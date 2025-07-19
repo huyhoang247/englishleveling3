@@ -1,5 +1,3 @@
-// --- START OF FILE background-game.tsx (13).txt ---
-
 // --- START OF FILE background-game.tsx ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
@@ -23,7 +21,6 @@ import BossBattle from './boss.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
-// >>> IMPORT LOGIC TÍNH TOÁN TỪ UPGRADE-STATS
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
@@ -257,7 +254,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     } catch (error) { console.error("Firestore Transaction failed for mastery cards: ", error); }
   };
     
-  // THAY ĐỔI 1: Tạo hàm mới để xử lý kết quả cuối cùng từ Miner Challenge
   const handleMinerChallengeEnd = async (result: {
     finalPickaxes: number;
     coinsEarned: number;
@@ -273,18 +269,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
     console.log("Ending Miner Challenge session. Updating Firestore with:", result);
 
-    // Chỉ thực hiện ghi nếu có sự thay đổi
     if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) {
         console.log("No changes to update from Miner Challenge.");
         return;
     }
 
     try {
-      // Thực hiện một giao dịch duy nhất để cập nhật tất cả dữ liệu
       await runTransaction(db, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
         if (!userDoc.exists()) {
-          // Trường hợp hiếm gặp, nhưng nên xử lý
           transaction.set(userDocRef, {
             coins: result.coinsEarned,
             pickaxes: result.finalPickaxes,
@@ -305,7 +298,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }
       });
       
-      // Cập nhật state cục bộ của background-game SAU KHI giao dịch thành công
       setPickaxes(result.finalPickaxes);
       setCoins(prevCoins => prevCoins + result.coinsEarned);
       if (result.highestFloorCompleted > minerChallengeHighestFloor) {
@@ -333,37 +325,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       } catch (error) { console.error("Firestore Transaction failed for pickaxes: ", error); }
   };
 
-  const updateHighestFloorInFirestore = async (userId: string, completedFloor: number) => {
-      // Hàm này không còn được dùng trực tiếp từ MinerChallenge nhưng có thể hữu ích ở nơi khác
-      if (!userId) { console.error("Cannot update highest floor: User not authenticated."); return; }
-      if (completedFloor <= minerChallengeHighestFloor) { return; }
-      const userDocRef = doc(db, 'users', userId);
-      try {
-          await runTransaction(db, async (transaction) => {
-              transaction.update(userDocRef, { minerChallengeHighestFloor: completedFloor });
-          });
-          setMinerChallengeHighestFloor(completedFloor);
-          console.log(`Highest floor updated in Firestore for user ${userId} to: ${completedFloor}`);
-      } catch (error) { console.error("Firestore Transaction failed for highest floor: ", error); }
-  };
-
-
-  const updateStatsInFirestore = async (userId: string, newStats: { hp: number; atk: number; def: number; }) => {
-      if (!userId) { console.error("Cannot update stats: User not authenticated."); return; }
-      const userDocRef = doc(db, 'users', userId);
-      try {
-          await runTransaction(db, async (transaction) => { transaction.update(userDocRef, { stats: newStats }); });
-          setUserStats(newStats); console.log(`User stats updated in Firestore for user ${userId}.`);
-      } catch (error) { console.error("Firestore Transaction failed for stats: ", error); }
-  };
-
   const handleUpdatePickaxes = async (amountToAdd: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) { console.error("Cannot update pickaxes: User not authenticated."); return; }
     const newTotal = pickaxes + amountToAdd;
     await updatePickaxesInFirestore(userId, newTotal);
   };
-
+  
   const updateJackpotPoolInFirestore = async (amount: number, resetToDefault: boolean = false) => {
       const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
       try {
@@ -383,6 +351,53 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const handleGemReward = (amount: number) => { setGems(prev => prev + amount); };
+    
+  // >>> ĐÂY LÀ HÀM MỚI QUAN TRỌNG NHẤT <<<
+  // HÀM NÀY SỬ DỤNG TRANSACTION ĐỂ ĐẢM BẢO TÍNH TOÀN VẸN DỮ LIỆU
+  const handleConfirmStatUpgrade = async (
+    userId: string,
+    upgradeCost: number,
+    newStats: { hp: number; atk: number; def: number; }
+  ) => {
+    if (!userId) {
+      console.error("Không thể nâng cấp: Người dùng chưa xác thực.");
+      throw new Error("Người dùng chưa xác thực"); // Ném lỗi để component con có thể bắt
+    }
+    const userDocRef = doc(db, 'users', userId);
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) {
+          throw "Tài liệu người dùng không tồn tại!";
+        }
+
+        const currentCoins = userDoc.data().coins || 0;
+        if (currentCoins < upgradeCost) {
+          throw new Error("Không đủ vàng trên server."); // Kiểm tra lại ở server để tránh lỗi
+        }
+        
+        const newCoins = currentCoins - upgradeCost;
+
+        // Thực hiện cả hai cập nhật trong cùng một transaction nguyên tử
+        transaction.update(userDocRef, {
+          coins: newCoins,
+          stats: newStats,
+        });
+      });
+
+      // Nếu transaction thành công, cập nhật state của component cha để đồng bộ.
+      // Việc này đảm bảo state của game luôn đúng cho lần mở màn hình tiếp theo.
+      console.log(`Nâng cấp chỉ số thành công cho user ${userId}. Dữ liệu đã nhất quán.`);
+      setCoins(prevCoins => prevCoins - upgradeCost);
+      setUserStats(newStats);
+
+    } catch (error) {
+      console.error("Giao dịch Firestore cho việc nâng cấp chỉ số thất bại: ", error);
+      // Ném lại lỗi để khối `catch` của component con có thể thực thi và khôi phục UI.
+      throw error;
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
@@ -543,18 +558,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isInventoryOpen ? 'block' : 'none' }}> <ErrorBoundary><Inventory onClose={toggleInventory} /></ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} />)}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}> <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary> </div>
-        
-        {/* THAY ĐỔI 2: Cập nhật các props truyền vào MinerChallenge */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isMinerChallengeOpen && auth.currentUser && (
                 <MinerChallenge
                     onClose={toggleMinerChallenge}
-                    // Dữ liệu ban đầu
                     initialDisplayedCoins={displayedCoins}
                     masteryCards={masteryCards}
                     initialPickaxes={pickaxes}
                     initialHighestFloor={minerChallengeHighestFloor}
-                    // Hàm callback mới để nhận kết quả cuối cùng
                     onGameEnd={handleMinerChallengeEnd}
                 />)}</ErrorBoundary>
         </div>
@@ -565,7 +576,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} />}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> <ErrorBoundary>{isVocabularyChestOpen && currentUser && ( <VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)} onGemReward={handleGemReward} displayedCoins={displayedCoins} /> )}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}> <ErrorBoundary> {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && ( <AchievementsScreen onClose={toggleAchievements} userId={auth.currentUser.uid} initialData={vocabularyData} onClaimReward={handleRewardClaim} masteryCardsCount={masteryCards} displayedCoins={displayedCoins} /> )} </ErrorBoundary> </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}> <ErrorBoundary> {isUpgradeScreenOpen && auth.currentUser && ( <UpgradeStatsScreen onClose={toggleUpgradeScreen} initialGold={coins} onUpdateGold={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} initialStats={userStats} onUpdateStats={(newStats) => updateStatsInFirestore(auth.currentUser!.uid, newStats)} /> )} </ErrorBoundary> </div>
+        
+        {/* >>> ĐÂY LÀ CHỖ THAY ĐỔI PROP <<< */}
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
+            <ErrorBoundary>
+                {isUpgradeScreenOpen && auth.currentUser && (
+                    <UpgradeStatsScreen
+                        onClose={toggleUpgradeScreen}
+                        initialGold={coins}
+                        initialStats={userStats}
+                        // Thay thế các prop cũ bằng một hàm nguyên tử, an toàn duy nhất
+                        onConfirmUpgrade={(cost, newStats) =>
+                          handleConfirmStatUpgrade(auth.currentUser!.uid, cost, newStats)
+                        }
+                    />
+                )}
+            </ErrorBoundary>
+        </div>
+        
         <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}> <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary> </div>
       </SidebarLayout>
 
