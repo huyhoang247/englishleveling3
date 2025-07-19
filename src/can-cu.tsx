@@ -29,10 +29,9 @@ const ALL_BASES = [
 const StyledProgressBar = ({ current, max, colorGradient, shadowColor }) => { const percentage = Math.max(0, (current / max) * 100); return ( <div className="w-full"><div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm"><div className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}></div><div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold font-sans"><span>{Math.floor(current).toLocaleString()} / {max.toLocaleString()}</span></div></div></div> ); };
 const ResourceDisplay = ({ icon, value, colorClass }) => ( <div className={`flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full border ${colorClass}`}>{icon}<span className="font-bold text-lg text-white tracking-wider">{Math.floor(value).toLocaleString()}</span></div> );
 
-// THAY ĐỔI: Header nhận `onPortClick` và không còn `h1`
-const GameHeader = ({ gold, crystals, onPortClick }) => (
+const GameHeader = ({ gold, crystals }) => (
   <header className="fixed top-0 left-0 w-full z-30 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
-    <div className="max-w-6xl mx-auto flex justify-end items-center">
+    <div className="max-w-6xl mx-auto flex justify-end items-center h-full">
       <div className="flex items-center gap-3">
         <ResourceDisplay 
             icon={<CoinsIcon className="w-6 h-6 text-yellow-400 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />}
@@ -44,14 +43,6 @@ const GameHeader = ({ gold, crystals, onPortClick }) => (
             value={crystals}
             colorClass="border-cyan-500/30"
         />
-        {/* THAY ĐỔI: Nút Port nhỏ gọn đã được thêm vào đây */}
-        <button
-          onClick={onPortClick}
-          className="flex items-center justify-center w-12 h-12 bg-indigo-600/80 rounded-full border border-indigo-500/80 hover:bg-indigo-600 transition-all active:scale-95"
-          aria-label="Open Port"
-        >
-          <WarehouseIcon className="w-6 h-6 text-white" />
-        </button>
       </div>
     </div>
   </header>
@@ -122,9 +113,8 @@ const FocusBaseCard = ({ baseData, playerState, onLevelUp, onUnlockNext, nextBas
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
       </div>
-      <div className="p-6 pt-2 flex flex-col flex-grow">
-        {/* THAY ĐỔI: Xóa "Current Base" và chỉ để lại tên căn cứ */}
-        <div className="text-center mb-4">
+      <div className="p-6 pt-4 flex flex-col flex-grow">
+        <div className="text-center mb-6">
           <h2 className="font-lilita text-4xl text-white text-shadow-sm truncate">{name}</h2>
         </div>
         <div className="flex-grow">
@@ -203,7 +193,6 @@ export default function App() {
     if (nextBaseData.stage > currentBaseData.stage) {
       const bonus = 500 * currentBaseData.stage;
       setCrystals(prev => prev + bonus);
-      // Thay alert bằng một modal thông báo đẹp hơn trong tương lai
       alert(`Congratulations! You've reached Stage ${nextBaseData.stage} and earned ${bonus} Crystals!`);
     }
   }, [gold, nextBaseData, currentBaseData]);
@@ -230,10 +219,20 @@ export default function App() {
         .btn-shine:hover:not(:disabled)::before { left: 125%; }
       `}</style>
       
-      {/* THAY ĐỔI: Truyền `onPortClick` vào GameHeader */}
-      <GameHeader gold={gold} crystals={crystals} onPortClick={() => setIsPortOpen(true)} />
+      <GameHeader gold={gold} crystals={crystals} />
 
       <main className="relative z-10 flex-grow flex flex-col items-center justify-center p-4 md:p-6 pt-20">
+        {/* NÚT PORT MỚI ĐƯỢC ĐẶT Ở ĐÂY */}
+        <div className="absolute top-0 right-4 md:right-6 mt-[88px] z-20">
+          <button
+            onClick={() => setIsPortOpen(true)}
+            className="btn-shine relative overflow-hidden bg-indigo-600/90 backdrop-blur-md text-white font-lilita tracking-wider px-5 py-2 rounded-lg shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all duration-300 flex items-center gap-2 border border-indigo-400/80 hover:scale-105 active:scale-100"
+          >
+            <WarehouseIcon className="w-5 h-5" />
+            <span>Port</span>
+          </button>
+        </div>
+        
         <h2 className="text-4xl font-lilita text-white text-shadow mb-8 animate-fade-in">Stage {currentStage}</h2>
 
         <div className="w-full flex items-center justify-center">
@@ -248,9 +247,7 @@ export default function App() {
             />
         </div>
       </main>
-
-      {/* THAY ĐỔI: Xóa footer */}
-
+      
       <PortModal isOpen={isPortOpen} onClose={() => setIsPortOpen(false)} goldInPort={goldInPort} goldStorage={goldStorage} goldPerSecond={goldPerSecond} onClaim={handleClaimGold} onUpgradeStorage={handleUpgradeStorage} upgradeStorageCost={upgradeStorageCost} crystals={crystals} />
     </div>
   );
