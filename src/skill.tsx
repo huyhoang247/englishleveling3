@@ -32,7 +32,6 @@ const ALL_SKILLS: Skill[] = [
   { id: 'fireball',    name: 'Quả Cầu Lửa',      description: 'Tấn công kẻ địch bằng một quả cầu lửa rực cháy.', icon: FireballIcon, rarity: 'B' },
   { id: 'ice_shard',   name: 'Mảnh Băng',         description: 'Làm chậm và gây sát thương lên mục tiêu.',         icon: IceShardIcon, rarity: 'A' },
   { id: 'heal',        name: 'Hồi Máu',          description: 'Phục hồi một lượng máu cho bản thân.',               icon: HealIcon, rarity: 'D' },
-  // ... thêm các kỹ năng khác với các cấp độ khác nhau
 ];
 
 const CRAFTING_COST = 50;
@@ -65,9 +64,7 @@ const SkillSlot = ({ skill, onClick }: { skill: Skill | null, onClick: () => voi
 
 const SkillCard = ({ skill, onClick, isEquipped }: { skill: Skill, onClick: () => void, isEquipped: boolean }) => {
   const baseClasses = "relative w-full p-3 rounded-lg border-2 flex items-center gap-4 transition-all duration-200";
-  const interactivity = isEquipped 
-    ? 'opacity-50 cursor-not-allowed' 
-    : `cursor-pointer hover:border-slate-600 hover:bg-slate-800/50 hover:shadow-lg hover:shadow-cyan-500/10`;
+  const interactivity = isEquipped ? 'opacity-50 cursor-not-allowed' : `cursor-pointer hover:border-slate-600 hover:bg-slate-800/50 hover:shadow-lg hover:shadow-cyan-500/10`;
   const IconComponent = skill.icon;
   
   return (
@@ -87,76 +84,85 @@ const SkillCard = ({ skill, onClick, isEquipped }: { skill: Skill, onClick: () =
   );
 };
 
-// --- START: MODAL CHI TIẾT KỸ NĂNG MỚI ---
 const SkillDetailModal = ({ skill, onClose, onEquip, isEquipped }: { skill: Skill, onClose: () => void, onEquip: (skill: Skill) => void, isEquipped: boolean }) => {
     const IconComponent = skill.icon;
-    
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
-          
           <div className={`relative bg-gradient-to-br ${getRarityGradient(skill.rarity)} p-5 rounded-xl border-2 ${getRarityColor(skill.rarity)} shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col`}>
-            {/* Header */}
             <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
               <div className="flex justify-between items-start mb-2">
                 <h3 className={`text-2xl font-bold ${getRarityTextColor(skill.rarity)}`}>{skill.name}</h3>
-                <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1">
-                  <CloseIcon className="w-5 h-5" />
-                </button>
+                <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
               </div>
-               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(skill.rarity)} bg-gray-800/70 border ${getRarityColor(skill.rarity)} capitalize`}>
-                {getRarityDisplayName(skill.rarity)}
-              </span>
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(skill.rarity)} bg-gray-800/70 border ${getRarityColor(skill.rarity)} capitalize`}>{getRarityDisplayName(skill.rarity)}</span>
             </div>
-
-            {/* Body */}
             <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
-                <div className="flex flex-col items-center text-center gap-4">
-                    <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(skill.rarity)} shadow-inner`}>
-                        <IconComponent className={`w-20 h-20 ${getRarityTextColor(skill.rarity)}`} />
-                    </div>
-                    <p className="text-slate-300 text-base leading-relaxed">{skill.description}</p>
-                    <div className="w-full text-left text-sm mt-4 p-4 bg-black/20 rounded-lg border border-slate-700/50">
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                            <div className="flex justify-between"><span className="text-slate-400">Loại:</span> <span className="font-semibold text-white">Chủ Động</span></div>
-                            <div className="flex justify-between"><span className="text-slate-400">Năng lượng:</span> <span className="font-semibold text-white">30</span></div>
-                            <div className="flex justify-between"><span className="text-slate-400">Thời gian hồi:</span> <span className="font-semibold text-white">5s</span></div>
-                            <div className="flex justify-between"><span className="text-slate-400">Mục tiêu:</span> <span className="font-semibold text-white">Đơn</span></div>
-                        </div>
-                    </div>
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(skill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(skill.rarity)}`} /></div>
+                <p className="text-slate-300 text-base leading-relaxed">{skill.description}</p>
+                <div className="w-full text-left text-sm mt-4 p-4 bg-black/20 rounded-lg border border-slate-700/50">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    <div className="flex justify-between"><span className="text-slate-400">Loại:</span> <span className="font-semibold text-white">Chủ Động</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Năng lượng:</span> <span className="font-semibold text-white">30</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Thời gian hồi:</span> <span className="font-semibold text-white">5s</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Mục tiêu:</span> <span className="font-semibold text-white">Đơn</span></div>
+                  </div>
                 </div>
+              </div>
             </div>
-            
-            {/* Footer */}
             <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
-                <button 
-                  onClick={() => onEquip(skill)} 
-                  disabled={isEquipped}
-                  className={`w-full font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform 
-                    ${isEquipped 
-                      ? 'bg-slate-700 text-slate-500 cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100'}`
-                  }>
-                  {isEquipped ? 'Đã Trang Bị' : 'Trang Bị'}
-                </button>
+              <button onClick={() => onEquip(skill)} disabled={isEquipped} className={`w-full font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100'}`}>{isEquipped ? 'Đã Trang Bị' : 'Trang Bị'}</button>
             </div>
           </div>
         </div>
     );
 };
-// --- END: MODAL CHI TIẾT KỸ NĂNG MỚI ---
 
+// --- START: POPUP CHẾ TẠO THÀNH CÔNG MỚI ---
+const CraftingSuccessModal = ({ skill, onClose }: { skill: Skill, onClose: () => void }) => {
+    const IconComponent = skill.icon;
+    const rarityTextColor = getRarityTextColor(skill.rarity);
+    const rarityColor = getRarityColor(skill.rarity).replace('border-', ''); // Lấy màu hex hoặc tên màu tailwind
+    const shadowStyle = { boxShadow: `0 0 25px -5px ${rarityColor}, 0 0 15px -10px ${rarityColor}` };
+
+    return (
+        <div className="fixed inset-0 flex items-center justify-center z-[100] p-4">
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
+            <div className="relative w-full max-w-sm">
+                {/* Hiệu ứng tia sáng nền */}
+                <div className="absolute inset-0.5 animate-spin-slow-360">
+                    <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(skill.rarity)} opacity-50 rounded-full blur-2xl`}></div>
+                </div>
+                <div className={`relative bg-gradient-to-b ${getRarityGradient(skill.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(skill.rarity)} text-center flex flex-col items-center gap-4`} style={shadowStyle}>
+                    <h2 className="text-2xl font-black tracking-widest uppercase text-white title-glow">Chế Tạo Thành Công</h2>
+                    <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(skill.rarity)} shadow-inner`}>
+                        <IconComponent className={`w-20 h-20 ${rarityTextColor}`} />
+                    </div>
+                    <div className="flex flex-col">
+                        <span className={`text-2xl font-bold ${rarityTextColor}`}>{skill.name}</span>
+                        <span className="font-semibold text-slate-300">{getRarityDisplayName(skill.rarity)}</span>
+                    </div>
+                    <p className="text-sm text-slate-400">{skill.description}</p>
+                    <button onClick={onClose} className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                        Tuyệt vời!
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+// --- END: POPUP CHẾ TẠO THÀNH CÔNG MỚI ---
 
 // --- COMPONENT CHÍNH ---
 export default function SkillScreen() {
   const [equippedSkills, setEquippedSkills] = useState<(Skill | null)[]>([null, null, null]);
-  const [ancientBooks, setAncientBooks] = useState(70);
+  const [ancientBooks, setAncientBooks] = useState(120);
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [newlyCraftedSkill, setNewlyCraftedSkill] = useState<Skill | null>(null);
   
-  // Bắt đầu với các kỹ năng giống trong ảnh để demo
-  const [ownedSkills, setOwnedSkills] = useState<Skill[]>([ALL_SKILLS[0], ALL_SKILLS[1]]);
-  // Kỹ năng còn lại có thể chế tạo
-  const [craftableSkills, setCraftableSkills] = useState<Skill[]>(ALL_SKILLS.slice(2));
+  const [ownedSkills, setOwnedSkills] = useState<Skill[]>([ALL_SKILLS[0]]);
+  const [craftableSkills, setCraftableSkills] = useState<Skill[]>(ALL_SKILLS.slice(1));
 
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
@@ -168,19 +174,13 @@ export default function SkillScreen() {
   };
   
   const handleEquipSkill = (skillToEquip: Skill) => {
-    if (equippedSkills.some(s => s?.id === skillToEquip.id)) {
-      showMessage("Kỹ năng đã được trang bị.");
-      return;
-    }
+    if (equippedSkills.some(s => s?.id === skillToEquip.id)) { showMessage("Kỹ năng đã được trang bị."); return; }
     const firstEmptySlotIndex = equippedSkills.findIndex(slot => slot === null);
-    if (firstEmptySlotIndex === -1) {
-      showMessage("Các ô kỹ năng đã đầy.");
-      return;
-    }
+    if (firstEmptySlotIndex === -1) { showMessage("Các ô kỹ năng đã đầy."); return; }
     const newEquipped = [...equippedSkills];
     newEquipped[firstEmptySlotIndex] = skillToEquip;
     setEquippedSkills(newEquipped);
-    setSelectedSkill(null); // Đóng modal sau khi trang bị
+    setSelectedSkill(null);
   };
 
   const handleUnequipSkill = (slotIndex: number) => {
@@ -191,23 +191,17 @@ export default function SkillScreen() {
   };
   
   const handleTrainAndCraft = () => {
-    if (craftableSkills.length === 0) {
-        showMessage("Bạn đã học tất cả kỹ năng!");
-        return;
-    }
-    if (ancientBooks < CRAFTING_COST) {
-      showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`);
-      return;
-    }
+    if (craftableSkills.length === 0) { showMessage("Bạn đã học tất cả kỹ năng!"); return; }
+    if (ancientBooks < CRAFTING_COST) { showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`); return; }
     
     const randomIndex = Math.floor(Math.random() * craftableSkills.length);
     const newSkill = craftableSkills[randomIndex];
 
     setAncientBooks(prev => prev - CRAFTING_COST);
-    setOwnedSkills(prev => [...prev, newSkill].sort((a, b) => a.id.localeCompare(b.id))); // Sắp xếp lại cho nhất quán
+    setOwnedSkills(prev => [...prev, newSkill].sort((a, b) => a.rarity.localeCompare(b.rarity) || a.id.localeCompare(b.id)));
     setCraftableSkills(prev => prev.filter(s => s.id !== newSkill.id));
     
-    showMessage(`Chế tạo thành công: ${newSkill.name} (Rank ${newSkill.rarity})!`);
+    setNewlyCraftedSkill(newSkill); // Kích hoạt popup thành công
   };
 
   return (
@@ -221,50 +215,29 @@ export default function SkillScreen() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(100, 116, 139, 0.5); border-radius: 20px; }
         .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.5), 0 0 20px rgba(45, 212, 191, 0.2); }
         .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; }
-        @keyframes fadeInDown {
-          from { opacity: 0; transform: translate(-50%, -100%); }
-          to { opacity: 1; transform: translate(-50%, 0); }
-        }
+        @keyframes fadeInDown { from { opacity: 0; transform: translate(-50%, -100%); } to { opacity: 1; transform: translate(-50%, 0); } }
+        .animate-spin-slow-360 { animation: spin-slow-360 20s linear infinite; }
+        @keyframes spin-slow-360 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
       
-      {message && (
-        <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-50">
-          {message}
-        </div>
-      )}
+      {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-50">{message}</div>}
 
-      {selectedSkill && (
-        <SkillDetailModal 
-          skill={selectedSkill}
-          onClose={() => setSelectedSkill(null)}
-          onEquip={handleEquipSkill}
-          isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)}
-        />
-      )}
+      {selectedSkill && <SkillDetailModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} onEquip={handleEquipSkill} isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)} />}
+
+      {newlyCraftedSkill && <CraftingSuccessModal skill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
 
       <div className="relative z-10 flex flex-col w-full h-screen p-4 sm:p-6 md:p-8">
-        
         <header className="w-full max-w-5xl mx-auto text-center flex-shrink-0 pb-2">
           <h1 className="text-3xl md:text-4xl font-black tracking-wider uppercase title-glow">QUẢN LÝ KỸ NĂNG</h1>
         </header>
 
         <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4">
-
-            {/* KHU VỰC TRANG BỊ */}
             <section className="flex-shrink-0 py-4">
                 <p className="text-slate-400 text-center mb-3 text-sm md:text-base">Kỹ năng đang trang bị. Nhấp để gỡ bỏ.</p>
                 <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
-                    {equippedSkills.map((skill, index) => (
-                        <SkillSlot 
-                            key={`equipped-${index}`} 
-                            skill={skill}
-                            onClick={() => handleUnequipSkill(index)}
-                        />
-                    ))}
+                    {equippedSkills.map((skill, index) => (<SkillSlot key={`equipped-${index}`} skill={skill} onClick={() => handleUnequipSkill(index)} />))}
                 </div>
             </section>
-
-            {/* KHU VỰC CHẾ TẠO & TÀI NGUYÊN */}
             <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <BookIcon className="w-8 h-8 text-yellow-300" />
@@ -273,31 +246,17 @@ export default function SkillScreen() {
                         <p className="text-xl font-bold text-white">{ancientBooks}</p>
                     </div>
                 </div>
-                <button 
-                  onClick={handleTrainAndCraft}
-                  className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
-                >
+                <button onClick={handleTrainAndCraft} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
                   Train ({CRAFTING_COST})
                 </button>
             </section>
-
-            {/* KHO KỸ NĂNG CỐ ĐỊNH */}
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                 <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0 title-glow">Kho Kỹ Năng</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
                     {ownedSkills.length > 0 ? (
-                        ownedSkills.map(skill => (
-                            <SkillCard
-                                key={skill.id}
-                                skill={skill}
-                                onClick={() => setSelectedSkill(skill)}
-                                isEquipped={equippedSkills.some(s => s?.id === skill.id)}
-                            />
-                        ))
+                        ownedSkills.map(skill => (<SkillCard key={skill.id} skill={skill} onClick={() => setSelectedSkill(skill)} isEquipped={equippedSkills.some(s => s?.id === skill.id)} />))
                     ) : (
-                        <div className="col-span-full flex items-center justify-center h-full text-slate-500">
-                            <p>Chưa có kỹ năng. Hãy dùng Sách Cổ để Train!</p>
-                        </div>
+                        <div className="col-span-full flex items-center justify-center h-full text-slate-500"><p>Chưa có kỹ năng. Hãy dùng Sách Cổ để Train!</p></div>
                     )}
                 </div>
             </section>
