@@ -140,16 +140,11 @@ export default function SkillEquipScreen() {
 
 
   return (
-    <div className="main-bg w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center font-sans text-white overflow-hidden">
+    <div className="main-bg w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center font-sans text-white">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         .font-sans { font-family: 'Inter', sans-serif; }
         .main-bg::before { content: ''; position: absolute; width: 150%; height: 150%; top: 50%; left: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); z-index: 0; pointer-events: none; }
-        /* Custom scrollbar for webkit browsers */
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(100, 116, 139, 0.5); border-radius: 20px; border: 3px solid transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(100, 116, 139, 0.8); }
       `}</style>
       
       {message && (
@@ -182,9 +177,7 @@ export default function SkillEquipScreen() {
         {/* --- TÚI ĐỒ / KHO KỸ NĂNG (Scrollable) --- */}
         <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col min-h-0">
             <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0">Kho Kỹ Năng</h2>
-            
-            {/* === DÒNG ĐÃ SỬA: Thêm "flex-1" vào đây === */}
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-2">
                 {ALL_SKILLS.map(skill => (
                     <SkillCard
                         key={skill.id}
