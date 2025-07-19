@@ -20,8 +20,8 @@ import { uiAssets, lottieAssets } from './game-assets.ts';
 import BossBattle from './boss.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
-import MinerChallenge from './bomb.tsx';
-// >>> IMPORT LOGIC TÍNH TOÁN TỪ UPGRADE-STATS
+// GIẢI PHÁP: Đổi tên import để dễ phân biệt
+import MinerChallengeGame from './bomb.tsx';
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
@@ -343,6 +343,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
+  // GIẢI PHÁP: Các hàm update riêng lẻ này vẫn tồn tại để phục vụ các tính năng khác,
+  // nhưng Miner Challenge sẽ không gọi chúng nữa.
   const updatePickaxesInFirestore = async (userId: string, newTotalAmount: number) => {
       if (!userId) {
           console.error("Cannot update pickaxes: User not authenticated.");
@@ -549,11 +551,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   // --- Các hàm toggle ---
-  const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>, ...otherSetters: React.Dispatch<React.SetStateAction<boolean>>[]) => {
+  const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
     return () => {
         if (isLoading) return;
         setter(prev => {
             const newState = !prev;
+            // GIẢI PHÁP: Điều chỉnh logic để chỉ đóng các cửa sổ khác, không gọi showNavBar ngay lập tức
             if (newState) {
                 hideNavBar();
                 [
@@ -564,7 +567,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     if (s !== setter) s(false);
                 });
             } else {
-                showNavBar();
+                // Chỉ gọi showNavBar nếu không có cửa sổ nào khác đang mở
+                const anyOtherOverlayStillOpen = [setIsRankOpen, setIsGoldMineOpen, setIsInventoryOpen, setIsLuckyGameOpen, setIsBlacksmithOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen].some(s => s !== setter && s.toString() === 'true');
+                if (!anyOtherOverlayStillOpen) {
+                    showNavBar();
+                }
             }
             return newState;
         });
@@ -584,6 +591,69 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const toggleAdminPanel = createToggleFunction(setIsAdminPanelOpen);
   const toggleUpgradeScreen = createToggleFunction(setIsUpgradeScreenOpen);
 
+  // GIẢI PHÁP: Hàm mới để xử lý kết quả từ Miner Challenge và thực hiện ghi một lần
+  const handleMinerChallengeClose = async (result: {
+      finalPickaxes: number;
+      coinsEarned: number;
+      highestFloorCompleted: number;
+  }) => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) {
+          console.error("Cannot save Miner Challenge data: User not authenticated.");
+          setIsMinerChallengeOpen(false); // Vẫn đóng cửa sổ
+          showNavBar();
+          return;
+      }
+      console.log("Saving Miner Challenge data:", result);
+
+      const userDocRef = doc(db, 'users', userId);
+      try {
+          // Sử dụng transaction để đảm bảo tất cả cập nhật đều thành công hoặc thất bại cùng nhau
+          await runTransaction(db, async (transaction) => {
+              const userDoc = await transaction.get(userDocRef);
+              if (!userDoc.exists()) {
+                  throw new Error("User document does not exist!");
+              }
+
+              const currentData = userDoc.data();
+              const currentCoins = currentData.coins || 0;
+              const newCoins = currentCoins + result.coinsEarned;
+
+              const dataToUpdate: {
+                  pickaxes: number;
+                  coins: number;
+                  minerChallengeHighestFloor?: number;
+              } = {
+                  pickaxes: result.finalPickaxes,
+                  coins: newCoins,
+              };
+              
+              // Chỉ cập nhật tầng cao nhất nếu người chơi vượt qua tầng cũ
+              const currentHighestFloor = currentData.minerChallengeHighestFloor || 0;
+              if (result.highestFloorCompleted > currentHighestFloor) {
+                dataToUpdate.minerChallengeHighestFloor = result.highestFloorCompleted;
+              }
+
+              transaction.update(userDocRef, dataToUpdate);
+          });
+
+          // Cập nhật state cục bộ của React sau khi giao dịch Firestore thành công
+          setPickaxes(result.finalPickaxes);
+          setCoins(prev => prev + result.coinsEarned);
+          if (result.highestFloorCompleted > minerChallengeHighestFloor) {
+              setMinerChallengeHighestFloor(result.highestFloorCompleted);
+          }
+          console.log("Miner Challenge data saved successfully.");
+
+      } catch (error) {
+          console.error("Firestore Transaction failed for Miner Challenge data: ", error);
+      } finally {
+          // Luôn đóng cửa sổ và hiển thị lại nav bar, dù thành công hay thất bại
+          setIsMinerChallengeOpen(false);
+          showNavBar();
+      }
+  };
+
 
   const handleSetToggleSidebar = (toggleFn: () => void) => {
       sidebarToggleRef.current = toggleFn;
@@ -593,13 +663,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
-  // >>> LOGIC TÍNH TOÁN CHỈ SỐ CHO BOSS BATTLE
   const getPlayerBattleStats = () => {
       const BASE_HP = 0;
       const BASE_ATK = 0;
       const BASE_DEF = 0;
 
-      // Tính toán chỉ số cộng thêm từ level, sử dụng logic nhất quán
       const bonusHp = calculateTotalStatValue(userStats.hp, statConfig.hp.baseUpgradeBonus);
       const bonusAtk = calculateTotalStatValue(userStats.atk, statConfig.atk.baseUpgradeBonus);
       const bonusDef = calculateTotalStatValue(userStats.def, statConfig.def.baseUpgradeBonus);
@@ -728,23 +796,25 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBlacksmithOpen ? 'block' : 'none' }}>
             <ErrorBoundary><Blacksmith onClose={toggleBlacksmith} /></ErrorBoundary>
         </div>
+
+        {/* GIẢI PHÁP: Sử dụng component và props đã được tối ưu hóa */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isMinerChallengeOpen && auth.currentUser && (
-                <MinerChallenge
-                    onClose={toggleMinerChallenge} displayedCoins={displayedCoins} masteryCards={masteryCards}
-                    onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                <MinerChallengeGame
+                    onClose={handleMinerChallengeClose}
+                    displayedCoins={coins}
+                    masteryCards={masteryCards}
                     initialPickaxes={pickaxes}
-                    onUpdatePickaxes={(newCount) => updatePickaxesInFirestore(auth.currentUser!.uid, newCount)}
                     initialHighestFloor={minerChallengeHighestFloor}
-                    onUpdateHighestFloor={(floor) => updateHighestFloorInFirestore(auth.currentUser!.uid, floor)}
                 />)}</ErrorBoundary>
         </div>
+
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBossBattleOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isBossBattleOpen && auth.currentUser && (
                     <BossBattle
                         onClose={toggleBossBattle}
-                        playerInitialStats={getPlayerBattleStats()} // >>> SỬ DỤNG HÀM TÍNH TOÁN NHẤT QUÁN
+                        playerInitialStats={getPlayerBattleStats()}
                         onBattleEnd={(result, rewards) => {
                             console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`);
                             if (result === 'win' && auth.currentUser) {
