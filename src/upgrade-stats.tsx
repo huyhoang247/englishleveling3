@@ -42,15 +42,13 @@ const Spinner = () => (
 );
 
 
-// >>> TẠO CONFIG TRUNG TÂM VÀ EXPORT
+// --- CONFIG VÀ LOGIC TÍNH TOÁN (Không đổi) ---
 export const statConfig = {
   hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
   atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
   def: { name: 'DEF', icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
 };
 
-
-// --- LOGIC TÍNH TOÁN ---
 export const calculateUpgradeCost = (level: number) => {
   const baseCost = 100;
   const tier = Math.floor(level / 10);
@@ -92,7 +90,7 @@ const formatNumber = (num: number) => {
 };
 
 
-// --- COMPONENT STAT CARD ---
+// --- COMPONENT STAT CARD (Không đổi) ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: string) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
   const nextUpgradeBonus = getBonusForLevel(level + 1, baseUpgradeBonus);
@@ -132,20 +130,20 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   );
 };
 
-// >>> INTERFACE ĐỊNH NGHĨA CÁC PROPS NHẬN TỪ COMPONENT CHA
+
+// >>> THAY ĐỔI 1: CẬP NHẬT INTERFACE PROPS
 interface UpgradeStatsScreenProps {
   onClose: () => void;
   initialGold: number;
-  onUpdateGold: (amount: number) => Promise<void> | void;
   initialStats: { hp: number; atk: number; def: number; };
-  onUpdateStats: (newStats: { hp: number; atk: number; def: number; }) => Promise<void> | void;
+  // Một hàm duy nhất để xác nhận toàn bộ thao tác nâng cấp
+  onConfirmUpgrade: (cost: number, newStats: { hp: number; atk: number; def: number; }) => Promise<void>;
 }
 
-// --- COMPONENT CHÍNH CỦA ỨNG DỤNG ---
-export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold, initialStats, onUpdateStats }: UpgradeStatsScreenProps) {
-  // Local state for stats and messages
+
+// --- COMPONENT CHÍNH ---
+export default function UpgradeStatsScreen({ onClose, initialGold, initialStats, onConfirmUpgrade }: UpgradeStatsScreenProps) {
   const [displayedGold, setDisplayedGold] = useState(initialGold);
-  // >>> SỬ DỤNG statConfig ĐỂ KHỞI TẠO STATE
   const [stats, setStats] = useState([
     { id: 'hp', level: initialStats.hp || 0, ...statConfig.hp },
     { id: 'atk', level: initialStats.atk || 0, ...statConfig.atk },
@@ -154,16 +152,18 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
   const [message, setMessage] = useState('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
 
-  // Đồng bộ state cục bộ với props từ component cha
+  // Đồng bộ state cục bộ khi component được mở hoặc props thay đổi
   useEffect(() => {
-      setStats(prevStats => prevStats.map(stat => ({
-          ...stat,
-          level: initialStats[stat.id as keyof typeof initialStats] || 0
-      })));
-  }, [initialStats]);
+    setDisplayedGold(initialGold);
+    setStats([
+        { id: 'hp', level: initialStats.hp || 0, ...statConfig.hp },
+        { id: 'atk', level: initialStats.atk || 0, ...statConfig.atk },
+        { id: 'def', level: initialStats.def || 0, ...statConfig.def },
+    ]);
+  }, [initialGold, initialStats]);
 
 
-  // Function to animate coin changes
+  // Hàm tạo hiệu ứng đếm số
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
     const isCountingUp = endValue > startValue;
@@ -187,49 +187,67 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
   }, []);
 
 
-  // Handle the upgrade logic
+  // >>> THAY ĐỔI 2: VIẾT LẠI HÀM NÂNG CẤP VỚI LOGIC OPTIMISTIC UPDATE
   const handleUpgrade = async (statId: string) => {
     if (upgradingId) return;
 
-    const statIndex = stats.findIndex(s => s.id === statId);
-    if (statIndex === -1) return;
+    const statToUpgrade = stats.find(s => s.id === statId);
+    if (!statToUpgrade) return;
 
-    const statToUpgrade = stats[statIndex];
     const upgradeCost = calculateUpgradeCost(statToUpgrade.level);
 
-    if (initialGold >= upgradeCost) {
-      setUpgradingId(statId);
-
-      const newGoldValue = initialGold - upgradeCost;
-      startCoinCountAnimation(initialGold, newGoldValue);
-
-      // Cập nhật Vàng trước
-      await onUpdateGold(-upgradeCost);
-
-      // Cập nhật level của chỉ số trong state cục bộ
-      const newStatsArray = stats.map(s =>
-          s.id === statId ? { ...s, level: s.level + 1 } : s
-      );
-      setStats(newStatsArray);
-
-      // Chuẩn bị object chỉ số mới để gửi lên Firestore
-      const newStatsForFirestore = {
-        hp: newStatsArray.find(s => s.id === 'hp')!.level,
-        atk: newStatsArray.find(s => s.id === 'atk')!.level,
-        def: newStatsArray.find(s => s.id === 'def')!.level,
-      };
-
-      // >>> GỌI HÀM `onUpdateStats` TỪ PROPS ĐỂ LƯU DỮ LIỆU
-      await onUpdateStats(newStatsForFirestore);
-      setMessage('');
-
-      setTimeout(() => {
-        setUpgradingId(null);
-      }, 500);
-
-    } else {
+    if (displayedGold < upgradeCost) {
       setMessage('Không đủ vàng!');
       setTimeout(() => setMessage(''), 2000);
+      return;
+    }
+
+    // --- Bắt đầu Optimistic Update ---
+    setUpgradingId(statId);
+    setMessage('');
+
+    // 1. Lưu lại state cũ để có thể khôi phục nếu lỗi
+    const oldGold = displayedGold;
+    const oldStats = [...stats];
+
+    // 2. Cập nhật giao diện ngay lập tức
+    const newGoldValue = oldGold - upgradeCost;
+    startCoinCountAnimation(oldGold, newGoldValue); // Hiệu ứng trừ tiền
+    
+    const newStatsArray = stats.map(s =>
+      s.id === statId ? { ...s, level: s.level + 1 } : s
+    );
+    setStats(newStatsArray); // Cập nhật level trên UI
+
+    // 3. Chuẩn bị dữ liệu và gửi lên server
+    const newStatsForFirestore = {
+      hp: newStatsArray.find(s => s.id === 'hp')!.level,
+      atk: newStatsArray.find(s => s.id === 'atk')!.level,
+      def: newStatsArray.find(s => s.id === 'def')!.level,
+    };
+
+    try {
+      // Gọi hàm cập nhật gộp và chờ kết quả
+      await onConfirmUpgrade(upgradeCost, newStatsForFirestore);
+      // Nếu thành công, không cần làm gì thêm vì UI đã được cập nhật.
+      console.log('Nâng cấp đã được xác nhận và lưu trên server.');
+
+    } catch (error) {
+      // 4. Nếu có lỗi, KHÔI PHỤC (ROLLBACK) giao diện
+      console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
+      setMessage('Nâng cấp thất bại, vui lòng thử lại!');
+      
+      // Khôi phục lại vàng và chỉ số trên UI
+      startCoinCountAnimation(newGoldValue, oldGold);
+      setStats(oldStats);
+
+      setTimeout(() => setMessage(''), 3000);
+    } finally {
+      // 5. Dù thành công hay thất bại, cũng kết thúc trạng thái "đang xử lý"
+      // Thêm một chút delay để người dùng thấy hiệu ứng hoàn tất
+      setTimeout(() => {
+        setUpgradingId(null);
+      }, 300);
     }
   };
 
@@ -252,59 +270,20 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
           .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
           .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
           .text-shadow-cyan { text-shadow: 0 0 8px rgba(0, 246, 255, 0.7); }
-
-          @keyframes animate-gradient-border {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-          .animate-border-flow {
-            background-size: 400% 400%;
-            animation: animate-gradient-border 3s linear infinite;
-          }
-
-          .animate-breathing {
-            animation: breathing 5s ease-in-out infinite;
-          }
-          @keyframes breathing {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4)); }
-            50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.7));}
-          }
-
-          .main-bg::before, .main-bg::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            z-index: 0;
-            pointer-events: none;
-          }
-          .main-bg::before {
-             width: 150%;
-             height: 150%;
-             top: 50%;
-             transform: translate(-50%, -50%);
-             background-image: radial-gradient(circle, transparent 40%, #110f21 80%);
-          }
-           .main-bg::after {
-             width: 100%;
-             height: 100%;
-             top: 0;
-             transform: translateX(-50%);
-             background-image: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-          }
+          .animate-border-flow { background-size: 400% 400%; animation: animate-gradient-border 3s linear infinite; }
+          @keyframes animate-gradient-border { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+          .animate-breathing { animation: breathing 5s ease-in-out infinite; }
+          @keyframes breathing { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4)); } 50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.7));} }
+          .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: 0; pointer-events: none; }
+          .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); }
+          .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.1) 0%, transparent 50%); }
       `}</style>
 
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
-        <button
-          onClick={onClose}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
-          aria-label="Quay lại Trang Chính"
-          title="Quay lại Trang Chính"
-        >
+        <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
           <HomeIcon className="w-5 h-5 text-slate-300" />
           <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
         </button>
-
         <div className="font-sans">
             <CoinDisplay displayedCoins={displayedGold} isStatsFullscreen={false} />
         </div>
@@ -317,28 +296,14 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
       )}
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
-
           <div className="mb-4 w-48 h-48 flex items-center justify-center animate-breathing">
-            <img
-              src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-16_15-55-32-819.png"
-              alt="Hero Stone Icon"
-              className="w-full h-full object-contain"
-            />
+            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-16_15-55-32-819.png" alt="Hero Stone Icon" className="w-full h-full object-contain" />
           </div>
 
           <div className="w-full max-w-xs bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6">{icons.heart}</div>
-              <span className="text-lg font-bold">{formatNumber(totalHp)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6">{icons.sword}</div>
-              <span className="text-lg font-bold">{formatNumber(totalAtk)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6">{icons.shield}</div>
-              <span className="text-lg font-bold">{formatNumber(totalDef)}</span>
-            </div>
+            <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.heart}</div> <span className="text-lg font-bold">{formatNumber(totalHp)}</span> </div>
+            <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.sword}</div> <span className="text-lg font-bold">{formatNumber(totalAtk)}</span> </div>
+            <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.shield}</div> <span className="text-lg font-bold">{formatNumber(totalDef)}</span> </div>
           </div>
 
           <div className="w-full px-2 mb-8">
@@ -356,13 +321,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, onUpdateGold,
 
           <div className="flex flex-row justify-center items-stretch gap-3 sm:gap-4">
             {stats.map(stat => (
-              <StatCard
-                key={stat.id}
-                stat={stat}
-                onUpgrade={handleUpgrade}
-                isProcessing={upgradingId === stat.id}
-                isDisabled={upgradingId !== null}
-              />
+              <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} isProcessing={upgradingId === stat.id} isDisabled={upgradingId !== null && upgradingId !== stat.id} />
             ))}
           </div>
         </div>
