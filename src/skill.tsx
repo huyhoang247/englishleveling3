@@ -6,12 +6,11 @@ const IceShardIcon = ({ className = '' }: { className?: string }) => ( <svg clas
 const HealIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> </svg> );
 const BookIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>);
 const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> );
-const GoldIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#facc15" stroke="#eab308" strokeWidth="1.5"/> <path d="M14.5 9.5C14.5 10.8807 13.3807 12 12 12C10.6193 12 9.5 10.8807 9.5 9.5C9.5 8.11929 10.6193 7 12 7C12.825 7 13.5543 7.37388 14.0302 7.96977" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/> <path d="M12 12V17" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/> <path d="M10 17H14" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/> </svg> );
-const GemIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M6.2998 8.24998L11.9998 2.54999L17.6998 8.24998L11.9998 21.45L6.2998 8.24998Z" fill="#67e8f9" stroke="#06b6d4" strokeWidth="1.5"/> <path d="M6.2998 8.24998H17.6998" stroke="#22d3ee" strokeWidth="1.5"/> <path d="M9.41992 8.24998L11.9999 21.45L14.5799 8.24998" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round"/> </svg> );
-const SettingsIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M19.14 12C19.14 15.93 15.93 19.14 12 19.14C8.07 19.14 4.86 15.93 4.86 12C4.86 8.07 8.07 4.86 12 4.86C15.93 4.86 19.14 8.07 19.14 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M12 6.86V4.86" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M12 20.14V18.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M16.24 7.76L17.66 6.34" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M6.34 17.66L7.76 16.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M18.14 12H20.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M3.86 12H5.86" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M17.66 17.66L16.24 16.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M7.76 7.76L6.34 6.34" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> </svg> );
+// --- START: MỚI ---
+const GoldIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#fbbF24" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 15.39L9.32 17l.79-3.08-2.3-1.99 3.18-.28L12 9l1.01 2.65 3.18.28-2.3 1.99.79 3.08L12 15.39z" fill="#fff" /></svg> );
+// --- END: MỚI ---
 
-
-// --- CÁC HÀM HELPER VỀ ĐỘ HIẾM (TỪ SHOP.TSX) ---
+// --- START: CÁC HÀM HELPER VỀ ĐỘ HIẾM (TỪ SHOP.TSX) ---
 const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; default: return 'border-gray-600'; } };
 const getRarityGradient = (rarity: string) => { switch(rarity) { case 'E': return 'from-gray-800/95 to-gray-900/95'; case 'D': return 'from-green-900/70 to-gray-900'; case 'B': return 'from-blue-800/80 to-gray-900'; case 'A': return 'from-purple-800/80 via-black/30 to-gray-900'; case 'S': return 'from-yellow-800/70 via-black/40 to-gray-900'; case 'SR': return 'from-red-800/80 via-orange-900/30 to-black'; default: return 'from-gray-800/95 to-gray-900/95'; } };
 const getRarityTextColor = (rarity: string) => { switch(rarity) { case 'E': return 'text-gray-400'; case 'D': return 'text-green-400'; case 'B': return 'text-blue-400'; case 'A': return 'text-purple-400'; case 'S': return 'text-yellow-300'; case 'SR': return 'text-red-400'; default: return 'text-gray-400'; } };
@@ -37,6 +36,37 @@ const ALL_SKILLS: Skill[] = [
 const CRAFTING_COST = 50;
 
 // --- CÁC COMPONENT CON ---
+
+// --- START: MỚI ---
+const Header = ({ username, avatarUrl, gold, ancientBooks }: { username: string; avatarUrl: string; gold: number; ancientBooks: number; }) => {
+    return (
+        <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
+            <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
+                <h1 className="text-2xl font-bold text-cyan-300 title-glow">
+                    Bảng Kỹ Năng
+                </h1>
+                <div className="flex items-center gap-4 sm:gap-6">
+                    {/* Resources */}
+                    <div className="flex items-center gap-2 p-2 bg-slate-900/50 rounded-md border border-slate-700/50">
+                        <GoldIcon className="w-6 h-6" />
+                        <span className="font-bold text-yellow-300 text-sm">{gold.toLocaleString()}</span>
+                    </div>
+                     <div className="flex items-center gap-2 p-2 bg-slate-900/50 rounded-md border border-slate-700/50">
+                        <BookIcon className="w-6 h-6 text-yellow-300" />
+                        <span className="font-bold text-white text-sm">{ancientBooks}</span>
+                    </div>
+
+                    {/* User Info */}
+                    <div className="flex items-center gap-3">
+                        <span className="hidden sm:block font-semibold text-slate-300">{username}</span>
+                        <img src={avatarUrl} alt="User Avatar" className="w-10 h-10 rounded-full border-2 border-cyan-500" />
+                    </div>
+                </div>
+            </div>
+        </header>
+    );
+};
+// --- END: MỚI ---
 
 const SkillSlot = ({ skill, onClick }: { skill: Skill | null, onClick: () => void }) => {
   const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center cursor-pointer group";
@@ -119,6 +149,7 @@ const SkillDetailModal = ({ skill, onClose, onEquip, isEquipped }: { skill: Skil
     );
 };
 
+// --- START: POPUP CHẾ TẠO THÀNH CÔNG MỚI ---
 const CraftingSuccessModal = ({ skill, onClose }: { skill: Skill, onClose: () => void }) => {
     const IconComponent = skill.icon;
     const rarityTextColor = getRarityTextColor(skill.rarity);
@@ -151,59 +182,7 @@ const CraftingSuccessModal = ({ skill, onClose }: { skill: Skill, onClose: () =>
         </div>
     );
 };
-
-// --- COMPONENT HEADER MỚI ---
-const Header = ({
-  playerName, playerLevel, xpCurrent, xpMax, avatarUrl, gold, gems, ancientBooks
-}: {
-  playerName: string;
-  playerLevel: number;
-  xpCurrent: number;
-  xpMax: number;
-  avatarUrl: string;
-  gold: number;
-  gems: number;
-  ancientBooks: number;
-}) => {
-  const xpPercentage = (xpCurrent / xpMax) * 100;
-
-  const CurrencyDisplay = ({ icon: Icon, amount, className = '' }: { icon: React.FC<{className?: string}>, amount: number | string, className?: string }) => (
-    <div className={`flex items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-full px-3 py-1.5 ${className}`}>
-      <Icon className="w-5 h-5 flex-shrink-0" />
-      <span className="font-bold text-sm text-white tracking-wider">{amount.toLocaleString()}</span>
-    </div>
-  );
-  
-  return (
-    <header className="relative z-20 flex-shrink-0 w-full max-w-7xl mx-auto p-3 bg-black/20 rounded-b-xl border-b border-x border-slate-800 backdrop-blur-sm">
-      <div className="flex justify-between items-center gap-4">
-        {/* === Phần Thông tin Người chơi === */}
-        <div className="flex items-center gap-4">
-          <img src={avatarUrl} alt="Player Avatar" className="w-14 h-14 rounded-full border-2 border-cyan-400 object-cover shadow-lg shadow-cyan-500/20"/>
-          <div>
-            <h1 className="text-xl font-bold text-white tracking-wide">{playerName}</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs font-bold bg-cyan-500 text-slate-900 px-2 py-0.5 rounded-md">LV {playerLevel}</span>
-              <div className="w-32 h-2.5 bg-black/50 rounded-full overflow-hidden border border-slate-700">
-                <div className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full" style={{ width: `${xpPercentage}%` }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* === Phần Tài nguyên & Cài đặt === */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <CurrencyDisplay icon={BookIcon} amount={ancientBooks} className="hidden md:flex text-yellow-300" />
-          <CurrencyDisplay icon={GoldIcon} amount={gold} />
-          <CurrencyDisplay icon={GemIcon} amount={gems} />
-          <button className="w-10 h-10 flex items-center justify-center bg-slate-900/50 border border-slate-700 rounded-full text-slate-400 hover:text-cyan-300 hover:border-cyan-500 transition-colors duration-200">
-            <SettingsIcon className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-    </header>
-  );
-};
+// --- END: POPUP CHẾ TẠO THÀNH CÔNG MỚI ---
 
 // --- COMPONENT CHÍNH ---
 export default function SkillScreen() {
@@ -212,19 +191,14 @@ export default function SkillScreen() {
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [newlyCraftedSkill, setNewlyCraftedSkill] = useState<Skill | null>(null);
   
-  // --- DỮ LIỆU MẪU CHO HEADER ---
-  const [playerInfo] = useState({
-    name: 'ShadowMancer',
-    level: 25,
-    xpCurrent: 1250,
-    xpMax: 3000,
-    avatarUrl: 'https://i.pravatar.cc/150?u=shadowmancer', // Dùng ảnh placeholder
-    gold: 15800,
-    gems: 850,
-  });
-  
   const [ownedSkills, setOwnedSkills] = useState<Skill[]>([ALL_SKILLS[0]]);
   const [craftableSkills, setCraftableSkills] = useState<Skill[]>(ALL_SKILLS.slice(1));
+  
+  // --- START: MỚI ---
+  // Thêm state cho thông tin người dùng và vàng
+  const [user, setUser] = useState({ name: 'Thợ Rèn Z', avatar: 'https://i.pravatar.cc/40?u=adventurer' });
+  const [gold, setGold] = useState(12500);
+  // --- END: MỚI ---
 
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
@@ -282,44 +256,39 @@ export default function SkillScreen() {
         @keyframes spin-slow-360 { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
       
-      {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[110]">{message}</div>}
+      {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-50">{message}</div>}
 
       {selectedSkill && <SkillDetailModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} onEquip={handleEquipSkill} isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)} />}
 
       {newlyCraftedSkill && <CraftingSuccessModal skill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
 
+      {/* --- START: MỚI --- */}
+      {/* Cấu trúc layout chính được cập nhật để chứa Header */}
       <div className="relative z-10 flex flex-col w-full h-screen">
         <Header 
-          playerName={playerInfo.name}
-          playerLevel={playerInfo.level}
-          xpCurrent={playerInfo.xpCurrent}
-          xpMax={playerInfo.xpMax}
-          avatarUrl={playerInfo.avatarUrl}
-          gold={playerInfo.gold}
-          gems={playerInfo.gems}
-          ancientBooks={ancientBooks}
+          username={user.name} 
+          avatarUrl={user.avatar} 
+          gold={gold} 
+          ancientBooks={ancientBooks} 
         />
-        
-        <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 sm:px-6 md:px-8 py-4">
+        <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 p-4 sm:p-6 md:p-8">
             <section className="flex-shrink-0 py-4">
                 <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
                     {equippedSkills.map((skill, index) => (<SkillSlot key={`equipped-${index}`} skill={skill} onClick={() => handleUnequipSkill(index)} />))}
                 </div>
             </section>
-            
             <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
-                 <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                     <BookIcon className="w-8 h-8 text-yellow-300" />
-                    <div>
-                        <span className="text-xs text-slate-400">Chi phí Train</span>
-                        <p className="text-xl font-bold text-white">{CRAFTING_COST}</p>
+                    <div className="text-left">
+                        <span className="text-xs text-slate-400">Sách Cổ</span>
+                        <p className="text-xl font-bold text-white">{ancientBooks}</p>
                     </div>
                 </div>
                 <button onClick={handleTrainAndCraft} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
-                  Train Kỹ Năng
+                  Train ({CRAFTING_COST})
                 </button>
             </section>
-
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                 <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0 title-glow">Kho Kỹ Năng</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
@@ -332,6 +301,7 @@ export default function SkillScreen() {
             </section>
         </main>
       </div>
+      {/* --- END: MỚI --- */}
     </div>
   );
 }
