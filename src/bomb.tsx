@@ -47,7 +47,7 @@ const CustomAnimationStyles = () => (
       0%, 100% { transform: translateX(0); }
       25% { transform: translateX(-3px); }
       50% { transform: translateX(3px); }
-      75% { transform: translateX(-3px); }
+      75% { translateX(-3px); }
     }
     .cell-shake {
       animation: gentle-shake-animation ${OPEN_CELL_DELAY}ms ease-in-out both;
@@ -104,7 +104,7 @@ const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
     );
 });
 
-// GIẢI PHÁP: Thay đổi Props để nhận một callback `onClose` duy nhất
+// GIẢI PHÁP: Thay đổi Props để nhận một callback `onClose` duy nhất với dữ liệu tổng kết
 interface MinerChallengeProps {
   onClose: (result: {
     finalPickaxes: number;
@@ -147,7 +147,7 @@ export default function MinerChallenge({
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState(null);
 
-  // GIẢI PHÁP: Quản lý state cục bộ, không gọi prop ra ngoài nữa
+  // GIẢI PHÁP: Quản lý state cục bộ, không gọi prop ra ngoài liên tục nữa
   const [pickaxes, setPickaxes] = useState(initialPickaxes);
   const [coinsEarned, setCoinsEarned] = useState(0); // Chỉ theo dõi tiền kiếm được trong phiên này
   const [animatedDisplayedCoins, setAnimatedDisplayedCoins] = useState(displayedCoins);
@@ -156,26 +156,6 @@ export default function MinerChallenge({
 
   // GIẢI PHÁP: Ref để theo dõi trạng thái đã lưu khi unmount hay chưa
   const savedOnExit = useRef(false);
-
-  const collectAllVisibleCoins = useCallback(() => {
-      const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
-      let totalReward = 0;
-      const newBoard = board.map(row =>
-          row.map(cell => {
-              if(cell.isRevealed && cell.isCoin && !cell.isCollected) {
-                  totalReward += rewardPerCoin;
-                  return { ...cell, isCollected: true };
-              }
-              return cell;
-          })
-      );
-      if(totalReward > 0) {
-          setBoard(newBoard);
-          setCoinsEarned(prev => prev + totalReward); // Cập nhật state nội bộ
-          // Animate số coin hiển thị
-          startCoinCountAnimation(animatedDisplayedCoins, animatedDisplayedCoins + totalReward);
-      }
-  }, [board, masteryCards, currentFloor, animatedDisplayedCoins]);
 
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
@@ -192,6 +172,26 @@ export default function MinerChallenge({
       }
     }, 30);
   }, []);
+
+  const collectAllVisibleCoins = useCallback(() => {
+      const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
+      let totalReward = 0;
+      const newBoard = board.map(row =>
+          row.map(cell => {
+              if(cell.isRevealed && cell.isCoin && !cell.isCollected) {
+                  totalReward += rewardPerCoin;
+                  return { ...cell, isCollected: true };
+              }
+              return cell;
+          })
+      );
+      if(totalReward > 0) {
+          setBoard(newBoard);
+          setCoinsEarned(prev => prev + totalReward); // Cập nhật state nội bộ
+          // Animate số coin hiển thị bằng cách cộng vào số coin đã có
+          startCoinCountAnimation(animatedDisplayedCoins, animatedDisplayedCoins + totalReward);
+      }
+  }, [board, masteryCards, currentFloor, animatedDisplayedCoins, startCoinCountAnimation]);
 
   const updateCell = (x, y, newProps) => {
     setBoard(prevBoard => prevBoard.map((row, rowIndex) => rowIndex !== y ? row : row.map((cell, colIndex) => colIndex !== x ? cell : { ...cell, ...newProps })));
@@ -256,7 +256,7 @@ export default function MinerChallenge({
         processCellOpening(x, y);
         setIsOpening(null);
     }, OPEN_CELL_DELAY);
-  }, [board, collectAllVisibleCoins, pickaxes, isOpening]);
+  }, [board, collectAllVisibleCoins, pickaxes, isOpening, processCellOpening]);
 
   const handleRightClick = useCallback((e, x, y) => {
     e.preventDefault();
@@ -284,8 +284,9 @@ export default function MinerChallenge({
 
   // GIẢI PHÁP: Hàm duy nhất để đóng và lưu game
   const handleCloseAndSave = useCallback(() => {
-    if (savedOnExit.current) return; // Chỉ lưu một lần
+    if (savedOnExit.current) return; // Đảm bảo chỉ lưu một lần
 
+    // Tự động thu thập tiền còn lại trên bàn cờ khi thoát
     let uncollectedReward = 0;
     const rewardPerCoinOnCurrentFloor = Math.max(1, masteryCards) * currentFloor;
     board.flat().forEach(cell => {
@@ -296,6 +297,7 @@ export default function MinerChallenge({
 
     const totalCoinsToUpdate = coinsEarned + uncollectedReward;
 
+    // Gửi gói dữ liệu tổng kết về cho component cha
     onClose({
         finalPickaxes: pickaxes,
         coinsEarned: totalCoinsToUpdate,
@@ -304,7 +306,7 @@ export default function MinerChallenge({
     savedOnExit.current = true;
   }, [board, pickaxes, coinsEarned, highestFloorCompleted, masteryCards, currentFloor, onClose]);
 
-  // GIẢI PHÁP: Đảm bảo dữ liệu được lưu ngay cả khi component bị unmount đột ngột (ví dụ: đóng tab)
+  // GIẢI PHÁP: Đảm bảo dữ liệu được lưu ngay cả khi component bị unmount đột ngột
   useEffect(() => {
       return () => {
           handleCloseAndSave();
@@ -319,7 +321,7 @@ export default function MinerChallenge({
       <header className="fixed top-0 left-0 w-full z-10 bg-slate-900/70 backdrop-blur-sm border-b border-slate-700/80">
         <div className="w-full max-w-md mx-auto flex items-center justify-between py-3 px-4">
           <button
-              onClick={handleCloseAndSave} // Gọi hàm lưu và đóng
+              onClick={handleCloseAndSave} // GIẢI PHÁP: Gọi hàm lưu và đóng
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
               aria-label="Home"
               title="Home"
@@ -335,7 +337,6 @@ export default function MinerChallenge({
       </header>
       <div className="w-full max-w-xs sm:max-w-sm mx-auto pt-24">
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
-            {/* UI hiển thị không thay đổi */}
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
                 <StairsIcon className="w-6 h-6 object-contain opacity-70" />
                 <div className="flex flex-col text-left">
@@ -368,6 +369,7 @@ export default function MinerChallenge({
                 </div>
             </div>
         </div>
+
         <div className="relative">
           <div className="w-full aspect-square">
             <div
@@ -391,6 +393,7 @@ export default function MinerChallenge({
           </div>
         </div>
       </div>
+
       {exitConfirmationPos && (
          <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
