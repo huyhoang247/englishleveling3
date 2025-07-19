@@ -23,6 +23,7 @@ import MinerChallenge from './bomb.tsx';
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
+import BaseBuildingScreen from './can-cu.tsx';
 
 // --- SVG Icon Components ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -132,6 +133,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [isUpgradeScreenOpen, setIsUpgradeScreenOpen] = useState(false);
+  const [isBaseBuildingOpen, setIsBaseBuildingOpen] = useState(false);
 
   // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
@@ -501,7 +503,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 hideNavBar();
                 [ setIsRankOpen, setIsInventoryOpen, setIsLuckyGameOpen, setIsBlacksmithOpen, 
                   setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, 
-                  setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen
+                  setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen
                 ].forEach(s => { if (s !== setter) s(false); });
             } else { showNavBar(); }
             return newState;
@@ -520,9 +522,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const toggleAchievements = createToggleFunction(setIsAchievementsOpen);
   const toggleAdminPanel = createToggleFunction(setIsAdminPanelOpen);
   const toggleUpgradeScreen = createToggleFunction(setIsUpgradeScreenOpen);
+  const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
   const handleSetToggleSidebar = (toggleFn: () => void) => { sidebarToggleRef.current = toggleFn; };
 
-  const isAnyOverlayOpen = isRankOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
+  const isAnyOverlayOpen = isRankOpen || isInventoryOpen || isLuckyGameOpen || isBlacksmithOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
@@ -542,7 +545,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank}
           onShowLuckyGame={toggleLuckyGame} onShowMinerChallenge={toggleMinerChallenge}
           onShowAchievements={toggleAchievements} onShowUpgrade={toggleUpgradeScreen}
-          onShowAdmin={isAdmin ? toggleAdminPanel : undefined}
+          onShowBaseBuilding={toggleBaseBuilding} onShowAdmin={isAdmin ? toggleAdminPanel : undefined}
       >
         <DungeonCanvasBackground isPaused={isGamePaused} />
         <div style={{ display: isAnyOverlayOpen ? 'none' : 'block', visibility: isLoading ? 'hidden' : 'visible' }} className="w-full h-full">
@@ -635,6 +638,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             </ErrorBoundary>
         </div>
         
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBaseBuildingOpen ? 'block' : 'none' }}>
+            <ErrorBoundary>
+                {isBaseBuildingOpen && (
+                    <BaseBuildingScreen
+                        onClose={toggleBaseBuilding}
+                    />
+                )}
+            </ErrorBoundary>
+        </div>
+
         <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}> <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary> </div>
       </SidebarLayout>
 
