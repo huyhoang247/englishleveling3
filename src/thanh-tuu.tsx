@@ -1,3 +1,5 @@
+// --- START OF FILE thanh-tuu.tsx (5).txt ---
+
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import CoinDisplay from './coin-display.tsx';
 
@@ -306,7 +308,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
         </div>
         
         <footer className="text-center mt-8 text-slate-500 text-sm">
-          
+          <p>Thiết kế bởi Gemini. Chúc bạn học tốt!</p>
         </footer>
       </div>
     </div>
@@ -331,66 +333,98 @@ function VocabularyRow({ item, rank, onClaim, isBeingClaimed, isAnyClaiming, isC
       <div className="col-span-10 md:col-span-3"> <p className="font-bold text-lg text-white">{word}</p> <span className="md:hidden text-xs text-slate-400">{`Cấp ${level}`}</span> <span className="hidden md:block text-xs text-slate-400">{`Cấp ${level}`}</span> </div>
       <div className="col-span-12 md:col-span-3 md:px-2"> <div className="w-full bg-slate-700 rounded-full h-3"> <div className="bg-gradient-to-r from-teal-400 to-cyan-500 h-3 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div> </div> <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p> </div>
       <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">x1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
-      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming || isClaimingAll} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming && !isClaimingAll ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isBeingClaimed ? 'Đang nhận...' : isClaimable ? 'Nhận' : 'Chưa Đạt'} </button> d</div>
+      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming || isClaimingAll} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming && !isClaimingAll ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isBeingClaimed ? 'Đang nhận...' : isClaimable ? 'Nhận' : 'Chưa Đạt'} </button> </div>
     </div>
   );
 }
 
+// --- [ĐÃ CẬP NHẬT] Component Phân Trang ---
 const PaginationControls = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void; }) => {
     if (totalPages <= 1) return null;
-    
-    // --- START: LOGIC PHÂN TRANG ĐÃ ĐƯỢC THIẾT KẾ LẠI ---
+
     const getPageNumbers = () => {
         const pageNumbers: (number | string)[] = [];
-        const siblingCount = 1; // Số trang hiển thị ở mỗi bên của trang hiện tại.
-        const totalSlots = siblingCount + 5; // Tổng số "slot" hiển thị: 1(first) + 1(last) + 1(current) + 2*siblingCount + 2(ellipses)
+        // Giới hạn số lượng nút hiển thị để tránh tràn giao diện (ví dụ: [1, '...', 4, 5, 6, '...', 10])
+        const maxVisibleButtons = 7; 
 
-        // TH1: Nếu tổng số trang ít, hiển thị tất cả.
-        if (totalPages <= totalSlots) {
+        // Trường hợp 1: Tổng số trang nhỏ, hiển thị tất cả các số trang
+        if (totalPages <= maxVisibleButtons) {
             for (let i = 1; i <= totalPages; i++) {
                 pageNumbers.push(i);
             }
             return pageNumbers;
         }
 
-        // TH2: Tổng số trang nhiều, cần tính toán để hiển thị rút gọn.
-        const pagesToShow = new Set<number>();
-
-        // Luôn thêm trang đầu và trang cuối
-        pagesToShow.add(1);
-        pagesToShow.add(totalPages);
+        // Trường hợp 2: Tổng số trang lớn, cần dùng dấu "..."
+        const mainPages = new Set<number>();
         
-        // Thêm trang hiện tại và các trang lân cận
-        for (let i = -siblingCount; i <= siblingCount; i++) {
-            const page = currentPage + i;
-            if (page > 1 && page < totalPages) { // Chỉ thêm nếu không phải là trang đầu/cuối
-                pagesToShow.add(page);
-            }
-        }
-        // Thêm trang hiện tại nếu nó là trang đầu hoặc cuối
-         pagesToShow.add(currentPage);
+        // Luôn hiển thị trang đầu và trang cuối
+        mainPages.add(1);
+        mainPages.add(totalPages);
+        
+        // Hiển thị trang hiện tại và các trang liền kề
+        mainPages.add(currentPage);
+        if (currentPage > 1) mainPages.add(currentPage - 1);
+        if (currentPage < totalPages) mainPages.add(currentPage + 1);
 
-        // Chuyển Set thành mảng đã sắp xếp và thêm dấu '...'
-        const sortedPages = Array.from(pagesToShow).sort((a, b) => a - b);
+        // Chuyển Set thành mảng đã sắp xếp
+        const sortedPages = Array.from(mainPages).sort((a, b) => a - b);
+        
         let lastPage: number | null = null;
         for (const page of sortedPages) {
+            // Thêm dấu "..." nếu có khoảng trống giữa các số trang
             if (lastPage !== null && page - lastPage > 1) {
                 pageNumbers.push('...');
             }
             pageNumbers.push(page);
             lastPage = page;
         }
-
+        
         return pageNumbers;
-    }
-    // --- END: LOGIC PHÂN TRANG ĐÃ ĐƯỢC THIẾT KẾ LẠI ---
-    
+    };
+
     const pages = getPageNumbers();
+
     return (
         <nav className="flex items-center justify-center gap-2" aria-label="Pagination">
-            <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" aria-label="Previous Page"> <ChevronLeftIcon className="w-5 h-5" /> </button>
-            {pages.map((page, index) => typeof page === 'number' ? ( <button key={index} onClick={() => onPageChange(page)} className={` px-4 py-2 text-sm font-semibold rounded-lg border border-slate-700 transition-colors ${currentPage === page ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700' } `} aria-current={currentPage === page ? 'page' : undefined}> {page} </button> ) : ( <span key={index} className="px-2 py-2 text-sm text-slate-500" aria-hidden="true"> {page} </span> ) )}
-            <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" aria-label="Next Page"> <ChevronRightIcon className="w-5 h-5" /> </button>
+            <button 
+                onClick={() => onPageChange(currentPage - 1)} 
+                disabled={currentPage === 1} 
+                className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
+                aria-label="Previous Page"
+            >
+                <ChevronLeftIcon className="w-5 h-5" />
+            </button>
+
+            {pages.map((page, index) => 
+                typeof page === 'number' ? ( 
+                    <button 
+                        key={index} 
+                        onClick={() => onPageChange(page)} 
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg border border-slate-700 transition-colors ${
+                            currentPage === page 
+                            ? 'bg-cyan-500 text-white border-cyan-400' 
+                            : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
+                        }`} 
+                        aria-current={currentPage === page ? 'page' : undefined}
+                    >
+                        {page}
+                    </button> 
+                ) : ( 
+                    <span key={index} className="px-2 py-2 text-sm text-slate-500" aria-hidden="true">
+                        {page}
+                    </span> 
+                )
+            )}
+
+            <button 
+                onClick={() => onPageChange(currentPage + 1)} 
+                disabled={currentPage === totalPages} 
+                className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
+                aria-label="Next Page"
+            >
+                <ChevronRightIcon className="w-5 h-5" />
+            </button>
         </nav>
     );
 };
