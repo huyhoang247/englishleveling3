@@ -35,11 +35,13 @@ const CRAFTING_COST = 50;
 
 // --- CÁC COMPONENT CON ---
 
+// --- START: HEADER ĐÃ CHỈNH SỬA ---
 const Header = ({ gold, ancientBooks }: { gold: number; ancientBooks: number; }) => {
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
             <div className="w-full max-w-5xl mx-auto flex justify-end items-center py-3 px-4 sm:px-0">
                 <div className="flex items-center gap-4 sm:gap-6">
+                    {/* Resources */}
                     <div className="flex items-center gap-2 p-2 bg-slate-900/50 rounded-md border border-slate-700/50">
                         <GoldIcon className="w-6 h-6" />
                         <span className="font-bold text-yellow-300 text-sm">{gold.toLocaleString()}</span>
@@ -53,6 +55,7 @@ const Header = ({ gold, ancientBooks }: { gold: number; ancientBooks: number; })
         </header>
     );
 };
+// --- END: HEADER ĐÃ CHỈNH SỬA ---
 
 const SkillSlot = ({ skill, onClick }: { skill: Skill | null, onClick: () => void }) => {
   const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center cursor-pointer group";
@@ -177,7 +180,10 @@ export default function SkillScreen() {
   const [ownedSkills, setOwnedSkills] = useState<Skill[]>([ALL_SKILLS[0]]);
   const [craftableSkills, setCraftableSkills] = useState<Skill[]>(ALL_SKILLS.slice(1));
   
+  // --- START: CHỈNH SỬA ---
+  // Xóa state user, chỉ giữ lại state gold
   const [gold, setGold] = useState(12500);
+  // --- END: CHỈNH SỬA ---
 
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
@@ -242,37 +248,30 @@ export default function SkillScreen() {
       {newlyCraftedSkill && <CraftingSuccessModal skill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
 
       <div className="relative z-10 flex flex-col w-full h-screen">
+        {/* --- START: CHỈNH SỬA --- */}
+        {/* Cập nhật cách gọi Header */}
         <Header gold={gold} ancientBooks={ancientBooks} />
+        {/* --- END: CHỈNH SỬA --- */}
         <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 p-4 sm:p-6 md:p-8">
             <section className="flex-shrink-0 py-4">
                 <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
                     {equippedSkills.map((skill, index) => (<SkillSlot key={`equipped-${index}`} skill={skill} onClick={() => handleUnequipSkill(index)} />))}
                 </div>
             </section>
-            
-            {/* --- START: KHU VỰC CRAFTING ĐÃ ĐƯỢC THIẾT KẾ LẠI --- */}
-            <section className="flex-shrink-0 p-4 bg-slate-900/50 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center gap-4">
-                <div className="flex-grow">
-                    <h3 className="text-lg font-bold text-white">Nghiên Cứu Kỹ Năng Mới</h3>
-                    <p className="text-sm text-slate-400 mt-1">Sử dụng Sách Cổ để nhận một kỹ năng ngẫu nhiên.</p>
-                </div>
-                <div className="flex-shrink-0 flex flex-col items-center gap-2">
-                    <button 
-                      onClick={handleTrainAndCraft} 
-                      className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-2 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
-                      disabled={ancientBooks < CRAFTING_COST || craftableSkills.length === 0}
-                    >
-                      Nghiên Cứu
-                    </button>
-                    <div className="flex items-center gap-2 text-xs text-slate-300">
-                        <span className="font-semibold">Chi phí:</span>
-                        <BookIcon className="w-4 h-4 text-yellow-300"/>
-                        <span className="font-bold text-white">{CRAFTING_COST}</span>
+            {/* --- START: ĐÃ CHỈNH SỬA --- */}
+            <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                    <BookIcon className="w-8 h-8 text-yellow-300" />
+                    <div className="text-left">
+                        <p className="text-xl font-bold text-white">{ancientBooks}</p>
+                        <span className="text-xs text-slate-400 -mt-1 block">Sách Cổ (Cần {CRAFTING_COST})</span>
                     </div>
                 </div>
+                <button onClick={handleTrainAndCraft} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
+                  Train
+                </button>
             </section>
-            {/* --- END: KHU VỰC CRAFTING ĐÃ ĐƯỢC THIẾT KẾ LẠI --- */}
-
+            {/* --- END: ĐÃ CHỈNH SỬA --- */}
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                 <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0 title-glow">Kho Kỹ Năng</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
