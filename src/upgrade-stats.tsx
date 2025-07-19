@@ -130,8 +130,7 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   );
 };
 
-
-// >>> THAY ĐỔI 1: CẬP NHẬT INTERFACE PROPS
+// INTERFACE ĐỊNH NGHĨA CÁC PROPS MỚI
 interface UpgradeStatsScreenProps {
   onClose: () => void;
   initialGold: number;
@@ -187,7 +186,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
   }, []);
 
 
-  // >>> THAY ĐỔI 2: VIẾT LẠI HÀM NÂNG CẤP VỚI LOGIC OPTIMISTIC UPDATE
+  // HÀM NÂNG CẤP ĐÃ ĐƯỢC TỐI ƯU VỚI LOGIC OPTIMISTIC UPDATE
   const handleUpgrade = async (statId: string) => {
     if (upgradingId) return;
 
