@@ -14,8 +14,8 @@ const LockIcon = (props) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24"
 
 // --- CẤU HÌNH GAME ---
 const MAX_LEVEL_PER_BASE = 5;
-const INITIAL_CRYSTALS = 500;
-const INITIAL_GOLD_STORAGE = 1000;
+const INITIAL_CRYSTALS = 5000;
+const INITIAL_GOLD_STORAGE = 10000;
 
 // Tạo một danh sách phẳng của tất cả các căn cứ
 const ALL_BASES = [
