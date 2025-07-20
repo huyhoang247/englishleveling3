@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx ---
+// --- START OF FILE background-game.tsx (UPDATED) ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -120,6 +120,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
   const [userStats, setUserStats] = useState({ hp: 0, atk: 0, def: 0 });
   const [jackpotPool, setJackpotPool] = useState(0);
+  // >>> THÊM STATE MỚI ĐỂ LƯU TẦNG BOSS CAO NHẤT <<<
+  const [bossBattleHighestFloor, setBossBattleHighestFloor] = useState(0);
+
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
@@ -207,14 +210,21 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setMasteryCards(userData.masteryCards || 0); setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50);
         setMinerChallengeHighestFloor(userData.minerChallengeHighestFloor || 0);
         setUserStats(userData.stats || { hp: 0, atk: 0, def: 0 });
+        // >>> ĐỌC DỮ LIỆU TẦNG BOSS TỪ FIRESTORE <<<
+        setBossBattleHighestFloor(userData.bossBattleHighestFloor || 0);
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
           coins: 0, gems: 0, masteryCards: 0, stats: { hp: 0, atk: 0, def: 0 },
-          pickaxes: 50, minerChallengeHighestFloor: 0, createdAt: new Date(),
+          pickaxes: 50, minerChallengeHighestFloor: 0, 
+          // >>> THIẾT LẬP GIÁ TRỊ MẶC ĐỊNH CHO NGƯỜI DÙNG MỚI <<<
+          bossBattleHighestFloor: 0,
+          createdAt: new Date(),
         });
         setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0); setPickaxes(50);
         setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
+        // >>> SET STATE MẶC ĐỊNH <<<
+        setBossBattleHighestFloor(0);
       }
     } catch (error) { console.error("Error fetching user data:", error); } 
     finally { setIsLoadingUserData(false); }
@@ -233,6 +243,30 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }
     } catch (error) { console.error("Error fetching jackpot pool:", error); }
   };
+    
+  // >>> THÊM HÀM MỚI ĐỂ CẬP NHẬT TẦNG BOSS LÊN FIRESTORE <<<
+  const handleBossFloorUpdate = async (newFloor: number) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+      console.error("Cannot update boss floor: User not authenticated.");
+      return;
+    }
+    // Chỉ cập nhật nếu tầng mới cao hơn tầng hiện tại
+    if (newFloor <= bossBattleHighestFloor) {
+      console.log(`New floor ${newFloor} is not higher than current ${bossBattleHighestFloor}. No update needed.`);
+      return;
+    }
+    const userDocRef = doc(db, 'users', userId);
+    try {
+      // Dùng setDoc với merge: true để chỉ cập nhật hoặc tạo mới trường này
+      await setDoc(userDocRef, { bossBattleHighestFloor: newFloor }, { merge: true });
+      setBossBattleHighestFloor(newFloor); // Cập nhật state cục bộ
+      console.log(`Updated boss floor to ${newFloor} for user ${userId}.`);
+    } catch (error) {
+      console.error("Firestore update failed for boss floor: ", error);
+    }
+  };
+
 
   const updateCoinsInFirestore = async (userId: string, amount: number) => {
     if (!userId) { console.error("Cannot update coins: User not authenticated."); return; }
@@ -369,8 +403,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   const handleGemReward = (amount: number) => { setGems(prev => prev + amount); };
     
-  // >>> ĐÂY LÀ HÀM MỚI QUAN TRỌNG NHẤT <<<
-  // HÀM NÀY SỬ DỤNG TRANSACTION ĐỂ ĐẢM BẢO TÍNH TOÀN VẸN DỮ LIỆU
   const handleConfirmStatUpgrade = async (
     userId: string,
     upgradeCost: number,
@@ -378,42 +410,31 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   ) => {
     if (!userId) {
       console.error("Không thể nâng cấp: Người dùng chưa xác thực.");
-      throw new Error("Người dùng chưa xác thực"); // Ném lỗi để component con có thể bắt
+      throw new Error("Người dùng chưa xác thực"); 
     }
     const userDocRef = doc(db, 'users', userId);
-
     setIsSyncingData(true);
-
     try {
       await runTransaction(db, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
         if (!userDoc.exists()) {
           throw "Tài liệu người dùng không tồn tại!";
         }
-
         const currentCoins = userDoc.data().coins || 0;
         if (currentCoins < upgradeCost) {
-          throw new Error("Không đủ vàng trên server."); // Kiểm tra lại ở server để tránh lỗi
+          throw new Error("Không đủ vàng trên server."); 
         }
-        
         const newCoins = currentCoins - upgradeCost;
-
-        // Thực hiện cả hai cập nhật trong cùng một transaction nguyên tử
         transaction.update(userDocRef, {
           coins: newCoins,
           stats: newStats,
         });
       });
-
-      // Nếu transaction thành công, cập nhật state của component cha để đồng bộ.
-      // Việc này đảm bảo state của game luôn đúng cho lần mở màn hình tiếp theo.
       console.log(`Nâng cấp chỉ số thành công cho user ${userId}. Dữ liệu đã nhất quán.`);
       setCoins(prevCoins => prevCoins - upgradeCost);
       setUserStats(newStats);
-
     } catch (error) {
       console.error("Giao dịch Firestore cho việc nâng cấp chỉ số thất bại: ", error);
-      // Ném lại lỗi để khối `catch` của component con có thể thực thi và khôi phục UI.
       throw error;
     } finally {
       setIsSyncingData(false);
@@ -430,6 +451,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false);
         setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
+        // >>> RESET STATE TẦNG BOSS KHI LOGOUT <<<
+        setBossBattleHighestFloor(0);
         setJackpotPool(0); setIsLoadingUserData(true); setVocabularyData(null);
       }
     });
@@ -468,9 +491,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     if (!userId) { console.error("Cannot claim reward: User not authenticated."); throw new Error("User not authenticated"); }
     const userDocRef = doc(db, 'users', userId);
     const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-    
     setIsSyncingData(true);
-
     try {
         await runTransaction(db, async (transaction) => {
             const userDoc = await transaction.get(userDocRef);
@@ -572,7 +593,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 </div>
             </div>
 
-            {/* --- Thanh thông báo "Thao tác quá nhanh" --- */}
             <div className={`absolute top-14 right-4 z-40 transform transition-all duration-300 ${showRateLimitToast ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-5 pointer-events-none'}`}>
                 <div className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-sm text-amber-200 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg border border-amber-400/50">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
@@ -615,13 +635,28 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
 
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBossBattleOpen ? 'block' : 'none' }}>
-            <ErrorBoundary> {isBossBattleOpen && auth.currentUser && ( <BossBattle onClose={toggleBossBattle} playerInitialStats={getPlayerBattleStats()} onBattleEnd={(result, rewards) => { console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`); if (result === 'win' && auth.currentUser) { updateCoinsInFirestore(auth.currentUser.uid, rewards.coins); } }} /> )} </ErrorBoundary>
+            <ErrorBoundary>
+                {isBossBattleOpen && auth.currentUser && (
+                    <BossBattle
+                        onClose={toggleBossBattle}
+                        playerInitialStats={getPlayerBattleStats()}
+                        onBattleEnd={(result, rewards) => {
+                            console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`);
+                            if (result === 'win' && auth.currentUser) {
+                                updateCoinsInFirestore(auth.currentUser.uid, rewards.coins);
+                            }
+                        }}
+                        // >>> TRUYỀN PROP MỚI VÀO COMPONENT BOSS <<<
+                        initialFloor={bossBattleHighestFloor}
+                        onFloorComplete={handleBossFloorUpdate}
+                    />
+                )}
+            </ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} />}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> <ErrorBoundary>{isVocabularyChestOpen && currentUser && ( <VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)} onGemReward={handleGemReward} displayedCoins={displayedCoins} /> )}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}> <ErrorBoundary> {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && ( <AchievementsScreen onClose={toggleAchievements} userId={auth.currentUser.uid} initialData={vocabularyData} onClaimReward={handleRewardClaim} masteryCardsCount={masteryCards} displayedCoins={displayedCoins} /> )} </ErrorBoundary> </div>
         
-        {/* >>> ĐÂY LÀ CHỖ THAY ĐỔI PROP <<< */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isUpgradeScreenOpen && auth.currentUser && (
@@ -629,7 +664,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClose={toggleUpgradeScreen}
                         initialGold={coins}
                         initialStats={userStats}
-                        // Thay thế các prop cũ bằng một hàm nguyên tử, an toàn duy nhất
                         onConfirmUpgrade={(cost, newStats) =>
                           handleConfirmStatUpgrade(auth.currentUser!.uid, cost, newStats)
                         }
