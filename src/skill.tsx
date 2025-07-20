@@ -109,7 +109,7 @@ const ALL_SKILLS: SkillBlueprint[] = [
 ];
 // --- END: CẤU TRÚC DỮ LIỆU MỚI CHO KỸ NĂNG ---
 
-const CRAFTING_COST = 50;
+const CRAFTING_COST = 10;
 
 // --- CÁC COMPONENT CON ---
 const Header = ({ gold, ancientBooks }: { gold: number; ancientBooks: number; }) => {
