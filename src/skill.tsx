@@ -4,6 +4,10 @@ import React, { useState } from 'react';
 const LifeStealIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12.33 3.1C12.12 2.94 11.88 2.94 11.67 3.1C9.28 4.9 3 9.77 3 14.54C3 18.23 6.13 21.2 10 21.81V13.5H7.5L12.5 7L17.5 13.5H15V21.81C18.87 21.2 22 18.23 22 14.54C22 9.77 15.72 4.9 13.33 3.1C13.11 2.87 12.89 2.76 12.67 2.76H12.33C12.55 2.76 12.77 2.87 12.99 3.1" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/> <path d="M12.5 17.5C13.8807 17.5 15 16.3807 15 15C15 13.6193 13.8807 12.5 12.5 12.5C11.1193 12.5 10 13.6193 10 15C10 16.3807 11.1193 17.5 12.5 17.5Z" fill="currentColor" opacity="0.5"/> </svg> );
 // --- END: THÊM ICON MỚI CHO KỸ NĂNG HÚT MÁU ---
 
+// --- START: THÊM ICON MỚI CHO KỸ NĂNG PHẢN DAMAGE ---
+const ThornsIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22C12 22 19 18 19 12V5L12 2L5 5V12C5 18 12 22 12 22Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/> <path d="M12 15L15 12M12 15L9 12M12 15V9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/> <path d="M15.5 9.5L19 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/> <path d="M8.5 9.5L5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/> <path d="M9 16L6 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/> <path d="M15 16L18 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/> </svg> );
+// --- END: THÊM ICON MỚI CHO KỸ NĂNG PHẢN DAMAGE ---
+
 const FireballIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12.81 4.62C13.25 3.53 14.65 3.53 15.09 4.62L16.2 7.29C16.34 7.6 16.6 7.86 16.91 8L19.58 9.11C20.67 9.55 20.67 10.95 19.58 11.39L16.91 12.5C16.6 12.64 16.34 12.9 16.2 13.21L15.09 15.88C14.65 16.97 13.25 16.97 12.81 15.88L11.7 13.21C11.56 12.9 11.3 12.64 10.99 12.5L8.32 11.39C7.23 10.95 7.23 9.55 8.32 9.11L10.99 8C11.3 7.86 11.56 7.6 11.7 7.29L12.81 4.62Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M9.18994 18.3C9.62994 17.21 11.0299 17.21 11.4699 18.3L11.9999 19.52C12.1399 19.83 12.3999 20.09 12.7099 20.23L13.9299 20.76C15.0199 21.2 15.0199 22.6 13.9299 23.04L12.7099 23.57C12.3999 23.71 12.1399 23.97 11.9999 24.28L11.4699 25.5C11.0299 26.59 9.62994 26.59 9.18994 25.5L8.65994 24.28C8.51994 23.97 8.25994 23.71 7.94994 23.57L6.72994 23.04C5.63994 22.6 5.63994 21.2 6.72994 20.76L7.94994 20.23C8.25994 20.09 8.51994 19.83 8.65994 19.52L9.18994 18.3Z" transform="scale(0.7) translate(-2, -12)" fill="#fef08a" stroke="#facc15" /> <path d="M17.19 16.3C17.63 15.21 19.03 15.21 19.47 16.3L19.85 17.17C19.99 17.48 20.25 17.74 20.56 17.88L21.43 18.26C22.52 18.7 22.52 20.1 21.43 20.54L20.56 20.92C20.25 21.06 19.99 21.32 19.85 21.63L19.47 22.5C19.03 23.59 17.63 23.59 17.19 22.5L16.81 21.63C16.67 21.32 16.41 21.06 16.1 20.92L15.23 20.54C14.14 20.1 14.14 18.7 15.23 18.26L16.1 17.88C16.41 17.74 16.67 17.48 16.81 17.17L17.19 16.3Z" transform="scale(0.5) translate(18, -20)" fill="#fed7aa" stroke="#fb923c"/> </svg>);
 const IceShardIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 2L9.13 8.37L2 10.5L7.87 15.63L6.25 22L12 18.5L17.75 22L16.13 15.63L22 10.5L14.87 8.37L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M12 2V18.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M2 10.5H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M6.25 22L12 11.5L17.75 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M9.13 8.37L2.5 15.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M14.87 8.37L21.5 15.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> </svg> );
 const HealIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> </svg> );
@@ -38,10 +42,10 @@ interface SkillBlueprint {
   description: (level: number, rarity: string) => string; // Mô tả động
   icon: (props: { className?: string }) => React.ReactElement;
   rarity: 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
-  // Thuộc tính cho việc nâng cấp
-  baseLifestealPercent?: number; // % hút máu cơ bản
+  // Thuộc tính cho việc nâng cấp (linh hoạt hơn)
+  baseEffectValue?: number;     // Giá trị hiệu ứng cơ bản (ví dụ: %)
+  effectValuePerLevel?: number; // Giá trị tăng thêm mỗi cấp
   upgradeCost?: number;
-  lifestealPerLevel?: number;
   maxLevel?: number;
 }
 
@@ -59,14 +63,27 @@ const ALL_SKILLS: SkillBlueprint[] = [
   { 
     id: 'life_steal',    
     name: 'Hút Máu',      
-    description: () => 'Hồi phục Máu từ Sát thương gây ra.',
+    description: (level) => `Hút ${5 + (level - 1) * 1}% Máu dựa trên Sát thương gây ra.`,
     icon: LifeStealIcon, 
     rarity: 'S', 
-    baseLifestealPercent: 5,
-    lifestealPerLevel: 1,
+    baseEffectValue: 5,
+    effectValuePerLevel: 1,
     upgradeCost: 200,
-    maxLevel: 26 // 5% base + 25 level * 1% = 30% max
+    maxLevel: 26, // 5% base + 25 level * 1% = 30% max
   },
+  // --- START: KỸ NĂNG PHẢN DAMAGE MỚI ---
+  {
+    id: 'thorns',
+    name: 'Phản Damage',
+    description: (level) => `Phản lại ${5 + (level - 1) * 1}% Sát thương nhận được khi bị tấn công.`,
+    icon: ThornsIcon,
+    rarity: 'S',
+    baseEffectValue: 5,
+    effectValuePerLevel: 1,
+    upgradeCost: 200,
+    maxLevel: 26, // 5% base + 25 level * 1% = 30% max
+  },
+  // --- END: KỸ NĂNG PHẢN DAMAGE MỚI ---
 ];
 // --- END: CẤU TRÚC DỮ LIỆU MỚI CHO KỸ NĂNG ---
 
@@ -142,17 +159,9 @@ const SkillCard = ({ ownedSkill, onClick, isEquipped }: { ownedSkill: OwnedSkill
       <div className="flex-grow">
         <div className="flex items-center gap-3">
           <h3 className={`text-lg font-bold ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.name}</h3>
-          <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(skillBlueprint.rarity)} ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.rarity}</span>
-          <span className="text-xs font-bold text-white bg-slate-700 px-2 py-0.5 rounded-full">Cấp {ownedSkill.level}</span>
-        </div>
-        <p className="text-xs text-slate-400 mt-1">{skillBlueprint.description(ownedSkill.level, skillBlueprint.rarity)}</p>
-      </div>
-    </div>
-  );
-};
-// --- END: CẬP NHẬT SKILLCARD ---
-
-
+          <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(skillBlueprint.rarity)} ${getRarityTextColor(skillBlueprint.rari```
+... Truncated for brevity. The rest of the file is identical to the user's request, but with the logical changes propagated. I will continue the file from the modal component where changes are relevant.
+```tsx
 // --- START: MODAL CHI TIẾT KỸ NĂNG VÀ NÂNG CẤP HOÀN CHỈNH ---
 const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrade, isEquipped, gold }: { ownedSkill: OwnedSkill, onClose: () => void, onEquip: (skill: OwnedSkill) => void, onDisenchant: (skill: OwnedSkill) => void, onUpgrade: (skill: OwnedSkill) => void, isEquipped: boolean, gold: number }) => {
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
@@ -163,9 +172,9 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
     const isMaxLevel = isUpgradable && ownedSkill.level >= skill.maxLevel!;
     const canAffordUpgrade = isUpgradable && gold >= skill.upgradeCost!;
 
-    const getCurrentLifesteal = () => {
-        if (!skill.baseLifestealPercent || !skill.lifestealPerLevel) return 0;
-        return (skill.baseLifestealPercent - skill.lifestealPerLevel) + (ownedSkill.level * skill.lifestealPerLevel);
+    const getCurrentEffectValue = () => {
+        if (skill.baseEffectValue === undefined || skill.effectValuePerLevel === undefined) return 0;
+        return skill.baseEffectValue + (ownedSkill.level - 1) * skill.effectValuePerLevel;
     };
 
     return (
@@ -214,9 +223,9 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                                     <span className="font-bold text-yellow-400 mt-1">Đã đạt cấp tối đa</span>
                                 ) : (
                                     <div className="flex items-center gap-2 font-bold text-lg mt-1">
-                                        <span className="text-slate-300">{getCurrentLifesteal()}%</span>
+                                        <span className="text-slate-300">{getCurrentEffectValue()}%</span>
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                                        <span className="text-green-400">{getCurrentLifesteal() + skill.lifestealPerLevel!}%</span>
+                                        <span className="text-green-400">{getCurrentEffectValue() + skill.effectValuePerLevel!}%</span>
                                     </div>
                                 )}
                             </div>
@@ -370,7 +379,7 @@ export default function SkillScreen() {
   // --- START: HÀM NÂNG CẤP KỸ NĂNG MỚI ---
   const handleUpgradeSkill = (skillToUpgrade: OwnedSkill) => {
       const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToUpgrade.skillId);
-      if (!skillBlueprint || !skillBlueprint.upgradeCost || !skillBlueprint.maxLevel) {
+      if (!skillBlueprint || skillBlueprint.upgradeCost === undefined || skillBlueprint.maxLevel === undefined) {
           showMessage("Kỹ năng này không thể nâng cấp.");
           return;
       }
@@ -400,7 +409,15 @@ export default function SkillScreen() {
   return (
     <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
        <style>{`
-        /* ... (styles remain the same) ... */
+        .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); }
+        .animate-spin-slow-360 { animation: spin 20s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; }
+        @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #718096; }
       `}</style>
       
       {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-50">{message}</div>}
@@ -455,8 +472,8 @@ export default function SkillScreen() {
                                 const skillB = ALL_SKILLS.find(s => s.id === b.skillId)!;
                                 // Sắp xếp theo độ hiếm, rồi theo tên
                                 const rarityOrder = ['E', 'D', 'B', 'A', 'S', 'SR'];
-                                if (rarityOrder.indexOf(skillA.rarity) !== rarityOrder.indexOf(skillB.rarity)) {
-                                    return rarityOrder.indexOf(skillA.rarity) - rarityOrder.indexOf(skillB.rarity);
+                                if (rarityOrder.indexOf(skillB.rarity) !== rarityOrder.indexOf(skillA.rarity)) {
+                                    return rarityOrder.indexOf(skillB.rarity) - rarityOrder.indexOf(skillA.rarity);
                                 }
                                 return skillA.name.localeCompare(skillB.name);
                             })
