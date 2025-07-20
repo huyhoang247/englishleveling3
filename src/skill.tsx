@@ -105,11 +105,12 @@ const SkillCard = ({ skill, onClick, isEquipped }: { skill: Skill, onClick: () =
   );
 };
 
-const SkillDetailModal = ({ skill, onClose, onEquip, isEquipped }: { skill: Skill, onClose: () => void, onEquip: (skill: Skill) => void, isEquipped: boolean }) => {
+// --- START: MODAL CHI TIẾT KỸ NĂNG ĐÃ THAY ĐỔI ---
+const SkillDetailModal = ({ skill, onClose, onEquip, onDisenchant, isEquipped }: { skill: Skill, onClose: () => void, onEquip: (skill: Skill) => void, onDisenchant: (skill: Skill) => void, isEquipped: boolean }) => {
     const IconComponent = skill.icon;
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
           <div className={`relative bg-gradient-to-br ${getRarityGradient(skill.rarity)} p-5 rounded-xl border-2 ${getRarityColor(skill.rarity)} shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col`}>
             <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
               <div className="flex justify-between items-start mb-2">
@@ -132,13 +133,23 @@ const SkillDetailModal = ({ skill, onClose, onEquip, isEquipped }: { skill: Skil
                 </div>
               </div>
             </div>
+            {/* --- START: KHU VỰC NÚT BẤM (TRANG BỊ/PHÂN RÃ) ĐÃ THAY ĐỔI --- */}
             <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
-              <button onClick={() => onEquip(skill)} disabled={isEquipped} className={`w-full font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100'}`}>{isEquipped ? 'Đã Trang Bị' : 'Trang Bị'}</button>
+              <div className="flex items-center gap-3">
+                <button onClick={() => onEquip(skill)} disabled={isEquipped} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100'}`}>
+                  {isEquipped ? 'Đã Trang Bị' : 'Trang Bị'}
+                </button>
+                <button onClick={() => onDisenchant(skill)} disabled={isEquipped} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-100'}`}>
+                  Phân Rã
+                </button>
+              </div>
             </div>
+            {/* --- END: KHU VỰC NÚT BẤM (TRANG BỊ/PHÂN RÃ) ĐÃ THAY ĐỔI --- */}
           </div>
         </div>
     );
 };
+// --- END: MODAL CHI TIẾT KỸ NĂNG ĐÃ THAY ĐỔI ---
 
 const CraftingSuccessModal = ({ skill, onClose }: { skill: Skill, onClose: () => void }) => {
     const IconComponent = skill.icon;
@@ -227,6 +238,22 @@ export default function SkillScreen() {
     setNewlyCraftedSkill(newSkill); // Kích hoạt popup thành công
   };
 
+  // --- START: HÀM PHÂN RÃ KỸ NĂNG MỚI ---
+  const handleDisenchantSkill = (skillToDisenchant: Skill) => {
+    if (equippedSkills.some(s => s?.id === skillToDisenchant.id)) {
+      showMessage("Không thể phân rã kỹ năng đang trang bị.");
+      return;
+    }
+    const booksToReturn = Math.floor(CRAFTING_COST / 2);
+    setOwnedSkills(prev => prev.filter(s => s.id !== skillToDisenchant.id));
+    setCraftableSkills(prev => [...prev, skillToDisenchant].sort((a, b) => a.id.localeCompare(b.id)));
+    setAncientBooks(prev => prev + booksToReturn);
+
+    setSelectedSkill(null);
+    showMessage(`Đã phân rã ${skillToDisenchant.name}, nhận lại ${booksToReturn} Sách Cổ.`);
+  };
+  // --- END: HÀM PHÂN RÃ KỸ NĂNG MỚI ---
+
   return (
     <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
        <style>{`
@@ -244,8 +271,16 @@ export default function SkillScreen() {
       `}</style>
       
       {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-50">{message}</div>}
-
-      {selectedSkill && <SkillDetailModal skill={selectedSkill} onClose={() => setSelectedSkill(null)} onEquip={handleEquipSkill} isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)} />}
+      
+      {/* --- START: CẬP NHẬT CÁCH GỌI MODAL --- */}
+      {selectedSkill && <SkillDetailModal 
+          skill={selectedSkill} 
+          onClose={() => setSelectedSkill(null)} 
+          onEquip={handleEquipSkill} 
+          onDisenchant={handleDisenchantSkill}
+          isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)} 
+      />}
+      {/* --- END: CẬP NHẬT CÁCH GỌI MODAL --- */}
 
       {newlyCraftedSkill && <CraftingSuccessModal skill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
 
