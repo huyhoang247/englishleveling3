@@ -177,12 +177,13 @@ const SkillCard = ({ ownedSkill, onClick, isEquipped }: { ownedSkill: OwnedSkill
         <IconComponent className={`w-8 h-8 ${getRarityTextColor(skillBlueprint.rarity)}`} />
       </div>
       <div className="flex-grow">
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
           <h3 className={`text-lg font-bold ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.name}</h3>
           <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(skillBlueprint.rarity)} ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.rarity}</span>
+        </div>
+        <div className="mt-1">
           <span className="text-xs font-bold text-white bg-slate-700 px-2 py-0.5 rounded-full">Cấp {ownedSkill.level}</span>
         </div>
-        <p className="text-xs text-slate-400 mt-1">{skillBlueprint.description(ownedSkill.level, skillBlueprint.rarity)}</p>
       </div>
     </div>
   );
