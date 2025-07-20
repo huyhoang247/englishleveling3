@@ -198,6 +198,18 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                 <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(skill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(skill.rarity)}`} /></div>
                 <p className="text-slate-300 text-base leading-relaxed">{skill.description(ownedSkill.level, skill.rarity)}</p>
                 
+                {/* --- START: THÊM LẠI KHUNG HIỂN THỊ TỈ LỆ KÍCH HOẠT --- */}
+                {/* Chỉ hiển thị chỉ số này cho các kỹ năng có thể nâng cấp (hiện tại là Hút Máu) */}
+                {isUpgradable && (
+                  <div className="w-full text-left text-sm mt-2 p-3 bg-black/20 rounded-lg border border-slate-700/50">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span>
+                      <span className="font-semibold text-cyan-300">{getActivationChance(skill.rarity)}%</span>
+                    </div>
+                  </div>
+                )}
+                {/* --- END: THÊM LẠI KHUNG HIỂN THỊ TỈ LỆ KÍCH HOẠT --- */}
+
                 {/* Upgrade Section */}
                 {isUpgradable && (
                     <div className="w-full mt-2 p-4 bg-black/30 rounded-lg border border-purple-800/50">
