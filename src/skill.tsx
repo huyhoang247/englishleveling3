@@ -190,8 +190,6 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                 <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(skill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(skill.rarity)}`} /></div>
                 <p className="text-slate-300 text-base leading-relaxed">{skill.description(ownedSkill.level, skill.rarity)}</p>
                 
-                {/* --- START: THÊM LẠI KHUNG HIỂN THỊ TỈ LỆ KÍCH HOẠT --- */}
-                {/* Chỉ hiển thị chỉ số này cho các kỹ năng có thể nâng cấp (hiện tại là Hút Máu) */}
                 {isUpgradable && (
                   <div className="w-full text-left text-sm mt-2 p-3 bg-black/20 rounded-lg border border-slate-700/50">
                     <div className="flex justify-between">
@@ -200,46 +198,42 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                     </div>
                   </div>
                 )}
-                {/* --- END: THÊM LẠI KHUNG HIỂN THỊ TỈ LỆ KÍCH HOẠT --- */}
-
-                {/* Upgrade Section */}
+                
+                {/* --- START: THIẾT KẾ LẠI KHUNG NÂNG CẤP GỌN GÀNG HƠN --- */}
                 {isUpgradable && (
-                    <div className="w-full mt-2 p-4 bg-black/30 rounded-lg border border-purple-800/50">
-                        <h4 className="font-bold text-purple-300 text-center mb-3">Nâng Cấp</h4>
-                        <div className="space-y-2 text-sm">
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400">Hiệu ứng hiện tại:</span>
-                                <span className="font-semibold text-white">Hút máu {getCurrentLifesteal()}%</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-400">Sau nâng cấp:</span>
-                                {isMaxLevel ? (
-                                    <span className="font-semibold text-yellow-400">Đã đạt cấp tối đa</span>
-                                ) : (
-                                    <span className="font-semibold text-green-400">Hút máu {getCurrentLifesteal() + skill.lifestealPerLevel!}%</span>
-                                )}
-                            </div>
-                        </div>
+                    <div className="w-full mt-4 pt-4 border-t border-slate-700/50 space-y-2">
                         <button 
                             onClick={() => onUpgrade(ownedSkill)}
                             disabled={isMaxLevel || !canAffordUpgrade || isEquipped}
-                            className={`w-full mt-4 flex items-center justify-center gap-2 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform disabled:cursor-not-allowed disabled:scale-100 ${
-                                isMaxLevel ? 'bg-slate-700 text-yellow-500' :
-                                !canAffordUpgrade ? 'bg-slate-700 text-slate-500' :
-                                'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25 active:scale-100'
-                            }`}
+                            className="w-full relative p-3 rounded-lg transition-all duration-300 text-left flex items-center justify-between disabled:cursor-not-allowed group bg-black/20 border border-slate-700/80 hover:border-purple-500 disabled:hover:border-slate-700/80 hover:bg-purple-900/20"
                         >
-                            {isMaxLevel ? 'Cấp Tối Đa' : (
-                                <>
-                                  <span>Nâng Cấp</span>
-                                  <GoldIcon className="w-5 h-5 inline-block" />
-                                  <span>{skill.upgradeCost?.toLocaleString()}</span>
-                                </>
+                            {/* Left side: Effect transition */}
+                            <div className="flex flex-col">
+                                <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
+                                {isMaxLevel ? (
+                                    <span className="font-bold text-yellow-400 mt-1">Đã đạt cấp tối đa</span>
+                                ) : (
+                                    <div className="flex items-center gap-2 font-bold text-lg mt-1">
+                                        <span className="text-slate-300">{getCurrentLifesteal()}%</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                        <span className="text-green-400">{getCurrentLifesteal() + skill.lifestealPerLevel!}%</span>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Right side: Cost */}
+                            {!isMaxLevel && (
+                                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${!canAffordUpgrade ? 'bg-slate-700 border border-slate-600' : 'bg-slate-800 border border-slate-600 group-hover:bg-purple-600/50 group-hover:border-purple-500'}`}>
+                                    <GoldIcon className="w-5 h-5"/>
+                                    <span className={`font-bold text-sm transition-colors ${!canAffordUpgrade ? 'text-slate-500' : 'text-yellow-300'}`}>{skill.upgradeCost?.toLocaleString()}</span>
+                                </div>
                             )}
                         </button>
-                        {isEquipped && <p className="text-center text-xs text-red-400 mt-2">Tháo kỹ năng để nâng cấp</p>}
+                        {isEquipped && <p className="text-center text-xs text-red-400">Tháo kỹ năng để nâng cấp</p>}
+                        {!isEquipped && !isMaxLevel && !canAffordUpgrade && <p className="text-center text-xs text-red-400">Không đủ vàng</p>}
                     </div>
                 )}
+                {/* --- END: THIẾT KẾ LẠI KHUNG NÂNG CẤP GỌN GÀNG HƠN --- */}
               </div>
             </div>
             
