@@ -203,79 +203,44 @@ export default function QuizAppHome() {
 
       case 'practices':
         return (
-          <div className="flex flex-col items-center gap-6 w-full max-w-lg mx-auto">
-            <div className="text-center mb-4">
-                <h2 className="text-3xl font-extrabold text-slate-800">Chọn Bài Tập</h2>
-                <p className="text-slate-500 mt-2">Bắt đầu hành trình chinh phục kiến thức của bạn.</p>
-            </div>
+          <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
+            <h1 className="text-2xl font-bold text-gray-800 mb-6">Chọn bài tập</h1>
 
-            <div className="space-y-5 w-full">
-              {/* Practice 1 */}
+            <div className="space-y-4 w-full">
               <button
                 onClick={() => handlePracticeSelect(1)}
-                className="w-full bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 flex justify-between items-center group"
+                className="w-full bg-white border border-gray-200 hover:border-indigo-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
               >
                 <div className="flex items-center">
-                  <div className="flex-shrink-0 h-16 w-16 bg-indigo-100 rounded-xl flex items-center justify-center mr-5">
-                    <span className="font-black text-2xl text-indigo-600">1</span>
+                  <div className="bg-indigo-100 text-indigo-600 rounded-full w-10 h-10 flex items-center justify-center mr-4 group-hover:bg-indigo-200">
+                    <span>1</span>
                   </div>
                   <div className="text-left">
-                    <h3 className="font-bold text-lg text-slate-800">Practice 1</h3>
-                    <div className="flex items-center space-x-4 text-slate-500 text-sm mt-1.5">
-                      <span className="flex items-center space-x-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>5 câu hỏi</span>
-                      </span>
-                      <span className="flex items-center space-x-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>5 phút</span>
-                      </span>
-                    </div>
+                    <h3 className="font-medium text-gray-800">Practice 1</h3>
+                    <p className="text-xs text-gray-500">5 câu hỏi • Thời gian: 5 phút</p>
                   </div>
                 </div>
-                <div className="text-indigo-400 group-hover:text-indigo-600 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
 
-              {/* Practice 2 */}
               <button
                 onClick={() => handlePracticeSelect(2)}
-                className="w-full bg-white rounded-2xl p-5 shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 flex justify-between items-center group"
+                className="w-full bg-white border border-gray-200 hover:border-pink-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
               >
                 <div className="flex items-center">
-                  <div className="flex-shrink-0 h-16 w-16 bg-pink-100 rounded-xl flex items-center justify-center mr-5">
-                    <span className="font-black text-2xl text-pink-600">2</span>
+                  <div className="bg-pink-100 text-pink-600 rounded-full w-10 h-10 flex items-center justify-center mr-4 group-hover:bg-pink-200">
+                    <span>2</span>
                   </div>
                   <div className="text-left">
-                    <h3 className="font-bold text-lg text-slate-800">Practice 2</h3>
-                    <div className="flex items-center space-x-4 text-slate-500 text-sm mt-1.5">
-                      <span className="flex items-center space-x-1.5">
-                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>7 câu hỏi</span>
-                      </span>
-                      <span className="flex items-center space-x-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>7 phút</span>
-                      </span>
-                    </div>
+                    <h3 className="font-medium text-gray-800">Practice 2</h3>
+                    <p className="text-xs text-gray-500">7 câu hỏi • Thời gian: 7 phút</p>
                   </div>
                 </div>
-                <div className="text-pink-400 group-hover:text-pink-600 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
           </div>
