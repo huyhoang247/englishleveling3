@@ -184,7 +184,7 @@ const SkillCard = ({ ownedSkill, onClick, isEquipped }: { ownedSkill: OwnedSkill
           <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(skillBlueprint.rarity)} ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.rarity}</span>
         </div>
         <div className="mt-1">
-          <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">Cấp {ownedSkill.level}</span>
+          <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">Level {ownedSkill.level}</span>
         </div>
       </div>
     </div>
@@ -218,7 +218,7 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
               </div>
               <div className="flex items-center gap-2">
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(skill.rarity)} bg-gray-800/70 border ${getRarityColor(skill.rarity)} capitalize`}>{getRarityDisplayName(skill.rarity)}</span>
-                <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Cấp {ownedSkill.level}</span>
+                <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Level {ownedSkill.level}</span>
               </div>
             </div>
 
@@ -247,7 +247,7 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                             <div className="flex flex-col">
                                 <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
                                 {isMaxLevel ? (
-                                    <span className="font-bold text-yellow-400 mt-1">Đã đạt cấp tối đa</span>
+                                    <span className="font-bold text-yellow-400 mt-1">Đã đạt level tối đa</span>
                                 ) : (
                                     <div className="flex items-center gap-2 font-bold text-lg mt-1">
                                         <span className="text-slate-300">{getCurrentEffectValue()}%</span>
@@ -402,7 +402,7 @@ export default function SkillScreen() {
           showMessage("Vui lòng tháo kỹ năng trước khi nâng cấp."); return;
       }
       if (skillToUpgrade.level >= skillBlueprint.maxLevel) {
-          showMessage("Kỹ năng đã đạt cấp tối đa."); return;
+          showMessage("Kỹ năng đã đạt level tối đa."); return;
       }
       if (gold < skillBlueprint.upgradeCost) {
           showMessage(`Không đủ vàng. Cần ${skillBlueprint.upgradeCost}.`); return;
@@ -412,7 +412,7 @@ export default function SkillScreen() {
       const updatedSkill = { ...skillToUpgrade, level: skillToUpgrade.level + 1 };
       setOwnedSkills(prev => prev.map(s => s.id === skillToUpgrade.id ? updatedSkill : s));
       setSelectedSkill(updatedSkill);
-      showMessage(`Nâng cấp ${skillBlueprint.name} lên Cấp ${updatedSkill.level} thành công!`);
+      showMessage(`Nâng cấp ${skillBlueprint.name} lên Level ${updatedSkill.level} thành công!`);
   }
 
   return (
