@@ -1,5 +1,4 @@
---- START OF FILE boss.tsx (14).txt ---
-// File: src/components/BossBattle.tsx
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import BOSS_DATA from './boss/bossData.ts'; 
