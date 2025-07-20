@@ -160,9 +160,10 @@ export default function QuizAppHome() {
               >
                 <div className="flex items-center">
                   <div className="p-3 bg-white/20 rounded-xl">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <img 
+                      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2354_Checklist%20Question%20Mark_remix_01k0mc0y2efdmb3gsgzgd6y81s.png" 
+                      alt="Trắc nghiệm icon" 
+                      className="h-8 w-8" />
                   </div>
                   <div className="ml-5">
                     <h3 className="text-xl font-bold">Trắc Nghiệm</h3>
