@@ -38,7 +38,6 @@ interface SkillBlueprint {
   description: (level: number, rarity: string) => string; // Mô tả động
   icon: (props: { className?: string }) => React.ReactElement;
   rarity: 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
-  type: 'Chủ Động' | 'Bị Động';
   // Thuộc tính cho việc nâng cấp
   baseLifestealPercent?: number; // % hút máu cơ bản
   upgradeCost?: number;
@@ -62,16 +61,15 @@ const getLifeStealDescription = (level: number, rarity: string): string => {
 
 
 const ALL_SKILLS: SkillBlueprint[] = [
-  { id: 'fireball',    name: 'Quả Cầu Lửa',      description: () => 'Tấn công kẻ địch bằng một quả cầu lửa rực cháy.', icon: FireballIcon, rarity: 'B', type: 'Chủ Động' },
-  { id: 'ice_shard',   name: 'Mảnh Băng',         description: () => 'Làm chậm và gây sát thương lên mục tiêu.',         icon: IceShardIcon, rarity: 'A', type: 'Chủ Động' },
-  { id: 'heal',        name: 'Hồi Máu',          description: () => 'Phục hồi một lượng máu cho bản thân.',               icon: HealIcon, rarity: 'D', type: 'Chủ Động' },
+  { id: 'fireball',    name: 'Quả Cầu Lửa',      description: () => 'Tấn công kẻ địch bằng một quả cầu lửa rực cháy.', icon: FireballIcon, rarity: 'B' },
+  { id: 'ice_shard',   name: 'Mảnh Băng',         description: () => 'Làm chậm và gây sát thương lên mục tiêu.',         icon: IceShardIcon, rarity: 'A' },
+  { id: 'heal',        name: 'Hồi Máu',          description: () => 'Phục hồi một lượng máu cho bản thân.',               icon: HealIcon, rarity: 'D' },
   { 
     id: 'life_steal',    
     name: 'Hút Máu',      
     description: getLifeStealDescription,
     icon: LifeStealIcon, 
     rarity: 'E', 
-    type: 'Bị Động',
     baseLifestealPercent: 5,
     lifestealPerLevel: 1,
     upgradeCost: 200,
@@ -200,14 +198,6 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                 <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(skill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(skill.rarity)}`} /></div>
                 <p className="text-slate-300 text-base leading-relaxed">{skill.description(ownedSkill.level, skill.rarity)}</p>
                 
-                {/* Stats */}
-                <div className="w-full text-left text-sm mt-2 p-4 bg-black/20 rounded-lg border border-slate-700/50">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                    <div className="flex justify-between"><span className="text-slate-400">Loại:</span> <span className="font-semibold text-white">{skill.type}</span></div>
-                    {skill.type === 'Bị Động' && <div className="flex justify-between"><span className="text-slate-400">Tỉ lệ K.Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(skill.rarity)}%</span></div>}
-                  </div>
-                </div>
-
                 {/* Upgrade Section */}
                 {isUpgradable && (
                     <div className="w-full mt-2 p-4 bg-black/30 rounded-lg border border-purple-800/50">
