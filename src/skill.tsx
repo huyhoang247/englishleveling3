@@ -61,7 +61,7 @@ const ALL_SKILLS: SkillBlueprint[] = [
     name: 'Hút Máu',      
     description: () => 'Hồi phục Máu từ Sát thương gây ra.',
     icon: LifeStealIcon, 
-    rarity: 'E', 
+    rarity: 'S', 
     baseLifestealPercent: 5,
     lifestealPerLevel: 1,
     upgradeCost: 200,
