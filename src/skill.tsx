@@ -199,9 +199,9 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                   </div>
                 )}
                 
-                {/* --- START: THIẾT KẾ LẠI KHUNG NÂNG CẤP GỌN GÀNG HƠN --- */}
+                {/* --- START: KHUNG NÂNG CẤP ĐÃ LOẠI BỎ LINE NGANG --- */}
                 {isUpgradable && (
-                    <div className="w-full mt-4 pt-4 border-t border-slate-700/50 space-y-2">
+                    <div className="w-full mt-4 space-y-2">
                         <button 
                             onClick={() => onUpgrade(ownedSkill)}
                             disabled={isMaxLevel || !canAffordUpgrade || isEquipped}
@@ -229,11 +229,11 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                                 </div>
                             )}
                         </button>
-                        {isEquipped && <p className="text-center text-xs text-red-400">Tháo kỹ năng để nâng cấp</p>}
-                        {!isEquipped && !isMaxLevel && !canAffordUpgrade && <p className="text-center text-xs text-red-400">Không đủ vàng</p>}
+                        {isEquipped && <p className="text-center text-xs text-red-400 mt-1">Tháo kỹ năng để nâng cấp</p>}
+                        {!isEquipped && !isMaxLevel && !canAffordUpgrade && <p className="text-center text-xs text-red-400 mt-1">Không đủ vàng</p>}
                     </div>
                 )}
-                {/* --- END: THIẾT KẾ LẠI KHUNG NÂNG CẤP GỌN GÀNG HƠN --- */}
+                {/* --- END: KHUNG NÂNG CẤP ĐÃ LOẠI BỎ LINE NGANG --- */}
               </div>
             </div>
             
