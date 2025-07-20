@@ -1,4 +1,4 @@
-// --- START OF FILE skill.tsx (9).txt ---
+// --- START OF FILE skill.tsx (9) - FIXED ---
 
 import React, { useState } from 'react';
 // --- START: IMPORT DỮ LIỆU TỪ TỆP MỚI ---
@@ -8,7 +8,9 @@ import { Skill, ALL_SKILLS, BookIcon } from './skill/skills-data.ts'; // Giả s
 
 // --- ICONS (Dành riêng cho màn hình này) ---
 const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> );
-const GoldIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#fbbF24" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 15.39L9.32 17l.79-3.08-2.3-1.99 3.18-.28L12 9l1.01 2.65 3.18.28-2.3 1.99.79 3.08L12 15.39z" fill="#fff" /></svg> );
+// --- START: SỬA LỖI TRONG GOLDICON ---
+const GoldIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#fbbc24" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 15.39L9.32 17l.79-3.08-2.3-1.99 3.18-.28L12 9l1.01 2.65 3.18.28-2.3 1.99.79 3.08L12 15.39z" fill="#fff" /></svg> );
+// --- END: SỬA LỖI TRONG GOLDICON ---
 
 // --- CÁC HÀM HELPER VỀ ĐỘ HIẾM (TỪ SHOP.TSX) ---
 const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; default: return 'border-gray-600'; } };
@@ -292,4 +294,4 @@ export default function SkillScreen() {
     </div>
   );
 }
-// --- END OF FILE skill.tsx (9).txt ---
+// --- END OF FILE skill.tsx (9) - FIXED ---
