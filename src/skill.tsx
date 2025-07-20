@@ -1,20 +1,14 @@
-// --- START OF FILE skill.tsx (10).txt ---
-
 import React, { useState } from 'react';
-// --- START: IMPORT DỮ LIỆU TỪ FILE MỚI ---
-// Giả sử file skills.data.ts nằm cùng thư mục, nếu khác, bạn hãy điều chỉnh đường dẫn.
-import { ALL_SKILLS, Skill } from './skill/skills-data.ts';
-// --- END: IMPORT DỮ LIỆU TỪ FILE MỚI ---
-
 
 // --- ICONS ---
-// FireballIcon, IceShardIcon, HealIcon đã được chuyển sang skills.data.ts và import ở trên.
-// Các icon giao diện chung vẫn được giữ lại tại đây.
+const FireballIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12.81 4.62C13.25 3.53 14.65 3.53 15.09 4.62L16.2 7.29C16.34 7.6 16.6 7.86 16.91 8L19.58 9.11C20.67 9.55 20.67 10.95 19.58 11.39L16.91 12.5C16.6 12.64 16.34 12.9 16.2 13.21L15.09 15.88C14.65 16.97 13.25 16.97 12.81 15.88L11.7 13.21C11.56 12.9 11.3 12.64 10.99 12.5L8.32 11.39C7.23 10.95 7.23 9.55 8.32 9.11L10.99 8C11.3 7.86 11.56 7.6 11.7 7.29L12.81 4.62Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M9.18994 18.3C9.62994 17.21 11.0299 17.21 11.4699 18.3L11.9999 19.52C12.1399 19.83 12.3999 20.09 12.7099 20.23L13.9299 20.76C15.0199 21.2 15.0199 22.6 13.9299 23.04L12.7099 23.57C12.3999 23.71 12.1399 23.97 11.9999 24.28L11.4699 25.5C11.0299 26.59 9.62994 26.59 9.18994 25.5L8.65994 24.28C8.51994 23.97 8.25994 23.71 7.94994 23.57L6.72994 23.04C5.63994 22.6 5.63994 21.2 6.72994 20.76L7.94994 20.23C8.25994 20.09 8.51994 19.83 8.65994 19.52L9.18994 18.3Z" transform="scale(0.7) translate(-2, -12)" fill="#fef08a" stroke="#facc15" /> <path d="M17.19 16.3C17.63 15.21 19.03 15.21 19.47 16.3L19.85 17.17C19.99 17.48 20.25 17.74 20.56 17.88L21.43 18.26C22.52 18.7 22.52 20.1 21.43 20.54L20.56 20.92C20.25 21.06 19.99 21.32 19.85 21.63L19.47 22.5C19.03 23.59 17.63 23.59 17.19 22.5L16.81 21.63C16.67 21.32 16.41 21.06 16.1 20.92L15.23 20.54C14.14 20.1 14.14 18.7 15.23 18.26L16.1 17.88C16.41 17.74 16.67 17.48 16.81 17.17L17.19 16.3Z" transform="scale(0.5) translate(18, -20)" fill="#fed7aa" stroke="#fb923c"/> </svg>);
+const IceShardIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 2L9.13 8.37L2 10.5L7.87 15.63L6.25 22L12 18.5L17.75 22L16.13 15.63L22 10.5L14.87 8.37L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M12 2V18.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M2 10.5H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M6.25 22L12 11.5L17.75 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M9.13 8.37L2.5 15.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M14.87 8.37L21.5 15.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> </svg> );
+const HealIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> </svg> );
+// --- START: ICON SÁCH CỔ ĐÃ THAY ĐỔI ---
 const BookIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png" alt="Sách Cổ" className={className} /> );
+// --- END: ICON SÁCH CỔ ĐÃ THAY ĐỔI ---
 const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> );
-// --- START: GOLD ICON ĐÃ SỬA LỖI ---
-const GoldIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#fbbf24" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 15.39L9.32 17l.79-3.08-2.3-1.99 3.18-.28L12 9l1.01 2.65 3.18.28-2.3 1.99.79 3.08L12 15.39z" fill="#fff" /></svg> );
-// --- END: GOLD ICON ĐÃ SỬA LỖI ---
+const GoldIcon = ({ className = '' }: { className?: string }) => ( <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#fbbF24" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 15.39L9.32 17l.79-3.08-2.3-1.99 3.18-.28L12 9l1.01 2.65 3.18.28-2.3 1.99.79 3.08L12 15.39z" fill="#fff" /></svg> );
 
 // --- START: CÁC HÀM HELPER VỀ ĐỘ HIẾM (TỪ SHOP.TSX) ---
 const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; default: return 'border-gray-600'; } };
@@ -25,15 +19,31 @@ const getRarityDisplayName = (rarity: string) => { if (!rarity) return 'Unknown 
 
 
 // --- DỮ LIỆU & CẤU HÌNH ---
+interface Skill {
+  id: string;
+  name: string;
+  description: string;
+  icon: (props: { className?: string }) => React.ReactElement;
+  rarity: 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
+}
+
+const ALL_SKILLS: Skill[] = [
+  { id: 'fireball',    name: 'Quả Cầu Lửa',      description: 'Tấn công kẻ địch bằng một quả cầu lửa rực cháy.', icon: FireballIcon, rarity: 'B' },
+  { id: 'ice_shard',   name: 'Mảnh Băng',         description: 'Làm chậm và gây sát thương lên mục tiêu.',         icon: IceShardIcon, rarity: 'A' },
+  { id: 'heal',        name: 'Hồi Máu',          description: 'Phục hồi một lượng máu cho bản thân.',               icon: HealIcon, rarity: 'D' },
+];
+
 const CRAFTING_COST = 50;
 
 // --- CÁC COMPONENT CON ---
 
+// --- START: HEADER ĐÃ CHỈNH SỬA ---
 const Header = ({ gold, ancientBooks }: { gold: number; ancientBooks: number; }) => {
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
             <div className="w-full max-w-5xl mx-auto flex justify-end items-center py-3 px-4 sm:px-0">
                 <div className="flex items-center gap-4 sm:gap-6">
+                    {/* Resources */}
                     <div className="flex items-center gap-2 p-2 bg-slate-900/50 rounded-md border border-slate-700/50">
                         <GoldIcon className="w-6 h-6" />
                         <span className="font-bold text-yellow-300 text-sm">{gold.toLocaleString()}</span>
@@ -47,6 +57,7 @@ const Header = ({ gold, ancientBooks }: { gold: number; ancientBooks: number; })
         </header>
     );
 };
+// --- END: HEADER ĐÃ CHỈNH SỬA ---
 
 const SkillSlot = ({ skill, onClick }: { skill: Skill | null, onClick: () => void }) => {
   const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center cursor-pointer group";
@@ -94,6 +105,7 @@ const SkillCard = ({ skill, onClick, isEquipped }: { skill: Skill, onClick: () =
   );
 };
 
+// --- START: MODAL CHI TIẾT KỸ NĂNG ĐÃ THAY ĐỔI ---
 const SkillDetailModal = ({ skill, onClose, onEquip, onDisenchant, isEquipped }: { skill: Skill, onClose: () => void, onEquip: (skill: Skill) => void, onDisenchant: (skill: Skill) => void, isEquipped: boolean }) => {
     const IconComponent = skill.icon;
     return (
@@ -121,6 +133,7 @@ const SkillDetailModal = ({ skill, onClose, onEquip, onDisenchant, isEquipped }:
                 </div>
               </div>
             </div>
+            {/* --- START: KHU VỰC NÚT BẤM (TRANG BỊ/PHÂN RÃ) ĐÃ THAY ĐỔI --- */}
             <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
               <div className="flex items-center gap-3">
                 <button onClick={() => onEquip(skill)} disabled={isEquipped} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100'}`}>
@@ -131,15 +144,17 @@ const SkillDetailModal = ({ skill, onClose, onEquip, onDisenchant, isEquipped }:
                 </button>
               </div>
             </div>
+            {/* --- END: KHU VỰC NÚT BẤM (TRANG BỊ/PHÂN RÃ) ĐÃ THAY ĐỔI --- */}
           </div>
         </div>
     );
 };
+// --- END: MODAL CHI TIẾT KỸ NĂNG ĐÃ THAY ĐỔI ---
 
 const CraftingSuccessModal = ({ skill, onClose }: { skill: Skill, onClose: () => void }) => {
     const IconComponent = skill.icon;
     const rarityTextColor = getRarityTextColor(skill.rarity);
-    const rarityColor = getRarityColor(skill.rarity).replace('border-', '');
+    const rarityColor = getRarityColor(skill.rarity).replace('border-', ''); // Lấy màu hex hoặc tên màu tailwind
     const shadowStyle = { boxShadow: `0 0 25px -5px ${rarityColor}, 0 0 15px -10px ${rarityColor}` };
 
     return (
@@ -178,7 +193,10 @@ export default function SkillScreen() {
   const [ownedSkills, setOwnedSkills] = useState<Skill[]>([ALL_SKILLS[0]]);
   const [craftableSkills, setCraftableSkills] = useState<Skill[]>(ALL_SKILLS.slice(1));
   
+  // --- START: CHỈNH SỬA ---
+  // Xóa state user, chỉ giữ lại state gold
   const [gold, setGold] = useState(12500);
+  // --- END: CHỈNH SỬA ---
 
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
@@ -217,9 +235,10 @@ export default function SkillScreen() {
     setOwnedSkills(prev => [...prev, newSkill].sort((a, b) => a.rarity.localeCompare(b.rarity) || a.id.localeCompare(b.id)));
     setCraftableSkills(prev => prev.filter(s => s.id !== newSkill.id));
     
-    setNewlyCraftedSkill(newSkill);
+    setNewlyCraftedSkill(newSkill); // Kích hoạt popup thành công
   };
 
+  // --- START: HÀM PHÂN RÃ KỸ NĂNG MỚI ---
   const handleDisenchantSkill = (skillToDisenchant: Skill) => {
     if (equippedSkills.some(s => s?.id === skillToDisenchant.id)) {
       showMessage("Không thể phân rã kỹ năng đang trang bị.");
@@ -233,6 +252,7 @@ export default function SkillScreen() {
     setSelectedSkill(null);
     showMessage(`Đã phân rã ${skillToDisenchant.name}, nhận lại ${booksToReturn} Sách Cổ.`);
   };
+  // --- END: HÀM PHÂN RÃ KỸ NĂNG MỚI ---
 
   return (
     <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
@@ -252,6 +272,7 @@ export default function SkillScreen() {
       
       {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-50">{message}</div>}
       
+      {/* --- START: CẬP NHẬT CÁCH GỌI MODAL --- */}
       {selectedSkill && <SkillDetailModal 
           skill={selectedSkill} 
           onClose={() => setSelectedSkill(null)} 
@@ -259,17 +280,22 @@ export default function SkillScreen() {
           onDisenchant={handleDisenchantSkill}
           isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)} 
       />}
-      
+      {/* --- END: CẬP NHẬT CÁCH GỌI MODAL --- */}
+
       {newlyCraftedSkill && <CraftingSuccessModal skill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
 
       <div className="relative z-10 flex flex-col w-full h-screen">
+        {/* --- START: CHỈNH SỬA --- */}
+        {/* Cập nhật cách gọi Header */}
         <Header gold={gold} ancientBooks={ancientBooks} />
+        {/* --- END: CHỈNH SỬA --- */}
         <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 p-4 sm:p-6 md:p-8">
             <section className="flex-shrink-0 py-4">
                 <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
                     {equippedSkills.map((skill, index) => (<SkillSlot key={`equipped-${index}`} skill={skill} onClick={() => handleUnequipSkill(index)} />))}
                 </div>
             </section>
+            {/* --- START: KHU VỰC TRAIN ĐÃ CHỈNH SỬA --- */}
             <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <BookIcon className="w-10 h-10" />
@@ -286,6 +312,7 @@ export default function SkillScreen() {
                   Train
                 </button>
             </section>
+            {/* --- END: KHU VỰC TRAIN ĐÃ CHỈNH SỬA --- */}
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                 <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0 title-glow">Kho Kỹ Năng</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
@@ -301,4 +328,3 @@ export default function SkillScreen() {
     </div>
   );
 }
-// --- END OF FILE skill.tsx (10).txt ---
