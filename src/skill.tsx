@@ -179,11 +179,11 @@ const SkillCard = ({ ownedSkill, onClick, isEquipped }: { ownedSkill: OwnedSkill
       </div>
       
       <div className="flex-grow flex flex-col justify-center">
-        <div className="flex items-baseline gap-2">
+        <div className="flex justify-between items-center">
           <h3 className={`text-base font-bold ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.name}</h3>
-          <span className={`px-1.5 py-0 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(skillBlueprint.rarity)} ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.rarity}</span>
+          <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(skillBlueprint.rarity)} ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.rarity}</span>
         </div>
-        <div>
+        <div className="mt-1">
           <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">Cấp {ownedSkill.level}</span>
         </div>
       </div>
