@@ -35,24 +35,21 @@ const getActivationChance = (rarity: string) => {
 // --- END: CÁC HÀM HELPER VỀ ĐỘ HIẾM VÀ KỸ NĂNG ---
 
 // --- START: CẤU TRÚC DỮ LIỆU MỚI CHO KỸ NĂNG ---
-// SkillBlueprint: Định nghĩa các thuộc tính cơ bản, không thay đổi của một kỹ năng.
 interface SkillBlueprint {
   id: string;
   name: string;
-  description: (level: number, rarity: string) => string; // Mô tả động
+  description: (level: number, rarity: string) => string;
   icon: (props: { className?: string }) => React.ReactElement;
   rarity: 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
-  // Thuộc tính cho việc nâng cấp (linh hoạt hơn)
-  baseEffectValue?: number;     // Giá trị hiệu ứng cơ bản (ví dụ: %)
-  effectValuePerLevel?: number; // Giá trị tăng thêm mỗi cấp
+  baseEffectValue?: number;
+  effectValuePerLevel?: number;
   upgradeCost?: number;
   maxLevel?: number;
 }
 
-// OwnedSkill: Đại diện cho một kỹ năng mà người chơi thực sự sở hữu, có cấp độ.
 interface OwnedSkill {
-  id: string; // ID duy nhất của instance này, hữu ích cho React keys
-  skillId: string; // Liên kết với SkillBlueprint
+  id: string;
+  skillId: string;
   level: number;
 }
 
@@ -69,9 +66,8 @@ const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    maxLevel: 26, // 5% base + 25 level * 1% = 30% max
+    maxLevel: 26,
   },
-  // --- START: KỸ NĂNG PHẢN DAMAGE MỚI ---
   {
     id: 'thorns',
     name: 'Phản Damage',
@@ -81,9 +77,8 @@ const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    maxLevel: 26, // 5% base + 25 level * 1% = 30% max
+    maxLevel: 26,
   },
-  // --- END: KỸ NĂNG PHẢN DAMAGE MỚI ---
 ];
 // --- END: CẤU TRÚC DỮ LIỆU MỚI CHO KỸ NĂNG ---
 
@@ -109,7 +104,6 @@ const Header = ({ gold, ancientBooks }: { gold: number; ancientBooks: number; })
     );
 };
 
-// --- START: CẬP NHẬT SKILLSLOT ĐỂ HIỂN THỊ CẤP ĐỘ ---
 const SkillSlot = ({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onClick: () => void }) => {
   const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
   const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center cursor-pointer group";
@@ -139,12 +133,11 @@ const SkillSlot = ({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onC
     </div>
   );
 };
-// --- END: CẬP NHẬT SKILLSLOT ---
 
-// --- START: CẬP NHẬT SKILLCARD ĐỂ HIỂN THỊ CẤP ĐỘ ---
+// --- START: COMPONENT SKILLCARD ĐÃ SỬA LỖI ---
 const SkillCard = ({ ownedSkill, onClick, isEquipped }: { ownedSkill: OwnedSkill, onClick: () => void, isEquipped: boolean }) => {
   const skillBlueprint = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
-  if (!skillBlueprint) return null; // Or some fallback UI
+  if (!skillBlueprint) return null;
 
   const baseClasses = "relative w-full p-3 rounded-lg border-2 flex items-center gap-4 transition-all duration-200";
   const interactivity = isEquipped ? 'opacity-50 cursor-not-allowed' : `cursor-pointer hover:border-slate-600 hover:bg-slate-800/50 hover:shadow-lg hover:shadow-cyan-500/10`;
@@ -157,12 +150,18 @@ const SkillCard = ({ ownedSkill, onClick, isEquipped }: { ownedSkill: OwnedSkill
         <IconComponent className={`w-8 h-8 ${getRarityTextColor(skillBlueprint.rarity)}`} />
       </div>
       <div className="flex-grow">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <h3 className={`text-lg font-bold ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.name}</h3>
-          <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(skillBlueprint.rarity)} ${getRarityTextColor(skillBlueprint.rari```
-... Truncated for brevity. The rest of the file is identical to the user's request, but with the logical changes propagated. I will continue the file from the modal component where changes are relevant.
-```tsx
-// --- START: MODAL CHI TIẾT KỸ NĂNG VÀ NÂNG CẤP HOÀN CHỈNH ---
+          <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(skillBlueprint.rarity)} ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.rarity}</span>
+          <span className="text-xs font-bold text-white bg-slate-700 px-2 py-0.5 rounded-full">Cấp {ownedSkill.level}</span>
+        </div>
+        <p className="text-xs text-slate-400 mt-1">{skillBlueprint.description(ownedSkill.level, skillBlueprint.rarity)}</p>
+      </div>
+    </div>
+  );
+};
+// --- END: COMPONENT SKILLCARD ĐÃ SỬA LỖI ---
+
 const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrade, isEquipped, gold }: { ownedSkill: OwnedSkill, onClose: () => void, onEquip: (skill: OwnedSkill) => void, onDisenchant: (skill: OwnedSkill) => void, onUpgrade: (skill: OwnedSkill) => void, isEquipped: boolean, gold: number }) => {
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
     if (!skill) return null;
@@ -208,7 +207,6 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                   </div>
                 )}
                 
-                {/* --- START: KHUNG NÂNG CẤP ĐÃ ĐIỀU CHỈNH KHOẢNG CÁCH --- */}
                 {isUpgradable && (
                     <div className="w-full mt-2 mb-4 space-y-2">
                         <button 
@@ -216,7 +214,6 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                             disabled={isMaxLevel || !canAffordUpgrade || isEquipped}
                             className="w-full relative p-3 rounded-lg transition-all duration-300 text-left flex items-center justify-between disabled:cursor-not-allowed group bg-black/20 border border-slate-700/80 hover:border-purple-500 disabled:hover:border-slate-700/80 hover:bg-purple-900/20"
                         >
-                            {/* Left side: Effect transition */}
                             <div className="flex flex-col">
                                 <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
                                 {isMaxLevel ? (
@@ -230,7 +227,6 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                                 )}
                             </div>
                             
-                            {/* Right side: Cost */}
                             {!isMaxLevel && (
                                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${!canAffordUpgrade ? 'bg-slate-700 border border-slate-600' : 'bg-slate-800 border border-slate-600 group-hover:bg-purple-600/50 group-hover:border-purple-500'}`}>
                                     <GoldIcon className="w-5 h-5"/>
@@ -242,11 +238,9 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                         {!isEquipped && !isMaxLevel && !canAffordUpgrade && <p className="text-center text-xs text-red-400 mt-1">Không đủ vàng</p>}
                     </div>
                 )}
-                {/* --- END: KHUNG NÂNG CẤP ĐÃ ĐIỀU CHỈNH KHOẢNG CÁCH --- */}
               </div>
             </div>
             
-            {/* Action Buttons */}
             <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
               <div className="flex items-center gap-3">
                 <button onClick={() => onEquip(ownedSkill)} disabled={isEquipped} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100'}`}>
@@ -261,8 +255,6 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
         </div>
     );
 };
-// --- END: MODAL CHI TIẾT KỸ NĂNG VÀ NÂNG CẤP ---
-
 
 const CraftingSuccessModal = ({ skill, onClose }: { skill: SkillBlueprint, onClose: () => void }) => {
     const IconComponent = skill.icon;
@@ -298,7 +290,6 @@ const CraftingSuccessModal = ({ skill, onClose }: { skill: SkillBlueprint, onClo
 
 // --- COMPONENT CHÍNH ---
 export default function SkillScreen() {
-  // --- START: CẬP NHẬT STATE ĐỂ SỬ DỤNG OWNEDSKILL ---
   const [equippedSkills, setEquippedSkills] = useState<(OwnedSkill | null)[]>([null, null, null]);
   const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([
       { id: `owned-${Date.now()}-ls`, skillId: 'life_steal', level: 1 },
@@ -306,11 +297,8 @@ export default function SkillScreen() {
   ]);
   const [selectedSkill, setSelectedSkill] = useState<OwnedSkill | null>(null);
   const [newlyCraftedSkill, setNewlyCraftedSkill] = useState<SkillBlueprint | null>(null);
-  
   const [gold, setGold] = useState(12500);
   const [ancientBooks, setAncientBooks] = useState(120);
-  // --- END: CẬP NHẬT STATE ---
-
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
 
@@ -376,35 +364,27 @@ export default function SkillScreen() {
     showMessage(`Đã phân rã ${skillBlueprint.name}, nhận lại ${booksToReturn} Sách Cổ.`);
   };
 
-  // --- START: HÀM NÂNG CẤP KỸ NĂNG MỚI ---
   const handleUpgradeSkill = (skillToUpgrade: OwnedSkill) => {
       const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToUpgrade.skillId);
       if (!skillBlueprint || skillBlueprint.upgradeCost === undefined || skillBlueprint.maxLevel === undefined) {
-          showMessage("Kỹ năng này không thể nâng cấp.");
-          return;
+          showMessage("Kỹ năng này không thể nâng cấp."); return;
       }
       if (equippedSkills.some(s => s?.id === skillToUpgrade.id)) {
-          showMessage("Vui lòng tháo kỹ năng trước khi nâng cấp.");
-          return;
+          showMessage("Vui lòng tháo kỹ năng trước khi nâng cấp."); return;
       }
       if (skillToUpgrade.level >= skillBlueprint.maxLevel) {
-          showMessage("Kỹ năng đã đạt cấp tối đa.");
-          return;
+          showMessage("Kỹ năng đã đạt cấp tối đa."); return;
       }
       if (gold < skillBlueprint.upgradeCost) {
-          showMessage(`Không đủ vàng. Cần ${skillBlueprint.upgradeCost}.`);
-          return;
+          showMessage(`Không đủ vàng. Cần ${skillBlueprint.upgradeCost}.`); return;
       }
 
       setGold(prev => prev - skillBlueprint.upgradeCost!);
-      
       const updatedSkill = { ...skillToUpgrade, level: skillToUpgrade.level + 1 };
-
       setOwnedSkills(prev => prev.map(s => s.id === skillToUpgrade.id ? updatedSkill : s));
       setSelectedSkill(updatedSkill);
       showMessage(`Nâng cấp ${skillBlueprint.name} lên Cấp ${updatedSkill.level} thành công!`);
   }
-  // --- END: HÀM NÂNG CẤP KỸ NĂNG MỚI ---
 
   return (
     <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
@@ -412,7 +392,7 @@ export default function SkillScreen() {
         .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); }
         .animate-spin-slow-360 { animation: spin 20s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; }
+        .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; }
         @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -422,7 +402,6 @@ export default function SkillScreen() {
       
       {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-50">{message}</div>}
       
-      {/* --- START: CẬP NHẬT CÁCH GỌI MODAL VỚI LOGIC MỚI --- */}
       {selectedSkill && <SkillDetailModal 
           ownedSkill={selectedSkill} 
           onClose={() => setSelectedSkill(null)} 
@@ -432,7 +411,6 @@ export default function SkillScreen() {
           isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)} 
           gold={gold}
       />}
-      {/* --- END: CẬP NHẬT CÁCH GỌI MODAL --- */}
 
       {newlyCraftedSkill && <CraftingSuccessModal skill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
 
@@ -463,19 +441,19 @@ export default function SkillScreen() {
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                 <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0 title-glow">Kho Kỹ Năng</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
-                    {/* --- START: RENDER DANH SÁCH KỸ NĂNG ĐÃ SỞ HỮU --- */}
                     {ownedSkills.length > 0 ? (
                         ownedSkills
-                            .slice() // Tạo bản sao để không thay đổi state gốc
+                            .slice()
                             .sort((a, b) => {
                                 const skillA = ALL_SKILLS.find(s => s.id === a.skillId)!;
                                 const skillB = ALL_SKILLS.find(s => s.id === b.skillId)!;
-                                // Sắp xếp theo độ hiếm, rồi theo tên
                                 const rarityOrder = ['E', 'D', 'B', 'A', 'S', 'SR'];
-                                if (rarityOrder.indexOf(skillB.rarity) !== rarityOrder.indexOf(skillA.rarity)) {
-                                    return rarityOrder.indexOf(skillB.rarity) - rarityOrder.indexOf(skillA.rarity);
+                                const rarityIndexA = rarityOrder.indexOf(skillA.rarity);
+                                const rarityIndexB = rarityOrder.indexOf(skillB.rarity);
+                                if (rarityIndexA !== rarityIndexB) {
+                                    return rarityIndexB - rarityIndexA; // Sắp xếp độ hiếm cao hơn trước
                                 }
-                                return skillA.name.localeCompare(skillB.name);
+                                return skillA.name.localeCompare(skillB.name); // Sắp xếp theo tên
                             })
                             .map(ownedSkill => (
                                 <SkillCard key={ownedSkill.id} ownedSkill={ownedSkill} onClick={() => setSelectedSkill(ownedSkill)} isEquipped={equippedSkills.some(s => s?.id === ownedSkill.id)} />
@@ -483,7 +461,6 @@ export default function SkillScreen() {
                     ) : (
                         <div className="col-span-full flex items-center justify-center h-full text-slate-500"><p>Chưa có kỹ năng. Hãy dùng Sách Cổ để Train!</p></div>
                     )}
-                    {/* --- END: RENDER DANH SÁCH KỸ NĂNG ĐÃ SỞ HỮU --- */}
                 </div>
             </section>
         </main>
