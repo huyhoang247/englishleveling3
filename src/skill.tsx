@@ -173,16 +173,18 @@ const SkillCard = ({ ownedSkill, onClick, isEquipped }: { ownedSkill: OwnedSkill
   return (
     <div className={`${baseClasses} border-slate-700 bg-slate-900/70 ${interactivity}`} onClick={!isEquipped ? onClick : undefined}>
       {isEquipped && <div className="absolute inset-0 bg-black/40 rounded-lg z-10 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-cyan-400">Đã Trang Bị</div>}
-      <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md border ${getRarityColor(skillBlueprint.rarity)} bg-black/20`}>
-        <IconComponent className={`w-8 h-8 ${getRarityTextColor(skillBlueprint.rarity)}`} />
+      
+      <div className={`flex-shrink-0 w-14 h-14 flex items-center justify-center rounded-md border ${getRarityColor(skillBlueprint.rarity)} bg-black/20`}>
+        <IconComponent className={`w-9 h-9 ${getRarityTextColor(skillBlueprint.rarity)}`} />
       </div>
-      <div className="flex-grow">
-        <div className="flex items-center gap-3">
-          <h3 className={`text-lg font-bold ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.name}</h3>
-          <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(skillBlueprint.rarity)} ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.rarity}</span>
+      
+      <div className="flex-grow flex flex-col justify-center">
+        <div className="flex items-baseline gap-2">
+          <h3 className={`text-base font-bold ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.name}</h3>
+          <span className={`px-1.5 py-0 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(skillBlueprint.rarity)} ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.rarity}</span>
         </div>
-        <div className="mt-1">
-          <span className="text-xs font-bold text-white bg-slate-700 px-2 py-0.5 rounded-full">Cấp {ownedSkill.level}</span>
+        <div>
+          <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">Cấp {ownedSkill.level}</span>
         </div>
       </div>
     </div>
