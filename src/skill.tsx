@@ -62,9 +62,6 @@ interface OwnedSkill {
 }
 
 const ALL_SKILLS: SkillBlueprint[] = [
-  { id: 'fireball',    name: 'Quả Cầu Lửa',      description: () => 'Tấn công kẻ địch bằng một quả cầu lửa rực cháy.', icon: FireballIcon, rarity: 'B' },
-  { id: 'ice_shard',   name: 'Mảnh Băng',         description: () => 'Làm chậm và gây sát thương lên mục tiêu.',         icon: IceShardIcon, rarity: 'A' },
-  { id: 'heal',        name: 'Hồi Máu',          description: () => 'Phục hồi một lượng máu cho bản thân.',               icon: HealIcon, rarity: 'D' },
   { 
     id: 'life_steal',    
     name: 'Hút Máu',      
@@ -87,7 +84,6 @@ const ALL_SKILLS: SkillBlueprint[] = [
     upgradeCost: 200,
     maxLevel: 26,
   },
-  // --- START: THÊM KỸ NĂNG MỚI TĂNG SÁT THƯƠNG ---
   {
     id: 'damage_boost',
     name: 'Tăng Sát Thương',
@@ -99,8 +95,6 @@ const ALL_SKILLS: SkillBlueprint[] = [
     upgradeCost: 200,
     maxLevel: 26,
   },
-  // --- END: THÊM KỸ NĂNG MỚI TĂNG SÁT THƯƠNG ---
-  // --- START: THÊM KỸ NĂNG MỚI XUYÊN GIÁP ---
   {
     id: 'armor_penetration',
     name: 'Xuyên Giáp',
@@ -112,7 +106,6 @@ const ALL_SKILLS: SkillBlueprint[] = [
     upgradeCost: 200,
     maxLevel: 26,
   },
-  // --- END: THÊM KỸ NĂNG MỚI XUYÊN GIÁP ---
 ];
 // --- END: CẤU TRÚC DỮ LIỆU MỚI CHO KỸ NĂNG ---
 
@@ -327,7 +320,6 @@ export default function SkillScreen() {
   const [equippedSkills, setEquippedSkills] = useState<(OwnedSkill | null)[]>([null, null, null]);
   const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([
       { id: `owned-${Date.now()}-ls`, skillId: 'life_steal', level: 1 },
-      { id: `owned-${Date.now()}-fb`, skillId: 'fireball', level: 1 },
   ]);
   const [selectedSkill, setSelectedSkill] = useState<OwnedSkill | null>(null);
   const [newlyCraftedSkill, setNewlyCraftedSkill] = useState<SkillBlueprint | null>(null);
