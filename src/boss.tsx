@@ -1,9 +1,9 @@
-
+// --- START OF FILE boss.tsx (UPDATED) ---
 
 import React, { useState, useEffect, useRef } from 'react';
 import BOSS_DATA from './boss/bossData.ts'; 
 
-// --- Props Interface for the Component ---
+// --- SỬA LẠI PROPS INTERFACE ---
 interface BossBattleProps {
   onClose: () => void;
   playerInitialStats: {
@@ -15,6 +15,9 @@ interface BossBattleProps {
     energy: number;
   };
   onBattleEnd: (result: 'win' | 'lose', rewards: { coins: number; energy: number }) => void;
+  // >>> THÊM PROPS MỚI <<<
+  initialFloor: number;
+  onFloorComplete: (newFloor: number) => void;
 }
 
 // --- Component Thanh Máu ---
@@ -182,8 +185,17 @@ const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
 }
 
 // --- Component Chính Của Game ---
-export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }: BossBattleProps) {
-  const [currentBossIndex, setCurrentBossIndex] = useState(0);
+export default function BossBattle({ 
+  onClose, 
+  playerInitialStats, 
+  onBattleEnd, 
+  // >>> NHẬN PROPS MỚI <<<
+  initialFloor, 
+  onFloorComplete 
+}: BossBattleProps) {
+  
+  // >>> SỬ DỤNG initialFloor ĐỂ KHỞI TẠO STATE TẦNG HIỆN TẠI <<<
+  const [currentBossIndex, setCurrentBossIndex] = useState(initialFloor);
   const currentBossData = BOSS_DATA[currentBossIndex];
 
   const [playerStats, setPlayerStats] = useState(playerInitialStats);
@@ -200,12 +212,17 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
 
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // >>> THÊM EFFECT ĐỂ ĐỒNG BỘ NẾU PROP THAY ĐỔI <<<
+  useEffect(() => {
+    setCurrentBossIndex(initialFloor);
+  }, [initialFloor]);
+
   useEffect(() => {
     setPlayerStats(playerInitialStats);
   }, [playerInitialStats]);
 
-
   useEffect(() => {
+    // Cập nhật lại boss stats mỗi khi tầng thay đổi
     setBossStats(BOSS_DATA[currentBossIndex].stats);
     addLog(`${BOSS_DATA[currentBossIndex].name} đã xuất hiện. Hãy chuẩn bị!`, 0);
   }, [currentBossIndex]);
@@ -232,10 +249,9 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
     }, 1500);
   };
 
-  // Công thức tính sát thương (Percentage Reduction) - Cân bằng tốt hơn
   const calculateDamage = (attackerAtk: number, defenderDef: number) => {
     const baseDamage = attackerAtk * (0.8 + Math.random() * 0.4);
-    const defenseConstant = 100; // Có thể tinh chỉnh để cân bằng game
+    const defenseConstant = 100;
     const damageReduction = defenderDef / (defenderDef + defenseConstant);
     const finalDamage = baseDamage * (1 - damageReduction);
     return Math.max(1, Math.floor(finalDamage));
@@ -243,7 +259,6 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
 
   const runBattleTurn = () => {
     if (gameOver) return;
-
     setTurnCounter(currentTurn => {
         const nextTurn = currentTurn + 1;
         const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
@@ -257,7 +272,6 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
             }
             return { ...prevBoss, hp: newHp };
         });
-
         setTimeout(() => {
             if (battleIntervalRef.current) {
                 const bossDmg = calculateDamage(bossStats.atk, playerStats.def);
@@ -273,7 +287,6 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
                 });
             }
         }, 400);
-
         return nextTurn;
     });
   };
@@ -284,7 +297,6 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
     setBattleState('finished');
     setGameOver(result);
     const rewards = currentBossData.rewards || { coins: 0, energy: 0 };
-
     if (result === 'win') {
       addLog(`${currentBossData.name} đã bị đánh bại!`, finalTurn);
       onBattleEnd('win', rewards);
@@ -318,19 +330,35 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
     setShowRewardsModal(false);
   }
 
-  const resetGame = () => {
+  // >>> HÀM MỚI: THỬ LẠI TẦNG HIỆN TẠI KHI THUA <<<
+  const retryCurrentFloor = () => {
+    resetAllStateForNewBattle();
+    // KHÔNG reset currentBossIndex, giữ nguyên tầng hiện tại
+    setPlayerStats(playerInitialStats); 
+    setBossStats(BOSS_DATA[currentBossIndex].stats); // Chỉ reset stats của boss hiện tại
+    setTimeout(() => addLog(`${BOSS_DATA[currentBossIndex].name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
+  };
+  
+  // >>> ĐỔI TÊN HÀM NÀY CHO RÕ NGHĨA HƠN <<<
+  // Hàm này chỉ dùng khi người chơi clear hết boss và muốn chơi lại từ đầu
+  const restartFromBeginning = () => {
     resetAllStateForNewBattle();
     setCurrentBossIndex(0);
-    setPlayerStats(playerInitialStats); 
+    onFloorComplete(0); // Báo cho parent biết để reset tiến trình
+    setPlayerStats(playerInitialStats);
     setBossStats(BOSS_DATA[0].stats);
     setTimeout(() => addLog(`${BOSS_DATA[0].name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
-  };
+  }
 
   const handleNextFloor = () => {
     const nextIndex = currentBossIndex + 1;
     if(nextIndex < BOSS_DATA.length) {
       resetAllStateForNewBattle();
       setCurrentBossIndex(nextIndex);
+      
+      // >>> ĐÂY LÀ LÚC GỌI onFloorComplete ĐỂ LƯU TIẾN TRÌNH <<<
+      onFloorComplete(nextIndex);
+
       // Hồi đầy máu cho người chơi, giữ nguyên chỉ số ATK/DEF đã nâng cấp
       // và năng lượng hiện tại (đã cộng thưởng).
       setPlayerStats(prev => ({
@@ -348,14 +376,12 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
     let tempTurn = turnCounter;
     let tempCombatLog: string[] = [...combatLog].reverse();
     let winner: 'win' | 'lose' | null = null;
-
     while (winner === null) {
         tempTurn++;
         const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
         tempBossHp -= playerDmg;
         tempCombatLog.push(`[Lượt ${tempTurn}] Bạn tấn công, gây ${playerDmg} sát thương.`);
         if (tempBossHp <= 0) { winner = 'win'; break; }
-
         const bossDmg = calculateDamage(bossStats.atk, playerStats.def);
         tempPlayerHp -= bossDmg;
         tempCombatLog.push(`[Lượt ${tempTurn}] ${currentBossData.name} phản công, gây ${bossDmg} sát thương.`);
@@ -450,8 +476,9 @@ export default function BossBattle({ onClose, playerInitialStats, onBattleEnd }:
                 )}
             </div>
 
-            {gameOver === 'win' && (<VictoryModal onRestart={resetGame} onNextFloor={handleNextFloor} isLastBoss={currentBossIndex === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
-            {gameOver === 'lose' && (<DefeatModal onRestart={resetGame} />)}
+            {/* >>> CẬP NHẬT CÁC HÀM GỌI TRONG MODAL <<< */}
+            {gameOver === 'win' && (<VictoryModal onRestart={restartFromBeginning} onNextFloor={handleNextFloor} isLastBoss={currentBossIndex === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
+            {gameOver === 'lose' && (<DefeatModal onRestart={retryCurrentFloor} />)}
         </main>
       </div>
     </>
