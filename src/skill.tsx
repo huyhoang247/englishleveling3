@@ -52,14 +52,6 @@ interface OwnedSkill {
   level: number;
 }
 
-const getLifeStealDescription = (level: number, rarity: string): string => {
-    const baseLifesteal = 4; // Bắt đầu từ 4, vì level 1 là 5%
-    const lifestealPerLevel = 1;
-    const currentLifesteal = baseLifesteal + (level * lifestealPerLevel);
-    return `Mỗi lượt có ${getActivationChance(rarity)}% cơ hội kích hoạt: Hồi phục Máu tương đương ${currentLifesteal}% Sát thương gây ra.`;
-};
-
-
 const ALL_SKILLS: SkillBlueprint[] = [
   { id: 'fireball',    name: 'Quả Cầu Lửa',      description: () => 'Tấn công kẻ địch bằng một quả cầu lửa rực cháy.', icon: FireballIcon, rarity: 'B' },
   { id: 'ice_shard',   name: 'Mảnh Băng',         description: () => 'Làm chậm và gây sát thương lên mục tiêu.',         icon: IceShardIcon, rarity: 'A' },
@@ -67,7 +59,7 @@ const ALL_SKILLS: SkillBlueprint[] = [
   { 
     id: 'life_steal',    
     name: 'Hút Máu',      
-    description: getLifeStealDescription,
+    description: () => 'Hồi phục Máu từ Sát thương gây ra.',
     icon: LifeStealIcon, 
     rarity: 'E', 
     baseLifestealPercent: 5,
