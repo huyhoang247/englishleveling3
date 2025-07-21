@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './coin-display.tsx';
-import { getFirestore, doc, getDoc, setDoc, runTransaction, collection, getDocs } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc, runTransaction, collection, getDocs, updateDoc } from 'firebase/firestore';
 import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
@@ -24,6 +24,7 @@ import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './tha
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './can-cu.tsx';
 import SkillScreen from './skill.tsx';
+import { type OwnedSkill } from './skill-data.tsx';
 
 // --- SVG Icon Components ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -117,11 +118,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [gems, setGems] = useState(0);
   const [masteryCards, setMasteryCards] = useState(0);
   const [pickaxes, setPickaxes] = useState(0);
+  const [ancientBooks, setAncientBooks] = useState(0); 
   const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
   const [userStats, setUserStats] = useState({ hp: 0, atk: 0, def: 0 });
   const [jackpotPool, setJackpotPool] = useState(0);
-  // >>> THÊM STATE MỚI ĐỂ LƯU TẦNG BOSS CAO NHẤT <<<
   const [bossBattleHighestFloor, setBossBattleHighestFloor] = useState(0);
+
+  // States for the skill system
+  const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([]);
+  const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([null, null, null]);
 
 
   // States for managing overlay visibility
@@ -210,21 +215,33 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setMasteryCards(userData.masteryCards || 0); setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50);
         setMinerChallengeHighestFloor(userData.minerChallengeHighestFloor || 0);
         setUserStats(userData.stats || { hp: 0, atk: 0, def: 0 });
-        // >>> ĐỌC DỮ LIỆU TẦNG BOSS TỪ FIRESTORE <<<
         setBossBattleHighestFloor(userData.bossBattleHighestFloor || 0);
+        
+        // Fetch skill system data
+        setAncientBooks(userData.ancientBooks || 20);
+        setOwnedSkills(userData.ownedSkills || []);
+        setEquippedSkillIds(userData.equippedSkillIds || [null, null, null]);
+
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
           coins: 0, gems: 0, masteryCards: 0, stats: { hp: 0, atk: 0, def: 0 },
           pickaxes: 50, minerChallengeHighestFloor: 0, 
-          // >>> THIẾT LẬP GIÁ TRỊ MẶC ĐỊNH CHO NGƯỜI DÙNG MỚI <<<
           bossBattleHighestFloor: 0,
+          // Add default skill data for new users
+          ancientBooks: 20,
+          ownedSkills: [],
+          equippedSkillIds: [null, null, null],
           createdAt: new Date(),
         });
         setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0); setPickaxes(50);
         setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
-        // >>> SET STATE MẶC ĐỊNH <<<
         setBossBattleHighestFloor(0);
+
+        // Set default skill state for new users
+        setAncientBooks(20);
+        setOwnedSkills([]);
+        setEquippedSkillIds([null, null, null]);
       }
     } catch (error) { console.error("Error fetching user data:", error); } 
     finally { setIsLoadingUserData(false); }
@@ -244,27 +261,77 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     } catch (error) { console.error("Error fetching jackpot pool:", error); }
   };
     
-  // >>> THÊM HÀM MỚI ĐỂ CẬP NHẬT TẦNG BOSS LÊN FIRESTORE <<<
   const handleBossFloorUpdate = async (newFloor: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) {
       console.error("Cannot update boss floor: User not authenticated.");
       return;
     }
-    // Chỉ cập nhật nếu tầng mới cao hơn tầng hiện tại
     if (newFloor <= bossBattleHighestFloor) {
-      console.log(`New floor ${newFloor} is not higher than current ${bossBattleHighestFloor}. No update needed.`);
       return;
     }
     const userDocRef = doc(db, 'users', userId);
     try {
-      // Dùng setDoc với merge: true để chỉ cập nhật hoặc tạo mới trường này
       await setDoc(userDocRef, { bossBattleHighestFloor: newFloor }, { merge: true });
-      setBossBattleHighestFloor(newFloor); // Cập nhật state cục bộ
+      setBossBattleHighestFloor(newFloor); 
       console.log(`Updated boss floor to ${newFloor} for user ${userId}.`);
     } catch (error) {
       console.error("Firestore update failed for boss floor: ", error);
     }
+  };
+
+  const handleSkillDataUpdate = async (updates: {
+      newOwnedSkills?: OwnedSkill[];
+      newEquippedSkillIds?: (string | null)[];
+      booksChange?: number;
+      goldChange?: number;
+  }) => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) {
+          console.error("User not authenticated for skill update.");
+          return;
+      }
+      setIsSyncingData(true);
+      const userDocRef = doc(db, 'users', userId);
+      try {
+          await runTransaction(db, async (transaction) => {
+              const userDoc = await transaction.get(userDocRef);
+              if (!userDoc.exists()) {
+                  throw "User document does not exist!";
+              }
+
+              const dataToUpdate: { [key: string]: any } = {};
+              
+              if (updates.booksChange) {
+                  const currentBooks = userDoc.data().ancientBooks || 0;
+                  dataToUpdate.ancientBooks = currentBooks + updates.booksChange;
+              }
+              if (updates.goldChange) {
+                  const currentGold = userDoc.data().coins || 0;
+                  dataToUpdate.coins = currentGold + updates.goldChange;
+              }
+              if (updates.newOwnedSkills) {
+                  dataToUpdate.ownedSkills = updates.newOwnedSkills;
+              }
+              if (updates.newEquippedSkillIds) {
+                  dataToUpdate.equippedSkillIds = updates.newEquippedSkillIds;
+              }
+
+              transaction.update(userDocRef, dataToUpdate);
+          });
+          
+          if (updates.newOwnedSkills) setOwnedSkills(updates.newOwnedSkills);
+          if (updates.newEquippedSkillIds) setEquippedSkillIds(updates.newEquippedSkillIds);
+          if (updates.booksChange) setAncientBooks(prev => prev + updates.booksChange!);
+          if (updates.goldChange) setCoins(prev => prev + updates.goldChange!);
+
+          console.log("Skill data updated successfully.", updates);
+
+      } catch (error) {
+          console.error("Firestore transaction for skill data update failed: ", error);
+      } finally {
+          setIsSyncingData(false);
+      }
   };
 
 
@@ -314,15 +381,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
 
     const userDocRef = doc(db, 'users', userId);
-    console.log("Ending Miner Challenge session. Updating Firestore with:", result);
-
     if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) {
-        console.log("No changes to update from Miner Challenge.");
         return;
     }
 
     setIsSyncingData(true);
-
     try {
       await runTransaction(db, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
@@ -353,8 +416,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setMinerChallengeHighestFloor(result.highestFloorCompleted);
       }
       
-      console.log("Firestore updated successfully after Miner Challenge.");
-
     } catch (error) {
       console.error("Firestore Transaction failed for Miner Challenge end: ", error);
     } finally {
@@ -378,7 +439,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   const handleUpdatePickaxes = async (amountToAdd: number) => {
     const userId = auth.currentUser?.uid;
-    if (!userId) { console.error("Cannot update pickaxes: User not authenticated."); return; }
+    if (!userId) { return; }
     const newTotal = pickaxes + amountToAdd;
     await updatePickaxesInFirestore(userId, newTotal);
   };
@@ -409,7 +470,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     newStats: { hp: number; atk: number; def: number; }
   ) => {
     if (!userId) {
-      console.error("Không thể nâng cấp: Người dùng chưa xác thực.");
       throw new Error("Người dùng chưa xác thực"); 
     }
     const userDocRef = doc(db, 'users', userId);
@@ -430,7 +490,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           stats: newStats,
         });
       });
-      console.log(`Nâng cấp chỉ số thành công cho user ${userId}. Dữ liệu đã nhất quán.`);
       setCoins(prevCoins => prevCoins - upgradeCost);
       setUserStats(newStats);
     } catch (error) {
@@ -451,9 +510,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false);
         setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
-        // >>> RESET STATE TẦNG BOSS KHI LOGOUT <<<
         setBossBattleHighestFloor(0);
         setJackpotPool(0); setIsLoadingUserData(true); setVocabularyData(null);
+        // Reset skill states on logout
+        setAncientBooks(0);
+        setOwnedSkills([]);
+        setEquippedSkillIds([null, null, null]);
       }
     });
     return () => unsubscribe();
@@ -488,7 +550,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   const handleRewardClaim = async (reward: { gold: number; masteryCards: number }, updatedVocabulary: VocabularyItem[]) => {
     const userId = auth.currentUser?.uid;
-    if (!userId) { console.error("Cannot claim reward: User not authenticated."); throw new Error("User not authenticated"); }
+    if (!userId) { throw new Error("User not authenticated"); }
     const userDocRef = doc(db, 'users', userId);
     const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
     setIsSyncingData(true);
@@ -501,7 +563,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             transaction.update(userDocRef, { coins: newCoins, masteryCards: newCards });
             transaction.set(achievementDocRef, { vocabulary: updatedVocabulary }, { merge: true });
         });
-        console.log("Reward claimed and achievements updated successfully in a single transaction.");
         setCoins(prev => prev + reward.gold); setMasteryCards(prev => prev + reward.masteryCards);
         setVocabularyData(updatedVocabulary);
     } catch (error) {
@@ -640,12 +701,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClose={toggleBossBattle}
                         playerInitialStats={getPlayerBattleStats()}
                         onBattleEnd={(result, rewards) => {
-                            console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`);
                             if (result === 'win' && auth.currentUser) {
                                 updateCoinsInFirestore(auth.currentUser.uid, rewards.coins);
                             }
                         }}
-                        // >>> TRUYỀN PROP MỚI VÀO COMPONENT BOSS <<<
                         initialFloor={bossBattleHighestFloor}
                         onFloorComplete={handleBossFloorUpdate}
                     />
@@ -683,8 +742,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isSkillScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
-                {isSkillScreenOpen && (
-                    <SkillScreen onClose={toggleSkillScreen} />
+                {isSkillScreenOpen && auth.currentUser && (
+                    <SkillScreen 
+                        onClose={toggleSkillScreen}
+                        gold={coins}
+                        ancientBooks={ancientBooks}
+                        ownedSkills={ownedSkills}
+                        equippedSkillIds={equippedSkillIds}
+                        onDataUpdate={handleSkillDataUpdate}
+                    />
                 )}
             </ErrorBoundary>
         </div>
