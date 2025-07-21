@@ -488,7 +488,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                   {selectedPractice === 3 ? (
                     <div className="w-full flex flex-col items-center gap-4">
                       <div className={`p-4 bg-white rounded-lg shadow-md w-full transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
-                        <p className="text-lg sm:text-xl font-medium text-gray-700 leading-relaxed flex flex-wrap items-baseline justify-start gap-x-2 gap-y-2">
+                        <p className="text-lg sm:text-xl font-medium text-gray-700 leading-relaxed">
                            {currentWord.question?.split('___').map((part, index, arr) => (
                             <React.Fragment key={index}>
                               <span>{part}</span>
@@ -496,7 +496,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                                 <button
                                   onClick={() => !isCorrect && setActiveBlankIndex(index)}
                                   disabled={!!isCorrect}
-                                  className={`px-3 py-1 rounded-md font-medium transition-all duration-200 min-w-[5rem] inline-flex items-center justify-center
+                                  className={`align-baseline inline-block mx-1 px-3 py-0.5 rounded-md font-medium transition-all duration-200
                                     ${filledWords[index] ? 'bg-green-100 text-green-700 cursor-default' : 'bg-gray-200 text-gray-500'}
                                     ${activeBlankIndex === index && !isCorrect ? 'ring-2 ring-indigo-500 shadow-lg scale-105 bg-indigo-50 text-indigo-700' : ''}
                                     ${isCorrect ? 'cursor-not-allowed' : 'hover:bg-indigo-100'}
