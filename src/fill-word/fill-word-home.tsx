@@ -111,19 +111,17 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   const isInitialLoadComplete = useRef(false);
   const p3InputRef = useRef<HTMLInputElement>(null);
 
-  // <<< STATE MỚI CHO PRACTICE 3 >>>
   const [filledWords, setFilledWords] = useState<string[]>([]);
   const [activeBlankIndex, setActiveBlankIndex] = useState<number | null>(null);
   const [shake, setShake] = useState(false);
 
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
   
-  // Reset state của Practice 3 khi chuyển câu hỏi
   const resetP3State = (wordItem: VocabularyItem | null) => {
     if (selectedPractice === 3 && wordItem) {
       const wordCount = wordItem.word.split(' ').length;
       setFilledWords(Array(wordCount).fill(''));
-      setActiveBlankIndex(0); // Bắt đầu từ ô trống đầu tiên
+      setActiveBlankIndex(0);
     } else {
       setFilledWords([]);
       setActiveBlankIndex(null);
@@ -232,7 +230,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     return () => clearInterval(timerId);
   }, [currentWord, gameOver, isCorrect]);
 
-  // Focus input của P3 khi activeBlankIndex thay đổi
   useEffect(() => {
     if (selectedPractice === 3 && activeBlankIndex !== null && p3InputRef.current) {
       p3InputRef.current.focus();
@@ -247,7 +244,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         setCurrentWord(nextWord); 
         setFeedback(''); 
         setIsCorrect(null);
-        resetP3State(nextWord); // Reset state P3 cho câu mới
+        resetP3State(nextWord);
     } else { 
         setGameOver(true); 
         setCurrentWord(null); 
@@ -302,30 +299,24 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     const expectedWord = correctWords[activeBlankIndex];
 
     if (userInput.trim().toLowerCase() === expectedWord.toLowerCase()) {
-      // Điền đúng từ cho ô hiện tại
       const newFilledWords = [...filledWords];
-      newFilledWords[activeBlankIndex] = expectedWord; // Hiện từ đúng (đúng cả viết hoa)
+      newFilledWords[activeBlankIndex] = expectedWord;
       setFilledWords(newFilledWords);
-      setUserInput(''); // Xóa input để chuẩn bị cho từ tiếp theo
+      setUserInput('');
 
       const nextBlankIndex = filledWords.findIndex((word, index) => index > activeBlankIndex && word === '');
 
       if (nextBlankIndex !== -1) {
-        // Vẫn còn ô trống, chuyển sang ô tiếp theo
         setActiveBlankIndex(nextBlankIndex);
       } else {
-        // Kiểm tra xem tất cả đã được điền chưa
         const allFilled = newFilledWords.every(word => word !== '');
         if (allFilled) {
-          // Đã điền hết và đúng, kích hoạt chuỗi thành công
           triggerSuccessSequence();
         } else {
-          // Nếu còn ô trống nào đó chưa điền (trường hợp nhảy ô)
           setActiveBlankIndex(newFilledWords.findIndex(w => w === ''));
         }
       }
     } else {
-      // Trả lời sai
       setShake(true);
       setStreak(0);
       setTimeout(() => setShake(false), 500);
@@ -420,9 +411,10 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
                     <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div>
                 </div>
+                {/* <<< THAY ĐỔI: BỎ CĂN GIỮA >>> */}
                 { (selectedPractice === 2 || selectedPractice === 3) && currentWord && (
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
-                    <p className="text-lg sm:text-xl font-semibold text-white leading-tight text-center">
+                    <p className="text-lg sm:text-xl font-semibold text-white leading-tight">
                       {currentWord.question?.split('___').map((part, i, arr) => (
                         <React.Fragment key={i}>
                           {part}
@@ -430,7 +422,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                         </React.Fragment>
                       ))}
                     </p>
-                    {currentWord.vietnameseHint && (<p className="text-white/80 text-sm mt-2 italic text-center">{currentWord.vietnameseHint}</p>)}
+                    {currentWord.vietnameseHint && (<p className="text-white/80 text-sm mt-2 italic">{currentWord.vietnameseHint}</p>)}
                   </div>
                 )}
               </div>
@@ -440,11 +432,10 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                   {selectedPractice === 1 && <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />}
                   
                   {selectedPractice === 3 ? (
-                    // <<< UI MỚI CHO PRACTICE 3 >>>
                     <div className="w-full flex flex-col items-center gap-4">
-                      {/* Hiển thị câu với các ô trống có thể click */}
-                      <div className="p-4 bg-white rounded-lg shadow-md w-full text-center">
-                        <p className="text-lg sm:text-xl font-medium text-gray-700 leading-relaxed flex flex-wrap items-center justify-center gap-x-2">
+                      {/* <<< THAY ĐỔI: BỎ CĂN GIỮA >>> */}
+                      <div className="p-4 bg-white rounded-lg shadow-md w-full">
+                        <p className="text-lg sm:text-xl font-medium text-gray-700 leading-relaxed flex flex-wrap items-center justify-start gap-x-2">
                            {currentWord.question?.split('___').map((part, index, arr) => (
                             <React.Fragment key={index}>
                               <span>{part}</span>
@@ -466,7 +457,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                         </p>
                       </div>
 
-                      {/* Input để điền từ */}
                       {activeBlankIndex !== null && !isCorrect && (
                         <div className={`w-full transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
                           <input
@@ -484,7 +474,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                       )}
                     </div>
                   ) : (
-                    // Giao diện cũ cho Practice 1 và 2
                     <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} feedback={feedback} isCorrect={isCorrect} disabled={!!isCorrect} />
                   )}
                 </div>
