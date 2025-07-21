@@ -40,6 +40,33 @@ const getActivationChance = (rarity: string) => {
         default: return 0;
     }
 };
+
+// --- START: THÊM HÀM LẤY ĐỘ HIẾM NGẪU NHIÊN KHI CHẾ TẠO ---
+const getRandomRarity = (): 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' => {
+    const rarities = [
+        { rarity: 'E', weight: 50 },
+        { rarity: 'D', weight: 30 },
+        { rarity: 'B', weight: 10 },
+        { rarity: 'A', weight: 5 },
+        { rarity: 'S', weight: 3 },
+        { rarity: 'SR', weight: 1 },
+    ] as const;
+
+    // Tổng trọng số là 99, đúng với tỷ lệ yêu cầu.
+    const totalWeight = rarities.reduce((sum, r) => sum + r.weight, 0);
+    let random = Math.random() * totalWeight;
+
+    for (const r of rarities) {
+        if (random < r.weight) {
+            return r.rarity;
+        }
+        random -= r.weight;
+    }
+
+    return 'E'; // Fallback, trường hợp này không nên xảy ra.
+};
+// --- END: THÊM HÀM LẤY ĐỘ HIẾM NGẪU NHIÊN KHI CHẾ TẠO ---
+
 // --- END: CÁC HÀM HELPER VỀ ĐỘ HIẾM VÀ KỸ NĂNG ---
 
 // --- START: CẤU TRÚC DỮ LIỆU MỚI CHO KỸ NĂNG ---
@@ -48,7 +75,6 @@ interface SkillBlueprint {
   name: string;
   description: (level: number, rarity: string) => string;
   icon: (props: { className?: string }) => React.ReactElement;
-  rarity: 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
   baseEffectValue?: number;
   effectValuePerLevel?: number;
   upgradeCost?: number;
@@ -59,6 +85,7 @@ interface OwnedSkill {
   id: string;
   skillId: string;
   level: number;
+  rarity: 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
 }
 
 const ALL_SKILLS: SkillBlueprint[] = [
@@ -67,7 +94,6 @@ const ALL_SKILLS: SkillBlueprint[] = [
     name: 'Hút Máu',      
     description: (level) => `Hút ${5 + (level - 1) * 1}% Máu dựa trên Sát thương gây ra.`,
     icon: LifeStealIcon, 
-    rarity: 'S', 
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
@@ -78,7 +104,6 @@ const ALL_SKILLS: SkillBlueprint[] = [
     name: 'Phản Damage',
     description: (level) => `Phản lại ${5 + (level - 1) * 1}% Sát thương nhận được khi bị tấn công.`,
     icon: ThornsIcon,
-    rarity: 'S',
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
@@ -89,7 +114,6 @@ const ALL_SKILLS: SkillBlueprint[] = [
     name: 'Tăng Sát Thương',
     description: (level) => `Khi tấn công, có tỉ lệ kích hoạt, tăng ${5 + (level - 1) * 1}% Sát thương cho đòn đánh đó.`,
     icon: DamageBoostIcon,
-    rarity: 'S',
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
@@ -100,7 +124,6 @@ const ALL_SKILLS: SkillBlueprint[] = [
     name: 'Xuyên Giáp',
     description: (level) => `Khi tấn công, có tỉ lệ kích hoạt, bỏ qua ${5 + (level - 1) * 1}% giáp của đối phương.`,
     icon: ArmorPenetrationIcon,
-    rarity: 'S',
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
@@ -134,17 +157,17 @@ const Header = ({ gold, ancientBooks }: { gold: number; ancientBooks: number; })
 const SkillSlot = ({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onClick: () => void }) => {
   const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
   const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center cursor-pointer group";
-  const borderStyle = skillBlueprint ? `${getRarityColor(skillBlueprint.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
+  const borderStyle = ownedSkill && skillBlueprint ? `${getRarityColor(ownedSkill.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
   const backgroundStyle = skillBlueprint ? 'bg-slate-900/80' : 'bg-slate-900/50';
   const IconComponent = skillBlueprint?.icon;
 
   return (
     <div className={`${baseClasses} ${borderStyle} ${backgroundStyle}`} onClick={onClick}>
-      {skillBlueprint && IconComponent ? (
+      {ownedSkill && skillBlueprint && IconComponent ? (
         <>
           <div className="text-center p-2 flex flex-col items-center gap-2">
             <div className="transition-all duration-300 group-hover:scale-110">
-               <IconComponent className={`w-10 h-10 ${getRarityTextColor(skillBlueprint.rarity)}`} />
+               <IconComponent className={`w-10 h-10 ${getRarityTextColor(ownedSkill.rarity)}`} />
             </div>
             <p className="text-xs sm:text-sm font-bold tracking-wider text-white">{skillBlueprint.name}</p>
           </div>
@@ -174,14 +197,14 @@ const SkillCard = ({ ownedSkill, onClick, isEquipped }: { ownedSkill: OwnedSkill
     <div className={`${baseClasses} border-slate-700 bg-slate-900/70 ${interactivity}`} onClick={!isEquipped ? onClick : undefined}>
       {isEquipped && <div className="absolute inset-0 bg-black/40 rounded-lg z-10 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-cyan-400">Đã Trang Bị</div>}
       
-      <div className={`flex-shrink-0 w-14 h-14 flex items-center justify-center rounded-md border ${getRarityColor(skillBlueprint.rarity)} bg-black/20`}>
-        <IconComponent className={`w-9 h-9 ${getRarityTextColor(skillBlueprint.rarity)}`} />
+      <div className={`flex-shrink-0 w-14 h-14 flex items-center justify-center rounded-md border ${getRarityColor(ownedSkill.rarity)} bg-black/20`}>
+        <IconComponent className={`w-9 h-9 ${getRarityTextColor(ownedSkill.rarity)}`} />
       </div>
       
       <div className="flex-grow flex flex-col justify-center">
         <div className="flex justify-between items-center">
-          <h3 className={`text-base font-bold ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.name}</h3>
-          <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(skillBlueprint.rarity)} ${getRarityTextColor(skillBlueprint.rarity)}`}>{skillBlueprint.rarity}</span>
+          <h3 className={`text-base font-bold ${getRarityTextColor(ownedSkill.rarity)}`}>{skillBlueprint.name}</h3>
+          <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(ownedSkill.rarity)} ${getRarityTextColor(ownedSkill.rarity)}`}>{ownedSkill.rarity}</span>
         </div>
         <div className="mt-1">
           <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">Level {ownedSkill.level}</span>
@@ -209,15 +232,15 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-          <div className={`relative bg-gradient-to-br ${getRarityGradient(skill.rarity)} p-5 rounded-xl border-2 ${getRarityColor(skill.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
+          <div className={`relative bg-gradient-to-br ${getRarityGradient(ownedSkill.rarity)} p-5 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
             {/* Header */}
             <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
               <div className="flex justify-between items-start mb-2">
-                <h3 className={`text-2xl font-bold ${getRarityTextColor(skill.rarity)}`}>{skill.name}</h3>
+                <h3 className={`text-2xl font-bold ${getRarityTextColor(ownedSkill.rarity)}`}>{skill.name}</h3>
                 <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
               </div>
               <div className="flex items-center gap-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(skill.rarity)} bg-gray-800/70 border ${getRarityColor(skill.rarity)} capitalize`}>{getRarityDisplayName(skill.rarity)}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(ownedSkill.rarity)} bg-gray-800/70 border ${getRarityColor(ownedSkill.rarity)} capitalize`}>{getRarityDisplayName(ownedSkill.rarity)}</span>
                 <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Level {ownedSkill.level}</span>
               </div>
             </div>
@@ -225,14 +248,14 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
             {/* Content */}
             <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-2">
               <div className="flex flex-col items-center text-center gap-4">
-                <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(skill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(skill.rarity)}`} /></div>
-                <p className="text-slate-300 text-base leading-relaxed">{skill.description(ownedSkill.level, skill.rarity)}</p>
+                <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)}`} /></div>
+                <p className="text-slate-300 text-base leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
                 
                 {isUpgradable && (
                   <div className="w-full text-left text-sm mt-2 p-3 bg-black/20 rounded-lg border border-slate-700/50">
                     <div className="flex justify-between">
                       <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span>
-                      <span className="font-semibold text-cyan-300">{getActivationChance(skill.rarity)}%</span>
+                      <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span>
                     </div>
                   </div>
                 )}
@@ -286,10 +309,13 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
     );
 };
 
-const CraftingSuccessModal = ({ skill, onClose }: { skill: SkillBlueprint, onClose: () => void }) => {
+const CraftingSuccessModal = ({ ownedSkill, onClose }: { ownedSkill: OwnedSkill, onClose: () => void }) => {
+    const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
+    if (!skill) return null;
+
     const IconComponent = skill.icon;
-    const rarityTextColor = getRarityTextColor(skill.rarity);
-    const rarityColor = getRarityColor(skill.rarity).replace('border-', ''); 
+    const rarityTextColor = getRarityTextColor(ownedSkill.rarity);
+    const rarityColor = getRarityColor(ownedSkill.rarity).replace('border-', ''); 
     const shadowStyle = { boxShadow: `0 0 25px -5px ${rarityColor}, 0 0 15px -10px ${rarityColor}` };
 
     return (
@@ -297,18 +323,18 @@ const CraftingSuccessModal = ({ skill, onClose }: { skill: SkillBlueprint, onClo
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
             <div className="relative w-full max-w-sm">
                 <div className="absolute inset-0.5 animate-spin-slow-360">
-                    <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(skill.rarity)} opacity-50 rounded-full blur-2xl`}></div>
+                    <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(ownedSkill.rarity)} opacity-50 rounded-full blur-2xl`}></div>
                 </div>
-                <div className={`relative bg-gradient-to-b ${getRarityGradient(skill.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(skill.rarity)} text-center flex flex-col items-center gap-4`} style={shadowStyle}>
+                <div className={`relative bg-gradient-to-b ${getRarityGradient(ownedSkill.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(ownedSkill.rarity)} text-center flex flex-col items-center gap-4`} style={shadowStyle}>
                     <h2 className="text-2xl font-black tracking-widest uppercase text-white title-glow">Chế Tạo Thành Công</h2>
-                    <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(skill.rarity)} shadow-inner`}>
+                    <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}>
                         <IconComponent className={`w-20 h-20 ${rarityTextColor}`} />
                     </div>
                     <div className="flex flex-col">
                         <span className={`text-2xl font-bold ${rarityTextColor}`}>{skill.name}</span>
-                        <span className="font-semibold text-slate-300">{getRarityDisplayName(skill.rarity)}</span>
+                        <span className="font-semibold text-slate-300">{getRarityDisplayName(ownedSkill.rarity)}</span>
                     </div>
-                    <p className="text-sm text-slate-400">{skill.description(1, skill.rarity)}</p>
+                    <p className="text-sm text-slate-400">{skill.description(1, ownedSkill.rarity)}</p>
                     <button onClick={onClose} className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105">
                         Tuyệt vời!
                     </button>
@@ -322,10 +348,10 @@ const CraftingSuccessModal = ({ skill, onClose }: { skill: SkillBlueprint, onClo
 export default function SkillScreen() {
   const [equippedSkills, setEquippedSkills] = useState<(OwnedSkill | null)[]>([null, null, null]);
   const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([
-      { id: `owned-${Date.now()}-ls`, skillId: 'life_steal', level: 1 },
+      { id: `owned-${Date.now()}-ls`, skillId: 'life_steal', level: 1, rarity: 'S' },
   ]);
   const [selectedSkill, setSelectedSkill] = useState<OwnedSkill | null>(null);
-  const [newlyCraftedSkill, setNewlyCraftedSkill] = useState<SkillBlueprint | null>(null);
+  const [newlyCraftedSkill, setNewlyCraftedSkill] = useState<OwnedSkill | null>(null);
   const [gold, setGold] = useState(12500);
   const [ancientBooks, setAncientBooks] = useState(120);
   const [message, setMessage] = useState('');
@@ -366,15 +392,18 @@ export default function SkillScreen() {
     
     const randomIndex = Math.floor(Math.random() * craftableSkills.length);
     const newSkillBlueprint = craftableSkills[randomIndex];
+    const newRarity = getRandomRarity();
+
     const newOwnedSkill: OwnedSkill = {
         id: `owned-${Date.now()}-${newSkillBlueprint.id}`,
         skillId: newSkillBlueprint.id,
         level: 1,
+        rarity: newRarity,
     };
 
     setAncientBooks(prev => prev - CRAFTING_COST);
     setOwnedSkills(prev => [...prev, newOwnedSkill]);
-    setNewlyCraftedSkill(newSkillBlueprint);
+    setNewlyCraftedSkill(newOwnedSkill);
   };
 
   const handleDisenchantSkill = (skillToDisenchant: OwnedSkill) => {
@@ -441,7 +470,7 @@ export default function SkillScreen() {
           gold={gold}
       />}
 
-      {newlyCraftedSkill && <CraftingSuccessModal skill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
+      {newlyCraftedSkill && <CraftingSuccessModal ownedSkill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
 
       <div className="relative z-10 flex flex-col w-full h-screen">
         <Header gold={gold} ancientBooks={ancientBooks} />
@@ -477,8 +506,8 @@ export default function SkillScreen() {
                                 const skillA = ALL_SKILLS.find(s => s.id === a.skillId)!;
                                 const skillB = ALL_SKILLS.find(s => s.id === b.skillId)!;
                                 const rarityOrder = ['E', 'D', 'B', 'A', 'S', 'SR'];
-                                const rarityIndexA = rarityOrder.indexOf(skillA.rarity);
-                                const rarityIndexB = rarityOrder.indexOf(skillB.rarity);
+                                const rarityIndexA = rarityOrder.indexOf(a.rarity);
+                                const rarityIndexB = rarityOrder.indexOf(b.rarity);
                                 if (rarityIndexA !== rarityIndexB) {
                                     return rarityIndexB - rarityIndexA; // Sắp xếp độ hiếm cao hơn trước
                                 }
