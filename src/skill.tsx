@@ -484,7 +484,7 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
 
       <div className="relative z-10 flex flex-col w-full h-screen">
         <Header gold={gold} ancientBooks={ancientBooks} />
-        <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 p-4 sm:p-6 md:p-8">
+        <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
             <section className="flex-shrink-0 py-4">
                 <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
                     {equippedSkills.map((skill, index) => (<SkillSlot key={`equipped-${index}`} ownedSkill={skill} onClick={() => handleUnequipSkill(index)} />))}
