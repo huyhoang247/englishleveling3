@@ -52,7 +52,6 @@ const getRandomRarity = (): 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' => {
         { rarity: 'SR', weight: 1 },
     ] as const;
 
-    // Tổng trọng số là 99, đúng với tỷ lệ yêu cầu.
     const totalWeight = rarities.reduce((sum, r) => sum + r.weight, 0);
     let random = Math.random() * totalWeight;
 
@@ -63,7 +62,7 @@ const getRandomRarity = (): 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' => {
         random -= r.weight;
     }
 
-    return 'E'; // Fallback, trường hợp này không nên xảy ra.
+    return 'E'; // Fallback
 };
 // --- END: THÊM HÀM LẤY ĐỘ HIẾM NGẪU NHIÊN KHI CHẾ TẠO ---
 
@@ -184,7 +183,6 @@ const SkillSlot = ({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onC
   );
 };
 
-// --- START: COMPONENT SKILLCARD ĐÃ SỬA LỖI ---
 const SkillCard = ({ ownedSkill, onClick, isEquipped }: { ownedSkill: OwnedSkill, onClick: () => void, isEquipped: boolean }) => {
   const skillBlueprint = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
   if (!skillBlueprint) return null;
@@ -213,7 +211,6 @@ const SkillCard = ({ ownedSkill, onClick, isEquipped }: { ownedSkill: OwnedSkill
     </div>
   );
 };
-// --- END: COMPONENT SKILLCARD ĐÃ SỬA LỖI ---
 
 const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrade, isEquipped, gold }: { ownedSkill: OwnedSkill, onClose: () => void, onEquip: (skill: OwnedSkill) => void, onDisenchant: (skill: OwnedSkill) => void, onUpgrade: (skill: OwnedSkill) => void, isEquipped: boolean, gold: number }) => {
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
@@ -246,7 +243,7 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
             </div>
 
             {/* Content */}
-            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-2">
+            <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2">
               <div className="flex flex-col items-center text-center gap-4">
                 <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)}`} /></div>
                 <p className="text-slate-300 text-base leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
@@ -367,12 +364,9 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
     setTimeout(() => setMessage(''), 3000);
   };
   
-  // --- START: THAY ĐỔI LOGIC ĐỂ CHO PHÉP CRAFT TRÙNG LẶP ---
   const getCraftableSkills = () => {
-      // Luôn trả về toàn bộ danh sách kỹ năng để có thể chế tạo lại.
       return ALL_SKILLS;
   };
-  // --- END: THAY ĐỔI LOGIC ĐỂ CHO PHÉP CRAFT TRÙNG LẶP ---
 
   const handleEquipSkill = (skillToEquip: OwnedSkill) => {
     if (equippedSkills.some(s => s?.id === skillToEquip.id)) { showMessage("Kỹ năng đã được trang bị."); return; }
@@ -393,8 +387,7 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
   
   const handleCraftSkill = () => {
     const craftableSkills = getCraftableSkills();
-    if (craftableSkills.length === 0) { 
-        // Trường hợp này gần như không xảy ra nữa, nhưng vẫn để lại để phòng lỗi
+    if (craftableSkills.length === 0) {
         showMessage("Không có kỹ năng nào để chế tạo."); 
         return; 
     }
@@ -405,7 +398,7 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
     const newRarity = getRandomRarity();
 
     const newOwnedSkill: OwnedSkill = {
-        id: `owned-${Date.now()}-${newSkillBlueprint.id}-${Math.random()}`, // Thêm số ngẫu nhiên để id luôn unique
+        id: `owned-${Date.now()}-${newSkillBlueprint.id}-${Math.random()}`,
         skillId: newSkillBlueprint.id,
         level: 1,
         rarity: newRarity,
@@ -468,10 +461,18 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; }
         @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #718096; }
+        
+        /* --- START: CSS ĐỂ ẨN THANH CUỘN --- */
+        /* Ẩn thanh cuộn cho Chrome, Safari và Opera */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Ẩn thanh cuộn cho IE, Edge và Firefox */
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        /* --- END: CSS ĐỂ ẨN THANH CUỘN --- */
       `}</style>
       
       {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-50">{message}</div>}
@@ -514,7 +515,7 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
             </section>
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                 <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0 title-glow">Kho Kỹ Năng</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto hide-scrollbar">
                     {ownedSkills.length > 0 ? (
                         ownedSkills
                             .slice()
@@ -525,12 +526,12 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
                                 const rarityIndexA = rarityOrder.indexOf(a.rarity);
                                 const rarityIndexB = rarityOrder.indexOf(b.rarity);
                                 if (rarityIndexA !== rarityIndexB) {
-                                    return rarityIndexB - rarityIndexA; // Sắp xếp độ hiếm cao hơn trước
+                                    return rarityIndexB - rarityIndexA;
                                 }
                                 if (a.level !== b.level) {
-                                    return b.level - a.level; // Sắp xếp level cao hơn trước
+                                    return b.level - a.level;
                                 }
-                                return skillA.name.localeCompare(skillB.name); // Sắp xếp theo tên
+                                return skillA.name.localeCompare(skillB.name);
                             })
                             .map(ownedSkill => (
                                 <SkillCard key={ownedSkill.id} ownedSkill={ownedSkill} onClick={() => setSelectedSkill(ownedSkill)} isEquipped={equippedSkills.some(s => s?.id === ownedSkill.id)} />
