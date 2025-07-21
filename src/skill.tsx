@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     ALL_SKILLS,
     CRAFTING_COST,
@@ -8,7 +8,7 @@ import {
     getRarityGradient,
     getRarityTextColor,
     getRarityDisplayName,
-    type OwnedSkill, // Sử dụng 'type' để import chỉ type definition
+    type OwnedSkill,
 } from './skill-data.tsx';
 
 // --- CÁC ICON GIAO DIỆN CHUNG ---
@@ -36,15 +36,16 @@ const Header = ({ gold, ancientBooks }: { gold: number; ancientBooks: number; })
     );
 };
 
-const SkillSlot = ({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onClick: () => void }) => {
+const SkillSlot = ({ ownedSkill, onClick, isProcessing }: { ownedSkill: OwnedSkill | null, onClick: () => void, isProcessing: boolean }) => {
   const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
-  const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center cursor-pointer group";
+  const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center group";
+  const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer';
   const borderStyle = ownedSkill && skillBlueprint ? `${getRarityColor(ownedSkill.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
   const backgroundStyle = skillBlueprint ? 'bg-slate-900/80' : 'bg-slate-900/50';
   const IconComponent = skillBlueprint?.icon;
 
   return (
-    <div className={`${baseClasses} ${borderStyle} ${backgroundStyle}`} onClick={onClick}>
+    <div className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} onClick={!isProcessing ? onClick : undefined}>
       {ownedSkill && skillBlueprint && IconComponent ? (
         <>
           <div className="text-center p-2 flex flex-col items-center gap-2">
@@ -66,16 +67,16 @@ const SkillSlot = ({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onC
   );
 };
 
-const SkillCard = ({ ownedSkill, onClick, isEquipped }: { ownedSkill: OwnedSkill, onClick: () => void, isEquipped: boolean }) => {
+const SkillCard = ({ ownedSkill, onClick, isEquipped, isProcessing }: { ownedSkill: OwnedSkill, onClick: () => void, isEquipped: boolean, isProcessing: boolean }) => {
   const skillBlueprint = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
   if (!skillBlueprint) return null;
 
   const baseClasses = "relative w-full p-3 rounded-lg border-2 flex items-center gap-4 transition-all duration-200";
-  const interactivity = isEquipped ? 'opacity-50 cursor-not-allowed' : `cursor-pointer hover:border-slate-600 hover:bg-slate-800/50 hover:shadow-lg hover:shadow-cyan-500/10`;
+  const interactivity = isEquipped ? 'opacity-50 cursor-not-allowed' : (isProcessing ? 'cursor-wait' : `cursor-pointer hover:border-slate-600 hover:bg-slate-800/50 hover:shadow-lg hover:shadow-cyan-500/10`);
   const IconComponent = skillBlueprint.icon;
   
   return (
-    <div className={`${baseClasses} border-slate-700 bg-slate-900/70 ${interactivity}`} onClick={!isEquipped ? onClick : undefined}>
+    <div className={`${baseClasses} border-slate-700 bg-slate-900/70 ${interactivity}`} onClick={!isEquipped && !isProcessing ? onClick : undefined}>
       {isEquipped && <div className="absolute inset-0 bg-black/40 rounded-lg z-10 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-cyan-400">Đã Trang Bị</div>}
       
       <div className={`flex-shrink-0 w-14 h-14 flex items-center justify-center rounded-md border ${getRarityColor(ownedSkill.rarity)} bg-black/20`}>
@@ -95,7 +96,7 @@ const SkillCard = ({ ownedSkill, onClick, isEquipped }: { ownedSkill: OwnedSkill
   );
 };
 
-const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrade, isEquipped, gold }: { ownedSkill: OwnedSkill, onClose: () => void, onEquip: (skill: OwnedSkill) => void, onDisenchant: (skill: OwnedSkill) => void, onUpgrade: (skill: OwnedSkill) => void, isEquipped: boolean, gold: number }) => {
+const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrade, isEquipped, gold, isProcessing }: { ownedSkill: OwnedSkill, onClose: () => void, onEquip: (skill: OwnedSkill) => void, onDisenchant: (skill: OwnedSkill) => void, onUpgrade: (skill: OwnedSkill) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
     if (!skill) return null;
 
@@ -108,6 +109,8 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
         if (skill.baseEffectValue === undefined || skill.effectValuePerLevel === undefined) return 0;
         return skill.baseEffectValue + (ownedSkill.level - 1) * skill.effectValuePerLevel;
     };
+
+    const actionDisabled = isProcessing;
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
@@ -144,7 +147,7 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
                     <div className="w-full mt-2 mb-4 space-y-2">
                         <button 
                             onClick={() => onUpgrade(ownedSkill)}
-                            disabled={isMaxLevel || !canAffordUpgrade || isEquipped}
+                            disabled={isMaxLevel || !canAffordUpgrade || isEquipped || actionDisabled}
                             className="w-full relative p-3 rounded-lg transition-all duration-300 text-left flex items-center justify-between disabled:cursor-not-allowed group bg-black/20 border border-slate-700/80 hover:border-purple-500 disabled:hover:border-slate-700/80 hover:bg-purple-900/20"
                         >
                             <div className="flex flex-col">
@@ -176,10 +179,10 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onDisenchant, onUpgrad
             
             <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
               <div className="flex items-center gap-3">
-                <button onClick={() => onEquip(ownedSkill)} disabled={isEquipped} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100'}`}>
+                <button onClick={() => onEquip(ownedSkill)} disabled={isEquipped || actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100'}`}>
                   {isEquipped ? 'Đã Trang Bị' : 'Trang Bị'}
                 </button>
-                <button onClick={() => onDisenchant(ownedSkill)} disabled={isEquipped} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-100'}`}>
+                <button onClick={() => onDisenchant(ownedSkill)} disabled={isEquipped || actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-100'}`}>
                   Phân Rã
                 </button>
               </div>
@@ -224,110 +227,165 @@ const CraftingSuccessModal = ({ ownedSkill, onClose }: { ownedSkill: OwnedSkill,
     );
 };
 
+
 // --- COMPONENT CHÍNH ---
 interface SkillScreenProps {
   onClose: () => void;
+  gold: number;
+  ancientBooks: number;
+  ownedSkills: OwnedSkill[];
+  equippedSkillIds: (string | null)[];
+  onSkillsUpdate: (updates: {
+    newOwned: OwnedSkill[];
+    newEquippedIds: (string | null)[];
+    goldChange: number;
+    booksChange: number;
+  }) => Promise<void>;
 }
 
-export default function SkillScreen({ onClose }: SkillScreenProps) {
-  const [equippedSkills, setEquippedSkills] = useState<(OwnedSkill | null)[]>([null, null, null]);
-  const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([
-      { id: `owned-${Date.now()}-ls`, skillId: 'life_steal', level: 1, rarity: 'S' },
-  ]);
+export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, equippedSkillIds, onSkillsUpdate }: SkillScreenProps) {
   const [selectedSkill, setSelectedSkill] = useState<OwnedSkill | null>(null);
   const [newlyCraftedSkill, setNewlyCraftedSkill] = useState<OwnedSkill | null>(null);
-  const [gold, setGold] = useState(12500);
-  const [ancientBooks, setAncientBooks] = useState(120);
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const equippedSkills = useMemo(() => {
+    return equippedSkillIds.map(id => ownedSkills.find(s => s.id === id) || null);
+  }, [equippedSkillIds, ownedSkills]);
 
   const showMessage = (text: string) => {
     setMessage(text);
     setMessageKey(prev => prev + 1);
-    setTimeout(() => setMessage(''), 3000);
+    const timer = setTimeout(() => setMessage(''), 3000);
+    return () => clearTimeout(timer);
   };
   
-  const getCraftableSkills = () => {
-      return ALL_SKILLS;
-  };
-
-  const handleEquipSkill = (skillToEquip: OwnedSkill) => {
+  const handleEquipSkill = async (skillToEquip: OwnedSkill) => {
+    if (isProcessing) return;
     if (equippedSkills.some(s => s?.id === skillToEquip.id)) { showMessage("Kỹ năng đã được trang bị."); return; }
     const firstEmptySlotIndex = equippedSkills.findIndex(slot => slot === null);
     if (firstEmptySlotIndex === -1) { showMessage("Các ô kỹ năng đã đầy."); return; }
-    const newEquipped = [...equippedSkills];
-    newEquipped[firstEmptySlotIndex] = skillToEquip;
-    setEquippedSkills(newEquipped);
-    setSelectedSkill(null);
+
+    setIsProcessing(true);
+    const newEquippedIds = [...equippedSkillIds];
+    newEquippedIds[firstEmptySlotIndex] = skillToEquip.id;
+
+    try {
+      await onSkillsUpdate({
+        newOwned: ownedSkills, // Unchanged
+        newEquippedIds: newEquippedIds,
+        goldChange: 0,
+        booksChange: 0,
+      });
+      setSelectedSkill(null);
+    } catch (error: any) {
+      showMessage(`Lỗi: ${error.message || 'Không thể trang bị'}`);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleUnequipSkill = (slotIndex: number) => {
-    if (!equippedSkills[slotIndex]) return;
-    const newEquipped = [...equippedSkills];
-    newEquipped[slotIndex] = null;
-    setEquippedSkills(newEquipped);
+  const handleUnequipSkill = async (slotIndex: number) => {
+    if (isProcessing || !equippedSkillIds[slotIndex]) return;
+
+    setIsProcessing(true);
+    const newEquippedIds = [...equippedSkillIds];
+    newEquippedIds[slotIndex] = null;
+
+    try {
+      await onSkillsUpdate({
+        newOwned: ownedSkills, // Unchanged
+        newEquippedIds: newEquippedIds,
+        goldChange: 0,
+        booksChange: 0,
+      });
+    } catch (error: any) {
+      showMessage(`Lỗi: ${error.message || 'Không thể tháo'}`);
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
-  const handleCraftSkill = () => {
-    const craftableSkills = getCraftableSkills();
-    if (craftableSkills.length === 0) {
-        showMessage("Không có kỹ năng nào để chế tạo."); 
-        return; 
-    }
+  const handleCraftSkill = async () => {
+    if (isProcessing) return;
     if (ancientBooks < CRAFTING_COST) { showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`); return; }
     
-    const randomIndex = Math.floor(Math.random() * craftableSkills.length);
-    const newSkillBlueprint = craftableSkills[randomIndex];
+    setIsProcessing(true);
+    const newSkillBlueprint = ALL_SKILLS[Math.floor(Math.random() * ALL_SKILLS.length)];
     const newRarity = getRandomRarity();
-
     const newOwnedSkill: OwnedSkill = {
         id: `owned-${Date.now()}-${newSkillBlueprint.id}-${Math.random()}`,
-        skillId: newSkillBlueprint.id,
-        level: 1,
-        rarity: newRarity,
+        skillId: newSkillBlueprint.id, level: 1, rarity: newRarity,
     };
+    const newOwnedList = [...ownedSkills, newOwnedSkill];
 
-    setAncientBooks(prev => prev - CRAFTING_COST);
-    setOwnedSkills(prev => [...prev, newOwnedSkill]);
-    setNewlyCraftedSkill(newOwnedSkill);
-  };
-
-  const handleDisenchantSkill = (skillToDisenchant: OwnedSkill) => {
-    if (equippedSkills.some(s => s?.id === skillToDisenchant.id)) {
-      showMessage("Không thể phân rã kỹ năng đang trang bị.");
-      return;
+    try {
+      await onSkillsUpdate({
+        newOwned: newOwnedList,
+        newEquippedIds: equippedSkillIds, // Unchanged
+        goldChange: 0,
+        booksChange: -CRAFTING_COST,
+      });
+      setNewlyCraftedSkill(newOwnedSkill);
+    } catch(error: any) {
+      showMessage(`Lỗi: ${error.message || 'Chế tạo thất bại'}`);
+    } finally {
+      setIsProcessing(false);
     }
-    const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToDisenchant.skillId);
-    if (!skillBlueprint) return;
-
-    const booksToReturn = Math.floor(CRAFTING_COST / 2);
-    setOwnedSkills(prev => prev.filter(s => s.id !== skillToDisenchant.id));
-    setAncientBooks(prev => prev + booksToReturn);
-
-    setSelectedSkill(null);
-    showMessage(`Đã phân rã ${skillBlueprint.name}, nhận lại ${booksToReturn} Sách Cổ.`);
   };
 
-  const handleUpgradeSkill = (skillToUpgrade: OwnedSkill) => {
-      const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToUpgrade.skillId);
-      if (!skillBlueprint || skillBlueprint.upgradeCost === undefined || skillBlueprint.maxLevel === undefined) {
-          showMessage("Kỹ năng này không thể nâng cấp."); return;
-      }
-      if (equippedSkills.some(s => s?.id === skillToUpgrade.id)) {
-          showMessage("Vui lòng tháo kỹ năng trước khi nâng cấp."); return;
-      }
-      if (skillToUpgrade.level >= skillBlueprint.maxLevel) {
-          showMessage("Kỹ năng đã đạt level tối đa."); return;
-      }
-      if (gold < skillBlueprint.upgradeCost) {
-          showMessage(`Không đủ vàng. Cần ${skillBlueprint.upgradeCost}.`); return;
-      }
+  const handleDisenchantSkill = async (skillToDisenchant: OwnedSkill) => {
+    if (isProcessing) return;
+    if (equippedSkills.some(s => s?.id === skillToDisenchant.id)) { showMessage("Không thể phân rã kỹ năng đang trang bị."); return; }
+    
+    setIsProcessing(true);
+    const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToDisenchant.skillId)!;
+    const booksToReturn = Math.floor(CRAFTING_COST / 2);
+    const newOwnedList = ownedSkills.filter(s => s.id !== skillToDisenchant.id);
 
-      setGold(prev => prev - skillBlueprint.upgradeCost!);
+    try {
+      await onSkillsUpdate({
+        newOwned: newOwnedList,
+        newEquippedIds: equippedSkillIds, // Unchanged
+        goldChange: 0,
+        booksChange: booksToReturn
+      });
+      setSelectedSkill(null);
+      showMessage(`Đã phân rã ${skillBlueprint.name}, nhận lại ${booksToReturn} Sách Cổ.`);
+    } catch(error: any) {
+      showMessage(`Lỗi: ${error.message || 'Phân rã thất bại'}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleUpgradeSkill = async (skillToUpgrade: OwnedSkill) => {
+      if (isProcessing) return;
+      const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToUpgrade.skillId);
+      if (!skillBlueprint || skillBlueprint.upgradeCost === undefined || skillBlueprint.maxLevel === undefined) { showMessage("Kỹ năng này không thể nâng cấp."); return; }
+      if (equippedSkills.some(s => s?.id === skillToUpgrade.id)) { showMessage("Vui lòng tháo kỹ năng trước khi nâng cấp."); return; }
+      if (skillToUpgrade.level >= skillBlueprint.maxLevel) { showMessage("Kỹ năng đã đạt level tối đa."); return; }
+      if (gold < skillBlueprint.upgradeCost) { showMessage(`Không đủ vàng. Cần ${skillBlueprint.upgradeCost}.`); return; }
+
+      setIsProcessing(true);
       const updatedSkill = { ...skillToUpgrade, level: skillToUpgrade.level + 1 };
-      setOwnedSkills(prev => prev.map(s => s.id === skillToUpgrade.id ? updatedSkill : s));
-      setSelectedSkill(updatedSkill);
-      showMessage(`Nâng cấp ${skillBlueprint.name} lên Level ${updatedSkill.level} thành công!`);
+      const newOwnedList = ownedSkills.map(s => s.id === skillToUpgrade.id ? updatedSkill : s);
+
+      try {
+        await onSkillsUpdate({
+          newOwned: newOwnedList,
+          newEquippedIds: equippedSkillIds, // Unchanged
+          goldChange: -skillBlueprint.upgradeCost,
+          booksChange: 0,
+        });
+        setSelectedSkill(updatedSkill);
+        showMessage(`Nâng cấp ${skillBlueprint.name} lên Level ${updatedSkill.level} thành công!`);
+      } catch(error: any) {
+        showMessage(`Lỗi: ${error.message || 'Nâng cấp thất bại'}`);
+      } finally {
+        setIsProcessing(false);
+      }
   }
 
   return (
@@ -344,18 +402,8 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; }
         @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } }
-        
-        /* --- START: CSS ĐỂ ẨN THANH CUỘN --- */
-        /* Ẩn thanh cuộn cho Chrome, Safari và Opera */
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        /* Ẩn thanh cuộn cho IE, Edge và Firefox */
-        .hide-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        /* --- END: CSS ĐỂ ẨN THANH CUỘN --- */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
       
       {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-50">{message}</div>}
@@ -368,6 +416,7 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
           onUpgrade={handleUpgradeSkill}
           isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)} 
           gold={gold}
+          isProcessing={isProcessing}
       />}
 
       {newlyCraftedSkill && <CraftingSuccessModal ownedSkill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
@@ -377,7 +426,7 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
         <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
             <section className="flex-shrink-0 py-4">
                 <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
-                    {equippedSkills.map((skill, index) => (<SkillSlot key={`equipped-${index}`} ownedSkill={skill} onClick={() => handleUnequipSkill(index)} />))}
+                    {equippedSkills.map((skill, index) => (<SkillSlot key={`equipped-${index}`} ownedSkill={skill} onClick={() => handleUnequipSkill(index)} isProcessing={isProcessing} />))}
                 </div>
             </section>
             <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
@@ -391,7 +440,7 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
                 <button 
                     onClick={handleCraftSkill} 
                     className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
-                    disabled={ancientBooks < CRAFTING_COST}
+                    disabled={ancientBooks < CRAFTING_COST || isProcessing}
                 >
                   Craft
                 </button>
@@ -403,21 +452,17 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
                         ownedSkills
                             .slice()
                             .sort((a, b) => {
-                                const skillA = ALL_SKILLS.find(s => s.id === a.skillId)!;
-                                const skillB = ALL_SKILLS.find(s => s.id === b.skillId)!;
                                 const rarityOrder = ['E', 'D', 'B', 'A', 'S', 'SR'];
                                 const rarityIndexA = rarityOrder.indexOf(a.rarity);
                                 const rarityIndexB = rarityOrder.indexOf(b.rarity);
-                                if (rarityIndexA !== rarityIndexB) {
-                                    return rarityIndexB - rarityIndexA;
-                                }
-                                if (a.level !== b.level) {
-                                    return b.level - a.level;
-                                }
+                                if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
+                                if (a.level !== b.level) return b.level - a.level;
+                                const skillA = ALL_SKILLS.find(s => s.id === a.skillId)!;
+                                const skillB = ALL_SKILLS.find(s => s.id === b.skillId)!;
                                 return skillA.name.localeCompare(skillB.name);
                             })
                             .map(ownedSkill => (
-                                <SkillCard key={ownedSkill.id} ownedSkill={ownedSkill} onClick={() => setSelectedSkill(ownedSkill)} isEquipped={equippedSkills.some(s => s?.id === ownedSkill.id)} />
+                                <SkillCard key={ownedSkill.id} ownedSkill={ownedSkill} onClick={() => setSelectedSkill(ownedSkill)} isEquipped={equippedSkills.some(s => s?.id === ownedSkill.id)} isProcessing={isProcessing} />
                             ))
                     ) : (
                         <div className="col-span-full flex items-center justify-center h-full text-slate-500"><p>Chưa có kỹ năng. Hãy dùng Sách Cổ để Craft!</p></div>
