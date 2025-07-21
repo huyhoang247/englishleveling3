@@ -181,6 +181,10 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
   const [detailData, setDetailData] = useState<Definition | null>(null);
   const [currentQuestionWord, setCurrentQuestionWord] = useState<string | null>(null);
 
+  // <<< THÊM MỚI: State cho tính năng chơi lại >>>
+  const [isRepeatSession, setIsRepeatSession] = useState(false);
+  const REPEAT_COST = 300;
+
   // Parse definitions from the imported text file
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
@@ -243,6 +247,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
           const completedSet = new Set<string>();
           completedWordsSnapshot.forEach((completedDoc) => {
             const gameModeId = selectedPractice === 1 ? "quiz-1" : `quiz-${selectedPractice}`;
+            // A word is considered "completed" for initial filtering if its document exists for this game mode.
             if (completedDoc.data()?.gameModes?.[gameModeId]) {
               completedSet.add(completedDoc.id.toLowerCase());
             }
@@ -278,14 +283,10 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
       return { allMatchingQuestions, remainingQuestions };
   }, [userVocabulary, completedQuizWords]);
 
-  // =================================================================
-  // == START: BLOCK ĐÃ SỬA LỖI LOGIC
-  // =================================================================
   useEffect(() => {
       if (loading) return;
 
       if (selectedPractice === 2) {
-          // Bước 1: Tạo ra TẤT CẢ các câu hỏi có thể có cho Practice 2, dựa trên toàn bộ từ vựng đã mở của người dùng, không quan tâm đã hoàn thành hay chưa.
           const allPossibleQuestions = userVocabulary.flatMap(word => {
               const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
               const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
@@ -306,7 +307,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
                   return [{
                       question: questionText,
                       vietnamese: randomSentence.vietnamese,
-                      options: [word.toLowerCase(), ...incorrectOptions.map(opt => opt.toLowerCase())], // Sẽ shuffle sau
+                      options: [word.toLowerCase(), ...incorrectOptions.map(opt => opt.toLowerCase())],
                       correctAnswer: word.toLowerCase(),
                       word: word,
                   }];
@@ -314,23 +315,16 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
               return [];
           });
 
-          // Bước 2: Từ danh sách TẤT CẢ câu hỏi, lọc ra những câu CHƯA hoàn thành.
           const remainingQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
 
-          // Bước 3: Gán state tương tự như Practice 1
-          setFilteredQuizData(allPossibleQuestions); // Đây là tổng số câu hỏi, dùng cho progress bar
-          setPlayableQuestions(shuffleArray(remainingQuestions)); // Đây là những câu hỏi người dùng sẽ chơi trong phiên này
+          setFilteredQuizData(allPossibleQuestions);
+          setPlayableQuestions(shuffleArray(remainingQuestions));
       } else {
-          // Logic cho Practice 1 giữ nguyên
           const { allMatchingQuestions, remainingQuestions } = generatePractice1Questions();
           setFilteredQuizData(allMatchingQuestions);
           setPlayableQuestions(shuffleArray(remainingQuestions));
       }
-  // Cập nhật dependency array để phản ánh đúng logic mới
   }, [selectedPractice, loading, userVocabulary, completedQuizWords, generatePractice1Questions]);
-  // =================================================================
-  // == END: BLOCK ĐÃ SỬA LỖI LOGIC
-  // =================================================================
 
 
   useEffect(() => {
@@ -339,7 +333,6 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     }
   }, [currentQuestion, playableQuestions]);
 
-  // Effect to find the vocabulary word for the current question
   useEffect(() => {
       if (playableQuestions.length > 0 && currentQuestion < playableQuestions.length) {
           const currentQuizItem = playableQuestions[currentQuestion];
@@ -440,10 +433,20 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
             batch.update(userDocRef, { coins: increment(coinsToAdd) });
           }
           const completedWordRef = doc(db, 'users', user.uid, 'completedWords', matchedWord.toLowerCase());
-          batch.set(completedWordRef, {
+
+          // <<< THAY ĐỔI: Ghi lại cấp độ hoàn thành >>>
+          // Ghi lại level 1 cho lần hoàn thành đầu tiên, và level 2 cho lần chơi lại.
+          const dataToSet = {
             lastCompletedAt: new Date(),
-            gameModes: { [gameModeId]: { correctCount: increment(1) } }
-          }, { merge: true });
+            gameModes: {
+              [gameModeId]: {
+                correctCount: increment(1),
+                completionLevel: isRepeatSession ? 2 : 1, // Ghi lại tiến trình lặp lại
+              },
+            },
+          };
+          batch.set(completedWordRef, dataToSet, { merge: true });
+
           await batch.commit();
           console.log(`Batch write thành công cho từ '${matchedWord}' và cập nhật coins.`);
         } catch (error) {
@@ -506,7 +509,6 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
   const resetQuiz = () => {
     let newPlayableQuestions = [];
     if (selectedPractice === 2) {
-        // We need to re-generate the playable questions, not use the old generatePractice2Questions()
         const allPossibleQuestions = userVocabulary.flatMap(word => {
             const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
             const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
@@ -533,6 +535,48 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     }
     setPlayableQuestions(shuffleArray(newPlayableQuestions));
 
+    setCurrentQuestion(0);
+    setScore(0);
+    setShowScore(false);
+    setSelectedOption(null);
+    setAnswered(false);
+    setStreak(0);
+    setTimeLeft(TOTAL_TIME);
+    setShowNextButton(false);
+    setHintUsed(false);
+    setHiddenOptions([]);
+  };
+
+  // <<< THÊM MỚI: Hàm xử lý chơi lại >>>
+  const handleReplayAll = async () => {
+    if (coins < REPEAT_COST) {
+      alert("Bạn không đủ vàng để thực hiện hành động này.");
+      return;
+    }
+
+    // 1. Trừ vàng
+    const newCoins = coins - REPEAT_COST;
+    startCoinCountAnimation(coins, newCoins);
+    setCoins(newCoins);
+    if (user) {
+      try {
+        await updateDoc(doc(db, "users", user.uid), { coins: increment(-REPEAT_COST) });
+      } catch (error) {
+        console.error("Lỗi khi trừ vàng để chơi lại:", error);
+        // Hoàn lại vàng nếu có lỗi
+        startCoinCountAnimation(newCoins, coins);
+        setCoins(coins);
+        return;
+      }
+    }
+
+    // 2. Đặt cờ cho phiên chơi lại
+    setIsRepeatSession(true);
+
+    // 3. Reset quiz với TẤT CẢ câu hỏi, không lọc
+    setPlayableQuestions(shuffleArray(filteredQuizData));
+
+    // 4. Reset các trạng thái khác của game
     setCurrentQuestion(0);
     setScore(0);
     setShowScore(false);
@@ -636,10 +680,19 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
               <p className="text-gray-600">Bạn cần mở thêm thẻ từ vựng để có câu hỏi trong mục này.</p>
             </div>
           ) : playableQuestions.length === 0 ? (
+            // <<< THAY ĐỔI: Thêm nút chơi lại vào màn hình chúc mừng >>>
             <div className="p-10 text-center flex flex-col items-center justify-center h-full">
                <TrophyIcon className="w-20 h-20 text-yellow-500 mb-4" />
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Xin chúc mừng!</h2>
-              <p className="text-gray-600">Bạn đã hoàn thành tất cả các câu hỏi có sẵn. Hãy quay lại sau khi học thêm từ vựng mới nhé!</p>
+              <p className="text-gray-600 mb-6">Bạn đã hoàn thành tất cả các câu hỏi có sẵn. <br/> Chơi lại để ghi nhớ sâu hơn nhé!</p>
+              <button
+                onClick={handleReplayAll}
+                disabled={coins < REPEAT_COST}
+                className="flex items-center justify-center mx-auto px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-lg font-medium shadow-lg transition hover:opacity-90 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400"
+              >
+                <RefreshIcon className="mr-2 h-5 w-5" />
+                <span>Chơi lại toàn bộ ({REPEAT_COST} vàng)</span>
+              </button>
             </div>
           ) : (
               <>
@@ -649,7 +702,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
                       <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
                         <div className="flex items-center">
                           <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">
-                            {totalCompletedBeforeSession + currentQuestion + 1}
+                            {isRepeatSession ? currentQuestion + 1 : totalCompletedBeforeSession + currentQuestion + 1}
                           </span>
                           <span className="mx-0.5 text-white/70 text-xs">/</span>
                           <span className="text-xs text-white/50">{filteredQuizData.length}</span>
@@ -674,7 +727,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6">
                       <div
                         className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
-                        style={{ width: `${quizProgress}%` }}
+                        style={{ width: `${isRepeatSession ? ((currentQuestion) / filteredQuizData.length) * 100 : quizProgress}%` }}
                       >
                         <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
                       </div>
