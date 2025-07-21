@@ -488,7 +488,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                   {selectedPractice === 3 ? (
                     <div className="w-full flex flex-col items-center gap-4">
                       <div className={`p-4 bg-white rounded-lg shadow-md w-full transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
-                        <p className="text-lg sm:text-xl font-medium text-gray-700 leading-relaxed flex flex-wrap items-center justify-start gap-x-2 gap-y-2">
+                        <p className="text-lg sm:text-xl font-medium text-gray-700 leading-relaxed flex flex-wrap items-baseline justify-start gap-x-2 gap-y-2">
                            {currentWord.question?.split('___').map((part, index, arr) => (
                             <React.Fragment key={index}>
                               <span>{part}</span>
@@ -496,16 +496,16 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                                 <button
                                   onClick={() => !isCorrect && setActiveBlankIndex(index)}
                                   disabled={!!isCorrect}
-                                  className={`px-3 py-1 rounded-md font-bold text-lg transition-all duration-200 tracking-widest min-w-[6rem] h-10 flex items-center justify-center
+                                  className={`px-3 py-1 rounded-md font-medium transition-all duration-200 min-w-[5rem] inline-flex items-center justify-center
                                     ${filledWords[index] ? 'bg-green-100 text-green-700 cursor-default' : 'bg-gray-200 text-gray-500'}
                                     ${activeBlankIndex === index && !isCorrect ? 'ring-2 ring-indigo-500 shadow-lg scale-105 bg-indigo-50 text-indigo-700' : ''}
                                     ${isCorrect ? 'cursor-not-allowed' : 'hover:bg-indigo-100'}
                                   `}
                                 >
                                   {filledWords[index]
-                                    ? filledWords[index].toUpperCase()
+                                    ? filledWords[index].toLowerCase()
                                     : (activeBlankIndex === index && !isCorrect)
-                                      ? (userInput.toUpperCase() || '...')
+                                      ? (userInput.toLowerCase() || '...')
                                       : '...'
                                   }
                                 </button>
@@ -517,7 +517,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
                       {activeBlankIndex !== null && !isCorrect && (
                         <div className="w-full flex flex-col items-center gap-4 transition-all duration-300">
-                          {/* Ô hiển thị input riêng đã được xóa */}
                           <div className="w-full">
                             <VirtualKeyboard
                               userInput={userInput}
