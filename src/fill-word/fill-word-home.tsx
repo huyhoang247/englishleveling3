@@ -21,6 +21,7 @@ interface VocabularyItem {
 }
 interface VocabularyGameProps {
   onGoBack: () => void;
+  selectedPractice: number;
 }
 
 // Các component phụ vẫn giữ lại trong file này
@@ -84,7 +85,7 @@ const shuffleArray = <T extends any[]>(array: T): T => { const shuffledArray = [
 const generateImageUrl = (imageIndex?: number) => { if (imageIndex !== undefined && typeof imageIndex === 'number') { const adjustedIndex = imageIndex - 1; if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) { return defaultImageUrls[adjustedIndex]; } } return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; };
 
 // Component chính của Game
-export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
+export default function VocabularyGame({ onGoBack, selectedPractice }: VocabularyGameProps) {
   const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -150,11 +151,16 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
           }
         });
 
-        // Xử lý danh sách từ đã hoàn thành
+        // Xác định ID của chế độ chơi dựa trên bài tập được chọn
+        const gameModeId = `fill-word-${selectedPractice}`;
+
+        // Xử lý danh sách từ đã hoàn thành cho đúng chế độ chơi
         const fetchedCompletedWords = new Set<string>();
         completedWordsSnapshot.forEach((completedDoc) => {
-            // doc.id chính là từ đã hoàn thành
-            fetchedCompletedWords.add(completedDoc.id);
+            // Chỉ tính những từ đã hoàn thành trong game mode hiện tại
+            if (completedDoc.data()?.gameModes?.[gameModeId]) {
+              fetchedCompletedWords.add(completedDoc.id);
+            }
         });
 
         // Cập nhật state
@@ -173,7 +179,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
     };
 
     fetchUserData();
-  }, [user]);
+  }, [user, selectedPractice]);
 
   useEffect(() => {
     if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
@@ -214,7 +220,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
             const userDocRef = doc(db, 'users', user.uid);
             const completedWordRef = doc(db, 'users', user.uid, 'completedWords', currentWord.word);
             const batch = writeBatch(db);
-            const gameModeId = "fill-word-1";
+            const gameModeId = `fill-word-${selectedPractice}`;
             batch.set(completedWordRef, {
                 lastCompletedAt: new Date(),
                 gameModes: {
@@ -238,7 +244,7 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
       setIsCorrect(false); 
       setStreak(0); 
     }
-  }, [currentWord, userInput, isCorrect, streak, user, coins, selectNextWord, startCoinCountAnimation, masteryCount]);
+  }, [currentWord, userInput, isCorrect, streak, user, coins, selectNextWord, startCoinCountAnimation, masteryCount, selectedPractice]);
   
   const resetGame = useCallback(() => {
     setGameOver(false); setStreak(0); setUserInput(''); setFeedback(''); setIsCorrect(null);
@@ -334,3 +340,4 @@ export default function VocabularyGame({ onGoBack }: VocabularyGameProps) {
     </div>
   );
 }
+// --- END OF FILE fill-word-home.tsx ---
