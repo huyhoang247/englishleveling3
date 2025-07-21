@@ -1,9 +1,16 @@
 // --- START OF FILE quiz-app-home.tsx ---
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import QuizApp from './quiz.tsx';
 import Breadcrumbs from '../bread-crumbs.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
+
+// Imports for progress calculation
+import { db, auth } from '../firebase.js';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { collection, getDocs } from 'firebase/firestore';
+import quizData from './quiz-data.ts';
+import { exampleData } from '../example-data.ts';
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
@@ -203,66 +210,7 @@ export default function QuizAppHome() {
 
       case 'practices':
         return (
-          <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Chọn bài tập</h1>
-
-            <div className="space-y-4 w-full">
-              <button
-                onClick={() => handlePracticeSelect(1)}
-                className="w-full bg-white border border-gray-200 hover:border-indigo-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
-              >
-                <div className="flex items-center">
-                  <div className="bg-indigo-100 text-indigo-600 rounded-full w-10 h-10 flex items-center justify-center mr-4 group-hover:bg-indigo-200">
-                    <span>1</span>
-                  </div>
-                  <div className="text-left">
-                    <h3 className="font-medium text-gray-800">Practice 1</h3>
-                    <p className="text-xs text-gray-500">Đoán từ qua hình ảnh</p>
-                  </div>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-
-              <button
-                onClick={() => handlePracticeSelect(2)}
-                className="w-full bg-white border border-gray-200 hover:border-pink-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
-              >
-                <div className="flex items-center">
-                  <div className="bg-pink-100 text-pink-600 rounded-full w-10 h-10 flex items-center justify-center mr-4 group-hover:bg-pink-200">
-                    <span>2</span>
-                  </div>
-                  <div className="text-left">
-                    <h3 className="font-medium text-gray-800">Practice 2</h3>
-                    <p className="text-xs text-gray-500">Điền 1 từ vào câu</p>
-                  </div>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-              
-              {/* <<< THÊM MỚI: NÚT PRACTICE 3 >>> */}
-              <button
-                onClick={() => handlePracticeSelect(3)}
-                className="w-full bg-white border border-gray-200 hover:border-teal-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
-              >
-                <div className="flex items-center">
-                  <div className="bg-teal-100 text-teal-600 rounded-full w-10 h-10 flex items-center justify-center mr-4 group-hover:bg-teal-200">
-                    <span>3</span>
-                  </div>
-                  <div className="text-left">
-                    <h3 className="font-medium text-gray-800">Practice 3</h3>
-                    <p className="text-xs text-gray-500">Điền 2 từ vào câu (Khó)</p>
-                  </div>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </div>
+          <PracticeList selectedType={selectedType} onPracticeSelect={handlePracticeSelect} />
         );
 
       default:
@@ -329,3 +277,162 @@ export default function QuizAppHome() {
   );
 }
 // --- END OF FILE quiz-app-home.tsx ---
+
+// Component to display practice list with progress
+const PracticeList = ({ selectedType, onPracticeSelect }) => {
+  const [progressData, setProgressData] = useState({ 1: null, 2: null, 3: null });
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(auth.currentUser);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!user || !selectedType) {
+      setLoading(false);
+      return;
+    }
+
+    const calculateProgress = async () => {
+      setLoading(true);
+      try {
+        const [openedVocabSnapshot, completedWordsSnapshot] = await Promise.all([
+          getDocs(collection(db, 'users', user.uid, 'openedVocab')),
+          getDocs(collection(db, 'users', user.uid, 'completedWords'))
+        ]);
+
+        const userVocabulary = openedVocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
+
+        const completedWordsByGameMode = {};
+        completedWordsSnapshot.forEach(doc => {
+          const gameModes = doc.data().gameModes;
+          if (gameModes) {
+            for (const mode in gameModes) {
+              if (!completedWordsByGameMode[mode]) completedWordsByGameMode[mode] = new Set();
+              completedWordsByGameMode[mode].add(doc.id.toLowerCase());
+            }
+          }
+        });
+
+        let p1, p2, p3;
+
+        if (selectedType === 'tracNghiem') {
+          const completedP1Set = completedWordsByGameMode['quiz-1'] || new Set();
+          const totalP1Qs = quizData.filter(q => userVocabulary.some(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)));
+          const completedP1 = totalP1Qs.filter(q => {
+            const word = userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question));
+            return word && completedP1Set.has(word.toLowerCase());
+          }).length;
+          p1 = { completed: completedP1, total: totalP1Qs.length };
+
+          const completedP2Set = completedWordsByGameMode['quiz-2'] || new Set();
+          const totalP2Qs = userVocabulary.flatMap(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)) ? [{ word }] : []);
+          const completedP2 = totalP2Qs.filter(q => completedP2Set.has(q.word.toLowerCase())).length;
+          p2 = { completed: completedP2, total: totalP2Qs.length };
+          
+          p3 = null; // No practice 3 for quiz
+
+        } else if (selectedType === 'dienTu') {
+          const completedP1Set = completedWordsByGameMode['fill-word-1'] || new Set();
+          p1 = { completed: userVocabulary.filter(v => completedP1Set.has(v.toLowerCase())).length, total: userVocabulary.length };
+
+          const completedP2Set = completedWordsByGameMode['fill-word-2'] || new Set();
+          const totalP2Qs = userVocabulary.filter(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)));
+          const completedP2 = totalP2Qs.filter(word => completedP2Set.has(word.toLowerCase())).length;
+          p2 = { completed: completedP2, total: totalP2Qs.length };
+
+          const completedP3Set = completedWordsByGameMode['fill-word-3'] || new Set();
+          let totalP3 = 0;
+          exampleData.forEach(sentence => {
+              const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+              if (wordsInSentence.length >= 2) {
+                  totalP3++; // Simplified count for now
+              }
+          });
+          // For fill-word-3, a completed entry is a pair of words, so the set size is correct.
+          p3 = { completed: completedP3Set.size, total: totalP3 };
+        }
+
+        setProgressData({ 1: p1, 2: p2, 3: p3 });
+
+      } catch (error) {
+        console.error("Lỗi khi tính toán tiến trình:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    calculateProgress();
+  }, [user, selectedType]);
+
+  const practiceDetails = {
+    tracNghiem: {
+      1: { title: 'Practice 1', desc: 'Luyện tập từ vựng qua câu hỏi', color: 'indigo' },
+      2: { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
+    },
+    dienTu: {
+      1: { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo' },
+      2: { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
+      3: { title: 'Practice 3', desc: 'Điền 2 từ vào câu (Khó)', color: 'teal' },
+    },
+  };
+  
+  const colorClasses = {
+    indigo: { border: 'hover:border-indigo-300', bg: 'bg-indigo-100', text: 'text-indigo-600', hoverBg: 'group-hover:bg-indigo-200', arrow: 'group-hover:text-indigo-500' },
+    pink:   { border: 'hover:border-pink-300',   bg: 'bg-pink-100',   text: 'text-pink-600',   hoverBg: 'group-hover:bg-pink-200',   arrow: 'group-hover:text-pink-500' },
+    teal:   { border: 'hover:border-teal-300',   bg: 'bg-teal-100',   text: 'text-teal-600',   hoverBg: 'group-hover:bg-teal-200',   arrow: 'group-hover:text-teal-500' },
+  };
+
+  const practicesToShow = selectedType ? Object.keys(practiceDetails[selectedType]) : [];
+
+  return (
+    <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">Chọn bài tập</h1>
+      <div className="space-y-4 w-full">
+        {loading ? (
+          <div className="text-center text-gray-500">Đang tải tiến độ...</div>
+        ) : (
+          practicesToShow.map(pNumStr => {
+            const practiceNumber = parseInt(pNumStr, 10);
+            const progress = progressData[practiceNumber];
+            const details = practiceDetails[selectedType][practiceNumber];
+            const colors = colorClasses[details.color];
+
+            return (
+              <button
+                key={practiceNumber}
+                onClick={() => onPracticeSelect(practiceNumber)}
+                className={`w-full bg-white border border-gray-200 ${colors.border} py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group`}
+              >
+                <div className="flex items-center">
+                  <div className={`${colors.bg} ${colors.text} rounded-full w-10 h-10 flex items-center justify-center mr-4 ${colors.hoverBg} transition-colors`}>
+                    <span className="font-bold">{practiceNumber}</span>
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-medium text-gray-800">{details.title}</h3>
+                    <p className="text-xs text-gray-500">{details.desc}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 sm:gap-4">
+                  {progress && progress.total > 0 && (
+                    <div className="text-right text-sm font-medium bg-gray-100 rounded-md px-2 py-0.5">
+                      <span className="font-bold text-gray-800">{progress.completed}</span>
+                      <span className="text-gray-400">/{progress.total}</span>
+                    </div>
+                  )}
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 ${colors.arrow} transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+};
