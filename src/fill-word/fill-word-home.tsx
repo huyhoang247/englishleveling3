@@ -48,7 +48,6 @@ const StreakDisplay: React.FC<{ displayedStreak: number; isAnimating: boolean; }
       <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div>
     </div>
 ));
-// <<< THAY ĐỔI 1: TẠO COMPONENT `MasteryDisplay` >>>
 const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
 const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => (
     <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
@@ -81,7 +80,6 @@ const BackIcon = ({ className }: { className: string }) => (
   </svg>
 );
 const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path><path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path></svg>);
-const getStreakText = (streak: number) => { return ""; };
 
 // Các hàm helper
 const shuffleArray = <T extends any[]>(array: T): T => { const shuffledArray = [...array]; for (let i = shuffledArray.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; } return shuffledArray as T; };
@@ -147,7 +145,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         let gameVocabulary: VocabularyItem[] = [];
 
         if (selectedPractice === 2) {
-            // SỬA: Logic cho Practice 2 - Dùng câu hỏi
             const userVocabularyWords: string[] = [];
             openedVocabSnapshot.forEach((vocabDoc) => {
                 const data = vocabDoc.data();
@@ -169,7 +166,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                 }
             });
         } else {
-            // Giữ nguyên: Logic cho Practice 1 - Dùng hình ảnh
             openedVocabSnapshot.forEach((vocabDoc) => {
                 const data = vocabDoc.data();
                 const imageIndex = Number(vocabDoc.id);
@@ -319,7 +315,8 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
             </div>
           ) : (
             <>
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-t-xl rounded-b-xl">
+              {/* <<< START: BLOCK THAY ĐỔI >>> */}
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-xl">
                 <div className="flex justify-between items-center mb-4">
                   <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
                       <div className="flex items-center">
@@ -332,25 +329,29 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
                     <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div>
                 </div>
+                {/* THÊM MỚI: Khối hiển thị câu hỏi cho Practice 2, giống hệt bên quiz.tsx */}
+                {selectedPractice === 2 && currentWord && (
+                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
+                    <h2 className="text-xl font-bold text-white leading-tight">
+                      {currentWord.question}
+                    </h2>
+                    {currentWord.vietnameseHint && (
+                      <p className="text-white/80 text-sm mt-2 italic">
+                        {currentWord.vietnameseHint}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
+              {/* <<< END: BLOCK THAY ĐỔI >>> */}
+              
               {currentWord ? (
-                <div className="w-full space-y-6">
-                  {/* SỬA: Hiển thị có điều kiện */}
-                  {selectedPractice !== 2 && (
+                <div className="w-full mt-6 space-y-6">
+                  {/* Sửa: chỉ hiển thị ImageCarousel cho Practice 1 */}
+                  {selectedPractice === 1 && (
                     <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />
                   )}
-                  {selectedPractice === 2 && currentWord.question && (
-                      <div className="w-full text-left p-6 bg-white rounded-xl shadow-lg border border-gray-200 my-4">
-                        <p className="text-xl font-bold text-gray-900 leading-relaxed tracking-wide">
-                          {currentWord.question}
-                        </p>
-                        {currentWord.vietnameseHint && (
-                          <p className="mt-3 text-base text-gray-500 italic">
-                            {currentWord.vietnameseHint}
-                          </p>
-                        )}
-                      </div>
-                  )}
+                  {/* Xóa: Khối câu hỏi cũ đã được di chuyển lên trên */}
                   <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} feedback={feedback} isCorrect={isCorrect} disabled={!!isCorrect} />
                 </div>
               ) : <div className='pt-10 font-bold text-gray-500'>Đang tải từ...</div>}
