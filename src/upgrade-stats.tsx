@@ -55,11 +55,12 @@ interface UpgradeStatsScreenProps {
 
 // --- COMPONENT CHÍNH ---
 export default function UpgradeStatsScreen({ onClose, initialGold, initialStats, onConfirmUpgrade }: UpgradeStatsScreenProps) {
-  // State lưu trữ trạng thái ban đầu khi mở màn hình
   const initialSessionState = useRef({ gold: initialGold, stats: initialStats }).current;
-
-  // State hiện tại, sẽ thay đổi liên tục khi người dùng nâng cấp
-  const [currentGold, setCurrentGold] = useState(initialGold);
+  
+  // Tách ra 2 state: một cho logic, một cho hiển thị animation
+  const [currentGold, setCurrentGold] = useState(initialGold); // Dùng cho logic
+  const [animatedGold, setAnimatedGold] = useState(initialGold); // Dùng cho UI
+  
   const [currentStats, setCurrentStats] = useState([
     { id: 'hp', level: initialStats.hp || 0, ...statConfig.hp },
     { id: 'atk', level: initialStats.atk || 0, ...statConfig.atk },
@@ -67,9 +68,31 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
   ]);
   
   const [message, setMessage] = useState('');
-  const [isSyncing, setIsSyncing] = useState(false); // Trạng thái khi đang lưu lúc đóng
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  // Hàm nâng cấp giờ đây chỉ xử lý logic ở client
+  // Mang hàm animation trở lại
+  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
+    if (startValue === endValue) return;
+
+    const duration = 300; // ms
+    let startTime: number | null = null;
+
+    const animate = (currentTime: number) => {
+      if (startTime === null) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      const value = Math.floor(startValue + (endValue - startValue) * progress);
+      
+      setAnimatedGold(value);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setAnimatedGold(endValue);
+      }
+    };
+    requestAnimationFrame(animate);
+  }, []);
+
   const handleLocalUpgrade = (statId: string) => {
     const statToUpgrade = currentStats.find(s => s.id === statId);
     if (!statToUpgrade) return;
@@ -81,8 +104,12 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
       return;
     }
 
-    // Cập nhật state cục bộ ngay lập tức
-    setCurrentGold(prevGold => prevGold - upgradeCost);
+    const newGoldValue = currentGold - upgradeCost;
+    // Cập nhật state logic ngay lập tức
+    setCurrentGold(newGoldValue);
+    // Bắt đầu animation cho state hiển thị
+    startCoinCountAnimation(currentGold, newGoldValue);
+
     setCurrentStats(prevStats =>
       prevStats.map(s =>
         s.id === statId ? { ...s, level: s.level + 1 } : s
@@ -90,15 +117,10 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
     );
   };
 
-  // Hàm được gọi khi người dùng nhấn nút đóng
   const handleConfirmAndClose = async () => {
     if (isSyncing) return;
-
     const totalCost = initialSessionState.gold - currentGold;
-    const hasChanges = totalCost > 0;
-    
-    // Nếu không có thay đổi gì, chỉ cần đóng lại
-    if (!hasChanges) {
+    if (totalCost <= 0) {
       onClose();
       return;
     }
@@ -113,20 +135,16 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
     };
 
     try {
-      // Gửi MỘT yêu cầu duy nhất lên server
       await onConfirmUpgrade(totalCost, finalStats);
-      console.log('Phiên nâng cấp đã được đồng bộ thành công!');
-      onClose(); // Đóng màn hình sau khi thành công
+      onClose();
     } catch (error) {
       console.error("Lỗi khi đồng bộ phiên nâng cấp:", error);
       setMessage('Lỗi! Không thể lưu thay đổi. Vui lòng thử lại.');
-      // Không đóng màn hình, cho phép người dùng thử lại
     } finally {
       setIsSyncing(false);
     }
   };
   
-  // Tính toán các giá trị hiển thị
   const totalHp = calculateTotalStatValue(currentStats.find(s => s.id === 'hp')!.level, statConfig.hp.baseUpgradeBonus);
   const totalAtk = calculateTotalStatValue(currentStats.find(s => s.id === 'atk')!.level, statConfig.atk.baseUpgradeBonus);
   const totalDef = calculateTotalStatValue(currentStats.find(s => s.id === 'def')!.level, statConfig.def.baseUpgradeBonus);
@@ -142,14 +160,11 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
 
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
         <button onClick={handleConfirmAndClose} disabled={isSyncing} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors disabled:cursor-wait disabled:opacity-70">
-          {isSyncing ? (
-            <> <Spinner /> <span className="hidden sm:inline text-sm font-semibold text-slate-300">Đang lưu...</span> </>
-          ) : (
-            <> <HomeIcon className="w-5 h-5 text-slate-300" /> <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span> </>
-          )}
+          {isSyncing ? ( <> <Spinner /> <span className="hidden sm:inline text-sm font-semibold text-slate-300">Đang lưu...</span> </> ) : ( <> <HomeIcon className="w-5 h-5 text-slate-300" /> <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span> </> )}
         </button>
         <div className="font-sans">
-            <CoinDisplay displayedCoins={currentGold} isStatsFullscreen={false} />
+            {/* Truyền state dành cho UI vào CoinDisplay */}
+            <CoinDisplay displayedCoins={animatedGold} />
         </div>
       </header>
 
@@ -181,7 +196,13 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
 
           <div className="flex flex-row justify-center items-stretch gap-3 sm:gap-4">
             {currentStats.map(stat => (
-              <StatCard key={stat.id} stat={stat} onUpgrade={handleLocalUpgrade} currentGold={currentGold} />
+              <StatCard 
+                key={stat.id} 
+                stat={stat} 
+                onUpgrade={handleLocalUpgrade} 
+                // Nút bấm phải kiểm tra với số vàng thực tế
+                currentGold={currentGold} 
+              />
             ))}
           </div>
         </div>
