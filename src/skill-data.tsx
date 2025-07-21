@@ -1,3 +1,5 @@
+// --- START OF FILE skill-data.tsx.txt ---
+
 import React from 'react';
 
 // --- START: CÁC ICON CHO KỸ NĂNG ---
@@ -66,7 +68,7 @@ export interface SkillBlueprint {
   maxLevel?: number;
 }
 
-export interface OwnedSkill {
+export type OwnedSkill = {
   id: string;
   skillId: string;
   level: number;
