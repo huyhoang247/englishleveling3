@@ -389,7 +389,7 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
     setEquippedSkills(newEquipped);
   };
   
-  const handleTrainAndCraft = () => {
+  const handleCraftSkill = () => {
     const craftableSkills = getCraftableSkills();
     if (craftableSkills.length === 0) { showMessage("Bạn đã học tất cả kỹ năng!"); return; }
     if (ancientBooks < CRAFTING_COST) { showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`); return; }
@@ -499,11 +499,11 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
                     </div>
                 </div>
                 <button 
-                    onClick={handleTrainAndCraft} 
+                    onClick={handleCraftSkill} 
                     className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
                     disabled={ancientBooks < CRAFTING_COST || getCraftableSkills().length === 0}
                 >
-                  Train
+                  Craft
                 </button>
             </section>
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
@@ -527,7 +527,7 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
                                 <SkillCard key={ownedSkill.id} ownedSkill={ownedSkill} onClick={() => setSelectedSkill(ownedSkill)} isEquipped={equippedSkills.some(s => s?.id === ownedSkill.id)} />
                             ))
                     ) : (
-                        <div className="col-span-full flex items-center justify-center h-full text-slate-500"><p>Chưa có kỹ năng. Hãy dùng Sách Cổ để Train!</p></div>
+                        <div className="col-span-full flex items-center justify-center h-full text-slate-500"><p>Chưa có kỹ năng. Hãy dùng Sách Cổ để Craft!</p></div>
                     )}
                 </div>
             </section>
