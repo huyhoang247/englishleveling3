@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './coin-display.tsx';
@@ -22,7 +24,7 @@ import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './tha
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './can-cu.tsx';
 import SkillScreen from './skill.tsx';
-import { OwnedSkill } from './skill-data.tsx';
+import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 
 // --- SVG Icon Components ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -120,11 +122,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [userStats, setUserStats] = useState({ hp: 0, atk: 0, def: 0 });
   const [jackpotPool, setJackpotPool] = useState(0);
   const [bossBattleHighestFloor, setBossBattleHighestFloor] = useState(0);
-  // >>> START: THÊM STATE MỚI CHO HỆ THỐNG KỸ NĂNG <<<
   const [ancientBooks, setAncientBooks] = useState(0);
   const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([]);
   const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([null, null, null]);
-  // >>> END: THÊM STATE MỚI CHO HỆ THỐNG KỸ NĂNG <<<
 
 
   // States for managing overlay visibility
@@ -214,32 +214,26 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setMinerChallengeHighestFloor(userData.minerChallengeHighestFloor || 0);
         setUserStats(userData.stats || { hp: 0, atk: 0, def: 0 });
         setBossBattleHighestFloor(userData.bossBattleHighestFloor || 0);
-        // >>> START: ĐỌC DỮ LIỆU KỸ NĂNG TỪ FIRESTORE <<<
         setAncientBooks(userData.ancientBooks || 0);
         const skillsData = userData.skills || { owned: [], equipped: [null, null, null] };
         setOwnedSkills(skillsData.owned);
         setEquippedSkillIds(skillsData.equipped);
-        // >>> END: ĐỌC DỮ LIỆU KỸ NĂNG TỪ FIRESTORE <<<
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
           coins: 0, gems: 0, masteryCards: 0, stats: { hp: 0, atk: 0, def: 0 },
           pickaxes: 50, minerChallengeHighestFloor: 0, 
           bossBattleHighestFloor: 0,
-          // >>> START: THIẾT LẬP GIÁ TRỊ MẶC ĐỊNH CHO KỸ NĂNG <<<
           ancientBooks: 0,
           skills: { owned: [], equipped: [null, null, null] },
-          // >>> END: THIẾT LẬP GIÁ TRỊ MẶC ĐỊNH CHO KỸ NĂNG <<<
           createdAt: new Date(),
         });
         setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0); setPickaxes(50);
         setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
         setBossBattleHighestFloor(0);
-        // >>> START: SET STATE MẶC ĐỊNH CHO KỸ NĂNG <<<
         setAncientBooks(0);
         setOwnedSkills([]);
         setEquippedSkillIds([null, null, null]);
-        // >>> END: SET STATE MẶC ĐỊNH CHO KỸ NĂNG <<<
       }
     } catch (error) { console.error("Error fetching user data:", error); } 
     finally { setIsLoadingUserData(false); }
@@ -453,7 +447,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-  // >>> START: HÀM CẬP NHẬT DỮ LIỆU KỸ NĂNG LÊN FIRESTORE <<<
   const handleSkillsUpdate = async (updates: {
       newOwned: OwnedSkill[];
       newEquippedIds: (string | null)[];
@@ -506,7 +499,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           setIsSyncingData(false);
       }
   };
-  // >>> END: HÀM CẬP NHẬT DỮ LIỆU KỸ NĂNG LÊN FIRESTORE <<<
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
@@ -519,11 +511,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
         setBossBattleHighestFloor(0);
-        // >>> START: RESET STATE KỸ NĂNG KHI LOGOUT <<<
         setAncientBooks(0);
         setOwnedSkills([]);
         setEquippedSkillIds([null, null, null]);
-        // >>> END: RESET STATE KỸ NĂNG KHI LOGOUT <<<
         setJackpotPool(0); setIsLoadingUserData(true); setVocabularyData(null);
       }
     });
@@ -632,6 +622,27 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       };
   };
 
+  const getEquippedSkillsDetails = () => {
+      if (!ownedSkills || !equippedSkillIds) return [];
+      
+      const equippedDetails = equippedSkillIds
+          .map(ownedId => {
+              if (!ownedId) return null;
+              const owned = ownedSkills.find(s => s.id === ownedId);
+              if (!owned) return null;
+              
+              const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId);
+              if (!blueprint) return null;
+
+              // Kết hợp thông tin từ owned skill và blueprint
+              return { ...owned, ...blueprint };
+          })
+          .filter(Boolean); // Lọc ra các giá trị null
+
+      // TypeScript sẽ không biết `Boolean` lọc null, nên ta cần ép kiểu
+      return equippedDetails as (OwnedSkill & SkillBlueprint)[];
+  };
+
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
       <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank}
@@ -718,6 +729,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         }}
                         initialFloor={bossBattleHighestFloor}
                         onFloorComplete={handleBossFloorUpdate}
+                        equippedSkills={getEquippedSkillsDetails()}
                     />
                 )}
             </ErrorBoundary>
