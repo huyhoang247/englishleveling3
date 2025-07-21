@@ -643,6 +643,27 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return equippedDetails as (OwnedSkill & SkillBlueprint)[];
   };
 
+  const handleBossBattleEnd = (result: 'win' | 'lose', rewards: { coins: number; energy: number }) => {
+      console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins, ${rewards.energy} energy`);
+      const userId = auth.currentUser?.uid;
+      if (!userId) return;
+
+      // Update coins from rewards
+      if (result === 'win' && rewards.coins > 0) {
+          updateCoinsInFirestore(userId, rewards.coins);
+      }
+
+      // Update user energy locally after battle. Firestore update for energy is not required by current logic.
+      // The 'energy' in playerInitialStats for BossBattle is just a battle resource.
+      // We assume the actual player energy is handled elsewhere or not a concept yet.
+      // For now, we can just log it.
+      if (rewards.energy > 0) {
+         console.log(`Player energy would be updated by: ${rewards.energy}`);
+         // If you have a global energy state for the player (outside of battle), you would update it here.
+         // e.g., setPlayerEnergy(prev => prev + rewards.energy);
+      }
+  };
+
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
       <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank}
@@ -721,12 +742,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <BossBattle
                         onClose={toggleBossBattle}
                         playerInitialStats={getPlayerBattleStats()}
-                        onBattleEnd={(result, rewards) => {
-                            console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`);
-                            if (result === 'win' && auth.currentUser) {
-                                updateCoinsInFirestore(auth.currentUser.uid, rewards.coins);
-                            }
-                        }}
+                        onBattleEnd={handleBossBattleEnd}
                         initialFloor={bossBattleHighestFloor}
                         onFloorComplete={handleBossFloorUpdate}
                         equippedSkills={getEquippedSkillsDetails()}
@@ -785,3 +801,5 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
+
+// --- END OF FILE background-game.tsx ---
