@@ -367,10 +367,12 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
     setTimeout(() => setMessage(''), 3000);
   };
   
+  // --- START: THAY ĐỔI LOGIC ĐỂ CHO PHÉP CRAFT TRÙNG LẶP ---
   const getCraftableSkills = () => {
-      const ownedSkillIds = ownedSkills.map(s => s.skillId);
-      return ALL_SKILLS.filter(s => !ownedSkillIds.includes(s.id));
+      // Luôn trả về toàn bộ danh sách kỹ năng để có thể chế tạo lại.
+      return ALL_SKILLS;
   };
+  // --- END: THAY ĐỔI LOGIC ĐỂ CHO PHÉP CRAFT TRÙNG LẶP ---
 
   const handleEquipSkill = (skillToEquip: OwnedSkill) => {
     if (equippedSkills.some(s => s?.id === skillToEquip.id)) { showMessage("Kỹ năng đã được trang bị."); return; }
@@ -391,7 +393,11 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
   
   const handleCraftSkill = () => {
     const craftableSkills = getCraftableSkills();
-    if (craftableSkills.length === 0) { showMessage("Bạn đã học tất cả kỹ năng!"); return; }
+    if (craftableSkills.length === 0) { 
+        // Trường hợp này gần như không xảy ra nữa, nhưng vẫn để lại để phòng lỗi
+        showMessage("Không có kỹ năng nào để chế tạo."); 
+        return; 
+    }
     if (ancientBooks < CRAFTING_COST) { showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`); return; }
     
     const randomIndex = Math.floor(Math.random() * craftableSkills.length);
@@ -399,7 +405,7 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
     const newRarity = getRandomRarity();
 
     const newOwnedSkill: OwnedSkill = {
-        id: `owned-${Date.now()}-${newSkillBlueprint.id}`,
+        id: `owned-${Date.now()}-${newSkillBlueprint.id}-${Math.random()}`, // Thêm số ngẫu nhiên để id luôn unique
         skillId: newSkillBlueprint.id,
         level: 1,
         rarity: newRarity,
@@ -501,7 +507,7 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
                 <button 
                     onClick={handleCraftSkill} 
                     className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
-                    disabled={ancientBooks < CRAFTING_COST || getCraftableSkills().length === 0}
+                    disabled={ancientBooks < CRAFTING_COST}
                 >
                   Craft
                 </button>
@@ -520,6 +526,9 @@ export default function SkillScreen({ onClose }: SkillScreenProps) {
                                 const rarityIndexB = rarityOrder.indexOf(b.rarity);
                                 if (rarityIndexA !== rarityIndexB) {
                                     return rarityIndexB - rarityIndexA; // Sắp xếp độ hiếm cao hơn trước
+                                }
+                                if (a.level !== b.level) {
+                                    return b.level - a.level; // Sắp xếp level cao hơn trước
                                 }
                                 return skillA.name.localeCompare(skillB.name); // Sắp xếp theo tên
                             })
