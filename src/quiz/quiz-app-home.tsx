@@ -217,7 +217,7 @@ export default function QuizAppHome() {
                   </div>
                   <div className="text-left">
                     <h3 className="font-medium text-gray-800">Practice 1</h3>
-                    <p className="text-xs text-gray-500">5 câu hỏi • Thời gian: 5 phút</p>
+                    <p className="text-xs text-gray-500">Đoán từ qua hình ảnh</p>
                   </div>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -235,10 +235,29 @@ export default function QuizAppHome() {
                   </div>
                   <div className="text-left">
                     <h3 className="font-medium text-gray-800">Practice 2</h3>
-                    <p className="text-xs text-gray-500">7 câu hỏi • Thời gian: 7 phút</p>
+                    <p className="text-xs text-gray-500">Điền 1 từ vào câu</p>
                   </div>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              
+              {/* <<< THÊM MỚI: NÚT PRACTICE 3 >>> */}
+              <button
+                onClick={() => handlePracticeSelect(3)}
+                className="w-full bg-white border border-gray-200 hover:border-teal-300 py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group"
+              >
+                <div className="flex items-center">
+                  <div className="bg-teal-100 text-teal-600 rounded-full w-10 h-10 flex items-center justify-center mr-4 group-hover:bg-teal-200">
+                    <span>3</span>
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-medium text-gray-800">Practice 3</h3>
+                    <p className="text-xs text-gray-500">Điền 2 từ vào câu (Khó)</p>
+                  </div>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
