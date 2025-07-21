@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
 
-// --- ICONS ---
+// --- ICONS --- (Không đổi)
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
 const icons = {
@@ -33,7 +33,7 @@ const icons = {
   )
 };
 
-// --- SPINNER COMPONENT ---
+// --- SPINNER COMPONENT --- (Không đổi)
 const Spinner = () => (
   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -130,12 +130,11 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   );
 };
 
-// INTERFACE ĐỊNH NGHĨA CÁC PROPS MỚI
+// INTERFACE ĐỊNH NGHĨA CÁC PROPS MỚI (Không đổi)
 interface UpgradeStatsScreenProps {
   onClose: () => void;
   initialGold: number;
   initialStats: { hp: number; atk: number; def: number; };
-  // Một hàm duy nhất để xác nhận toàn bộ thao tác nâng cấp
   onConfirmUpgrade: (cost: number, newStats: { hp: number; atk: number; def: number; }) => Promise<void>;
 }
 
@@ -188,6 +187,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
 
   // HÀM NÂNG CẤP ĐÃ ĐƯỢC TỐI ƯU VỚI LOGIC OPTIMISTIC UPDATE
   const handleUpgrade = async (statId: string) => {
+    // Ngăn chặn việc nâng cấp khác khi đang có một tiến trình
     if (upgradingId) return;
 
     const statToUpgrade = stats.find(s => s.id === statId);
@@ -218,7 +218,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
     );
     setStats(newStatsArray); // Cập nhật level trên UI
 
-    // 3. Chuẩn bị dữ liệu và gửi lên server
+    // 3. Chuẩn bị dữ liệu và gửi lên server trong nền
     const newStatsForFirestore = {
       hp: newStatsArray.find(s => s.id === 'hp')!.level,
       atk: newStatsArray.find(s => s.id === 'atk')!.level,
@@ -237,8 +237,8 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
       setMessage('Nâng cấp thất bại, vui lòng thử lại!');
       
       // Khôi phục lại vàng và chỉ số trên UI
-      startCoinCountAnimation(newGoldValue, oldGold);
-      setStats(oldStats);
+      startCoinCountAnimation(newGoldValue, oldGold); // Trả lại vàng
+      setStats(oldStats); // Quay về level cũ
 
       setTimeout(() => setMessage(''), 3000);
     } finally {
@@ -320,7 +320,14 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
 
           <div className="flex flex-row justify-center items-stretch gap-3 sm:gap-4">
             {stats.map(stat => (
-              <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} isProcessing={upgradingId === stat.id} isDisabled={upgradingId !== null && upgradingId !== stat.id} />
+              <StatCard 
+                  key={stat.id} 
+                  stat={stat} 
+                  onUpgrade={handleUpgrade} 
+                  isProcessing={upgradingId === stat.id} 
+                  // Khóa các nút khác khi đang có một tiến trình nâng cấp
+                  isDisabled={upgradingId !== null && upgradingId !== stat.id} 
+              />
             ))}
           </div>
         </div>
