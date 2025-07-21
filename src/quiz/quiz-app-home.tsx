@@ -20,27 +20,24 @@ export default function QuizAppHome() {
 
   const handleTypeSelect = (type) => {
     setSelectedType(type);
-    if (type === 'tracNghiem') {
-      setCurrentView('practices');
-    } else {
-      // Đổi tên view để dễ nhận biết hơn
-      setCurrentView('vocabularyGame');
-    }
+    // Cả Trắc Nghiệm và Điền Từ đều sẽ đi đến màn hình chọn bài tập
+    setCurrentView('practices');
     setSelectedPractice(null);
   };
 
   const handlePracticeSelect = (practice) => {
-    setCurrentView('quiz');
     setSelectedPractice(practice);
+    if (selectedType === 'tracNghiem') {
+      setCurrentView('quiz');
+    } else if (selectedType === 'dienTu') {
+      setCurrentView('vocabularyGame');
+    }
   };
 
   const goBack = () => {
-    if (currentView === 'vocabularyGame' || currentView === 'quiz') { // Gộp điều kiện cho cả 2 game
-        setCurrentView('practices'); // Quay lại màn hình chọn practice
-        if (selectedType === 'dienTu') { // Nếu là game điền từ, quay lại màn hình chọn loại quiz
-            setCurrentView('quizTypes');
-            setSelectedType(null);
-        }
+    if (currentView === 'vocabularyGame' || currentView === 'quiz') {
+      setCurrentView('practices');
+      setSelectedPractice(null);
     } else if (currentView === 'quizTypes') {
       setCurrentView('main');
       setSelectedQuiz(null);
@@ -64,7 +61,7 @@ export default function QuizAppHome() {
   if (currentView === 'vocabularyGame') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
-        <VocabularyGame onGoBack={goBack} />
+        <VocabularyGame onGoBack={goBack} selectedPractice={selectedPractice} />
       </div>
     );
   }
@@ -218,7 +215,7 @@ export default function QuizAppHome() {
                   </div>
                   <div className="text-left">
                     <h3 className="font-medium text-gray-800">Practice 1</h3>
-                    <p className="text-xs text-gray-500">5 câu hỏi • Thời gian: 5 phút</p>
+                    <p className="text-xs text-gray-500">Mỗi câu 60 giây</p>
                   </div>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -236,7 +233,7 @@ export default function QuizAppHome() {
                   </div>
                   <div className="text-left">
                     <h3 className="font-medium text-gray-800">Practice 2</h3>
-                    <p className="text-xs text-gray-500">7 câu hỏi • Thời gian: 7 phút</p>
+                    <p className="text-xs text-gray-500">Mỗi câu 45 giây • Thử thách</p>
                   </div>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
