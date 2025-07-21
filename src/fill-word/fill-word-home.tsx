@@ -181,30 +181,21 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
             exampleData.forEach(sentence => {
                 const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                 if (wordsInSentence.length >= 2) {
-                    // <<< START: SỬA LỖI LOGIC THỨ TỰ TỪ >>>
                     const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 2);
-
-                    // Sắp xếp 2 từ đã chọn dựa trên vị trí xuất hiện của chúng trong câu gốc
                     const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) =>
                         sentence.english.toLowerCase().indexOf(a.toLowerCase()) -
                         sentence.english.toLowerCase().indexOf(b.toLowerCase())
                     );
-                    
-                    const [word1, word2] = correctlyOrderedWords; // Bây giờ word1 luôn đứng trước word2 trong câu
-
+                    const [word1, word2] = correctlyOrderedWords;
                     let questionText = sentence.english;
-                    // Việc thay thế vẫn hoạt động đúng vì nó tìm và thay thế từng từ
                     questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
                     questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
-                    
-                    // Chuỗi đáp án 'word' giờ sẽ khớp với thứ tự của các ô trống
                     gameVocabulary.push({ 
                         word: `${word1} ${word2}`, 
                         question: questionText, 
                         vietnameseHint: sentence.vietnamese, 
                         hint: `Điền 2 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` 
                     });
-                    // <<< END: SỬA LỖI LOGIC THỨ TỰ TỪ >>>
                 }
             });
         }
@@ -266,6 +257,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => { if (startValue === endValue) return; let step = Math.ceil((endValue - startValue) / 30) || 1; let current = startValue; const interval = setInterval(() => { current += step; if (current >= endValue) { setDisplayedCoins(endValue); clearInterval(interval); } else { setDisplayedCoins(current); } }, 30); }, []);
   
+  // <<< START: THAY ĐỔI LỚN - CẬP NHẬT LOGIC LƯU DỮ LIỆU >>>
   const triggerSuccessSequence = useCallback(async () => {
     if (!currentWord || !user) return;
     setIsCorrect(true);
@@ -273,8 +265,13 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     setStreak(newStreak);
     setStreakAnimation(true);
     setTimeout(() => setStreakAnimation(false), 1500);
-    setUsedWords(prev => new Set(prev).add(currentWord.word));
     setShowConfetti(true);
+
+    // Dùng cho Practice 3 để không thêm cụm từ vào usedWords
+    // mà thêm từng từ riêng lẻ vào sau.
+    if (selectedPractice !== 3) {
+      setUsedWords(prev => new Set(prev).add(currentWord.word));
+    }
 
     const coinReward = (masteryCount * newStreak) * (selectedPractice === 3 ? 2 : 1);
     const updatedCoins = coins + coinReward;
@@ -283,18 +280,55 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
     try {
       const userDocRef = doc(db, 'users', user.uid);
-      const completedWordRef = doc(db, 'users', user.uid, 'completedWords', currentWord.word);
       const batch = writeBatch(db);
       const gameModeId = `fill-word-${selectedPractice}`;
-      batch.set(completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
+
+      // Xác định các từ cần cập nhật tiến trình
+      let wordsToUpdate: string[];
+      if (selectedPractice === 3) {
+        wordsToUpdate = currentWord.word.split(' ');
+      } else {
+        wordsToUpdate = [currentWord.word];
+      }
+      
+      // Lặp qua từng từ và thêm vào batch để cập nhật
+      wordsToUpdate.forEach(word => {
+        const completedWordRef = doc(db, 'users', user.uid, 'completedWords', word);
+        batch.set(
+          completedWordRef, 
+          { 
+            lastCompletedAt: new Date(), 
+            gameModes: { [gameModeId]: { correctCount: increment(1) } } 
+          }, 
+          { merge: true }
+        );
+      });
+
+      // Cập nhật usedWords cho practice 3 sau khi đã tách từ
+      if (selectedPractice === 3) {
+          setUsedWords(prev => {
+              const newSet = new Set(prev);
+              // Chỉ thêm cụm từ gốc để kiểm tra logic hoàn thành game
+              // (hiển thị game over khi tất cả cụm từ đã được chơi)
+              newSet.add(currentWord.word);
+              return newSet;
+          });
+      }
+
+      // Cập nhật coin của người dùng
       batch.update(userDocRef, { 'coins': updatedCoins });
+      
+      // Commit tất cả các thay đổi một lần
       await batch.commit();
-    } catch (e) { console.error("Lỗi khi cập nhật dữ liệu với batch:", e); }
+
+    } catch (e) { 
+      console.error("Lỗi khi cập nhật dữ liệu với batch:", e); 
+    }
     
     setTimeout(() => setShowConfetti(false), 2000);
     setTimeout(selectNextWord, 1500);
   }, [currentWord, user, streak, masteryCount, selectedPractice, coins, startCoinCountAnimation, selectNextWord]);
-
+  // <<< END: THAY ĐỔI LỚN - CẬP NHẬT LOGIC LƯU DỮ LIỆU >>>
 
   const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect) return;
