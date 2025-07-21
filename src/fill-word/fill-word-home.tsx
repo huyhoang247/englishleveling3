@@ -13,7 +13,7 @@ import WordSquaresInput from './vocabulary-input.tsx';
 import Confetti from './chuc-mung.tsx';
 import CoinDisplay from '../coin-display.tsx';
 import ImageCarousel3D from './image-carousel-3d.tsx';
-import VirtualKeyboard from './keyboard.tsx'; // <<< THÊM MỚI: Import bàn phím ảo
+import VirtualKeyboard from './keyboard.tsx';
 
 // Định nghĩa kiểu dữ liệu
 interface VocabularyItem {
@@ -110,7 +110,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   const [timeLeft, setTimeLeft] = useState(60);
   const TOTAL_TIME = 60;
   const isInitialLoadComplete = useRef(false);
-  const p3InputRef = useRef<HTMLDivElement>(null); // <<< THAY ĐỔI: Ref giờ trỏ tới div
+  const p3InputRef = useRef<HTMLDivElement>(null);
 
   const [filledWords, setFilledWords] = useState<string[]>([]);
   const [activeBlankIndex, setActiveBlankIndex] = useState<number | null>(null);
@@ -181,12 +181,30 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
             exampleData.forEach(sentence => {
                 const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                 if (wordsInSentence.length >= 2) {
-                    const wordsToHide = shuffleArray(wordsInSentence).slice(0, 2);
-                    const word1 = wordsToHide[0], word2 = wordsToHide[1];
+                    // <<< START: SỬA LỖI LOGIC THỨ TỰ TỪ >>>
+                    const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 2);
+
+                    // Sắp xếp 2 từ đã chọn dựa trên vị trí xuất hiện của chúng trong câu gốc
+                    const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) =>
+                        sentence.english.toLowerCase().indexOf(a.toLowerCase()) -
+                        sentence.english.toLowerCase().indexOf(b.toLowerCase())
+                    );
+                    
+                    const [word1, word2] = correctlyOrderedWords; // Bây giờ word1 luôn đứng trước word2 trong câu
+
                     let questionText = sentence.english;
+                    // Việc thay thế vẫn hoạt động đúng vì nó tìm và thay thế từng từ
                     questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
                     questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
-                    gameVocabulary.push({ word: `${word1} ${word2}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 2 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
+                    
+                    // Chuỗi đáp án 'word' giờ sẽ khớp với thứ tự của các ô trống
+                    gameVocabulary.push({ 
+                        word: `${word1} ${word2}`, 
+                        question: questionText, 
+                        vietnameseHint: sentence.vietnamese, 
+                        hint: `Điền 2 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` 
+                    });
+                    // <<< END: SỬA LỖI LOGIC THỨ TỰ TỪ >>>
                 }
             });
         }
@@ -230,13 +248,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     const timerId = setInterval(() => setTimeLeft(prev => { if (prev <= 1) { setStreak(0); clearInterval(timerId); return 0; } return prev - 1; }), 1000);
     return () => clearInterval(timerId);
   }, [currentWord, gameOver, isCorrect]);
-
-  // <<< THAY ĐỔI: Bỏ useEffect focus vào input
-  // useEffect(() => {
-  //   if (selectedPractice === 3 && activeBlankIndex !== null && p3InputRef.current) {
-  //     p3InputRef.current.focus();
-  //   }
-  // }, [activeBlankIndex, selectedPractice]);
 
   const selectNextWord = useCallback(() => {
     if (currentWordIndex < shuffledUnusedWords.length - 1) { 
@@ -349,7 +360,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   
   const handleImageClick = useCallback(() => setShowImagePopup(true), []);
   
-  // <<< THÊM MỚI: Tính độ dài từ hiện tại cho practice 3
   const p3CurrentWordLength = useMemo(() => {
     if (selectedPractice !== 3 || !currentWord || activeBlankIndex === null) {
       return Infinity;
@@ -466,10 +476,8 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                         </p>
                       </div>
 
-                      {/* <<< START: THAY ĐỔI LỚN CHO PRACTICE 3 >>> */}
                       {activeBlankIndex !== null && !isCorrect && (
                         <div className={`w-full flex flex-col items-center gap-4 transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
-                          {/* Display for user input, styled to look like an input field */}
                           <div
                             ref={p3InputRef}
                             className="w-full px-4 py-3 text-center text-lg font-bold tracking-widest text-gray-800 bg-white border-2 border-indigo-300 rounded-lg shadow-inner flex items-center justify-center min-h-[58px]"
@@ -477,7 +485,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                             {userInput.toUpperCase() || <span className="text-gray-400 font-normal italic tracking-normal">{`Điền từ cho ô trống ${activeBlankIndex + 1}...`}</span>}
                           </div>
                       
-                          {/* Virtual Keyboard and Check Button */}
                           <div className="w-full">
                             <VirtualKeyboard
                               userInput={userInput}
@@ -500,7 +507,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                           </div>
                         </div>
                       )}
-                      {/* <<< END: THAY ĐỔI LỚN CHO PRACTICE 3 >>> */}
                     </div>
                   ) : (
                     <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} feedback={feedback} isCorrect={isCorrect} disabled={!!isCorrect} />
