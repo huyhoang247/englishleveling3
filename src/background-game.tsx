@@ -23,6 +23,7 @@ import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgra
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './can-cu.tsx';
+import SkillScreen from './skill.tsx';
 
 // --- SVG Icon Components ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -135,6 +136,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [isUpgradeScreenOpen, setIsUpgradeScreenOpen] = useState(false);
   const [isBaseBuildingOpen, setIsBaseBuildingOpen] = useState(false);
+  const [isSkillScreenOpen, setIsSkillScreenOpen] = useState(false);
 
   // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
@@ -521,7 +523,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             if (newState) {
                 hideNavBar();
                 [ setIsRankOpen, setIsInventoryOpen, setIsLuckyGameOpen, 
-                  setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, 
+                  setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen,
                   setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen
                 ].forEach(s => { if (s !== setter) s(false); });
             } else { showNavBar(); }
@@ -540,10 +542,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const toggleAchievements = createToggleFunction(setIsAchievementsOpen);
   const toggleAdminPanel = createToggleFunction(setIsAdminPanelOpen);
   const toggleUpgradeScreen = createToggleFunction(setIsUpgradeScreenOpen);
+  const toggleSkillScreen = createToggleFunction(setIsSkillScreenOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
   const handleSetToggleSidebar = (toggleFn: () => void) => { sidebarToggleRef.current = toggleFn; };
 
-  const isAnyOverlayOpen = isRankOpen || isInventoryOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen;
+  const isAnyOverlayOpen = isRankOpen || isInventoryOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
@@ -608,6 +611,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
               {[ { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000fe00622fb8cc4792a683dcb3.png" alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest },
                  { icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" /> },
+                 { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250721_0918_K%E1%BB%B9%20N%C4%83ng%20R%E1%BB%B1c%20L%E1%BB%ADa_remix_01k0nc8f7je2mr0869c2fhg979.png" alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen },
               ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
           </div>
@@ -673,6 +677,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <BaseBuildingScreen
                         onClose={toggleBaseBuilding}
                     />
+                )}
+            </ErrorBoundary>
+        </div>
+
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isSkillScreenOpen ? 'block' : 'none' }}>
+            <ErrorBoundary>
+                {isSkillScreenOpen && (
+                    <SkillScreen onClose={toggleSkillScreen} />
                 )}
             </ErrorBoundary>
         </div>
