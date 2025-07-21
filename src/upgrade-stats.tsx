@@ -35,9 +35,9 @@ const icons = {
 
 // --- CONFIG VÀ LOGIC TÍNH TOÁN ---
 export const statConfig = {
-  hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600", shadowColor: "shadow-red-500/50" },
-  atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500", shadowColor: "shadow-cyan-400/50" },
-  def: { name: 'DEF', icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500", shadowColor: "shadow-blue-500/50" },
+  hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
+  atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
+  def: { name: 'DEF', icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
 };
 
 export const calculateUpgradeCost = (level: number) => {
@@ -48,7 +48,6 @@ export const calculateUpgradeCost = (level: number) => {
 
 export const getBonusForLevel = (level: number, baseBonus: number) => {
   if (level === 0) return 0;
-  // Bonus nhận được khi đạt tới level này
   const tier = Math.floor((level - 1) / 10);
   return baseBonus * Math.pow(2, tier);
 };
@@ -56,9 +55,14 @@ export const getBonusForLevel = (level: number, baseBonus: number) => {
 export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => {
   if (currentLevel === 0) return 0;
   let totalValue = 0;
-  for (let i = 1; i <= currentLevel; i++) {
-    totalValue += getBonusForLevel(i, baseBonus);
+  const fullTiers = Math.floor(currentLevel / 10);
+  const remainingLevelsInCurrentTier = currentLevel % 10;
+  for (let i = 0; i < fullTiers; i++) {
+    const bonusInTier = baseBonus * Math.pow(2, i);
+    totalValue += 10 * bonusInTier;
   }
+  const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers);
+  totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier;
   return totalValue;
 };
 
@@ -97,11 +101,12 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
         </div>
         <button
           onClick={() => onUpgrade(stat.id)}
-          disabled={isDisabled || isProcessing}
+          disabled={isDisabled || isProcessing} // Chỉ vô hiệu hóa nút, không hiển thị spinner
           className="w-full bg-slate-800 border-2 border-cyan-400/50 rounded-lg py-2 px-1 flex items-center justify-center gap-1 shadow-lg transition-all duration-200 active:scale-95
                      hover:enabled:bg-slate-700 hover:enabled:border-cyan-400
                      disabled:cursor-not-allowed disabled:opacity-70"
         >
+          {/* Luôn hiển thị giá tiền */}
           <>
             <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
             <span className="text-base font-bold text-yellow-300">{formatNumber(upgradeCost)}</span>
@@ -120,11 +125,6 @@ interface UpgradeStatsScreenProps {
   onConfirmUpgrade: (cost: number, newStats: { hp: number; atk: number; def: number; }) => Promise<void>;
 }
 
-// INTERFACE CHO THÔNG BÁO NÂNG CẤP
-interface UpgradeNotificationInfo {
-    stat: any;
-    bonus: number;
-}
 
 // --- COMPONENT CHÍNH ---
 export default function UpgradeStatsScreen({ onClose, initialGold, initialStats, onConfirmUpgrade }: UpgradeStatsScreenProps) {
@@ -136,8 +136,6 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
   ]);
   const [message, setMessage] = useState('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
-  const [upgradeNotification, setUpgradeNotification] = useState<UpgradeNotificationInfo | null>(null);
-
 
   // Đồng bộ state cục bộ khi component được mở hoặc props thay đổi
   useEffect(() => {
@@ -176,7 +174,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
 
   // HÀM NÂNG CẤP ĐÃ ĐƯỢC TỐI ƯU VỚI LOGIC OPTIMISTIC UPDATE
   const handleUpgrade = async (statId: string) => {
-    if (upgradingId) return;
+    if (upgradingId) return; // Nếu đang có 1 nâng cấp khác, không làm gì cả
 
     const statToUpgrade = stats.find(s => s.id === statId);
     if (!statToUpgrade) return;
@@ -189,20 +187,24 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
       return;
     }
 
-    setUpgradingId(statId);
+    // --- Bắt đầu Optimistic Update ---
+    setUpgradingId(statId); // Khóa các nút khác
     setMessage('');
 
+    // 1. Lưu lại state cũ để có thể khôi phục nếu lỗi
     const oldGold = displayedGold;
-    const oldStats = JSON.parse(JSON.stringify(stats));
+    const oldStats = JSON.parse(JSON.stringify(stats)); // Deep copy để đảm bảo an toàn
 
+    // 2. Cập nhật giao diện ngay lập tức
     const newGoldValue = oldGold - upgradeCost;
-    startCoinCountAnimation(oldGold, newGoldValue);
+    startCoinCountAnimation(oldGold, newGoldValue); // Hiệu ứng trừ tiền
     
     const newStatsArray = stats.map(s =>
       s.id === statId ? { ...s, level: s.level + 1 } : s
     );
-    setStats(newStatsArray);
+    setStats(newStatsArray); // Cập nhật level trên UI
 
+    // 3. Chuẩn bị dữ liệu và gửi lên server
     const newStatsForFirestore = {
       hp: newStatsArray.find(s => s.id === 'hp')!.level,
       atk: newStatsArray.find(s => s.id === 'atk')!.level,
@@ -210,26 +212,26 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
     };
 
     try {
+      // Gọi hàm cập nhật gộp và chờ kết quả
       await onConfirmUpgrade(upgradeCost, newStatsForFirestore);
+      // Nếu thành công, không cần làm gì thêm vì UI đã được cập nhật.
       console.log('Nâng cấp đã được xác nhận và lưu trên server.');
 
-      // --- HIỂN THỊ THÔNG BÁO THÀNH CÔNG ---
-      const bonusJustAdded = getBonusForLevel(statToUpgrade.level + 1, statToUpgrade.baseUpgradeBonus);
-      setUpgradeNotification({ stat: statToUpgrade, bonus: bonusJustAdded });
-      setTimeout(() => setUpgradeNotification(null), 2500); // Tự động ẩn sau 2.5s
-
     } catch (error) {
+      // 4. Nếu có lỗi, KHÔI PHỤC (ROLLBACK) giao diện
       console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
       setMessage('Nâng cấp thất bại, vui lòng thử lại!');
       
+      // Khôi phục lại vàng và chỉ số trên UI
       startCoinCountAnimation(newGoldValue, oldGold);
       setStats(oldStats);
 
       setTimeout(() => setMessage(''), 3000);
     } finally {
+      // 5. Dù thành công hay thất bại, cũng kết thúc trạng thái "đang xử lý" để mở khóa các nút
       setTimeout(() => {
         setUpgradingId(null);
-      }, 200);
+      }, 200); // Delay ngắn để tránh spam click
     }
   };
 
@@ -259,39 +261,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
           .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: 0; pointer-events: none; }
           .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); }
           .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.1) 0%, transparent 50%); }
-          /* --- ANIMATION CHO THÔNG BÁO --- */
-          .notification-overlay { animation: fade-in 0.3s ease-out forwards; }
-          @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-          .notification-card { animation: notification-pop-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-          @keyframes notification-pop-in {
-            from { opacity: 0; transform: scale(0.8) translateY(20px); }
-            to   { opacity: 1; transform: scale(1) translateY(0); }
-          }
       `}</style>
-
-      {/* --- START: OVERLAY THÔNG BÁO NÂNG CẤP --- */}
-      {upgradeNotification && (
-        <div 
-          className="notification-overlay fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
-          onClick={() => setUpgradeNotification(null)}
-        >
-          <div className={`notification-card relative w-full max-w-xs flex flex-col items-center gap-4 p-6 rounded-2xl bg-slate-800/90 border-2 border-slate-600 shadow-2xl ${upgradeNotification.stat.shadowColor}`}>
-            <div className="absolute top-0 -translate-y-1/2 w-24 h-24 p-2 bg-slate-800 rounded-full flex items-center justify-center">
-                <div className={`w-full h-full p-2 bg-gradient-to-br ${upgradeNotification.stat.color} rounded-full shadow-lg`}>
-                    {upgradeNotification.stat.icon}
-                </div>
-            </div>
-            <div className="mt-14 text-center">
-                <p className="text-2xl font-bold tracking-wider text-slate-200">Nâng cấp thành công!</p>
-                <p className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 to-amber-500 text-shadow-sm mt-2">
-                  {upgradeNotification.stat.name} +{formatNumber(upgradeNotification.bonus)}
-                </p>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* --- END: OVERLAY THÔNG BÁO NÂNG CẤP --- */}
-
 
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
         <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
@@ -340,7 +310,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
                 stat={stat} 
                 onUpgrade={handleUpgrade} 
                 isProcessing={upgradingId === stat.id} 
-                isDisabled={upgradingId !== null || upgradeNotification !== null} // Vô hiệu hóa nút khi đang nâng cấp hoặc đang hiển thị thông báo
+                isDisabled={upgradingId !== null} // Vô hiệu hóa tất cả các nút khi một nút đang được xử lý
               />
             ))}
           </div>
