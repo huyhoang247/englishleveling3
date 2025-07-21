@@ -257,7 +257,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => { if (startValue === endValue) return; let step = Math.ceil((endValue - startValue) / 30) || 1; let current = startValue; const interval = setInterval(() => { current += step; if (current >= endValue) { setDisplayedCoins(endValue); clearInterval(interval); } else { setDisplayedCoins(current); } }, 30); }, []);
   
-  // <<< START: THAY ĐỔI LỚN - CẬP NHẬT LOGIC LƯU DỮ LIỆU >>>
   const triggerSuccessSequence = useCallback(async () => {
     if (!currentWord || !user) return;
     setIsCorrect(true);
@@ -267,8 +266,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     setTimeout(() => setStreakAnimation(false), 1500);
     setShowConfetti(true);
 
-    // Dùng cho Practice 3 để không thêm cụm từ vào usedWords
-    // mà thêm từng từ riêng lẻ vào sau.
     if (selectedPractice !== 3) {
       setUsedWords(prev => new Set(prev).add(currentWord.word));
     }
@@ -283,7 +280,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       const batch = writeBatch(db);
       const gameModeId = `fill-word-${selectedPractice}`;
 
-      // Xác định các từ cần cập nhật tiến trình
       let wordsToUpdate: string[];
       if (selectedPractice === 3) {
         wordsToUpdate = currentWord.word.split(' ');
@@ -291,9 +287,9 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         wordsToUpdate = [currentWord.word];
       }
       
-      // Lặp qua từng từ và thêm vào batch để cập nhật
       wordsToUpdate.forEach(word => {
-        const completedWordRef = doc(db, 'users', user.uid, 'completedWords', word);
+        // <<< FIX: Thêm .toLowerCase() để đảm bảo tính nhất quán của ID document >>>
+        const completedWordRef = doc(db, 'users', user.uid, 'completedWords', word.toLowerCase());
         batch.set(
           completedWordRef, 
           { 
@@ -304,21 +300,16 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         );
       });
 
-      // Cập nhật usedWords cho practice 3 sau khi đã tách từ
       if (selectedPractice === 3) {
           setUsedWords(prev => {
               const newSet = new Set(prev);
-              // Chỉ thêm cụm từ gốc để kiểm tra logic hoàn thành game
-              // (hiển thị game over khi tất cả cụm từ đã được chơi)
               newSet.add(currentWord.word);
               return newSet;
           });
       }
 
-      // Cập nhật coin của người dùng
       batch.update(userDocRef, { 'coins': updatedCoins });
       
-      // Commit tất cả các thay đổi một lần
       await batch.commit();
 
     } catch (e) { 
@@ -328,7 +319,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     setTimeout(() => setShowConfetti(false), 2000);
     setTimeout(selectNextWord, 1500);
   }, [currentWord, user, streak, masteryCount, selectedPractice, coins, startCoinCountAnimation, selectNextWord]);
-  // <<< END: THAY ĐỔI LỚN - CẬP NHẬT LOGIC LƯU DỮ LIỆU >>>
 
   const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect) return;
