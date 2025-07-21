@@ -1,35 +1,44 @@
-// --- START OF FILE boss.tsx (UPDATED) ---
+
 
 import React, { useState, useEffect, useRef } from 'react';
-import BOSS_DATA from './boss/bossData.ts'; 
+import BOSS_DATA from './boss/bossData.ts';
+import { 
+    OwnedSkill, 
+    SkillBlueprint, 
+    getActivationChance, 
+    getRarityTextColor 
+} from './skill-data.tsx';
 
-// --- SỬA LẠI PROPS INTERFACE ---
-interface BossBattleProps {
-  onClose: () => void;
-  playerInitialStats: {
+// --- TYPE DEFINITIONS ---
+type ActiveSkill = OwnedSkill & SkillBlueprint;
+
+type CombatStats = {
     maxHp: number;
     hp: number;
     atk: number;
     def: number;
-    maxEnergy: number;
-    energy: number;
-  };
+    maxEnergy?: number;
+    energy?: number;
+};
+
+interface BossBattleProps {
+  onClose: () => void;
+  playerInitialStats: CombatStats;
   onBattleEnd: (result: 'win' | 'lose', rewards: { coins: number; energy: number }) => void;
-  // >>> THÊM PROPS MỚI <<<
   initialFloor: number;
   onFloorComplete: (newFloor: number) => void;
+  equippedSkills: ActiveSkill[];
 }
 
-// --- Component Thanh Máu ---
+
+// --- UI HELPER COMPONENTS ---
+
 const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
   const percentage = Math.max(0, (current / max) * 100);
   return (
     <div className="w-full">
       <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
-        <div
-          className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`}
-          style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}
-        ></div>
+        <div className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}></div>
         <div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold">
           <span>{Math.ceil(current)} / {max}</span>
         </div>
@@ -38,40 +47,21 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
   );
 };
 
-// --- Component Hiển thị Năng Lượng ---
 const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
     return (
       <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-cyan-500/30">
-          <img
-            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png"
-            alt="Energy"
-            className="w-5 h-5"
-          />
-          <span className="font-bold text-base text-cyan-300 text-shadow-sm tracking-wider">
-              {current}/{max}
-          </span>
+          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png" alt="Energy" className="w-5 h-5" />
+          <span className="font-bold text-base text-cyan-300 text-shadow-sm tracking-wider">{current}/{max}</span>
       </div>
     );
 };
 
-// --- Component Số Sát Thương ---
-const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: number, isPlayerHit: boolean }) => {
-  const formatDamageText = (num: number): string => {
-    if (num >= 1000) return `${parseFloat((num / 1000).toFixed(1))}k`;
-    return String(num);
-  };
+const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colorClass: string }) => {
   return (
-    <div
-      key={id}
-      className={`absolute top-1/3 font-lilita text-2xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[5%]' : 'right-[5%]'}`}
-      style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}
-    >
-      -{formatDamageText(damage)}
-    </div>
+    <div key={id} className={`absolute top-1/3 font-lilita text-2xl animate-float-up pointer-events-none ${colorClass}`} style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}>{text}</div>
   );
 };
 
-// --- Component Modal Chỉ Số ---
 const StatsModal = ({ player, boss, onClose }: { player: any, boss: any, onClose: () => void }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
@@ -86,9 +76,7 @@ const StatsModal = ({ player, boss, onClose }: { player: any, boss: any, onClose
             </div>
             <div className="h-16 w-px bg-slate-600/70"></div>
             <div className="flex flex-col items-center gap-1.5">
-              <h3 className="text-xl font-bold text-red-400 text-shadow-sm tracking-wide select-none">
-                  BOSS
-              </h3>
+              <h3 className="text-xl font-bold text-red-400 text-shadow-sm tracking-wide select-none">BOSS</h3>
               <p className="text-lg">ATK: <span className="font-bold text-red-400">{boss.atk}</span></p>
               <p className="text-lg">DEF: <span className="font-bold text-sky-400">{boss.def}</span></p>
             </div>
@@ -99,7 +87,6 @@ const StatsModal = ({ player, boss, onClose }: { player: any, boss: any, onClose
   )
 }
 
-// --- Component Modal Lịch Sử Chiến Đấu ---
 const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
@@ -107,14 +94,13 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
           <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
           <div className="p-4 border-b border-slate-700"><h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide">BATTLE HISTORY</h3></div>
           <div className="h-80 overflow-y-auto p-4 flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
-            {log.length > 0 ? log.map((entry, index) => (<p key={index} className="text-slate-300 mb-2 border-b border-slate-800/50 pb-2">{entry}</p>)) : (<p className="text-slate-400 text-center italic">Chưa có lịch sử trận đấu.</p>)}
+            {log.length > 0 ? log.map((entry, index) => (<p key={index} className="text-slate-300 mb-2 border-b border-slate-800/50 pb-2" dangerouslySetInnerHTML={{__html: entry}}></p>)) : (<p className="text-slate-400 text-center italic">Chưa có lịch sử trận đấu.</p>)}
           </div>
         </div>
       </div>
     )
 }
 
-// --- Component Modal Phần Thưởng ---
 const RewardsModal = ({ onClose, rewards }: { onClose: () => void, rewards: { coins: number, energy: number } }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
@@ -138,7 +124,6 @@ const RewardsModal = ({ onClose, rewards }: { onClose: () => void, rewards: { co
   );
 };
 
-// --- Component Modal Chiến Thắng ---
 const VictoryModal = ({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number, energy: number } }) => {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
@@ -169,7 +154,6 @@ const VictoryModal = ({ onRestart, onNextFloor, isLastBoss, rewards }: { onResta
   );
 }
 
-// --- Component Modal Thất Bại ---
 const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
@@ -184,139 +168,192 @@ const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
   );
 }
 
-// --- Component Chính Của Game ---
+
+// --- MAIN BOSS BATTLE COMPONENT ---
 export default function BossBattle({ 
   onClose, 
   playerInitialStats, 
   onBattleEnd, 
-  // >>> NHẬN PROPS MỚI <<<
   initialFloor, 
-  onFloorComplete 
+  onFloorComplete,
+  equippedSkills 
 }: BossBattleProps) {
   
-  // >>> SỬ DỤNG initialFloor ĐỂ KHỞI TẠO STATE TẦNG HIỆN TẠI <<<
+  // --- STATE MANAGEMENT ---
   const [currentBossIndex, setCurrentBossIndex] = useState(initialFloor);
   const currentBossData = BOSS_DATA[currentBossIndex];
-
-  const [playerStats, setPlayerStats] = useState(playerInitialStats);
-  const [bossStats, setBossStats] = useState(currentBossData.stats);
+  const [playerStats, setPlayerStats] = useState<CombatStats>(playerInitialStats);
+  const [bossStats, setBossStats] = useState<CombatStats>(currentBossData.stats);
   const [combatLog, setCombatLog] = useState<string[]>([]);
   const [previousCombatLog, setPreviousCombatLog] = useState<string[]>([]);
   const [turnCounter, setTurnCounter] = useState(0);
   const [gameOver, setGameOver] = useState<null | 'win' | 'lose'>(null);
   const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
+  const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
   const [showStats, setShowStats] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
-  const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
-
+  
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // >>> THÊM EFFECT ĐỂ ĐỒNG BỘ NẾU PROP THAY ĐỔI <<<
-  useEffect(() => {
-    setCurrentBossIndex(initialFloor);
-  }, [initialFloor]);
-
-  useEffect(() => {
-    setPlayerStats(playerInitialStats);
-  }, [playerInitialStats]);
-
-  useEffect(() => {
-    // Cập nhật lại boss stats mỗi khi tầng thay đổi
-    setBossStats(BOSS_DATA[currentBossIndex].stats);
-    addLog(`${BOSS_DATA[currentBossIndex].name} đã xuất hiện. Hãy chuẩn bị!`, 0);
-  }, [currentBossIndex]);
-
-  useEffect(() => {
-    if (battleState === 'fighting') {
-      battleIntervalRef.current = setInterval(runBattleTurn, 800);
-    }
-    return () => {
-      if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    };
-  }, [battleState, bossStats, playerStats]);
-
-  const addLog = (message: string, turn: number) => {
-    const logEntry = turn > 0 ? `[Lượt ${turn}] ${message}` : message;
-    setCombatLog(prevLog => [logEntry, ...prevLog]);
-  };
-
-  const showFloatingDamage = (damage: number, isPlayerHit: boolean) => {
+  // --- LOGIC HELPERS ---
+  const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
+  const addLog = (message: string) => setCombatLog(prev => [message, ...prev].slice(0, 50));
+  const showFloatingText = (text: string, colorClass: string, isPlayerSide: boolean) => {
     const id = Date.now() + Math.random();
-    setDamages(prev => [...prev, { id, damage, isPlayerHit }]);
-    setTimeout(() => {
-      setDamages(prev => prev.filter(d => d.id !== id));
-    }, 1500);
+    const position = isPlayerSide ? 'left-[5%]' : 'right-[5%]'
+    setDamages(prev => [...prev, { id, text, colorClass: `${position} ${colorClass}` }]);
+    setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
   };
+  
+  // --- CORE BATTLE LOGIC FUNCTION ---
+  const executeFullTurn = (currentPlayer: CombatStats, currentBoss: CombatStats, turn: number) => {
+    const turnLogs: string[] = [];
+    const log = (msg: string) => turnLogs.push(`[Lượt ${turn}] ${msg}`);
+    const checkActivation = (rarity: string) => Math.random() * 100 < getActivationChance(rarity);
+    const getSkillEffect = (skill: ActiveSkill) => (skill.baseEffectValue || 0) + (skill.level - 1) * (skill.effectValuePerLevel || 0);
+    const calculateDamage = (atk: number, def: number) => Math.max(1, Math.floor(atk * (0.8 + Math.random() * 0.4) * (1 - def / (def + 100))));
+    
+    let player = { ...currentPlayer };
+    let boss = { ...currentBoss };
+    let winner: 'win' | 'lose' | null = null;
+    let turnEvents = { playerDmg: 0, playerHeal: 0, bossDmg: 0, bossReflectDmg: 0 };
 
-  const calculateDamage = (attackerAtk: number, defenderDef: number) => {
-    const baseDamage = attackerAtk * (0.8 + Math.random() * 0.4);
-    const defenseConstant = 100;
-    const damageReduction = defenderDef / (defenderDef + defenseConstant);
-    const finalDamage = baseDamage * (1 - damageReduction);
-    return Math.max(1, Math.floor(finalDamage));
-  };
-
-  const runBattleTurn = () => {
-    if (gameOver) return;
-    setTurnCounter(currentTurn => {
-        const nextTurn = currentTurn + 1;
-        const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
-        setBossStats(prevBoss => {
-            const newHp = prevBoss.hp - playerDmg;
-            addLog(`Bạn tấn công, gây ${playerDmg} sát thương.`, nextTurn);
-            showFloatingDamage(playerDmg, false);
-            if (newHp <= 0) {
-                endGame('win', nextTurn);
-                return { ...prevBoss, hp: 0 };
-            }
-            return { ...prevBoss, hp: newHp };
-        });
-        setTimeout(() => {
-            if (battleIntervalRef.current) {
-                const bossDmg = calculateDamage(bossStats.atk, playerStats.def);
-                setPlayerStats(prevPlayer => {
-                    const newHp = prevPlayer.hp - bossDmg;
-                    addLog(`${currentBossData.name} phản công, gây ${bossDmg} sát thương.`, nextTurn);
-                    showFloatingDamage(bossDmg, true);
-                    if (newHp <= 0) {
-                        endGame('lose', nextTurn);
-                        return { ...prevPlayer, hp: 0 };
-                    }
-                    return { ...prevPlayer, hp: newHp };
-                });
-            }
-        }, 400);
-        return nextTurn;
+    // 1. Player's Attack Phase
+    let atkMods = { boost: 1, armorPen: 0 };
+    equippedSkills.forEach(skill => {
+        if ((skill.id === 'damage_boost' || skill.id === 'armor_penetration') && checkActivation(skill.rarity)) {
+            const effect = getSkillEffect(skill);
+            log(`<span class="${getRarityTextColor(skill.rarity)} font-bold">[Kỹ Năng] ${skill.name}</span> kích hoạt!`);
+            if (skill.id === 'damage_boost') atkMods.boost += effect / 100;
+            if (skill.id === 'armor_penetration') atkMods.armorPen += effect / 100;
+        }
     });
+    const playerDmg = calculateDamage(player.atk * atkMods.boost, Math.max(0, boss.def * (1 - atkMods.armorPen)));
+    turnEvents.playerDmg = playerDmg;
+    log(`Bạn tấn công, gây <b class="text-red-400">${playerDmg}</b> sát thương.`);
+    boss.hp -= playerDmg;
+
+    // 2. Player's Post-Attack Phase (Lifesteal)
+    equippedSkills.forEach(skill => {
+        if (skill.id === 'life_steal' && checkActivation(skill.rarity)) {
+            const healed = Math.ceil(playerDmg * (getSkillEffect(skill) / 100));
+            const actualHeal = Math.min(healed, player.maxHp - player.hp);
+            if (actualHeal > 0) {
+                turnEvents.playerHeal = actualHeal;
+                log(`<span class="text-green-400 font-bold">[Kỹ Năng] ${skill.name}</span> hút <b class="text-green-400">${actualHeal}</b> Máu.`);
+                player.hp += actualHeal;
+            }
+        }
+    });
+    
+    if (boss.hp <= 0) {
+        boss.hp = 0; winner = 'win';
+        log(`${currentBossData.name} đã bị đánh bại!`);
+        return { player, boss, turnLogs, winner, turnEvents };
+    }
+
+    // 3. Boss's Attack Phase
+    const bossDmg = calculateDamage(boss.atk, player.def);
+    turnEvents.bossDmg = bossDmg;
+    log(`${currentBossData.name} phản công, gây <b class="text-red-400">${bossDmg}</b> sát thương.`);
+    player.hp -= bossDmg;
+
+    // 4. Player's Defensive Phase (Thorns)
+    let totalReflectDmg = 0;
+    equippedSkills.forEach(skill => {
+        if (skill.id === 'thorns' && checkActivation(skill.rarity)) {
+            const reflectDmg = Math.ceil(bossDmg * (getSkillEffect(skill) / 100));
+            totalReflectDmg += reflectDmg;
+            log(`<span class="text-orange-400 font-bold">[Kỹ Năng] ${skill.name}</span> phản lại <b class="text-orange-400">${reflectDmg}</b> sát thương.`);
+            boss.hp -= reflectDmg;
+        }
+    });
+    if (totalReflectDmg > 0) turnEvents.bossReflectDmg = totalReflectDmg;
+
+    if (player.hp <= 0) {
+        player.hp = 0; winner = 'lose';
+        log("Bạn đã gục ngã... THẤT BẠI!");
+        return { player, boss, turnLogs, winner, turnEvents };
+    }
+    if (boss.hp <= 0) {
+        boss.hp = 0; winner = 'win';
+        log(`${currentBossData.name} đã bị đánh bại!`);
+    }
+
+    return { player, boss, turnLogs, winner, turnEvents };
   };
 
-  const endGame = (result: 'win' | 'lose', finalTurn: number) => {
+  // --- BATTLE CONTROL FUNCTIONS ---
+  
+  const runBattleTurn = () => {
+    const nextTurn = turnCounter + 1;
+    const { player: newPlayer, boss: newBoss, turnLogs, winner, turnEvents } = executeFullTurn(playerStats, bossStats, nextTurn);
+    
+    // Animate visuals
+    if (turnEvents.playerDmg > 0) showFloatingText(`-${formatDamageText(turnEvents.playerDmg)}`, 'text-red-500', false);
+    if (turnEvents.playerHeal > 0) showFloatingText(`+${formatDamageText(turnEvents.playerHeal)}`, 'text-green-400', true);
+    setTimeout(() => {
+      if (turnEvents.bossDmg > 0) showFloatingText(`-${formatDamageText(turnEvents.bossDmg)}`, 'text-red-500', true);
+      if (turnEvents.bossReflectDmg > 0) showFloatingText(`-${formatDamageText(turnEvents.bossReflectDmg)}`, 'text-orange-400', false);
+    }, 500);
+
+    setPlayerStats(newPlayer);
+    setBossStats(newBoss);
+    setCombatLog(prev => [...turnLogs.reverse(), ...prev]);
+    setTurnCounter(nextTurn);
+    if (winner) endGame(winner);
+  };
+  
+  const skipBattle = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    battleIntervalRef.current = null;
     setBattleState('finished');
+
+    let tempPlayer = { ...playerStats };
+    let tempBoss = { ...bossStats };
+    let tempTurn = turnCounter;
+    let finalWinner: 'win' | 'lose' | null = null;
+    const fullLog: string[] = [];
+
+    while (finalWinner === null) {
+        tempTurn++;
+        const turnResult = executeFullTurn(tempPlayer, tempBoss, tempTurn);
+        tempPlayer = turnResult.player;
+        tempBoss = turnResult.boss;
+        finalWinner = turnResult.winner;
+        fullLog.push(...turnResult.turnLogs);
+    }
+
+    setPlayerStats(tempPlayer);
+    setBossStats(tempBoss);
+    setCombatLog(prev => [...fullLog.reverse(), ...prev]);
+    setTurnCounter(tempTurn);
+    endGame(finalWinner);
+  };
+
+  const endGame = (result: 'win' | 'lose') => {
+    if (gameOver) return;
+    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     setGameOver(result);
+    setBattleState('finished');
     const rewards = currentBossData.rewards || { coins: 0, energy: 0 };
-    if (result === 'win') {
-      addLog(`${currentBossData.name} đã bị đánh bại!`, finalTurn);
-      onBattleEnd('win', rewards);
-      const newEnergy = Math.min(playerInitialStats.maxEnergy, playerStats.energy + rewards.energy);
-      setPlayerStats(prev => ({...prev, energy: newEnergy}));
-    } else {
-      addLog("Bạn đã gục ngã... THẤT BẠI!", finalTurn);
-      onBattleEnd('lose', { coins: 0, energy: 0 });
+    onBattleEnd(result, result === 'win' ? rewards : { coins: 0, energy: 0 });
+    
+    if (result === 'win' && playerStats.energy !== undefined && playerStats.maxEnergy !== undefined) {
+        setPlayerStats(prev => ({
+            ...prev,
+            energy: Math.min(prev.maxEnergy!, (prev.energy || 0) + rewards.energy)
+        }));
     }
   };
 
+  // --- BATTLE STATE TRANSITIONS ---
   const startGame = () => {
-    if (battleState === 'idle' && playerStats.energy >= 10) {
-      setPlayerStats(prev => ({ ...prev, energy: prev.energy - 10 }));
-      setBattleState('fighting');
-    } else if (battleState === 'idle') {
-      addLog("Không đủ năng lượng.", 0);
-    }
+    if (battleState !== 'idle' || (playerStats.energy || 0) < 10) return;
+    setPlayerStats(prev => ({ ...prev, energy: (prev.energy || 0) - 10 }));
+    setBattleState('fighting');
   };
-
+  
   const resetAllStateForNewBattle = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     setPreviousCombatLog(combatLog);
@@ -325,75 +362,48 @@ export default function BossBattle({
     setGameOver(null);
     setBattleState('idle');
     setDamages([]);
-    setShowStats(false);
-    setShowLogModal(false);
-    setShowRewardsModal(false);
   }
 
-  // >>> HÀM MỚI: THỬ LẠI TẦNG HIỆN TẠI KHI THUA <<<
   const retryCurrentFloor = () => {
     resetAllStateForNewBattle();
-    // KHÔNG reset currentBossIndex, giữ nguyên tầng hiện tại
     setPlayerStats(playerInitialStats); 
-    setBossStats(BOSS_DATA[currentBossIndex].stats); // Chỉ reset stats của boss hiện tại
-    setTimeout(() => addLog(`${BOSS_DATA[currentBossIndex].name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
+    setBossStats(BOSS_DATA[currentBossIndex].stats);
+    setTimeout(() => addLog(`[Lượt 0] ${BOSS_DATA[currentBossIndex].name} đã xuất hiện.`), 100);
   };
   
-  // >>> ĐỔI TÊN HÀM NÀY CHO RÕ NGHĨA HƠN <<<
-  // Hàm này chỉ dùng khi người chơi clear hết boss và muốn chơi lại từ đầu
-  const restartFromBeginning = () => {
-    resetAllStateForNewBattle();
-    setCurrentBossIndex(0);
-    onFloorComplete(0); // Báo cho parent biết để reset tiến trình
-    setPlayerStats(playerInitialStats);
-    setBossStats(BOSS_DATA[0].stats);
-    setTimeout(() => addLog(`${BOSS_DATA[0].name} đã xuất hiện. Hãy chuẩn bị!`, 0), 100);
-  }
-
   const handleNextFloor = () => {
     const nextIndex = currentBossIndex + 1;
-    if(nextIndex < BOSS_DATA.length) {
-      resetAllStateForNewBattle();
-      setCurrentBossIndex(nextIndex);
-      
-      // >>> ĐÂY LÀ LÚC GỌI onFloorComplete ĐỂ LƯU TIẾN TRÌNH <<<
-      onFloorComplete(nextIndex);
-
-      // Hồi đầy máu cho người chơi, giữ nguyên chỉ số ATK/DEF đã nâng cấp
-      // và năng lượng hiện tại (đã cộng thưởng).
-      setPlayerStats(prev => ({
-        ...playerInitialStats, // Lấy ATK/DEF... từ prop (đã được nâng cấp)
-        hp: playerInitialStats.maxHp, // Hồi đầy máu
-        energy: prev.energy // Giữ lại năng lượng hiện tại
-      }));
-    }
+    if(nextIndex >= BOSS_DATA.length) return;
+    
+    resetAllStateForNewBattle();
+    setCurrentBossIndex(nextIndex);
+    onFloorComplete(nextIndex);
+    
+    setPlayerStats(prev => ({
+      ...playerInitialStats, 
+      hp: playerInitialStats.maxHp,
+      energy: prev.energy 
+    }));
   }
 
-  const skipBattle = () => {
-    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    let tempPlayerHp = playerStats.hp;
-    let tempBossHp = bossStats.hp;
-    let tempTurn = turnCounter;
-    let tempCombatLog: string[] = [...combatLog].reverse();
-    let winner: 'win' | 'lose' | null = null;
-    while (winner === null) {
-        tempTurn++;
-        const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
-        tempBossHp -= playerDmg;
-        tempCombatLog.push(`[Lượt ${tempTurn}] Bạn tấn công, gây ${playerDmg} sát thương.`);
-        if (tempBossHp <= 0) { winner = 'win'; break; }
-        const bossDmg = calculateDamage(bossStats.atk, playerStats.def);
-        tempPlayerHp -= bossDmg;
-        tempCombatLog.push(`[Lượt ${tempTurn}] ${currentBossData.name} phản công, gây ${bossDmg} sát thương.`);
-        if (tempPlayerHp <= 0) { winner = 'lose'; break; }
-    }
-    setCombatLog(tempCombatLog.reverse());
-    setPlayerStats(prev => ({ ...prev, hp: Math.max(0, tempPlayerHp) }));
-    setBossStats(prev => ({ ...prev, hp: Math.max(0, tempBossHp) }));
-    setTurnCounter(tempTurn);
-    endGame(winner, tempTurn);
-  }
+  // --- REACT HOOKS ---
+  useEffect(() => { setCurrentBossIndex(initialFloor); }, [initialFloor]);
+  useEffect(() => { setPlayerStats(playerInitialStats); }, [playerInitialStats]);
+  useEffect(() => {
+    setBossStats(BOSS_DATA[currentBossIndex].stats);
+    addLog(`[Lượt 0] ${BOSS_DATA[currentBossIndex].name} đã xuất hiện. Hãy chuẩn bị!`);
+  }, [currentBossIndex]);
 
+  useEffect(() => {
+    if (battleState === 'fighting' && !gameOver) {
+      battleIntervalRef.current = setInterval(runBattleTurn, 1200);
+    }
+    return () => {
+      if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+    };
+  }, [battleState, gameOver, turnCounter]); // Trigger on turnCounter change
+
+  // --- RENDER ---
   return (
     <>
       <style>{`
@@ -402,7 +412,6 @@ export default function BossBattle({
       `}</style>
 
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
-      
       {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
       {showRewardsModal && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
 
@@ -411,10 +420,8 @@ export default function BossBattle({
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-2">
                 <div className="w-1/2"><h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">{currentBossData.floor}</h3><HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" /></div>
                 <div className="flex items-center justify-end gap-4 w-1/2">
-                    <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />
-                    <button onClick={onClose} className="w-9 h-9 flex items-center justify-center bg-slate-800/70 hover:bg-red-500/80 rounded-full text-slate-300 hover:text-white transition-colors text-xl font-sans flex-shrink-0" aria-label="Thoát">
-                        ✕
-                    </button>
+                    {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />}
+                    <button onClick={onClose} className="w-9 h-9 flex items-center justify-center bg-slate-800/70 hover:bg-red-500/80 rounded-full text-slate-300 hover:text-white transition-colors text-xl font-sans flex-shrink-0" aria-label="Thoát">✕</button>
                 </div>
             </div>
         </header>
@@ -422,25 +429,21 @@ export default function BossBattle({
         <main className="w-full h-full flex flex-col justify-center items-center pt-24 p-4">
             <div className="w-full flex justify-center items-center gap-4 mb-4 h-10">
                 <button onClick={() => setShowStats(true)} className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md">View Stats</button>
-
                 {battleState === 'idle' && (
                   <>
                     <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length} className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">View Log</button>
                     <button onClick={() => setShowRewardsModal(true)} className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md">Rewards</button>
                   </>
                 )}
-
-                {battleState === 'fighting' && (<button onClick={skipBattle} className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button>)}
+                {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button>)}
             </div>
-
-            {damages.map(d => (<FloatingDamage key={d.id} damage={d.damage} id={d.id} isPlayerHit={d.isPlayerHit} />))}
+            
+            {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
                   <div className="relative group flex justify-center">
-                    <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">
-                      BOSS
-                    </h2>
+                    <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
                     <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                       {currentBossData.name.toUpperCase()}
                       <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-slate-900"></div>
@@ -448,11 +451,7 @@ export default function BossBattle({
                   </div>
                   
                   <div className="w-40 h-40 md:w-56 md:h-56">
-                    <img 
-                      src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} 
-                      alt={currentBossData.name} 
-                      className="w-full h-full object-contain" 
-                    />
+                    <img src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} alt={currentBossData.name} className="w-full h-full object-contain" />
                   </div>
                   <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
                 </div>
@@ -460,7 +459,7 @@ export default function BossBattle({
 
             <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
                 {battleState === 'idle' && (
-                <button onClick={startGame} disabled={playerStats.energy < 10} className="btn-shine relative overflow-hidden px-10 py-2 bg-slate-900/80 rounded-lg text-teal-300 border border-teal-500/40 transition-all duration-300 hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)] active:scale-95 disabled:bg-slate-800/60 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed disabled:shadow-none">
+                <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="btn-shine relative overflow-hidden px-10 py-2 bg-slate-900/80 rounded-lg text-teal-300 border border-teal-500/40 transition-all duration-300 hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)] active:scale-95 disabled:bg-slate-800/60 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed disabled:shadow-none">
                     <div className="flex flex-col items-center gap-0.5">
                         <span className="font-bold text-lg tracking-widest uppercase">Fight</span>
                         <div className="flex items-center gap-1 text-xs font-semibold text-cyan-400/80">
@@ -471,13 +470,12 @@ export default function BossBattle({
                 )}
                 {battleState !== 'idle' && (
                   <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
-                      {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`}>{entry}</p>))}
+                      {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
                   </div>
                 )}
             </div>
 
-            {/* >>> CẬP NHẬT CÁC HÀM GỌI TRONG MODAL <<< */}
-            {gameOver === 'win' && (<VictoryModal onRestart={restartFromBeginning} onNextFloor={handleNextFloor} isLastBoss={currentBossIndex === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
+            {gameOver === 'win' && (<VictoryModal onRestart={retryCurrentFloor} onNextFloor={handleNextFloor} isLastBoss={currentBossIndex === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
             {gameOver === 'lose' && (<DefeatModal onRestart={retryCurrentFloor} />)}
         </main>
       </div>
