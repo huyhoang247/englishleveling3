@@ -1,3 +1,5 @@
+// --- START OF FILE background-game.tsx (UPDATED) ---
+
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './coin-display.tsx';
@@ -23,6 +25,14 @@ import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './can-cu.tsx';
 import SkillScreen from './skill.tsx';
 import { OwnedSkill } from './skill-data.tsx';
+
+// --- START: THÊM INTERFACE CHO VẬT PHẨM TRONG KHO ĐỒ ---
+export interface InventoryItem {
+  instanceId: string; // ID độc nhất cho mỗi vật phẩm, để phân biệt các vật phẩm cùng loại
+  itemId: string;     // ID của vật phẩm trong item-database
+}
+// --- END: THÊM INTERFACE ---
+
 
 // --- SVG Icon Components ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -120,11 +130,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [userStats, setUserStats] = useState({ hp: 0, atk: 0, def: 0 });
   const [jackpotPool, setJackpotPool] = useState(0);
   const [bossBattleHighestFloor, setBossBattleHighestFloor] = useState(0);
-  // >>> START: THÊM STATE MỚI CHO HỆ THỐNG KỸ NĂNG <<<
   const [ancientBooks, setAncientBooks] = useState(0);
   const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([]);
   const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([null, null, null]);
-  // >>> END: THÊM STATE MỚI CHO HỆ THỐNG KỸ NĂNG <<<
+  // >>> START: THÊM STATE CHO KHO ĐỒ <<<
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  // >>> END: THÊM STATE CHO KHO ĐỒ <<<
 
 
   // States for managing overlay visibility
@@ -214,32 +225,35 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setMinerChallengeHighestFloor(userData.minerChallengeHighestFloor || 0);
         setUserStats(userData.stats || { hp: 0, atk: 0, def: 0 });
         setBossBattleHighestFloor(userData.bossBattleHighestFloor || 0);
-        // >>> START: ĐỌC DỮ LIỆU KỸ NĂNG TỪ FIRESTORE <<<
         setAncientBooks(userData.ancientBooks || 0);
         const skillsData = userData.skills || { owned: [], equipped: [null, null, null] };
         setOwnedSkills(skillsData.owned);
         setEquippedSkillIds(skillsData.equipped);
-        // >>> END: ĐỌC DỮ LIỆU KỸ NĂNG TỪ FIRESTORE <<<
+        // >>> START: ĐỌC DỮ LIỆU KHO ĐỒ TỪ FIRESTORE <<<
+        setInventory(userData.inventory || []);
+        // >>> END: ĐỌC DỮ LIỆU KHO ĐỒ TỪ FIRESTORE <<<
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
           coins: 0, gems: 0, masteryCards: 0, stats: { hp: 0, atk: 0, def: 0 },
           pickaxes: 50, minerChallengeHighestFloor: 0, 
           bossBattleHighestFloor: 0,
-          // >>> START: THIẾT LẬP GIÁ TRỊ MẶC ĐỊNH CHO KỸ NĂNG <<<
           ancientBooks: 0,
           skills: { owned: [], equipped: [null, null, null] },
-          // >>> END: THIẾT LẬP GIÁ TRỊ MẶC ĐỊNH CHO KỸ NĂNG <<<
+          // >>> START: THIẾT LẬP GIÁ TRỊ KHO ĐỒ MẶC ĐỊNH <<<
+          inventory: [],
+          // >>> END: THIẾT LẬP GIÁ TRỊ KHO ĐỒ MẶC ĐỊNH <<<
           createdAt: new Date(),
         });
         setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0); setPickaxes(50);
         setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
         setBossBattleHighestFloor(0);
-        // >>> START: SET STATE MẶC ĐỊNH CHO KỸ NĂNG <<<
         setAncientBooks(0);
         setOwnedSkills([]);
         setEquippedSkillIds([null, null, null]);
-        // >>> END: SET STATE MẶC ĐỊNH CHO KỸ NĂNG <<<
+        // >>> START: SET STATE KHO ĐỒ MẶC ĐỊNH <<<
+        setInventory([]);
+        // >>> END: SET STATE KHO ĐỒ MẶC ĐỊNH <<<
       }
     } catch (error) { console.error("Error fetching user data:", error); } 
     finally { setIsLoadingUserData(false); }
@@ -453,7 +467,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-  // >>> START: HÀM CẬP NHẬT DỮ LIỆU KỸ NĂNG LÊN FIRESTORE <<<
   const handleSkillsUpdate = async (updates: {
       newOwned: OwnedSkill[];
       newEquippedIds: (string | null)[];
@@ -506,7 +519,57 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           setIsSyncingData(false);
       }
   };
-  // >>> END: HÀM CẬP NHẬT DỮ LIỆU KỸ NĂNG LÊN FIRESTORE <<<
+  
+  // >>> START: HÀM XỬ LÝ MUA VẬT PHẨM TỪ SHOP <<<
+  const handlePurchaseItem = async (itemToBuy: any) => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) { throw new Error("Người dùng chưa xác thực để mua vật phẩm."); }
+      
+      const userDocRef = doc(db, 'users', userId);
+      setIsSyncingData(true);
+
+      try {
+          await runTransaction(db, async (transaction) => {
+              const userDoc = await transaction.get(userDocRef);
+              if (!userDoc.exists()) { throw new Error("Tài liệu người dùng không tồn tại!"); }
+
+              const currentCoins = userDoc.data().coins || 0;
+              if (currentCoins < itemToBuy.price) {
+                  throw new Error("Không đủ vàng trên server.");
+              }
+
+              const newCoins = currentCoins - itemToBuy.price;
+              
+              const currentInventory = userDoc.data().inventory || [];
+              const newInventoryItem: InventoryItem = {
+                  instanceId: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                  itemId: itemToBuy.id,
+              };
+
+              const newInventory = [...currentInventory, newInventoryItem];
+
+              transaction.update(userDocRef, {
+                  coins: newCoins,
+                  inventory: newInventory,
+              });
+          });
+
+          // Cập nhật state cục bộ sau khi giao dịch thành công
+          setCoins(prev => prev - itemToBuy.price);
+          setInventory(prev => [...prev, {
+              instanceId: `item-${Date.now()}-local`, // ID cục bộ có thể khác, nhưng cấu trúc thì giống
+              itemId: itemToBuy.id,
+          }]);
+          console.log(`Vật phẩm ${itemToBuy.name} đã được mua thành công!`);
+
+      } catch (error) {
+          console.error("Giao dịch mua vật phẩm thất bại:", error);
+          throw error; // Ném lỗi để component Shop có thể xử lý
+      } finally {
+          setIsSyncingData(false);
+      }
+  };
+  // >>> END: HÀM XỬ LÝ MUA VẬT PHẨM TỪ SHOP <<<
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
@@ -519,11 +582,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
         setBossBattleHighestFloor(0);
-        // >>> START: RESET STATE KỸ NĂNG KHI LOGOUT <<<
         setAncientBooks(0);
         setOwnedSkills([]);
         setEquippedSkillIds([null, null, null]);
-        // >>> END: RESET STATE KỸ NĂNG KHI LOGOUT <<<
+        // >>> START: RESET KHO ĐỒ KHI LOGOUT <<<
+        setInventory([]);
+        // >>> END: RESET KHO ĐỒ KHI LOGOUT <<<
         setJackpotPool(0); setIsLoadingUserData(true); setVocabularyData(null);
       }
     });
@@ -722,7 +786,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 )}
             </ErrorBoundary>
         </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} />}</ErrorBoundary> </div>
+        {/* >>> START: CẬP NHẬT PROPS CHO SHOP <<< */}
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> 
+            <ErrorBoundary>
+                {isShopOpen && auth.currentUser && 
+                    <Shop 
+                        onClose={toggleShop} 
+                        userCoins={coins}
+                        userGems={gems}
+                        onPurchaseItem={handlePurchaseItem}
+                    />
+                }
+            </ErrorBoundary> 
+        </div>
+        {/* >>> END: CẬP NHẬT PROPS CHO SHOP <<< */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> <ErrorBoundary>{isVocabularyChestOpen && currentUser && ( <VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)} onGemReward={handleGemReward} displayedCoins={displayedCoins} /> )}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}> <ErrorBoundary> {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && ( <AchievementsScreen onClose={toggleAchievements} userId={auth.currentUser.uid} initialData={vocabularyData} onClaimReward={handleRewardClaim} masteryCardsCount={masteryCards} displayedCoins={displayedCoins} /> )} </ErrorBoundary> </div>
         
