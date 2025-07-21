@@ -13,6 +13,7 @@ import WordSquaresInput from './vocabulary-input.tsx';
 import Confetti from './chuc-mung.tsx';
 import CoinDisplay from '../coin-display.tsx';
 import ImageCarousel3D from './image-carousel-3d.tsx';
+import VirtualKeyboard from './keyboard.tsx'; // <<< THÊM MỚI: Import bàn phím ảo
 
 // Định nghĩa kiểu dữ liệu
 interface VocabularyItem {
@@ -109,7 +110,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   const [timeLeft, setTimeLeft] = useState(60);
   const TOTAL_TIME = 60;
   const isInitialLoadComplete = useRef(false);
-  const p3InputRef = useRef<HTMLInputElement>(null);
+  const p3InputRef = useRef<HTMLDivElement>(null); // <<< THAY ĐỔI: Ref giờ trỏ tới div
 
   const [filledWords, setFilledWords] = useState<string[]>([]);
   const [activeBlankIndex, setActiveBlankIndex] = useState<number | null>(null);
@@ -230,11 +231,12 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     return () => clearInterval(timerId);
   }, [currentWord, gameOver, isCorrect]);
 
-  useEffect(() => {
-    if (selectedPractice === 3 && activeBlankIndex !== null && p3InputRef.current) {
-      p3InputRef.current.focus();
-    }
-  }, [activeBlankIndex, selectedPractice]);
+  // <<< THAY ĐỔI: Bỏ useEffect focus vào input
+  // useEffect(() => {
+  //   if (selectedPractice === 3 && activeBlankIndex !== null && p3InputRef.current) {
+  //     p3InputRef.current.focus();
+  //   }
+  // }, [activeBlankIndex, selectedPractice]);
 
   const selectNextWord = useCallback(() => {
     if (currentWordIndex < shuffledUnusedWords.length - 1) { 
@@ -347,6 +349,15 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   
   const handleImageClick = useCallback(() => setShowImagePopup(true), []);
   
+  // <<< THÊM MỚI: Tính độ dài từ hiện tại cho practice 3
+  const p3CurrentWordLength = useMemo(() => {
+    if (selectedPractice !== 3 || !currentWord || activeBlankIndex === null) {
+      return Infinity;
+    }
+    const correctWords = currentWord.word.split(' ');
+    return correctWords[activeBlankIndex]?.length ?? Infinity;
+  }, [currentWord, activeBlankIndex, selectedPractice]);
+
   if (loading) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">Đang tải dữ liệu...</div>;
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 text-center p-4">{error}</div>;
   if (vocabularyList.length === 0 && !loading && !error) return (
@@ -411,7 +422,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
                     <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div>
                 </div>
-                {/* <<< THAY ĐỔI: BỎ CĂN GIỮA >>> */}
                 { (selectedPractice === 2 || selectedPractice === 3) && currentWord && (
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
                     <p className="text-lg sm:text-xl font-semibold text-white leading-tight">
@@ -433,7 +443,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                   
                   {selectedPractice === 3 ? (
                     <div className="w-full flex flex-col items-center gap-4">
-                      {/* <<< THAY ĐỔI: BỎ CĂN GIỮA >>> */}
                       <div className="p-4 bg-white rounded-lg shadow-md w-full">
                         <p className="text-lg sm:text-xl font-medium text-gray-700 leading-relaxed flex flex-wrap items-center justify-start gap-x-2">
                            {currentWord.question?.split('___').map((part, index, arr) => (
@@ -457,21 +466,41 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                         </p>
                       </div>
 
+                      {/* <<< START: THAY ĐỔI LỚN CHO PRACTICE 3 >>> */}
                       {activeBlankIndex !== null && !isCorrect && (
-                        <div className={`w-full transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
-                          <input
+                        <div className={`w-full flex flex-col items-center gap-4 transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
+                          {/* Display for user input, styled to look like an input field */}
+                          <div
                             ref={p3InputRef}
-                            type="text"
-                            value={userInput}
-                            onChange={(e) => setUserInput(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleP3WordCheck()}
-                            placeholder={`Điền từ cho ô trống ${activeBlankIndex + 1}`}
-                            className="w-full px-4 py-3 text-center text-lg font-semibold text-gray-800 bg-white border-2 border-indigo-300 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
-                            autoComplete="off"
-                            autoCapitalize="none"
-                          />
+                            className="w-full px-4 py-3 text-center text-lg font-bold tracking-widest text-gray-800 bg-white border-2 border-indigo-300 rounded-lg shadow-inner flex items-center justify-center min-h-[58px]"
+                          >
+                            {userInput.toUpperCase() || <span className="text-gray-400 font-normal italic tracking-normal">{`Điền từ cho ô trống ${activeBlankIndex + 1}...`}</span>}
+                          </div>
+                      
+                          {/* Virtual Keyboard and Check Button */}
+                          <div className="w-full">
+                            <VirtualKeyboard
+                              userInput={userInput}
+                              setUserInput={setUserInput}
+                              wordLength={p3CurrentWordLength}
+                              disabled={!!isCorrect}
+                            />
+                            <div className="flex justify-center mt-2">
+                              <button
+                                onClick={handleP3WordCheck}
+                                disabled={!userInput.trim()}
+                                className="px-8 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm flex items-center bg-gradient-to-r from-blue-400 to-indigo-500 text-white hover:shadow-md hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Kiểm tra
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       )}
+                      {/* <<< END: THAY ĐỔI LỚN CHO PRACTICE 3 >>> */}
                     </div>
                   ) : (
                     <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} feedback={feedback} isCorrect={isCorrect} disabled={!!isCorrect} />
