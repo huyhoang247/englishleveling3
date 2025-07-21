@@ -6,6 +6,7 @@ import { db, auth } from '../firebase.js';
 import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc, increment } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
+import { exampleData } from '../example-data.ts'; // THÊM: Import dữ liệu câu hỏi cho Practice 2
 
 // Các component con được tách ra các file riêng
 import WordSquaresInput from './vocabulary-input.tsx';
@@ -15,9 +16,11 @@ import ImageCarousel3D from './image-carousel-3d.tsx';
 
 // Định nghĩa kiểu dữ liệu
 interface VocabularyItem {
-  word: string;
-  hint: string;
-  imageIndex?: number;
+  word: string; // Luôn là từ cần đoán
+  hint: string; // Gợi ý chính
+  imageIndex?: number; // Dành cho Practice 1
+  question?: string; // Dành cho Practice 2: "The cat sat on the ___."
+  vietnameseHint?: string; // Dành cho Practice 2: "Con mèo ngồi trên tấm thảm."
 }
 interface VocabularyGameProps {
   onGoBack: () => void;
@@ -103,7 +106,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
   const [streak, setStreak] = useState(0);
-  // <<< THAY ĐỔI 2: THÊM STATE CHO `masteryCount` >>>
   const [masteryCount, setMasteryCount] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
@@ -112,7 +114,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
   
-  // <<< THAY ĐỔI 3: CẬP NHẬT LOGIC LẤY DỮ LIỆU >>>
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) {
@@ -122,7 +123,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       try {
         setLoading(true); setError(null);
 
-        // Sử dụng Promise.all để lấy dữ liệu song song, tăng hiệu suất
         const [
           userDocSnap, 
           openedVocabSnapshot, 
@@ -133,38 +133,57 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
           getDocs(collection(db, 'users', user.uid, 'completedWords'))
         ]);
 
-        // Xử lý coins và masteryCount từ document chính
         const fetchedCoins = userDocSnap.exists() ? (userDocSnap.data().coins || 0) : 0;
         const fetchedMasteryCount = userDocSnap.exists() ? (userDocSnap.data().masteryCards || 0) : 0;
         
-        // Xử lý danh sách từ vựng cần chơi
-        const vocabularyWithImages: VocabularyItem[] = [];
-        openedVocabSnapshot.forEach((vocabDoc) => {
-          const data = vocabDoc.data();
-          const imageIndex = Number(vocabDoc.id); // doc.id chính là imageId
-          if (data.word && !isNaN(imageIndex)) {
-            vocabularyWithImages.push({
-              word: data.word,
-              hint: `Nghĩa của từ "${data.word}"`,
-              imageIndex: imageIndex
-            });
-          }
-        });
-
-        // Xác định ID của chế độ chơi dựa trên bài tập được chọn
         const gameModeId = `fill-word-${selectedPractice}`;
-
-        // Xử lý danh sách từ đã hoàn thành cho đúng chế độ chơi
         const fetchedCompletedWords = new Set<string>();
         completedWordsSnapshot.forEach((completedDoc) => {
-            // Chỉ tính những từ đã hoàn thành trong game mode hiện tại
             if (completedDoc.data()?.gameModes?.[gameModeId]) {
               fetchedCompletedWords.add(completedDoc.id);
             }
         });
 
-        // Cập nhật state
-        setVocabularyList(vocabularyWithImages);
+        let gameVocabulary: VocabularyItem[] = [];
+
+        if (selectedPractice === 2) {
+            // SỬA: Logic cho Practice 2 - Dùng câu hỏi
+            const userVocabularyWords: string[] = [];
+            openedVocabSnapshot.forEach((vocabDoc) => {
+                const data = vocabDoc.data();
+                if (data.word) userVocabularyWords.push(data.word);
+            });
+
+            userVocabularyWords.forEach(word => {
+                const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
+                const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
+
+                if (matchingSentences.length > 0) {
+                    const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
+                    gameVocabulary.push({
+                        word: word,
+                        question: randomSentence.english.replace(wordRegex, '___'),
+                        vietnameseHint: randomSentence.vietnamese,
+                        hint: `Điền từ còn thiếu. Gợi ý: ${randomSentence.vietnamese}`
+                    });
+                }
+            });
+        } else {
+            // Giữ nguyên: Logic cho Practice 1 - Dùng hình ảnh
+            openedVocabSnapshot.forEach((vocabDoc) => {
+                const data = vocabDoc.data();
+                const imageIndex = Number(vocabDoc.id);
+                if (data.word && !isNaN(imageIndex)) {
+                    gameVocabulary.push({
+                        word: data.word,
+                        hint: `Nghĩa của từ "${data.word}"`,
+                        imageIndex: imageIndex
+                    });
+                }
+            });
+        }
+
+        setVocabularyList(gameVocabulary);
         setCoins(fetchedCoins);
         setMasteryCount(fetchedMasteryCount);
         setDisplayedCoins(fetchedCoins);
@@ -275,7 +294,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
           <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
         </button>
 
-        {/* <<< THAY ĐỔI 4: THÊM `MasteryDisplay` VÀO HEADER >>> */}
         <div className="flex items-center gap-2 sm:gap-3">
           <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
           <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
@@ -317,7 +335,22 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
               </div>
               {currentWord ? (
                 <div className="w-full space-y-6">
-                  <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />
+                  {/* SỬA: Hiển thị có điều kiện */}
+                  {selectedPractice !== 2 && (
+                    <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />
+                  )}
+                  {selectedPractice === 2 && currentWord.question && (
+                      <div className="w-full text-left p-6 bg-white rounded-xl shadow-lg border border-gray-200 my-4">
+                        <p className="text-xl font-bold text-gray-900 leading-relaxed tracking-wide">
+                          {currentWord.question}
+                        </p>
+                        {currentWord.vietnameseHint && (
+                          <p className="mt-3 text-base text-gray-500 italic">
+                            {currentWord.vietnameseHint}
+                          </p>
+                        )}
+                      </div>
+                  )}
                   <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} feedback={feedback} isCorrect={isCorrect} disabled={!!isCorrect} />
                 </div>
               ) : <div className='pt-10 font-bold text-gray-500'>Đang tải từ...</div>}
