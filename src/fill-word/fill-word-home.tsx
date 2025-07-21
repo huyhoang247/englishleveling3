@@ -180,6 +180,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                     const word2 = wordsToHide[1];
 
                     let questionText = sentence.english;
+                    // Important: Replace words case-insensitively
                     questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
                     questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
 
@@ -299,6 +300,19 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
   return (
     <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
+      {/* <<< THAY ĐỔI 1: THÊM STYLE CHO ANIMATION >>> */}
+      <style jsx global>{`
+        @keyframes shake {
+          10%, 90% { transform: translate3d(-1px, 0, 0); }
+          20%, 80% { transform: translate3d(2px, 0, 0); }
+          30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+          40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        .animate-shake {
+          animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+      `}</style>
+
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
         <button onClick={onGoBack} className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100" aria-label="Quay lại">
           <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
@@ -341,7 +355,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
                     <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div>
                 </div>
-                {/* Khối hiển thị câu hỏi cho Practice 2 & 3 */}
                 {(selectedPractice === 2 || selectedPractice === 3) && currentWord && (
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
                     <h2 className="text-xl font-bold text-white leading-tight">
@@ -361,12 +374,37 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                   {selectedPractice === 1 && (
                     <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />
                   )}
-                  {/*
-                    Component WordSquaresInput được giả định là có thể render 2 từ nếu prop 'word'
-                    chứa một dấu cách, ví dụ: "wordOne wordTwo".
-                    Nó sẽ tự động tạo một khoảng trống giữa hai bộ ô vuông.
-                  */}
-                  <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} feedback={feedback} isCorrect={isCorrect} disabled={!!isCorrect} />
+
+                  {/* <<< THAY ĐỔI 2: SỬ DỤNG INPUT KHÁC NHAU CHO CÁC PRACTICE >>> */}
+                  {selectedPractice === 3 ? (
+                    // Input mới dành riêng cho Practice 3 (điền 2 từ)
+                    <div className="flex flex-col items-center gap-4">
+                      <input
+                        type="text"
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && !isCorrect && checkAnswer()}
+                        placeholder="Gõ 2 từ còn thiếu vào đây..."
+                        disabled={!!isCorrect}
+                        className={`w-full px-4 py-3 text-center text-lg font-semibold text-gray-800 bg-white border-2 rounded-lg shadow-inner focus:outline-none focus:ring-2 transition-all duration-200
+                          ${isCorrect === true ? 'border-green-500 ring-green-300' : ''}
+                          ${isCorrect === false ? 'border-red-500 ring-red-300 animate-shake' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-300'}
+                          ${!!isCorrect ? 'cursor-not-allowed bg-gray-100' : ''}
+                        `}
+                      />
+                      <button
+                        onClick={checkAnswer}
+                        disabled={!!isCorrect || !userInput.trim()}
+                        className="w-full px-6 py-3 font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Kiểm tra
+                      </button>
+                    </div>
+                  ) : (
+                    // Input cũ dùng cho Practice 1 và 2
+                    <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} feedback={feedback} isCorrect={isCorrect} disabled={!!isCorrect} />
+                  )}
+
                 </div>
               ) : <div className='pt-10 font-bold text-gray-500'>Đang tải từ...</div>}
             </>
