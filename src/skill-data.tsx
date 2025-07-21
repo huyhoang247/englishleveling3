@@ -123,3 +123,5 @@ export const ALL_SKILLS: SkillBlueprint[] = [
   },
 ];
 // --- END: DANH SÁCH TẤT CẢ KỸ NĂNG TRONG GAME ---
+
+// --- END OF FILE skill-data.tsx ---
