@@ -1,8 +1,8 @@
 // --- START OF FILE boss.tsx ---
 
 import React, { useState, useEffect, useRef } from 'react';
-import BOSS_DATA from './boss/bossData.ts';
-import { OwnedSkill, SkillBlueprint, getActivationChance, ALL_SKILLS } from './skill-data.tsx';
+import { OwnedSkill, SkillBlueprint, getActivationChance } from './skill-data.tsx';
+import BOSS_DATA from './boss/bossData.ts'; 
 
 // --- SỬA LẠI PROPS INTERFACE ---
 interface BossBattleProps {
@@ -57,47 +57,16 @@ const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
 };
 
 // --- Component Số Sát Thương ---
-const FloatingDamage = ({ damage, id, isPlayerHit, activatedSkills }: { damage: number, id: number, isPlayerHit: boolean, activatedSkills: string[] }) => {
+const FloatingDamage = ({ damage, id, isPlayerHit }: { damage: number, id: number, isPlayerHit: boolean }) => {
   const formatDamageText = (num: number): string => {
     if (num >= 1000) return `${parseFloat((num / 1000).toFixed(1))}k`;
     return String(num);
   };
-
-  const getSkillDamageStyle = (skills: string[]) => {
-    const isBoost = skills.includes('damage_boost');
-    const isPenetration = skills.includes('armor_penetration');
-
-    if (isBoost && isPenetration) {
-      return {
-        className: 'text-yellow-300 scale-125 font-black',
-        textShadow: '2px 2px 0 #000, 3px 3px 8px rgba(250, 204, 21, 0.7)',
-      };
-    }
-    if (isBoost) {
-      return {
-        className: 'text-orange-400 scale-110 font-bold',
-        textShadow: '2px 2px 0 #000, 3px 3px 6px rgba(249, 115, 22, 0.6)',
-      };
-    }
-    if (isPenetration) {
-      return {
-        className: 'text-cyan-400 italic',
-        textShadow: '2px 2px 0 #000, 3px 3px 6px rgba(34, 211, 238, 0.6)',
-      };
-    }
-    return {
-      className: 'text-red-500',
-      textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)',
-    };
-  };
-
-  const { className: skillClassName, textShadow: skillTextShadow } = getSkillDamageStyle(activatedSkills);
-
   return (
     <div
       key={id}
-      className={`absolute top-1/3 font-lilita text-2xl animate-float-up pointer-events-none ${isPlayerHit ? 'left-[5%]' : 'right-[5%]'} ${skillClassName}`}
-      style={{ textShadow: skillTextShadow }}
+      className={`absolute top-1/3 font-lilita text-2xl animate-float-up text-red-500 pointer-events-none ${isPlayerHit ? 'left-[5%]' : 'right-[5%]'}`}
+      style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}
     >
       -{formatDamageText(damage)}
     </div>
@@ -217,6 +186,20 @@ const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
   );
 }
 
+// --- Component Thông Báo Kích Hoạt Kỹ Năng ---
+const SkillActivationNotification = ({ skillInfo }: { skillInfo: { name: string; icon: React.ReactElement } | null }) => {
+  if (!skillInfo) return null;
+
+  return (
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[150%] z-30 pointer-events-none animate-skill-fade-in-out flex justify-center w-full">
+      <div className="flex items-center gap-3 bg-gradient-to-br from-slate-900/80 via-purple-900/60 to-slate-900/80 backdrop-blur-md p-3 rounded-xl border-2 border-purple-500/50 shadow-2xl shadow-purple-500/20">
+        <div className="w-10 h-10 flex-shrink-0">{skillInfo.icon}</div>
+        <span className="font-lilita text-xl text-white text-shadow-sm tracking-wider whitespace-nowrap">{skillInfo.name}</span>
+      </div>
+    </div>
+  );
+};
+
 // --- Component Chính Của Game ---
 export default function BossBattle({ 
   onClose, 
@@ -225,7 +208,7 @@ export default function BossBattle({
   // >>> NHẬN PROPS MỚI <<<
   initialFloor, 
   onFloorComplete,
-  equippedSkills
+  equippedSkills = []
 }: BossBattleProps) {
   
   // >>> SỬ DỤNG initialFloor ĐỂ KHỞI TẠO STATE TẦNG HIỆN TẠI <<<
@@ -242,9 +225,12 @@ export default function BossBattle({
   const [showStats, setShowStats] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
-  const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean, activatedSkills: string[] }[]>([]);
+  const [damages, setDamages] = useState<{ id: number, damage: number, isPlayerHit: boolean }[]>([]);
+  const [skillActivation, setSkillActivation] = useState<{ name: string; icon: React.ReactElement } | null>(null);
+  const [isSkillNotificationVisible, setIsSkillNotificationVisible] = useState(false);
 
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const skillNotificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // >>> THÊM EFFECT ĐỂ ĐỒNG BỘ NẾU PROP THAY ĐỔI <<<
   useEffect(() => {
@@ -263,7 +249,7 @@ export default function BossBattle({
 
   useEffect(() => {
     if (battleState === 'fighting') {
-      battleIntervalRef.current = setInterval(runBattleTurn, 800);
+      battleIntervalRef.current = setInterval(runBattleTurn, 1000);
     }
     return () => {
       if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
@@ -275,81 +261,104 @@ export default function BossBattle({
     setCombatLog(prevLog => [logEntry, ...prevLog]);
   };
 
-  const showFloatingDamage = (damage: number, isPlayerHit: boolean, activatedSkills: string[] = []) => {
+  const showSkillActivation = (skill: OwnedSkill & SkillBlueprint) => {
+      if (isSkillNotificationVisible) return; 
+
+      setIsSkillNotificationVisible(true);
+      setSkillActivation({ name: skill.name, icon: skill.icon({ className: 'w-full h-full' }) });
+      
+      if (skillNotificationTimeoutRef.current) {
+          clearTimeout(skillNotificationTimeoutRef.current);
+      }
+
+      skillNotificationTimeoutRef.current = setTimeout(() => {
+          setSkillActivation(null); setIsSkillNotificationVisible(false);
+      }, 2500); 
+  };
+
+  const showFloatingDamage = (damage: number, isPlayerHit: boolean) => {
     const id = Date.now() + Math.random();
-    setDamages(prev => [...prev, { id, damage, isPlayerHit, activatedSkills }]);
+    setDamages(prev => [...prev, { id, damage, isPlayerHit }]);
     setTimeout(() => {
       setDamages(prev => prev.filter(d => d.id !== id));
     }, 1500);
   };
 
-  const calculateDamage = (attackerAtk: number, defenderDef: number, attackerSkills: (OwnedSkill & SkillBlueprint)[]) => {
-    const activatedSkills: string[] = [];
-    let effectiveAtk = attackerAtk;
-    let effectiveDef = defenderDef;
-
-    attackerSkills.forEach(skill => {
-        const chance = getActivationChance(skill.rarity);
-        if (Math.random() * 100 < chance) {
-            activatedSkills.push(skill.id);
-            const effectValue = (skill.baseEffectValue || 0) + ((skill.level - 1) * (skill.effectValuePerLevel || 0));
-
-            if (skill.id === 'damage_boost') {
-                effectiveAtk *= (1 + effectValue / 100);
-            }
-            if (skill.id === 'armor_penetration') {
-                effectiveDef *= (1 - effectValue / 100);
-            }
-        }
-    });
-
-    const baseDamage = effectiveAtk * (0.8 + Math.random() * 0.4);
+  const calculateDamage = (attackerAtk: number, defenderDef: number, options: { armorPen?: number } = {}) => {
+    const armorPenPercentage = options.armorPen || 0;
+    const effectiveDef = Math.max(0, defenderDef * (1 - armorPenPercentage / 100));
+    const baseDamage = attackerAtk * (0.8 + Math.random() * 0.4);
     const defenseConstant = 100;
-    const damageReduction = Math.max(0, effectiveDef) / (Math.max(0, effectiveDef) + defenseConstant);
+    const damageReduction = effectiveDef / (effectiveDef + defenseConstant);
     const finalDamage = baseDamage * (1 - damageReduction);
-
-    return {
-        damage: Math.max(1, Math.floor(finalDamage)),
-        activatedSkills: activatedSkills
-    };
+    return Math.max(1, Math.floor(finalDamage));
   };
 
   const runBattleTurn = () => {
     if (gameOver) return;
     setTurnCounter(currentTurn => {
-        const nextTurn = currentTurn + 1;
-        const { damage: playerDmg, activatedSkills } = calculateDamage(playerStats.atk, bossStats.def, equippedSkills);
-        setBossStats(prevBoss => {
-            const newHp = prevBoss.hp - playerDmg;
-            let logMessage = `Bạn tấn công, gây ${playerDmg} sát thương.`;
-            if (activatedSkills.length > 0) {
-                const skillNames = activatedSkills.map(id => ALL_SKILLS.find(s => s.id === id)?.name || id).join(', ');
-                logMessage += ` (Kích hoạt: ${skillNames}!)`;
-            }
-            addLog(logMessage, nextTurn);
-            showFloatingDamage(playerDmg, false, activatedSkills);
-            if (newHp <= 0) {
-                endGame('win', nextTurn);
-                return { ...prevBoss, hp: 0 };
-            }
-            return { ...prevBoss, hp: newHp };
-        });
-        setTimeout(() => {
-            if (battleIntervalRef.current) {
-                const { damage: bossDmg } = calculateDamage(bossStats.atk, playerStats.def, []); // Boss chưa có skill
-                setPlayerStats(prevPlayer => {
-                    const newHp = prevPlayer.hp - bossDmg;
-                    addLog(`${currentBossData.name} phản công, gây ${bossDmg} sát thương.`, nextTurn);
-                    showFloatingDamage(bossDmg, true, []);
-                    if (newHp <= 0) {
-                        endGame('lose', nextTurn);
-                        return { ...prevPlayer, hp: 0 };
-                    }
-                    return { ...prevPlayer, hp: newHp };
-                });
-            }
-        }, 400);
+      const nextTurn = currentTurn + 1;
+
+      // --- PLAYER'S TURN ---
+      let effects = { damageBoost: 1, armorPen: 0, lifeSteal: 0 };
+      equippedSkills.forEach(skill => {
+        if (['damage_boost', 'armor_penetration', 'life_steal'].includes(skill.id)) {
+          if (Math.random() * 100 < getActivationChance(skill.rarity)) {
+            showSkillActivation(skill);
+            const effectValue = (skill.baseEffectValue || 0) + (skill.level - 1) * (skill.effectValuePerLevel || 0);
+            addLog(`Kỹ năng [${skill.name}] đã kích hoạt!`, nextTurn);
+            if (skill.id === 'damage_boost') effects.damageBoost += effectValue / 100;
+            if (skill.id === 'armor_penetration') effects.armorPen += effectValue;
+            if (skill.id === 'life_steal') effects.lifeSteal += effectValue / 100;
+          }
+        }
+      });
+
+      const playerDmg = Math.floor(calculateDamage(playerStats.atk, bossStats.def, { armorPen: effects.armorPen }) * effects.damageBoost);
+      const lifeStealHeal = Math.ceil(playerDmg * effects.lifeSteal);
+
+      setBossStats(prevBoss => ({ ...prevBoss, hp: prevBoss.hp - playerDmg }));
+      addLog(`Bạn tấn công, gây ${playerDmg} sát thương.`, nextTurn);
+      showFloatingDamage(playerDmg, false);
+      
+      if (lifeStealHeal > 0) {
+        setPlayerStats(prevPlayer => ({...prevPlayer, hp: Math.min(prevPlayer.maxHp, prevPlayer.hp + lifeStealHeal)}));
+        addLog(`Bạn hồi ${lifeStealHeal} máu nhờ [Hút Máu].`, nextTurn);
+      }
+      
+      if (bossStats.hp - playerDmg <= 0) {
+        endGame('win', nextTurn);
+        setBossStats(prev => ({...prev, hp: 0}));
         return nextTurn;
+      }
+
+      // --- BOSS'S TURN (delayed) ---
+      setTimeout(() => {
+        if (!battleIntervalRef.current) return;
+
+        const thornsSkill = equippedSkills.find(s => s.id === 'thorns');
+        if (thornsSkill && Math.random() * 100 < getActivationChance(thornsSkill.rarity)) {
+            showSkillActivation(thornsSkill);
+            const effectValue = ((thornsSkill.baseEffectValue || 0) + (thornsSkill.level - 1) * (thornsSkill.effectValuePerLevel || 0)) / 100;
+            const potentialBossDmg = calculateDamage(bossStats.atk, playerStats.def);
+            const thornsDmg = Math.ceil(potentialBossDmg * effectValue);
+            setBossStats(prev => ({ ...prev, hp: prev.hp - thornsDmg }));
+            addLog(`[Phản Damage] gây ${thornsDmg} sát thương lên Boss.`, nextTurn);
+            showFloatingDamage(thornsDmg, false);
+            if (bossStats.hp - thornsDmg <= 0) { endGame('win', nextTurn); setBossStats(prev => ({...prev, hp: 0})); return; }
+        }
+
+        if (!battleIntervalRef.current) return;
+        const bossDmg = calculateDamage(bossStats.atk, playerStats.def);
+        setPlayerStats(prevPlayer => {
+          const newHp = prevPlayer.hp - bossDmg;
+          addLog(`${currentBossData.name} phản công, gây ${bossDmg} sát thương.`, nextTurn);
+          showFloatingDamage(bossDmg, true);
+          if (newHp <= 0) { endGame('lose', nextTurn); return { ...prevPlayer, hp: 0 }; }
+          return { ...prevPlayer, hp: newHp };
+        });
+      }, 500);
+      return nextTurn;
     });
   };
 
@@ -440,11 +449,11 @@ export default function BossBattle({
     let winner: 'win' | 'lose' | null = null;
     while (winner === null) {
         tempTurn++;
-        const { damage: playerDmg } = calculateDamage(playerStats.atk, bossStats.def, equippedSkills); // Bỏ qua log và hiệu ứng skill khi skip
+        const playerDmg = calculateDamage(playerStats.atk, bossStats.def);
         tempBossHp -= playerDmg;
         tempCombatLog.push(`[Lượt ${tempTurn}] Bạn tấn công, gây ${playerDmg} sát thương.`);
         if (tempBossHp <= 0) { winner = 'win'; break; }
-        const { damage: bossDmg } = calculateDamage(bossStats.atk, playerStats.def, []);
+        const bossDmg = calculateDamage(bossStats.atk, playerStats.def);
         tempPlayerHp -= bossDmg;
         tempCombatLog.push(`[Lượt ${tempTurn}] ${currentBossData.name} phản công, gây ${bossDmg} sát thương.`);
         if (tempPlayerHp <= 0) { winner = 'lose'; break; }
@@ -461,6 +470,7 @@ export default function BossBattle({
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
+        @keyframes skill-fade-in-out { 0%, 100% { opacity: 0; transform: translate(-50%, -150%) scale(0.8); } 15%, 85% { opacity: 1; transform: translate(-50%, -150%) scale(1); } } .animate-skill-fade-in-out { animation: skill-fade-in-out 2.5s ease-in-out forwards; }
       `}</style>
 
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
@@ -495,7 +505,8 @@ export default function BossBattle({
                 {battleState === 'fighting' && (<button onClick={skipBattle} className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button>)}
             </div>
 
-            {damages.map(d => (<FloatingDamage key={d.id} damage={d.damage} id={d.id} isPlayerHit={d.isPlayerHit} activatedSkills={d.activatedSkills} />))}
+            <SkillActivationNotification skillInfo={skillActivation} />
+            {damages.map(d => (<FloatingDamage key={d.id} damage={d.damage} id={d.id} isPlayerHit={d.isPlayerHit} />))}
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
@@ -546,3 +557,5 @@ export default function BossBattle({
     </>
   );
 }
+
+// --- END OF FILE boss.tsx ---
