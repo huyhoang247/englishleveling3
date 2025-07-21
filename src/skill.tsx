@@ -345,7 +345,11 @@ const CraftingSuccessModal = ({ ownedSkill, onClose }: { ownedSkill: OwnedSkill,
 };
 
 // --- COMPONENT CHÍNH ---
-export default function SkillScreen() {
+interface SkillScreenProps {
+  onClose: () => void;
+}
+
+export default function SkillScreen({ onClose }: SkillScreenProps) {
   const [equippedSkills, setEquippedSkills] = useState<(OwnedSkill | null)[]>([null, null, null]);
   const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([
       { id: `owned-${Date.now()}-ls`, skillId: 'life_steal', level: 1, rarity: 'S' },
@@ -446,6 +450,12 @@ export default function SkillScreen() {
 
   return (
     <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
+       <button 
+            onClick={onClose} 
+            className="absolute top-4 right-4 z-50 text-slate-400 hover:text-white transition-colors p-2 bg-black/20 rounded-full hover:bg-black/40"
+            aria-label="Close">
+            <CloseIcon className="w-6 h-6" />
+        </button>
        <style>{`
         .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); }
         .animate-spin-slow-360 { animation: spin 20s linear infinite; }
