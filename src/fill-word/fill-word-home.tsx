@@ -1,7 +1,7 @@
 // --- START OF FILE fill-word-home.tsx ---
 
 // Các import cơ bản từ React và các thư viện khác
-import { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { db, auth } from '../firebase.js';
 import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc, increment } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -109,9 +109,28 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   const [timeLeft, setTimeLeft] = useState(60);
   const TOTAL_TIME = 60;
   const isInitialLoadComplete = useRef(false);
+  const p3InputRef = useRef<HTMLInputElement>(null);
+
+  // <<< STATE MỚI CHO PRACTICE 3 >>>
+  const [filledWords, setFilledWords] = useState<string[]>([]);
+  const [activeBlankIndex, setActiveBlankIndex] = useState<number | null>(null);
+  const [shake, setShake] = useState(false);
 
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
   
+  // Reset state của Practice 3 khi chuyển câu hỏi
+  const resetP3State = (wordItem: VocabularyItem | null) => {
+    if (selectedPractice === 3 && wordItem) {
+      const wordCount = wordItem.word.split(' ').length;
+      setFilledWords(Array(wordCount).fill(''));
+      setActiveBlankIndex(0); // Bắt đầu từ ô trống đầu tiên
+    } else {
+      setFilledWords([]);
+      setActiveBlankIndex(null);
+    }
+    setUserInput('');
+  };
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) {
@@ -146,50 +165,29 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         });
 
         if (selectedPractice === 1) {
-            // Practice 1: Đoán từ qua ảnh
             openedVocabSnapshot.forEach((vocabDoc) => {
-                const data = vocabDoc.data();
-                const imageIndex = Number(vocabDoc.id);
-                if (data.word && !isNaN(imageIndex)) {
-                    gameVocabulary.push({ word: data.word, hint: `Nghĩa của từ "${data.word}"`, imageIndex: imageIndex });
-                }
+                const data = vocabDoc.data(); const imageIndex = Number(vocabDoc.id);
+                if (data.word && !isNaN(imageIndex)) { gameVocabulary.push({ word: data.word, hint: `Nghĩa của từ "${data.word}"`, imageIndex: imageIndex }); }
             });
         } else if (selectedPractice === 2) {
-            // Practice 2: Điền 1 từ
             userVocabularyWords.forEach(word => {
                 const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
                 const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
                 if (matchingSentences.length > 0) {
                     const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
-                    gameVocabulary.push({
-                        word: word,
-                        question: randomSentence.english.replace(wordRegex, '___'),
-                        vietnameseHint: randomSentence.vietnamese,
-                        hint: `Điền từ còn thiếu. Gợi ý: ${randomSentence.vietnamese}`
-                    });
+                    gameVocabulary.push({ word: word, question: randomSentence.english.replace(wordRegex, '___'), vietnameseHint: randomSentence.vietnamese, hint: `Điền từ còn thiếu. Gợi ý: ${randomSentence.vietnamese}` });
                 }
             });
         } else if (selectedPractice === 3) {
-            // Practice 3: Điền 2 từ
             exampleData.forEach(sentence => {
                 const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                
                 if (wordsInSentence.length >= 2) {
                     const wordsToHide = shuffleArray(wordsInSentence).slice(0, 2);
-                    const word1 = wordsToHide[0];
-                    const word2 = wordsToHide[1];
-
+                    const word1 = wordsToHide[0], word2 = wordsToHide[1];
                     let questionText = sentence.english;
-                    // Important: Replace words case-insensitively
                     questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
                     questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
-
-                    gameVocabulary.push({
-                        word: `${word1} ${word2}`, // Đáp án là hai từ cách nhau bởi dấu cách
-                        question: questionText,
-                        vietnameseHint: sentence.vietnamese,
-                        hint: `Điền 2 từ còn thiếu. Gợi ý: ${sentence.vietnamese}`
-                    });
+                    gameVocabulary.push({ word: `${word1} ${word2}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 2 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
                 }
             });
         }
@@ -215,11 +213,17 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
       const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word));
       if (unusedWords.length === 0) { setGameOver(true); setCurrentWord(null); } else {
-        const shuffled = shuffleArray(unusedWords); setShuffledUnusedWords(shuffled); setCurrentWord(shuffled[0]); setCurrentWordIndex(0); setGameOver(false);
+        const shuffled = shuffleArray(unusedWords); 
+        const firstWord = shuffled[0];
+        setShuffledUnusedWords(shuffled); 
+        setCurrentWord(firstWord); 
+        setCurrentWordIndex(0); 
+        setGameOver(false);
+        resetP3State(firstWord);
       }
       isInitialLoadComplete.current = true;
     }
-  }, [vocabularyList, loading, error, usedWords]);
+  }, [vocabularyList, loading, error, usedWords, selectedPractice]);
   
   useEffect(() => {
     if (!currentWord || gameOver || isCorrect) return;
@@ -228,57 +232,121 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     return () => clearInterval(timerId);
   }, [currentWord, gameOver, isCorrect]);
 
+  // Focus input của P3 khi activeBlankIndex thay đổi
+  useEffect(() => {
+    if (selectedPractice === 3 && activeBlankIndex !== null && p3InputRef.current) {
+      p3InputRef.current.focus();
+    }
+  }, [activeBlankIndex, selectedPractice]);
+
   const selectNextWord = useCallback(() => {
-    if (currentWordIndex < shuffledUnusedWords.length - 1) { const nextIndex = currentWordIndex + 1; setCurrentWordIndex(nextIndex); setCurrentWord(shuffledUnusedWords[nextIndex]); setUserInput(''); setFeedback(''); setIsCorrect(null); } else { setGameOver(true); setCurrentWord(null); }
-  }, [currentWordIndex, shuffledUnusedWords]);
+    if (currentWordIndex < shuffledUnusedWords.length - 1) { 
+        const nextIndex = currentWordIndex + 1; 
+        const nextWord = shuffledUnusedWords[nextIndex];
+        setCurrentWordIndex(nextIndex); 
+        setCurrentWord(nextWord); 
+        setFeedback(''); 
+        setIsCorrect(null);
+        resetP3State(nextWord); // Reset state P3 cho câu mới
+    } else { 
+        setGameOver(true); 
+        setCurrentWord(null); 
+    }
+  }, [currentWordIndex, shuffledUnusedWords, selectedPractice]);
   
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => { if (startValue === endValue) return; let step = Math.ceil((endValue - startValue) / 30) || 1; let current = startValue; const interval = setInterval(() => { current += step; if (current >= endValue) { setDisplayedCoins(endValue); clearInterval(interval); } else { setDisplayedCoins(current); } }, 30); }, []);
   
+  const triggerSuccessSequence = useCallback(async () => {
+    if (!currentWord || !user) return;
+    setIsCorrect(true);
+    const newStreak = streak + 1;
+    setStreak(newStreak);
+    setStreakAnimation(true);
+    setTimeout(() => setStreakAnimation(false), 1500);
+    setUsedWords(prev => new Set(prev).add(currentWord.word));
+    setShowConfetti(true);
+
+    const coinReward = (masteryCount * newStreak) * (selectedPractice === 3 ? 2 : 1);
+    const updatedCoins = coins + coinReward;
+    setCoins(updatedCoins);
+    startCoinCountAnimation(coins, updatedCoins);
+
+    try {
+      const userDocRef = doc(db, 'users', user.uid);
+      const completedWordRef = doc(db, 'users', user.uid, 'completedWords', currentWord.word);
+      const batch = writeBatch(db);
+      const gameModeId = `fill-word-${selectedPractice}`;
+      batch.set(completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
+      batch.update(userDocRef, { 'coins': updatedCoins });
+      await batch.commit();
+    } catch (e) { console.error("Lỗi khi cập nhật dữ liệu với batch:", e); }
+    
+    setTimeout(() => setShowConfetti(false), 2000);
+    setTimeout(selectNextWord, 1500);
+  }, [currentWord, user, streak, masteryCount, selectedPractice, coins, startCoinCountAnimation, selectNextWord]);
+
+
   const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect) return;
-    // So sánh chuẩn hóa, hoạt động cho cả 1 và 2 từ
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
-      setIsCorrect(true); setFeedback(''); const newStreak = streak + 1; setStreak(newStreak); setStreakAnimation(true); setTimeout(() => setStreakAnimation(false), 1500);
-      setUsedWords(prev => new Set(prev).add(currentWord.word)); setShowConfetti(true);
-      
-      if (user) {
-        // Tăng thưởng cho bài tập khó hơn
-        const coinReward = (masteryCount * newStreak) * (selectedPractice === 3 ? 2 : 1);
-        const updatedCoins = coins + coinReward; 
-        setCoins(updatedCoins); 
-        startCoinCountAnimation(coins, updatedCoins);
-        
-        try {
-            const userDocRef = doc(db, 'users', user.uid);
-            const completedWordRef = doc(db, 'users', user.uid, 'completedWords', currentWord.word);
-            const batch = writeBatch(db);
-            const gameModeId = `fill-word-${selectedPractice}`;
-            batch.set(completedWordRef, {
-                lastCompletedAt: new Date(),
-                gameModes: { [gameModeId]: { correctCount: increment(1) } }
-            }, { merge: true });
-            batch.update(userDocRef, { 'coins': updatedCoins });
-            
-            await batch.commit();
+      await triggerSuccessSequence();
+    } else { 
+      setFeedback(''); setIsCorrect(false); setStreak(0); 
+    }
+  }, [currentWord, userInput, isCorrect, triggerSuccessSequence]);
+  
+  const handleP3WordCheck = useCallback(() => {
+    if (!currentWord || activeBlankIndex === null || !userInput.trim() || isCorrect) return;
 
-        } catch (e) { 
-            console.error("Lỗi khi cập nhật dữ liệu với batch:", e); 
+    const correctWords = currentWord.word.split(' ');
+    const expectedWord = correctWords[activeBlankIndex];
+
+    if (userInput.trim().toLowerCase() === expectedWord.toLowerCase()) {
+      // Điền đúng từ cho ô hiện tại
+      const newFilledWords = [...filledWords];
+      newFilledWords[activeBlankIndex] = expectedWord; // Hiện từ đúng (đúng cả viết hoa)
+      setFilledWords(newFilledWords);
+      setUserInput(''); // Xóa input để chuẩn bị cho từ tiếp theo
+
+      const nextBlankIndex = filledWords.findIndex((word, index) => index > activeBlankIndex && word === '');
+
+      if (nextBlankIndex !== -1) {
+        // Vẫn còn ô trống, chuyển sang ô tiếp theo
+        setActiveBlankIndex(nextBlankIndex);
+      } else {
+        // Kiểm tra xem tất cả đã được điền chưa
+        const allFilled = newFilledWords.every(word => word !== '');
+        if (allFilled) {
+          // Đã điền hết và đúng, kích hoạt chuỗi thành công
+          triggerSuccessSequence();
+        } else {
+          // Nếu còn ô trống nào đó chưa điền (trường hợp nhảy ô)
+          setActiveBlankIndex(newFilledWords.findIndex(w => w === ''));
         }
       }
-      setTimeout(() => setShowConfetti(false), 2000); 
-      setTimeout(selectNextWord, 1500);
-    } else { 
-      setFeedback(''); 
-      setIsCorrect(false); 
-      setStreak(0); 
+    } else {
+      // Trả lời sai
+      setShake(true);
+      setStreak(0);
+      setTimeout(() => setShake(false), 500);
     }
-  }, [currentWord, userInput, isCorrect, streak, user, coins, selectNextWord, startCoinCountAnimation, masteryCount, selectedPractice]);
-  
+  }, [currentWord, activeBlankIndex, userInput, isCorrect, filledWords, triggerSuccessSequence]);
+
   const resetGame = useCallback(() => {
-    setGameOver(false); setStreak(0); setUserInput(''); setFeedback(''); setIsCorrect(null);
+    setGameOver(false); setStreak(0); setFeedback(''); setIsCorrect(null);
     const unused = vocabularyList.filter(item => !usedWords.has(item.word));
-    if (unused.length > 0) { const shuffled = shuffleArray(unused); setShuffledUnusedWords(shuffled); setCurrentWord(shuffled[0]); setCurrentWordIndex(0); } else { setGameOver(true); setCurrentWord(null); }
-  }, [vocabularyList, usedWords]);
+    if (unused.length > 0) { 
+        const shuffled = shuffleArray(unused); 
+        const firstWord = shuffled[0];
+        setShuffledUnusedWords(shuffled); 
+        setCurrentWord(shuffled[0]); 
+        setCurrentWordIndex(0); 
+        resetP3State(firstWord);
+    } else { 
+        setGameOver(true); 
+        setCurrentWord(null); 
+    }
+  }, [vocabularyList, usedWords, selectedPractice]);
 
   const carouselImageUrls = useMemo(() => {
     if (!currentWord) return [`https://placehold.co/400x320/E0E7FF/4338CA?text=Loading...`];
@@ -300,7 +368,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
   return (
     <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
-      {/* <<< THAY ĐỔI 1: THÊM STYLE CHO ANIMATION >>> */}
       <style jsx global>{`
         @keyframes shake {
           10%, 90% { transform: translate3d(-1px, 0, 0); }
@@ -308,9 +375,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
           30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
           40%, 60% { transform: translate3d(4px, 0, 0); }
         }
-        .animate-shake {
-          animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
+        .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
       `}</style>
 
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
@@ -324,7 +389,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         </div>
       </header>
       
-      <main className="flex-grow px-8 pt-8 pb-8 w-full flex flex-col items-center">
+      <main className="flex-grow px-4 sm:px-8 pt-8 pb-8 w-full flex flex-col items-center">
         {showConfetti && <Confetti />}
         <div className="w-full flex flex-col items-center">
           {gameOver ? (
@@ -355,56 +420,73 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
                     <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div>
                 </div>
-                {(selectedPractice === 2 || selectedPractice === 3) && currentWord && (
+                { (selectedPractice === 2 || selectedPractice === 3) && currentWord && (
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
-                    <h2 className="text-xl font-bold text-white leading-tight">
-                      {currentWord.question}
-                    </h2>
-                    {currentWord.vietnameseHint && (
-                      <p className="text-white/80 text-sm mt-2 italic">
-                        {currentWord.vietnameseHint}
-                      </p>
-                    )}
+                    <p className="text-lg sm:text-xl font-semibold text-white leading-tight text-center">
+                      {currentWord.question?.split('___').map((part, i, arr) => (
+                        <React.Fragment key={i}>
+                          {part}
+                          {i < arr.length - 1 && <span className="font-bold text-indigo-300">___</span>}
+                        </React.Fragment>
+                      ))}
+                    </p>
+                    {currentWord.vietnameseHint && (<p className="text-white/80 text-sm mt-2 italic text-center">{currentWord.vietnameseHint}</p>)}
                   </div>
                 )}
               </div>
               
               {currentWord ? (
                 <div className="w-full mt-6 space-y-6">
-                  {selectedPractice === 1 && (
-                    <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />
-                  )}
-
-                  {/* <<< THAY ĐỔI 2: SỬ DỤNG INPUT KHÁC NHAU CHO CÁC PRACTICE >>> */}
+                  {selectedPractice === 1 && <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />}
+                  
                   {selectedPractice === 3 ? (
-                    // Input mới dành riêng cho Practice 3 (điền 2 từ)
-                    <div className="flex flex-col items-center gap-4">
-                      <input
-                        type="text"
-                        value={userInput}
-                        onChange={(e) => setUserInput(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && !isCorrect && checkAnswer()}
-                        placeholder="Gõ 2 từ còn thiếu vào đây..."
-                        disabled={!!isCorrect}
-                        className={`w-full px-4 py-3 text-center text-lg font-semibold text-gray-800 bg-white border-2 rounded-lg shadow-inner focus:outline-none focus:ring-2 transition-all duration-200
-                          ${isCorrect === true ? 'border-green-500 ring-green-300' : ''}
-                          ${isCorrect === false ? 'border-red-500 ring-red-300 animate-shake' : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-300'}
-                          ${!!isCorrect ? 'cursor-not-allowed bg-gray-100' : ''}
-                        `}
-                      />
-                      <button
-                        onClick={checkAnswer}
-                        disabled={!!isCorrect || !userInput.trim()}
-                        className="w-full px-6 py-3 font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Kiểm tra
-                      </button>
+                    // <<< UI MỚI CHO PRACTICE 3 >>>
+                    <div className="w-full flex flex-col items-center gap-4">
+                      {/* Hiển thị câu với các ô trống có thể click */}
+                      <div className="p-4 bg-white rounded-lg shadow-md w-full text-center">
+                        <p className="text-lg sm:text-xl font-medium text-gray-700 leading-relaxed flex flex-wrap items-center justify-center gap-x-2">
+                           {currentWord.question?.split('___').map((part, index, arr) => (
+                            <React.Fragment key={index}>
+                              <span>{part}</span>
+                              {index < arr.length - 1 && (
+                                <button
+                                  onClick={() => !isCorrect && setActiveBlankIndex(index)}
+                                  disabled={!!isCorrect}
+                                  className={`px-3 py-1 rounded-md font-bold text-lg transition-all duration-200
+                                    ${filledWords[index] ? 'bg-green-100 text-green-700 cursor-default' : 'bg-gray-200 text-gray-500'}
+                                    ${activeBlankIndex === index && !isCorrect ? 'ring-2 ring-indigo-500 shadow-lg scale-105' : ''}
+                                    ${isCorrect ? 'cursor-not-allowed' : 'hover:bg-indigo-100'}
+                                  `}
+                                >
+                                  {filledWords[index] || '...'}
+                                </button>
+                              )}
+                            </React.Fragment>
+                          ))}
+                        </p>
+                      </div>
+
+                      {/* Input để điền từ */}
+                      {activeBlankIndex !== null && !isCorrect && (
+                        <div className={`w-full transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
+                          <input
+                            ref={p3InputRef}
+                            type="text"
+                            value={userInput}
+                            onChange={(e) => setUserInput(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleP3WordCheck()}
+                            placeholder={`Điền từ cho ô trống ${activeBlankIndex + 1}`}
+                            className="w-full px-4 py-3 text-center text-lg font-semibold text-gray-800 bg-white border-2 border-indigo-300 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                            autoComplete="off"
+                            autoCapitalize="none"
+                          />
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    // Input cũ dùng cho Practice 1 và 2
+                    // Giao diện cũ cho Practice 1 và 2
                     <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} feedback={feedback} isCorrect={isCorrect} disabled={!!isCorrect} />
                   )}
-
                 </div>
               ) : <div className='pt-10 font-bold text-gray-500'>Đang tải từ...</div>}
             </>
