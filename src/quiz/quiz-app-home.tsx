@@ -20,13 +20,14 @@ export default function QuizAppHome() {
 
   const handleTypeSelect = (type) => {
     setSelectedType(type);
-    // Cả Trắc Nghiệm và Điền Từ đều sẽ đi đến màn hình chọn bài tập
+    // Cả hai loại quiz bây giờ đều điều hướng đến màn hình chọn bài tập
     setCurrentView('practices');
     setSelectedPractice(null);
   };
 
   const handlePracticeSelect = (practice) => {
     setSelectedPractice(practice);
+    // Dựa vào loại quiz đã chọn để vào đúng game
     if (selectedType === 'tracNghiem') {
       setCurrentView('quiz');
     } else if (selectedType === 'dienTu') {
@@ -36,6 +37,7 @@ export default function QuizAppHome() {
 
   const goBack = () => {
     if (currentView === 'vocabularyGame' || currentView === 'quiz') {
+      // Từ màn hình game, luôn quay lại màn hình chọn bài tập
       setCurrentView('practices');
       setSelectedPractice(null);
     } else if (currentView === 'quizTypes') {
@@ -215,7 +217,7 @@ export default function QuizAppHome() {
                   </div>
                   <div className="text-left">
                     <h3 className="font-medium text-gray-800">Practice 1</h3>
-                    <p className="text-xs text-gray-500">Mỗi câu 60 giây</p>
+                    <p className="text-xs text-gray-500">5 câu hỏi • Thời gian: 5 phút</p>
                   </div>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -233,7 +235,7 @@ export default function QuizAppHome() {
                   </div>
                   <div className="text-left">
                     <h3 className="font-medium text-gray-800">Practice 2</h3>
-                    <p className="text-xs text-gray-500">Mỗi câu 45 giây • Thử thách</p>
+                    <p className="text-xs text-gray-500">7 câu hỏi • Thời gian: 7 phút</p>
                   </div>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -307,3 +309,4 @@ export default function QuizAppHome() {
     </div>
   );
 }
+// --- END OF FILE quiz-app-home.tsx ---
