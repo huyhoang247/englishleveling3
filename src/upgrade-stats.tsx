@@ -33,16 +33,7 @@ const icons = {
   )
 };
 
-// --- SPINNER COMPONENT ---
-const Spinner = () => (
-  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-  </svg>
-);
-
-
-// --- CONFIG VÀ LOGIC TÍNH TOÁN (Không đổi) ---
+// --- CONFIG VÀ LOGIC TÍNH TOÁN ---
 export const statConfig = {
   hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
   atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
@@ -90,10 +81,9 @@ const formatNumber = (num: number) => {
 };
 
 
-// --- COMPONENT STAT CARD (Không đổi) ---
+// --- COMPONENT STAT CARD (Đã loại bỏ Spinner) ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: string) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
-  const nextUpgradeBonus = getBonusForLevel(level + 1, baseUpgradeBonus);
   const upgradeCost = calculateUpgradeCost(level);
 
   return (
@@ -111,26 +101,23 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
         </div>
         <button
           onClick={() => onUpgrade(stat.id)}
-          disabled={isDisabled || isProcessing}
+          disabled={isDisabled || isProcessing} // Chỉ vô hiệu hóa nút, không hiển thị spinner
           className="w-full bg-slate-800 border-2 border-cyan-400/50 rounded-lg py-2 px-1 flex items-center justify-center gap-1 shadow-lg transition-all duration-200 active:scale-95
                      hover:enabled:bg-slate-700 hover:enabled:border-cyan-400
                      disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {isProcessing ? (
-            <Spinner />
-          ) : (
-            <>
-              <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
-              <span className="text-base font-bold text-yellow-300">{formatNumber(upgradeCost)}</span>
-            </>
-          )}
+          {/* Luôn hiển thị giá tiền */}
+          <>
+            <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
+            <span className="text-base font-bold text-yellow-300">{formatNumber(upgradeCost)}</span>
+          </>
         </button>
       </div>
     </div>
   );
 };
 
-// INTERFACE ĐỊNH NGHĨA CÁC PROPS MỚI
+// INTERFACE ĐỊNH NGHĨA CÁC PROPS
 interface UpgradeStatsScreenProps {
   onClose: () => void;
   initialGold: number;
@@ -184,6 +171,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
     }, 30);
   }, []);
 
+
   // HÀM NÂNG CẤP ĐÃ ĐƯỢC TỐI ƯU VỚI LOGIC OPTIMISTIC UPDATE
   const handleUpgrade = async (statId: string) => {
     if (upgradingId) return; // Nếu đang có 1 nâng cấp khác, không làm gì cả
@@ -200,7 +188,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
     }
 
     // --- Bắt đầu Optimistic Update ---
-    setUpgradingId(statId);
+    setUpgradingId(statId); // Khóa các nút khác
     setMessage('');
 
     // 1. Lưu lại state cũ để có thể khôi phục nếu lỗi
@@ -240,14 +228,12 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
 
       setTimeout(() => setMessage(''), 3000);
     } finally {
-      // 5. Dù thành công hay thất bại, cũng kết thúc trạng thái "đang xử lý"
-      // Thêm một chút delay để người dùng thấy hiệu ứng hoàn tất
+      // 5. Dù thành công hay thất bại, cũng kết thúc trạng thái "đang xử lý" để mở khóa các nút
       setTimeout(() => {
         setUpgradingId(null);
-      }, 300);
+      }, 200); // Delay ngắn để tránh spam click
     }
   };
-
 
   // Calculations for display
   const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp')!.level, statConfig.hp.baseUpgradeBonus);
@@ -324,7 +310,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
                 stat={stat} 
                 onUpgrade={handleUpgrade} 
                 isProcessing={upgradingId === stat.id} 
-                isDisabled={upgradingId !== null && upgradingId !== stat.id} // Vô hiệu hóa các nút khác khi đang xử lý
+                isDisabled={upgradingId !== null} // Vô hiệu hóa tất cả các nút khi một nút đang được xử lý
               />
             ))}
           </div>
