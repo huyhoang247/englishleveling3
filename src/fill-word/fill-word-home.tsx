@@ -6,7 +6,7 @@ import { db, auth } from '../firebase.js';
 import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc, increment } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
-import { exampleData } from '../example-data.ts'; // THÊM: Import dữ liệu câu hỏi cho Practice 2
+import { exampleData } from '../example-data.ts';
 
 // Các component con được tách ra các file riêng
 import WordSquaresInput from './vocabulary-input.tsx';
@@ -16,11 +16,11 @@ import ImageCarousel3D from './image-carousel-3d.tsx';
 
 // Định nghĩa kiểu dữ liệu
 interface VocabularyItem {
-  word: string; // Luôn là từ cần đoán
-  hint: string; // Gợi ý chính
-  imageIndex?: number; // Dành cho Practice 1
-  question?: string; // Dành cho Practice 2: "The cat sat on the ___."
-  vietnameseHint?: string; // Dành cho Practice 2: "Con mèo ngồi trên tấm thảm."
+  word: string; // "word" cho p1, "word" cho p2, "wordOne wordTwo" cho p3
+  hint: string;
+  imageIndex?: number;
+  question?: string;
+  vietnameseHint?: string;
 }
 interface VocabularyGameProps {
   onGoBack: () => void;
@@ -121,11 +121,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       try {
         setLoading(true); setError(null);
 
-        const [
-          userDocSnap, 
-          openedVocabSnapshot, 
-          completedWordsSnapshot
-        ] = await Promise.all([
+        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
           getDocs(collection(db, 'users', user.uid, 'completedWords'))
@@ -143,18 +139,26 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         });
 
         let gameVocabulary: VocabularyItem[] = [];
+        const userVocabularyWords: string[] = [];
+        openedVocabSnapshot.forEach((vocabDoc) => {
+            const data = vocabDoc.data();
+            if (data.word) userVocabularyWords.push(data.word);
+        });
 
-        if (selectedPractice === 2) {
-            const userVocabularyWords: string[] = [];
+        if (selectedPractice === 1) {
+            // Practice 1: Đoán từ qua ảnh
             openedVocabSnapshot.forEach((vocabDoc) => {
                 const data = vocabDoc.data();
-                if (data.word) userVocabularyWords.push(data.word);
+                const imageIndex = Number(vocabDoc.id);
+                if (data.word && !isNaN(imageIndex)) {
+                    gameVocabulary.push({ word: data.word, hint: `Nghĩa của từ "${data.word}"`, imageIndex: imageIndex });
+                }
             });
-
+        } else if (selectedPractice === 2) {
+            // Practice 2: Điền 1 từ
             userVocabularyWords.forEach(word => {
                 const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
                 const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
-
                 if (matchingSentences.length > 0) {
                     const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
                     gameVocabulary.push({
@@ -165,15 +169,25 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                     });
                 }
             });
-        } else {
-            openedVocabSnapshot.forEach((vocabDoc) => {
-                const data = vocabDoc.data();
-                const imageIndex = Number(vocabDoc.id);
-                if (data.word && !isNaN(imageIndex)) {
+        } else if (selectedPractice === 3) {
+            // Practice 3: Điền 2 từ
+            exampleData.forEach(sentence => {
+                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                
+                if (wordsInSentence.length >= 2) {
+                    const wordsToHide = shuffleArray(wordsInSentence).slice(0, 2);
+                    const word1 = wordsToHide[0];
+                    const word2 = wordsToHide[1];
+
+                    let questionText = sentence.english;
+                    questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
+                    questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
+
                     gameVocabulary.push({
-                        word: data.word,
-                        hint: `Nghĩa của từ "${data.word}"`,
-                        imageIndex: imageIndex
+                        word: `${word1} ${word2}`, // Đáp án là hai từ cách nhau bởi dấu cách
+                        question: questionText,
+                        vietnameseHint: sentence.vietnamese,
+                        hint: `Điền 2 từ còn thiếu. Gợi ý: ${sentence.vietnamese}`
                     });
                 }
             });
@@ -221,12 +235,14 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   
   const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect) return;
+    // So sánh chuẩn hóa, hoạt động cho cả 1 và 2 từ
     if (userInput.trim().toLowerCase() === currentWord.word.toLowerCase()) {
       setIsCorrect(true); setFeedback(''); const newStreak = streak + 1; setStreak(newStreak); setStreakAnimation(true); setTimeout(() => setStreakAnimation(false), 1500);
       setUsedWords(prev => new Set(prev).add(currentWord.word)); setShowConfetti(true);
       
       if (user) {
-        const coinReward = masteryCount * newStreak; 
+        // Tăng thưởng cho bài tập khó hơn
+        const coinReward = (masteryCount * newStreak) * (selectedPractice === 3 ? 2 : 1);
         const updatedCoins = coins + coinReward; 
         setCoins(updatedCoins); 
         startCoinCountAnimation(coins, updatedCoins);
@@ -238,11 +254,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
             const gameModeId = `fill-word-${selectedPractice}`;
             batch.set(completedWordRef, {
                 lastCompletedAt: new Date(),
-                gameModes: {
-                    [gameModeId]: {
-                        correctCount: increment(1)
-                    }
-                }
+                gameModes: { [gameModeId]: { correctCount: increment(1) } }
             }, { merge: true });
             batch.update(userDocRef, { 'coins': updatedCoins });
             
@@ -277,19 +289,20 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   
   if (loading) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">Đang tải dữ liệu...</div>;
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 text-center p-4">{error}</div>;
-  if (vocabularyList.length === 0 && !loading && !error) return <div className="flex flex-col items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">Bạn chưa mở thẻ từ vựng nào.<br/>Hãy vào màn hình "Lật thẻ" để bắt đầu!</div>;
+  if (vocabularyList.length === 0 && !loading && !error) return (
+    <div className="flex flex-col items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">
+        Bạn không có đủ từ vựng cho bài tập này.
+        <br/>
+        {selectedPractice === 3 ? "Cần có câu chứa ít nhất 2 từ bạn đã học." : "Hãy vào màn hình 'Lật thẻ' để học thêm!"}
+    </div>
+  );
 
   return (
     <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
-        <button
-          onClick={onGoBack}
-          className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100"
-          aria-label="Quay lại"
-        >
+        <button onClick={onGoBack} className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100" aria-label="Quay lại">
           <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
         </button>
-
         <div className="flex items-center gap-2 sm:gap-3">
           <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
           <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
@@ -315,7 +328,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
             </div>
           ) : (
             <>
-              {/* <<< START: BLOCK THAY ĐỔI >>> */}
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-xl">
                 <div className="flex justify-between items-center mb-4">
                   <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30">
@@ -329,8 +341,8 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
                     <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div>
                 </div>
-                {/* THÊM MỚI: Khối hiển thị câu hỏi cho Practice 2, giống hệt bên quiz.tsx */}
-                {selectedPractice === 2 && currentWord && (
+                {/* Khối hiển thị câu hỏi cho Practice 2 & 3 */}
+                {(selectedPractice === 2 || selectedPractice === 3) && currentWord && (
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
                     <h2 className="text-xl font-bold text-white leading-tight">
                       {currentWord.question}
@@ -343,22 +355,24 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                   </div>
                 )}
               </div>
-              {/* <<< END: BLOCK THAY ĐỔI >>> */}
               
               {currentWord ? (
                 <div className="w-full mt-6 space-y-6">
-                  {/* Sửa: chỉ hiển thị ImageCarousel cho Practice 1 */}
                   {selectedPractice === 1 && (
                     <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />
                   )}
-                  {/* Xóa: Khối câu hỏi cũ đã được di chuyển lên trên */}
+                  {/*
+                    Component WordSquaresInput được giả định là có thể render 2 từ nếu prop 'word'
+                    chứa một dấu cách, ví dụ: "wordOne wordTwo".
+                    Nó sẽ tự động tạo một khoảng trống giữa hai bộ ô vuông.
+                  */}
                   <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} feedback={feedback} isCorrect={isCorrect} disabled={!!isCorrect} />
                 </div>
               ) : <div className='pt-10 font-bold text-gray-500'>Đang tải từ...</div>}
             </>
           )}
         </div>
-        {showImagePopup && currentWord && (
+        {showImagePopup && currentWord && selectedPractice === 1 && (
           <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
             <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-2xl">
               <button onClick={() => setShowImagePopup(false)} className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-all"><span className="text-xl font-bold">✕</span></button>
