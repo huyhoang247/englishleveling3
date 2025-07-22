@@ -374,7 +374,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                     )}
                   </div>
                   <div className="text-left">
-                    <div className="flex items-baseline gap-2">
+                    <div className="flex items-center gap-2">
                         <h3 className="font-medium text-gray-800">{mainTitle}</h3>
                         {subTitle && (
                             <span className="bg-gray-200 text-gray-600 text-[10px] font-semibold px-2 py-0.5 rounded-md">
