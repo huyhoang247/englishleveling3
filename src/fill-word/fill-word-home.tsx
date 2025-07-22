@@ -1,4 +1,4 @@
-// --- START OF FILE: fill-word-home.tsx ---
+// --- START OF FILE: fill-word-home.tsx (FINAL VERSION) ---
 
 import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { db, auth } from '../firebase.js';
@@ -93,17 +93,28 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
           getDocs(collection(db, 'users', user.uid, 'completedWords'))
         ]);
 
-        const fetchedCoins = userDocSnap.exists() ? (userDocSnap.data().coins || 0) : 0;
-        const fetchedMasteryCount = userDocSnap.exists() ? (userDocSnap.data().masteryCards || 0) : 0;
+        const userData = userDocSnap.exists() ? userDocSnap.data() : {};
+        const fetchedCoins = userData.coins || 0;
+        const fetchedMasteryCount = userData.masteryCards || 0;
         
         const gameModeId = `fill-word-${selectedPractice}`;
         const fetchedCompletedWords = new Set<string>();
+
+        // For practices 1 & 2
         completedWordsSnapshot.forEach((completedDoc) => {
             if (completedDoc.data()?.gameModes?.[gameModeId]) {
-              // ***FIX: Normalize to lowercase when fetching***
               fetchedCompletedWords.add(completedDoc.id.toLowerCase());
             }
         });
+
+        // For practice 3, get from the user document
+        if (selectedPractice === 3 || selectedPractice === 103) {
+            const completedP3Map = userData.completedMultiWordQuestions || {};
+            Object.keys(completedP3Map).forEach(questionId => {
+                fetchedCompletedWords.add(questionId.toLowerCase());
+            });
+        }
+
 
         let gameVocabulary: VocabularyItem[] = [];
         const userVocabularyWords: string[] = [];
@@ -160,7 +171,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
   useEffect(() => {
     if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
-      // ***FIX: Check against lowercase word to match fetched data***
       const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word.toLowerCase()));
       if (unusedWords.length === 0) { setGameOver(true); setCurrentWord(null); } else {
         const shuffled = shuffleArray(unusedWords); 
@@ -209,7 +219,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     setTimeout(() => setStreakAnimation(false), 1500);
     setShowConfetti(true);
 
-    // ***FIX: Update local state consistently with lowercase***
     setUsedWords(prev => new Set(prev).add(currentWord.word.toLowerCase()));
 
     const coinReward = (masteryCount * newStreak) * ((selectedPractice === 3 || selectedPractice === 103) ? 2 : 1);
@@ -221,23 +230,25 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       const userDocRef = doc(db, 'users', user.uid);
       const batch = writeBatch(db);
       const gameModeId = `fill-word-${selectedPractice}`;
-
+      
       if (selectedPractice === 3 || selectedPractice === 103) {
-        // --- LOGIC CHO PRACTICE 3 (ĐIỀN 2 TỪ) ---
-        
-        // 1. Lưu ID của cả câu hỏi để tracking game completion
-        const questionId = currentWord.word.toLowerCase();
-        const questionRef = doc(db, 'users', user.uid, 'completedWords', questionId);
-        batch.set(questionRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
-
-        // 2. Lưu từng từ riêng lẻ để tracking stats cá nhân
+        // --- LOGIC FOR PRACTICE 3 ---
+        // 1. Give EXP to individual words in `completedWords` collection
         const individualWords = currentWord.word.split(' ');
         individualWords.forEach(word => {
           const individualWordRef = doc(db, 'users', user.uid, 'completedWords', word.toLowerCase());
           batch.set(individualWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
         });
+
+        // 2. Mark this multi-word question as complete in the user's document
+        const questionId = currentWord.word.toLowerCase();
+        // Use dot notation to update a field in a map
+        batch.update(userDocRef, {
+          [`completedMultiWordQuestions.${questionId}`]: true
+        });
+
       } else {
-        // --- LOGIC CHO CÁC PRACTICE KHÁC ---
+        // --- LOGIC FOR OTHER PRACTICES ---
         const wordId = currentWord.word.toLowerCase();
         const completedWordRef = doc(db, 'users', user.uid, 'completedWords', wordId);
         batch.set(completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
