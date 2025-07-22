@@ -1,4 +1,4 @@
-// --- START OF FILE quiz-app-home.tsx ---
+// --- START OF FILE: quiz-app-home.tsx ---
 
 import { useState, useEffect } from 'react';
 import QuizApp from './quiz.tsx';
@@ -7,7 +7,7 @@ import VocabularyGame from '../fill-word/fill-word-home.tsx';
 
 // Imports for progress calculation
 import { db, auth } from '../firebase.js';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
@@ -27,14 +27,12 @@ export default function QuizAppHome() {
 
   const handleTypeSelect = (type) => {
     setSelectedType(type);
-    // Cả hai loại quiz bây giờ đều điều hướng đến màn hình chọn bài tập
     setCurrentView('practices');
     setSelectedPractice(null);
   };
 
   const handlePracticeSelect = (practice) => {
     setSelectedPractice(practice);
-    // Dựa vào loại quiz đã chọn để vào đúng game
     if (selectedType === 'tracNghiem') {
       setCurrentView('quiz');
     } else if (selectedType === 'dienTu') {
@@ -44,7 +42,6 @@ export default function QuizAppHome() {
 
   const goBack = () => {
     if (currentView === 'vocabularyGame' || currentView === 'quiz') {
-      // Từ màn hình game, luôn quay lại màn hình chọn bài tập
       setCurrentView('practices');
       setSelectedPractice(null);
     } else if (currentView === 'quizTypes') {
@@ -66,7 +63,6 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   };
 
-  // Khi ở trong màn hình game điền từ, bọc nó trong một lớp phủ
   if (currentView === 'vocabularyGame') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
@@ -75,8 +71,6 @@ export default function QuizAppHome() {
     );
   }
 
-  // Nếu là màn hình quiz, cũng bọc nó trong một lớp phủ toàn màn hình
-  // để ẩn thanh navbar, tương tự như VocabularyGame.
   if (currentView === 'quiz') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
@@ -96,7 +90,6 @@ export default function QuizAppHome() {
               </h1>
               <p className="text-gray-500 mt-2 text-lg">Chọn một chế độ để bắt đầu</p>
             </div>
-
             <div className="w-full max-w-md space-y-5">
               <button
                 onClick={() => handleQuizSelect(1)}
@@ -109,116 +102,52 @@ export default function QuizAppHome() {
                   <h3 className="text-xl font-bold text-gray-800">Quiz</h3>
                   <p className="text-gray-500 text-sm mt-1">Luyện tập các câu hỏi trắc nghiệm</p>
                 </div>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-gray-400 group-hover:text-blue-500 transition-colors"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
-
               <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
-                <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">
-                  Sắp ra mắt
-                </div>
-                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm">
-                  <span className="text-4xl">📄</span>
-                </div>
-                <div className="ml-5 text-left flex-grow">
-                  <h3 className="text-xl font-bold text-gray-500">Đề Thi</h3>
-                  <p className="text-gray-400 text-sm mt-1">Kiểm tra kiến thức với các đề thi thử</p>
-                </div>
+                <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Sắp ra mắt</div>
+                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm"><span className="text-4xl">📄</span></div>
+                <div className="ml-5 text-left flex-grow"><h3 className="text-xl font-bold text-gray-500">Đề Thi</h3><p className="text-gray-400 text-sm mt-1">Kiểm tra kiến thức với các đề thi thử</p></div>
               </div>
-
               <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
-                <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">
-                  Sắp ra mắt
-                </div>
-                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm">
-                  <span className="text-4xl">📖</span>
-                </div>
-                <div className="ml-5 text-left flex-grow">
-                  <h3 className="text-xl font-bold text-gray-500">Ngữ Pháp</h3>
-                  <p className="text-gray-400 text-sm mt-1">Luyện tập các chủ điểm ngữ pháp</p>
-                </div>
+                <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Sắp ra mắt</div>
+                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm"><span className="text-4xl">📖</span></div>
+                <div className="ml-5 text-left flex-grow"><h3 className="text-xl font-bold text-gray-500">Ngữ Pháp</h3><p className="text-gray-400 text-sm mt-1">Luyện tập các chủ điểm ngữ pháp</p></div>
               </div>
             </div>
           </div>
         );
-
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
-            <div className="text-center">
-              <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">
-                Quiz {selectedQuiz}
-              </h2>
-              <p className="mt-2 text-md text-gray-500">Chọn hình thức luyện tập bạn muốn.</p>
-            </div>
-
+            <div className="text-center"><h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Quiz {selectedQuiz}</h2><p className="mt-2 text-md text-gray-500">Chọn hình thức luyện tập bạn muốn.</p></div>
             <div className="space-y-5 w-full">
-              <button
-                onClick={() => handleTypeSelect('tracNghiem')}
-                className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group"
-              >
+              <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <img 
-                      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2354_Checklist%20Question%20Mark_remix_01k0mc0y2efdmb3gsgzgd6y81s.png" 
-                      alt="Trắc nghiệm icon" 
-                      className="h-8 w-8" />
-                  </div>
-                  <div className="ml-5">
-                    <h3 className="text-xl font-bold">Trắc Nghiệm</h3>
-                    <p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p>
-                  </div>
-                  <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
-                  </div>
+                  <div className="p-3 bg-white/20 rounded-xl"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2354_Checklist%20Question%20Mark_remix_01k0mc0y2efdmb3gsgzgd6y81s.png" alt="Trắc nghiệm icon" className="h-8 w-8" /></div>
+                  <div className="ml-5"><h3 className="text-xl font-bold">Trắc Nghiệm</h3><p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p></div>
+                  <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg></div>
                 </div>
               </button>
-
-              <button
-                onClick={() => handleTypeSelect('dienTu')}
-                className="w-full text-left p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group"
-              >
+              <button onClick={() => handleTypeSelect('dienTu')} className="w-full text-left p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" />
-                    </svg>
-                  </div>
-                  <div className="ml-5">
-                    <h3 className="text-xl font-bold">Điền Từ</h3>
-                    <p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p>
-                  </div>
-                   <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
-                  </div>
+                  <div className="p-3 bg-white/20 rounded-xl"><svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" /></svg></div>
+                  <div className="ml-5"><h3 className="text-xl font-bold">Điền Từ</h3><p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p></div>
+                  <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg></div>
                 </div>
               </button>
             </div>
           </div>
         );
-
       case 'practices':
-        return (
-          <PracticeList selectedType={selectedType} onPracticeSelect={handlePracticeSelect} />
-        );
-
+        return <PracticeList selectedType={selectedType} onPracticeSelect={handlePracticeSelect} />;
       default:
         return <div>Nội dung không tồn tại</div>;
     }
   };
 
-  // If the view is for selecting quiz types or practices, wrap it in a full-screen container to hide the bottom navbar.
   if (currentView === 'quizTypes' || currentView === 'practices') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
@@ -228,20 +157,10 @@ export default function QuizAppHome() {
             <div className={'h-[calc(100%-8px)] flex flex-col'}>
               <div className="p-6">
                 <div className="flex justify-start mb-2">
-                   <Breadcrumbs
-                      currentView={currentView}
-                      selectedQuiz={selectedQuiz}
-                      selectedType={selectedType}
-                      selectedPractice={selectedPractice}
-                      goHome={goHome}
-                      setCurrentView={setCurrentView}
-                   />
+                   <Breadcrumbs currentView={currentView} selectedQuiz={selectedQuiz} selectedType={selectedType} selectedPractice={selectedPractice} goHome={goHome} setCurrentView={setCurrentView} />
                 </div>
               </div>
-              {/* Removed vertical centering to align content to the top */}
-              <div className="overflow-y-auto p-6">
-                {renderContent()}
-              </div>
+              <div className="overflow-y-auto p-6">{renderContent()}</div>
             </div>
           </div>
         </div>
@@ -257,32 +176,31 @@ export default function QuizAppHome() {
           {currentView !== 'main' && (
             <div className="p-6 pb-0">
               <div className="flex justify-start mb-2">
-                 <Breadcrumbs
-                    currentView={currentView}
-                    selectedQuiz={selectedQuiz}
-                    selectedType={selectedType}
-                    selectedPractice={selectedPractice}
-                    goHome={goHome}
-                    setCurrentView={setCurrentView}
-                 />
+                 <Breadcrumbs currentView={currentView} selectedQuiz={selectedQuiz} selectedType={selectedType} selectedPractice={selectedPractice} goHome={goHome} setCurrentView={setCurrentView} />
               </div>
             </div>
           )}
-           <div className={`p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-32`}>
-            {renderContent()}
-          </div>
+           <div className={`p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-32`}>{renderContent()}</div>
         </div>
       </div>
     </div>
   );
 }
-// --- END OF FILE quiz-app-home.tsx ---
+
+// SVG Icon for Lock
+const LockIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+  </svg>
+);
 
 // Component to display practice list with progress
 const PracticeList = ({ selectedType, onPracticeSelect }) => {
-  const [progressData, setProgressData] = useState({ 1: null, 2: null, 3: null });
+  const [progressData, setProgressData] = useState({});
+  const [unlockCounts, setUnlockCounts] = useState({ 'quiz-1': 0, 'quiz-2': 0 });
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(auth.currentUser);
+  const UNLOCK_THRESHOLD = 100;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -317,47 +235,59 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
             }
           }
         });
+        
+        setUnlockCounts({
+          'quiz-1': completedWordsByGameMode['quiz-1']?.size || 0,
+          'quiz-2': completedWordsByGameMode['quiz-2']?.size || 0,
+        });
 
-        let p1, p2, p3;
-
+        let newProgressData = {};
+        
         if (selectedType === 'tracNghiem') {
-          const completedP1Set = completedWordsByGameMode['quiz-1'] || new Set();
-          const totalP1Qs = quizData.filter(q => userVocabulary.some(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)));
-          const completedP1 = totalP1Qs.filter(q => {
-            const word = userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question));
-            return word && completedP1Set.has(word.toLowerCase());
-          }).length;
-          p1 = { completed: completedP1, total: totalP1Qs.length };
+            const allQuizModes = ['quiz-1', 'quiz-2', 'quiz-101', 'quiz-102'];
+            allQuizModes.forEach(mode => {
+                const practiceNum = parseInt(mode.split('-')[1]);
+                const completedSet = completedWordsByGameMode[mode] || new Set();
 
-          const completedP2Set = completedWordsByGameMode['quiz-2'] || new Set();
-          const totalP2Qs = userVocabulary.flatMap(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)) ? [{ word }] : []);
-          const completedP2 = totalP2Qs.filter(q => completedP2Set.has(q.word.toLowerCase())).length;
-          p2 = { completed: completedP2, total: totalP2Qs.length };
-          
-          p3 = null; // No practice 3 for quiz
+                if (practiceNum === 1 || practiceNum === 101) {
+                    const totalQs = quizData.filter(q => userVocabulary.some(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)));
+                    const completed = totalQs.filter(q => {
+                        const word = userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question));
+                        return word && completedSet.has(word.toLowerCase());
+                    }).length;
+                    newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
+                } else if (practiceNum === 2 || practiceNum === 102) {
+                    const totalQs = userVocabulary.flatMap(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)) ? [{ word }] : []);
+                    const completed = totalQs.filter(q => completedSet.has(q.word.toLowerCase())).length;
+                    newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
+                }
+            });
 
         } else if (selectedType === 'dienTu') {
-          const completedP1Set = completedWordsByGameMode['fill-word-1'] || new Set();
-          p1 = { completed: userVocabulary.filter(v => completedP1Set.has(v.toLowerCase())).length, total: userVocabulary.length };
+            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3'];
+            allFillModes.forEach(mode => {
+                const practiceNum = parseInt(mode.split('-')[2]);
+                const completedSet = completedWordsByGameMode[mode] || new Set();
+                let progress = {};
 
-          const completedP2Set = completedWordsByGameMode['fill-word-2'] || new Set();
-          const totalP2Qs = userVocabulary.filter(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)));
-          const completedP2 = totalP2Qs.filter(word => completedP2Set.has(word.toLowerCase())).length;
-          p2 = { completed: completedP2, total: totalP2Qs.length };
-
-          const completedP3Set = completedWordsByGameMode['fill-word-3'] || new Set();
-          let totalP3 = 0;
-          exampleData.forEach(sentence => {
-              const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-              if (wordsInSentence.length >= 2) {
-                  totalP3++; // Simplified count for now
-              }
-          });
-          // For fill-word-3, a completed entry is a pair of words, so the set size is correct.
-          p3 = { completed: completedP3Set.size, total: totalP3 };
+                if (practiceNum === 1) {
+                    progress = { completed: userVocabulary.filter(v => completedSet.has(v.toLowerCase())).length, total: userVocabulary.length };
+                } else if (practiceNum === 2) {
+                    const totalQs = userVocabulary.filter(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)));
+                    const completed = totalQs.filter(word => completedSet.has(word.toLowerCase())).length;
+                    progress = { completed: completed, total: totalQs.length };
+                } else if (practiceNum === 3) {
+                     let totalP3 = 0;
+                     exampleData.forEach(sentence => {
+                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                         if (wordsInSentence.length >= 2) totalP3++;
+                     });
+                     progress = { completed: completedSet.size, total: totalP3 };
+                }
+                newProgressData[practiceNum] = progress;
+            });
         }
-
-        setProgressData({ 1: p1, 2: p2, 3: p3 });
+        setProgressData(newProgressData);
 
       } catch (error) {
         console.error("Lỗi khi tính toán tiến trình:", error);
@@ -373,6 +303,8 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
     tracNghiem: {
       1: { title: 'Practice 1', desc: 'Luyện tập từ vựng qua câu hỏi', color: 'indigo' },
       2: { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
+      101: { title: 'Practice 1 (Preview 1)', desc: `Luyện tập lại câu hỏi đã học`, color: 'teal', unlockKey: 'quiz-1', unlockPractice: 1 },
+      102: { title: 'Practice 2 (Preview 1)', desc: `Luyện tập lại câu hỏi đã học`, color: 'orange', unlockKey: 'quiz-2', unlockPractice: 2 },
     },
     dienTu: {
       1: { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo' },
@@ -385,6 +317,8 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
     indigo: { border: 'hover:border-indigo-300', bg: 'bg-indigo-100', text: 'text-indigo-600', hoverBg: 'group-hover:bg-indigo-200', arrow: 'group-hover:text-indigo-500' },
     pink:   { border: 'hover:border-pink-300',   bg: 'bg-pink-100',   text: 'text-pink-600',   hoverBg: 'group-hover:bg-pink-200',   arrow: 'group-hover:text-pink-500' },
     teal:   { border: 'hover:border-teal-300',   bg: 'bg-teal-100',   text: 'text-teal-600',   hoverBg: 'group-hover:bg-teal-200',   arrow: 'group-hover:text-teal-500' },
+    orange: { border: 'hover:border-orange-300', bg: 'bg-orange-100', text: 'text-orange-600', hoverBg: 'group-hover:bg-orange-200', arrow: 'group-hover:text-orange-500' },
+    gray:   { border: 'border-gray-300', bg: 'bg-gray-200', text: 'text-gray-500', hoverBg: 'group-hover:bg-gray-200', arrow: 'group-hover:text-gray-400' },
   };
 
   const practicesToShow = selectedType ? Object.keys(practiceDetails[selectedType]) : [];
@@ -398,33 +332,48 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
         ) : (
           practicesToShow.map(pNumStr => {
             const practiceNumber = parseInt(pNumStr, 10);
+            let details = practiceDetails[selectedType][practiceNumber];
             const progress = progressData[practiceNumber];
-            const details = practiceDetails[selectedType][practiceNumber];
-            const colors = colorClasses[details.color];
 
+            let isLocked = false;
+            let currentUnlockCount = 0;
+            if (details.unlockKey) {
+              currentUnlockCount = unlockCounts[details.unlockKey] || 0;
+              isLocked = currentUnlockCount < UNLOCK_THRESHOLD;
+            }
+
+            let colors = isLocked ? colorClasses.gray : colorClasses[details.color];
+            
             return (
               <button
                 key={practiceNumber}
-                onClick={() => onPracticeSelect(practiceNumber)}
-                className={`w-full bg-white border border-gray-200 ${colors.border} py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group`}
+                onClick={() => !isLocked && onPracticeSelect(practiceNumber)}
+                disabled={isLocked}
+                className={`w-full bg-white border ${isLocked ? colors.border : `border-gray-200 ${colors.border}`} py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group ${isLocked ? 'cursor-not-allowed opacity-70' : ''}`}
               >
                 <div className="flex items-center">
-                  <div className={`${colors.bg} ${colors.text} rounded-full w-10 h-10 flex items-center justify-center mr-4 ${colors.hoverBg} transition-colors`}>
-                    <span className="font-bold">{practiceNumber}</span>
+                  <div className={`${colors.bg} ${colors.text} rounded-full w-10 h-10 flex items-center justify-center mr-4 ${!isLocked ? colors.hoverBg : ''} transition-colors`}>
+                    {isLocked ? (
+                      <LockIcon className="w-5 h-5" />
+                    ) : (
+                      <span className="font-bold">{practiceNumber > 100 ? `P${practiceNumber - 100}` : practiceNumber}</span>
+                    )}
                   </div>
                   <div className="text-left">
                     <h3 className="font-medium text-gray-800">{details.title}</h3>
-                    <p className="text-xs text-gray-500">{details.desc}</p>
+                    <p className="text-xs text-gray-500">
+                      {isLocked ? `Hoàn thành ${currentUnlockCount}/${UNLOCK_THRESHOLD} câu ở Practice ${details.unlockPractice} để mở khóa` : details.desc}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 sm:gap-4">
-                  {progress && progress.total > 0 && (
+                  {!isLocked && progress && progress.total > 0 && (
                     <div className="text-right text-sm font-medium bg-gray-100 rounded-md px-2 py-0.5">
                       <span className="font-bold text-gray-800">{progress.completed}</span>
                       <span className="text-gray-400">/{progress.total}</span>
                     </div>
                   )}
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 ${colors.arrow} transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 ${!isLocked ? colors.arrow : ''} transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -436,3 +385,5 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
     </div>
   );
 };
+
+// --- END OF FILE: quiz-app-home.tsx ---
