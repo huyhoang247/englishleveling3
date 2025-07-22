@@ -1,4 +1,4 @@
-// --- START OF FILE: quiz-app-home.tsx ---
+// --- START OF FILE: quiz-app-home.tsx (FINAL VERSION) ---
 
 import { useState, useEffect } from 'react';
 import QuizApp from './quiz.tsx';
@@ -8,7 +8,7 @@ import VocabularyGame from '../fill-word/fill-word-home.tsx';
 // Imports for progress calculation
 import { db, auth } from '../firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs } from 'firebase/firestore'; // Added getDoc
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
@@ -218,11 +218,13 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
     const calculateProgress = async () => {
       setLoading(true);
       try {
-        const [openedVocabSnapshot, completedWordsSnapshot] = await Promise.all([
+        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot] = await Promise.all([
+          getDoc(doc(db, 'users', user.uid)), // Get user doc for P3 progress
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
           getDocs(collection(db, 'users', user.uid, 'completedWords'))
         ]);
-
+        
+        const userData = userDocSnap.exists() ? userDocSnap.data() : {};
         const userVocabulary = openedVocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
 
         const completedWordsByGameMode = {};
@@ -236,7 +238,6 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
           }
         });
         
-        // Cập nhật để lấy tất cả các count cần thiết
         const allUnlockCounts = {};
         const keysToCount = ['quiz-1', 'quiz-2', 'fill-word-1', 'fill-word-2', 'fill-word-3'];
         keysToCount.forEach(key => {
@@ -274,7 +275,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                 let progress = {};
 
                 if (practiceNum === 1 || practiceNum === 101) {
-                    progress = { completed: userVocabulary.filter(v => completedSet.has(v.toLowerCase())).length, total: userVocabulary.length };
+                    progress = { completed: completedSet.size, total: userVocabulary.length };
                 } else if (practiceNum === 2 || practiceNum === 102) {
                     const totalQs = userVocabulary.filter(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)));
                     const completed = totalQs.filter(word => completedSet.has(word.toLowerCase())).length;
@@ -285,8 +286,12 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                          const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                          if (wordsInSentence.length >= 2) totalP3++;
                      });
-                     // ID của practice 3 là "word1 word2", nên set.size là chính xác
-                     progress = { completed: completedSet.size, total: totalP3 };
+                     
+                     // Get completed count from the user document's map
+                     const completedP3Map = userData.completedMultiWordQuestions || {};
+                     const completedCount = Object.keys(completedP3Map).length;
+                     
+                     progress = { completed: completedCount, total: totalP3 };
                 }
                 newProgressData[practiceNum] = progress;
             });
