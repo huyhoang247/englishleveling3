@@ -197,7 +197,7 @@ const LockIcon = ({ className }: { className: string }) => (
 // Component to display practice list with progress
 const PracticeList = ({ selectedType, onPracticeSelect }) => {
   const [progressData, setProgressData] = useState({});
-  const [unlockCounts, setUnlockCounts] = useState({ 'quiz-1': 0, 'quiz-2': 0 });
+  const [unlockCounts, setUnlockCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(auth.currentUser);
   const UNLOCK_THRESHOLD = 100;
@@ -236,10 +236,13 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
           }
         });
         
-        setUnlockCounts({
-          'quiz-1': completedWordsByGameMode['quiz-1']?.size || 0,
-          'quiz-2': completedWordsByGameMode['quiz-2']?.size || 0,
+        // Cập nhật để lấy tất cả các count cần thiết
+        const allUnlockCounts = {};
+        const keysToCount = ['quiz-1', 'quiz-2', 'fill-word-1', 'fill-word-2', 'fill-word-3'];
+        keysToCount.forEach(key => {
+            allUnlockCounts[key] = completedWordsByGameMode[key]?.size || 0;
         });
+        setUnlockCounts(allUnlockCounts);
 
         let newProgressData = {};
         
@@ -264,24 +267,25 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
             });
 
         } else if (selectedType === 'dienTu') {
-            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3'];
+            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-101', 'fill-word-102', 'fill-word-103'];
             allFillModes.forEach(mode => {
                 const practiceNum = parseInt(mode.split('-')[2]);
                 const completedSet = completedWordsByGameMode[mode] || new Set();
                 let progress = {};
 
-                if (practiceNum === 1) {
+                if (practiceNum === 1 || practiceNum === 101) {
                     progress = { completed: userVocabulary.filter(v => completedSet.has(v.toLowerCase())).length, total: userVocabulary.length };
-                } else if (practiceNum === 2) {
+                } else if (practiceNum === 2 || practiceNum === 102) {
                     const totalQs = userVocabulary.filter(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)));
                     const completed = totalQs.filter(word => completedSet.has(word.toLowerCase())).length;
                     progress = { completed: completed, total: totalQs.length };
-                } else if (practiceNum === 3) {
+                } else if (practiceNum === 3 || practiceNum === 103) {
                      let totalP3 = 0;
                      exampleData.forEach(sentence => {
                          const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                          if (wordsInSentence.length >= 2) totalP3++;
                      });
+                     // ID của practice 3 là "word1 word2", nên set.size là chính xác
                      progress = { completed: completedSet.size, total: totalP3 };
                 }
                 newProgressData[practiceNum] = progress;
@@ -310,6 +314,9 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
       1: { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo' },
       2: { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
       3: { title: 'Practice 3', desc: 'Điền 2 từ vào câu (Khó)', color: 'teal' },
+      101: { title: 'Practice 1 (Preview 1)', desc: 'Luyện tập lại câu hỏi đã học', color: 'purple', unlockKey: 'fill-word-1', unlockPractice: 1 },
+      102: { title: 'Practice 2 (Preview 1)', desc: 'Luyện tập lại câu hỏi đã học', color: 'green', unlockKey: 'fill-word-2', unlockPractice: 2 },
+      103: { title: 'Practice 3 (Preview 1)', desc: 'Luyện tập lại câu hỏi đã học', color: 'yellow', unlockKey: 'fill-word-3', unlockPractice: 3 },
     },
   };
   
@@ -318,6 +325,9 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
     pink:   { border: 'hover:border-pink-300',   bg: 'bg-pink-100',   text: 'text-pink-600',   hoverBg: 'group-hover:bg-pink-200',   arrow: 'group-hover:text-pink-500' },
     teal:   { border: 'hover:border-teal-300',   bg: 'bg-teal-100',   text: 'text-teal-600',   hoverBg: 'group-hover:bg-teal-200',   arrow: 'group-hover:text-teal-500' },
     orange: { border: 'hover:border-orange-300', bg: 'bg-orange-100', text: 'text-orange-600', hoverBg: 'group-hover:bg-orange-200', arrow: 'group-hover:text-orange-500' },
+    purple: { border: 'hover:border-purple-300', bg: 'bg-purple-100', text: 'text-purple-600', hoverBg: 'group-hover:bg-purple-200', arrow: 'group-hover:text-purple-500' },
+    green:  { border: 'hover:border-green-300',  bg: 'bg-green-100',  text: 'text-green-600',  hoverBg: 'group-hover:bg-green-200',  arrow: 'group-hover:text-green-500' },
+    yellow: { border: 'hover:border-yellow-300', bg: 'bg-yellow-100', text: 'text-yellow-600', hoverBg: 'group-hover:bg-yellow-200', arrow: 'group-hover:text-yellow-500' },
     gray:   { border: 'border-gray-300', bg: 'bg-gray-200', text: 'text-gray-500', hoverBg: 'group-hover:bg-gray-200', arrow: 'group-hover:text-gray-400' },
   };
 
@@ -385,5 +395,3 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
     </div>
   );
 };
-
-// --- END OF FILE: quiz-app-home.tsx ---
