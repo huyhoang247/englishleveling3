@@ -100,7 +100,8 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         const fetchedCompletedWords = new Set<string>();
         completedWordsSnapshot.forEach((completedDoc) => {
             if (completedDoc.data()?.gameModes?.[gameModeId]) {
-              fetchedCompletedWords.add(completedDoc.id);
+              // ***FIX: Normalize to lowercase when fetching***
+              fetchedCompletedWords.add(completedDoc.id.toLowerCase());
             }
         });
 
@@ -159,7 +160,8 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
   useEffect(() => {
     if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
-      const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word));
+      // ***FIX: Check against lowercase word to match fetched data***
+      const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word.toLowerCase()));
       if (unusedWords.length === 0) { setGameOver(true); setCurrentWord(null); } else {
         const shuffled = shuffleArray(unusedWords); 
         const firstWord = shuffled[0];
@@ -199,6 +201,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   
   const triggerSuccessSequence = useCallback(async () => {
     if (!currentWord || !user) return;
+    
     setIsCorrect(true);
     const newStreak = streak + 1;
     setStreak(newStreak);
@@ -206,9 +209,8 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     setTimeout(() => setStreakAnimation(false), 1500);
     setShowConfetti(true);
 
-    if (selectedPractice !== 3 && selectedPractice !== 103) {
-      setUsedWords(prev => new Set(prev).add(currentWord.word));
-    }
+    // ***FIX: Update local state consistently with lowercase***
+    setUsedWords(prev => new Set(prev).add(currentWord.word.toLowerCase()));
 
     const coinReward = (masteryCount * newStreak) * ((selectedPractice === 3 || selectedPractice === 103) ? 2 : 1);
     const updatedCoins = coins + coinReward;
@@ -220,20 +222,25 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       const batch = writeBatch(db);
       const gameModeId = `fill-word-${selectedPractice}`;
 
-      let wordsToUpdate: string[];
       if (selectedPractice === 3 || selectedPractice === 103) {
-        wordsToUpdate = currentWord.word.split(' ');
-      } else {
-        wordsToUpdate = [currentWord.word];
-      }
-      
-      wordsToUpdate.forEach(word => {
-        const completedWordRef = doc(db, 'users', user.uid, 'completedWords', word.toLowerCase());
-        batch.set( completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true } );
-      });
+        // --- LOGIC CHO PRACTICE 3 (ĐIỀN 2 TỪ) ---
+        
+        // 1. Lưu ID của cả câu hỏi để tracking game completion
+        const questionId = currentWord.word.toLowerCase();
+        const questionRef = doc(db, 'users', user.uid, 'completedWords', questionId);
+        batch.set(questionRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
 
-      if (selectedPractice === 3 || selectedPractice === 103) {
-          setUsedWords(prev => new Set(prev).add(currentWord.word));
+        // 2. Lưu từng từ riêng lẻ để tracking stats cá nhân
+        const individualWords = currentWord.word.split(' ');
+        individualWords.forEach(word => {
+          const individualWordRef = doc(db, 'users', user.uid, 'completedWords', word.toLowerCase());
+          batch.set(individualWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
+        });
+      } else {
+        // --- LOGIC CHO CÁC PRACTICE KHÁC ---
+        const wordId = currentWord.word.toLowerCase();
+        const completedWordRef = doc(db, 'users', user.uid, 'completedWords', wordId);
+        batch.set(completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
       }
 
       if (coinReward > 0) {
@@ -292,7 +299,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
   const resetGame = useCallback(() => {
     setGameOver(false); setStreak(0); setFeedback(''); setIsCorrect(null);
-    const unused = vocabularyList.filter(item => !usedWords.has(item.word));
+    const unused = vocabularyList.filter(item => !usedWords.has(item.word.toLowerCase()));
     if (unused.length > 0) { 
         const shuffled = shuffleArray(unused); 
         const firstWord = shuffled[0];
@@ -346,7 +353,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         <div className="w-full flex flex-col items-center">
           {gameOver ? (
             <div className="text-center py-8 w-full">
-              <div className="bg-white p-8 rounded-2xl shadow-lg mb-6"><h2 className="text-2xl font-bold mb-4 text-indigo-800">Trò chơi kết thúc!</h2><p className="text-xl mb-4">Hoàn thành: <span className="font-bold text-indigo-600">{usedWords.size}/{vocabularyList.length}</span></p><div className="w-full bg-gray-200 rounded-full h-4 mb-6"><div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full" style={{ width: `${vocabularyList.length > 0 ? (usedWords.size / vocabularyList.length) * 100 : 0}%` }}></div></div></div>
+              <div className="bg-white p-8 rounded-2xl shadow-lg mb-6"><h2 className="text-2xl font-bold mb-4 text-indigo-800">Trò chơi kết thúc!</h2><p className="text-xl mb-4">Bạn đã hoàn thành tất cả các từ trong bài tập này.</p><div className="w-full bg-gray-200 rounded-full h-4 mb-6"><div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full" style={{ width: `100%` }}></div></div></div>
               <button onClick={resetGame} className="flex items-center justify-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 py-3 rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105"><RefreshIcon className="mr-2 h-5 w-5" /> Chơi lại</button>
             </div>
           ) : (
