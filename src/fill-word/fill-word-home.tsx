@@ -199,7 +199,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   
   const triggerSuccessSequence = useCallback(async () => {
     if (!currentWord || !user) return;
-
     setIsCorrect(true);
     const newStreak = streak + 1;
     setStreak(newStreak);
@@ -207,8 +206,14 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     setTimeout(() => setStreakAnimation(false), 1500);
     setShowConfetti(true);
 
+    if (selectedPractice !== 3 && selectedPractice !== 103) {
+      setUsedWords(prev => new Set(prev).add(currentWord.word));
+    }
+
     const coinReward = (masteryCount * newStreak) * ((selectedPractice === 3 || selectedPractice === 103) ? 2 : 1);
     const updatedCoins = coins + coinReward;
+    setCoins(updatedCoins);
+    startCoinCountAnimation(coins, updatedCoins);
 
     try {
       const userDocRef = doc(db, 'users', user.uid);
@@ -227,18 +232,15 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         batch.set( completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true } );
       });
 
+      if (selectedPractice === 3 || selectedPractice === 103) {
+          setUsedWords(prev => new Set(prev).add(currentWord.word));
+      }
+
       if (coinReward > 0) {
         batch.update(userDocRef, { 'coins': increment(coinReward) });
       }
       
-      // Ghi dữ liệu vào Firestore
       await batch.commit();
-
-      // SỬA LỖI: Cập nhật state usedWords và coins SAU KHI commit thành công
-      // Áp dụng cho TẤT CẢ các practice
-      setUsedWords(prev => new Set(prev).add(currentWord.word));
-      setCoins(updatedCoins);
-      startCoinCountAnimation(coins, updatedCoins);
 
     } catch (e) { 
       console.error("Lỗi khi cập nhật dữ liệu với batch:", e); 
