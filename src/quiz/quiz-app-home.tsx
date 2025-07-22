@@ -236,6 +236,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
           }
         });
         
+        // Cập nhật để lấy tất cả các count cần thiết
         const allUnlockCounts = {};
         const keysToCount = ['quiz-1', 'quiz-2', 'fill-word-1', 'fill-word-2', 'fill-word-3'];
         keysToCount.forEach(key => {
@@ -272,36 +273,20 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                 const completedSet = completedWordsByGameMode[mode] || new Set();
                 let progress = {};
 
-                // FIX: Refactored the logic to ensure 'completed' is always a subset of 'total'
                 if (practiceNum === 1 || practiceNum === 101) {
-                    // For this practice, the playable items are the user's vocabulary.
-                    const playableItems = userVocabulary;
-                    const total = playableItems.length;
-                    // We count completions by filtering THIS list, ensuring consistency.
-                    const completed = playableItems.filter(v => completedSet.has(v.toLowerCase())).length;
-                    progress = { completed, total };
+                    progress = { completed: userVocabulary.filter(v => completedSet.has(v.toLowerCase())).length, total: userVocabulary.length };
                 } else if (practiceNum === 2 || practiceNum === 102) {
-                    // This logic is already safe as it follows the same pattern.
-                    const playableItems = userVocabulary.filter(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)));
-                    const total = playableItems.length;
-                    const completed = playableItems.filter(word => completedSet.has(word.toLowerCase())).length;
-                    progress = { completed, total };
+                    const totalQs = userVocabulary.filter(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)));
+                    const completed = totalQs.filter(word => completedSet.has(word.toLowerCase())).length;
+                    progress = { completed: completed, total: totalQs.length };
                 } else if (practiceNum === 3 || practiceNum === 103) {
-                     // REFACTORED: Made the logic safer and clearer.
-                     // A playable item is a sentence with at least 2 known words.
-                     const playableItems = exampleData.filter(sentence => {
+                     let totalP3 = 0;
+                     exampleData.forEach(sentence => {
                          const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                         return wordsInSentence.length >= 2;
+                         if (wordsInSentence.length >= 2) totalP3++;
                      });
-                     
-                     // The completion ID for P3 is "word1 word2". `completedSet.size` is the most direct way
-                     // to count these unique pairs. We assume the game logic prevents duplicate completions for the same pair.
-                     // The total is the number of sentences that *could* generate such a pair.
-                     const total = playableItems.length;
-                     const completed = completedSet.size;
-                     
-                     // We add a safeguard to prevent 'completed' from exceeding 'total' due to data inconsistency.
-                     progress = { completed: Math.min(completed, total), total: total };
+                     // ID của practice 3 là "word1 word2", nên set.size là chính xác
+                     progress = { completed: completedSet.size, total: totalP3 };
                 }
                 newProgressData[practiceNum] = progress;
             });
