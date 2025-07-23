@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 
-// --- Dữ liệu mẫu (ĐÃ CẬP NHẬT: Rút gọn subQuest.title) ---
+// --- Dữ liệu mẫu (ĐÃ CẬP NHẬT: Thêm mainProgress/mainTotal) ---
 const initialQuests = [
   {
     id: 7,
@@ -10,12 +10,12 @@ const initialQuests = [
     level: 6,
     rewards: { xp: 1000, gold: 500 },
     status: 'in_progress',
+    mainProgress: 6, // Nhiệm vụ chính chưa hoàn thành
+    mainTotal: 100,
     subQuests: [
-      { id: 'p1_1', title: 'Preview 1', progress: 100, total: 100 },
-      { id: 'p1_2', title: 'Preview 2', progress: 75, total: 100 },
+      { id: 'p1_1', title: 'Preview 1', progress: 0, total: 100 },
+      { id: 'p1_2', title: 'Preview 2', progress: 0, total: 100 },
       { id: 'p1_3', title: 'Preview 3', progress: 0, total: 100 },
-      { id: 'p1_4', title: 'Preview 4', progress: 0, total: 100 },
-      { id: 'p1_5', title: 'Preview 5', progress: 0, total: 100 },
     ]
   },
   {
@@ -25,10 +25,12 @@ const initialQuests = [
     type: 'practice',
     level: 10,
     rewards: { xp: 2500, gold: 1200 },
-    status: 'available',
+    status: 'in_progress',
+    mainProgress: 100, // Nhiệm vụ chính đã hoàn thành -> Lộ trình được mở khóa
+    mainTotal: 100,
     subQuests: [
-      { id: 'p2_1', title: 'Preview 1', progress: 0, total: 100 },
-      { id: 'p2_2', title: 'Preview 2', progress: 0, total: 100 },
+      { id: 'p2_1', title: 'Preview 1', progress: 100, total: 100 },
+      { id: 'p2_2', title: 'Preview 2', progress: 15, total: 100 },
       { id: 'p2_3', title: 'Preview 3', progress: 0, total: 100 },
     ]
   },
@@ -39,11 +41,12 @@ const initialQuests = [
     type: 'practice',
     level: 15,
     rewards: { xp: 5000, gold: 3000 },
-    status: 'in_progress',
+    status: 'available',
+    mainProgress: 0,
+    mainTotal: 100,
     subQuests: [
-      { id: 'p3_1', title: 'Preview 1', progress: 100, total: 100 },
-      { id: 'p3_2', title: 'Preview 2', progress: 100, total: 100 },
-      { id: 'p3_3', title: 'Preview 3', progress: 100, total: 100 },
+      { id: 'p3_1', title: 'Preview 1', progress: 0, total: 100 },
+      { id: 'p3_2', title: 'Preview 2', progress: 0, total: 100 },
     ]
   },
   {
@@ -87,76 +90,51 @@ const QuestIcon = ({ type }) => ({
 }[type] || <ShieldIcon />);
 
 // --- Các Component con để hiển thị trạng thái mục tiêu ---
-const SubQuestCompleted = ({ subQuest }) => (
-  <div className="flex items-center space-x-3 p-3 bg-gray-900/30 rounded-lg">
-    <CheckCircleIcon className="text-green-500 flex-shrink-0" />
-    <span className="text-gray-400 line-through">{subQuest.title}</span>
-  </div>
-);
-
+const SubQuestCompleted = ({ subQuest }) => <div className="flex items-center space-x-3 p-3 bg-gray-900/30 rounded-lg"><CheckCircleIcon className="text-green-500 flex-shrink-0" /><span className="text-gray-400 line-through">{subQuest.title}</span></div>;
 const SubQuestActive = ({ subQuest }) => {
   const percentage = (subQuest.progress / subQuest.total) * 100;
-  return (
-    <div className="p-4 bg-cyan-900/30 rounded-lg border border-cyan-500/50 shadow-lg shadow-cyan-500/10">
-      <h4 className="font-bold text-cyan-200 mb-2">{subQuest.title}</h4>
-      <div className="flex justify-between items-center text-xs text-cyan-100 mb-1">
-        <span>Tiến độ câu hỏi</span>
-        <span>{subQuest.progress} / {subQuest.total}</span>
-      </div>
-      <div className="w-full bg-gray-600 rounded-full h-2">
-        <div
-          className="bg-gradient-to-r from-teal-400 to-green-400 h-2 rounded-full transition-all duration-500"
-          style={{ width: `${percentage}%` }}
-        ></div>
-      </div>
-    </div>
-  );
+  return (<div className="p-4 bg-cyan-900/30 rounded-lg border border-cyan-500/50 shadow-lg shadow-cyan-500/10"><h4 className="font-bold text-cyan-200 mb-2">{subQuest.title}</h4><div className="flex justify-between items-center text-xs text-cyan-100 mb-1"><span>Tiến độ câu hỏi</span><span>{subQuest.progress} / {subQuest.total}</span></div><div className="w-full bg-gray-600 rounded-full h-2"><div className="bg-gradient-to-r from-teal-400 to-green-400 h-2 rounded-full transition-all duration-500" style={{ width: `${percentage}%` }}></div></div></div>);
 };
-
-const SubQuestLocked = ({ subQuest }) => (
-  <div className="flex items-center space-x-3 p-3 bg-gray-800/50 rounded-lg opacity-60">
-    <LockIcon />
-    <span className="text-gray-500">{subQuest.title}</span>
+const SubQuestLocked = ({ subQuest }) => <div className="flex items-center space-x-3 p-3 bg-gray-800/50 rounded-lg opacity-60"><LockIcon /><span className="text-gray-500">{subQuest.title}</span></div>;
+const ReviewPathLocked = () => (
+  <div className="pt-4 border-t border-gray-700/50">
+    <h4 className="font-semibold text-sm text-gray-500 mb-3">Lộ trình ôn tập</h4>
+    <div className="p-4 bg-gray-800/50 rounded-lg text-center opacity-70">
+        <LockIcon />
+        <p className="mt-2 text-sm text-gray-400">Hoàn thành Progress để mở khóa lộ trình.</p>
+    </div>
   </div>
 );
-
 
 // --- Component Thẻ Nhiệm Vụ chính ---
 const QuestCard = ({ quest, onAction, style }) => {
   const isPracticeQuest = quest.type === 'practice';
   const isCompleted = quest.status === 'completed';
 
-  // --- THAY ĐỔI: Logic tính toán tiến độ tổng thể ---
-  const { overallProgress, categorizedSubQuests } = useMemo(() => {
-    if (!isPracticeQuest || !quest.subQuests) {
-      return { 
-        overallProgress: { progress: quest.progress, total: quest.total }, 
-        categorizedSubQuests: [] 
-      };
+  const { overallProgress, categorizedSubQuests, isReviewUnlocked, canBeClaimed } = useMemo(() => {
+    if (!isPracticeQuest) {
+      return { overallProgress: { progress: quest.progress, total: quest.total }, categorizedSubQuests: [], isReviewUnlocked: false, canBeClaimed: quest.progress >= quest.total };
     }
-
-    // Tính tổng số câu hỏi đã làm và tổng số câu hỏi của toàn bộ nhiệm vụ
-    const totalProgress = quest.subQuests.reduce((acc, sub) => acc + sub.progress, 0);
-    const totalQuestions = quest.subQuests.reduce((acc, sub) => acc + sub.total, 0);
-
+    
+    const reviewUnlocked = quest.mainProgress >= quest.mainTotal;
+    const subQuestsCompleted = quest.subQuests.filter(sq => sq.progress >= sq.total).length;
+    
     let isActiveFound = false;
     const categorized = quest.subQuests.map(sq => {
       if (sq.progress >= sq.total) return { ...sq, status: 'completed' };
-      if (!isActiveFound) {
-        isActiveFound = true;
-        return { ...sq, status: 'active' };
-      }
+      if (!isActiveFound) { isActiveFound = true; return { ...sq, status: 'active' }; }
       return { ...sq, status: 'locked' };
     });
 
     return {
-      overallProgress: { progress: totalProgress, total: totalQuestions },
+      overallProgress: { progress: quest.mainProgress, total: quest.mainTotal },
       categorizedSubQuests: categorized,
+      isReviewUnlocked: reviewUnlocked,
+      canBeClaimed: reviewUnlocked && subQuestsCompleted === quest.subQuests.length,
     };
-  }, [quest, isPracticeQuest]);
+  }, [quest]);
 
   const overallPercentage = overallProgress.total > 0 ? (overallProgress.progress / overallProgress.total) * 100 : 0;
-  const canBeClaimed = overallProgress.progress >= overallProgress.total;
 
   return (
     <div style={style} className={`bg-gray-800/70 backdrop-blur-md rounded-xl overflow-hidden transition-all duration-300 group quest-card ${isCompleted ? 'opacity-70' : ''}`}>
@@ -164,13 +142,9 @@ const QuestCard = ({ quest, onAction, style }) => {
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-300"></div>
         <div className="absolute top-4 right-4 bg-gray-900/80 px-3 py-1 rounded-full text-xs font-bold text-yellow-300 border border-yellow-500/50">Lv. {quest.level}</div>
         <div className="flex items-start">
-          <div className="bg-gray-900 p-3 rounded-full border-2 border-gray-700 group-hover:border-cyan-500 transition-colors duration-300 mr-4">
-            <QuestIcon type={quest.type} />
-          </div>
+          <div className="bg-gray-900 p-3 rounded-full border-2 border-gray-700 group-hover:border-cyan-500 transition-colors duration-300 mr-4"><QuestIcon type={quest.type} /></div>
           <div>
-            {isPracticeQuest && (
-              <p className="text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-1">Trắc nghiệm</p>
-            )}
+            {isPracticeQuest && <p className="text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-1">Trắc nghiệm</p>}
             <h3 className={`text-lg font-bold ${isCompleted ? 'text-gray-400' : 'text-cyan-300'}`}>{quest.title}</h3>
             <p className="text-sm text-gray-400 max-w-md">{quest.description}</p>
           </div>
@@ -181,7 +155,6 @@ const QuestCard = ({ quest, onAction, style }) => {
         {!isCompleted && (
           <div>
             <div className="flex justify-between items-center text-xs text-gray-300 mb-1">
-              {/* --- THAY ĐỔI: Tên nhãn "Progress" --- */}
               <span>Progress</span>
               <span>{overallProgress.progress} / {overallProgress.total}</span>
             </div>
@@ -192,40 +165,32 @@ const QuestCard = ({ quest, onAction, style }) => {
         )}
 
         {isPracticeQuest && quest.status !== 'completed' && (
-          <div className="pt-4 border-t border-gray-700/50">
-            {/* --- THAY ĐỔI: Tên nhãn "Lộ trình ôn tập" --- */}
-            <h4 className="font-semibold text-sm text-gray-400 mb-3">Lộ trình ôn tập:</h4>
-            <div className="space-y-2">
-              {categorizedSubQuests.map(sq => {
-                switch(sq.status) {
-                  case 'completed': return <SubQuestCompleted key={sq.id} subQuest={sq} />;
-                  case 'active': return <SubQuestActive key={sq.id} subQuest={sq} />;
-                  case 'locked': return <SubQuestLocked key={sq.id} subQuest={sq} />;
-                  default: return null;
-                }
-              })}
+          isReviewUnlocked ? (
+            <div className="pt-4 border-t border-gray-700/50">
+              <h4 className="font-semibold text-sm text-gray-400 mb-3">Lộ trình ôn tập:</h4>
+              <div className="space-y-2">
+                {categorizedSubQuests.map(sq => {
+                  switch(sq.status) {
+                    case 'completed': return <SubQuestCompleted key={sq.id} subQuest={sq} />;
+                    case 'active': return <SubQuestActive key={sq.id} subQuest={sq} />;
+                    case 'locked': return <SubQuestLocked key={sq.id} subQuest={sq} />;
+                    default: return null;
+                  }
+                })}
+              </div>
             </div>
-          </div>
+          ) : (
+            <ReviewPathLocked />
+          )
         )}
         
-        {isPracticeQuest && canBeClaimed && quest.status !== 'completed' && (
-            <div className="flex items-center justify-center space-x-3 text-center py-2">
-                <CheckCircleIcon className="text-green-400" />
-                <p className="font-semibold text-green-300">Xuất sắc! Đã hoàn thành tất cả mục tiêu.</p>
-            </div>
-        )}
+        {isPracticeQuest && canBeClaimed && quest.status !== 'completed' && (<div className="flex items-center justify-center space-x-3 text-center py-2"><CheckCircleIcon className="text-green-400" /><p className="font-semibold text-green-300">Xuất sắc! Đã hoàn thành tất cả mục tiêu.</p></div>)}
 
         <div>
           <h4 className="font-semibold text-sm text-gray-400 mb-2">Phần thưởng:</h4>
           <div className="flex flex-wrap gap-3 text-sm">
-            <div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-yellow-500/30 shadow-sm">
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Gold" className="w-4 h-4" /> 
-              <span className="text-yellow-300 font-bold">{quest.rewards.gold}</span>
-            </div>
-            <div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-purple-500/30 shadow-sm">
-              <XPIcon /> 
-              <span className="text-purple-300 font-bold">{quest.rewards.xp}</span>
-            </div>
+            <div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-yellow-500/30 shadow-sm"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Gold" className="w-4 h-4" /> <span className="text-yellow-300 font-bold">{quest.rewards.gold}</span></div>
+            <div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-purple-500/30 shadow-sm"><XPIcon /> <span className="text-purple-300 font-bold">{quest.rewards.xp}</span></div>
           </div>
         </div>
       </div>
