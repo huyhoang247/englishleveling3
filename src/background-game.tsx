@@ -498,18 +498,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
     
-  const handleShopPurchase = async (item: any) => {
+  const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) {
       console.error("Cannot purchase item: User not authenticated.");
       throw new Error("Người dùng chưa được xác thực.");
     }
-    if (!item || typeof item.price !== 'number' || !item.id) {
+    if (!item || typeof item.price !== 'number' || !item.id || typeof quantity !== 'number' || quantity <= 0) {
       console.error("Invalid item data for purchase:", item);
-      throw new Error("Dữ liệu vật phẩm không hợp lệ.");
+      throw new Error("Dữ liệu vật phẩm hoặc số lượng không hợp lệ.");
     }
 
     const userDocRef = doc(db, 'users', userId);
+    const totalCost = item.price * quantity;
     setIsSyncingData(true);
 
     try {
@@ -518,28 +519,31 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         if (!userDoc.exists()) { throw new Error("Tài liệu người dùng không tồn tại!"); }
 
         const currentCoins = userDoc.data().coins || 0;
-        if (currentCoins < item.price) { throw new Error("Không đủ vàng."); }
+        if (currentCoins < totalCost) { throw new Error("Không đủ vàng."); }
 
-        const updates: { [key: string]: any } = { coins: currentCoins - item.price, };
+        const updates: { [key: string]: any } = { coins: currentCoins - totalCost, };
 
         // Handle specific item logic - ID 1009 is for "Sách Cổ"
         if (item.id === 1009) {
           const currentBooks = userDoc.data().ancientBooks || 0;
-          updates.ancientBooks = currentBooks + 1;
+          updates.ancientBooks = currentBooks + quantity;
         } else {
-          console.warn(`Purchase logic not implemented for item ID: ${item.id}`);
+           // Logic for other stackable items can be added here
+          // For non-stackable items, quantity will be 1, so this part might not be needed
+          // or could be a generic inventory update.
+          console.warn(`Purchase logic for a quantity > 1 might not be fully implemented for item ID: ${item.id}`);
         }
 
         transaction.update(userDocRef, updates);
       });
 
       // Update local state after successful transaction
-      setCoins(prev => prev - item.price);
+      setCoins(prev => prev - totalCost);
       if (item.id === 1009) {
-        setAncientBooks(prev => prev + 1);
+        setAncientBooks(prev => prev + quantity);
       }
-      console.log(`Purchase successful for item ${item.name}.`);
-      alert(`Mua thành công ${item.name}!`);
+      console.log(`Purchase successful for ${quantity}x ${item.name}.`);
+      alert(`Mua thành công x${quantity} ${item.name}!`);
     } catch (error) {
       console.error("Shop purchase transaction failed:", error);
       alert(`Mua thất bại: ${error instanceof Error ? error.message : String(error)}`);
