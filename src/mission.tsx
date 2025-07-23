@@ -69,7 +69,8 @@ const FilterControls = ({ filters, setFilters }) => {
       <div>
         <span className="text-sm font-bold text-slate-400 mr-3">Loại:</span>
         <div className="inline-flex gap-2">
-          <FilterButton type="type" value="all">Tất cả</dFilterButton>
+          {/* DÒNG NÀY ĐÃ ĐƯỢC SỬA */}
+          <FilterButton type="type" value="all">Tất cả</FilterButton>
           <FilterButton type="type" value="Chính tuyến">Chính tuyến</FilterButton>
           <FilterButton type="type" value="Phụ">Phụ</FilterButton>
           <FilterButton type="type" value="Chế tạo">Chế tạo</FilterButton>
@@ -141,7 +142,7 @@ const QuestDetail = ({ quest, onTrack, onUntrack }) => {
       </div>
       
       {/* Progress */}
-      {quest.status !== "Mới" && quest.status !== "Hoàn thành" && (
+      {quest.status === "Đang làm" && (
          <div className="mb-6">
             <div className="flex justify-between items-center mb-1.5 text-sm">
                 <span className="font-medium text-slate-300">Tiến độ</span>
