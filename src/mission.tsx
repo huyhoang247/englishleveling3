@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useCallback } from 'react';
 
-// --- Dữ liệu mẫu (Không thay đổi cấu trúc, chỉ cập nhật giá trị để demo) ---
+// --- Dữ liệu mẫu (ĐÃ CẬP NHẬT: Rút gọn title) ---
 const initialQuests = [
   {
     id: 7,
-    title: 'Hoàn thành Practice 1 (100 Câu)',
+    title: 'Practice 1', // Đã rút gọn
     description: 'Chinh phục toàn bộ các bài thực hành trong chương 1 để nhận phần thưởng lớn.',
     type: 'practice',
     level: 6,
@@ -20,7 +20,7 @@ const initialQuests = [
   },
   {
     id: 8,
-    title: 'Hoàn thành Practice 2 (200 Câu)',
+    title: 'Practice 2', // Đã rút gọn
     description: 'Vượt qua thử thách với các câu hỏi nâng cao của chương 2.',
     type: 'practice',
     level: 10,
@@ -34,7 +34,7 @@ const initialQuests = [
   },
   {
     id: 9,
-    title: 'Hoàn thành Practice 3 (300 Câu)',
+    title: 'Practice 3', // Đã rút gọn
     description: 'Bài kiểm tra cuối cùng để chứng tỏ đẳng cấp chuyên gia.',
     type: 'practice',
     level: 15,
@@ -70,7 +70,7 @@ const initialQuests = [
   },
 ];
 
-// --- Icon Components (SVG) - Thêm icon Lock ---
+// --- Icon Components (SVG) - Không thay đổi ---
 const SwordIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400"><path d="M14.5 17.5 3 6l3-3 11.5 11.5"/><path d="m21 21-9-9"/><path d="m15 12-3.5 3.5"/><path d="m3 21 3-3"/></svg>;
 const LeafIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400"><path d="M11 20A7 7 0 0 1 4 13H2a9 9 0 0 0 9 9z"/><path d="M13 4a7 7 0 0 1 7 7v1h2a9 9 0 0 0-9-9z"/><path d="M2 12h1.1a2.9 2.9 0 0 1 2.8 2.4L7 22"/><path d="M22 12h-1.1a2.9 2.9 0 0 0-2.8-2.4L17 2"/></svg>;
 const ShieldIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>;
@@ -87,8 +87,6 @@ const QuestIcon = ({ type }) => ({
 }[type] || <ShieldIcon />);
 
 // --- Các Component con để hiển thị trạng thái mục tiêu ---
-
-// Mục tiêu đã hoàn thành
 const SubQuestCompleted = ({ subQuest }) => (
   <div className="flex items-center space-x-3 p-3 bg-gray-900/30 rounded-lg">
     <CheckCircleIcon className="text-green-500 flex-shrink-0" />
@@ -96,7 +94,6 @@ const SubQuestCompleted = ({ subQuest }) => (
   </div>
 );
 
-// Mục tiêu đang hoạt động
 const SubQuestActive = ({ subQuest }) => {
   const percentage = (subQuest.progress / subQuest.total) * 100;
   return (
@@ -116,7 +113,6 @@ const SubQuestActive = ({ subQuest }) => {
   );
 };
 
-// Mục tiêu bị khóa
 const SubQuestLocked = ({ subQuest }) => (
   <div className="flex items-center space-x-3 p-3 bg-gray-800/50 rounded-lg opacity-60">
     <LockIcon />
@@ -142,9 +138,7 @@ const QuestCard = ({ quest, onAction, style }) => {
     let isActiveFound = false;
     
     const categorized = quest.subQuests.map(sq => {
-      if (sq.progress >= sq.total) {
-        return { ...sq, status: 'completed' };
-      }
+      if (sq.progress >= sq.total) return { ...sq, status: 'completed' };
       if (!isActiveFound) {
         isActiveFound = true;
         return { ...sq, status: 'active' };
@@ -170,7 +164,13 @@ const QuestCard = ({ quest, onAction, style }) => {
           <div className="bg-gray-900 p-3 rounded-full border-2 border-gray-700 group-hover:border-cyan-500 transition-colors duration-300 mr-4">
             <QuestIcon type={quest.type} />
           </div>
+          {/* --- THAY ĐỔI: Thêm Tag "Trắc nghiệm" --- */}
           <div>
+            {isPracticeQuest && (
+              <p className="text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-1">
+                Trắc nghiệm
+              </p>
+            )}
             <h3 className={`text-lg font-bold ${isCompleted ? 'text-gray-400' : 'text-cyan-300'}`}>{quest.title}</h3>
             <p className="text-sm text-gray-400 max-w-md">{quest.description}</p>
           </div>
