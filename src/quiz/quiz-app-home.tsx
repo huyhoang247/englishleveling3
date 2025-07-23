@@ -1,3 +1,5 @@
+// --- START OF FILE quiz-app-home.tsx (18).txt ---
+
 // --- START OF FILE: quiz-app-home.tsx ---
 
 import { useState, useEffect } from 'react';
@@ -8,7 +10,7 @@ import VocabularyGame from '../fill-word/fill-word-home.tsx';
 // Imports for progress calculation
 import { db, auth } from '../firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, updateDoc, increment } from 'firebase/firestore';
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
@@ -194,7 +196,7 @@ const CompletedIcon = ({ className }: { className: string }) => (
     </svg>
 );
 
-// SVG Icons (LockIcon, RefreshIcon)
+// SVG Icons (LockIcon, RefreshIcon, GiftIcon)
 const LockIcon = ({ className }: { className: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
     <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
@@ -207,6 +209,25 @@ const RefreshIcon = ({ className }: { className: string }) => (
   </svg>
 );
 
+const GiftIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+    </svg>
+);
+
+const GoldCoinIcon = ({ className }: { className: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <radialGradient id="gold_grad_quiz" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(15 9) rotate(90) scale(10)">
+                <stop stopColor="#FEF08A"/>
+                <stop offset="1" stopColor="#F59E0B"/>
+            </radialGradient>
+        </defs>
+        <circle cx="12" cy="12" r="10" fill="url(#gold_grad_quiz)"/>
+        <text x="12" y="17" fontFamily="sans-serif" fontSize="12" fill="#A16207" textAnchor="middle" fontWeight="bold">G</text>
+    </svg>
+);
+
 // Component to display practice list with progress
 const PracticeList = ({ selectedType, onPracticeSelect }) => {
   const [progressData, setProgressData] = useState({});
@@ -214,6 +235,9 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
   const [user, setUser] = useState(auth.currentUser);
   const [view, setView] = useState<'main' | 'reviews'>('main');
   const [selectedPracticeForReview, setSelectedPracticeForReview] = useState<number | null>(null);
+  const [isRewardsPopupOpen, setIsRewardsPopupOpen] = useState(false);
+  const [selectedPracticeForRewards, setSelectedPracticeForRewards] = useState<{ number: number | null, title: string }>({ number: null, title: '' });
+  const [claimedRewards, setClaimedRewards] = useState({});
 
   const MAX_PREVIEWS = 5; // Define max number of preview levels
 
@@ -240,6 +264,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
         ]);
         
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
+        setClaimedRewards(userData.claimedQuizRewards || {});
         const userVocabulary = openedVocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
 
         const completedWordsByGameMode = {};
@@ -351,11 +376,32 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
     setSelectedPracticeForReview(practiceNumber);
     setView('reviews');
   };
+  
+  const handleRewardsClick = (e, practiceNumber, practiceTitle) => {
+    e.stopPropagation();
+    setSelectedPracticeForRewards({ number: practiceNumber, title: practiceTitle });
+    setIsRewardsPopupOpen(true);
+  };
 
   if (loading) {
     return <div className="text-center text-gray-500">Đang tải tiến độ...</div>;
   }
   
+  if (isRewardsPopupOpen) {
+    return <RewardsPopup 
+              isOpen={isRewardsPopupOpen}
+              onClose={() => setIsRewardsPopupOpen(false)}
+              practiceNumber={selectedPracticeForRewards.number}
+              practiceTitle={selectedPracticeForRewards.title}
+              progressData={progressData}
+              claimedRewards={claimedRewards}
+              setClaimedRewards={setClaimedRewards}
+              user={user}
+              selectedType={selectedType}
+              MAX_PREVIEWS={MAX_PREVIEWS}
+            />;
+  }
+
   if (view === 'reviews' && selectedPracticeForReview) {
       const basePracticeDetails = practiceDetails[selectedType]?.[String(selectedPracticeForReview)];
 
@@ -380,18 +426,13 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
             </div>
              <div className="space-y-4 w-full">
                 {Array.from({ length: MAX_PREVIEWS }, (_, i) => i + 1).map(previewLevel => {
-                    // --- [FIX] START OF CORRECTION ---
-                    // The logic that hid the component (`return null`) has been removed.
-                    // Now, we always render the component and rely solely on `isLocked` to control its state.
-                    
                     const prerequisiteId = previewLevel === 1
-                        ? selectedPracticeForReview // Prerequisite for Preview 1 is the base practice
-                        : ((previewLevel - 1) * 100) + selectedPracticeForReview; // Prerequisite for Preview N is Preview N-1
+                        ? selectedPracticeForReview
+                        : ((previewLevel - 1) * 100) + selectedPracticeForReview; 
                     
                     const practiceNumber = (previewLevel * 100) + selectedPracticeForReview;
                     const prerequisiteProgress = progressData[prerequisiteId];
                     
-                    // A level is locked if its prerequisite is not yet 100% complete.
                     const isLocked = !prerequisiteProgress || prerequisiteProgress.total === 0 || prerequisiteProgress.completed < prerequisiteProgress.total;
                     
                     const progress = progressData[practiceNumber];
@@ -406,8 +447,6 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                         ? `Hoàn thành tất cả câu ở ${prerequisiteName} để mở` 
                         : `Luyện tập lại các câu hỏi`;
                         
-                    // A level is only *visible* if its prerequisite is *unlocked*.
-                    // This prevents showing Preview 3 if Preview 1 isn't even done yet.
                     if (previewLevel > 1) {
                          const oneLevelBeforeId = ((previewLevel - 2) === 0)
                             ? selectedPracticeForReview
@@ -418,8 +457,6 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                              return null;
                          }
                     }
-
-                    // --- [FIX] END OF CORRECTION ---
 
                     return (
                         <button
@@ -502,7 +539,14 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                         <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 ${colors.arrow} transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </div>
                 </div>
-                <div className="border-t border-gray-200 mt-3 pt-3 flex justify-end">
+                <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
+                    <button 
+                        onClick={(e) => handleRewardsClick(e, practiceNumber, details.title)}
+                        className="flex items-center gap-2 text-sm font-semibold text-yellow-600 hover:text-yellow-800 transition-colors"
+                    >
+                        <GiftIcon className="w-4 h-4" />
+                        <span>Phần thưởng</span>
+                    </button>
                     <button 
                         onClick={(e) => handleReviewClick(e, practiceNumber)} 
                         disabled={!isCompleted}
@@ -522,4 +566,125 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
   );
 };
 
-// --- END OF FILE: quiz-app-home.tsx ---
+// --- NEW --- Rewards Popup Component
+const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }) => {
+    const [isClaiming, setIsClaiming] = useState(null);
+
+    const handleClaim = async (rewardId, amount) => {
+        if (isClaiming || !user) return;
+        setIsClaiming(rewardId);
+
+        try {
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, {
+                coins: increment(amount),
+                [`claimedQuizRewards.${rewardId}`]: true
+            });
+            
+            setClaimedRewards(prev => ({ ...prev, [rewardId]: true }));
+            // Note: The main coin display in the header won't update live as its state is not managed here.
+            // The user will receive the coins, and the display will be correct on the next app load.
+        } catch (error) {
+            console.error("Error claiming reward:", error);
+            alert("Đã có lỗi xảy ra khi nhận thưởng.");
+        } finally {
+            setIsClaiming(null);
+        }
+    };
+
+    const renderRewardTiers = () => {
+        const tiers = [];
+        const BASE_REWARD_PER_100_Q = 1000;
+        const MILESTONE_STEP = 100;
+        const MAX_MILESTONES_TO_DISPLAY = 5;
+
+        // Function to generate tiers for a given level
+        const generateTiersForLevel = (levelProgress, levelNumber, levelTitle, multiplier) => {
+            if (!levelProgress || levelProgress.total === 0) {
+                return null;
+            }
+
+            const levelTiers = [];
+            const maxPossibleMilestone = Math.floor(levelProgress.total / MILESTONE_STEP) * MILESTONE_STEP;
+
+            for (let i = 1; i <= MAX_MILESTONES_TO_DISPLAY; i++) {
+                const milestone = i * MILESTONE_STEP;
+                if (milestone > maxPossibleMilestone + MILESTONE_STEP) break; // Don't show excessively high, unreachable milestones
+
+                const rewardId = `${selectedType}-${levelNumber}-${milestone}`;
+                const isCompleted = levelProgress.completed >= milestone;
+                const isClaimed = claimedRewards[rewardId];
+                const rewardAmount = i * BASE_REWARD_PER_100_Q * multiplier;
+
+                let statusComponent;
+                if (isClaimed) {
+                    statusComponent = <div className="px-3 py-1.5 text-xs font-bold text-green-700 bg-green-200 rounded-full flex items-center gap-1.5"><CompletedIcon className="w-4 h-4" />Đã nhận</div>;
+                } else if (isCompleted) {
+                    statusComponent = <button onClick={() => handleClaim(rewardId, rewardAmount)} disabled={isClaiming === rewardId} className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 disabled:bg-indigo-400 transition w-[60px] text-center">{isClaiming === rewardId ? '...' : 'Nhận'}</button>;
+                } else {
+                    statusComponent = <div className="px-3 py-1.5 text-xs font-bold text-gray-500 bg-gray-200 rounded-full flex items-center gap-1.5"><LockIcon className="w-4 h-4" />{`${levelProgress.completed}/${milestone}`}</div>;
+                }
+
+                levelTiers.push(
+                    <div key={rewardId} className="flex items-center justify-between bg-white p-3 rounded-md shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <GoldCoinIcon className="w-8 h-8 flex-shrink-0" />
+                            <div>
+                                <p className="font-semibold text-gray-800">{rewardAmount.toLocaleString()} Vàng</p>
+                                <p className="text-sm text-gray-500">Hoàn thành {milestone} câu</p>
+                            </div>
+                        </div>
+                        {statusComponent}
+                    </div>
+                );
+            }
+
+            if (levelTiers.length > 0) {
+              return (
+                <div key={levelNumber} className="bg-gray-100 p-4 rounded-lg">
+                    <h4 className="font-bold text-gray-700">{levelTitle}</h4>
+                    <div className="space-y-3 mt-3">{levelTiers}</div>
+                </div>
+              );
+            }
+            return null;
+        };
+
+        // Main Practice Tiers
+        const mainProgress = progressData[practiceNumber];
+        const mainTiers = generateTiersForLevel(mainProgress, practiceNumber, "Luyện tập chính", 1);
+        if (mainTiers) tiers.push(mainTiers);
+        else tiers.push(<p key="no-main" className="text-sm text-gray-500 text-center py-4">Chưa có câu hỏi cho phần luyện tập này.</p>)
+
+        // Preview Levels Tiers
+        for (let i = 1; i <= MAX_PREVIEWS; i++) {
+            const previewNumber = (i * 100) + practiceNumber;
+            const previewProgress = progressData[previewNumber];
+            const multiplier = Math.pow(2, i);
+            const previewTiers = generateTiersForLevel(previewProgress, previewNumber, `Preview ${i} (x${multiplier} Thưởng)`, multiplier);
+            if (previewTiers) tiers.push(previewTiers);
+        }
+
+        return tiers;
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+            <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all animate-scale-up" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                       <GiftIcon className="w-6 h-6 text-yellow-500"/>
+                       Phần thưởng: {practiceTitle}
+                    </h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+                </div>
+                <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50">
+                    {renderRewardTiers()}
+                </div>
+            </div>
+             <style jsx>{` @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; } `}</style>
+        </div>
+    );
+};
