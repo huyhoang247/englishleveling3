@@ -125,6 +125,7 @@ const sampleItemsNonWeapons = [
     { id: 1006, name: 'Khiên Bất Diệt', type: 'Trang bị', rarity: 'SR', price: 2000, image: 'https://placehold.co/600x600/1a1a2e/c0c0c0?text=🛡️', description: 'Một chiếc khiên không thể bị phá hủy, chặn mọi đòn tấn công từ phía trước.' },
     { id: 1004, name: 'Gói Trang Phục Hắc Tinh', type: 'Trang phục', rarity: 'S', price: 2200, image: 'https://placehold.co/600x600/1a1a2e/9370db?text=✨', description: 'Thay đổi ngoại hình của bạn thành một thực thể vũ trụ bí ẩn và quyền năng.' },
     { id: 1003, name: 'Ngọc Tái Sinh', type: 'Vật phẩm', rarity: 'A', price: 975, image: 'https://placehold.co/600x600/1a1a2e/32cd32?text=💎', description: 'Hồi sinh ngay lập tức tại chỗ khi bị hạ gục. Chỉ có thể sử dụng một lần mỗi trận.' },
+    { id: 1009, name: 'Sách Cổ', type: 'Vật phẩm', rarity: 'A', price: 1500, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png', description: 'Dùng để học và nâng cấp các kỹ năng đặc biệt.' },
     { id: 1007, name: 'Vé Nâng Cấp VIP', type: 'Vật phẩm', rarity: 'B', price: 500, image: 'https://placehold.co/600x600/1a1a2e/f0e68c?text=🎟️', description: 'Nhận đặc quyền VIP trong 30 ngày, bao gồm tăng kinh nghiệm và vật phẩm nhận được.' },
     { id: 1008, name: 'Rương Kho Báu Bí Ẩn', type: 'Rương', rarity: 'A', price: 750, image: 'https://placehold.co/600x600/1a1a2e/d2b48c?text=📦', description: 'Mở để có cơ hội nhận được một vật phẩm quý hiếm ngẫu nhiên từ danh sách phần thưởng.' },
 ];
@@ -228,14 +229,33 @@ const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: s
 };
 
 // --- START: MODAL CHI TIẾT VẬT PHẨM ĐƯỢC THIẾT KẾ LẠI ---
-const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => void }) => {
+const ItemDetailModal = ({ item, onClose, onPurchase }: { item: any | null; onClose: () => void; onPurchase: (item: any) => Promise<void> }) => {
     const [activeModalTab, setActiveModalTab] = useState<'info' | 'skills'>('info');
+    const [isPurchasing, setIsPurchasing] = useState(false);
 
     useEffect(() => {
-        if (item) setActiveModalTab('info');
+        if (item) {
+            setActiveModalTab('info');
+            setIsPurchasing(false);
+        }
     }, [item]);
 
     if (!item) return null;
+    
+    const handlePurchaseClick = async () => {
+        if (!item || isPurchasing) return;
+        setIsPurchasing(true);
+        try {
+            await onPurchase(item);
+            onClose(); // Close modal on successful purchase
+        } catch (error) {
+            // Error is handled/alerted in the parent component (background-game).
+            // We just need to stop the loading state here.
+            console.error("Purchase failed, as reported to modal:", error);
+        } finally {
+            setIsPurchasing(false);
+        }
+    };
 
     const hasSkills = item.skills && item.skills.length > 0;
     
@@ -288,8 +308,12 @@ const ItemDetailModal = ({ item, onClose }: { item: any | null; onClose: () => v
                     </div>
 
                     {/* Compact Buy Button */}
-                    <button className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-bold text-sm uppercase px-5 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100">
-                        MUA NGAY
+                    <button 
+                        className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-bold text-sm uppercase px-5 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed disabled:shadow-none disabled:scale-100"
+                        onClick={handlePurchaseClick}
+                        disabled={isPurchasing}
+                    >
+                        {isPurchasing ? 'ĐANG XỬ LÝ...' : 'MUA NGAY'}
                     </button>
                 </div>
             </div>
@@ -389,7 +413,7 @@ const ShopHeader = ({ onClose }: { onClose: () => void }) => {
 
 
 // --- Component Chính Của Cửa Hàng ---
-const GameShopUI = ({ onClose }: { onClose: () => void }) => {
+const GameShopUI = ({ onClose, onPurchase }: { onClose: () => void; onPurchase: (item: any) => Promise<void> }) => {
     const [activeCategory, setActiveCategory] = useState('Vũ khí');
     const [selectedItem, setSelectedItem] = useState<any | null>(null);
     const [allItems, setAllItems] = useState<any[]>([]);
@@ -404,13 +428,13 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
     const handleSelectItem = (shopItem: any) => {
         const baseItem = itemDatabase.get(shopItem.id);
         
-        if (!baseItem) {
+        if (!baseItem && shopItem.type !== 'Vật phẩm' && shopItem.type !== 'Trang bị' && shopItem.type !== 'Trang phục' && shopItem.type !== 'Rương') {
             console.error(`Vật phẩm với ID ${shopItem.id} không tìm thấy trong database.`);
             setSelectedItem(shopItem);
             return;
         }
 
-        const detailedItem = { ...baseItem, ...shopItem, };
+        const detailedItem = { ...(baseItem || {}), ...shopItem, };
         setSelectedItem(detailedItem);
     };
 
@@ -438,7 +462,7 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
                         </div>
                     </section>
                 </main>
-                {selectedItem && <ItemDetailModal item={selectedItem} onClose={handleCloseModal} />}
+                {selectedItem && <ItemDetailModal item={selectedItem} onClose={handleCloseModal} onPurchase={onPurchase} />}
             </div>
             <style jsx global>{`
               .bg-grid-slate-800\\/40 {
@@ -454,6 +478,6 @@ const GameShopUI = ({ onClose }: { onClose: () => void }) => {
 };
 
 // --- Component Wrapper để export ---
-export default function App({ onClose }: { onClose: () => void }) {
-    return <GameShopUI onClose={onClose} />;
+export default function App({ onClose, onPurchase }: { onClose: () => void; onPurchase: (item: any) => Promise<void> }) {
+    return <GameShopUI onClose={onClose} onPurchase={onPurchase} />;
 }
