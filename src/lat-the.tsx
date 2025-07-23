@@ -222,11 +222,11 @@ const HomeIcon = ({ className = '' }: { className?: string }) => (
 
 const CardCapacityDisplay = ({ current, max }: { current: number; max: number }) => (
     <div 
-        className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg p-0.5 flex items-center shadow-lg border border-indigo-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"
+        className="bg-gradient-to-br from-red-500 to-orange-500 rounded-lg p-0.5 flex items-center shadow-lg border border-red-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"
         title="Nâng cấp sức chứa thẻ"
     >
         {/* Shiny effect on hover */}
-        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-indigo-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-orange-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
         
         {/* Icon */}
         <div className="relative mr-1 flex items-center justify-center">
@@ -236,19 +236,19 @@ const CardCapacityDisplay = ({ current, max }: { current: number; max: number })
         {/* Text: current / max */}
         <div className="font-bold text-white text-xs tracking-wide">
             {current.toLocaleString()}
-            <span className="text-indigo-200/80 font-medium opacity-90">
+            <span className="text-red-200/80 font-medium opacity-90">
                  / {max.toLocaleString()}
             </span>
         </div>
 
         {/* Plus button for upgrading capacity */}
-        <div className="ml-1 w-3 h-3 bg-gradient-to-br from-indigo-400 to-purple-600 rounded-full flex items-center justify-center cursor-pointer border border-indigo-300 shadow-inner hover:shadow-indigo-300/50 hover:scale-110 transition-all duration-200">
+        <div className="ml-1 w-3 h-3 bg-gradient-to-br from-red-400 to-orange-500 rounded-full flex items-center justify-center cursor-pointer border border-red-300 shadow-inner hover:shadow-red-300/50 hover:scale-110 transition-all duration-200">
             <span className="text-white font-bold text-xs">+</span>
         </div>
 
         {/* Sparkles */}
         <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div>
+        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-orange-200 rounded-full animate-pulse-fast"></div>
     </div>
 );
 
