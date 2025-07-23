@@ -161,6 +161,14 @@ const ScopedStyles = () => (
         @keyframes vocabulary-chest-flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
         @keyframes vocabulary-chest-deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
+        @keyframes vocabulary-chest-pulse-fast {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .vocabulary-chest-root .animate-pulse-fast {
+            animation: vocabulary-chest-pulse-fast 1s infinite;
+        }
+
         .vocabulary-chest-root .card-opening-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -212,36 +220,35 @@ const HomeIcon = ({ className = '' }: { className?: string }) => (
     </svg>
 );
 
-const CardCapacityIcon = ({ className = '' }: { className?: string }) => (
-    <img 
-        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png" 
-        alt="Card Capacity Icon" 
-        className={className} 
-    />
-);
-
 const CardCapacityDisplay = ({ current, max }: { current: number; max: number }) => (
     <div 
-        className="relative p-0.5 rounded-lg bg-gradient-to-br from-cyan-400 via-cyan-500 to-blue-600 group hover:scale-105 transition-transform duration-300 cursor-pointer shadow-lg hover:shadow-cyan-500/40"
-        title="Sức chứa thẻ (Nâng cấp trong Cửa hàng)"
+        className="bg-gradient-to-br from-cyan-500 to-blue-700 rounded-lg p-0.5 flex items-center shadow-lg border border-cyan-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"
+        title="Nâng cấp sức chứa thẻ"
     >
-        <div className="flex items-center gap-2 rounded-[7px] bg-slate-800/80 backdrop-blur-sm px-3 py-1 relative overflow-hidden">
-            {/* Shiny effect on hover */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-150%] transition-all duration-700"></div>
-
-            {/* Icon */}
-            <div className="relative flex-shrink-0">
-                <CardCapacityIcon className="w-5 h-5" />
-            </div>
-
-            {/* Text: current / max */}
-            <div className="font-bold text-white text-sm tracking-wide">
-                {current.toLocaleString()}
-                <span className="text-blue-300 opacity-80 font-medium">
-                    {' / '}{max.toLocaleString()}
-                </span>
-            </div>
+        {/* Shiny effect on hover */}
+        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+        
+        {/* Icon */}
+        <div className="relative mr-1 flex items-center justify-center">
+            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png" alt="Sức chứa thẻ" className="w-4 h-4" />
         </div>
+
+        {/* Text: current / max */}
+        <div className="font-bold text-white text-xs tracking-wide">
+            {current.toLocaleString()}
+            <span className="text-blue-200/80 font-medium opacity-90">
+                 / {max.toLocaleString()}
+            </span>
+        </div>
+
+        {/* Plus button for upgrading capacity */}
+        <div className="ml-1 w-3 h-3 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center cursor-pointer border border-cyan-300 shadow-inner hover:shadow-cyan-300/50 hover:scale-110 transition-all duration-200">
+            <span className="text-white font-bold text-xs">+</span>
+        </div>
+
+        {/* Sparkles */}
+        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-cyan-200 rounded-full animate-pulse-fast"></div>
     </div>
 );
 
