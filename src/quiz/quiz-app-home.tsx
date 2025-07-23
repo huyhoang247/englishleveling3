@@ -196,7 +196,7 @@ const CompletedIcon = ({ className }: { className: string }) => (
     </svg>
 );
 
-// SVG Icons (LockIcon, RefreshIcon, GiftIcon)
+// SVG Icons (LockIcon, RefreshIcon, GiftIcon, CheckCircleIcon)
 const LockIcon = ({ className }: { className: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
     <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
@@ -212,6 +212,12 @@ const RefreshIcon = ({ className }: { className: string }) => (
 const GiftIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+    </svg>
+);
+
+const CheckCircleIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-10.707a1 1 0 00-1.414-1.414L9 9.586 7.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
     </svg>
 );
 
@@ -566,7 +572,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
   );
 };
 
-// --- NEW --- Rewards Popup Component
+// --- NEW --- Rewards Popup Component with Scalable Logic
 const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }) => {
     const [isClaiming, setIsClaiming] = useState(null);
 
@@ -582,8 +588,6 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             });
             
             setClaimedRewards(prev => ({ ...prev, [rewardId]: true }));
-            // Note: The main coin display in the header won't update live as its state is not managed here.
-            // The user will receive the coins, and the display will be correct on the next app load.
         } catch (error) {
             console.error("Error claiming reward:", error);
             alert("Đã có lỗi xảy ra khi nhận thưởng.");
@@ -596,28 +600,55 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         const tiers = [];
         const BASE_REWARD_PER_100_Q = 1000;
         const MILESTONE_STEP = 100;
-        const MAX_MILESTONES_TO_DISPLAY = 5;
+        const NUM_MILESTONES_TO_SHOW = 3; // Number of upcoming milestones to display
 
-        // Function to generate tiers for a given level
         const generateTiersForLevel = (levelProgress, levelNumber, levelTitle, multiplier) => {
             if (!levelProgress || levelProgress.total === 0) {
                 return null;
             }
 
             const levelTiers = [];
-            const maxPossibleMilestone = Math.floor(levelProgress.total / MILESTONE_STEP) * MILESTONE_STEP;
 
-            for (let i = 1; i <= MAX_MILESTONES_TO_DISPLAY; i++) {
-                const milestone = i * MILESTONE_STEP;
-                if (milestone > maxPossibleMilestone + MILESTONE_STEP) break; // Don't show excessively high, unreachable milestones
+            // Find the first unclaimed milestone index
+            let firstUnclaimedMilestoneIndex = 1;
+            while (true) {
+                const rewardId = `${selectedType}-${levelNumber}-${firstUnclaimedMilestoneIndex * MILESTONE_STEP}`;
+                if (claimedRewards[rewardId]) {
+                    firstUnclaimedMilestoneIndex++;
+                } else {
+                    break;
+                }
+            }
+            
+            // Add a summary of claimed rewards
+            const claimedCount = firstUnclaimedMilestoneIndex - 1;
+            if (claimedCount > 0) {
+                 levelTiers.push(
+                    <div key={`${levelNumber}-summary`} className="flex items-center gap-3 bg-green-50 text-green-800 p-3 rounded-md shadow-sm">
+                        <CheckCircleIcon className="w-5 h-5 flex-shrink-0" />
+                        <p className="font-semibold text-sm">Đã nhận {claimedCount} mốc thưởng ở cấp độ này.</p>
+                    </div>
+                );
+            }
 
+            // Display the next N milestones
+            for (let i = 0; i < NUM_MILESTONES_TO_SHOW; i++) {
+                const milestoneIndex = firstUnclaimedMilestoneIndex + i;
+                const milestone = milestoneIndex * MILESTONE_STEP;
+
+                // Stop if milestone is impossible to reach
+                if (milestone > levelProgress.total) {
+                    break;
+                }
+                
                 const rewardId = `${selectedType}-${levelNumber}-${milestone}`;
                 const isCompleted = levelProgress.completed >= milestone;
-                const isClaimed = claimedRewards[rewardId];
-                const rewardAmount = i * BASE_REWARD_PER_100_Q * multiplier;
+                const isClaimed = claimedRewards[rewardId]; // This should be false based on our logic, but check for safety
+                const rewardAmount = milestoneIndex * BASE_REWARD_PER_100_Q * multiplier;
 
                 let statusComponent;
                 if (isClaimed) {
+                     // This case is unlikely to be hit due to the logic above, but is a good fallback
                     statusComponent = <div className="px-3 py-1.5 text-xs font-bold text-green-700 bg-green-200 rounded-full flex items-center gap-1.5"><CompletedIcon className="w-4 h-4" />Đã nhận</div>;
                 } else if (isCompleted) {
                     statusComponent = <button onClick={() => handleClaim(rewardId, rewardAmount)} disabled={isClaiming === rewardId} className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 disabled:bg-indigo-400 transition w-[60px] text-center">{isClaiming === rewardId ? '...' : 'Nhận'}</button>;
@@ -638,6 +669,16 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                     </div>
                 );
             }
+            
+            // If we only have the summary, it means all reachable milestones are claimed.
+            if(levelTiers.length === 1 && claimedCount > 0){
+                 // Check if there's a next possible milestone
+                 const nextMilestone = (claimedCount + 1) * MILESTONE_STEP;
+                 if(levelProgress.total < nextMilestone) {
+                     levelTiers.push(<p key={`${levelNumber}-all-done`} className="text-center text-sm text-gray-500 pt-2">Bạn đã hoàn thành tất cả các mốc thưởng có sẵn!</p>)
+                 }
+            }
+
 
             if (levelTiers.length > 0) {
               return (
