@@ -187,6 +187,13 @@ export default function QuizAppHome() {
   );
 }
 
+// --- NEW --- Icon for completed state
+const CompletedIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+    </svg>
+);
+
 // SVG Icons (LockIcon, RefreshIcon)
 const LockIcon = ({ className }: { className: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
@@ -388,6 +395,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                     const isLocked = !prerequisiteProgress || prerequisiteProgress.total === 0 || prerequisiteProgress.completed < prerequisiteProgress.total;
                     
                     const progress = progressData[practiceNumber];
+                    const isCompleted = !isLocked && progress && progress.total > 0 && progress.completed >= progress.total;
                     const colors = isLocked ? colorClasses.gray : colorClasses[previewColors[(previewLevel - 1) % previewColors.length]];
 
                     const prerequisiteName = previewLevel === 1 
@@ -432,11 +440,15 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 sm:gap-4">
-                                {!isLocked && progress && progress.total > 0 && (
-                                <div className="text-right text-sm font-medium bg-gray-100 rounded-md px-2 py-0.5">
-                                    <span className="font-bold text-gray-800">{progress.completed}</span>
-                                    <span className="text-gray-400">/{progress.total}</span>
-                                </div>
+                                {isCompleted ? (
+                                    <CompletedIcon className="w-6 h-6 text-green-500" />
+                                ) : (
+                                    !isLocked && progress && progress.total > 0 && (
+                                    <div className="text-right text-sm font-medium bg-gray-100 rounded-md px-2 py-0.5">
+                                        <span className="font-bold text-gray-800">{progress.completed}</span>
+                                        <span className="text-gray-400">/{progress.total}</span>
+                                    </div>
+                                    )
                                 )}
                                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 ${!isLocked ? colors.arrow : ''} transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                             </div>
@@ -458,8 +470,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
             const details = practiceDetails[selectedType][practiceNumber];
             const progress = progressData[practiceNumber];
             const colors = colorClasses[details.color];
-
-            const isReviewUnlocked = progress && progress.total > 0 && progress.completed >= progress.total;
+            const isCompleted = progress && progress.total > 0 && progress.completed >= progress.total;
 
             return (
               <div
@@ -478,11 +489,15 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                         </div>
                     </div>
                      <div className="flex items-center gap-3 sm:gap-4 pl-2">
-                        {progress && progress.total > 0 && (
-                            <div className="text-right text-sm font-medium bg-gray-100 rounded-md px-2 py-0.5">
-                            <span className="font-bold text-gray-800">{progress.completed}</span>
-                            <span className="text-gray-400">/{progress.total}</span>
-                            </div>
+                        {isCompleted ? (
+                            <CompletedIcon className="w-6 h-6 text-green-500" />
+                        ) : (
+                            progress && progress.total > 0 && (
+                                <div className="text-right text-sm font-medium bg-gray-100 rounded-md px-2 py-0.5">
+                                    <span className="font-bold text-gray-800">{progress.completed}</span>
+                                    <span className="text-gray-400">/{progress.total}</span>
+                                </div>
+                            )
                         )}
                         <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 ${colors.arrow} transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </div>
@@ -490,12 +505,12 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                 <div className="border-t border-gray-200 mt-3 pt-3 flex justify-end">
                     <button 
                         onClick={(e) => handleReviewClick(e, practiceNumber)} 
-                        disabled={!isReviewUnlocked}
+                        disabled={!isCompleted}
                         className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
                     >
                         <RefreshIcon className="w-4 h-4" />
                         <span>Ôn tập</span>
-                        {!isReviewUnlocked && <LockIcon className="w-4 h-4 ml-1 text-gray-400"/>}
+                        {!isCompleted && <LockIcon className="w-4 h-4 ml-1 text-gray-400"/>}
                     </button>
                 </div>
               </div>
