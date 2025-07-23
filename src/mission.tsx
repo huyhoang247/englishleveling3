@@ -1,49 +1,49 @@
 import React, { useState, useMemo, useCallback } from 'react';
 
-// --- Dữ liệu mẫu (ĐÃ CẬP NHẬT: Rút gọn title) ---
+// --- Dữ liệu mẫu (ĐÃ CẬP NHẬT: Rút gọn subQuest.title) ---
 const initialQuests = [
   {
     id: 7,
-    title: 'Practice 1', // Đã rút gọn
+    title: 'Practice 1',
     description: 'Chinh phục toàn bộ các bài thực hành trong chương 1 để nhận phần thưởng lớn.',
     type: 'practice',
     level: 6,
     rewards: { xp: 1000, gold: 500 },
     status: 'in_progress',
     subQuests: [
-      { id: 'p1_1', title: 'Practice 1 Preview 1', progress: 100, total: 100 },
-      { id: 'p1_2', title: 'Practice 1 Preview 2', progress: 75, total: 100 },
-      { id: 'p1_3', title: 'Practice 1 Preview 3', progress: 0, total: 100 },
-      { id: 'p1_4', title: 'Practice 1 Preview 4', progress: 0, total: 100 },
-      { id: 'p1_5', title: 'Practice 1 Preview 5', progress: 0, total: 100 },
+      { id: 'p1_1', title: 'Preview 1', progress: 100, total: 100 },
+      { id: 'p1_2', title: 'Preview 2', progress: 75, total: 100 },
+      { id: 'p1_3', title: 'Preview 3', progress: 0, total: 100 },
+      { id: 'p1_4', title: 'Preview 4', progress: 0, total: 100 },
+      { id: 'p1_5', title: 'Preview 5', progress: 0, total: 100 },
     ]
   },
   {
     id: 8,
-    title: 'Practice 2', // Đã rút gọn
+    title: 'Practice 2',
     description: 'Vượt qua thử thách với các câu hỏi nâng cao của chương 2.',
     type: 'practice',
     level: 10,
     rewards: { xp: 2500, gold: 1200 },
     status: 'available',
     subQuests: [
-      { id: 'p2_1', title: 'Practice 2 Preview 1', progress: 0, total: 100 },
-      { id: 'p2_2', title: 'Practice 2 Preview 2', progress: 0, total: 100 },
-      { id: 'p2_3', title: 'Practice 2 Preview 3', progress: 0, total: 100 },
+      { id: 'p2_1', title: 'Preview 1', progress: 0, total: 100 },
+      { id: 'p2_2', title: 'Preview 2', progress: 0, total: 100 },
+      { id: 'p2_3', title: 'Preview 3', progress: 0, total: 100 },
     ]
   },
   {
     id: 9,
-    title: 'Practice 3', // Đã rút gọn
+    title: 'Practice 3',
     description: 'Bài kiểm tra cuối cùng để chứng tỏ đẳng cấp chuyên gia.',
     type: 'practice',
     level: 15,
     rewards: { xp: 5000, gold: 3000 },
     status: 'in_progress',
     subQuests: [
-      { id: 'p3_1', title: 'Practice 3 Preview 1', progress: 100, total: 100 },
-      { id: 'p3_2', title: 'Practice 3 Preview 2', progress: 100, total: 100 },
-      { id: 'p3_3', title: 'Practice 3 Preview 3', progress: 100, total: 100 },
+      { id: 'p3_1', title: 'Preview 1', progress: 100, total: 100 },
+      { id: 'p3_2', title: 'Preview 2', progress: 100, total: 100 },
+      { id: 'p3_3', title: 'Preview 3', progress: 100, total: 100 },
     ]
   },
   {
@@ -126,6 +126,7 @@ const QuestCard = ({ quest, onAction, style }) => {
   const isPracticeQuest = quest.type === 'practice';
   const isCompleted = quest.status === 'completed';
 
+  // --- THAY ĐỔI: Logic tính toán tiến độ tổng thể ---
   const { overallProgress, categorizedSubQuests } = useMemo(() => {
     if (!isPracticeQuest || !quest.subQuests) {
       return { 
@@ -134,9 +135,11 @@ const QuestCard = ({ quest, onAction, style }) => {
       };
     }
 
-    const completedCount = quest.subQuests.filter(sq => sq.progress >= sq.total).length;
+    // Tính tổng số câu hỏi đã làm và tổng số câu hỏi của toàn bộ nhiệm vụ
+    const totalProgress = quest.subQuests.reduce((acc, sub) => acc + sub.progress, 0);
+    const totalQuestions = quest.subQuests.reduce((acc, sub) => acc + sub.total, 0);
+
     let isActiveFound = false;
-    
     const categorized = quest.subQuests.map(sq => {
       if (sq.progress >= sq.total) return { ...sq, status: 'completed' };
       if (!isActiveFound) {
@@ -147,7 +150,7 @@ const QuestCard = ({ quest, onAction, style }) => {
     });
 
     return {
-      overallProgress: { progress: completedCount, total: quest.subQuests.length },
+      overallProgress: { progress: totalProgress, total: totalQuestions },
       categorizedSubQuests: categorized,
     };
   }, [quest, isPracticeQuest]);
@@ -164,12 +167,9 @@ const QuestCard = ({ quest, onAction, style }) => {
           <div className="bg-gray-900 p-3 rounded-full border-2 border-gray-700 group-hover:border-cyan-500 transition-colors duration-300 mr-4">
             <QuestIcon type={quest.type} />
           </div>
-          {/* --- THAY ĐỔI: Thêm Tag "Trắc nghiệm" --- */}
           <div>
             {isPracticeQuest && (
-              <p className="text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-1">
-                Trắc nghiệm
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-1">Trắc nghiệm</p>
             )}
             <h3 className={`text-lg font-bold ${isCompleted ? 'text-gray-400' : 'text-cyan-300'}`}>{quest.title}</h3>
             <p className="text-sm text-gray-400 max-w-md">{quest.description}</p>
@@ -181,7 +181,8 @@ const QuestCard = ({ quest, onAction, style }) => {
         {!isCompleted && (
           <div>
             <div className="flex justify-between items-center text-xs text-gray-300 mb-1">
-              <span>Tiến độ tổng thể</span>
+              {/* --- THAY ĐỔI: Tên nhãn "Progress" --- */}
+              <span>Progress</span>
               <span>{overallProgress.progress} / {overallProgress.total}</span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2.5">
@@ -192,7 +193,8 @@ const QuestCard = ({ quest, onAction, style }) => {
 
         {isPracticeQuest && quest.status !== 'completed' && (
           <div className="pt-4 border-t border-gray-700/50">
-            <h4 className="font-semibold text-sm text-gray-400 mb-3">Lộ trình mục tiêu:</h4>
+            {/* --- THAY ĐỔI: Tên nhãn "Lộ trình ôn tập" --- */}
+            <h4 className="font-semibold text-sm text-gray-400 mb-3">Lộ trình ôn tập:</h4>
             <div className="space-y-2">
               {categorizedSubQuests.map(sq => {
                 switch(sq.status) {
