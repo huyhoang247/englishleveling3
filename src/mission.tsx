@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 
 // --- Dữ liệu mẫu cho các nhiệm vụ (Mở rộng) ---
 const initialQuests = [
@@ -57,7 +57,7 @@ const initialQuests = [
     rewards: { xp: 400, gold: 600, items: ['Bản Đồ Cổ'] },
     status: 'available',
   },
-    {
+  {
     id: 6,
     title: 'Chế Tạo Trang Bị',
     description: 'Rèn một chiếc giáp từ các nguyên liệu thu thập được.',
@@ -81,7 +81,7 @@ const XPIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="
 const ItemIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-gray-400"><path d="M20.57 14.86L12 20.11 3.43 14.86a2 2 0 0 1-1.43-1.86V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v7a2 2 0 0 1-1.43 1.86zM12 4L4 8v6l8 4 8-4V8l-8-4z"/></svg>;
 const CheckCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-green-400"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg>;
 
-const QuestIcon = ({ type }) => {
+const QuestIcon = ({ type }: { type: string }) => {
   const icons = {
     combat: <SwordIcon />,
     gathering: <LeafIcon />,
@@ -93,6 +93,8 @@ const QuestIcon = ({ type }) => {
 };
 
 // --- Component Thẻ Nhiệm Vụ ---
+// Ghi chú: Component này không được bọc trong React.memo, nên việc tối ưu `onAction` ở component cha không có tác động lớn,
+// nhưng đây vẫn là một thói quen tốt.
 const QuestCard = ({ quest, onAction, style }) => {
   const progressPercentage = (quest.progress / quest.total) * 100;
   const isCompleted = quest.status === 'completed';
@@ -180,15 +182,23 @@ export default function App() {
   const [quests, setQuests] = useState(initialQuests);
   const [activeTab, setActiveTab] = useState('active'); // 'active' or 'completed'
 
-  const handleQuestAction = (questId, action) => {
-    setQuests(quests.map(q => {
-      if (q.id !== questId) return q;
-      if (action === 'accept') return { ...q, status: 'in_progress' };
-      if (action === 'abandon') return { ...q, status: 'available', progress: 0 };
-      return q;
-    }));
-  };
+  // --- THAY ĐỔI: Tối ưu hóa bằng useCallback ---
+  // Bọc hàm này trong useCallback để nó không bị tạo lại mỗi lần component render.
+  // Điều này giúp ngăn các component con (như QuestCard) render lại một cách không cần thiết
+  // nếu chúng được tối ưu hóa bằng React.memo.
+  // Ta sử dụng "functional update" (c => c.map(...)) để không cần đưa `quests` vào dependency array.
+  const handleQuestAction = useCallback((questId: number, action: string) => {
+    setQuests(currentQuests => 
+      currentQuests.map(q => {
+        if (q.id !== questId) return q;
+        if (action === 'accept') return { ...q, status: 'in_progress' };
+        if (action === 'abandon') return { ...q, status: 'available', progress: 0 };
+        return q;
+      })
+    );
+  }, []); // Dependency array rỗng, hàm này sẽ chỉ được tạo một lần duy nhất.
 
+  // Hoàn toàn chính xác, `useMemo` ở đây rất quan trọng để tránh tính toán lại danh sách mỗi khi render.
   const filteredQuests = useMemo(() => {
     if (activeTab === 'active') {
       return quests.filter(q => q.status === 'available' || q.status === 'in_progress');
@@ -213,7 +223,6 @@ export default function App() {
   return (
     <>
       <style>{`
-        /* --- THAY ĐỔI --- Thêm class cho nền gradient */
         .gradient-background {
           background-color: #020617; /* Màu nền chính: slate-950 */
           background-image: radial-gradient(at top, #1e293b, #020617 50%); /* Gradient: từ slate-800 ở trên cùng, hòa vào slate-950 */
@@ -233,7 +242,6 @@ export default function App() {
         }
       `}</style>
       
-      {/* --- THAY ĐỔI --- Sử dụng class .gradient-background và xóa bỏ lớp phủ */ }
       <div className="min-h-screen text-white font-sans p-4 sm:p-8 gradient-background">
         <div className="max-w-4xl mx-auto">
           <header className="text-center mb-8">
