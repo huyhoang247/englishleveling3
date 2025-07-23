@@ -203,13 +203,11 @@ const RefreshIcon = ({ className }: { className: string }) => (
 // Component to display practice list with progress
 const PracticeList = ({ selectedType, onPracticeSelect }) => {
   const [progressData, setProgressData] = useState({});
-  const [unlockCounts, setUnlockCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(auth.currentUser);
   const [view, setView] = useState<'main' | 'reviews'>('main');
   const [selectedPracticeForReview, setSelectedPracticeForReview] = useState<number | null>(null);
 
-  const UNLOCK_THRESHOLD = 100;
   const MAX_PREVIEWS = 5; // Define max number of preview levels
 
   useEffect(() => {
@@ -247,22 +245,6 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
             }
           }
         });
-        
-        const allUnlockCounts = {};
-        const baseKeys = ['quiz-1', 'quiz-2', 'fill-word-1', 'fill-word-2', 'fill-word-3'];
-        const allKeysToCount = [...baseKeys];
-        baseKeys.forEach(baseKey => {
-            for(let i = 1; i <= MAX_PREVIEWS; i++) {
-                const practiceNum = parseInt(baseKey.split('-').pop());
-                const previewPracticeId = i * 100 + practiceNum;
-                allKeysToCount.push(baseKey.replace(`-${practiceNum}`, `-${previewPracticeId}`));
-            }
-        });
-
-        allKeysToCount.forEach(key => {
-            allUnlockCounts[key] = completedWordsByGameMode[key]?.size || 0;
-        });
-        setUnlockCounts(allUnlockCounts);
 
         let newProgressData = {};
         
@@ -336,13 +318,13 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
   
   const practiceDetails = {
     tracNghiem: {
-      '1': { title: 'Practice 1', desc: 'Luyện tập từ vựng qua câu hỏi', color: 'indigo', unlockKeyPrefix: 'quiz' },
-      '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink', unlockKeyPrefix: 'quiz' },
+      '1': { title: 'Practice 1', desc: 'Luyện tập từ vựng qua câu hỏi', color: 'indigo' },
+      '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
     },
     dienTu: {
-      '1': { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo', unlockKeyPrefix: 'fill-word' },
-      '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink', unlockKeyPrefix: 'fill-word' },
-      '3': { title: 'Practice 3', desc: 'Điền 2 từ vào câu (Khó)', color: 'teal', unlockKeyPrefix: 'fill-word' },
+      '1': { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo' },
+      '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
+      '3': { title: 'Practice 3', desc: 'Điền 2 từ vào câu (Khó)', color: 'teal' },
     },
   };
   
@@ -367,7 +349,6 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
     return <div className="text-center text-gray-500">Đang tải tiến độ...</div>;
   }
   
-  // [FIX & ENHANCEMENT] This block handles the "reviews" view with corrections for the crash.
   if (view === 'reviews' && selectedPracticeForReview) {
       const basePracticeDetails = practiceDetails[selectedType]?.[String(selectedPracticeForReview)];
 
@@ -392,30 +373,33 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
             </div>
              <div className="space-y-4 w-full">
                 {Array.from({ length: MAX_PREVIEWS }, (_, i) => i + 1).map(previewLevel => {
+                    const prerequisiteId = previewLevel === 1
+                        ? selectedPracticeForReview // Prereq for Preview 1 is the base practice
+                        : ((previewLevel - 1) * 100) + selectedPracticeForReview; // Prereq for Preview N is Preview N-1
+
+                    // A level is only VISIBLE if its prerequisite is complete.
+                    // This applies to Preview 2 and onwards. Preview 1 is always visible.
                     if (previewLevel > 1) {
-                        const preRequisiteLevel = previewLevel - 1;
-                        const preRequisitePracticeId = preRequisiteLevel === 1 ? selectedPracticeForReview : ((preRequisiteLevel - 1) * 100) + selectedPracticeForReview;
-                        const preRequisiteUnlockKey = `${basePracticeDetails.unlockKeyPrefix}-${preRequisitePracticeId}`;
-                        if ((unlockCounts[preRequisiteUnlockKey] || 0) < UNLOCK_THRESHOLD) {
-                           return null;
+                        const prevLevelProgress = progressData[prerequisiteId];
+                        if (!prevLevelProgress || prevLevelProgress.total === 0 || prevLevelProgress.completed < prevLevelProgress.total) {
+                           return null; // Hide this level because its prerequisite is not met.
                         }
                     }
 
                     const practiceNumber = (previewLevel * 100) + selectedPracticeForReview;
-                    const unlockPracticeId = previewLevel === 1 
-                        ? selectedPracticeForReview
-                        : ((previewLevel - 1) * 100) + selectedPracticeForReview;
-                    
-                    const unlockKey = `${basePracticeDetails.unlockKeyPrefix}-${unlockPracticeId}`;
-                    const currentUnlockCount = unlockCounts[unlockKey] || 0;
-                    const isLocked = currentUnlockCount < UNLOCK_THRESHOLD;
+                    const prerequisiteProgress = progressData[prerequisiteId];
+                    const isLocked = !prerequisiteProgress || prerequisiteProgress.total === 0 || prerequisiteProgress.completed < prerequisiteProgress.total;
                     
                     const progress = progressData[practiceNumber];
                     const colors = isLocked ? colorClasses.gray : colorClasses[previewColors[(previewLevel - 1) % previewColors.length]];
 
-                    const unlockText = previewLevel === 1 
+                    const prerequisiteName = previewLevel === 1 
                         ? `Practice ${selectedPracticeForReview}` 
                         : `Preview ${previewLevel - 1}`;
+
+                    const unlockText = isLocked 
+                        ? `Hoàn thành tất cả câu ở ${prerequisiteName} để mở` 
+                        : `Luyện tập lại các câu hỏi`;
 
                     return (
                         <button
@@ -431,7 +415,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                                 <div className="text-left">
                                 <h3 className="font-medium text-gray-800">Preview {previewLevel}</h3>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    {isLocked ? `Hoàn thành ${currentUnlockCount}/${UNLOCK_THRESHOLD} câu ở ${unlockText} để mở` : `Luyện tập lại các câu hỏi`}
+                                    {unlockText}
                                 </p>
                                 </div>
                             </div>
@@ -463,8 +447,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
             const progress = progressData[practiceNumber];
             const colors = colorClasses[details.color];
 
-            const firstReviewUnlockKey = `${details.unlockKeyPrefix}-${practiceNumber}`;
-            const isReviewUnlocked = (unlockCounts[firstReviewUnlockKey] || 0) >= UNLOCK_THRESHOLD;
+            const isReviewUnlocked = progress && progress.total > 0 && progress.completed >= progress.total;
 
             return (
               <div
