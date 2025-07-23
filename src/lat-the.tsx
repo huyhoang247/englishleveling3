@@ -1,3 +1,5 @@
+// --- lat-the.tsx.txt (MODIFIED) ---
+
 // --- START OF FILE: lat-the.tsx (FULL CODE) ---
 
 // lat-the.tsx (Phiên bản đã cập nhật và sửa lỗi)
@@ -382,17 +384,22 @@ const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 // === 3. COMPONENT CHÍNH =================================================
 // ========================================================================
 
+// --- UPDATED: Props interface ---
 interface VocabularyChestScreenProps { 
     onClose: () => void; 
     currentUserId: string | null; 
     onUpdateCoins: (amount: number) => void; 
     onGemReward: (amount: number) => void;
     displayedCoins: number; 
+    totalVocabCollected: number;
+    cardCapacity: number;
+    onVocabUpdate: (count: number) => void;
 }
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced';
 const PRELOAD_POOL_SIZE = 20;
 
-const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onUpdateCoins, onGemReward, displayedCoins }) => {
+// --- UPDATED: Component signature to accept new props ---
+const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onUpdateCoins, onGemReward, displayedCoins, totalVocabCollected, cardCapacity, onVocabUpdate }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [] });
     const [preloadPool, setPreloadPool] = useState<number[]>([]);
@@ -539,6 +546,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 });
             });
 
+            // This is the correct place to increment the total count in the database.
             batch.update(userDocRef, {
                 totalVocabCollected: increment(newWordsData.length)
             });
@@ -550,7 +558,8 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             if (err.code === 'not-found') {
                 console.log('User document not found, creating a new one...');
                 try {
-                   await setDoc(userDocRef, { totalVocabCollected: 0 }); 
+                   // When creating, set both total and capacity. The parent component will already have done this, but this is a failsafe.
+                   await setDoc(userDocRef, { totalVocabCollected: 0, cardCapacity: 100 }); 
                    await updateUserProgressInFirestore(imageIds, chestType); 
                 } catch(creationError) {
                     console.error("Error creating user document:", creationError);
@@ -561,8 +570,15 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
+    // --- UPDATED: handleOpenCards with capacity check ---
     const handleOpenCards = async (count: 1 | 4, chestType: ChestType, price: number) => {
         if (isProcessingClick) return;
+
+        // NEW: Capacity Check
+        if (totalVocabCollected + count > cardCapacity) {
+            alert(`Kho thẻ đã đầy! (${totalVocabCollected}/${cardCapacity}).\nVui lòng nâng cấp sức chứa trong Cửa hàng để tiếp tục.`);
+            return;
+        }
 
         if (displayedCoins < price) {
             alert(`Bạn không đủ coin! Cần ${price.toLocaleString()}, bạn đang có ${displayedCoins.toLocaleString()}.`);
@@ -578,7 +594,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         setIsProcessingClick(true);
         setLastOpenedChest({ count, type: chestType, price }); 
 
-        // UPDATED: Start animation and update parent state
         const newCoinTotal = displayedCoins - price;
         startCoinCountAnimation(displayedCoins, newCoinTotal);
         onUpdateCoins(-price);
@@ -597,6 +612,9 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 
         const imageIdsToSave = selectedOriginalIndices.map(index => index + 1);
         await updateUserProgressInFirestore(imageIdsToSave, chestType);
+        
+        // NEW: Call the callback to update the parent component's state
+        onVocabUpdate(imageIdsToSave.length);
 
         setAvailableIndices(prev => ({ ...prev, [chestType]: prev[chestType].filter(idx => !selectedOriginalIndices.includes(idx)) }));
         setPreloadPool(prev => prev.filter(idx => !selectedOriginalIndices.includes(idx)));
@@ -695,4 +713,3 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 }
 
 export default VocabularyChestScreen;
-// --- END OF FILE: lat-the.tsx ---
