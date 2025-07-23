@@ -1,7 +1,57 @@
 import React, { useState, useMemo, useCallback } from 'react';
 
-// --- Dữ liệu mẫu (Không thay đổi) ---
+// --- Dữ liệu mẫu (ĐÃ CẬP NHẬT) ---
 const initialQuests = [
+  // --- Nhiệm vụ Trắc nghiệm mới ---
+  {
+    id: 7,
+    title: 'Hoàn thành Practice 1 (100 Câu)',
+    description: 'Chinh phục toàn bộ các bài thực hành trong chương 1 để nhận phần thưởng lớn.',
+    type: 'practice',
+    level: 6,
+    rewards: { xp: 1000, gold: 500 },
+    status: 'in_progress',
+    subQuests: [
+      { id: 'p1_1', title: 'Hoàn thành Practice 1 Preview 1', completed: true },
+      { id: 'p1_2', title: 'Hoàn thành Practice 1 Preview 2', completed: true },
+      { id: 'p1_3', title: 'Hoàn thành Practice 1 Preview 3', completed: false },
+      { id: 'p1_4', title: 'Hoàn thành Practice 1 Preview 4', completed: false },
+      { id: 'p1_5', title: 'Hoàn thành Practice 1 Preview 5', completed: false },
+    ]
+  },
+  {
+    id: 8,
+    title: 'Hoàn thành Practice 2 (200 Câu)',
+    description: 'Vượt qua thử thách với các câu hỏi nâng cao của chương 2.',
+    type: 'practice',
+    level: 10,
+    rewards: { xp: 2500, gold: 1200 },
+    status: 'available', // Nhiệm vụ chưa bắt đầu
+    subQuests: [
+      { id: 'p2_1', title: 'Hoàn thành Practice 2 Preview 1', completed: false },
+      { id: 'p2_2', title: 'Hoàn thành Practice 2 Preview 2', completed: false },
+      { id: 'p2_3', title: 'Hoàn thành Practice 2 Preview 3', completed: false },
+      { id: 'p2_4', title: 'Hoàn thành Practice 2 Preview 4', completed: false },
+      { id: 'p2_5', title: 'Hoàn thành Practice 2 Preview 5', completed: false },
+    ]
+  },
+  {
+    id: 9,
+    title: 'Hoàn thành Practice 3 (300 Câu)',
+    description: 'Bài kiểm tra cuối cùng để chứng tỏ đẳng cấp chuyên gia.',
+    type: 'practice',
+    level: 15,
+    rewards: { xp: 5000, gold: 3000 },
+    status: 'in_progress',
+    subQuests: [
+      { id: 'p3_1', title: 'Hoàn thành Practice 3 Preview 1', completed: true },
+      { id: 'p3_2', title: 'Hoàn thành Practice 3 Preview 2', completed: true },
+      { id: 'p3_3', title: 'Hoàn thành Practice 3 Preview 3', completed: true },
+      { id: 'p3_4', title: 'Hoàn thành Practice 3 Preview 4', completed: true },
+      { id: 'p3_5', title: 'Hoàn thành Practice 3 Preview 5', completed: true },
+    ]
+  },
+  // --- Nhiệm vụ cũ ---
   {
     id: 1,
     title: 'Diệt Rồng Cổ Đại',
@@ -35,48 +85,20 @@ const initialQuests = [
     rewards: { xp: 200, gold: 500 },
     status: 'completed',
   },
-  {
-    id: 4,
-    title: 'Giải Cứu Dân Làng',
-    description: 'Đánh bại 15 quái vật đang bao vây một ngôi làng nhỏ.',
-    type: 'combat',
-    level: 10,
-    progress: 8,
-    total: 15,
-    rewards: { xp: 350, gold: 400 },
-    status: 'in_progress',
-  },
-  {
-    id: 5,
-    title: 'Bí Mật Hầm Mộ',
-    description: 'Khám phá những bí ẩn được chôn giấu trong hầm mộ cổ.',
-    type: 'exploration',
-    level: 12,
-    progress: 0,
-    total: 1,
-    rewards: { xp: 400, gold: 600 },
-    status: 'available',
-  },
-  {
-    id: 6,
-    title: 'Chế Tạo Trang Bị',
-    description: 'Rèn một chiếc giáp từ các nguyên liệu thu thập được.',
-    type: 'crafting',
-    level: 7,
-    progress: 1,
-    total: 1,
-    rewards: { xp: 180, gold: 150 },
-    status: 'completed',
-  },
 ];
 
-// --- Icon Components (SVG) - Không thay đổi ---
+// --- Icon Components (SVG) - CẬP NHẬT: Thêm icon mới ---
 const SwordIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400"><path d="M14.5 17.5 3 6l3-3 11.5 11.5"/><path d="m21 21-9-9"/><path d="m15 12-3.5 3.5"/><path d="m3 21 3-3"/></svg>;
 const LeafIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400"><path d="M11 20A7 7 0 0 1 4 13H2a9 9 0 0 0 9 9z"/><path d="M13 4a7 7 0 0 1 7 7v1h2a9 9 0 0 0-9-9z"/><path d="M2 12h1.1a2.9 2.9 0 0 1 2.8 2.4L7 22"/><path d="M22 12h-1.1a2.9 2.9 0 0 0-2.8-2.4L17 2"/></svg>;
 const ShieldIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>;
 const CompassIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>;
 const HammerIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-400"><path d="m15 12-8.373 8.373a1 1 0 1 1-1.414-1.414L12.586 12l-2.829-2.828a1 1 0 0 1 0-1.414l4.243-4.243a1 1 0 0 1 1.414 0l2.828 2.828a1 1 0 0 1 0 1.414L15 12z"></path></svg>;
 const XPIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-purple-400"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>;
+const PencilIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-teal-400"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
+const CheckSquareIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan-400"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>;
+const SquareIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>;
+const ChevronDownIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>;
+
 
 const QuestIcon = ({ type }: { type: string }) => {
   const icons = {
@@ -85,27 +107,41 @@ const QuestIcon = ({ type }: { type: string }) => {
     escort: <ShieldIcon />,
     exploration: <CompassIcon />,
     crafting: <HammerIcon />,
+    practice: <PencilIcon />, // Thêm icon cho nhiệm vụ trắc nghiệm
   };
   return icons[type] || <ShieldIcon />;
 };
 
-// --- Component Thẻ Nhiệm Vụ ---
+// --- Component Thẻ Nhiệm Vụ (ĐÃ NÂNG CẤP) ---
 const QuestCard = ({ quest, onAction, style }) => {
-  const progressPercentage = (quest.progress / quest.total) * 100;
-  const isCompletedStatus = quest.status === 'completed';
-  
-  // --- THAY ĐỔI: Logic xác định có thể nhận thưởng ---
-  const canBeClaimed = quest.progress >= quest.total;
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isPracticeQuest = quest.type === 'practice';
+  const isCompleted = quest.status === 'completed';
 
-  const claimButtonEnabledClass = "px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md hover:shadow-emerald-500/50 transform hover:scale-105";
-  const claimButtonDisabledClass = "px-5 py-2 rounded-md font-semibold text-sm bg-gray-600 text-gray-400 cursor-not-allowed";
+  // Tính toán tiến độ động cho nhiệm vụ trắc nghiệm
+  const { progress, total } = useMemo(() => {
+    if (isPracticeQuest && quest.subQuests) {
+      const completedCount = quest.subQuests.filter(sq => sq.completed).length;
+      return { progress: completedCount, total: quest.subQuests.length };
+    }
+    // Trả về tiến độ gốc cho các nhiệm vụ thường
+    return { progress: quest.progress, total: quest.total };
+  }, [quest, isPracticeQuest]);
+
+  const progressPercentage = total > 0 ? (progress / total) * 100 : 0;
+  const canBeClaimed = progress >= total;
 
   return (
     <div
       style={style}
-      className={`bg-gray-800/70 backdrop-blur-md rounded-xl overflow-hidden transition-all duration-300 group quest-card ${isCompletedStatus ? 'opacity-70' : ''}`}
+      className={`bg-gray-800/70 backdrop-blur-md rounded-xl overflow-hidden transition-all duration-300 group quest-card ${isCompleted ? 'opacity-70' : ''}`}
     >
-      <div className={`relative p-5 border-b-2 ${isCompletedStatus ? 'border-green-500/30' : 'border-cyan-500/30'}`}>
+      {/* --- HEADER (CÓ THỂ NHẤN ĐỂ MỞ RỘNG) --- */}
+      <button
+        onClick={() => isPracticeQuest && setIsExpanded(!isExpanded)}
+        className={`w-full text-left relative p-5 border-b-2 ${isCompleted ? 'border-green-500/30' : 'border-cyan-500/30'} ${isPracticeQuest ? 'cursor-pointer' : 'cursor-default'}`}
+        disabled={!isPracticeQuest}
+      >
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-300"></div>
         <div className="absolute top-4 right-4 bg-gray-900/80 px-3 py-1 rounded-full text-xs font-bold text-yellow-300 border border-yellow-500/50">
           Lv. {quest.level}
@@ -116,20 +152,26 @@ const QuestCard = ({ quest, onAction, style }) => {
               <QuestIcon type={quest.type} />
             </div>
             <div>
-              <h3 className={`text-lg font-bold ${isCompletedStatus ? 'text-gray-400' : 'text-cyan-300'}`}>{quest.title}</h3>
+              <h3 className={`text-lg font-bold ${isCompleted ? 'text-gray-400' : 'text-cyan-300'}`}>{quest.title}</h3>
               <p className="text-sm text-gray-400 max-w-md">{quest.description}</p>
             </div>
           </div>
+          {isPracticeQuest && (
+            <div className={`absolute top-1/2 right-0 -translate-y-1/2 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+              <ChevronDownIcon />
+            </div>
+          )}
         </div>
-      </div>
+      </button>
 
+      {/* --- PHẦN THÂN THẺ (NỘI DUNG CHÍNH) --- */}
       <div className="p-5">
         {/* Progress Bar */}
-        {!isCompletedStatus && (
+        {!isCompleted && (
           <div className="my-2">
             <div className="flex justify-between items-center text-xs text-gray-300 mb-1">
               <span>Tiến độ</span>
-              <span>{quest.progress} / {quest.total}</span>
+              <span>{progress} / {total}</span>
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2.5">
               <div
@@ -140,16 +182,31 @@ const QuestCard = ({ quest, onAction, style }) => {
           </div>
         )}
 
-        {/* --- THAY ĐỔI: Rewards section đã được tối giản --- */}
+        {/* --- DANH SÁCH NHIỆM VỤ CON (CHỈ HIỂN THỊ KHI MỞ RỘNG) --- */}
+        {isPracticeQuest && isExpanded && (
+           <div className="mt-4 pt-4 border-t border-gray-700/50">
+             <h4 className="font-semibold text-sm text-gray-400 mb-3">Các mục tiêu:</h4>
+             <ul className="space-y-3">
+              {quest.subQuests.map((subQuest) => (
+                <li key={subQuest.id} className="flex items-center space-x-3">
+                  {subQuest.completed ? <CheckSquareIcon /> : <SquareIcon />}
+                  <span className={`transition-colors duration-300 ${subQuest.completed ? 'text-gray-500 line-through' : 'text-gray-200'}`}>
+                    {subQuest.title}
+                  </span>
+                </li>
+              ))}
+             </ul>
+           </div>
+        )}
+
+        {/* Rewards section */}
         <div className="mt-4">
           <h4 className="font-semibold text-sm text-gray-400 mb-2">Rewards:</h4>
           <div className="flex flex-wrap gap-3 text-sm">
-            {/* Tag cho Vàng */}
             <div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-yellow-500/30 shadow-sm transition-all duration-300 hover:border-yellow-500/60 hover:shadow-md hover:shadow-yellow-500/10">
               <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Gold" className="w-4 h-4" /> 
               <span className="text-yellow-300 font-bold">{quest.rewards.gold}</span>
             </div>
-            {/* Tag cho XP */}
             <div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-purple-500/30 shadow-sm transition-all duration-300 hover:border-purple-500/60 hover:shadow-md hover:shadow-purple-500/10">
               <XPIcon /> 
               <span className="text-purple-300 font-bold">{quest.rewards.xp}</span>
@@ -158,24 +215,28 @@ const QuestCard = ({ quest, onAction, style }) => {
         </div>
       </div>
 
-      {/* --- THAY ĐỔI: Logic nút bấm đã được thiết kế lại --- */}
+      {/* Footer with Actions */}
       <div className="bg-gray-900/50 px-5 py-3 flex items-center justify-end space-x-3">
         {quest.status === 'available' && (
-          <button disabled className={claimButtonDisabledClass}>
-            Claim
+          <button onClick={() => onAction(quest.id, 'accept')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-md hover:shadow-cyan-500/50 transform hover:scale-105">
+            Accept
           </button>
         )}
         {quest.status === 'in_progress' && (
           <button 
             onClick={() => onAction(quest.id, 'claim')} 
             disabled={!canBeClaimed}
-            className={canBeClaimed ? claimButtonEnabledClass : claimButtonDisabledClass}
+            className={`px-5 py-2 rounded-md font-semibold text-sm transition-all duration-300 transform ${
+              canBeClaimed
+              ? 'text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md hover:shadow-emerald-500/50 hover:scale-105'
+              : 'text-gray-400 bg-gray-600 cursor-not-allowed'
+            }`}
           >
             Claim
           </button>
         )}
-        {isCompletedStatus && (
-          <button onClick={() => onAction(quest.id, 'claim')} className={claimButtonEnabledClass}>
+        {isCompleted && (
+          <button onClick={() => onAction(quest.id, 'claim')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md hover:shadow-emerald-500/50 transform hover:scale-105">
             Claim
           </button>
         )}
@@ -192,23 +253,48 @@ export default function App() {
 
   const handleQuestAction = useCallback((questId: number, action: 'accept' | 'abandon' | 'claim') => {
     setQuests(currentQuests => {
+      // Logic nhận thưởng hoặc hủy nhiệm vụ
       if (action === 'claim') {
         return currentQuests.filter(q => q.id !== questId);
       }
+      
       return currentQuests.map(q => {
         if (q.id !== questId) return q;
-        if (action === 'accept') return { ...q, status: 'in_progress' };
-        if (action === 'abandon') return { ...q, status: 'available', progress: 0 };
+
+        if (action === 'accept') {
+          // Khi chấp nhận, đổi status và tự động hoàn thành 1 mục con đầu tiên cho nhiệm vụ practice để demo
+          if (q.type === 'practice' && q.subQuests) {
+              const newSubQuests = [...q.subQuests];
+              if (newSubQuests.length > 0) newSubQuests[0] = { ...newSubQuests[0], completed: true };
+              return { ...q, status: 'in_progress', subQuests: newSubQuests };
+          }
+          return { ...q, status: 'in_progress' };
+        }
+
+        if (action === 'abandon') {
+           // Reset tiến độ khi hủy
+          if (q.type === 'practice' && q.subQuests) {
+             const resetSubQuests = q.subQuests.map(sq => ({ ...sq, completed: false }));
+             return { ...q, status: 'available', subQuests: resetSubQuests };
+          }
+          return { ...q, status: 'available', progress: 0 };
+        }
         return q;
       });
     });
   }, []);
 
   const filteredQuests = useMemo(() => {
+    // Sắp xếp để nhiệm vụ 'in_progress' lên trên 'available'
+    const sortedQuests = [...quests].sort((a, b) => {
+      const statusOrder = { 'in_progress': 1, 'available': 2, 'completed': 3 };
+      return statusOrder[a.status] - statusOrder[b.status];
+    });
+
     if (activeTab === 'active') {
-      return quests.filter(q => q.status === 'available' || q.status === 'in_progress');
+      return sortedQuests.filter(q => q.status === 'available' || q.status === 'in_progress');
     }
-    return quests.filter(q => q.status === 'completed');
+    return sortedQuests.filter(q => q.status === 'completed');
   }, [quests, activeTab]);
 
   const TabButton = ({ tabName, label }) => (
