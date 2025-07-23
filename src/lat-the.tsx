@@ -1,4 +1,4 @@
-// --- lat-the.tsx.txt (CORRECTED - Header UI moved here) ---
+// --- lat-the.tsx.txt (CORRECTED - UI Polish) ---
 
 // --- START OF FILE: lat-the.tsx (FULL CODE) ---
 
@@ -64,6 +64,12 @@ const ScopedStyles = () => (
             box-sizing: border-box;
             flex-shrink: 0; 
         }
+
+        .vocabulary-chest-root .header-right-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
         
         /* CSS CHO NÚT HOME MỚI (Dựa trên thanh-tuu.tsx) */
         .vocabulary-chest-root .vocab-screen-home-btn {
@@ -106,6 +112,49 @@ const ScopedStyles = () => (
             }
         }
         
+        /* === NEW: CSS for Card Capacity Display (matches coin-display.tsx style) === */
+        .vocabulary-chest-root .header-capacity-display {
+            background: linear-gradient(to right, #4b5563, #1f2937); /* gray-600 to gray-800 */
+            border-radius: 9999px; /* rounded-full */
+            padding: 2px 8px 2px 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #6b7280; /* gray-500 */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            cursor: default;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .vocabulary-chest-root .header-capacity-display:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        }
+        .vocabulary-chest-root .header-capacity-display .capacity-icon-container {
+            width: 20px;
+            height: 20px;
+            background-color: rgba(17, 24, 39, 0.5); /* gray-900/50 */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .vocabulary-chest-root .header-capacity-display .capacity-icon {
+             width: 14px;
+             height: 14px;
+             color: #e5e7eb; /* gray-200 */
+        }
+        .vocabulary-chest-root .header-capacity-display .capacity-text-container {
+            font-weight: 600; /* font-semibold */
+            color: #f9fafb; /* gray-50 */
+            font-size: 0.875rem; /* text-sm */
+            letter-spacing: 0.025em;
+        }
+        .vocabulary-chest-root .header-capacity-display .capacity-text-container .max-capacity {
+            opacity: 0.6;
+            font-weight: 500; /* font-medium */
+            font-size: 0.8rem;
+        }
+
         /* === CONTAINER RƯƠNG === */
         .vocabulary-chest-root .chest-gallery-container {
             display: flex; flex-wrap: wrap; justify-content: center;
@@ -212,14 +261,12 @@ const ScopedStyles = () => (
 // === 2. CÁC COMPONENT CON VÀ DATA =======================================
 // ========================================================================
 
-// THÊM ICON HOME TỪ thanh-tuu.tsx
 const HomeIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
         <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
     </svg>
 );
 
-// --- NEW: Card Capacity Icon Component (Moved here) ---
 const CardCapacityIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
         <path d="M21.75 6.75V17.25C21.75 18.4913 20.7413 19.5 19.5 19.5H4.5C3.25868 19.5 2.25 18.4913 2.25 17.25V6.75C2.25 5.50868 3.25868 4.5 4.5 4.5H19.5C20.7413 4.5 21.75 5.50868 21.75 6.75ZM19.5 2.25H4.5C2.01472 2.25 0 4.26472 0 6.75V17.25C0 19.7353 2.01472 21.75 4.5 21.75H19.5C21.9853 21.75 24 19.7353 24 17.25V6.75C24 4.26472 21.9853 2.25 19.5 2.25Z" transform="translate(0, 1)"/>
@@ -227,23 +274,15 @@ const CardCapacityIcon = ({ className = '' }: { className?: string }) => (
     </svg>
 );
 
-// --- NEW: Card Capacity Display Component (Moved here) ---
+// --- NEW: Polished Card Capacity Display Component ---
 const CardCapacityDisplay = ({ current, max }: { current: number; max: number }) => (
-    <div style={{
-        backgroundColor: 'rgba(51, 65, 85, 0.8)', // slate-700/80
-        borderRadius: '8px',
-        padding: '4px 8px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        border: '1px solid rgb(71, 85, 105)', // slate-600
-        cursor: 'default',
-        transition: 'background-color 0.2s'
-    }}>
-        <CardCapacityIcon style={{ width: '18px', height: '18px', color: '#d1d5db' /* slate-300 */ }} />
-        <div style={{ fontWeight: '600', color: '#f9fafb' /* gray-50 */, fontSize: '0.875rem', letterSpacing: '0.025em' }}>
+    <div className="header-capacity-display" title={`Sức chứa thẻ: ${current}/${max}`}>
+        <div className="capacity-icon-container">
+            <CardCapacityIcon className="capacity-icon" />
+        </div>
+        <div className="capacity-text-container">
             {current.toLocaleString()}
-            <span style={{ opacity: '0.6', fontWeight: '500', fontSize: '0.8rem' }}>/{max.toLocaleString()}</span>
+            <span className="max-capacity">/{max.toLocaleString()}</span>
         </div>
     </div>
 );
@@ -670,7 +709,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             
             {isLoading && <LoadingOverlay isVisible={true} />}
 
-            {/* --- UPDATED: Header now includes Card Capacity --- */}
             {!isLoading && (
                  <header className="main-header">
                     <button 
@@ -682,7 +720,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                         <span>Trang Chính</span>
                     </button>
                     
-                    <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="header-right-group">
                         <CardCapacityDisplay current={totalVocabCollected} max={cardCapacity} />
                         <CoinDisplay displayedCoins={localDisplayedCoins} isStatsFullscreen={false} />
                     </div>
