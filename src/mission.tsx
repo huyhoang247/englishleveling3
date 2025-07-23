@@ -1,234 +1,261 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
-// --- SVG ICONS (Thay thế cho lucide-react) ---
-// Các icon được thiết kế riêng để phù hợp với chủ đề fantasy
-
-const StarIcon = ({ className = "h-5 w-5" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.007z" clipRule="evenodd" />
-  </svg>
+// --- ICONS TÙY CHỈNH (SVG) ---
+// Được thiết kế riêng cho giao diện này để đảm bảo tính nhất quán và độc đáo
+const MainQuestIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-amber-300">
+        <path fillRule="evenodd" d="M12.963 2.286a.75.75 0 00-1.071 1.052A6.75 6.75 0 0015.75 12c0 1.864-1.12 3.513-2.858 4.662a.75.75 0 10.929 1.234A8.25 8.25 0 0017.25 12c0-2.286-1.42-4.33-3.645-5.382a.75.75 0 00-.642-1.332z" clipRule="evenodd" />
+        <path d="M11.75 2.25a.75.75 0 01.75.75v18a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75z" />
+        <path d="M3 10.035a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z" />
+    </svg>
 );
-
-const CoinsIcon = ({ className = "h-5 w-5" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM9.515 4.545c-.85.345-1.63.8-2.32 1.353 1.25.93 2.682 1.59 4.232 1.936.012-.014.026-.028.038-.042a.75.75 0 011.06 1.06l-2.002 2.003c.53.213 1.1.343 1.693.419 1.134.148 2.292-.265 3.19-.955.942-.728 1.601-1.803 1.79-2.996-.134.02-.268.036-.404.048-1.25.12-2.457-.23-3.486-.885-.18-.11-.35-.227-.512-.35a.75.75 0 01-.2-1.025l1.78-2.135c-.431-.22-.88-.41-1.348-.565a10.45 10.45 0 00-3.328-.27zM6.02 7.646c-.25.32-.48.653-.69.998.05.02.1.04.15.06-.11.13-.21.26-.31.4a.75.75 0 01-1.05-.14 9.68 9.68 0 01-.43-1.018c.41-.21.83-.4 1.26-.554.12.09.24.18.37.26a.75.75 0 01.67-1.3 11.22 11.22 0 00-1.03-.43A9.73 9.73 0 016.02 7.646z" clipRule="evenodd" />
-  </svg>
+const SideQuestIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-cyan-300">
+        <path fillRule="evenodd" d="M10.5 3.75a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0V5.06l-4.72 4.72a.75.75 0 01-1.06-1.06L8.19 5.25H4.5a.75.75 0 010-1.5h6zM13.5 18.75a.75.75 0 00-.75-.75H9.81l4.72-4.72a.75.75 0 10-1.06-1.06L8.75 16.94V13.5a.75.75 0 00-1.5 0v6a.75.75 0 00.75.75h6a.75.75 0 00.75-.75z" clipRule="evenodd" />
+    </svg>
 );
-
-const ChestIcon = ({ className = "h-5 w-5" }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-        <path d="M10 4.00098H14C14.5523 4.00098 15 4.44869 15 5.00098V7.00098H9V5.00098C9 4.44869 9.44772 4.00098 10 4.00098Z" />
-        <path fillRule="evenodd" d="M5 6.00098C3.89543 6.00098 3 6.89641 3 8.00098V18.001C3 19.1055 3.89543 20.001 5 20.001H19C20.1046 20.001 21 19.1055 21 18.001V8.00098C21 6.89641 20.1046 6.00098 19 6.00098H5ZM5 8.00098H19V18.001H5V8.00098Z" clipRule="evenodd" />
+const CraftingQuestIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-lime-300">
+        <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM9.623 7.23a.75.75 0 01.635-1.157 11.193 11.193 0 013.978 1.157.75.75 0 01-.635 1.157 9.693 9.693 0 00-2.708-.998.75.75 0 01-.635-1.157zM8.25 12c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v.375c0 .621-.504 1.125-1.125 1.125h-5.25A1.125 1.125 0 018.25 12.375V12zm-2.659 5.03a.75.75 0 10-1.182.872 9.735 9.735 0 002.363 2.362.75.75 0 10.872-1.182 8.235 8.235 0 01-2.053-2.052zM17.47 18.082a.75.75 0 10.872 1.182 9.735 9.735 0 002.363-2.362.75.75 0 10-1.182-.872 8.235 8.235 0 01-2.053 2.052z" clipRule="evenodd" />
     </svg>
 );
 
-const ChevronIcon = ({ className = "h-6 w-6" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
-    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-  </svg>
-);
-
-const BookIcon = ({ className = "h-8 w-8" }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-        <path d="M12 2.25a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75z" />
-        <path d="M3.5 4.5a.75.75 0 0 0-1.5 0v14.25a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V4.5a.75.75 0 0 0-1.5 0v14.25a1.5 1.5 0 0 1-1.5 1.5h-12a1.5 1.5 0 0 1-1.5-1.5V4.5z" />
+const LocationPinIcon = ({ className = "h-4 w-4" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+        <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.1.4-.223.654-.369.64-.37 1.439-.823 2.433-1.48.991-.655 2.22-1.511 3.42-2.734a11.247 11.247 0 002.452-4.132c.162-1.385.116-2.673-.127-3.86a5.002 5.002 0 00-4.04-4.04c-1.187-.243-2.475-.209-3.86.127a11.247 11.247 0 00-4.132 2.452c-1.224 1.223-2.08 2.443-2.734 3.42C2.35 12.44 1.8 13.239 1.43 13.879c-.147.254-.27.468-.37.654a5.741 5.741 0 00-.14.281l-.008.018-.003.006zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clipRule="evenodd" />
     </svg>
 );
 
-
-// --- DỮ LIỆU MẪU ---
+// --- DỮ LIỆU MẪU ĐƯỢC MỞ RỘNG ---
 const initialQuests = [
-  { id: 1, title: 'Tiêu Diệt Rồng Lửa', description: 'Bà chúa lửa Ignis đã thức giấc. Hãy tiến vào hang ổ của nó và dập tắt ngọn lửa hung tàn.', status: 'Đang làm', progress: 65, rewards: { xp: 500, gold: 250, items: ['Vảy Rồng Lửa', 'Tim Rồng'] }, type: 'Chính tuyến', level: 'Khó' },
-  { id: 2, title: 'Thu Thập Thảo Dược Hiếm', description: 'Tìm 10 đóa Hoa Sương Mai trong Khu Rừng Ánh Trăng để bào chế thuốc giải độc.', status: 'Mới', progress: 0, rewards: { xp: 150, gold: 50, items: ['Thuốc Giải Độc Cấp 1'] }, type: 'Phụ', level: 'Dễ' },
-  { id: 3, title: 'Giải Cứu Dân Làng', description: 'Một nhóm cướp đã tấn công làng Woodhaven. Hãy đánh bại chúng và giải cứu các con tin.', status: 'Đang làm', progress: 30, rewards: { xp: 300, gold: 100, items: ['Bùa Hộ Mệnh Của Dân Làng'] }, type: 'Chính tuyến', level: 'Trung bình' },
-  { id: 4, title: 'Chế Tạo Thanh Kiếm Bão Tố', description: 'Rèn một vũ khí huyền thoại bằng cách thu thập Lõi Sét và Tinh Thể Gió.', status: 'Hoàn thành', progress: 100, rewards: { xp: 1000, gold: 0, items: ['Kiếm Bão Tố'] }, type: 'Chế tạo', level: 'Sử thi' },
+  { id: 1, title: 'Tiêu Diệt Rồng Lửa', description: 'Bà chúa lửa Ignis đã thức giấc tại Hẻm Núi Hắc Hỏa. Hãy tiến vào hang ổ của nó và dập tắt ngọn lửa hung tàn.', lore: 'Truyền thuyết kể rằng, máu của Ignis có thể tôi luyện nên những vũ khí bất hoại.', status: 'Đang làm', progress: 65, rewards: { xp: 500, gold: 250, items: ['Vảy Rồng Lửa', 'Tim Rồng'] }, type: 'Chính tuyến', level: 'Khó', location: 'Hẻm Núi Hắc Hỏa', tracked: true },
+  { id: 2, title: 'Thu Thập Thảo Dược Hiếm', description: 'Tìm 10 đóa Hoa Sương Mai trong Khu Rừng Ánh Trăng để bào chế thuốc giải độc cho trưởng làng Elara.', lore: 'Loài hoa này chỉ nở dưới ánh trăng tròn, tỏa ra một thứ ánh sáng xanh dịu nhẹ.', status: 'Mới', progress: 0, rewards: { xp: 150, gold: 50, items: ['Thuốc Giải Độc Cấp 1'] }, type: 'Phụ', level: 'Dễ', location: 'Rừng Ánh Trăng', tracked: false },
+  { id: 3, title: 'Giải Cứu Dân Làng', description: 'Một nhóm cướp Răng Đen đã tấn công làng Woodhaven. Hãy đánh bại chúng và giải cứu các con tin.', lore: 'Dân làng Woodhaven nổi tiếng với tài làm mộc và lòng hiếu khách.', status: 'Đang làm', progress: 30, rewards: { xp: 300, gold: 100, items: ['Bùa Hộ Mệnh Của Dân Làng'] }, type: 'Chính tuyến', level: 'Trung bình', location: 'Làng Woodhaven', tracked: false },
+  { id: 4, title: 'Chế Tạo Thanh Kiếm Bão Tố', description: 'Rèn một vũ khí huyền thoại bằng cách thu thập 3 Lõi Sét từ Đỉnh Gió Hú và 5 Tinh Thể Gió từ Hang Động Vọng Âm.', lore: 'Thanh kiếm được cho là có thể điều khiển sấm sét, là nỗi khiếp sợ của kẻ thù.', status: 'Hoàn thành', progress: 100, rewards: { xp: 1000, gold: 0, items: ['Kiếm Bão Tố'] }, type: 'Chế tạo', level: 'Sử thi', location: 'Lò Rèn Cổ', tracked: false },
+  { id: 5, title: 'Bí Mật Cổ Thư', description: 'Giải mã những ký tự cổ trong cuốn sách tìm được tại Thư Viện Cấm.', lore: 'Cuốn sách dường như chỉ ra vị trí của một di vật đã thất lạc từ lâu.', status: 'Mới', progress: 0, rewards: { xp: 400, gold: 50, items: ['Bản Đồ Cổ'] }, type: 'Phụ', level: 'Khó', location: 'Thư Viện Cấm', tracked: false },
 ];
+
+const questTypeIcons = {
+  'Chính tuyến': <MainQuestIcon />,
+  'Phụ': <SideQuestIcon />,
+  'Chế tạo': <CraftingQuestIcon />,
+};
 
 // --- COMPONENTS ---
 
-const RewardIcon = ({ type, value, item }) => {
-  const icons = {
-    xp: <StarIcon className="h-5 w-5 text-yellow-300" />,
-    gold: <CoinsIcon className="h-5 w-5 text-amber-400" />,
-    item: <ChestIcon className="h-5 w-5 text-sky-300" />,
-  };
+// Component Bộ Lọc
+const FilterControls = ({ filters, setFilters }) => {
+  const FilterButton = ({ type, value, children }) => (
+    <button
+      onClick={() => setFilters(prev => ({ ...prev, [type]: value }))}
+      className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors duration-200 ${filters[type] === value ? 'bg-amber-400/20 text-amber-300' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200'}`}
+    >
+      {children}
+    </button>
+  );
+
   return (
-    <div className="flex items-center gap-2 bg-black/20 backdrop-blur-sm border border-white/10 px-3 py-1.5 rounded-lg text-sm shadow-sm">
-      {icons[type]}
-      <span className="font-medium text-slate-200">{value}</span>
-      {item && <span className="font-bold text-white">{item}</span>}
+    <div className="flex flex-wrap gap-3 p-4 bg-black/20 rounded-t-xl border-b border-slate-700/50">
+      <div>
+        <span className="text-sm font-bold text-slate-400 mr-3">Trạng thái:</span>
+        <div className="inline-flex gap-2">
+          <FilterButton type="status" value="all">Tất cả</FilterButton>
+          <FilterButton type="status" value="Đang làm">Đang làm</FilterButton>
+          <FilterButton type="status" value="Mới">Mới</FilterButton>
+          <FilterButton type="status" value="Hoàn thành">Hoàn thành</FilterButton>
+        </div>
+      </div>
+       <div className="h-6 w-px bg-slate-700/50"></div>
+      <div>
+        <span className="text-sm font-bold text-slate-400 mr-3">Loại:</span>
+        <div className="inline-flex gap-2">
+          <FilterButton type="type" value="all">Tất cả</dFilterButton>
+          <FilterButton type="type" value="Chính tuyến">Chính tuyến</FilterButton>
+          <FilterButton type="type" value="Phụ">Phụ</FilterButton>
+          <FilterButton type="type" value="Chế tạo">Chế tạo</FilterButton>
+        </div>
+      </div>
     </div>
   );
 };
 
-const QuestCard = ({ quest, onSelect, isSelected }) => {
-  const statusConfig = {
-    'Đang làm': { border: 'from-blue-500 to-cyan-400', tagBg: 'bg-blue-500/20', tagText: 'text-blue-300' },
-    'Hoàn thành': { border: 'from-green-500 to-emerald-400', tagBg: 'bg-green-500/20', tagText: 'text-green-300' },
-    'Mới': { border: 'from-yellow-500 to-amber-400', tagBg: 'bg-yellow-500/20', tagText: 'text-yellow-300' },
+// Component Item trong danh sách nhiệm vụ
+const QuestListItem = ({ quest, onSelect, isSelected }) => {
+  const statusColors = {
+    'Hoàn thành': 'bg-green-500',
+    'Đang làm': 'bg-blue-500',
+    'Mới': 'bg-yellow-500',
   };
-
-  const levelColors = {
-    'Dễ': 'text-green-400',
-    'Trung bình': 'text-yellow-400',
-    'Khó': 'text-orange-400',
-    'Sử thi': 'text-purple-400',
-  }
-
   return (
     <div
-      className={`group relative p-px rounded-xl bg-gradient-to-br ${statusConfig[quest.status].border} transition-all duration-300 hover:shadow-xl hover:shadow-cyan-500/10`}
       onClick={() => onSelect(quest.id)}
+      className={`flex items-center gap-4 p-4 cursor-pointer transition-all duration-200 border-l-4 ${isSelected ? 'bg-slate-700/50 border-amber-400' : 'bg-transparent border-transparent hover:bg-slate-800/60'}`}
     >
-      <div className="bg-slate-900/80 backdrop-blur-lg rounded-[11px] transition-all duration-300 group-hover:bg-slate-800/80 cursor-pointer">
-        {/* Header của thẻ */}
-        <div className="p-4 flex items-start justify-between gap-4">
-          <div className="flex-grow">
-            <div className="flex items-center gap-3 mb-1">
-              <span className={`text-xs font-bold uppercase px-3 py-1 rounded-full ${statusConfig[quest.status].tagBg} ${statusConfig[quest.status].tagText} border border-current/30`}>
-                {quest.status}
-              </span>
-              <h3 className="text-lg font-bold text-cyan-200 tracking-wide">{quest.title}</h3>
+      <div className="flex-shrink-0">{questTypeIcons[quest.type]}</div>
+      <div className="flex-grow">
+        <h3 className={`font-bold ${isSelected ? 'text-amber-300' : 'text-slate-200'}`}>{quest.title}</h3>
+        <p className="text-sm text-slate-400">{quest.type}</p>
+      </div>
+      <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${statusColors[quest.status]}`}></div>
+    </div>
+  );
+};
+
+// Component Chi tiết nhiệm vụ
+const QuestDetail = ({ quest, onTrack, onUntrack }) => {
+  if (!quest) {
+    return (
+      <div className="flex items-center justify-center h-full text-slate-500 p-8">
+        <p>Chọn một nhiệm vụ để xem chi tiết.</p>
+      </div>
+    );
+  }
+
+  const levelColors = { 'Dễ': 'text-green-400', 'Trung bình': 'text-yellow-400', 'Khó': 'text-orange-400', 'Sử thi': 'text-purple-400' };
+
+  return (
+    <div className="p-6 md:p-8 overflow-y-auto h-full bg-black/10">
+      {/* Header */}
+      <div className="border-b border-slate-700/50 pb-4 mb-6">
+        <div className="flex justify-between items-start">
+            <div>
+                 <p className={`font-bold text-sm mb-1 ${levelColors[quest.level]}`}>{quest.level.toUpperCase()}</p>
+                 <h1 className="text-3xl font-bold text-amber-200 font-serif tracking-wider">{quest.title}</h1>
             </div>
-            <p className={`text-sm font-semibold ${levelColors[quest.level]}`}>{quest.type} - {quest.level}</p>
-          </div>
-          <ChevronIcon className={`h-6 w-6 text-slate-400 transition-transform duration-500 ease-in-out ${isSelected ? 'rotate-180' : ''} flex-shrink-0 mt-1`} />
+            {quest.status === "Hoàn thành" && (
+                <div className="text-sm font-bold uppercase px-3 py-1 bg-green-500/20 text-green-300 border border-green-400/50 rounded-md">
+                    Đã Hoàn Thành
+                </div>
+            )}
         </div>
+        <div className="flex items-center gap-2 mt-2 text-slate-400 text-sm">
+          <LocationPinIcon />
+          <span>{quest.location}</span>
+        </div>
+      </div>
 
-        {/* Nội dung chi tiết - Sử dụng grid transition để animation mượt hơn */}
-        <div className={`grid transition-all duration-500 ease-in-out ${isSelected ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-          <div className="overflow-hidden">
-            <div className="px-4 pb-5 pt-1 space-y-5">
-              <p className="text-slate-300 text-sm leading-relaxed">{quest.description}</p>
-              
-              {/* Thanh tiến độ */}
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-sm font-medium text-slate-400">Tiến độ</span>
-                  <span className="text-sm font-bold text-cyan-300">{quest.progress}%</span>
-                </div>
-                <div className="w-full bg-black/20 rounded-full h-2.5 overflow-hidden">
-                    <div
-                        className="bg-gradient-to-r from-cyan-500 to-purple-500 h-2.5 rounded-full transition-all duration-500 relative"
-                        style={{ width: `${quest.progress}%` }}
-                    >
-                        {/* Shimmer effect */}
-                        <div className="absolute top-0 left-0 h-full w-full bg-white/20 animate-[shimmer_2s_infinite] opacity-50"></div>
-                    </div>
-                </div>
-              </div>
-
-              {/* Phần thưởng */}
-              <div>
-                <h4 className="text-base font-semibold text-slate-300 mb-2">Phần thưởng</h4>
-                <div className="flex flex-wrap gap-2">
-                  <RewardIcon type="xp" value={`${quest.rewards.xp} XP`} />
-                  {quest.rewards.gold > 0 && <RewardIcon type="gold" value={quest.rewards.gold} />}
-                  {quest.rewards.items.map((item, index) => (
-                    <RewardIcon key={index} type="item" value={item} />
-                  ))}
-                </div>
-              </div>
-
-              {/* Nút hành động */}
-              <div className="pt-2">
-                {quest.status === 'Hoàn thành' ? (
-                  <button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2.5 px-4 rounded-lg shadow-lg shadow-green-500/20 hover:scale-[1.02] hover:shadow-green-500/40 transition-all duration-300">
-                    Lĩnh Thưởng
-                  </button>
-                ) : (
-                  <button className="w-full bg-gradient-to-r from-sky-600 to-cyan-500 text-white font-bold py-2.5 px-4 rounded-lg shadow-lg shadow-cyan-500/20 hover:scale-[1.02] hover:shadow-cyan-500/40 transition-all duration-300">
-                    {quest.status === 'Mới' ? 'Bắt Đầu Theo Dõi' : 'Tiếp Tục'}
-                  </button>
-                )}
-              </div>
+      {/* Description & Lore */}
+      <div className="space-y-4 mb-6">
+        <p className="text-slate-300 leading-relaxed">{quest.description}</p>
+        <p className="italic text-slate-400/80 border-l-2 border-slate-600 pl-4">"{quest.lore}"</p>
+      </div>
+      
+      {/* Progress */}
+      {quest.status !== "Mới" && quest.status !== "Hoàn thành" && (
+         <div className="mb-6">
+            <div className="flex justify-between items-center mb-1.5 text-sm">
+                <span className="font-medium text-slate-300">Tiến độ</span>
+                <span className="font-bold text-cyan-300">{quest.progress}%</span>
             </div>
-          </div>
+            <div className="w-full bg-slate-800 rounded-full h-3 border border-slate-700">
+                <div className="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full rounded-full" style={{ width: `${quest.progress}%` }}></div>
+            </div>
         </div>
+      )}
+
+      {/* Rewards */}
+      <div className="mb-8">
+        <h4 className="text-lg font-semibold text-slate-200 mb-3 font-serif">Phần thưởng</h4>
+        <div className="flex flex-wrap gap-3">
+            <div className="flex items-center gap-2 bg-slate-800/70 px-4 py-2 rounded-md border border-slate-700">
+                <span className="font-bold text-yellow-400">XP</span>
+                <span className="text-slate-200">{quest.rewards.xp}</span>
+            </div>
+             {quest.rewards.gold > 0 && (
+                <div className="flex items-center gap-2 bg-slate-800/70 px-4 py-2 rounded-md border border-slate-700">
+                    <span className="font-bold text-amber-500">Vàng</span>
+                    <span className="text-slate-200">{quest.rewards.gold}</span>
+                </div>
+             )}
+             {quest.rewards.items.map((item, index) => (
+                <div key={index} className="flex items-center gap-2 bg-slate-800/70 px-4 py-2 rounded-md border border-slate-700">
+                    <span className="font-bold text-sky-400">Vật phẩm</span>
+                    <span className="text-slate-200">{item}</span>
+                </div>
+             ))}
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="pt-4 border-t border-slate-700/50">
+        {quest.status === 'Hoàn thành' ? (
+          <button className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition-colors">Lĩnh Thưởng</button>
+        ) : quest.tracked ? (
+          <button onClick={() => onUntrack(quest.id)} className="w-full bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 rounded-lg transition-colors">Bỏ Theo Dõi</button>
+        ) : (
+          <button onClick={() => onTrack(quest.id)} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3 rounded-lg transition-colors">Theo Dõi Nhiệm Vụ</button>
+        )}
       </div>
     </div>
   );
 };
 
-export default function App() {
-  const [quests, setQuests] = useState(initialQuests);
-  const [selectedQuestId, setSelectedQuestId] = useState(quests[0]?.id || null);
 
-  const handleSelectQuest = (id) => {
-    setSelectedQuestId(prevId => (prevId === id ? null : id));
+// --- COMPONENT CHÍNH ---
+export default function QuestLog() {
+  const [quests, setQuests] = useState(initialQuests);
+  const [selectedQuestId, setSelectedQuestId] = useState(initialQuests.find(q => q.tracked)?.id || initialQuests[0]?.id || null);
+  const [filters, setFilters] = useState({ status: 'all', type: 'all' });
+  
+  const handleTrackQuest = (id) => {
+    setQuests(quests.map(q => q.id === id ? { ...q, tracked: true, status: q.status === 'Mới' ? 'Đang làm' : q.status } : q));
   };
 
-  return (
-    <>
-      {/* CSS cho hiệu ứng shimmer của thanh progress và background aurora */}
-      <style jsx global>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%) skewX(-15deg); }
-          100% { transform: translateX(100%) skewX(-15deg); }
-        }
-        @keyframes aurora {
-          0% { transform: translate(-50%, -50%) rotate(0deg) scale(1.5); }
-          100% { transform: translate(-50%, -50%) rotate(360deg) scale(1.5); }
-        }
-        .aurora-bg::before, .aurora-bg::after {
-          content: '';
-          position: absolute;
-          filter: blur(80px);
-          opacity: 0.15;
-          z-index: -1;
-        }
-        .aurora-bg::before {
-          width: 400px;
-          height: 400px;
-          top: 20%;
-          left: 10%;
-          background: radial-gradient(circle, #38bdf8, transparent 60%);
-          animation: aurora 20s linear infinite;
-        }
-        .aurora-bg::after {
-          width: 400px;
-          height: 400px;
-          bottom: 10%;
-          right: 5%;
-          background: radial-gradient(circle, #a855f7, transparent 60%);
-          animation: aurora 25s linear infinite reverse;
-        }
-      `}</style>
-      <div className="relative min-h-screen bg-slate-900 font-sans text-white p-4 md:p-8 flex items-center justify-center overflow-hidden aurora-bg">
-        <div className="w-full max-w-2xl mx-auto z-10">
-          <header className="text-center mb-8">
-            <div className="flex justify-center items-center gap-4">
-              <BookIcon className="h-8 w-8 text-cyan-300" />
-              <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-200 via-cyan-300 to-sky-400 pb-2">
-                Sổ Nhiệm Vụ
-              </h1>
-            </div>
-            <p className="text-slate-400 mt-2 text-lg">Những cuộc phiêu lưu đang chờ đợi bạn.</p>
-          </header>
+  const handleUntrackQuest = (id) => {
+    setQuests(quests.map(q => q.id === id ? { ...q, tracked: false } : q));
+  };
+  
+  const filteredQuests = useMemo(() => {
+    return quests
+      .filter(q => filters.status === 'all' || q.status === filters.status)
+      .filter(q => filters.type === 'all' || q.type === filters.type)
+      .filter(q => !q.tracked); // Không hiển thị quest đã được theo dõi trong danh sách chung
+  }, [quests, filters]);
 
-          <main className="space-y-4">
-            {quests.length > 0 ? (
-              quests.map(quest => (
-                <QuestCard
-                  key={quest.id}
-                  quest={quest}
-                  onSelect={handleSelectQuest}
-                  isSelected={selectedQuestId === quest.id}
-                />
-              ))
-            ) : (
-              <div className="text-center py-16 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                <p className="text-slate-400 text-lg">Không có nhiệm vụ nào.</p>
-                <p className="text-slate-500 mt-2">Hãy quay lại sau để nhận thử thách mới!</p>
-              </div>
-            )}
-          </main>
+  const trackedQuests = useMemo(() => quests.filter(q => q.tracked), [quests]);
+  const selectedQuest = useMemo(() => quests.find(q => q.id === selectedQuestId), [quests, selectedQuestId]);
+  
+  return (
+    <div className="min-h-screen bg-zinc-900 font-sans text-white p-4 md:p-8 flex justify-center items-center" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/dark-leather.png')" }}>
+      <div className="w-full max-w-6xl mx-auto h-[85vh] max-h-[900px] flex flex-col md:flex-row bg-slate-900/70 backdrop-blur-sm rounded-xl shadow-2xl shadow-black/50 border border-slate-700/50 overflow-hidden">
+        
+        {/* Cột Trái: Danh sách nhiệm vụ */}
+        <div className="w-full md:w-1/3 flex flex-col border-r border-slate-700/50">
+          <header className="p-4 text-center border-b border-slate-700/50">
+            <h1 className="text-2xl font-bold text-amber-200 font-serif">Sổ Nhiệm Vụ</h1>
+          </header>
           
-          <footer className="text-center mt-12 text-slate-500 text-sm">
-            <p>Giao diện được nâng cấp bởi AI.</p>
-          </footer>
+          <div className="overflow-y-auto flex-grow">
+            {/* Nhiệm vụ đang theo dõi */}
+            {trackedQuests.length > 0 && (
+                <div className="border-b-2 border-amber-400/30">
+                    <h2 className="text-xs uppercase font-bold text-amber-300 p-3 bg-amber-400/10">Đang Theo Dõi</h2>
+                    {trackedQuests.map(quest => (
+                        <QuestListItem key={quest.id} quest={quest} onSelect={setSelectedQuestId} isSelected={selectedQuestId === quest.id} />
+                    ))}
+                </div>
+            )}
+            
+            {/* Tất cả nhiệm vụ */}
+            <div>
+                 <h2 className="text-xs uppercase font-bold text-slate-400 p-3 bg-black/10">Tất Cả Nhiệm Vụ</h2>
+                 {filteredQuests.map(quest => (
+                    <QuestListItem key={quest.id} quest={quest} onSelect={setSelectedQuestId} isSelected={selectedQuestId === quest.id} />
+                 ))}
+                 {filteredQuests.length === 0 && (
+                    <p className="text-center text-slate-500 p-6">Không có nhiệm vụ nào phù hợp.</p>
+                 )}
+            </div>
+          </div>
+
+          <FilterControls filters={filters} setFilters={setFilters} />
+        </div>
+
+        {/* Cột Phải: Chi tiết nhiệm vụ */}
+        <div className="w-full md:w-2/3">
+          <QuestDetail quest={selectedQuest} onTrack={handleTrackQuest} onUntrack={handleUntrackQuest} />
         </div>
       </div>
-    </>
+    </div>
   );
 }
