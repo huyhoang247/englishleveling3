@@ -105,6 +105,48 @@ const ScopedStyles = () => (
                 gap: 8px;
             }
         }
+
+        /* <<< MỚI: CSS CHO CARD CAPACITY ĐƯỢC THIẾT KẾ LẠI >>> */
+        .vocabulary-chest-root .styled-card-capacity-display {
+            padding: 1px; /* Tạo không gian cho viền gradient */
+            border-radius: 9px; /* Hơi lớn hơn bên trong */
+            background: linear-gradient(145deg, rgba(129, 140, 248, 0.5), rgba(71, 85, 105, 0.3));
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+        .vocabulary-chest-root .styled-card-capacity-display:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            background: linear-gradient(145deg, rgba(165, 180, 252, 0.6), rgba(100, 116, 139, 0.5));
+        }
+        .vocabulary-chest-root .styled-card-capacity-inner {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px; /* Tăng padding một chút */
+            border-radius: 8px;
+            background-image: linear-gradient(to bottom, #334155, #1e293b); /* slate-700 to slate-800 */
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5); /* Thêm bóng đổ bên trong */
+        }
+        .vocabulary-chest-root .styled-card-capacity-icon {
+            width: 18px;
+            height: 18px;
+            color: #cbd5e1; /* slate-300 */
+            flex-shrink: 0;
+        }
+        .vocabulary-chest-root .styled-card-capacity-text {
+            font-weight: 700; /* Bold hơn */
+            color: #f1f5f9; /* slate-100 */
+            font-size: 0.8rem;
+            letter-spacing: 0.05em; /* Tăng letter spacing */
+            text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+        }
+        .vocabulary-chest-root .styled-card-capacity-text-max {
+            color: #94a3b8; /* slate-400 */
+            font-weight: 500;
+            margin-left: 2px;
+        }
         
         /* === CONTAINER RƯƠNG === */
         .vocabulary-chest-root .chest-gallery-container {
@@ -227,23 +269,19 @@ const CardCapacityIcon = ({ className = '' }: { className?: string }) => (
     </svg>
 );
 
-// --- NEW: Card Capacity Display Component (Moved here) ---
+// <<< THAY ĐỔI: Thiết kế lại hoàn toàn CardCapacityDisplay >>>
+// Giao diện mới này đồng bộ với CoinDisplay, sử dụng kỹ thuật viền gradient
+// và có phong cách cao cấp, hiện đại hơn.
 const CardCapacityDisplay = ({ current, max }: { current: number; max: number }) => (
-    <div style={{
-        backgroundColor: 'rgba(51, 65, 85, 0.8)', // slate-700/80
-        borderRadius: '8px',
-        padding: '4px 8px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        border: '1px solid rgb(71, 85, 105)', // slate-600
-        cursor: 'default',
-        transition: 'background-color 0.2s'
-    }}>
-        <CardCapacityIcon style={{ width: '18px', height: '18px', color: '#d1d5db' /* slate-300 */ }} />
-        <div style={{ fontWeight: '600', color: '#f9fafb' /* gray-50 */, fontSize: '0.875rem', letterSpacing: '0.025em' }}>
-            {current.toLocaleString()}
-            <span style={{ opacity: '0.6', fontWeight: '500', fontSize: '0.8rem' }}>/{max.toLocaleString()}</span>
+    <div className="styled-card-capacity-display">
+        <div className="styled-card-capacity-inner">
+            <CardCapacityIcon className="styled-card-capacity-icon" />
+            <div className="styled-card-capacity-text">
+                {current.toLocaleString()}
+                <span className="styled-card-capacity-text-max">
+                    /{max.toLocaleString()}
+                </span>
+            </div>
         </div>
     </div>
 );
