@@ -135,19 +135,21 @@ const QuestCard = ({ quest, onAction, style }) => {
           </div>
         )}
 
-        {/* --- THAY ĐỔI: Phần thưởng được bọc riêng lẻ trong các 'tag' --- */}
+        {/* --- THAY ĐỔI: Phần thưởng được thiết kế lại với các 'tag' riêng biệt --- */}
         <div className="mt-4">
-          <h4 className="font-semibold text-sm text-gray-200 mb-2">Phần thưởng:</h4>
-          <div className="flex flex-wrap gap-x-3 gap-y-2 text-sm">
+          <h4 className="font-semibold text-sm text-gray-400 mb-2">Phần thưởng:</h4>
+          <div className="flex flex-wrap gap-3 text-sm">
             {/* Tag cho Vàng */}
-            <div className="flex items-center space-x-1.5 bg-slate-700/50 px-3 py-1 rounded-md border border-slate-600/70">
+            <div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-yellow-500/30 shadow-sm transition-all duration-300 hover:border-yellow-500/60 hover:shadow-md hover:shadow-yellow-500/10">
               <GoldIcon /> 
-              <span className="text-yellow-300 font-medium">{quest.rewards.gold} Vàng</span>
+              <span className="text-yellow-300 font-bold">{quest.rewards.gold}</span>
+              <span className="text-gray-400">Vàng</span>
             </div>
             {/* Tag cho XP */}
-            <div className="flex items-center space-x-1.5 bg-slate-700/50 px-3 py-1 rounded-md border border-slate-600/70">
+            <div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-purple-500/30 shadow-sm transition-all duration-300 hover:border-purple-500/60 hover:shadow-md hover:shadow-purple-500/10">
               <XPIcon /> 
-              <span className="text-purple-300 font-medium">{quest.rewards.xp} XP</span>
+              <span className="text-purple-300 font-bold">{quest.rewards.xp}</span>
+               <span className="text-gray-400">XP</span>
             </div>
           </div>
         </div>
