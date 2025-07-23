@@ -373,21 +373,18 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
             </div>
              <div className="space-y-4 w-full">
                 {Array.from({ length: MAX_PREVIEWS }, (_, i) => i + 1).map(previewLevel => {
+                    // --- [FIX] START OF CORRECTION ---
+                    // The logic that hid the component (`return null`) has been removed.
+                    // Now, we always render the component and rely solely on `isLocked` to control its state.
+                    
                     const prerequisiteId = previewLevel === 1
-                        ? selectedPracticeForReview // Prereq for Preview 1 is the base practice
-                        : ((previewLevel - 1) * 100) + selectedPracticeForReview; // Prereq for Preview N is Preview N-1
-
-                    // A level is only VISIBLE if its prerequisite is complete.
-                    // This applies to Preview 2 and onwards. Preview 1 is always visible.
-                    if (previewLevel > 1) {
-                        const prevLevelProgress = progressData[prerequisiteId];
-                        if (!prevLevelProgress || prevLevelProgress.total === 0 || prevLevelProgress.completed < prevLevelProgress.total) {
-                           return null; // Hide this level because its prerequisite is not met.
-                        }
-                    }
-
+                        ? selectedPracticeForReview // Prerequisite for Preview 1 is the base practice
+                        : ((previewLevel - 1) * 100) + selectedPracticeForReview; // Prerequisite for Preview N is Preview N-1
+                    
                     const practiceNumber = (previewLevel * 100) + selectedPracticeForReview;
                     const prerequisiteProgress = progressData[prerequisiteId];
+                    
+                    // A level is locked if its prerequisite is not yet 100% complete.
                     const isLocked = !prerequisiteProgress || prerequisiteProgress.total === 0 || prerequisiteProgress.completed < prerequisiteProgress.total;
                     
                     const progress = progressData[practiceNumber];
@@ -400,6 +397,21 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                     const unlockText = isLocked 
                         ? `Hoàn thành tất cả câu ở ${prerequisiteName} để mở` 
                         : `Luyện tập lại các câu hỏi`;
+                        
+                    // A level is only *visible* if its prerequisite is *unlocked*.
+                    // This prevents showing Preview 3 if Preview 1 isn't even done yet.
+                    if (previewLevel > 1) {
+                         const oneLevelBeforeId = ((previewLevel - 2) === 0)
+                            ? selectedPracticeForReview
+                            : ((previewLevel - 2) * 100) + selectedPracticeForReview;
+                         const oneLevelBeforeProgress = progressData[oneLevelBeforeId];
+                         const isPreviousUnlocked = oneLevelBeforeProgress && oneLevelBeforeProgress.total > 0 && oneLevelBeforeProgress.completed >= oneLevelBeforeProgress.total;
+                         if(!isPreviousUnlocked) {
+                             return null;
+                         }
+                    }
+
+                    // --- [FIX] END OF CORRECTION ---
 
                     return (
                         <button
