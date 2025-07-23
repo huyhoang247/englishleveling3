@@ -109,15 +109,15 @@ const renderItemSkills = (item: any) => {
 // --- SVG Icon Components (thay thế cho lucide-react) ---
 const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children: React.ReactNode }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg> );
 const Shield = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></Icon> );
-// START: CẬP NHẬT ICON GEM
 const Gem = (props: any) => ( <img src="https://englishleveling3.vercel.app/static/media/gems.028f7333d86c97f63a44.png" alt="Gems" {...props} /> );
-// END: CẬP NHẬT ICON GEM
 const Swords = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M14.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4-4L14.5 3.5z"/><path d="M19.5 8.5a2.12 2.12 0 0 1-3-3L10 12l4 4L19.5 8.5z"/></Icon> );
 const Coins = (props: any) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" {...props} /> );
 const Sparkles = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="m12 3-1.9 4.2-4.3.4 3.3 2.9-1 4.2 3.6-2.3 3.6 2.3-1-4.2 3.3-2.9-4.3-.4L12 3z"/><path d="M5 12.5 3.1 14 5 15.5"/><path d="M19 12.5 20.9 14 19 15.5"/></Icon> );
 const ShoppingCart = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.16" /></Icon> );
 const Tag = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.432 0l6.568-6.568a2.426 2.426 0 0 0 0-3.432L12.586 2.586z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></Icon> );
 const RefreshCw = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></Icon> );
+const ArrowUpCircle = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></Icon> );
+
 
 // --- Dữ liệu tĩnh cho các loại vật phẩm khác ---
 const sampleItemsNonWeapons = [
@@ -128,6 +128,19 @@ const sampleItemsNonWeapons = [
     { id: 1009, name: 'Sách Cổ', type: 'Vật phẩm', rarity: 'A', price: 1500, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png', description: 'Dùng để học và nâng cấp các kỹ năng đặc biệt.', stackable: true },
     { id: 1007, name: 'Vé Nâng Cấp VIP', type: 'Vật phẩm', rarity: 'B', price: 500, image: 'https://placehold.co/600x600/1a1a2e/f0e68c?text=🎟️', description: 'Nhận đặc quyền VIP trong 30 ngày, bao gồm tăng kinh nghiệm và vật phẩm nhận được.' },
     { id: 1008, name: 'Rương Kho Báu Bí Ẩn', type: 'Rương', rarity: 'A', price: 750, image: 'https://placehold.co/600x600/1a1a2e/d2b48c?text=📦', description: 'Mở để có cơ hội nhận được một vật phẩm quý hiếm ngẫu nhiên từ danh sách phần thưởng.' },
+    // START: THÊM VẬT PHẨM NÂNG CẤP SỨC CHỨA THẺ
+    { 
+      id: 2001, 
+      name: 'Nâng Cấp Sức Chứa Thẻ', 
+      type: 'Nâng Cấp', 
+      rarity: 'A', 
+      price: 100, // 100 gold / 1 capacity
+      image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png', 
+      description: 'Tăng giới hạn số lượng thẻ từ vựng có thể sở hữu. Giá được tính trên mỗi đơn vị sức chứa.', 
+      stackable: true,
+      quantityOptions: [50, 100, 200]
+    },
+    // END: THÊM VẬT PHẨM NÂNG CẤP SỨC CHỨA THẺ
 ];
 
 const SHOP_WEAPON_RANKS: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR'];
@@ -207,6 +220,7 @@ const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: s
         { name: 'Vũ khí', icon: Swords }, { name: 'Trang bị', icon: Shield },
         { name: 'Trang phục', icon: Sparkles }, { name: 'Vật phẩm', icon: Tag },
         { name: 'Rương', icon: ShoppingCart },
+        { name: 'Nâng Cấp', icon: ArrowUpCircle }, // THÊM TAB NÂNG CẤP
     ];
     
     return (
@@ -238,7 +252,10 @@ const ItemDetailModal = ({ item, onClose, onPurchase }: { item: any | null; onCl
         if (item) {
             setActiveModalTab('info');
             setIsPurchasing(false);
-            setQuantity(1); // Reset số lượng khi mở vật phẩm mới
+            // START: CẬP NHẬT SỐ LƯỢNG MẶC ĐỊNH
+            // Nếu có tùy chọn số lượng, đặt mặc định là cái đầu tiên.
+            setQuantity(item.quantityOptions ? item.quantityOptions[0] : 1); 
+            // END: CẬP NHẬT SỐ LƯỢNG MẶC ĐỊNH
         }
     }, [item]);
 
@@ -261,7 +278,9 @@ const ItemDetailModal = ({ item, onClose, onPurchase }: { item: any | null; onCl
 
     const hasSkills = item.skills && item.skills.length > 0;
     const isStackable = item.stackable === true;
-    const quantityOptions = [1, 5, 10];
+    // START: SỬ DỤNG TÙY CHỌN SỐ LƯỢNG TÙY CHỈNH
+    const quantityOptions = item.quantityOptions || [1, 5, 10];
+    // END: SỬ DỤNG TÙY CHỌN SỐ LƯỢNG TÙY CHỈNH
     
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-3">
@@ -302,7 +321,7 @@ const ItemDetailModal = ({ item, onClose, onPurchase }: { item: any | null; onCl
               </div>
             </div>
             
-            {/* --- START: KHU VỰC MUA HÀNG ĐÃ THIẾT KẾ LẠI --- */}
+            {/* --- START: KHU VỰC MUA HÀNG ĐÃ THIẾT KẾ LẠI (CÓ CẬP NHẬT) --- */}
             <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
                 {isStackable && (
                   <div className="mb-4">
@@ -318,7 +337,8 @@ const ItemDetailModal = ({ item, onClose, onPurchase }: { item: any | null; onCl
                                           : 'bg-slate-800/70 text-slate-300 hover:bg-slate-700'
                                   }`}
                               >
-                                  x{q}
+                                  {/* Hiển thị "+50" cho sức chứa, "x5" cho các vật phẩm khác */}
+                                  {item.id === 2001 ? `+${q}` : `x${q}`}
                               </button>
                           ))}
                       </div>
