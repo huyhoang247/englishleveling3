@@ -1,4 +1,4 @@
-// --- START OF FILE: fill-word-home.tsx (FINAL VERSION) ---
+// --- START OF FILE: fill-word-home.tsx (FINAL VERSION WITH FIX) ---
 
 import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { db, auth } from '../firebase.js';
@@ -349,13 +349,15 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         {(selectedPractice === 3 || selectedPractice === 103) ? "Cần có câu chứa ít nhất 2 từ bạn đã học." : "Hãy vào màn hình 'Lật thẻ' để học thêm!"}
     </div>
   );
-
-  // [FIX] Calculate progress dynamically like in quiz.tsx
-  // This ensures the progress counter is correct from the very first question of the session.
-  const completedInitially = vocabularyList.length - shuffledUnusedWords.length;
-  const numCompletedForProgressBar = completedInitially + currentWordIndex;
-  const currentQuestionDisplayNumber = isCorrect ? numCompletedForProgressBar + 1 : numCompletedForProgressBar;
-  const progressPercent = vocabularyList.length > 0 ? (numCompletedForProgressBar / vocabularyList.length) * 100 : 0;
+  
+  // [FIX] Calculate progress to include the current question
+  const completedCount = usedWords.size;
+  const totalCount = vocabularyList.length;
+  // If the game isn't over and a word is loaded, we're on the "next" question.
+  // The display count should be the number of completed words + 1.
+  const displayCount = gameOver || !currentWord ? completedCount : Math.min(completedCount + 1, totalCount);
+  // The progress bar should also reflect the question being attempted for a consistent UI.
+  const progressPercentage = totalCount > 0 ? (displayCount / totalCount) * 100 : 0;
 
   return (
     <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
@@ -378,10 +380,10 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
             <>
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-xl">
                 <div className="flex justify-between items-center mb-4">
-                  <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{isCorrect ? currentQuestionDisplayNumber + 1 : currentQuestionDisplayNumber}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{vocabularyList.length}</span></div></div>
+                  <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{displayCount}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{totalCount}</span></div></div>
                   <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
                 </div>
-                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${progressPercent}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
+                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${progressPercentage}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                 { (selectedPractice === 2 || selectedPractice === 102 || selectedPractice === 3 || selectedPractice === 103) && currentWord && (
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
                     <p className="text-lg sm:text-xl font-semibold text-white leading-tight">{currentWord.question?.split('___').map((part, i, arr) => ( <React.Fragment key={i}> {part} {i < arr.length - 1 && <span className="font-bold text-indigo-300">___</span>} </React.Fragment> ))}</p>
@@ -446,4 +448,3 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     </div>
   );
 }
-// --- END OF FILE: fill-word-home.tsx (FINAL VERSION) ---
