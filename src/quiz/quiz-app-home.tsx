@@ -1,6 +1,5 @@
-// --- START OF FILE: quiz-app-home.tsx (MODIFIED) ---
+// --- START OF FILE: quiz-app-home.tsx ---
 
-// ... (các import không đổi) ...
 import { useState, useEffect } from 'react';
 import QuizApp from './quiz.tsx';
 import Breadcrumbs from '../bread-crumbs.tsx';
@@ -9,11 +8,9 @@ import VocabularyGame from '../fill-word/fill-word-home.tsx';
 // Imports for progress calculation
 import { db, auth } from '../firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore'; // Added getDoc
+import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
-
-// ... (component QuizAppHome không đổi, chỉ thay đổi component PracticeList bên dưới) ...
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
@@ -216,7 +213,6 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
   const MAX_PREVIEWS = 5; // Define max number of preview levels
 
   useEffect(() => {
-    // ... (useEffect for auth state change is unchanged)
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
@@ -224,7 +220,6 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
   }, []);
 
   useEffect(() => {
-    // ... (useEffect for progress calculation is mostly unchanged)
     if (!user || !selectedType) {
       setLoading(false);
       return;
@@ -253,12 +248,11 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
           }
         });
         
-        // --- This part is now more dynamic ---
         const allUnlockCounts = {};
         const baseKeys = ['quiz-1', 'quiz-2', 'fill-word-1', 'fill-word-2', 'fill-word-3'];
         const allKeysToCount = [...baseKeys];
         baseKeys.forEach(baseKey => {
-            for(let i = 1; i < MAX_PREVIEWS; i++) {
+            for(let i = 1; i <= MAX_PREVIEWS; i++) {
                 const practiceNum = parseInt(baseKey.split('-').pop());
                 const previewPracticeId = i * 100 + practiceNum;
                 allKeysToCount.push(baseKey.replace(`-${practiceNum}`, `-${previewPracticeId}`));
@@ -273,7 +267,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
         let newProgressData = {};
         
         if (selectedType === 'tracNghiem') {
-            const allQuizModes = ['quiz-1', 'quiz-2']; // Base modes
+            const allQuizModes = ['quiz-1', 'quiz-2'];
             for(let i = 1; i <= MAX_PREVIEWS; i++) {
                 allQuizModes.push(`quiz-${i*100 + 1}`, `quiz-${i*100 + 2}`);
             }
@@ -284,14 +278,14 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
 
                 const completedSet = completedWordsByGameMode[mode] || new Set();
 
-                if (practiceNum % 100 === 1) { // Practice 1 type
+                if (practiceNum % 100 === 1) {
                     const totalQs = quizData.filter(q => userVocabulary.some(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)));
                     const completed = totalQs.filter(q => {
                         const word = userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question));
                         return word && completedSet.has(word.toLowerCase());
                     }).length;
                     newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
-                } else if (practiceNum % 100 === 2) { // Practice 2 type
+                } else if (practiceNum % 100 === 2) {
                     const totalQs = userVocabulary.flatMap(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)) ? [{ word }] : []);
                     const completed = totalQs.filter(q => completedSet.has(q.word.toLowerCase())).length;
                     newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
@@ -299,7 +293,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
             });
 
         } else if (selectedType === 'dienTu') {
-            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3']; // Base modes
+            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3'];
             for(let i = 1; i <= MAX_PREVIEWS; i++) {
                 allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`);
             }
@@ -311,13 +305,13 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                 const completedSet = completedWordsByGameMode[mode] || new Set();
                 let progress = {};
 
-                if (practiceNum % 100 === 1) { // Practice 1 type
+                if (practiceNum % 100 === 1) {
                     progress = { completed: completedSet.size, total: userVocabulary.length };
-                } else if (practiceNum % 100 === 2) { // Practice 2 type
+                } else if (practiceNum % 100 === 2) {
                     const totalQs = userVocabulary.filter(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)));
                     const completed = totalQs.filter(word => completedSet.has(word.toLowerCase())).length;
                     progress = { completed: completed, total: totalQs.length };
-                } else if (practiceNum % 100 === 3) { // Practice 3 type
+                } else if (practiceNum % 100 === 3) {
                      let totalP3 = 0;
                      exampleData.forEach(sentence => {
                          const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
@@ -340,20 +334,19 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
     calculateProgress();
   }, [user, selectedType]);
   
-  // --- This is now only for BASE practices ---
   const practiceDetails = {
     tracNghiem: {
-      1: { title: 'Practice 1', desc: 'Luyện tập từ vựng qua câu hỏi', color: 'indigo', unlockKeyPrefix: 'quiz' },
-      2: { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink', unlockKeyPrefix: 'quiz' },
+      '1': { title: 'Practice 1', desc: 'Luyện tập từ vựng qua câu hỏi', color: 'indigo', unlockKeyPrefix: 'quiz' },
+      '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink', unlockKeyPrefix: 'quiz' },
     },
     dienTu: {
-      1: { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo', unlockKeyPrefix: 'fill-word' },
-      2: { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink', unlockKeyPrefix: 'fill-word' },
-      3: { title: 'Practice 3', desc: 'Điền 2 từ vào câu (Khó)', color: 'teal', unlockKeyPrefix: 'fill-word' },
+      '1': { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo', unlockKeyPrefix: 'fill-word' },
+      '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink', unlockKeyPrefix: 'fill-word' },
+      '3': { title: 'Practice 3', desc: 'Điền 2 từ vào câu (Khó)', color: 'teal', unlockKeyPrefix: 'fill-word' },
     },
   };
   
-  const colorClasses = { // ... (unchanged)
+  const colorClasses = {
     indigo: { border: 'hover:border-indigo-300', bg: 'bg-indigo-100', text: 'text-indigo-600', hoverBg: 'group-hover:bg-indigo-200', arrow: 'group-hover:text-indigo-500' },
     pink:   { border: 'hover:border-pink-300',   bg: 'bg-pink-100',   text: 'text-pink-600',   hoverBg: 'group-hover:bg-pink-200',   arrow: 'group-hover:text-pink-500' },
     teal:   { border: 'hover:border-teal-300',   bg: 'bg-teal-100',   text: 'text-teal-600',   hoverBg: 'group-hover:bg-teal-200',   arrow: 'group-hover:text-teal-500' },
@@ -365,7 +358,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
   };
 
   const handleReviewClick = (e, practiceNumber) => {
-    e.stopPropagation(); // Prevent main card's onClick from firing
+    e.stopPropagation();
     setSelectedPracticeForReview(practiceNumber);
     setView('reviews');
   };
@@ -374,20 +367,40 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
     return <div className="text-center text-gray-500">Đang tải tiến độ...</div>;
   }
   
+  // [FIX & ENHANCEMENT] This block handles the "reviews" view with corrections for the crash.
   if (view === 'reviews' && selectedPracticeForReview) {
-      const basePracticeDetails = practiceDetails[selectedType][selectedPracticeForReview];
+      const basePracticeDetails = practiceDetails[selectedType]?.[String(selectedPracticeForReview)];
+
+      if (!basePracticeDetails) {
+          return (
+              <div className="text-center text-red-500">
+                  <p>Lỗi: Không tìm thấy chi tiết bài tập.</p>
+                  <button onClick={() => setView('main')} className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded">Quay lại</button>
+              </div>
+          );
+      }
+
       const previewColors = ['purple', 'green', 'yellow', 'orange', 'pink'];
 
       return (
          <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
             <div className="w-full text-center relative mb-6">
-                <button onClick={() => setView('main')} className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800">
+                <button onClick={() => setView('main')} className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 p-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 <h1 className="text-2xl font-bold text-gray-800">Ôn tập: {basePracticeDetails.title}</h1>
             </div>
              <div className="space-y-4 w-full">
                 {Array.from({ length: MAX_PREVIEWS }, (_, i) => i + 1).map(previewLevel => {
+                    if (previewLevel > 1) {
+                        const preRequisiteLevel = previewLevel - 1;
+                        const preRequisitePracticeId = preRequisiteLevel === 1 ? selectedPracticeForReview : ((preRequisiteLevel - 1) * 100) + selectedPracticeForReview;
+                        const preRequisiteUnlockKey = `${basePracticeDetails.unlockKeyPrefix}-${preRequisitePracticeId}`;
+                        if ((unlockCounts[preRequisiteUnlockKey] || 0) < UNLOCK_THRESHOLD) {
+                           return null;
+                        }
+                    }
+
                     const practiceNumber = (previewLevel * 100) + selectedPracticeForReview;
                     const unlockPracticeId = previewLevel === 1 
                         ? selectedPracticeForReview
@@ -397,12 +410,12 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                     const currentUnlockCount = unlockCounts[unlockKey] || 0;
                     const isLocked = currentUnlockCount < UNLOCK_THRESHOLD;
                     
-                    if (previewLevel > 1 && (unlockCounts[`${basePracticeDetails.unlockKeyPrefix}-${((previewLevel - 2) * 100) + selectedPracticeForReview}`] || 0) < UNLOCK_THRESHOLD) {
-                        return null; // Don't show Preview 2 if Preview 1 is not unlocked
-                    }
-
                     const progress = progressData[practiceNumber];
-                    const colors = isLocked ? colorClasses.gray : colorClasses[previewColors[previewLevel - 1] % previewColors.length];
+                    const colors = isLocked ? colorClasses.gray : colorClasses[previewColors[(previewLevel - 1) % previewColors.length]];
+
+                    const unlockText = previewLevel === 1 
+                        ? `Practice ${selectedPracticeForReview}` 
+                        : `Preview ${previewLevel - 1}`;
 
                     return (
                         <button
@@ -418,7 +431,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                                 <div className="text-left">
                                 <h3 className="font-medium text-gray-800">Preview {previewLevel}</h3>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    {isLocked ? `Hoàn thành ${currentUnlockCount}/${UNLOCK_THRESHOLD} câu ở ${previewLevel === 1 ? `Practice ${selectedPracticeForReview}` : `Preview ${previewLevel - 1}`} để mở` : `Luyện tập lại các câu hỏi`}
+                                    {isLocked ? `Hoàn thành ${currentUnlockCount}/${UNLOCK_THRESHOLD} câu ở ${unlockText} để mở` : `Luyện tập lại các câu hỏi`}
                                 </p>
                                 </div>
                             </div>
@@ -439,7 +452,6 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
       );
   }
 
-  // --- Main List View ---
   const practicesToShow = selectedType ? Object.keys(practiceDetails[selectedType]) : [];
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
@@ -480,7 +492,6 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                         <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 ${colors.arrow} transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                     </div>
                 </div>
-                 {/* Review Button */}
                 <div className="border-t border-gray-200 mt-3 pt-3 flex justify-end">
                     <button 
                         onClick={(e) => handleReviewClick(e, practiceNumber)} 
@@ -500,3 +511,5 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
     </div>
   );
 };
+
+// --- END OF FILE: quiz-app-home.tsx ---
