@@ -1,10 +1,4 @@
-// --- START OF FILE lat-the.tsx (1).txt ---
-
-// --- lat-the.tsx.txt (CORRECTED - Header UI moved here) ---
-
-// --- START OF FILE: lat-the.tsx (FULL CODE) ---
-
-// lat-the.tsx (Phiên bản đã cập nhật và sửa lỗi)
+// --- START OF FILE: lat-the.tsx (FULL CODE - RE-DESIGNED CARD CAPACITY) ---
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { db } from './firebase.js'; 
@@ -22,110 +16,100 @@ const ScopedStyles = () => (
     <style>{`
         /* --- LỚP GỐC: Thiết lập môi trường độc lập --- */
         .vocabulary-chest-root {
-            width: 100%; height: 100%; position: absolute; top: 0; left: 0;
+            /* Kích thước & Vị trí */
+            width: 100%;
+            height: 100%;
+            position: absolute; /* Quan trọng để tách biệt khỏi luồng layout cha */
+            top: 0;
+            left: 0;
+            
+            /* Nền & Giao diện */
             background-color: #0a0a14;
             background-image: radial-gradient(circle at center, #16213e, #0a0a14);
-            color: #e0e0e0; font-family: 'Roboto', sans-serif;
-            display: flex; flex-direction: column; justify-content: flex-start;
-            align-items: center; z-index: 100; overflow: hidden;
+            color: #e0e0e0;
+            font-family: 'Roboto', sans-serif;
+            
+            /* Bố cục nội bộ */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Header ở trên, content ở dưới */
+            align-items: center;
+            
+            /* Đảm bảo nó che phủ mọi thứ bên dưới */
+            z-index: 100; 
+            overflow: hidden; /* Ngăn cuộn ở cấp cao nhất của component */
         }
         
-        /* === HEADER === */
+        /* Tiền tố hóa TẤT CẢ các style khác với .vocabulary-chest-root */
+        
+        /* === HEADER (ĐÃ CẬP NHẬT) === */
         .vocabulary-chest-root .main-header {
-            position: sticky; top: 0; left: 0; width: 100%;
-            padding: 8px 16px; display: flex; justify-content: space-between;
-            align-items: center; background-color: rgba(16, 22, 46, 0.7);
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            position: sticky;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between; /* Canh lề các mục */
+            align-items: center;
+            background-color: rgba(16, 22, 46, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1010; box-sizing: border-box; flex-shrink: 0; 
+            z-index: 1010; /* Tăng z-index để nổi lên trên overlay */
+            box-sizing: border-box;
+            flex-shrink: 0; 
         }
         
-        /* NÚT HOME */
+        /* CSS CHO NÚT HOME MỚI (Dựa trên thanh-tuu.tsx) */
         .vocabulary-chest-root .vocab-screen-home-btn {
-            display: flex; align-items: center; gap: 8px; padding: 6px 12px;
-            border-radius: 8px; background-color: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgb(51, 65, 85);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background-color: rgba(30, 41, 59, 0.8); /* slate-800/80 */
+            border: 1px solid rgb(51, 65, 85); /* slate-700 */
             transition: background-color 0.2s ease, opacity 0.3s ease, visibility 0.3s;
-            cursor: pointer; color: #cbd5e1;
+            cursor: pointer;
+            color: #cbd5e1; /* slate-300 */
         }
-        .vocabulary-chest-root .vocab-screen-home-btn:hover { background-color: rgb(51, 65, 85); }
-        .vocabulary-chest-root .vocab-screen-home-btn.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .vocabulary-chest-root .vocab-screen-home-btn svg { width: 20px; height: 20px; }
-        .vocabulary-chest-root .vocab-screen-home-btn span { font-size: 0.875rem; font-weight: 600; }
-        
+        .vocabulary-chest-root .vocab-screen-home-btn:hover {
+            background-color: rgb(51, 65, 85); /* slate-700 */
+        }
+        .vocabulary-chest-root .vocab-screen-home-btn.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .vocabulary-chest-root .vocab-screen-home-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+        .vocabulary-chest-root .vocab-screen-home-btn span {
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 600; /* font-semibold */
+        }
+        /* Ẩn chữ trên màn hình nhỏ, tương tự sm:inline */
         @media (max-width: 640px) {
-            .vocabulary-chest-root .vocab-screen-home-btn span { display: none; }
-            .vocabulary-chest-root .header-right-group { gap: 8px; }
-        }
-
-        /* <<< MỚI: CSS CHO CARD CAPACITY DISPLAY ĐỂ ĐỒNG BỘ VỚI COIN DISPLAY >>> */
-        .vocabulary-chest-root .capacity-widget-container {
-            /* Container ngoài, tạo hiệu ứng viền gradient */
-            position: relative;
-            background-image: linear-gradient(to bottom right, #38bdf8, #3b82f6); /* from-sky-400 to-blue-500 */
-            border-radius: 8px; /* rounded-lg */
-            padding: 2px; /* tương đương p-0.5 */
-            display: flex;
-            align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-            border: 1px solid #0ea5e9; /* sky-500 */
-            overflow: hidden;
-            cursor: default;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .vocabulary-chest-root .capacity-widget-container:hover {
-            transform: scale(1.05);
-        }
-
-        /* Hiệu ứng tỏa sáng khi hover, giống hệt CoinDisplay */
-        .vocabulary-chest-root .widget-shine-effect {
-            position: absolute; inset: 0; width: 100%; height: 100%;
-            background-image: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
-            transform: translateX(-100%) skewX(-15deg);
-            transition: transform 0.8s ease-in-out;
-        }
-        .vocabulary-chest-root .group:hover .widget-shine-effect {
-            transform: translateX(100%) skewX(-15deg);
+            .vocabulary-chest-root .vocab-screen-home-btn span {
+                display: none;
+            }
+            .vocabulary-chest-root .header-right-group {
+                gap: 8px;
+            }
         }
         
-        /* Container nội dung bên trong */
-        .vocabulary-chest-root .capacity-widget-inner {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background-color: #1e293b; /* slate-800, tạo nền tối */
-            padding: 2px 8px; /* Giữ chiều cao tương đồng với CoinDisplay */
-            border-radius: 6px; /* Hơi nhỏ hơn container ngoài */
-        }
-        
-        /* Icon */
-        .vocabulary-chest-root .capacity-icon {
-            width: 16px; /* w-4 */
-            height: 16px; /* h-4 */
-            color: #7dd3fc; /* sky-300 */
-        }
-
-        /* Text */
-        .vocabulary-chest-root .capacity-text {
-            font-weight: 700; /* font-bold */
-            color: #e0f2fe; /* sky-100 */
-            font-size: 12px; /* text-xs */
-            letter-spacing: 0.025em; /* tracking-wide */
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-        }
-        .vocabulary-chest-root .capacity-text-max {
-            font-weight: 500;
-            color: #7dd3fc; /* sky-300 */
-            opacity: 0.8;
-        }
-
         /* === CONTAINER RƯƠNG === */
         .vocabulary-chest-root .chest-gallery-container {
             display: flex; flex-wrap: wrap; justify-content: center;
             gap: 30px; width: 100%; max-width: 1300px; 
             padding: 20px 20px 100px; box-sizing: border-box;
-            flex-grow: 1; overflow-y: auto;
+            flex-grow: 1;      /* Chiếm hết không gian còn lại */
+            overflow-y: auto;  /* Tạo thanh cuộn cho riêng nó */
         }
+
+        /* Tùy chỉnh thanh cuộn */
         .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar { width: 8px; }
         .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-track { background: rgba(10, 10, 20, 0.5); border-radius: 4px; }
         .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-thumb { background-color: #4a5588; border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
@@ -171,18 +155,32 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .button-price { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; color: white; font-weight: 600; background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px; text-shadow: none; }
         .vocabulary-chest-root .price-icon { width: 16px; height: 16px; }
 
-        /* --- Overlay, Card & Loading Styles --- */
+        /* --- Overlay, Card & Loading Styles (Cũng cần được scope) --- */
         @keyframes vocabulary-chest-fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes vocabulary-chest-spin { to { transform: rotate(360deg); } }
         @keyframes vocabulary-chest-flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
         @keyframes vocabulary-chest-deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
+        @keyframes vocabulary-chest-pulse-fast {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .vocabulary-chest-root .animate-pulse-fast {
+            animation: vocabulary-chest-pulse-fast 1s infinite;
+        }
+
         .vocabulary-chest-root .card-opening-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
             background-color: rgba(10, 10, 20, 0.95);
-            z-index: 1000; display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             animation: vocabulary-chest-fade-in 0.5s ease;
-            overflow: hidden; padding: 70px 15px 80px; box-sizing: border-box;
+            overflow: hidden;
+            padding: 70px 15px 80px;
+            box-sizing: border-box;
         }
         .vocabulary-chest-root .overlay-content { width: 100%; max-width: 900px; }
         .vocabulary-chest-root .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
@@ -203,7 +201,7 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
         .vocabulary-chest-root .card-wrapper.dealt-in { animation: vocabulary-chest-deal-in 0.5s ease-out forwards; }
 
-        /* Loading Overlay */
+        /* Loading Overlay cũng cần được scope */
         .vocabulary-chest-root .loading-spinner-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; animation: vocabulary-chest-fade-in 0.3s ease-out; }
         .vocabulary-chest-root .loading-spinner { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.2); border-top-color: #a78bfa; border-radius: 50%; animation: vocabulary-chest-spin 1s linear infinite; }
         .vocabulary-chest-root .loading-text { color: #e0e0e0; margin-top: 20px; font-size: 1rem; font-weight: 500; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
@@ -225,26 +223,39 @@ const HomeIcon = ({ className = '' }: { className?: string }) => (
 const CardCapacityIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
         <path d="M21.75 6.75V17.25C21.75 18.4913 20.7413 19.5 19.5 19.5H4.5C3.25868 19.5 2.25 18.4913 2.25 17.25V6.75C2.25 5.50868 3.25868 4.5 4.5 4.5H19.5C20.7413 4.5 21.75 5.50868 21.75 6.75ZM19.5 2.25H4.5C2.01472 2.25 0 4.26472 0 6.75V17.25C0 19.7353 2.01472 21.75 4.5 21.75H19.5C21.9853 21.75 24 19.7353 24 17.25V6.75C24 4.26472 21.9853 2.25 19.5 2.25Z" transform="translate(0, 1)"/>
-        <path d="M1.5 5.5H22.5" stroke="#1e293b" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M1.5 5.5H22.5" stroke="#111827" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
 );
 
-// <<< ĐÃ THIẾT KẾ LẠI: CardCapacityDisplay đồng bộ hoàn toàn với CoinDisplay >>>
 const CardCapacityDisplay = ({ current, max }: { current: number; max: number }) => (
-    <div className="capacity-widget-container group">
-      {/* Hiệu ứng tỏa sáng */}
-      <div className="widget-shine-effect"></div>
-      
-      {/* Nội dung bên trong, được bọc để tạo viền */}
-      <div className="capacity-widget-inner">
-        <CardCapacityIcon className="capacity-icon" />
-        <div className="capacity-text">
-          {current.toLocaleString()}
-          <span className="capacity-text-max">
-              /{max.toLocaleString()}
-          </span>
+    <div 
+        className="bg-gradient-to-br from-cyan-500 to-blue-700 rounded-lg p-0.5 flex items-center shadow-lg border border-cyan-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"
+        title="Nâng cấp sức chứa thẻ"
+    >
+        {/* Shiny effect on hover */}
+        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+        
+        {/* Icon */}
+        <div className="relative mr-1 flex items-center justify-center">
+            <CardCapacityIcon className="w-4 h-4 text-white" />
         </div>
-      </div>
+
+        {/* Text: current / max */}
+        <div className="font-bold text-white text-xs tracking-wide">
+            {current.toLocaleString()}
+            <span className="text-blue-200/80 font-medium opacity-90">
+                 / {max.toLocaleString()}
+            </span>
+        </div>
+
+        {/* Plus button for upgrading capacity */}
+        <div className="ml-1 w-3 h-3 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center cursor-pointer border border-cyan-300 shadow-inner hover:shadow-cyan-300/50 hover:scale-110 transition-all duration-200">
+            <span className="text-white font-bold text-xs">+</span>
+        </div>
+
+        {/* Sparkles */}
+        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-cyan-200 rounded-full animate-pulse-fast"></div>
     </div>
 );
 
@@ -719,7 +730,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 </div>
             )}
 
-            {/* Các Overlay */}
             {showSingleOverlay && cardsForPopup.length > 0 && (
                 <div className="card-opening-overlay">
                     <div className="overlay-content">
