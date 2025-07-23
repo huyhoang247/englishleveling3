@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 
-// --- Dữ liệu mẫu (ĐÃ CẬP NHẬT: Practice 1 có 10 sub-quests) ---
+// --- Dữ liệu mẫu (Không thay đổi) ---
 const initialQuests = [
   {
     id: 7,
@@ -12,11 +12,11 @@ const initialQuests = [
     status: 'in_progress',
     mainProgress: 100, // Đã mở khóa lộ trình
     mainTotal: 100,
-    subQuests: [ // Danh sách 10 mục
+    subQuests: [
       { id: 'p1_1', title: 'Preview 1', progress: 100, total: 100 },
       { id: 'p1_2', title: 'Preview 2', progress: 100, total: 100 },
-      { id: 'p1_3', title: 'Preview 3', progress: 100, total: 100 },
-      { id: 'p1_4', title: 'Preview 4', progress: 50, total: 100 }, // Mục đang hoạt động
+      { id: 'p1_3', title: 'Preview 3', progress: 50, total: 100 }, 
+      { id: 'p1_4', title: 'Preview 4', progress: 0, total: 100 },
       { id: 'p1_5', title: 'Preview 5', progress: 0, total: 100 },
       { id: 'p1_6', title: 'Preview 6', progress: 0, total: 100 },
       { id: 'p1_7', title: 'Preview 7', progress: 0, total: 100 },
@@ -84,14 +84,27 @@ const SubQuestActive = ({ subQuest }) => { const p = (subQuest.progress / subQue
 const SubQuestLocked = ({ subQuest }) => <div className="flex items-center space-x-3 p-3 bg-gray-800/50 rounded-lg opacity-60"><LockIcon /><span className="text-gray-500">{subQuest.title}</span></div>;
 const ReviewPathLocked = () => <div className="pt-4 border-t border-gray-700/50"><h4 className="font-semibold text-sm text-gray-500 mb-3">Lộ trình ôn tập</h4><div className="p-4 bg-gray-800/50 rounded-lg text-center opacity-70 flex flex-col items-center"><LockIcon /><p className="mt-2 text-sm text-gray-400">Hoàn thành Progress để mở khóa.</p></div></div>;
 
+// --- THAY ĐỔI: Component mới cho Progress đã hoàn thành ---
+const MainProgressCompleted = () => (
+    <div>
+        <div className="flex justify-between items-center">
+            <span className="text-xs text-gray-300">Progress</span>
+            <span className="text-xs font-bold text-green-400">ĐÃ HOÀN THÀNH</span>
+        </div>
+        <div className="w-full bg-gray-700 rounded-full h-2.5 mt-1">
+            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '100%' }}></div>
+        </div>
+    </div>
+);
+
 // --- Component Thẻ Nhiệm Vụ chính ---
 const QuestCard = ({ quest, onAction, style }) => {
   const isPracticeQuest = quest.type === 'practice';
   const isCompleted = quest.status === 'completed';
 
-  const { overallProgress, displaySubQuests, isReviewUnlocked, canBeClaimed, activeIndex } = useMemo(() => {
+  const { overallProgress, displaySubQuests, isReviewUnlocked, canBeClaimed } = useMemo(() => {
     if (!isPracticeQuest) {
-      return { overallProgress: { progress: quest.progress, total: quest.total }, displaySubQuests: [], isReviewUnlocked: false, canBeClaimed: quest.progress >= quest.total, activeIndex: -1 };
+      return { overallProgress: { progress: quest.progress, total: quest.total }, displaySubQuests: [], isReviewUnlocked: false, canBeClaimed: quest.progress >= quest.total };
     }
     
     const reviewUnlocked = quest.mainProgress >= quest.mainTotal;
@@ -101,10 +114,8 @@ const QuestCard = ({ quest, onAction, style }) => {
     let displayList = [];
     if (reviewUnlocked) {
         if (allSubQuestsDone) {
-            // Tất cả đã xong, hiển thị 3 mục cuối
             displayList = quest.subQuests.slice(-3);
         } else {
-            // Hiển thị cửa sổ 3 mục: trước, hiện tại, sau
             const startIndex = Math.max(0, activeIdx - 1);
             const endIndex = Math.min(quest.subQuests.length, activeIdx + 2);
             displayList = quest.subQuests.slice(startIndex, endIndex);
@@ -122,33 +133,57 @@ const QuestCard = ({ quest, onAction, style }) => {
       displaySubQuests: categorized,
       isReviewUnlocked: reviewUnlocked,
       canBeClaimed: reviewUnlocked && allSubQuestsDone,
-      activeIndex: activeIdx,
     };
   }, [quest]);
 
   const overallPercentage = overallProgress.total > 0 ? (overallProgress.progress / overallProgress.total) * 100 : 0;
 
-  return ( <div style={style} className={`bg-gray-800/70 backdrop-blur-md rounded-xl overflow-hidden transition-all duration-300 group quest-card ${isCompleted ? 'opacity-70' : ''}`}><div className={`relative p-5 border-b-2 ${isCompleted ? 'border-green-500/30' : 'border-cyan-500/30'}`}><div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-300"></div><div className="absolute top-4 right-4 bg-gray-900/80 px-3 py-1 rounded-full text-xs font-bold text-yellow-300 border border-yellow-500/50">Lv. {quest.level}</div><div className="flex items-start"><div className="bg-gray-900 p-3 rounded-full border-2 border-gray-700 group-hover:border-cyan-500 transition-colors duration-300 mr-4"><QuestIcon type={quest.type} /></div><div>{isPracticeQuest && <p className="text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-1">Trắc nghiệm</p>}<h3 className={`text-lg font-bold ${isCompleted ? 'text-gray-400' : 'text-cyan-300'}`}>{quest.title}</h3><p className="text-sm text-gray-400 max-w-md">{quest.description}</p></div></div></div><div className="p-5 space-y-4">{!isCompleted && (<div><div className="flex justify-between items-center text-xs text-gray-300 mb-1"><span>Progress</span><span>{overallProgress.progress} / {overallProgress.total}</span></div><div className="w-full bg-gray-700 rounded-full h-2.5"><div className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2.5 rounded-full transition-all duration-500" style={{ width: `${overallPercentage}%` }}></div></div></div>)}{isPracticeQuest && quest.status !== 'completed' && (isReviewUnlocked ? (<div className="pt-4 border-t border-gray-700/50"><h4 className="font-semibold text-sm text-gray-400 mb-3">Lộ trình ôn tập:</h4><div className="space-y-2">{displaySubQuests.map(sq => { switch(sq.status) { case 'completed': return <SubQuestCompleted key={sq.id} subQuest={sq} />; case 'active': return <SubQuestActive key={sq.id} subQuest={sq} />; case 'locked': return <SubQuestLocked key={sq.id} subQuest={sq} />; default: return null; }})}</div></div>) : (<ReviewPathLocked />))}{isPracticeQuest && canBeClaimed && quest.status !== 'completed' && (<div className="flex items-center justify-center space-x-3 text-center py-2"><CheckCircleIcon className="text-green-400" /><p className="font-semibold text-green-300">Xuất sắc! Đã hoàn thành tất cả mục tiêu.</p></div>)}<div><h4 className="font-semibold text-sm text-gray-400 mb-2">Phần thưởng:</h4><div className="flex flex-wrap gap-3 text-sm"><div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-yellow-500/30 shadow-sm"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Gold" className="w-4 h-4" /> <span className="text-yellow-300 font-bold">{quest.rewards.gold}</span></div><div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-purple-500/30 shadow-sm"><XPIcon /> <span className="text-purple-300 font-bold">{quest.rewards.xp}</span></div></div></div></div><div className="bg-gray-900/50 px-5 py-3 flex items-center justify-end space-x-3">{quest.status === 'available' && <button onClick={() => onAction(quest.id, 'accept')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-md hover:shadow-cyan-500/50 transform hover:scale-105">Nhận NV</button>}{quest.status === 'in_progress' && <button onClick={() => onAction(quest.id, 'claim')} disabled={!canBeClaimed} className={`px-5 py-2 rounded-md font-semibold text-sm transition-all duration-300 transform ${canBeClaimed ? 'text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md hover:shadow-emerald-500/50 hover:scale-105' : 'text-gray-400 bg-gray-600 cursor-not-allowed'}`}>Nhận thưởng</button>}{isCompleted && <button onClick={() => onAction(quest.id, 'claim')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md hover:shadow-emerald-500/50 transform hover:scale-105">Nhận thưởng</button>}</div></div>);
+  return ( <div style={style} className={`bg-gray-800/70 backdrop-blur-md rounded-xl overflow-hidden transition-all duration-300 group quest-card ${isCompleted ? 'opacity-70' : ''}`}><div className={`relative p-5 border-b-2 ${isCompleted ? 'border-green-500/30' : 'border-cyan-500/30'}`}><div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-300"></div><div className="absolute top-4 right-4 bg-gray-900/80 px-3 py-1 rounded-full text-xs font-bold text-yellow-300 border border-yellow-500/50">Lv. {quest.level}</div><div className="flex items-start"><div className="bg-gray-900 p-3 rounded-full border-2 border-gray-700 group-hover:border-cyan-500 transition-colors duration-300 mr-4"><QuestIcon type={quest.type} /></div><div>{isPracticeQuest && <p className="text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-1">Trắc nghiệm</p>}<h3 className={`text-lg font-bold ${isCompleted ? 'text-gray-400' : 'text-cyan-300'}`}>{quest.title}</h3><p className="text-sm text-gray-400 max-w-md">{quest.description}</p></div></div></div><div className="p-5 space-y-4">{!isCompleted && (
+    // --- THAY ĐỔI: Logic hiển thị thanh Progress ---
+    <div>
+      {isPracticeQuest ? (
+        // Nhiệm vụ Practice: Hiển thị trạng thái hoàn thành hoặc thanh progress
+        isReviewUnlocked ? (
+          <MainProgressCompleted />
+        ) : (
+          <div>
+            <div className="flex justify-between items-center text-xs text-gray-300 mb-1">
+              <span>Progress</span>
+              <span>{overallProgress.progress} / {overallProgress.total}</span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-2.5">
+              <div className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2.5 rounded-full transition-all duration-500" style={{ width: `${overallPercentage}%` }}></div>
+            </div>
+          </div>
+        )
+      ) : (
+        // Nhiệm vụ thường: Luôn hiển thị thanh progress
+        <div>
+          <div className="flex justify-between items-center text-xs text-gray-300 mb-1">
+            <span>Progress</span>
+            <span>{quest.progress} / {quest.total}</span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2.5">
+            <div className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2.5 rounded-full transition-all duration-500" style={{ width: `${(quest.progress / quest.total) * 100}%` }}></div>
+          </div>
+        </div>
+      )}
+    </div>
+  )}{isPracticeQuest && quest.status !== 'completed' && (isReviewUnlocked ? (<div className="pt-4 border-t border-gray-700/50"><h4 className="font-semibold text-sm text-gray-400 mb-3">Lộ trình ôn tập:</h4><div className="space-y-2">{displaySubQuests.map(sq => { switch(sq.status) { case 'completed': return <SubQuestCompleted key={sq.id} subQuest={sq} />; case 'active': return <SubQuestActive key={sq.id} subQuest={sq} />; case 'locked': return <SubQuestLocked key={sq.id} subQuest={sq} />; default: return null; }})}</div></div>) : (<ReviewPathLocked />))}{isPracticeQuest && canBeClaimed && quest.status !== 'completed' && (<div className="flex items-center justify-center space-x-3 text-center py-2"><CheckCircleIcon className="text-green-400" /><p className="font-semibold text-green-300">Xuất sắc! Đã hoàn thành tất cả mục tiêu.</p></div>)}<div><h4 className="font-semibold text-sm text-gray-400 mb-2">Phần thưởng:</h4><div className="flex flex-wrap gap-3 text-sm"><div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-yellow-500/30 shadow-sm"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Gold" className="w-4 h-4" /> <span className="text-yellow-300 font-bold">{quest.rewards.gold}</span></div><div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-purple-500/30 shadow-sm"><XPIcon /> <span className="text-purple-300 font-bold">{quest.rewards.xp}</span></div></div></div></div><div className="bg-gray-900/50 px-5 py-3 flex items-center justify-end space-x-3">{quest.status === 'available' && <button onClick={() => onAction(quest.id, 'accept')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-md hover:shadow-cyan-500/50 transform hover:scale-105">Nhận NV</button>}{quest.status === 'in_progress' && <button onClick={() => onAction(quest.id, 'claim')} disabled={!canBeClaimed} className={`px-5 py-2 rounded-md font-semibold text-sm transition-all duration-300 transform ${canBeClaimed ? 'text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md hover:shadow-emerald-500/50 hover:scale-105' : 'text-gray-400 bg-gray-600 cursor-not-allowed'}`}>Nhận thưởng</button>}{isCompleted && <button onClick={() => onAction(quest.id, 'claim')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md hover:shadow-emerald-500/50 transform hover:scale-105">Nhận thưởng</button>}</div></div>);
 };
 
-// --- Component Chính (Đã cập nhật để quản lý Popup) ---
+// --- Component Chính ---
 export default function App() {
   const [quests, setQuests] = useState(initialQuests);
   const [activeTab, setActiveTab] = useState('active');
   const [isControlPanelOpen, setControlPanelOpen] = useState(false);
-
   const handleQuestAction = useCallback((questId, action) => { setQuests(currentQuests => { if (action === 'claim') return currentQuests.filter(q => q.id !== questId); if (action === 'accept') return currentQuests.map(q => q.id === questId ? { ...q, status: 'in_progress' } : q); return currentQuests; }); }, []);
   const filteredQuests = useMemo(() => { const sortedQuests = [...quests].sort((a, b) => { const statusOrder = { 'in_progress': 1, 'available': 2, 'completed': 3 }; return statusOrder[a.status] - statusOrder[b.status]; }); if (activeTab === 'active') return sortedQuests.filter(q => q.status === 'available' || q.status === 'in_progress'); return sortedQuests.filter(q => q.status === 'completed'); }, [quests, activeTab]);
   const TabButton = ({ tabName, label }) => (<button onClick={() => setActiveTab(tabName)} className={`px-6 py-2 rounded-t-lg font-semibold transition-all duration-300 relative ${activeTab === tabName ? 'bg-gray-800/70 text-cyan-300' : 'bg-gray-900/50 text-gray-400 hover:bg-gray-800/50 hover:text-white'}`}>{label}{activeTab === tabName && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-cyan-400"></div>}</button>);
 
   return (
     <>
-      <style>{`
-        .gradient-background { background-color: #020617; background-image: radial-gradient(at top, #1e293b, #020617 50%); }
-        .quest-card { border: 1px solid transparent; animation: fadeIn 0.5s ease-out forwards; }
-        .quest-card:hover { border-color: #0891b2; box-shadow: 0 0 25px rgba(14, 165, 233, 0.3); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
+      <style>{`.gradient-background { background-color: #020617; background-image: radial-gradient(at top, #1e293b, #020617 50%); } .quest-card { border: 1px solid transparent; animation: fadeIn 0.5s ease-out forwards; } .quest-card:hover { border-color: #0891b2; box-shadow: 0 0 25px rgba(14, 165, 233, 0.3); } @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }`}</style>
       <button onClick={() => setControlPanelOpen(true)} className="fixed bottom-5 right-5 z-40 bg-cyan-600/80 hover:bg-cyan-500 text-white p-3 rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 transform hover:scale-110" aria-label="Mở bảng điều khiển test"><SettingsIcon /></button>
       {isControlPanelOpen && <ControlPanel quests={quests} setQuests={setQuests} onClose={() => setControlPanelOpen(false)} />}
       <div className="min-h-screen text-white font-sans p-4 sm:p-8 gradient-background">
