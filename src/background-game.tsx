@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './coin-display.tsx';
@@ -499,6 +497,57 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           setIsSyncingData(false);
       }
   };
+    
+  const handleShopPurchase = async (item: any) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+      console.error("Cannot purchase item: User not authenticated.");
+      throw new Error("Người dùng chưa được xác thực.");
+    }
+    if (!item || typeof item.price !== 'number' || !item.id) {
+      console.error("Invalid item data for purchase:", item);
+      throw new Error("Dữ liệu vật phẩm không hợp lệ.");
+    }
+
+    const userDocRef = doc(db, 'users', userId);
+    setIsSyncingData(true);
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) { throw new Error("Tài liệu người dùng không tồn tại!"); }
+
+        const currentCoins = userDoc.data().coins || 0;
+        if (currentCoins < item.price) { throw new Error("Không đủ vàng."); }
+
+        const updates: { [key: string]: any } = { coins: currentCoins - item.price, };
+
+        // Handle specific item logic - ID 1009 is for "Sách Cổ"
+        if (item.id === 1009) {
+          const currentBooks = userDoc.data().ancientBooks || 0;
+          updates.ancientBooks = currentBooks + 1;
+        } else {
+          console.warn(`Purchase logic not implemented for item ID: ${item.id}`);
+        }
+
+        transaction.update(userDocRef, updates);
+      });
+
+      // Update local state after successful transaction
+      setCoins(prev => prev - item.price);
+      if (item.id === 1009) {
+        setAncientBooks(prev => prev + 1);
+      }
+      console.log(`Purchase successful for item ${item.name}.`);
+      alert(`Mua thành công ${item.name}!`);
+    } catch (error) {
+      console.error("Shop purchase transaction failed:", error);
+      alert(`Mua thất bại: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
+    } finally {
+      setIsSyncingData(false);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
@@ -734,7 +783,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 )}
             </ErrorBoundary>
         </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} />}</ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} onPurchase={handleShopPurchase} />}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> <ErrorBoundary>{isVocabularyChestOpen && currentUser && ( <VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)} onGemReward={handleGemReward} displayedCoins={displayedCoins} /> )}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}> <ErrorBoundary> {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && ( <AchievementsScreen onClose={toggleAchievements} userId={auth.currentUser.uid} initialData={vocabularyData} onClaimReward={handleRewardClaim} masteryCardsCount={masteryCards} displayedCoins={displayedCoins} /> )} </ErrorBoundary> </div>
         
