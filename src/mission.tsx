@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useCallback } from 'react';
 
-// --- Dữ liệu mẫu (ĐÃ CẬP NHẬT) ---
+// --- Dữ liệu mẫu (Không thay đổi) ---
 const initialQuests = [
-  // --- Nhiệm vụ Trắc nghiệm mới ---
+  // --- Nhiệm vụ Trắc nghiệm ---
   {
     id: 7,
     title: 'Hoàn thành Practice 1 (100 Câu)',
@@ -26,7 +26,7 @@ const initialQuests = [
     type: 'practice',
     level: 10,
     rewards: { xp: 2500, gold: 1200 },
-    status: 'available', // Nhiệm vụ chưa bắt đầu
+    status: 'available',
     subQuests: [
       { id: 'p2_1', title: 'Hoàn thành Practice 2 Preview 1', completed: false },
       { id: 'p2_2', title: 'Hoàn thành Practice 2 Preview 2', completed: false },
@@ -87,7 +87,7 @@ const initialQuests = [
   },
 ];
 
-// --- Icon Components (SVG) - CẬP NHẬT: Thêm icon mới ---
+// --- Icon Components (SVG) - CẬP NHẬT: Thêm icon trạng thái ---
 const SwordIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400"><path d="M14.5 17.5 3 6l3-3 11.5 11.5"/><path d="m21 21-9-9"/><path d="m15 12-3.5 3.5"/><path d="m3 21 3-3"/></svg>;
 const LeafIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400"><path d="M11 20A7 7 0 0 1 4 13H2a9 9 0 0 0 9 9z"/><path d="M13 4a7 7 0 0 1 7 7v1h2a9 9 0 0 0-9-9z"/><path d="M2 12h1.1a2.9 2.9 0 0 1 2.8 2.4L7 22"/><path d="M22 12h-1.1a2.9 2.9 0 0 0-2.8-2.4L17 2"/></svg>;
 const ShieldIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>;
@@ -95,9 +95,9 @@ const CompassIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" hei
 const HammerIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-400"><path d="m15 12-8.373 8.373a1 1 0 1 1-1.414-1.414L12.586 12l-2.829-2.828a1 1 0 0 1 0-1.414l4.243-4.243a1 1 0 0 1 1.414 0l2.828 2.828a1 1 0 0 1 0 1.414L15 12z"></path></svg>;
 const XPIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-purple-400"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>;
 const PencilIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-teal-400"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
-const CheckSquareIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan-400"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>;
-const SquareIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>;
-const ChevronDownIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>;
+// --- Icon trạng thái mới ---
+const CompletedObjectiveIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400 flex-shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>;
+const PendingObjectiveIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 flex-shrink-0"><circle cx="12" cy="12" r="10"></circle></svg>;
 
 
 const QuestIcon = ({ type }: { type: string }) => {
@@ -107,16 +107,16 @@ const QuestIcon = ({ type }: { type: string }) => {
     escort: <ShieldIcon />,
     exploration: <CompassIcon />,
     crafting: <HammerIcon />,
-    practice: <PencilIcon />, // Thêm icon cho nhiệm vụ trắc nghiệm
+    practice: <PencilIcon />,
   };
   return icons[type] || <ShieldIcon />;
 };
 
-// --- Component Thẻ Nhiệm Vụ (ĐÃ NÂNG CẤP) ---
+// --- Component Thẻ Nhiệm Vụ (ĐÃ NÂNG CẤP THEO HƯỚNG DASHBOARD) ---
 const QuestCard = ({ quest, onAction, style }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const isPracticeQuest = quest.type === 'practice';
   const isCompleted = quest.status === 'completed';
+  const isInProgress = quest.status === 'in_progress';
 
   // Tính toán tiến độ động cho nhiệm vụ trắc nghiệm
   const { progress, total } = useMemo(() => {
@@ -124,7 +124,6 @@ const QuestCard = ({ quest, onAction, style }) => {
       const completedCount = quest.subQuests.filter(sq => sq.completed).length;
       return { progress: completedCount, total: quest.subQuests.length };
     }
-    // Trả về tiến độ gốc cho các nhiệm vụ thường
     return { progress: quest.progress, total: quest.total };
   }, [quest, isPracticeQuest]);
 
@@ -136,12 +135,8 @@ const QuestCard = ({ quest, onAction, style }) => {
       style={style}
       className={`bg-gray-800/70 backdrop-blur-md rounded-xl overflow-hidden transition-all duration-300 group quest-card ${isCompleted ? 'opacity-70' : ''}`}
     >
-      {/* --- HEADER (CÓ THỂ NHẤN ĐỂ MỞ RỘNG) --- */}
-      <button
-        onClick={() => isPracticeQuest && setIsExpanded(!isExpanded)}
-        className={`w-full text-left relative p-5 border-b-2 ${isCompleted ? 'border-green-500/30' : 'border-cyan-500/30'} ${isPracticeQuest ? 'cursor-pointer' : 'cursor-default'}`}
-        disabled={!isPracticeQuest}
-      >
+      {/* --- HEADER (Tĩnh, không tương tác) --- */}
+      <div className={`relative p-5 border-b-2 ${isCompleted ? 'border-green-500/30' : 'border-cyan-500/30'}`}>
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-300"></div>
         <div className="absolute top-4 right-4 bg-gray-900/80 px-3 py-1 rounded-full text-xs font-bold text-yellow-300 border border-yellow-500/50">
           Lv. {quest.level}
@@ -156,13 +151,8 @@ const QuestCard = ({ quest, onAction, style }) => {
               <p className="text-sm text-gray-400 max-w-md">{quest.description}</p>
             </div>
           </div>
-          {isPracticeQuest && (
-            <div className={`absolute top-1/2 right-0 -translate-y-1/2 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-              <ChevronDownIcon />
-            </div>
-          )}
         </div>
-      </button>
+      </div>
 
       {/* --- PHẦN THÂN THẺ (NỘI DUNG CHÍNH) --- */}
       <div className="p-5">
@@ -182,14 +172,14 @@ const QuestCard = ({ quest, onAction, style }) => {
           </div>
         )}
 
-        {/* --- DANH SÁCH NHIỆM VỤ CON (CHỈ HIỂN THỊ KHI MỞ RỘNG) --- */}
-        {isPracticeQuest && isExpanded && (
+        {/* --- BẢNG BÁO CÁO TIẾN ĐỘ (hiển thị tự động) --- */}
+        {isPracticeQuest && isInProgress && (
            <div className="mt-4 pt-4 border-t border-gray-700/50">
-             <h4 className="font-semibold text-sm text-gray-400 mb-3">Các mục tiêu:</h4>
+             <h4 className="font-semibold text-sm text-gray-400 mb-3">Mục tiêu hiện tại:</h4>
              <ul className="space-y-3">
               {quest.subQuests.map((subQuest) => (
                 <li key={subQuest.id} className="flex items-center space-x-3">
-                  {subQuest.completed ? <CheckSquareIcon /> : <SquareIcon />}
+                  {subQuest.completed ? <CompletedObjectiveIcon /> : <PendingObjectiveIcon />}
                   <span className={`transition-colors duration-300 ${subQuest.completed ? 'text-gray-500 line-through' : 'text-gray-200'}`}>
                     {subQuest.title}
                   </span>
@@ -201,7 +191,7 @@ const QuestCard = ({ quest, onAction, style }) => {
 
         {/* Rewards section */}
         <div className="mt-4">
-          <h4 className="font-semibold text-sm text-gray-400 mb-2">Rewards:</h4>
+          <h4 className="font-semibold text-sm text-gray-400 mb-2">Phần thưởng:</h4>
           <div className="flex flex-wrap gap-3 text-sm">
             <div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-yellow-500/30 shadow-sm transition-all duration-300 hover:border-yellow-500/60 hover:shadow-md hover:shadow-yellow-500/10">
               <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Gold" className="w-4 h-4" /> 
@@ -219,10 +209,10 @@ const QuestCard = ({ quest, onAction, style }) => {
       <div className="bg-gray-900/50 px-5 py-3 flex items-center justify-end space-x-3">
         {quest.status === 'available' && (
           <button onClick={() => onAction(quest.id, 'accept')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-md hover:shadow-cyan-500/50 transform hover:scale-105">
-            Accept
+            Nhận NV
           </button>
         )}
-        {quest.status === 'in_progress' && (
+        {isInProgress && (
           <button 
             onClick={() => onAction(quest.id, 'claim')} 
             disabled={!canBeClaimed}
@@ -232,12 +222,12 @@ const QuestCard = ({ quest, onAction, style }) => {
               : 'text-gray-400 bg-gray-600 cursor-not-allowed'
             }`}
           >
-            Claim
+            Nhận thưởng
           </button>
         )}
         {isCompleted && (
           <button onClick={() => onAction(quest.id, 'claim')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md hover:shadow-emerald-500/50 transform hover:scale-105">
-            Claim
+            Nhận thưởng
           </button>
         )}
       </div>
@@ -253,7 +243,6 @@ export default function App() {
 
   const handleQuestAction = useCallback((questId: number, action: 'accept' | 'abandon' | 'claim') => {
     setQuests(currentQuests => {
-      // Logic nhận thưởng hoặc hủy nhiệm vụ
       if (action === 'claim') {
         return currentQuests.filter(q => q.id !== questId);
       }
@@ -262,17 +251,10 @@ export default function App() {
         if (q.id !== questId) return q;
 
         if (action === 'accept') {
-          // Khi chấp nhận, đổi status và tự động hoàn thành 1 mục con đầu tiên cho nhiệm vụ practice để demo
-          if (q.type === 'practice' && q.subQuests) {
-              const newSubQuests = [...q.subQuests];
-              if (newSubQuests.length > 0) newSubQuests[0] = { ...newSubQuests[0], completed: true };
-              return { ...q, status: 'in_progress', subQuests: newSubQuests };
-          }
           return { ...q, status: 'in_progress' };
         }
 
         if (action === 'abandon') {
-           // Reset tiến độ khi hủy
           if (q.type === 'practice' && q.subQuests) {
              const resetSubQuests = q.subQuests.map(sq => ({ ...sq, completed: false }));
              return { ...q, status: 'available', subQuests: resetSubQuests };
@@ -285,7 +267,6 @@ export default function App() {
   }, []);
 
   const filteredQuests = useMemo(() => {
-    // Sắp xếp để nhiệm vụ 'in_progress' lên trên 'available'
     const sortedQuests = [...quests].sort((a, b) => {
       const statusOrder = { 'in_progress': 1, 'available': 2, 'completed': 3 };
       return statusOrder[a.status] - statusOrder[b.status];
@@ -342,7 +323,7 @@ export default function App() {
           </header>
 
           <div className="flex border-b border-gray-700 mb-6">
-            <TabButton tabName="active" label="Đang Nhận" />
+            <TabButton tabName="active" label="Đang Hoạt Động" />
             <TabButton tabName="completed" label="Đã Hoàn Thành" />
           </div>
 
