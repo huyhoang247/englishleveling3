@@ -161,14 +161,6 @@ const ScopedStyles = () => (
         @keyframes vocabulary-chest-flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
         @keyframes vocabulary-chest-deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
-        @keyframes vocabulary-chest-pulse-fast {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .vocabulary-chest-root .animate-pulse-fast {
-            animation: vocabulary-chest-pulse-fast 1s infinite;
-        }
-
         .vocabulary-chest-root .card-opening-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -230,12 +222,12 @@ const CardCapacityIcon = ({ className = '' }: { className?: string }) => (
 
 const CardCapacityDisplay = ({ current, max }: { current: number; max: number }) => (
     <div 
-        className="bg-gradient-to-br from-purple-500 via-violet-600 to-indigo-700 rounded-lg p-0.5 group hover:scale-105 transition-transform duration-300 cursor-pointer shadow-lg hover:shadow-violet-500/40"
-        title="Nâng cấp sức chứa thẻ"
+        className="relative p-0.5 rounded-lg bg-gradient-to-br from-cyan-400 via-cyan-500 to-blue-600 group hover:scale-105 transition-transform duration-300 cursor-pointer shadow-lg hover:shadow-cyan-500/40"
+        title="Sức chứa thẻ (Nâng cấp trong Cửa hàng)"
     >
-        <div className="bg-slate-800/80 backdrop-blur-sm rounded-[7px] px-2 py-1 flex items-center gap-2 relative overflow-hidden">
+        <div className="flex items-center gap-2 rounded-[7px] bg-slate-800/80 backdrop-blur-sm px-3 py-1 relative overflow-hidden">
             {/* Shiny effect on hover */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-400/20 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-150%] transition-all duration-700"></div>
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-150%] transition-all duration-700"></div>
 
             {/* Icon */}
             <div className="relative flex-shrink-0">
@@ -243,16 +235,12 @@ const CardCapacityDisplay = ({ current, max }: { current: number; max: number })
             </div>
 
             {/* Text: current / max */}
-            <div className="font-semibold text-white text-xs tracking-wider">
+            <div className="font-bold text-white text-sm tracking-wide">
                 {current.toLocaleString()}
-                <span className="text-indigo-300 font-normal opacity-80">
+                <span className="text-blue-300 opacity-80 font-medium">
                     {' / '}{max.toLocaleString()}
                 </span>
             </div>
-            
-            {/* Sparkles - a more subtle effect */}
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-violet-400 rounded-full blur-sm opacity-70 animate-pulse"></div>
-            <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-purple-400 rounded-full blur-sm opacity-70 animate-pulse" style={{ animationDelay: '500ms' }}></div>
         </div>
     </div>
 );
