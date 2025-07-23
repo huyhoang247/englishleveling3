@@ -1,3 +1,5 @@
+// --- background-game.tsx (4).txt (MODIFIED) ---
+
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './coin-display.tsx';
@@ -42,6 +44,28 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
+);
+
+// --- NEW: Card Capacity Icon Component ---
+const CardCapacityIcon = ({ className = '' }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <path d="M21.75 6.75V17.25C21.75 18.4913 20.7413 19.5 19.5 19.5H4.5C3.25868 19.5 2.25 18.4913 2.25 17.25V6.75C2.25 5.50868 3.25868 4.5 4.5 4.5H19.5C20.7413 4.5 21.75 5.50868 21.75 6.75ZM19.5 2.25H4.5C2.01472 2.25 0 4.26472 0 6.75V17.25C0 19.7353 2.01472 21.75 4.5 21.75H19.5C21.9853 21.75 24 19.7353 24 17.25V6.75C24 4.26472 21.9853 2.25 19.5 2.25Z" transform="translate(0, 1)"/>
+        <path d="M1.5 5.5H22.5" stroke="#1f2937" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+);
+
+
+// --- NEW: Card Capacity Display Component ---
+const CardCapacityDisplay = ({ current, max }: { current: number; max: number }) => (
+    <div className="bg-gradient-to-br from-slate-600 to-slate-800 rounded-lg p-0.5 flex items-center shadow-lg border border-slate-400/80 relative group cursor-pointer hover:scale-105 transition-all duration-300">
+        <div className="relative mr-1.5 ml-1 flex items-center justify-center">
+            <CardCapacityIcon className="w-4 h-4 text-slate-300" />
+        </div>
+        <div className="font-bold text-white text-xs tracking-wide pr-1.5">
+            {current.toLocaleString()}
+            <span className="opacity-60 font-normal text-xs">/{max.toLocaleString()}</span>
+        </div>
+    </div>
 );
 
 
@@ -123,7 +147,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [ancientBooks, setAncientBooks] = useState(0);
   const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([]);
   const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([null, null, null]);
-
+  // --- NEW STATE for Card Capacity ---
+  const [totalVocabCollected, setTotalVocabCollected] = useState(0);
+  const [cardCapacity, setCardCapacity] = useState(100);
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
@@ -216,6 +242,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         const skillsData = userData.skills || { owned: [], equipped: [null, null, null] };
         setOwnedSkills(skillsData.owned);
         setEquippedSkillIds(skillsData.equipped);
+        // --- UPDATED: Fetch Card Capacity data ---
+        setTotalVocabCollected(userData.totalVocabCollected || 0);
+        setCardCapacity(userData.cardCapacity || 100); // Default to 100 if not present
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
@@ -224,6 +253,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           bossBattleHighestFloor: 0,
           ancientBooks: 0,
           skills: { owned: [], equipped: [null, null, null] },
+          // --- UPDATED: Add new fields for new users ---
+          totalVocabCollected: 0,
+          cardCapacity: 100,
           createdAt: new Date(),
         });
         setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0); setPickaxes(50);
@@ -232,6 +264,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setAncientBooks(0);
         setOwnedSkills([]);
         setEquippedSkillIds([null, null, null]);
+        // --- UPDATED: Set state for new users ---
+        setTotalVocabCollected(0);
+        setCardCapacity(100);
       }
     } catch (error) { console.error("Error fetching user data:", error); } 
     finally { setIsLoadingUserData(false); }
@@ -529,9 +564,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           updates.ancientBooks = currentBooks + quantity;
         } else {
            // Logic for other stackable items can be added here
-          // For non-stackable items, quantity will be 1, so this part might not be needed
-          // or could be a generic inventory update.
-          console.warn(`Purchase logic for a quantity > 1 might not be fully implemented for item ID: ${item.id}`);
+           // For future: item.id for "Card Capacity Upgrade" would go here
+           console.warn(`Purchase logic for a quantity > 1 might not be fully implemented for item ID: ${item.id}`);
         }
 
         transaction.update(userDocRef, updates);
@@ -567,6 +601,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setAncientBooks(0);
         setOwnedSkills([]);
         setEquippedSkillIds([null, null, null]);
+        // --- UPDATED: Reset new state on logout ---
+        setTotalVocabCollected(0);
+        setCardCapacity(100);
         setJackpotPool(0); setIsLoadingUserData(true); setVocabularyData(null);
       }
     });
@@ -715,7 +752,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                      <img src={uiAssets.menuIcon} alt="Menu Icon" className="w-5 h-5 object-contain" />
                 </button>
                 <div className="flex-1"></div>
-                <div className="flex items-center space-x-1 currency-display-container relative z-10">
+                {/* --- UPDATED: Header Currency Display Container --- */}
+                <div className="flex items-center space-x-1.5 currency-display-container relative z-10">
                     <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                         <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={16} color="#a78bfa" className="relative z-20" /></div>
@@ -724,6 +762,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
                         <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                     </div>
+                    {/* --- NEW: Card Capacity Display --- */}
+                    <CardCapacityDisplay current={totalVocabCollected} max={cardCapacity} />
                     <CoinDisplay displayedCoins={displayedCoins} />
                 </div>
             </div>
@@ -788,7 +828,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             </ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} onPurchase={handleShopPurchase} />}</ErrorBoundary> </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> <ErrorBoundary>{isVocabularyChestOpen && currentUser && ( <VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)} onGemReward={handleGemReward} displayedCoins={displayedCoins} /> )}</ErrorBoundary> </div>
+        {/* --- UPDATED: Pass new props to VocabularyChestScreen --- */}
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> <ErrorBoundary>{isVocabularyChestOpen && currentUser && ( <VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)} onGemReward={handleGemReward} displayedCoins={displayedCoins} totalVocabCollected={totalVocabCollected} cardCapacity={cardCapacity} onVocabUpdate={(count) => setTotalVocabCollected(prev => prev + count)} /> )}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}> <ErrorBoundary> {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && ( <AchievementsScreen onClose={toggleAchievements} userId={auth.currentUser.uid} initialData={vocabularyData} onClaimReward={handleRewardClaim} masteryCardsCount={masteryCards} displayedCoins={displayedCoins} /> )} </ErrorBoundary> </div>
         
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
