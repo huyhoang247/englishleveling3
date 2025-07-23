@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 
-// --- THAY ĐỔI: Dữ liệu mẫu đã được đơn giản hóa, loại bỏ phần thưởng item ---
+// --- Dữ liệu mẫu (Không thay đổi) ---
 const initialQuests = [
   {
     id: 1,
@@ -11,7 +11,7 @@ const initialQuests = [
     progress: 0,
     total: 1,
     rewards: { xp: 500, gold: 1000 },
-    status: 'available', // 'available', 'in_progress', 'completed'
+    status: 'available',
   },
   {
     id: 2,
@@ -135,19 +135,25 @@ const QuestCard = ({ quest, onAction, style }) => {
           </div>
         )}
 
-        {/* --- THAY ĐỔI: Khu vực phần thưởng được thiết kế lại --- */}
+        {/* --- THAY ĐỔI: Phần thưởng được bọc riêng lẻ trong các 'tag' --- */}
         <div className="mt-4">
           <h4 className="font-semibold text-sm text-gray-200 mb-2">Phần thưởng:</h4>
-          <div className="bg-gray-900/50 p-3 rounded-lg">
-            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-              <div className="flex items-center space-x-1.5"><GoldIcon /> <span className="text-yellow-300">{quest.rewards.gold} Vàng</span></div>
-              <div className="flex items-center space-x-1.5"><XPIcon /> <span className="text-purple-300">{quest.rewards.xp} XP</span></div>
+          <div className="flex flex-wrap gap-x-3 gap-y-2 text-sm">
+            {/* Tag cho Vàng */}
+            <div className="flex items-center space-x-1.5 bg-slate-700/50 px-3 py-1 rounded-md border border-slate-600/70">
+              <GoldIcon /> 
+              <span className="text-yellow-300 font-medium">{quest.rewards.gold} Vàng</span>
+            </div>
+            {/* Tag cho XP */}
+            <div className="flex items-center space-x-1.5 bg-slate-700/50 px-3 py-1 rounded-md border border-slate-600/70">
+              <XPIcon /> 
+              <span className="text-purple-300 font-medium">{quest.rewards.xp} XP</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* --- THAY ĐỔI: Nút bấm và hành động được cập nhật --- */}
+      {/* Footer with Actions (Không thay đổi) */}
       <div className="bg-gray-900/50 px-5 py-3 flex items-center justify-end space-x-3">
         {quest.status === 'available' && (
           <button onClick={() => onAction(quest.id, 'accept')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-md hover:shadow-cyan-500/50 transform hover:scale-105">
@@ -170,16 +176,14 @@ const QuestCard = ({ quest, onAction, style }) => {
 };
 
 
-// --- Component Chính ---
+// --- Component Chính (Không thay đổi) ---
 export default function App() {
   const [quests, setQuests] = useState(initialQuests);
   const [activeTab, setActiveTab] = useState('active');
 
-  // --- THAY ĐỔI: Thêm hành động 'claim' để xử lý việc nhận thưởng ---
   const handleQuestAction = useCallback((questId: number, action: 'accept' | 'abandon' | 'claim') => {
     setQuests(currentQuests => {
       if (action === 'claim') {
-        // Khi nhận thưởng, loại bỏ nhiệm vụ khỏi danh sách
         return currentQuests.filter(q => q.id !== questId);
       }
       return currentQuests.map(q => {
