@@ -507,6 +507,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
     
+  // START: CẬP NHẬT LOGIC MUA HÀNG
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) {
@@ -532,15 +533,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
         const updates: { [key: string]: any } = { coins: currentCoins - totalCost, };
 
-        // Handle specific item logic - ID 1009 is for "Sách Cổ"
-        if (item.id === 1009) {
+        // Handle specific item logic
+        if (item.id === 1009) { // Sách Cổ
           const currentBooks = userDoc.data().ancientBooks || 0;
           updates.ancientBooks = currentBooks + quantity;
+        } else if (item.id === 2001) { // Nâng Cấp Sức Chứa Thẻ
+          const currentCapacity = userDoc.data().cardCapacity || 100;
+          updates.cardCapacity = currentCapacity + quantity;
         } else {
-           // Logic for other stackable items can be added here
-           // For non-stackable items, quantity will be 1, so this part might not be needed
-          // or could be a generic inventory update.
-          console.warn(`Purchase logic for a quantity > 1 might not be fully implemented for item ID: ${item.id}`);
+           console.warn(`Purchase logic might not be fully implemented for item ID: ${item.id}`);
         }
 
         transaction.update(userDocRef, updates);
@@ -550,9 +551,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setCoins(prev => prev - totalCost);
       if (item.id === 1009) {
         setAncientBooks(prev => prev + quantity);
+      } else if (item.id === 2001) {
+        setCardCapacity(prev => prev + quantity);
       }
+
       console.log(`Purchase successful for ${quantity}x ${item.name}.`);
       alert(`Mua thành công x${quantity} ${item.name}!`);
+
     } catch (error) {
       console.error("Shop purchase transaction failed:", error);
       alert(`Mua thất bại: ${error instanceof Error ? error.message : String(error)}`);
@@ -561,6 +566,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setIsSyncingData(false);
     }
   };
+  // END: CẬP NHẬT LOGIC MUA HÀNG
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
