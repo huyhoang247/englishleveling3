@@ -1,4 +1,4 @@
-// --- lat-the.tsx.txt (MODIFIED) ---
+// --- lat-the.tsx.txt (CORRECTED - Header UI moved here) ---
 
 // --- START OF FILE: lat-the.tsx (FULL CODE) ---
 
@@ -99,6 +99,10 @@ const ScopedStyles = () => (
         @media (max-width: 640px) {
             .vocabulary-chest-root .vocab-screen-home-btn span {
                 display: none;
+            }
+            /* NEW: Adjust spacing on small screens for header items */
+            .vocabulary-chest-root .header-right-group {
+                gap: 8px;
             }
         }
         
@@ -214,6 +218,36 @@ const HomeIcon = ({ className = '' }: { className?: string }) => (
         <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
     </svg>
 );
+
+// --- NEW: Card Capacity Icon Component (Moved here) ---
+const CardCapacityIcon = ({ className = '' }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <path d="M21.75 6.75V17.25C21.75 18.4913 20.7413 19.5 19.5 19.5H4.5C3.25868 19.5 2.25 18.4913 2.25 17.25V6.75C2.25 5.50868 3.25868 4.5 4.5 4.5H19.5C20.7413 4.5 21.75 5.50868 21.75 6.75ZM19.5 2.25H4.5C2.01472 2.25 0 4.26472 0 6.75V17.25C0 19.7353 2.01472 21.75 4.5 21.75H19.5C21.9853 21.75 24 19.7353 24 17.25V6.75C24 4.26472 21.9853 2.25 19.5 2.25Z" transform="translate(0, 1)"/>
+        <path d="M1.5 5.5H22.5" stroke="#111827" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+);
+
+// --- NEW: Card Capacity Display Component (Moved here) ---
+const CardCapacityDisplay = ({ current, max }: { current: number; max: number }) => (
+    <div style={{
+        backgroundColor: 'rgba(51, 65, 85, 0.8)', // slate-700/80
+        borderRadius: '8px',
+        padding: '4px 8px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        border: '1px solid rgb(71, 85, 105)', // slate-600
+        cursor: 'default',
+        transition: 'background-color 0.2s'
+    }}>
+        <CardCapacityIcon style={{ width: '18px', height: '18px', color: '#d1d5db' /* slate-300 */ }} />
+        <div style={{ fontWeight: '600', color: '#f9fafb' /* gray-50 */, fontSize: '0.875rem', letterSpacing: '0.025em' }}>
+            {current.toLocaleString()}
+            <span style={{ opacity: '0.6', fontWeight: '500', fontSize: '0.8rem' }}>/{max.toLocaleString()}</span>
+        </div>
+    </div>
+);
+
 
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
     if (!isVisible) return null;
@@ -384,7 +418,6 @@ const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 // === 3. COMPONENT CHÍNH =================================================
 // ========================================================================
 
-// --- UPDATED: Props interface ---
 interface VocabularyChestScreenProps { 
     onClose: () => void; 
     currentUserId: string | null; 
@@ -398,7 +431,6 @@ interface VocabularyChestScreenProps {
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced';
 const PRELOAD_POOL_SIZE = 20;
 
-// --- UPDATED: Component signature to accept new props ---
 const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onUpdateCoins, onGemReward, displayedCoins, totalVocabCollected, cardCapacity, onVocabUpdate }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [] });
@@ -409,15 +441,12 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [isProcessingClick, setIsProcessingClick] = useState(false);
     const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType, price: number } | null>(null);
 
-    // NEW: Local state for animated coin display
     const [localDisplayedCoins, setLocalDisplayedCoins] = useState(displayedCoins);
 
-    // NEW: Sync local state with prop
     useEffect(() => {
         setLocalDisplayedCoins(displayedCoins);
     }, [displayedCoins]);
 
-    // NEW: Coin animation function (from quiz.tsx)
     const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
         if (startValue === endValue) return;
 
@@ -546,7 +575,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 });
             });
 
-            // This is the correct place to increment the total count in the database.
             batch.update(userDocRef, {
                 totalVocabCollected: increment(newWordsData.length)
             });
@@ -558,7 +586,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             if (err.code === 'not-found') {
                 console.log('User document not found, creating a new one...');
                 try {
-                   // When creating, set both total and capacity. The parent component will already have done this, but this is a failsafe.
                    await setDoc(userDocRef, { totalVocabCollected: 0, cardCapacity: 100 }); 
                    await updateUserProgressInFirestore(imageIds, chestType); 
                 } catch(creationError) {
@@ -570,11 +597,9 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
-    // --- UPDATED: handleOpenCards with capacity check ---
     const handleOpenCards = async (count: 1 | 4, chestType: ChestType, price: number) => {
         if (isProcessingClick) return;
 
-        // NEW: Capacity Check
         if (totalVocabCollected + count > cardCapacity) {
             alert(`Kho thẻ đã đầy! (${totalVocabCollected}/${cardCapacity}).\nVui lòng nâng cấp sức chứa trong Cửa hàng để tiếp tục.`);
             return;
@@ -612,8 +637,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 
         const imageIdsToSave = selectedOriginalIndices.map(index => index + 1);
         await updateUserProgressInFirestore(imageIdsToSave, chestType);
-        
-        // NEW: Call the callback to update the parent component's state
+
         onVocabUpdate(imageIdsToSave.length);
 
         setAvailableIndices(prev => ({ ...prev, [chestType]: prev[chestType].filter(idx => !selectedOriginalIndices.includes(idx)) }));
@@ -646,6 +670,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             
             {isLoading && <LoadingOverlay isVisible={true} />}
 
+            {/* --- UPDATED: Header now includes Card Capacity --- */}
             {!isLoading && (
                  <header className="main-header">
                     <button 
@@ -657,8 +682,10 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                         <span>Trang Chính</span>
                     </button>
                     
-                    {/* UPDATED: Use local state for animated display */}
-                    <CoinDisplay displayedCoins={localDisplayedCoins} isStatsFullscreen={false} />
+                    <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <CardCapacityDisplay current={totalVocabCollected} max={cardCapacity} />
+                        <CoinDisplay displayedCoins={localDisplayedCoins} isStatsFullscreen={false} />
+                    </div>
                 </header>
             )}
 
