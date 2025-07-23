@@ -92,14 +92,20 @@ const QuestIcon = ({ type }: { type: string }) => {
 // --- Component Thẻ Nhiệm Vụ ---
 const QuestCard = ({ quest, onAction, style }) => {
   const progressPercentage = (quest.progress / quest.total) * 100;
-  const isCompleted = quest.status === 'completed';
+  const isCompletedStatus = quest.status === 'completed';
+  
+  // --- THAY ĐỔI: Logic xác định có thể nhận thưởng ---
+  const canBeClaimed = quest.progress >= quest.total;
+
+  const claimButtonEnabledClass = "px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md hover:shadow-emerald-500/50 transform hover:scale-105";
+  const claimButtonDisabledClass = "px-5 py-2 rounded-md font-semibold text-sm bg-gray-600 text-gray-400 cursor-not-allowed";
 
   return (
     <div
       style={style}
-      className={`bg-gray-800/70 backdrop-blur-md rounded-xl overflow-hidden transition-all duration-300 group quest-card ${isCompleted ? 'opacity-70' : ''}`}
+      className={`bg-gray-800/70 backdrop-blur-md rounded-xl overflow-hidden transition-all duration-300 group quest-card ${isCompletedStatus ? 'opacity-70' : ''}`}
     >
-      <div className={`relative p-5 border-b-2 ${isCompleted ? 'border-green-500/30' : 'border-cyan-500/30'}`}>
+      <div className={`relative p-5 border-b-2 ${isCompletedStatus ? 'border-green-500/30' : 'border-cyan-500/30'}`}>
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900/20 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-300"></div>
         <div className="absolute top-4 right-4 bg-gray-900/80 px-3 py-1 rounded-full text-xs font-bold text-yellow-300 border border-yellow-500/50">
           Lv. {quest.level}
@@ -110,7 +116,7 @@ const QuestCard = ({ quest, onAction, style }) => {
               <QuestIcon type={quest.type} />
             </div>
             <div>
-              <h3 className={`text-lg font-bold ${isCompleted ? 'text-gray-400' : 'text-cyan-300'}`}>{quest.title}</h3>
+              <h3 className={`text-lg font-bold ${isCompletedStatus ? 'text-gray-400' : 'text-cyan-300'}`}>{quest.title}</h3>
               <p className="text-sm text-gray-400 max-w-md">{quest.description}</p>
             </div>
           </div>
@@ -119,7 +125,7 @@ const QuestCard = ({ quest, onAction, style }) => {
 
       <div className="p-5">
         {/* Progress Bar */}
-        {!isCompleted && (
+        {!isCompletedStatus && (
           <div className="my-2">
             <div className="flex justify-between items-center text-xs text-gray-300 mb-1">
               <span>Tiến độ</span>
@@ -152,20 +158,24 @@ const QuestCard = ({ quest, onAction, style }) => {
         </div>
       </div>
 
-      {/* Footer with Actions */}
+      {/* --- THAY ĐỔI: Logic nút bấm đã được thiết kế lại --- */}
       <div className="bg-gray-900/50 px-5 py-3 flex items-center justify-end space-x-3">
         {quest.status === 'available' && (
-          <button onClick={() => onAction(quest.id, 'accept')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-md hover:shadow-cyan-500/50 transform hover:scale-105">
-            Accept
+          <button disabled className={claimButtonDisabledClass}>
+            Claim
           </button>
         )}
         {quest.status === 'in_progress' && (
-          <button onClick={() => onAction(quest.id, 'abandon')} className="px-5 py-2 rounded-md text-gray-300 font-semibold text-sm transition-all duration-200 bg-gray-700 hover:bg-red-800 hover:text-white">
-            Abandon
+          <button 
+            onClick={() => onAction(quest.id, 'claim')} 
+            disabled={!canBeClaimed}
+            className={canBeClaimed ? claimButtonEnabledClass : claimButtonDisabledClass}
+          >
+            Claim
           </button>
         )}
-        {isCompleted && (
-          <button onClick={() => onAction(quest.id, 'claim')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md hover:shadow-emerald-500/50 transform hover:scale-105">
+        {isCompletedStatus && (
+          <button onClick={() => onAction(quest.id, 'claim')} className={claimButtonEnabledClass}>
             Claim
           </button>
         )}
