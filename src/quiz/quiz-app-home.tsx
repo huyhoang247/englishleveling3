@@ -1,6 +1,4 @@
-// --- START OF FILE quiz-app-home.tsx (18).txt ---
-
-// --- START OF FILE: quiz-app-home.tsx ---
+// --- START OF FILE quiz-app-home.tsx ---
 
 import { useState, useEffect } from 'react';
 import QuizApp from './quiz.tsx';
@@ -216,16 +214,7 @@ const GiftIcon = ({ className }: { className: string }) => (
 );
 
 const GoldCoinIcon = ({ className }: { className: string }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-            <radialGradient id="gold_grad_quiz" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(15 9) rotate(90) scale(10)">
-                <stop stopColor="#FEF08A"/>
-                <stop offset="1" stopColor="#F59E0B"/>
-            </radialGradient>
-        </defs>
-        <circle cx="12" cy="12" r="10" fill="url(#gold_grad_quiz)"/>
-        <text x="12" y="17" fontFamily="sans-serif" fontSize="12" fill="#A16207" textAnchor="middle" fontWeight="bold">G</text>
-    </svg>
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className={className} />
 );
 
 // Component to display practice list with progress
@@ -630,7 +619,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                         <div className="flex items-center gap-3">
                             <GoldCoinIcon className="w-8 h-8 flex-shrink-0" />
                             <div>
-                                <p className="font-semibold text-gray-800">{rewardAmount.toLocaleString()} Vàng</p>
+                                <p className="font-semibold text-gray-800">{rewardAmount.toLocaleString()}</p>
                                 <p className="text-sm text-gray-500">Hoàn thành {milestone} câu</p>
                             </div>
                         </div>
