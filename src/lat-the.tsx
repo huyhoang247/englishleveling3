@@ -221,41 +221,39 @@ const HomeIcon = ({ className = '' }: { className?: string }) => (
 );
 
 const CardCapacityIcon = ({ className = '' }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-        <path d="M21.75 6.75V17.25C21.75 18.4913 20.7413 19.5 19.5 19.5H4.5C3.25868 19.5 2.25 18.4913 2.25 17.25V6.75C2.25 5.50868 3.25868 4.5 4.5 4.5H19.5C20.7413 4.5 21.75 5.50868 21.75 6.75ZM19.5 2.25H4.5C2.01472 2.25 0 4.26472 0 6.75V17.25C0 19.7353 2.01472 21.75 4.5 21.75H19.5C21.9853 21.75 24 19.7353 24 17.25V6.75C24 4.26472 21.9853 2.25 19.5 2.25Z" transform="translate(0, 1)"/>
-        <path d="M1.5 5.5H22.5" stroke="#111827" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
+    <img 
+        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png" 
+        alt="Card Capacity Icon" 
+        className={className} 
+    />
 );
 
 const CardCapacityDisplay = ({ current, max }: { current: number; max: number }) => (
     <div 
-        className="bg-gradient-to-br from-cyan-500 to-blue-700 rounded-lg p-0.5 flex items-center shadow-lg border border-cyan-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"
+        className="bg-gradient-to-br from-purple-500 via-violet-600 to-indigo-700 rounded-lg p-0.5 group hover:scale-105 transition-transform duration-300 cursor-pointer shadow-lg hover:shadow-violet-500/40"
         title="Nâng cấp sức chứa thẻ"
     >
-        {/* Shiny effect on hover */}
-        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-        
-        {/* Icon */}
-        <div className="relative mr-1 flex items-center justify-center">
-            <CardCapacityIcon className="w-4 h-4 text-white" />
-        </div>
+        <div className="bg-slate-800/80 backdrop-blur-sm rounded-[7px] px-2 py-1 flex items-center gap-2 relative overflow-hidden">
+            {/* Shiny effect on hover */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-400/20 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-150%] transition-all duration-700"></div>
 
-        {/* Text: current / max */}
-        <div className="font-bold text-white text-xs tracking-wide">
-            {current.toLocaleString()}
-            <span className="text-blue-200/80 font-medium opacity-90">
-                 / {max.toLocaleString()}
-            </span>
-        </div>
+            {/* Icon */}
+            <div className="relative flex-shrink-0">
+                <CardCapacityIcon className="w-5 h-5" />
+            </div>
 
-        {/* Plus button for upgrading capacity */}
-        <div className="ml-1 w-3 h-3 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full flex items-center justify-center cursor-pointer border border-cyan-300 shadow-inner hover:shadow-cyan-300/50 hover:scale-110 transition-all duration-200">
-            <span className="text-white font-bold text-xs">+</span>
+            {/* Text: current / max */}
+            <div className="font-semibold text-white text-xs tracking-wider">
+                {current.toLocaleString()}
+                <span className="text-indigo-300 font-normal opacity-80">
+                    {' / '}{max.toLocaleString()}
+                </span>
+            </div>
+            
+            {/* Sparkles - a more subtle effect */}
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-violet-400 rounded-full blur-sm opacity-70 animate-pulse"></div>
+            <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-purple-400 rounded-full blur-sm opacity-70 animate-pulse" style={{ animationDelay: '500ms' }}></div>
         </div>
-
-        {/* Sparkles */}
-        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-cyan-200 rounded-full animate-pulse-fast"></div>
     </div>
 );
 
