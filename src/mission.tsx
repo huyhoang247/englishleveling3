@@ -76,8 +76,9 @@ const LeafIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height
 const ShieldIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>;
 const CompassIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>;
 const HammerIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-400"><path d="m15 12-8.373 8.373a1 1 0 1 1-1.414-1.414L12.586 12l-2.829-2.828a1 1 0 0 1 0-1.414l4.243-4.243a1 1 0 0 1 1.414 0l2.828 2.828a1 1 0 0 1 0 1.414L15 12z"></path></svg>;
-const GoldIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-yellow-400"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm-1-7h2v4h-2v-4zm0-2h2v2h-2V9z"/></svg>;
 const XPIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-purple-400"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>;
+
+// --- THAY ĐỔI: Component GoldIcon được thay thế bằng img tag bên dưới, không cần định nghĩa ở đây ---
 
 const QuestIcon = ({ type }: { type: string }) => {
   const icons = {
@@ -135,15 +136,15 @@ const QuestCard = ({ quest, onAction, style }) => {
           </div>
         )}
 
-        {/* --- THAY ĐỔI: Phần thưởng được thiết kế lại với các 'tag' riêng biệt --- */}
+        {/* --- THAY ĐỔI: Rewards section --- */}
         <div className="mt-4">
-          <h4 className="font-semibold text-sm text-gray-400 mb-2">Phần thưởng:</h4>
+          <h4 className="font-semibold text-sm text-gray-400 mb-2">Rewards:</h4>
           <div className="flex flex-wrap gap-3 text-sm">
-            {/* Tag cho Vàng */}
+            {/* Tag cho Vàng với icon mới */}
             <div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-yellow-500/30 shadow-sm transition-all duration-300 hover:border-yellow-500/60 hover:shadow-md hover:shadow-yellow-500/10">
-              <GoldIcon /> 
+              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Gold" className="w-4 h-4" /> 
               <span className="text-yellow-300 font-bold">{quest.rewards.gold}</span>
-              <span className="text-gray-400">Vàng</span>
+              <span className="text-gray-400">Gold</span>
             </div>
             {/* Tag cho XP */}
             <div className="flex items-center space-x-2 bg-gradient-to-br from-gray-800 to-gray-900/50 px-3 py-1.5 rounded-lg border border-purple-500/30 shadow-sm transition-all duration-300 hover:border-purple-500/60 hover:shadow-md hover:shadow-purple-500/10">
@@ -155,21 +156,21 @@ const QuestCard = ({ quest, onAction, style }) => {
         </div>
       </div>
 
-      {/* Footer with Actions (Không thay đổi) */}
+      {/* Footer with Actions (THAY ĐỔI: Cập nhật tên nút) */}
       <div className="bg-gray-900/50 px-5 py-3 flex items-center justify-end space-x-3">
         {quest.status === 'available' && (
           <button onClick={() => onAction(quest.id, 'accept')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-md hover:shadow-cyan-500/50 transform hover:scale-105">
-            Chấp Nhận
+            Accept
           </button>
         )}
         {quest.status === 'in_progress' && (
           <button onClick={() => onAction(quest.id, 'abandon')} className="px-5 py-2 rounded-md text-gray-300 font-semibold text-sm transition-all duration-200 bg-gray-700 hover:bg-red-800 hover:text-white">
-            Hủy Bỏ
+            Abandon
           </button>
         )}
         {isCompleted && (
           <button onClick={() => onAction(quest.id, 'claim')} className="px-5 py-2 rounded-md text-white font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-md hover:shadow-emerald-500/50 transform hover:scale-105">
-            Nhận Thưởng
+            Claim
           </button>
         )}
       </div>
