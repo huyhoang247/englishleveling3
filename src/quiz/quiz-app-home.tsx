@@ -260,6 +260,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
         setClaimedRewards(userData.claimedQuizRewards || {});
         const userVocabulary = openedVocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
+        const completedMultiWordMap = userData.completedMultiWordQuestions || {};
 
         const completedWordsByGameMode = {};
         completedWordsSnapshot.forEach(doc => {
@@ -301,9 +302,9 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
             });
 
         } else if (selectedType === 'dienTu') {
-            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3'];
+            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-4'];
             for(let i = 1; i <= MAX_PREVIEWS; i++) {
-                allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`);
+                allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`, `fill-word-${i*100 + 4}`);
             }
 
             allFillModes.forEach(mode => {
@@ -325,9 +326,16 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                          const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                          if (wordsInSentence.length >= 2) totalP3++;
                      });
-                     const completedP3Map = userData.completedMultiWordQuestions || {};
-                     const completedCount = Object.keys(completedP3Map).length;
+                     const completedCount = Object.keys(completedMultiWordMap).filter(key => key.split(' ').length === 2).length;
                      progress = { completed: completedCount, total: totalP3 };
+                } else if (practiceNum % 100 === 4) {
+                     let totalP4 = 0;
+                     exampleData.forEach(sentence => {
+                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                         if (wordsInSentence.length >= 3) totalP4++;
+                     });
+                     const completedCount = Object.keys(completedMultiWordMap).filter(key => key.split(' ').length === 3).length;
+                     progress = { completed: completedCount, total: totalP4 };
                 }
                 newProgressData[practiceNum] = progress;
             });
@@ -351,6 +359,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
       '1': { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo' },
       '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
       '3': { title: 'Practice 3', desc: 'Điền 2 từ vào câu (Khó)', color: 'teal' },
+      '4': { title: 'Practice 4', desc: 'Điền 3 từ vào câu (Rất Khó)', color: 'orange' },
     },
   };
   
@@ -446,8 +455,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                             ? selectedPracticeForReview
                             : ((previewLevel - 2) * 100) + selectedPracticeForReview;
                          const oneLevelBeforeProgress = progressData[oneLevelBeforeId];
-                         const isPreviousUnlocked = oneLevelBeforeProgress && oneLevelBeforeProgress.total > 0 && oneLevelBeforeProgress.completed >= oneLevelBeforeProgress.total;
-                         if(!isPreviousUnlocked) {
+                         if (!oneLevelBeforeProgress || oneLevelBeforeProgress.total === 0 || oneLevelBeforeProgress.completed < oneLevelBeforeProgress.total) {
                              return null;
                          }
                     }
