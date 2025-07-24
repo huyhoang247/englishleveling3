@@ -151,7 +151,7 @@ export default function QuizAppHome() {
   if (currentView === 'quizTypes' || currentView === 'practices') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
-        <div className="min-h-screen h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
+        <div className="min-h-svh h-svh bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-0">
           <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
             <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
             <div className={'h-[calc(100%-8px)] flex flex-col'}>
@@ -169,7 +169,7 @@ export default function QuizAppHome() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="h-svh overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="w-full h-full bg-white flex flex-col">
         <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 flex-shrink-0"></div>
         <div className="flex-grow overflow-y-auto">
