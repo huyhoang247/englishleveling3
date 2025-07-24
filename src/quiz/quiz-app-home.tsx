@@ -160,7 +160,7 @@ export default function QuizAppHome() {
                    <Breadcrumbs currentView={currentView} selectedQuiz={selectedQuiz} selectedType={selectedType} selectedPractice={selectedPractice} goHome={goHome} setCurrentView={setCurrentView} />
                 </div>
               </div>
-              <div className="flex-grow overflow-y-auto p-6">{renderContent()}</div>
+              <div className="flex-grow overflow-y-auto p-6 hide-scrollbar">{renderContent()}</div>
             </div>
           </div>
         </div>
@@ -183,6 +183,15 @@ export default function QuizAppHome() {
            <div className={`p-6 ${currentView !== 'main' ? 'z-[51] relative' : ''} pb-32`}>{renderContent()}</div>
         </div>
       </div>
+      <style jsx>{`
+        .hide-scrollbar {
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none; /* Safari and Chrome */
+        }
+      `}</style>
     </div>
   );
 }
