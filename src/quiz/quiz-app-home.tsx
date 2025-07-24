@@ -269,16 +269,16 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
     const calculateProgress = async () => {
       setLoading(true);
       try {
-        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot] = await Promise.all([
+        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
-          getDocs(collection(db, 'users', user.uid, 'completedWords'))
+          getDocs(collection(db, 'users', user.uid, 'completedWords')),
+          getDocs(collection(db, 'users', user.uid, 'completedMultiWordQuestions')) // <-- FETCH NEW SUBCOLLECTION
         ]);
         
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
         setClaimedRewards(userData.claimedQuizRewards || {});
         const userVocabulary = openedVocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
-        const completedMultiWordMap = userData.completedMultiWordQuestions || {};
 
         const completedWordsByGameMode = {};
         completedWordsSnapshot.forEach(doc => {
@@ -289,6 +289,18 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
               completedWordsByGameMode[mode].add(doc.id.toLowerCase());
             }
           }
+        });
+        
+        // Process the new subcollection for multi-word questions
+        const completedMultiWordByGameMode = {};
+        completedMultiWordSnapshot.forEach(doc => {
+            const gameModes = doc.data().gameModes;
+            if(gameModes){
+                for(const mode in gameModes){
+                    if(!completedMultiWordByGameMode[mode]) completedMultiWordByGameMode[mode] = new Set();
+                    completedMultiWordByGameMode[mode].add(doc.id.toLowerCase());
+                }
+            }
         });
 
         let newProgressData = {};
@@ -344,9 +356,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                          const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                          if (wordsInSentence.length >= 2) totalP3++;
                      });
-                     const completedCount = Object.keys(completedMultiWordMap).filter(
-                         key => completedMultiWordMap[key]?.[mode]
-                     ).length;
+                     const completedCount = completedMultiWordByGameMode[mode]?.size || 0;
                      progress = { completed: completedCount, total: totalP3 };
                 } else if (practiceNum % 100 === 4) {
                      let totalP4 = 0;
@@ -354,9 +364,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                          const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                          if (wordsInSentence.length >= 3) totalP4++;
                      });
-                     const completedCount = Object.keys(completedMultiWordMap).filter(
-                         key => completedMultiWordMap[key]?.[mode]
-                     ).length;
+                     const completedCount = completedMultiWordByGameMode[mode]?.size || 0;
                      progress = { completed: completedCount, total: totalP4 };
                 }
                 newProgressData[practiceNum] = progress;
@@ -606,8 +614,6 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             });
             
             setClaimedRewards(prev => ({ ...prev, [rewardId]: true }));
-            // Note: The main coin display in the header won't update live as its state is not managed here.
-            // The user will receive the coins, and the display will be correct on the next app load.
         } catch (error) {
             console.error("Error claiming reward:", error);
             alert("Đã có lỗi xảy ra khi nhận thưởng.");
@@ -622,7 +628,6 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         const MILESTONE_STEP = 100;
         const MAX_MILESTONES_TO_DISPLAY = 5;
 
-        // Function to generate tiers for a given level
         const generateTiersForLevel = (levelProgress, levelNumber, levelTitle, multiplier) => {
             if (!levelProgress || levelProgress.total === 0) {
                 return null;
@@ -633,7 +638,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
 
             for (let i = 1; i <= MAX_MILESTONES_TO_DISPLAY; i++) {
                 const milestone = i * MILESTONE_STEP;
-                if (milestone > maxPossibleMilestone + MILESTONE_STEP) break; // Don't show excessively high, unreachable milestones
+                if (milestone > maxPossibleMilestone + MILESTONE_STEP) break;
 
                 const rewardId = `${selectedType}-${levelNumber}-${milestone}`;
                 const isCompleted = levelProgress.completed >= milestone;
@@ -681,13 +686,11 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             return null;
         };
 
-        // Main Practice Tiers
         const mainProgress = progressData[practiceNumber];
         const mainTiers = generateTiersForLevel(mainProgress, practiceNumber, "Luyện tập chính", 1);
         if (mainTiers) tiers.push(mainTiers);
         else tiers.push(<p key="no-main" className="text-sm text-gray-500 text-center py-4">Chưa có câu hỏi cho phần luyện tập này.</p>)
 
-        // Preview Levels Tiers
         for (let i = 1; i <= MAX_PREVIEWS; i++) {
             const previewNumber = (i * 100) + practiceNumber;
             const previewProgress = progressData[previewNumber];
