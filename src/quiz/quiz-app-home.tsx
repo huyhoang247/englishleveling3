@@ -632,7 +632,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                                 </div>
                                 <div className="bg-blue-50 rounded-md px-2 py-1 inline-flex items-center gap-1.5">
                                     <CardCapacityIcon className="w-4 h-4" />
-                                    <span className="text-sm font-bold text-blue-700">+{capacityRewardAmount}</span>
+                                    <span className="text-sm font-bold text-blue-700">{capacityRewardAmount}</span>
                                 </div>
                             </div>
                         </div>
