@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
 
 // --- PHẦN CSS ---
-// CSS được định nghĩa như một chuỗi và sẽ được chèn vào component
 const GameStyles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
 
     body {
       margin: 0;
@@ -26,18 +34,82 @@ const GameStyles = () => (
 
     .game-frame {
         background-color: transparent;
-        border-radius: 0;
         border: none;
         padding: 40px 20px 20px 20px;
-        box-shadow: none;
-        position: relative;
-        z-index: 2;
         width: 100%;
         max-width: 500px;
         box-sizing: border-box;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
+        position: relative; /* Quan trọng để lớp phủ hoạt động đúng */
+    }
+    
+    /* --- THÊM MỚI: Lớp phủ cho màn hình cược --- */
+    .betting-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(26, 32, 44, 0.8); /* Nền mờ, cùng màu với background chính */
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* Hiệu ứng kính mờ (frosted glass) */
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px); /* Hỗ trợ Safari */
+    }
+
+    .betting-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .betting-section h2 {
+      font-size: 1.5em;
+      margin-bottom: 25px;
+      font-weight: 600;
+    }
+    
+    .betting-options {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 250px;
+    }
+
+    .bet-button {
+      background-color: #2D3748;
+      border: 2px solid #6B7280;
+      color: white;
+      padding: 15px 20px;
+      font-size: 1.2em;
+      font-weight: 700;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .bet-button:hover {
+      background-color: #4A5568;
+      transform: scale(1.03);
+    }
+    
+    .current-bet-display {
+        text-align: center;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+        color: #A0AEC0;
+        height: 20px; /* Đặt chiều cao cố định để không bị giật layout */
+    }
+    .current-bet-display span {
+        font-weight: 700;
+        color: white;
     }
 
     .rewards-legend {
@@ -101,14 +173,11 @@ const GameStyles = () => (
         color: white;
     }
 
-    /* --- THAY ĐỔI Ở ĐÂY --- */
     .game-board {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 15px;
         perspective: 1000px;
-        /* Thay margin-top: auto; bằng một giá trị cụ thể để đẩy lưới lên */
-        margin-top: 5vh;
         margin-bottom: 20px;
     }
 
@@ -165,11 +234,17 @@ const GameStyles = () => (
     }
 
     .victory-message {
-        margin-top: 20px;
+        position: absolute;
+        bottom: 80px; /* Đẩy lên trên thanh dưới cùng */
+        left: 20px;
+        right: 20px;
         padding: 15px;
-        background-color: rgba(0,0,0,0.2);
+        background-color: rgba(0,0,0,0.7);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
         border-radius: 10px;
         text-align: center;
+        z-index: 5;
     }
 
     .reset-button {
@@ -205,7 +280,7 @@ const GameStyles = () => (
   `}</style>
 );
 
-// --- PHẦN LOGIC VÀ DỮ LIỆU (KHÔNG THAY ĐỔI) ---
+// --- PHẦN LOGIC VÀ DỮ LIỆU ---
 
 const CARD_TYPES = [
     { type: 'Gold', icon: '📦', reward: 'Vàng x16800' },
@@ -213,6 +288,8 @@ const CARD_TYPES = [
     { type: 'SmallTreasure', icon: '🪙', reward: 'Kho Báu Nhỏ' },
     { type: 'Gems', icon: '💎', reward: 'Đá Quý' },
 ];
+
+const BET_AMOUNTS = [1000, 10000, 100000]; // Mức cược
 
 const initializeDeck = () => {
     let id = 1;
@@ -229,8 +306,11 @@ const initializeDeck = () => {
 };
 
 
-// --- COMPONENT CHÍNH (KHÔNG THAY ĐỔI) ---
+// --- COMPONENT CHÍNH ---
 function App() {
+    const [gamePhase, setGamePhase] = useState('betting'); // 'betting', 'playing'
+    const [currentBet, setCurrentBet] = useState(0);
+
     const [cards, setCards] = useState(initializeDeck());
     const [flippedCards, setFlippedCards] = useState([]);
     const [matchedTypes, setMatchedTypes] = useState([]);
@@ -269,7 +349,8 @@ function App() {
     };
     
     const handleCardClick = (index) => {
-        if (!canFlip || cards[index].isFlipped || cards[index].isMatched) {
+        // --- THAY ĐỔI: Chỉ cho phép click khi đang trong giai đoạn chơi ---
+        if (!canFlip || cards[index].isFlipped || cards[index].isMatched || gamePhase !== 'playing') {
             return;
         }
         
@@ -284,6 +365,13 @@ function App() {
         setFlippedCards([]);
         setCanFlip(true);
         setCards(initializeDeck());
+        setCurrentBet(0);
+        setGamePhase('betting');
+    }
+
+    const handleBetSelect = (amount) => {
+      setCurrentBet(amount);
+      setGamePhase('playing');
     }
 
     const allMatched = matchedTypes.length === CARD_TYPES.length;
@@ -292,6 +380,31 @@ function App() {
         <div className="game-wrapper">
             <GameStyles />
             <div className="game-frame">
+                {/* --- THAY ĐỔI: Luôn hiển thị bàn chơi, lớp phủ sẽ xuất hiện khi cần --- */}
+
+                {/* Lớp phủ đặt cược */}
+                {gamePhase === 'betting' && (
+                    <div className="betting-overlay fade-in">
+                        <div className="betting-section">
+                            <h2>Chọn Mức Cược</h2>
+                            <div className="betting-options">
+                                {BET_AMOUNTS.map(amount => (
+                                    <button key={amount} className="bet-button" onClick={() => handleBetSelect(amount)}>
+                                        {amount.toLocaleString('vi-VN')} Vàng
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
+                {/* Giao diện chơi game chính */}
+                <div className="current-bet-display">
+                    {gamePhase === 'playing' && (
+                        <span>Mức cược: {currentBet.toLocaleString('vi-VN')} Vàng</span>
+                    )}
+                </div>
+
                 <div className="rewards-legend">
                     {CARD_TYPES.map(reward => (
                         <div 
@@ -323,8 +436,9 @@ function App() {
                     ))}
                 </div>
                 
+                {/* Thông báo chiến thắng */}
                 {allMatched && (
-                    <div className="victory-message">
+                    <div className="victory-message fade-in">
                         <h2>Chúc mừng! Bạn đã tìm thấy tất cả kho báu!</h2>
                         <button onClick={handleResetGame} className="reset-button">Chơi lại</button>
                     </div>
