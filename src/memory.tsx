@@ -8,7 +8,6 @@ const GameStyles = () => (
 
     body {
       margin: 0;
-      /* --- THAY ĐỔI: Đổi nền thành màu xanh-đen --- */
       background-color: #1A202C;
       overflow: hidden;
     }
@@ -22,7 +21,6 @@ const GameStyles = () => (
         display: flex;
         flex-direction: column;
         align-items: center;
-        /* --- THAY ĐỔI: Đổi nền thành màu xanh-đen --- */
         background-color: #1A202C;
     }
 
@@ -45,7 +43,7 @@ const GameStyles = () => (
     .rewards-legend {
         margin-bottom: 25px;
         padding: 10px;
-        background-color: rgba(0, 0, 0, 0.2); /* Giữ lại màu nền trong suốt nhẹ */
+        background-color: rgba(0, 0, 0, 0.2);
         border-radius: 10px;
     }
 
@@ -71,7 +69,6 @@ const GameStyles = () => (
     }
 
     .reward-icons span {
-        /* --- THAY ĐỔI: Màu nền phụ đậm hơn --- */
         background: #2D3748;
         border-radius: 5px;
         width: 28px;
@@ -84,12 +81,10 @@ const GameStyles = () => (
 
     .reward-item.found .reward-icons span {
         background: #f9a826;
-        /* --- THAY ĐỔI: Màu chữ khi tìm thấy để tương phản với nền vàng --- */
         color: #1A202C;
     }
 
     .reward-text {
-        /* --- THAY ĐỔI: Màu nền phụ đậm hơn --- */
         background-color: #2D3748;
         padding: 5px 15px;
         border-radius: 15px;
@@ -100,7 +95,6 @@ const GameStyles = () => (
     }
     .reward-item.found .reward-text {
         background-color: #f9a826;
-        /* --- THAY ĐỔI: Màu chữ khi tìm thấy để tương phản với nền vàng --- */
         color: #1A202C;
     }
 
@@ -146,7 +140,8 @@ const GameStyles = () => (
         justify-content: center;
         align-items: center;
         font-size: 2.5em;
-        border: 4px solid #f9a826;
+        /* --- THAY ĐỔI: Viền nhỏ lại và đổi màu xám --- */
+        border: 2px solid #6B7280;
     }
 
     .card-back {
@@ -155,14 +150,14 @@ const GameStyles = () => (
     }
 
     .card-front {
-        /* --- THAY ĐỔI: Mặt trước thẻ bài trùng với màu nền chính --- */
         background-color: #1A202C;
         color: white;
         transform: rotateY(180deg);
     }
     
     .card.matched .card-front {
-        box-shadow: 0 0 15px 5px #f9a826;
+        /* --- THAY ĐỔI: Đồng bộ màu glow khi match --- */
+        box-shadow: 0 0 15px 4px #6B7280;
         border-color: #fff;
     }
 
@@ -194,7 +189,6 @@ const GameStyles = () => (
     
     .treasure-pile {
         height: 60px;
-        /* --- THAY ĐỔI: Đồng bộ màu với các element khác --- */
         background-color: #2D3748;
         border-radius: 0;
         position: relative;
