@@ -615,12 +615,12 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 }
 
                 levelTiers.push(
-                    <div key={rewardId} className="flex items-center justify-between bg-white p-3 rounded-md shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <GoldCoinIcon className="w-8 h-8 flex-shrink-0" />
-                            <div>
-                                <p className="font-semibold text-gray-800">{rewardAmount.toLocaleString()}</p>
-                                <p className="text-sm text-gray-500">Hoàn thành {milestone} câu</p>
+                    <div key={rewardId} className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
+                        <div>
+                            <p className="font-semibold text-gray-800">Hoàn thành {milestone} câu</p>
+                            <div className="flex items-center gap-2 mt-1">
+                                <GoldCoinIcon className="w-5 h-5" />
+                                <p className="font-bold text-orange-600">+{rewardAmount.toLocaleString()}</p>
                             </div>
                         </div>
                         {statusComponent}
