@@ -558,18 +558,18 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
 // --- NEW --- Rewards Popup Component
 const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }) => {
     const [isClaiming, setIsClaiming] = useState(null);
- 
+
     const handleClaim = async (rewardId, amount) => {
         if (isClaiming || !user) return;
         setIsClaiming(rewardId);
- 
+
         try {
             const userDocRef = doc(db, 'users', user.uid);
             await updateDoc(userDocRef, {
                 coins: increment(amount),
                 [`claimedQuizRewards.${rewardId}`]: true
             });
-             
+            
             setClaimedRewards(prev => ({ ...prev, [rewardId]: true }));
             // Note: The main coin display in the header won't update live as its state is not managed here.
             // The user will receive the coins, and the display will be correct on the next app load.
@@ -580,101 +580,71 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             setIsClaiming(null);
         }
     };
- 
+
     const renderRewardTiers = () => {
         const tiers = [];
-        const BASE_REWARD_PER_100_Q = 500;
+        const BASE_REWARD_PER_100_Q = 1000;
         const MILESTONE_STEP = 100;
         const MAX_MILESTONES_TO_DISPLAY = 5;
- 
+
         // Function to generate tiers for a given level
         const generateTiersForLevel = (levelProgress, levelNumber, levelTitle, multiplier) => {
             if (!levelProgress || levelProgress.total === 0) {
                 return null;
             }
- 
+
             const levelTiers = [];
             const maxPossibleMilestone = Math.floor(levelProgress.total / MILESTONE_STEP) * MILESTONE_STEP;
- 
+
             for (let i = 1; i <= MAX_MILESTONES_TO_DISPLAY; i++) {
                 const milestone = i * MILESTONE_STEP;
                 if (milestone > maxPossibleMilestone + MILESTONE_STEP) break; // Don't show excessively high, unreachable milestones
- 
+
                 const rewardId = `${selectedType}-${levelNumber}-${milestone}`;
+                const isCompleted = levelProgress.completed >= milestone;
                 const isClaimed = claimedRewards[rewardId];
                 const rewardAmount = i * BASE_REWARD_PER_100_Q * multiplier;
-                const isCompleted = levelProgress.completed >= milestone;
-                const isClaimable = isCompleted && !isClaimed;
- 
-                let leftIcon;
-                if (isClaimed) {
-                    leftIcon = <CompletedIcon className="w-7 h-7 text-green-500" />;
-                } else if (isClaimable) {
-                    leftIcon = <GiftIcon className="w-7 h-7 text-yellow-500" />;
-                } else {
-                    leftIcon = <LockIcon className="w-6 h-6 text-gray-400" />;
-                }
- 
+
                 let statusComponent;
                 if (isClaimed) {
-                    statusComponent = <div className="text-sm font-semibold text-green-600">Đã nhận</div>;
+                    statusComponent = <div className="px-3 py-1.5 text-xs font-bold text-green-700 bg-green-200 rounded-full flex items-center gap-1.5"><CompletedIcon className="w-4 h-4" />Đã nhận</div>;
                 } else if (isCompleted) {
-                    statusComponent = <button onClick={() => handleClaim(rewardId, rewardAmount)} disabled={isClaiming === rewardId} className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-2 px-6 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all disabled:from-gray-400 disabled:to-gray-500 disabled:shadow-md disabled:cursor-wait disabled:scale-100">{isClaiming === rewardId ? '...' : 'Nhận'}</button>;
+                    statusComponent = <button onClick={() => handleClaim(rewardId, rewardAmount)} disabled={isClaiming === rewardId} className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 disabled:bg-indigo-400 transition w-[60px] text-center">{isClaiming === rewardId ? '...' : 'Nhận'}</button>;
                 } else {
-                     statusComponent = (
-                        <div className="text-right">
-                            <p className="font-bold text-sm text-gray-700">{levelProgress.completed.toLocaleString()}<span className="font-normal text-gray-500">/{milestone.toLocaleString()}</span></p>
-                            <div className="w-24 h-2 bg-gray-200 rounded-full mt-1 overflow-hidden">
-                                <div 
-                                    className="h-full bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full transition-all duration-500" 
-                                    style={{ width: `${Math.min(100, (levelProgress.completed / milestone) * 100)}%` }}>
-                                </div>
-                            </div>
-                        </div>
-                    );
+                    statusComponent = <div className="px-3 py-1.5 text-xs font-bold text-gray-500 bg-gray-200 rounded-full flex items-center gap-1.5"><LockIcon className="w-4 h-4" />{`${levelProgress.completed}/${milestone}`}</div>;
                 }
- 
+
                 levelTiers.push(
-                    <div key={rewardId} className={`flex items-center justify-between p-4 rounded-xl transition-all duration-300 ${isClaimable ? 'bg-white border-2 border-purple-400 shadow-lg' : 'bg-white border border-gray-200 shadow-sm'} ${isClaimed ? 'opacity-70' : ''}`}>
-                        <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${isClaimed ? 'bg-green-100' : isClaimable ? 'bg-purple-100' : 'bg-gray-100'}`}>
-                                {leftIcon}
-                            </div>
-                            <div className="flex-grow">
-                                <p className="font-semibold text-gray-700">Hoàn thành {milestone.toLocaleString()} câu</p>
-                                <div className="flex items-center gap-1.5 mt-1">
-                                    <GoldCoinIcon className="w-5 h-5"/>
-                                    <span className="font-bold text-base text-gray-800">{rewardAmount.toLocaleString()}</span>
-                                </div>
+                    <div key={rewardId} className="flex items-center justify-between bg-white p-3 rounded-md shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <GoldCoinIcon className="w-8 h-8 flex-shrink-0" />
+                            <div>
+                                <p className="font-semibold text-gray-800">{rewardAmount.toLocaleString()}</p>
+                                <p className="text-sm text-gray-500">Hoàn thành {milestone} câu</p>
                             </div>
                         </div>
-                        <div className="flex-shrink-0 ml-4">
-                            {statusComponent}
-                        </div>
+                        {statusComponent}
                     </div>
                 );
             }
- 
+
             if (levelTiers.length > 0) {
               return (
-                <div key={levelNumber}>
-                    <div className="flex items-center gap-2 mb-3 mt-4">
-                        <div className={`w-1 h-5 ${levelTitle.includes('Preview') ? 'bg-teal-500' : 'bg-purple-500'} rounded-full`}></div>
-                        <h4 className="font-bold text-lg text-gray-800">{levelTitle}</h4>
-                    </div>
+                <div key={levelNumber} className="bg-gray-100 p-4 rounded-lg">
+                    <h4 className="font-bold text-gray-700">{levelTitle}</h4>
                     <div className="space-y-3 mt-3">{levelTiers}</div>
                 </div>
               );
             }
             return null;
         };
- 
+
         // Main Practice Tiers
         const mainProgress = progressData[practiceNumber];
         const mainTiers = generateTiersForLevel(mainProgress, practiceNumber, "Luyện tập chính", 1);
         if (mainTiers) tiers.push(mainTiers);
         else tiers.push(<p key="no-main" className="text-sm text-gray-500 text-center py-4">Chưa có câu hỏi cho phần luyện tập này.</p>)
- 
+
         // Preview Levels Tiers
         for (let i = 1; i <= MAX_PREVIEWS; i++) {
             const previewNumber = (i * 100) + practiceNumber;
@@ -683,27 +653,27 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             const previewTiers = generateTiersForLevel(previewProgress, previewNumber, `Preview ${i} (x${multiplier} Thưởng)`, multiplier);
             if (previewTiers) tiers.push(previewTiers);
         }
- 
+
         return tiers;
     };
- 
+
     if (!isOpen) return null;
- 
+
     return (
         <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
-            <div className="bg-gray-50 rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all animate-scale-up" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between p-5 border-b border-gray-200 bg-white">
-                    <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3">
+            <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all animate-scale-up" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                        <GiftIcon className="w-6 h-6 text-yellow-500"/>
                        Phần thưởng: {practiceTitle}
                     </h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-3xl leading-none">×</button>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
                 </div>
                 <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50">
                     {renderRewardTiers()}
                 </div>
             </div>
-             <style jsx>{` @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }`}</style>
+             <style jsx>{` @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; } `}</style>
         </div>
     );
 };
