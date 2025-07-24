@@ -521,7 +521,6 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
   const practicesToShow = selectedType ? Object.keys(practiceDetails[selectedType]) : [];
   return (
     <div className="w-full max-w-md mx-auto">
-      <h1 className="sticky top-0 bg-white text-2xl font-bold text-gray-800 text-center py-4 z-10">Chọn bài tập</h1>
       <div className="space-y-4 w-full pt-2">
           {practicesToShow.map(pNumStr => {
             const practiceNumber = parseInt(pNumStr, 10);
@@ -563,10 +562,10 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                 <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
                     <button 
                         onClick={(e) => handleRewardsClick(e, practiceNumber, details.title)}
-                        className="flex items-center gap-2 text-sm font-semibold text-purple-800 hover:text-purple-900 transition-colors"
+                        className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
                     >
                         <GiftIcon className="w-4 h-4" />
-                        <span>Phần thưởng</span>
+                        <span>Rewards</span>
                     </button>
                     <button 
                         onClick={(e) => handleReviewClick(e, practiceNumber)} 
@@ -705,7 +704,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
                     <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                        <GiftIcon className="w-6 h-6 text-yellow-500"/>
-                       Phần thưởng: {practiceTitle}
+                       Rewards: {practiceTitle}
                     </h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
                 </div>
