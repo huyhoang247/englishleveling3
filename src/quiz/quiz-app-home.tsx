@@ -563,7 +563,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                 <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
                     <button 
                         onClick={(e) => handleRewardsClick(e, practiceNumber, details.title)}
-                        className="flex items-center gap-2 text-sm font-semibold text-yellow-600 hover:text-yellow-800 transition-colors"
+                        className="flex items-center gap-2 text-sm font-semibold text-purple-800 hover:text-purple-900 transition-colors"
                     >
                         <GiftIcon className="w-4 h-4" />
                         <span>Phần thưởng</span>
