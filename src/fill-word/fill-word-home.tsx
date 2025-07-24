@@ -1,4 +1,4 @@
-// --- START OF FILE: fill-word-home.tsx (FINAL VERSION WITH FIX) ---
+// --- START OF FILE: fill-word-home.tsx ---
 
 import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { db, auth } from '../firebase.js';
@@ -100,21 +100,21 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         const gameModeId = `fill-word-${selectedPractice}`;
         const fetchedCompletedWords = new Set<string>();
 
-        // For practices 1 & 2
-        completedWordsSnapshot.forEach((completedDoc) => {
-            if (completedDoc.data()?.gameModes?.[gameModeId]) {
-              fetchedCompletedWords.add(completedDoc.id.toLowerCase());
-            }
-        });
-
-        // For practices 3 & 4, get from the user document
+        // [FIX] Use if/else to separate logic for different practice types
         if (selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) {
+            // For multi-word practices, the source of truth is the map on the user doc.
             const completedMultiWordMap = userData.completedMultiWordQuestions || {};
             Object.keys(completedMultiWordMap).forEach(questionId => {
                 fetchedCompletedWords.add(questionId.toLowerCase());
             });
+        } else {
+            // For single-word practices, the source of truth is the gameMode flag in the subcollection.
+            completedWordsSnapshot.forEach((completedDoc) => {
+                if (completedDoc.data()?.gameModes?.[gameModeId]) {
+                  fetchedCompletedWords.add(completedDoc.id.toLowerCase());
+                }
+            });
         }
-
 
         let gameVocabulary: VocabularyItem[] = [];
         const userVocabularyWords: string[] = [];
@@ -364,13 +364,9 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     </div>
   );
   
-  // [FIX] Calculate progress to include the current question
   const completedCount = usedWords.size;
   const totalCount = vocabularyList.length;
-  // If the game isn't over and a word is loaded, we're on the "next" question.
-  // The display count should be the number of completed words + 1.
   const displayCount = gameOver || !currentWord ? completedCount : Math.min(completedCount + 1, totalCount);
-  // The progress bar should also reflect the question being attempted for a consistent UI.
   const progressPercentage = totalCount > 0 ? (displayCount / totalCount) * 100 : 0;
 
   return (
