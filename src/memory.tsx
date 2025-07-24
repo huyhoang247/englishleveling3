@@ -6,42 +6,38 @@ const GameStyles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
-    /* --- THAY ĐỔI --- */
-    /* Xoá background tím và các thuộc tính căn giữa không cần thiết */
     body {
       margin: 0;
-      background-color: #3f3c62; /* Đặt màu nền chính của game cho body */
-      overflow: hidden; /* Prevent scrollbars */
+      /* --- THAY ĐỔI: Đổi nền thành màu xanh-đen --- */
+      background-color: #1A202C;
+      overflow: hidden;
     }
 
-    /* --- THAY ĐỔI --- */
-    /* Wrapper sẽ chiếm toàn bộ màn hình */
     .game-wrapper {
         font-family: 'Poppins', sans-serif;
         color: white;
-        width: 100vw; /* Chiều rộng 100% của viewport */
-        height: 100vh; /* Chiều cao 100% của viewport */
+        width: 100vw;
+        height: 100vh;
         position: relative;
         display: flex;
         flex-direction: column;
         align-items: center;
-        background-color: #3f3c62; /* Nền chính của game */
+        /* --- THAY ĐỔI: Đổi nền thành màu xanh-đen --- */
+        background-color: #1A202C;
     }
 
-    /* --- THAY ĐỔI --- */
-    /* Frame sẽ là phần nội dung chính, co giãn để lấp đầy không gian */
     .game-frame {
-        background-color: transparent; /* Nền trong suốt vì wrapper đã có màu */
-        border-radius: 0; /* Bỏ bo góc */
-        border: none; /* Bỏ đường viền */
-        padding: 40px 20px 20px 20px; /* Thêm padding trên cùng cho thanh trạng thái điện thoại */
-        box-shadow: none; /* Bỏ shadow */
+        background-color: transparent;
+        border-radius: 0;
+        border: none;
+        padding: 40px 20px 20px 20px;
+        box-shadow: none;
         position: relative;
         z-index: 2;
         width: 100%;
-        max-width: 500px; /* Thêm max-width để không quá rộng trên màn hình lớn */
+        max-width: 500px;
         box-sizing: border-box;
-        flex-grow: 1; /* Quan trọng: cho phép nó chiếm không gian còn lại */
+        flex-grow: 1;
         display: flex;
         flex-direction: column;
     }
@@ -49,7 +45,7 @@ const GameStyles = () => (
     .rewards-legend {
         margin-bottom: 25px;
         padding: 10px;
-        background-color: rgba(0, 0, 0, 0.1);
+        background-color: rgba(0, 0, 0, 0.2); /* Giữ lại màu nền trong suốt nhẹ */
         border-radius: 10px;
     }
 
@@ -75,7 +71,8 @@ const GameStyles = () => (
     }
 
     .reward-icons span {
-        background: #2e2b4f;
+        /* --- THAY ĐỔI: Màu nền phụ đậm hơn --- */
+        background: #2D3748;
         border-radius: 5px;
         width: 28px;
         height: 28px;
@@ -87,11 +84,13 @@ const GameStyles = () => (
 
     .reward-item.found .reward-icons span {
         background: #f9a826;
-        color: #3f3c62;
+        /* --- THAY ĐỔI: Màu chữ khi tìm thấy để tương phản với nền vàng --- */
+        color: #1A202C;
     }
 
     .reward-text {
-        background-color: #2e2b4f;
+        /* --- THAY ĐỔI: Màu nền phụ đậm hơn --- */
+        background-color: #2D3748;
         padding: 5px 15px;
         border-radius: 15px;
         font-size: 0.9em;
@@ -101,7 +100,8 @@ const GameStyles = () => (
     }
     .reward-item.found .reward-text {
         background-color: #f9a826;
-        color: #3f3c62;
+        /* --- THAY ĐỔI: Màu chữ khi tìm thấy để tương phản với nền vàng --- */
+        color: #1A202C;
     }
 
     .game-board {
@@ -109,7 +109,7 @@ const GameStyles = () => (
         grid-template-columns: repeat(4, 1fr);
         gap: 15px;
         perspective: 1000px;
-        margin-top: auto; /* Đẩy lưới game xuống dưới nếu có không gian thừa */
+        margin-top: auto;
         margin-bottom: 20px;
     }
 
@@ -155,7 +155,8 @@ const GameStyles = () => (
     }
 
     .card-front {
-        background-color: #3f3c62;
+        /* --- THAY ĐỔI: Mặt trước thẻ bài trùng với màu nền chính --- */
+        background-color: #1A202C;
         color: white;
         transform: rotateY(180deg);
     }
@@ -191,18 +192,17 @@ const GameStyles = () => (
         background-color: #e89a1f;
     }
     
-    /* --- THAY ĐỔI --- */
-    /* Chỉnh sửa lại phần "kho báu" để nằm ở dưới cùng */
     .treasure-pile {
-        height: 60px; /* Giảm chiều cao */
-        background-color: #2e2b4f; /* Đổi màu cho phù hợp */
+        height: 60px;
+        /* --- THAY ĐỔI: Đồng bộ màu với các element khác --- */
+        background-color: #2D3748;
         border-radius: 0;
         position: relative;
         z-index: 1;
         padding: 0;
         box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.3) inset;
         width: 100%;
-        max-width: 500px; /* Đồng bộ max-width */
+        max-width: 500px;
         box-sizing: border-box;
     }
   `}</style>
@@ -232,7 +232,7 @@ const initializeDeck = () => {
 };
 
 
-// --- COMPONENT CHÍNH ---
+// --- COMPONENT CHÍNH (KHÔNG THAY ĐỔI) ---
 function App() {
     const [cards, setCards] = useState(initializeDeck());
     const [flippedCards, setFlippedCards] = useState([]);
