@@ -53,7 +53,7 @@ const GameStyles = () => (
         justify-content: space-between;
         margin-bottom: 8px;
         opacity: 0.5;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.3s ease, background-color 0.3s ease;
     }
     .reward-item:last-child {
         margin-bottom: 0;
@@ -77,11 +77,13 @@ const GameStyles = () => (
         justify-content: center;
         align-items: center;
         font-size: 16px;
+        transition: background-color 0.3s ease;
     }
 
+    /* --- THAY ĐỔI: Đổi màu nền cam sang xám --- */
     .reward-item.found .reward-icons span {
-        background: #f9a826;
-        color: #1A202C;
+        background: #6B7280;
+        color: white; /* Đổi màu chữ thành trắng để dễ đọc trên nền xám */
     }
 
     .reward-text {
@@ -92,10 +94,13 @@ const GameStyles = () => (
         font-weight: 600;
         min-width: 120px;
         text-align: center;
+        transition: background-color 0.3s ease;
     }
+    
+    /* --- THAY ĐỔI: Đổi màu nền cam sang xám --- */
     .reward-item.found .reward-text {
-        background-color: #f9a826;
-        color: #1A202C;
+        background-color: #6B7280;
+        color: white; /* Đổi màu chữ thành trắng để dễ đọc trên nền xám */
     }
 
     .game-board {
@@ -140,7 +145,6 @@ const GameStyles = () => (
         justify-content: center;
         align-items: center;
         font-size: 2.5em;
-        /* --- THAY ĐỔI: Viền nhỏ lại và đổi màu xám --- */
         border: 2px solid #6B7280;
     }
 
@@ -156,7 +160,6 @@ const GameStyles = () => (
     }
     
     .card.matched .card-front {
-        /* --- THAY ĐỔI: Đồng bộ màu glow khi match --- */
         box-shadow: 0 0 15px 4px #6B7280;
         border-color: #fff;
     }
@@ -169,8 +172,9 @@ const GameStyles = () => (
         text-align: center;
     }
 
+    /* --- THAY ĐỔI: Đổi màu nút Chơi lại sang xám --- */
     .reset-button {
-        background-color: #f9a826;
+        background-color: #6B7280; /* Màu xám */
         color: white;
         border: none;
         padding: 12px 25px;
@@ -184,7 +188,7 @@ const GameStyles = () => (
     }
 
     .reset-button:hover {
-        background-color: #e89a1f;
+        background-color: #4A5568; /* Màu xám đậm hơn khi hover */
     }
     
     .treasure-pile {
