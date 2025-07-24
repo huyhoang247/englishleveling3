@@ -155,7 +155,7 @@ export default function QuizAppHome() {
           <div className="w-full h-full bg-white rounded-none shadow-xl overflow-hidden">
             <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600"></div>
             <div className={'h-[calc(100%-8px)] flex flex-col'}>
-              <div className="p-6 flex-shrink-0">
+              <div className="p-6">
                 <div className="flex justify-start mb-2">
                    <Breadcrumbs currentView={currentView} selectedQuiz={selectedQuiz} selectedType={selectedType} selectedPractice={selectedPractice} goHome={goHome} setCurrentView={setCurrentView} />
                 </div>
