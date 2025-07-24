@@ -420,14 +420,14 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
       const previewColors = ['purple', 'green', 'yellow', 'orange', 'pink'];
 
       return (
-         <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
-            <div className="w-full text-center relative mb-6">
+         <div className="w-full max-w-md mx-auto">
+            <div className="sticky top-[-1.5rem] bg-white w-full text-center relative py-4 z-10">
                 <button onClick={() => setView('main')} className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 p-2">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 <h1 className="text-2xl font-bold text-gray-800">Ôn tập: {basePracticeDetails.title}</h1>
             </div>
-             <div className="space-y-4 w-full">
+             <div className="space-y-4 w-full pt-2">
                 {Array.from({ length: MAX_PREVIEWS }, (_, i) => i + 1).map(previewLevel => {
                     const prerequisiteId = previewLevel === 1
                         ? selectedPracticeForReview
@@ -501,9 +501,9 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
 
   const practicesToShow = selectedType ? Object.keys(practiceDetails[selectedType]) : [];
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Chọn bài tập</h1>
-      <div className="space-y-4 w-full">
+    <div className="w-full max-w-md mx-auto">
+      <h1 className="sticky top-[-1.5rem] bg-white text-2xl font-bold text-gray-800 text-center py-4 z-10">Chọn bài tập</h1>
+      <div className="space-y-4 w-full pt-2">
           {practicesToShow.map(pNumStr => {
             const practiceNumber = parseInt(pNumStr, 10);
             const details = practiceDetails[selectedType][practiceNumber];
