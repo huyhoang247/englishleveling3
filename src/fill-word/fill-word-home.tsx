@@ -67,7 +67,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
   
   const resetMultiWordState = (wordItem: VocabularyItem | null) => {
-    if ((selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) && wordItem) {
+    if ((selectedPractice % 100 === 3 || selectedPractice % 100 === 4) && wordItem) {
       const wordCount = wordItem.word.split(' ').length;
       setFilledWords(Array(wordCount).fill(''));
       setActiveBlankIndex(0);
@@ -87,10 +87,11 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       try {
         setLoading(true); setError(null);
 
-        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot] = await Promise.all([
+        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
-          getDocs(collection(db, 'users', user.uid, 'completedWords'))
+          getDocs(collection(db, 'users', user.uid, 'completedWords')),
+          getDocs(collection(db, 'users', user.uid, 'completedMultiWordQuestions')) // <-- FETCH NEW SUBCOLLECTION
         ]);
 
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
@@ -100,15 +101,14 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         const gameModeId = `fill-word-${selectedPractice}`;
         const fetchedCompletedWords = new Set<string>();
 
-        // [FIX] Use if/else to separate logic for different practice types
-        if (selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) {
-            // For multi-word practices, the source of truth is the map on the user doc.
-            const completedMultiWordMap = userData.completedMultiWordQuestions || {};
-            Object.keys(completedMultiWordMap).forEach(questionId => {
-                fetchedCompletedWords.add(questionId.toLowerCase());
+        if (selectedPractice % 100 === 3 || selectedPractice % 100 === 4) {
+            completedMultiWordSnapshot.forEach(doc => {
+                const gameModes = doc.data().gameModes;
+                if (gameModes?.[gameModeId]) {
+                    fetchedCompletedWords.add(doc.id.toLowerCase());
+                }
             });
         } else {
-            // For single-word practices, the source of truth is the gameMode flag in the subcollection.
             completedWordsSnapshot.forEach((completedDoc) => {
                 if (completedDoc.data()?.gameModes?.[gameModeId]) {
                   fetchedCompletedWords.add(completedDoc.id.toLowerCase());
@@ -123,12 +123,12 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
             if (data.word) userVocabularyWords.push(data.word);
         });
 
-        if (selectedPractice === 1 || selectedPractice === 101) {
+        if (selectedPractice % 100 === 1) {
             openedVocabSnapshot.forEach((vocabDoc) => {
                 const data = vocabDoc.data(); const imageIndex = Number(vocabDoc.id);
                 if (data.word && !isNaN(imageIndex)) { gameVocabulary.push({ word: data.word, hint: `Nghĩa của từ "${data.word}"`, imageIndex: imageIndex }); }
             });
-        } else if (selectedPractice === 2 || selectedPractice === 102) {
+        } else if (selectedPractice % 100 === 2) {
             userVocabularyWords.forEach(word => {
                 const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
                 const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
@@ -137,7 +137,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                     gameVocabulary.push({ word: word, question: randomSentence.english.replace(wordRegex, '___'), vietnameseHint: randomSentence.vietnamese, hint: `Điền từ còn thiếu. Gợi ý: ${randomSentence.vietnamese}` });
                 }
             });
-        } else if (selectedPractice === 3 || selectedPractice === 103) {
+        } else if (selectedPractice % 100 === 3) {
             exampleData.forEach(sentence => {
                 const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                 if (wordsInSentence.length >= 2) {
@@ -150,7 +150,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                     gameVocabulary.push({ word: `${word1} ${word2}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 2 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
                 }
             });
-        } else if (selectedPractice === 4 || selectedPractice === 104) {
+        } else if (selectedPractice % 100 === 4) {
              exampleData.forEach(sentence => {
                 const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                 if (wordsInSentence.length >= 3) {
@@ -235,40 +235,34 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
     setUsedWords(prev => new Set(prev).add(currentWord.word.toLowerCase()));
 
-    const coinReward = (masteryCount * newStreak) * ((selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) ? 2 : 1);
+    const coinReward = (masteryCount * newStreak) * ((selectedPractice % 100 === 3 || selectedPractice % 100 === 4) ? 2 : 1);
     const updatedCoins = coins + coinReward;
     setCoins(updatedCoins);
     startCoinCountAnimation(coins, updatedCoins);
 
     try {
-      const userDocRef = doc(db, 'users', user.uid);
       const batch = writeBatch(db);
       const gameModeId = `fill-word-${selectedPractice}`;
       
-      if (selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) {
-        // --- LOGIC FOR MULTI-WORD PRACTICES ---
-        // 1. Give EXP to individual words in `completedWords` collection
+      if (selectedPractice % 100 === 3 || selectedPractice % 100 === 4) {
         const individualWords = currentWord.word.split(' ');
         individualWords.forEach(word => {
           const individualWordRef = doc(db, 'users', user.uid, 'completedWords', word.toLowerCase());
-          batch.set(individualWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
+          batch.set(individualWordRef, { gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
         });
 
-        // 2. Mark this multi-word question as complete in the user's document
         const questionId = currentWord.word.toLowerCase();
-        // Use dot notation to update a field in a map
-        batch.update(userDocRef, {
-          [`completedMultiWordQuestions.${questionId}`]: true
-        });
+        const multiWordDocRef = doc(db, 'users', user.uid, 'completedMultiWordQuestions', questionId);
+        batch.set(multiWordDocRef, { gameModes: { [gameModeId]: true } }, { merge: true });
 
       } else {
-        // --- LOGIC FOR OTHER PRACTICES ---
         const wordId = currentWord.word.toLowerCase();
         const completedWordRef = doc(db, 'users', user.uid, 'completedWords', wordId);
-        batch.set(completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
+        batch.set(completedWordRef, { gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
       }
 
       if (coinReward > 0) {
+        const userDocRef = doc(db, 'users', user.uid);
         batch.update(userDocRef, { 'coins': increment(coinReward) });
       }
       
@@ -347,7 +341,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   const handleImageClick = useCallback(() => setShowImagePopup(true), []);
   
   const multiWordCurrentBlankLength = useMemo(() => {
-    if ((selectedPractice !== 3 && selectedPractice !== 103 && selectedPractice !== 4 && selectedPractice !== 104) || !currentWord || activeBlankIndex === null) {
+    if ((selectedPractice % 100 !== 3 && selectedPractice % 100 !== 4) || !currentWord || activeBlankIndex === null) {
       return Infinity;
     }
     const correctWords = currentWord.word.split(' ');
@@ -360,7 +354,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     <div className="flex flex-col items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">
         Bạn không có đủ từ vựng cho bài tập này.
         <br/>
-        {(selectedPractice === 4 || selectedPractice === 104) ? "Cần có câu chứa ít nhất 3 từ bạn đã học." : (selectedPractice === 3 || selectedPractice === 103) ? "Cần có câu chứa ít nhất 2 từ bạn đã học." : "Hãy vào màn hình 'Lật thẻ' để học thêm!"}
+        {(selectedPractice % 100 === 4) ? "Cần có câu chứa ít nhất 3 từ bạn đã học." : (selectedPractice % 100 === 3) ? "Cần có câu chứa ít nhất 2 từ bạn đã học." : "Hãy vào màn hình 'Lật thẻ' để học thêm!"}
     </div>
   );
   
@@ -394,7 +388,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                   <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
                 </div>
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${progressPercentage}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
-                { (selectedPractice === 2 || selectedPractice === 102 || selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) && currentWord && (
+                { (selectedPractice % 100 >= 2) && currentWord && (
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
                     <p className="text-lg sm:text-xl font-semibold text-white leading-tight">{currentWord.question?.split('___').map((part, i, arr) => ( <React.Fragment key={i}> {part} {i < arr.length - 1 && <span className="font-bold text-indigo-300">___</span>} </React.Fragment> ))}</p>
                     {currentWord.vietnameseHint && (<p className="text-white/80 text-sm mt-2 italic">{currentWord.vietnameseHint}</p>)}
@@ -404,9 +398,9 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
               
               {currentWord ? (
                 <div className="w-full mt-6 space-y-6">
-                  {(selectedPractice === 1 || selectedPractice === 101) && <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />}
+                  {(selectedPractice % 100 === 1) && <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />}
                   
-                  {(selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) ? (
+                  {(selectedPractice % 100 === 3 || selectedPractice % 100 === 4) ? (
                     <div className="w-full flex flex-col items-center gap-4">
                       <div className={`p-4 bg-white rounded-lg shadow-md w-full transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
                         <p className="text-lg sm:text-xl font-medium text-gray-700 leading-relaxed">
@@ -444,7 +438,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
             </>
           )}
         </div>
-        {showImagePopup && currentWord && (selectedPractice === 1 || selectedPractice === 101) && (
+        {showImagePopup && currentWord && (selectedPractice % 100 === 1) && (
           <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
             <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-2xl">
               <button onClick={() => setShowImagePopup(false)} className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-all"><span className="text-xl font-bold">✕</span></button>
