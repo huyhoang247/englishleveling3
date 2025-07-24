@@ -143,11 +143,8 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
             exampleData.forEach(sentence => {
                 const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                 if (wordsInSentence.length >= 2) {
-                    // --- START: FIX FOR PRACTICE 3 ---
-                    // Lấy 2 từ đầu tiên thay vì ngẫu nhiên để đảm bảo tính nhất quán
-                    const wordsToHide = wordsInSentence.slice(0, 2);
-                    const correctlyOrderedWords = wordsToHide.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
-                    // --- END: FIX FOR PRACTICE 3 ---
+                    const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 2);
+                    const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
                     const [word1, word2] = correctlyOrderedWords;
                     let questionText = sentence.english;
                     questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
@@ -159,11 +156,8 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
              exampleData.forEach(sentence => {
                 const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                 if (wordsInSentence.length >= 3) {
-                    // --- START: FIX FOR PRACTICE 4 ---
-                    // Lấy 3 từ đầu tiên thay vì ngẫu nhiên để đảm bảo tính nhất quán
-                    const wordsToHide = wordsInSentence.slice(0, 3);
-                    const correctlyOrderedWords = wordsToHide.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
-                    // --- END: FIX FOR PRACTICE 4 ---
+                    const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 3);
+                    const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
                     const [word1, word2, word3] = correctlyOrderedWords;
                     let questionText = sentence.english;
                     questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
@@ -265,10 +259,15 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         // 2. Mark this multi-word question as complete in its own scalable subcollection
         const questionId = currentWord.word.toLowerCase();
         const completedMultiWordRef = doc(db, 'users', user.uid, 'completedMultiWord', questionId);
+        
+        // SỬA LỖI TẠI ĐÂY: Thay đổi cách lưu dữ liệu để tạo object lồng nhau, khớp với logic đọc.
         batch.set(completedMultiWordRef, {
-            [`completedIn.${gameModeId}`]: true,
+            completedIn: {
+                [gameModeId]: true
+            },
             lastCompletedAt: new Date()
         }, { merge: true });
+
       } else {
         // --- LOGIC FOR OTHER PRACTICES ---
         const wordId = currentWord.word.toLowerCase();
