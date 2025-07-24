@@ -217,6 +217,11 @@ const GoldCoinIcon = ({ className }: { className: string }) => (
     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className={className} />
 );
 
+// --- NEW --- Card Capacity Icon
+const CardCapacityIcon = ({ className }: { className: string }) => (
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png" alt="Card Capacity Icon" className={className} />
+);
+
 // Component to display practice list with progress
 const PracticeList = ({ selectedType, onPracticeSelect }) => {
   const [progressData, setProgressData] = useState({});
@@ -559,14 +564,15 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
 const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }) => {
     const [isClaiming, setIsClaiming] = useState(null);
 
-    const handleClaim = async (rewardId, amount) => {
+    const handleClaim = async (rewardId, coinAmount, capacityAmount) => {
         if (isClaiming || !user) return;
         setIsClaiming(rewardId);
 
         try {
             const userDocRef = doc(db, 'users', user.uid);
             await updateDoc(userDocRef, {
-                coins: increment(amount),
+                coins: increment(coinAmount),
+                cardCapacity: increment(capacityAmount),
                 [`claimedQuizRewards.${rewardId}`]: true
             });
             
@@ -604,12 +610,13 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 const isCompleted = levelProgress.completed >= milestone;
                 const isClaimed = claimedRewards[rewardId];
                 const rewardAmount = i * BASE_REWARD_PER_100_Q * multiplier;
+                const capacityRewardAmount = 10;
 
                 let statusComponent;
                 if (isClaimed) {
                     statusComponent = <div className="px-3 py-1.5 text-xs font-bold text-green-700 bg-green-200 rounded-full flex items-center gap-1.5"><CompletedIcon className="w-4 h-4" />Đã nhận</div>;
                 } else if (isCompleted) {
-                    statusComponent = <button onClick={() => handleClaim(rewardId, rewardAmount)} disabled={isClaiming === rewardId} className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 disabled:bg-indigo-400 transition w-[60px] text-center">{isClaiming === rewardId ? '...' : 'Nhận'}</button>;
+                    statusComponent = <button onClick={() => handleClaim(rewardId, rewardAmount, capacityRewardAmount)} disabled={isClaiming === rewardId} className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 disabled:bg-indigo-400 transition w-[60px] text-center">{isClaiming === rewardId ? '...' : 'Nhận'}</button>;
                 } else {
                     statusComponent = <div className="px-3 py-1.5 text-xs font-bold text-gray-500 bg-gray-200 rounded-full flex items-center gap-1.5"><LockIcon className="w-4 h-4" />{`${levelProgress.completed}/${milestone}`}</div>;
                 }
@@ -618,9 +625,15 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                     <div key={rewardId} className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
                         <div>
                             <p className="font-semibold text-gray-800">Hoàn thành {milestone} câu</p>
-                            <div className="bg-orange-50 rounded-md px-2 py-1 inline-flex items-center gap-1.5 mt-2">
-                                <GoldCoinIcon className="w-4 h-4" />
-                                <span className="text-sm font-bold text-orange-700">{rewardAmount.toLocaleString()}</span>
+                            <div className="flex items-center gap-2 mt-2">
+                                <div className="bg-orange-50 rounded-md px-2 py-1 inline-flex items-center gap-1.5">
+                                    <GoldCoinIcon className="w-4 h-4" />
+                                    <span className="text-sm font-bold text-orange-700">{rewardAmount.toLocaleString()}</span>
+                                </div>
+                                <div className="bg-blue-50 rounded-md px-2 py-1 inline-flex items-center gap-1.5">
+                                    <CardCapacityIcon className="w-4 h-4" />
+                                    <span className="text-sm font-bold text-blue-700">+{capacityRewardAmount}</span>
+                                </div>
                             </div>
                         </div>
                         {statusComponent}
