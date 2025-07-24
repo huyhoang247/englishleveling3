@@ -344,7 +344,9 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                          const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                          if (wordsInSentence.length >= 2) totalP3++;
                      });
-                     const completedCount = Object.keys(completedMultiWordMap).filter(key => key.split(' ').length === 2).length;
+                     const completedCount = Object.keys(completedMultiWordMap).filter(
+                         key => completedMultiWordMap[key]?.[mode]
+                     ).length;
                      progress = { completed: completedCount, total: totalP3 };
                 } else if (practiceNum % 100 === 4) {
                      let totalP4 = 0;
@@ -352,7 +354,9 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                          const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                          if (wordsInSentence.length >= 3) totalP4++;
                      });
-                     const completedCount = Object.keys(completedMultiWordMap).filter(key => key.split(' ').length === 3).length;
+                     const completedCount = Object.keys(completedMultiWordMap).filter(
+                         key => completedMultiWordMap[key]?.[mode]
+                     ).length;
                      progress = { completed: completedCount, total: totalP4 };
                 }
                 newProgressData[practiceNum] = progress;
