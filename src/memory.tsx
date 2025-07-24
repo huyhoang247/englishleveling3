@@ -1,45 +1,19 @@
 import React, { useState, useEffect } from 'react';
 
-// --- PHẦN CSS ĐÃ NÂNG CẤP ---
+// --- PHẦN CSS ---
 // CSS được định nghĩa như một chuỗi và sẽ được chèn vào component
 const GameStyles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
-    /* --- Keyframes cho các hiệu ứng động --- */
-    @keyframes gradient-animation {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    @keyframes pulseGlow {
-      0% { box-shadow: 0 0 15px 5px rgba(249, 168, 38, 0.7); }
-      50% { box-shadow: 0 0 25px 10px rgba(249, 168, 38, 1); }
-      100% { box-shadow: 0 0 15px 5px rgba(249, 168, 38, 0.7); }
-    }
-    
-    @keyframes slideInUp {
-        from { transform: translateY(30px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-    
-    /* --- Cài đặt chung --- */
     body {
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background: linear-gradient(135deg, #6a11cb, #2575fc, #3f3c62);
-      background-size: 200% 200%;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
       margin: 0;
-      overflow: hidden;
-      animation: gradient-animation 15s ease infinite;
+      overflow: hidden; /* Prevent scrollbars */
     }
 
     .game-wrapper {
@@ -52,54 +26,53 @@ const GameStyles = () => (
         display: flex;
         flex-direction: column;
         align-items: center;
-        animation: fadeIn 0.8s ease-out;
     }
 
     .game-frame {
-        background: radial-gradient(circle, #4a467a 0%, #3f3c62 100%);
+        background-color: #3f3c62;
         border-radius: 40px;
         border: 10px solid #2e2b4f;
         padding: 20px;
-        box-shadow: inset 0 0 15px rgba(0,0,0,0.5), 0 15px 40px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         position: relative;
         z-index: 2;
-        width: 100%;
-        box-sizing: border-box;
+        width: 100%; /* Ensure it takes full width of wrapper */
+        box-sizing: border-box; /* Include padding and border in the element's total width and height */
     }
 
-    .header {
-        background: linear-gradient(135deg, #ffb74d 0%, #f9a826 100%);
-        color: #3f3c62;
+    /* Đã xoá phần header, có thể xoá CSS này nếu muốn */
+    /* .header {
+        background-color: #f9a826;
+        color: white;
         text-align: center;
         padding: 10px 20px;
         border-radius: 20px;
-        margin: -45px auto 20px auto;
-        width: 85%;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.25);
-        border: 4px solid #fffbe9;
+        margin: -40px auto 20px auto;
+        width: 80%;
+        box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        border: 4px solid #fff;
         box-sizing: border-box;
-        font-weight: 700;
     }
 
     .header h1 {
         margin: 0;
         font-size: 1.8em;
-        text-shadow: 1px 1px 2px rgba(255,255,255,0.4);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
 
     .header p {
         margin: 5px 0 0;
         font-size: 0.9em;
-        font-weight: 400;
-        opacity: 0.9;
-    }
+        font-weight: normal;
+    } */
 
     .rewards-legend {
+        /* Điều chỉnh lại margin-top vì đã xoá header */
+        margin-top: 10px;
         margin-bottom: 25px;
-        padding: 15px;
-        background-color: rgba(0, 0, 0, 0.15);
-        border-radius: 15px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px;
+        background-color: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
     }
 
     .reward-item {
@@ -107,9 +80,8 @@ const GameStyles = () => (
         align-items: center;
         justify-content: space-between;
         margin-bottom: 8px;
-        opacity: 0.4;
-        transform: scale(1);
-        transition: opacity 0.4s ease, transform 0.4s ease;
+        opacity: 0.5;
+        transition: opacity 0.3s ease;
     }
     .reward-item:last-child {
         margin-bottom: 0;
@@ -117,28 +89,26 @@ const GameStyles = () => (
 
     .reward-item.found {
         opacity: 1;
-        transform: scale(1.05);
     }
 
     .reward-icons {
         display: flex;
-        gap: 5px;
+        gap: 4px;
     }
 
     .reward-icons span {
         background: #2e2b4f;
-        border-radius: 8px;
+        border-radius: 5px;
         width: 28px;
         height: 28px;
         display: flex;
         justify-content: center;
         align-items: center;
         font-size: 16px;
-        transition: background-color 0.4s, color 0.4s;
     }
 
     .reward-item.found .reward-icons span {
-        background: linear-gradient(135deg, #ffb74d 0%, #f9a826 100%);
+        background: #f9a826;
         color: #3f3c62;
     }
 
@@ -150,11 +120,9 @@ const GameStyles = () => (
         font-weight: 600;
         min-width: 120px;
         text-align: center;
-        transition: background-color 0.4s, color 0.4s;
     }
-    
     .reward-item.found .reward-text {
-        background: linear-gradient(135deg, #ffb74d 0%, #f9a826 100%);
+        background-color: #f9a826;
         color: #3f3c62;
     }
 
@@ -162,7 +130,7 @@ const GameStyles = () => (
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 15px;
-        perspective: 1200px;
+        perspective: 1000px;
     }
 
     .card {
@@ -171,20 +139,14 @@ const GameStyles = () => (
         cursor: pointer;
         background-color: transparent;
         border: none;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    /* Hiệu ứng nhấc lên khi hover vào thẻ chưa lật */
-    .card:not(.flipped):not(.matched):hover {
-        transform: translateY(-5px) scale(1.03);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     }
 
     .card-inner {
         position: relative;
         width: 100%;
         height: 100%;
-        transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1);
+        text-align: center;
+        transition: transform 0.6s;
         transform-style: preserve-3d;
     }
 
@@ -197,68 +159,56 @@ const GameStyles = () => (
         position: absolute;
         width: 100%;
         height: 100%;
+        -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
-        border-radius: 12px;
+        border-radius: 10px;
         display: flex;
         justify-content: center;
         align-items: center;
         font-size: 2.5em;
-        border: 4px solid rgba(249, 168, 38, 0.5);
+        border: 4px solid #f9a826;
     }
 
     .card-back {
-        background: radial-gradient(circle, #4a90e2 0%, #2e86de 100%);
+        background-color: #2e86de;
         color: white;
-        font-size: 2.8em; /* Làm biểu tượng mặt sau to hơn */
     }
 
     .card-front {
-        background-color: #5d589e; /* Màu sáng hơn một chút để nổi bật */
+        background-color: #3f3c62;
         color: white;
         transform: rotateY(180deg);
     }
     
     .card.matched .card-front {
+        box-shadow: 0 0 15px 5px #f9a826;
         border-color: #fff;
-        animation: pulseGlow 1.5s infinite ease-in-out;
     }
 
     .victory-message {
         margin-top: 20px;
-        padding: 20px;
-        background: linear-gradient(135deg, #f9a826, #ffb74d);
-        color: #2e2b4f;
-        border-radius: 15px;
+        padding: 15px;
+        background-color: rgba(0,0,0,0.2);
+        border-radius: 10px;
         text-align: center;
-        animation: slideInUp 0.5s ease-out forwards;
-    }
-    .victory-message h2 {
-        margin: 0 0 15px 0;
-        font-weight: 700;
-        text-shadow: 1px 1px 2px rgba(255,255,255,0.4);
     }
 
     .reset-button {
-        background: #fff;
-        color: #3f3c62;
+        background-color: #f9a826;
+        color: white;
         border: none;
-        padding: 12px 30px;
+        padding: 12px 25px;
         font-size: 1.1em;
         font-weight: bold;
-        border-radius: 50px;
+        border-radius: 20px;
         cursor: pointer;
-        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-        transition: all 0.2s ease-in-out;
+        transition: background-color 0.3s;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        margin-top: 10px;
     }
 
     .reset-button:hover {
-        background: #fffbe9;
-        transform: translateY(-3px);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.25);
-    }
-    .reset-button:active {
-        transform: translateY(0px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        background-color: #e89a1f;
     }
     
     .treasure-pile {
@@ -270,9 +220,9 @@ const GameStyles = () => (
         margin-top: -50px;
         z-index: 1;
         padding-top: 50px;
-        box-shadow: inset 0 10px 30px rgba(0, 0, 0, 0.4);
-        width: calc(100% - 40px);
-        max-width: 430px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) inset;
+        width: calc(100% - 40px); /* Adjust based on game-frame padding and border */
+        max-width: 430px; /* Adjust based on game-frame max-width */
         box-sizing: border-box;
     }
   `}</style>
@@ -314,7 +264,7 @@ function App() {
             setCanFlip(false);
             checkForMatch();
         }
-    }, [flippedCards]); 
+    }, [flippedCards, cards]); // Added cards to dependency array for checkForMatch to work correctly
 
     const checkForMatch = () => {
         const [firstIndex, secondIndex, thirdIndex] = flippedCards;
@@ -364,13 +314,15 @@ function App() {
     const allMatched = matchedTypes.length === CARD_TYPES.length;
 
     return (
+        // Dùng một thẻ div để bao bọc cả game và style
         <div className="game-wrapper">
-            <GameStyles />
+            <GameStyles /> {/* Chèn CSS vào đây */}
             <div className="game-frame">
-                <div className="header">
+                {/* --- PHẦN HEADER ĐÃ BỊ XOÁ --- */}
+                {/* <div className="header">
                     <h1>Dig for treasure</h1>
                     <p>Flip 3 identical cards to win rewards</p>
-                </div>
+                </div> */}
 
                 <div className="rewards-legend">
                     {CARD_TYPES.map(reward => (
@@ -397,7 +349,7 @@ function App() {
                         >
                             <div className="card-inner">
                                 <div className="card-front">{card.icon}</div>
-                                <div className="card-back">🧭</div>
+                                <div className="card-back">?</div>
                             </div>
                         </div>
                     ))}
@@ -415,4 +367,4 @@ function App() {
     );
 }
 
-export default App; 
+export default App;
