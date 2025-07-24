@@ -6,69 +6,47 @@ const GameStyles = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
+    /* --- THAY ĐỔI --- */
+    /* Xoá background tím và các thuộc tính căn giữa không cần thiết */
     body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
       margin: 0;
+      background-color: #3f3c62; /* Đặt màu nền chính của game cho body */
       overflow: hidden; /* Prevent scrollbars */
     }
 
+    /* --- THAY ĐỔI --- */
+    /* Wrapper sẽ chiếm toàn bộ màn hình */
     .game-wrapper {
         font-family: 'Poppins', sans-serif;
         color: white;
-        width: 100%;
-        max-width: 450px;
-        margin: 20px;
+        width: 100vw; /* Chiều rộng 100% của viewport */
+        height: 100vh; /* Chiều cao 100% của viewport */
         position: relative;
         display: flex;
         flex-direction: column;
         align-items: center;
+        background-color: #3f3c62; /* Nền chính của game */
     }
 
+    /* --- THAY ĐỔI --- */
+    /* Frame sẽ là phần nội dung chính, co giãn để lấp đầy không gian */
     .game-frame {
-        background-color: #3f3c62;
-        border-radius: 40px;
-        border: 10px solid #2e2b4f;
-        padding: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        background-color: transparent; /* Nền trong suốt vì wrapper đã có màu */
+        border-radius: 0; /* Bỏ bo góc */
+        border: none; /* Bỏ đường viền */
+        padding: 40px 20px 20px 20px; /* Thêm padding trên cùng cho thanh trạng thái điện thoại */
+        box-shadow: none; /* Bỏ shadow */
         position: relative;
         z-index: 2;
-        width: 100%; /* Ensure it takes full width of wrapper */
-        box-sizing: border-box; /* Include padding and border in the element's total width and height */
-    }
-
-    /* Đã xoá phần header, có thể xoá CSS này nếu muốn */
-    /* .header {
-        background-color: #f9a826;
-        color: white;
-        text-align: center;
-        padding: 10px 20px;
-        border-radius: 20px;
-        margin: -40px auto 20px auto;
-        width: 80%;
-        box-shadow: 0 5px 10px rgba(0,0,0,0.2);
-        border: 4px solid #fff;
+        width: 100%;
+        max-width: 500px; /* Thêm max-width để không quá rộng trên màn hình lớn */
         box-sizing: border-box;
+        flex-grow: 1; /* Quan trọng: cho phép nó chiếm không gian còn lại */
+        display: flex;
+        flex-direction: column;
     }
-
-    .header h1 {
-        margin: 0;
-        font-size: 1.8em;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-
-    .header p {
-        margin: 5px 0 0;
-        font-size: 0.9em;
-        font-weight: normal;
-    } */
 
     .rewards-legend {
-        /* Điều chỉnh lại margin-top vì đã xoá header */
-        margin-top: 10px;
         margin-bottom: 25px;
         padding: 10px;
         background-color: rgba(0, 0, 0, 0.1);
@@ -131,6 +109,8 @@ const GameStyles = () => (
         grid-template-columns: repeat(4, 1fr);
         gap: 15px;
         perspective: 1000px;
+        margin-top: auto; /* Đẩy lưới game xuống dưới nếu có không gian thừa */
+        margin-bottom: 20px;
     }
 
     .card {
@@ -211,24 +191,24 @@ const GameStyles = () => (
         background-color: #e89a1f;
     }
     
+    /* --- THAY ĐỔI --- */
+    /* Chỉnh sửa lại phần "kho báu" để nằm ở dưới cùng */
     .treasure-pile {
-        height: 80px;
-        background-color: #4d4980;
-        border-bottom-left-radius: 40px;
-        border-bottom-right-radius: 40px;
+        height: 60px; /* Giảm chiều cao */
+        background-color: #2e2b4f; /* Đổi màu cho phù hợp */
+        border-radius: 0;
         position: relative;
-        margin-top: -50px;
         z-index: 1;
-        padding-top: 50px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) inset;
-        width: calc(100% - 40px); /* Adjust based on game-frame padding and border */
-        max-width: 430px; /* Adjust based on game-frame max-width */
+        padding: 0;
+        box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.3) inset;
+        width: 100%;
+        max-width: 500px; /* Đồng bộ max-width */
         box-sizing: border-box;
     }
   `}</style>
 );
 
-// --- PHẦN LOGIC VÀ DỮ LIỆU ---
+// --- PHẦN LOGIC VÀ DỮ LIỆU (KHÔNG THAY ĐỔI) ---
 
 const CARD_TYPES = [
     { type: 'Gold', icon: '📦', reward: 'Vàng x16800' },
@@ -264,21 +244,19 @@ function App() {
             setCanFlip(false);
             checkForMatch();
         }
-    }, [flippedCards, cards]); // Added cards to dependency array for checkForMatch to work correctly
+    }, [flippedCards, cards]);
 
     const checkForMatch = () => {
         const [firstIndex, secondIndex, thirdIndex] = flippedCards;
         const cardType = cards[firstIndex].type;
 
         if (cards[secondIndex].type === cardType && cards[thirdIndex].type === cardType) {
-            // TRÙNG KHỚP
             setCards(prev => prev.map(card => 
                 card.type === cardType ? { ...card, isMatched: true } : card
             ));
             setMatchedTypes(prev => [...prev, cardType]);
             resetTurn();
         } else {
-            // KHÔNG TRÙNG KHỚP
             setTimeout(() => {
                 setCards(prev => prev.map((card, index) => 
                     flippedCards.includes(index) ? { ...card, isFlipped: false } : card
@@ -314,16 +292,9 @@ function App() {
     const allMatched = matchedTypes.length === CARD_TYPES.length;
 
     return (
-        // Dùng một thẻ div để bao bọc cả game và style
         <div className="game-wrapper">
-            <GameStyles /> {/* Chèn CSS vào đây */}
+            <GameStyles />
             <div className="game-frame">
-                {/* --- PHẦN HEADER ĐÃ BỊ XOÁ --- */}
-                {/* <div className="header">
-                    <h1>Dig for treasure</h1>
-                    <p>Flip 3 identical cards to win rewards</p>
-                </div> */}
-
                 <div className="rewards-legend">
                     {CARD_TYPES.map(reward => (
                         <div 
