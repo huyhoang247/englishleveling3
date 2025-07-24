@@ -1,3 +1,5 @@
+// --- START OF FILE quiz-app-home.tsx (30).txt ---
+
 // --- START OF FILE quiz-app-home.tsx ---
 
 import { useState, useEffect } from 'react';
@@ -351,23 +353,39 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
                     const completed = totalQs.filter(word => completedSet.has(word.toLowerCase())).length;
                     progress = { completed: completed, total: totalQs.length };
                 } else if (practiceNum % 100 === 3) {
-                     let totalP3 = 0;
+                     // --- START: FIX FOR PRACTICE 3 ---
+                     const totalQuestionsP3 = new Set<string>();
                      exampleData.forEach(sentence => {
                          const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                         if (wordsInSentence.length >= 2) totalP3++;
+                         if (wordsInSentence.length >= 2) {
+                             const wordsToUse = wordsInSentence.slice(0, 2);
+                             const orderedWords = wordsToUse.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()));
+                             if (orderedWords.length === 2) {
+                                 totalQuestionsP3.add(orderedWords.join(' ').toLowerCase());
+                             }
+                         }
                      });
                      const gameModeId = `fill-word-${practiceNum}`;
-                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
-                     progress = { completed: completedSet.size, total: totalP3 };
+                     const completedSetP3 = completedMultiWordByGameMode[gameModeId] || new Set();
+                     progress = { completed: completedSetP3.size, total: totalQuestionsP3.size };
+                     // --- END: FIX FOR PRACTICE 3 ---
                 } else if (practiceNum % 100 === 4) {
-                     let totalP4 = 0;
+                     // --- START: FIX FOR PRACTICE 4 ---
+                     const totalQuestionsP4 = new Set<string>();
                      exampleData.forEach(sentence => {
                          const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                         if (wordsInSentence.length >= 3) totalP4++;
+                         if (wordsInSentence.length >= 3) {
+                             const wordsToUse = wordsInSentence.slice(0, 3);
+                             const orderedWords = wordsToUse.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()));
+                             if (orderedWords.length === 3) {
+                                 totalQuestionsP4.add(orderedWords.join(' ').toLowerCase());
+                             }
+                         }
                      });
-                     const gameModeId = `fill-word-${practiceNum}`;
-                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
-                     progress = { completed: completedSet.size, total: totalP4 };
+                     const gameModeIdP4 = `fill-word-${practiceNum}`;
+                     const completedSetP4 = completedMultiWordByGameMode[gameModeIdP4] || new Set();
+                     progress = { completed: completedSetP4.size, total: totalQuestionsP4.size };
+                     // --- END: FIX FOR PRACTICE 4 ---
                 }
                 newProgressData[practiceNum] = progress;
             });
