@@ -80,10 +80,9 @@ const GameStyles = () => (
         transition: background-color 0.3s ease;
     }
 
-    /* --- THAY ĐỔI: Đổi màu nền cam sang xám --- */
     .reward-item.found .reward-icons span {
         background: #6B7280;
-        color: white; /* Đổi màu chữ thành trắng để dễ đọc trên nền xám */
+        color: white;
     }
 
     .reward-text {
@@ -97,18 +96,19 @@ const GameStyles = () => (
         transition: background-color 0.3s ease;
     }
     
-    /* --- THAY ĐỔI: Đổi màu nền cam sang xám --- */
     .reward-item.found .reward-text {
         background-color: #6B7280;
-        color: white; /* Đổi màu chữ thành trắng để dễ đọc trên nền xám */
+        color: white;
     }
 
+    /* --- THAY ĐỔI Ở ĐÂY --- */
     .game-board {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 15px;
         perspective: 1000px;
-        margin-top: auto;
+        /* Thay margin-top: auto; bằng một giá trị cụ thể để đẩy lưới lên */
+        margin-top: 5vh;
         margin-bottom: 20px;
     }
 
@@ -172,9 +172,8 @@ const GameStyles = () => (
         text-align: center;
     }
 
-    /* --- THAY ĐỔI: Đổi màu nút Chơi lại sang xám --- */
     .reset-button {
-        background-color: #6B7280; /* Màu xám */
+        background-color: #6B7280;
         color: white;
         border: none;
         padding: 12px 25px;
@@ -188,7 +187,7 @@ const GameStyles = () => (
     }
 
     .reset-button:hover {
-        background-color: #4A5568; /* Màu xám đậm hơn khi hover */
+        background-color: #4A5568;
     }
     
     .treasure-pile {
