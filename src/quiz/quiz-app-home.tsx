@@ -164,6 +164,16 @@ export default function QuizAppHome() {
             </div>
           </div>
         </div>
+        {/* FIX: Add style block here to hide scrollbar */}
+        <style jsx>{`
+          .hide-scrollbar {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+          }
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none; /* Safari and Chrome */
+          }
+        `}</style>
       </div>
     );
   }
@@ -699,11 +709,25 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                     </h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
                 </div>
-                <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50">
+                {/* FIX: Add hide-scrollbar class */}
+                <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50 hide-scrollbar">
                     {renderRewardTiers()}
                 </div>
             </div>
-             <style jsx>{` @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; } `}</style>
+            {/* FIX: Add hide-scrollbar styles */}
+            <style jsx>{`
+                @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+                .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
+                .hide-scrollbar {
+                  -ms-overflow-style: none; /* IE and Edge */
+                  scrollbar-width: none; /* Firefox */
+                }
+                .hide-scrollbar::-webkit-scrollbar {
+                  display: none; /* Safari and Chrome */
+                }
+            `}</style>
         </div>
     );
 };
