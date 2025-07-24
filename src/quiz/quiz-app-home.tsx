@@ -618,9 +618,9 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                     <div key={rewardId} className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
                         <div>
                             <p className="font-semibold text-gray-800">Hoàn thành {milestone} câu</p>
-                            <div className="flex items-center gap-2 mt-1">
-                                <GoldCoinIcon className="w-5 h-5" />
-                                <p className="font-bold text-orange-600">+{rewardAmount.toLocaleString()}</p>
+                            <div className="bg-orange-50 rounded-md px-2 py-1 inline-flex items-center gap-1.5 mt-2">
+                                <GoldCoinIcon className="w-4 h-4" />
+                                <span className="text-sm font-bold text-orange-700">{rewardAmount.toLocaleString()}</span>
                             </div>
                         </div>
                         {statusComponent}
