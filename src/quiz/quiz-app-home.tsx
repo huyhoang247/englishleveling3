@@ -502,7 +502,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
   const practicesToShow = selectedType ? Object.keys(practiceDetails[selectedType]) : [];
   return (
     <div className="w-full max-w-md mx-auto">
-      <h1 className="sticky top-[-1.5rem] bg-white text-2xl font-bold text-gray-800 text-center py-4 z-10">Chọn bài tập</h1>
+      <h1 className="sticky top-0 bg-white text-2xl font-bold text-gray-800 text-center py-4 z-10">Chọn bài tập</h1>
       <div className="space-y-4 w-full pt-2">
           {practicesToShow.map(pNumStr => {
             const practiceNumber = parseInt(pNumStr, 10);
