@@ -6,12 +6,12 @@ const GameStyles = () => (
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .fade-in {
-      animation: fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      animation: fadeIn 0.5s ease-out forwards;
     }
 
     body {
@@ -42,74 +42,90 @@ const GameStyles = () => (
         flex-grow: 1;
         display: flex;
         flex-direction: column;
-        position: relative; /* Quan trọng để lớp phủ hoạt động đúng */
+        position: relative;
     }
     
-    /* --- THÊM MỚI: Lớp phủ cho màn hình cược --- */
-    .betting-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(26, 32, 44, 0.8); /* Nền mờ, cùng màu với background chính */
-      z-index: 10;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      /* Hiệu ứng kính mờ (frosted glass) */
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px); /* Hỗ trợ Safari */
-    }
-
-    .betting-section {
+    /* --- THÊM MỚI: CSS cho khu vực điều khiển cược --- */
+    .betting-container {
+      margin-top: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      text-align: center;
-      padding: 20px;
-    }
-
-    .betting-section h2 {
-      font-size: 1.5em;
-      margin-bottom: 25px;
-      font-weight: 600;
-    }
-    
-    .betting-options {
-      display: flex;
-      flex-direction: column;
       gap: 15px;
-      width: 250px;
     }
 
-    .bet-button {
+    .betting-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .bet-adjust-button {
       background-color: #2D3748;
       border: 2px solid #6B7280;
       color: white;
-      padding: 15px 20px;
-      font-size: 1.2em;
-      font-weight: 700;
-      border-radius: 15px;
+      width: 50px;
+      height: 50px;
+      font-size: 2em;
+      font-weight: 300;
+      border-radius: 50%;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
       transition: background-color 0.3s, transform 0.2s;
     }
 
-    .bet-button:hover {
+    .bet-adjust-button:hover {
       background-color: #4A5568;
-      transform: scale(1.03);
+      transform: scale(1.05);
     }
     
+    .bet-adjust-button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .bet-amount-display {
+      font-size: 1.8em;
+      font-weight: 700;
+      min-width: 160px;
+      text-align: center;
+      color: #f9a826; /* Màu vàng cho nổi bật */
+    }
+    
+    .start-game-button {
+      background-color: #2e86de; /* Màu xanh của mặt sau thẻ */
+      color: white;
+      border: none;
+      padding: 12px 40px;
+      font-size: 1.2em;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+      width: 80%;
+    }
+    
+    .start-game-button:hover {
+      background-color: #256ab1;
+      transform: scale(1.02);
+    }
+
     .current-bet-display {
         text-align: center;
-        margin-bottom: 15px;
-        font-size: 0.9em;
+        margin-top: 20px;
+        font-size: 1em;
         color: #A0AEC0;
-        height: 20px; /* Đặt chiều cao cố định để không bị giật layout */
+        height: 40px; /* Đặt chiều cao để không giật layout */
     }
     .current-bet-display span {
         font-weight: 700;
         color: white;
+        margin-left: 5px;
     }
 
     .rewards-legend {
@@ -178,7 +194,14 @@ const GameStyles = () => (
         grid-template-columns: repeat(4, 1fr);
         gap: 15px;
         perspective: 1000px;
-        margin-bottom: 20px;
+        margin-bottom: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    /* --- THAY ĐỔI: Làm mờ thẻ khi đang cược --- */
+    .game-board.disabled {
+        opacity: 0.5;
+        pointer-events: none;
     }
 
     .card {
@@ -235,7 +258,7 @@ const GameStyles = () => (
 
     .victory-message {
         position: absolute;
-        bottom: 80px; /* Đẩy lên trên thanh dưới cùng */
+        bottom: 80px;
         left: 20px;
         right: 20px;
         padding: 15px;
@@ -309,12 +332,15 @@ const initializeDeck = () => {
 // --- COMPONENT CHÍNH ---
 function App() {
     const [gamePhase, setGamePhase] = useState('betting'); // 'betting', 'playing'
-    const [currentBet, setCurrentBet] = useState(0);
+    // --- THÊM MỚI: State cho chỉ số mức cược ---
+    const [betIndex, setBetIndex] = useState(0);
 
     const [cards, setCards] = useState(initializeDeck());
     const [flippedCards, setFlippedCards] = useState([]);
     const [matchedTypes, setMatchedTypes] = useState([]);
     const [canFlip, setCanFlip] = useState(true);
+
+    const currentBetAmount = BET_AMOUNTS[betIndex];
 
     useEffect(() => {
         if (flippedCards.length === 3) {
@@ -349,8 +375,7 @@ function App() {
     };
     
     const handleCardClick = (index) => {
-        // --- THAY ĐỔI: Chỉ cho phép click khi đang trong giai đoạn chơi ---
-        if (!canFlip || cards[index].isFlipped || cards[index].isMatched || gamePhase !== 'playing') {
+        if (!canFlip || cards[index].isFlipped || cards[index].isMatched) {
             return;
         }
         
@@ -365,14 +390,22 @@ function App() {
         setFlippedCards([]);
         setCanFlip(true);
         setCards(initializeDeck());
-        setCurrentBet(0);
         setGamePhase('betting');
+        setBetIndex(0); // Reset mức cược về ban đầu
     }
 
-    const handleBetSelect = (amount) => {
-      setCurrentBet(amount);
-      setGamePhase('playing');
-    }
+    // --- THÊM MỚI: Các hàm điều khiển cược ---
+    const handleIncreaseBet = () => {
+        setBetIndex(prevIndex => Math.min(prevIndex + 1, BET_AMOUNTS.length - 1));
+    };
+
+    const handleDecreaseBet = () => {
+        setBetIndex(prevIndex => Math.max(prevIndex - 1, 0));
+    };
+
+    const handleStartGame = () => {
+        setGamePhase('playing');
+    };
 
     const allMatched = matchedTypes.length === CARD_TYPES.length;
 
@@ -380,31 +413,6 @@ function App() {
         <div className="game-wrapper">
             <GameStyles />
             <div className="game-frame">
-                {/* --- THAY ĐỔI: Luôn hiển thị bàn chơi, lớp phủ sẽ xuất hiện khi cần --- */}
-
-                {/* Lớp phủ đặt cược */}
-                {gamePhase === 'betting' && (
-                    <div className="betting-overlay fade-in">
-                        <div className="betting-section">
-                            <h2>Chọn Mức Cược</h2>
-                            <div className="betting-options">
-                                {BET_AMOUNTS.map(amount => (
-                                    <button key={amount} className="bet-button" onClick={() => handleBetSelect(amount)}>
-                                        {amount.toLocaleString('vi-VN')} Vàng
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
-                
-                {/* Giao diện chơi game chính */}
-                <div className="current-bet-display">
-                    {gamePhase === 'playing' && (
-                        <span>Mức cược: {currentBet.toLocaleString('vi-VN')} Vàng</span>
-                    )}
-                </div>
-
                 <div className="rewards-legend">
                     {CARD_TYPES.map(reward => (
                         <div 
@@ -421,7 +429,7 @@ function App() {
                     ))}
                 </div>
 
-                <div className="game-board">
+                <div className={`game-board ${gamePhase === 'betting' ? 'disabled' : ''}`}>
                     {cards.map((card, index) => (
                         <div 
                             key={card.id} 
@@ -435,8 +443,25 @@ function App() {
                         </div>
                     ))}
                 </div>
+
+                {/* --- THAY ĐỔI: Giao diện cược mới --- */}
+                {gamePhase === 'betting' && (
+                    <div className="betting-container fade-in">
+                        <div className="betting-controls">
+                            <button className="bet-adjust-button" onClick={handleDecreaseBet} disabled={betIndex === 0}>-</button>
+                            <div className="bet-amount-display">{currentBetAmount.toLocaleString('vi-VN')}</div>
+                            <button className="bet-adjust-button" onClick={handleIncreaseBet} disabled={betIndex === BET_AMOUNTS.length - 1}>+</button>
+                        </div>
+                        <button className="start-game-button" onClick={handleStartGame}>Bắt đầu</button>
+                    </div>
+                )}
                 
-                {/* Thông báo chiến thắng */}
+                {gamePhase === 'playing' && (
+                     <div className="current-bet-display fade-in">
+                        Đã cược: <span>{currentBetAmount.toLocaleString('vi-VN')} Vàng</span>
+                    </div>
+                )}
+                
                 {allMatched && (
                     <div className="victory-message fade-in">
                         <h2>Chúc mừng! Bạn đã tìm thấy tất cả kho báu!</h2>
