@@ -20,7 +20,7 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 
 
 // --- CÁC COMPONENT CON ---
-const Header = ({ gold, ancientBooks, onClose }: { gold: number; ancientBooks: number; onClose: () => void; }) => {
+const Header = ({ gold, onClose }: { gold: number; onClose: () => void; }) => {
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
@@ -35,10 +35,6 @@ const Header = ({ gold, ancientBooks, onClose }: { gold: number; ancientBooks: n
                 </button>
                 <div className="flex items-center gap-4 sm:gap-6">
                     <CoinDisplay displayedCoins={gold} isStatsFullscreen={false} />
-                     <div className="flex items-center gap-2 p-2 bg-slate-900/50 rounded-md border border-slate-700/50">
-                        <BookIcon className="w-6 h-6" />
-                        <span className="font-bold text-white text-sm">{ancientBooks}</span>
-                    </div>
                 </div>
             </div>
         </header>
@@ -425,7 +421,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
       {newlyCraftedSkill && <CraftingSuccessModal ownedSkill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
 
       <div className="relative z-10 flex flex-col w-full h-screen">
-        <Header gold={gold} ancientBooks={ancientBooks} onClose={onClose} />
+        <Header gold={gold} onClose={onClose} />
         <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
             <section className="flex-shrink-0 py-4">
                 <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
