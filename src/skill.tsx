@@ -10,6 +10,7 @@ import {
     getRarityDisplayName,
     type OwnedSkill,
 } from './skill-data.tsx';
+import CoinDisplay from './coin-display.tsx';
 
 // --- CÁC ICON GIAO DIỆN CHUNG ---
 const BookIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png" alt="Sách Cổ" className={className} /> );
@@ -33,10 +34,7 @@ const Header = ({ gold, ancientBooks, onClose }: { gold: number; ancientBooks: n
                     <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
                 </button>
                 <div className="flex items-center gap-4 sm:gap-6">
-                    <div className="flex items-center gap-2 p-2 bg-slate-900/50 rounded-md border border-slate-700/50">
-                        <GoldIcon className="w-6 h-6" />
-                        <span className="font-bold text-yellow-300 text-sm">{gold.toLocaleString()}</span>
-                    </div>
+                    <CoinDisplay displayedCoins={gold} isStatsFullscreen={false} />
                      <div className="flex items-center gap-2 p-2 bg-slate-900/50 rounded-md border border-slate-700/50">
                         <BookIcon className="w-6 h-6" />
                         <span className="font-bold text-white text-sm">{ancientBooks}</span>
