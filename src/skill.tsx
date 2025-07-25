@@ -1,100 +1,16 @@
 import React, { useState, useMemo } from 'react';
-
-// Giả lập các dependencies, thay thế bằng import thật của bạn
-// --- START: Giả lập dependencies ---
-export const ALL_SKILLS = [
-    {
-        id: 'fireball',
-        name: 'Fireball',
-        description: (level: number, rarity: string) => `Deals damage. Power increases with level and rarity.`,
-        icon: ({ className }: { className?: string }) => <div className={className}>🔥</div>,
-        upgradeCost: 100,
-        maxLevel: 10,
-        baseEffectValue: 10,
-        effectValuePerLevel: 2,
-    },
-    {
-        id: 'ice-shard',
-        name: 'Ice Shard',
-        description: (level: number, rarity: string) => `Slows enemy. Duration increases with level and rarity.`,
-        icon: ({ className }: { className?: string }) => <div className={className}>❄️</div>,
-        upgradeCost: 150,
-        maxLevel: 5,
-        baseEffectValue: 20,
-        effectValuePerLevel: 5,
-    },
-    {
-        id: 'heal',
-        name: 'Heal',
-        description: (level: number, rarity: string) => `Restores health. Amount increases with level and rarity.`,
-        icon: ({ className }: { className?: string }) => <div className={className}>💚</div>,
-        upgradeCost: 200,
-        maxLevel: 8,
-        baseEffectValue: 5,
-        effectValuePerLevel: 1,
-    }
-];
-
-export const CRAFTING_COST = 5;
-
-export type SkillRarity = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
-export type OwnedSkill = {
-    id: string;
-    skillId: string;
-    level: number;
-    rarity: SkillRarity;
-};
-
-export const getRandomRarity = (): SkillRarity => {
-    const rand = Math.random();
-    if (rand < 0.4) return 'E';  // 40%
-    if (rand < 0.7) return 'D';  // 30%
-    if (rand < 0.85) return 'B'; // 15%
-    if (rand < 0.95) return 'A'; // 10%
-    if (rand < 0.99) return 'S'; // 4%
-    return 'SR'; // 1%
-};
-
-export const getActivationChance = (rarity: SkillRarity) => {
-    const chances = { E: 5, D: 10, B: 15, A: 20, S: 25, SR: 30 };
-    return chances[rarity];
-};
-
-export const getRarityColor = (rarity: SkillRarity) => {
-    const colors = { E: 'border-slate-500', D: 'border-green-500', B: 'border-blue-500', A: 'border-purple-500', S: 'border-yellow-500', SR: 'border-red-500' };
-    return colors[rarity];
-};
-
-export const getRarityGradient = (rarity: SkillRarity) => {
-    const gradients = {
-        E: 'from-slate-800 to-slate-900',
-        D: 'from-green-800 to-green-900',
-        B: 'from-blue-800 to-blue-900',
-        A: 'from-purple-800 to-purple-900',
-        S: 'from-yellow-800 to-yellow-900',
-        SR: 'from-red-800 to-red-900'
-    };
-    return gradients[rarity];
-};
-
-export const getRarityTextColor = (rarity: SkillRarity) => {
-    const textColors = { E: 'text-slate-400', D: 'text-green-400', B: 'text-blue-400', A: 'text-purple-400', S: 'text-yellow-400', SR: 'text-red-400' };
-    return textColors[rarity];
-};
-
-export const getRarityDisplayName = (rarity: SkillRarity) => {
-    const names = { E: 'Common', D: 'Uncommon', B: 'Rare', A: 'Epic', S: 'Legendary', SR: 'Mythic' };
-    return names[rarity];
-};
-
-const CoinDisplay = ({ displayedCoins }: { displayedCoins: number; isStatsFullscreen: boolean }) => (
-    <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-700/80 rounded-full px-4 py-1.5">
-        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className="w-5 h-5"/>
-        <span className="font-bold text-base text-yellow-300 tracking-wider">{displayedCoins.toLocaleString()}</span>
-    </div>
-);
-// --- END: Giả lập dependencies ---
-
+import {
+    ALL_SKILLS,
+    CRAFTING_COST,
+    getRandomRarity,
+    getActivationChance,
+    getRarityColor,
+    getRarityGradient,
+    getRarityTextColor,
+    getRarityDisplayName,
+    type OwnedSkill,
+} from './skill-data.tsx';
+import CoinDisplay from './coin-display.tsx';
 
 // --- CÁC ICON GIAO DIỆN CHUNG ---
 const BookIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png" alt="Sách Cổ" className={className} /> );
@@ -283,6 +199,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const MAX_SKILLS_IN_STORAGE = 20;
 
   const equippedSkills = useMemo(() => {
     return equippedSkillIds.map(id => ownedSkills.find(s => s.id === id) || null);
@@ -325,6 +242,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
   const handleCraftSkill = async () => {
     if (isProcessing) return;
     if (ancientBooks < CRAFTING_COST) { showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`); return; }
+    if (ownedSkills.length >= MAX_SKILLS_IN_STORAGE) { showMessage(`Kho chứa đã đầy (${MAX_SKILLS_IN_STORAGE}/${MAX_SKILLS_IN_STORAGE}). Không thể chế tạo thêm.`); return; }
     setIsProcessing(true);
     const newSkillBlueprint = ALL_SKILLS[Math.floor(Math.random() * ALL_SKILLS.length)];
     const newRarity = getRandomRarity();
@@ -394,19 +312,21 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
                 </button>
             </section>
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
-                {/* --- START: THAY ĐỔI THEO YÊU CẦU --- */}
-                <div className="flex items-baseline mb-4 flex-shrink-0">
-                    <h2 className="text-lg font-bold text-cyan-400">Storage</h2>
-                    <div className="ml-3 font-semibold text-base">
-                        <span className="text-white">{ownedSkills.length}</span>
-                        <span className="text-slate-400">/20</span>
+                {/* --- THAY ĐỔI BẮT ĐẦU TẠI ĐÂY --- */}
+                <div className="flex justify-between items-baseline mb-4 flex-shrink-0">
+                    <div className="flex items-baseline gap-2">
+                        <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
+                        <span className="text-sm font-semibold text-slate-300">
+                            {ownedSkills.length}
+                            <span className="text-xs text-slate-500"> / {MAX_SKILLS_IN_STORAGE}</span>
+                        </span>
                     </div>
+                    {/* Có thể thêm các nút sắp xếp/lọc ở đây trong tương lai */}
                 </div>
-                {/* --- END: THAY ĐỔI THEO YÊU CẦU --- */}
+                {/* --- THAY ĐỔI KẾT THÚC TẠI ĐÂY --- */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto hide-scrollbar">
                     {ownedSkills.length > 0 ? (
                         ownedSkills
-                            // Lọc ra những kỹ năng chưa được trang bị
                             .filter(ownedSkill => !equippedSkillIds.includes(ownedSkill.id))
                             .sort((a, b) => {
                                 const rarityOrder = ['E', 'D', 'B', 'A', 'S', 'SR'];
