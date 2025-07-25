@@ -568,7 +568,7 @@ const ShopHeader = ({ onClose, onOpenGemModal }: { onClose: () => void; onOpenGe
                             <span className="font-bold text-sm">{userGems.toLocaleString()}</span>
                         </div>
                     </div>
-                    <button onClick={onOpenGemModal} className="bg-yellow-500 text-slate-900 font-bold text-xs px-3 py-2 rounded-md hover:bg-yellow-400 transition-colors hidden sm:block">NẠP</button>
+                    <button onClick={onOpenGemModal} className="bg-yellow-500 text-slate-900 font-bold text-xs px-3 py-2 rounded-md hover:bg-yellow-400 transition-colors">NẠP</button>
                 </div>
             </div>
         </header>
