@@ -1,4 +1,4 @@
-// --- START OF FILE shop.tsx (4).txt ---
+// --- START OF FILE shop.tsx.txt ---
 
 import React, { useState, useEffect } from 'react';
 import { itemDatabase, ItemRank } from './inventory/item-database.ts';
@@ -234,28 +234,26 @@ const ShopItemCard = ({ item, onSelect }: { item: any; onSelect: (item: any) => 
 const GemPackageCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => void }) => {
     return (
         <div 
-            className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-800/80 to-purple-900/40 border-2 border-slate-700 transition-all duration-300 hover:border-purple-500 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer flex flex-col"
+            className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-800/80 to-slate-900 border border-slate-700 transition-all duration-300 hover:border-purple-500 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer flex flex-col text-center p-4"
             onClick={() => onSelect(pkg)}
         >
-            <div className="relative flex-grow flex items-center justify-center p-6">
-                <Gem className="w-24 h-24 object-contain transition-transform duration-300 group-hover:scale-110" />
-                {pkg.bonus && (
-                    <div className="absolute top-3 right-3 px-2.5 py-1 text-xs font-bold bg-yellow-400/20 text-yellow-200 rounded-full border border-yellow-500/40">
-                        {pkg.bonus}
-                    </div>
-                )}
-            </div>
-            <div className="p-4 bg-black/30 border-t-2 border-slate-700 group-hover:border-purple-500 transition-colors duration-300">
-                <div className='flex justify-between items-baseline'>
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Gem className="w-5 h-5" />
-                        {pkg.gems.toLocaleString()}
-                    </h3>
-                    <p className="text-base font-semibold text-purple-300">
-                        {pkg.price.toLocaleString('vi-VN')} VNĐ
-                    </p>
+            {pkg.bonus && (
+                <div className="absolute top-2 right-2 px-2.5 py-1 text-xs font-bold bg-yellow-400/20 text-yellow-200 rounded-full border border-yellow-500/40">
+                    {pkg.bonus}
                 </div>
+            )}
+
+            <h3 className="text-3xl font-bold text-white">
+                {pkg.gems.toLocaleString()}
+            </h3>
+
+            <div className="flex-grow flex items-center justify-center my-3">
+                <Gem className="w-12 h-12 object-contain transition-transform duration-300 group-hover:scale-110" />
             </div>
+            
+            <p className="text-lg font-semibold text-purple-300">
+                {pkg.price.toLocaleString('vi-VN')} VNĐ
+            </p>
         </div>
     );
 };
@@ -568,7 +566,7 @@ const GameShopUI = ({ onClose, onPurchase, currentUser }: { onClose: () => void;
                         </div>
                         
                         {activeCategory === 'Nạp Gems' ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                            <div className="grid grid-cols-2 gap-4 md:gap-6">
                                 {gemPackages.map(pkg => (
                                     <GemPackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectGemPackage} />
                                 ))}
