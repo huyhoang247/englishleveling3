@@ -1,12 +1,10 @@
-// --- START OF FILE DungeonCanvasBackground.tsx (VỚI CHUYỂN ĐỘNG ORB MƯỢT MÀ) ---
+// --- START OF FILE DungeonCanvasBackground.tsx (VỚI CHUYỂN ĐỘNG ORB MƯỢT MÀ, KHÔNG CÓ ICON) ---
 
 import React, { useRef, useEffect } from 'react';
 
 // === CÁC HẰNG SỐ CẤU HÌNH CHO HIỆU ỨNG ===
 const PARTICLE_COUNT = 50;
 const ORB_COUNT = 8; // Tăng nhẹ số lượng orb cho thêm phần sống động
-const ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2004_19_40%20PM.png";
-const ICON_FALLBACK_URL = "https://placehold.co/192x192/2D1B69/FFFFFF?text=🏰";
 
 // === CÁC HÀM TIỆN ÍCH ===
 const random = (min: number, max: number) => Math.random() * (max - min) + min;
@@ -22,21 +20,14 @@ interface Particle {
   opacity: number;
 }
 
-// THAY ĐỔI: Cấu trúc Orb được làm lại hoàn toàn để hỗ trợ chuyển động mượt mà
 interface Orb {
-  // Điểm neo trung tâm mà quả cầu sẽ trôi nổi xung quanh
   anchorX: number;
   anchorY: number;
-  // Bán kính quỹ đạo (cho phép quỹ đạo hình elip)
   orbitRadiusX: number;
   orbitRadiusY: number;
-  // Góc hiện tại trên quỹ đạo
   angle: number;
-  // Tốc độ quay
   angleSpeed: number;
-  // Kích thước cơ bản
   radius: number;
-  // Màu sắc và độ mờ
   color: string;
   baseOpacity: number;
 }
@@ -51,25 +42,12 @@ const DungeonCanvasBackground: React.FC<DungeonCanvasBackgroundProps> = ({ isPau
   const animationFrameIdRef = useRef<number>();
   const particlesRef = useRef<Particle[]>([]);
   const orbsRef = useRef<Orb[]>([]);
-  const dungeonIconRef = useRef<HTMLImageElement | null>(null);
-  const iconLoadedRef = useRef<boolean>(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
-
-    // Khởi tạo ảnh icon (giữ nguyên)
-    const icon = new Image();
-    icon.src = ICON_URL;
-    icon.onload = () => { dungeonIconRef.current = icon; iconLoadedRef.current = true; };
-    icon.onerror = () => {
-      console.warn("Failed to load dungeon icon, using fallback.");
-      const fallbackIcon = new Image();
-      fallbackIcon.src = ICON_FALLBACK_URL;
-      fallbackIcon.onload = () => { dungeonIconRef.current = fallbackIcon; iconLoadedRef.current = true; };
-    };
     
     // Vòng lặp animation chính
     const animate = (time: number) => {
@@ -79,7 +57,6 @@ const DungeonCanvasBackground: React.FC<DungeonCanvasBackgroundProps> = ({ isPau
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // ... (Phần vẽ nền, đuốc, icon giữ nguyên) ...
             // 1. Vẽ nền Gradient
             const bgGradient = ctx.createLinearGradient(0, 0, width, height);
             bgGradient.addColorStop(0, '#0f0f23');
@@ -106,20 +83,7 @@ const DungeonCanvasBackground: React.FC<DungeonCanvasBackgroundProps> = ({ isPau
             ctx.fillStyle = torch2Grad;
             ctx.fillRect(0, 0, width, height);
             
-            // 3. Vẽ icon ở giữa
-            if (iconLoadedRef.current && dungeonIconRef.current) {
-                const iconSize = Math.min(width, height) * 0.25;
-                const iconX = (width - iconSize) / 2;
-                const iconY = height * 0.15;
-                ctx.save();
-                ctx.globalAlpha = 0.8;
-                ctx.shadowColor = 'rgba(100, 150, 255, 0.5)';
-                ctx.shadowBlur = 30;
-                ctx.drawImage(dungeonIconRef.current, iconX, iconY, iconSize, iconSize);
-                ctx.restore();
-            }
-
-            // 4. CẬP NHẬT VÀ VẼ CÁC QUẢ CẦU (LOGIC MỚI)
+            // 3. CẬP NHẬT VÀ VẼ CÁC QUẢ CẦU (LOGIC MỚI)
             orbsRef.current.forEach(orb => {
                 // Cập nhật góc để tạo chuyển động quay
                 orb.angle += orb.angleSpeed;
@@ -147,7 +111,7 @@ const DungeonCanvasBackground: React.FC<DungeonCanvasBackgroundProps> = ({ isPau
                 ctx.globalAlpha = 1; // Reset global alpha
             });
 
-            // 5. Cập nhật và vẽ các hạt bụi (giữ nguyên)
+            // 4. Cập nhật và vẽ các hạt bụi (giữ nguyên)
             particlesRef.current.forEach(p => {
                 p.x += p.vx;
                 p.y += p.vy;
@@ -178,14 +142,14 @@ const DungeonCanvasBackground: React.FC<DungeonCanvasBackgroundProps> = ({ isPau
         const logicalWidth = width;
         const logicalHeight = height;
 
-        // Khởi tạo hạt bụi (giữ nguyên)
+        // Khởi tạo hạt bụi
         particlesRef.current = [];
         const particleColors = ['rgba(253, 230, 138, 0.8)', 'rgba(100, 150, 255, 0.6)', 'rgba(150, 255, 100, 0.5)'];
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             particlesRef.current.push({ x: random(0, logicalWidth), y: random(0, logicalHeight), vx: random(-0.3, 0.3), vy: random(-0.3, 0.3), radius: random(1, 2.5), color: particleColors[Math.floor(random(0, particleColors.length))], opacity: random(0.3, 0.8) });
         }
         
-        // THAY ĐỔI: Khởi tạo các quả cầu với thuộc tính mới
+        // Khởi tạo các quả cầu
         orbsRef.current = [];
         const orbColors = ['rgba(100, 150, 255, 0.6)', 'rgba(255, 100, 150, 0.5)', 'rgba(150, 255, 100, 0.4)'];
         for (let i = 0; i < ORB_COUNT; i++) {
