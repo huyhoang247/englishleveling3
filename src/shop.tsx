@@ -251,7 +251,7 @@ const GemPackageCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => v
             </div>
 
             {/* Main Visual: Large Gem */}
-            <div className="relative flex-grow flex items-center justify-center p-8 pt-12">
+            <div className="relative flex-grow flex items-center justify-center px-8 pt-14 pb-6">
                 <Gem className="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110" />
             </div>
 
