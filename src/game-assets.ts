@@ -92,11 +92,11 @@ export const lottieAssets = {
 export const treasureAssets = {
   chestClosed: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/treasure-chest%20(1).png",
   // -- Thêm mới từ lat-the.tsx: Hình ảnh các loại rương từ vựng --
-  chestBasic: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1429_Kh%E1%BB%91i%20%C4%90%C3%A1%20B%C3%AD%20%E1%BA%A8n_remix_01k0v2tww9fgvrgdsnpy1v6jcr.png",
-  chestElementary: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1403_Cube%20B%C3%AD%20%E1%BA%A8n%20Anime_simple_compose_01k0v1f7pvenxtv1etzcmr7vw8.png",
-  chestIntermediate: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1349_H%E1%BB%99p%20M%C3%A0u%20T%C3%ADm%20B%C3%AD%20%E1%BA%A8n_remix_01k0v0m8twfmg83nazwc1pdeqv.png",
-  chestAdvanced: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1326_D%E1%BA%A5u%20H%E1%BB%8Fi%20Ruby_remix_01k0tz9qp5eppbwcgjy10vs786.png",
-  chestMaster: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1306_H%E1%BB%99p%20Ph%C3%A1p%20M%C3%A0u_remix_01k0ty5vryfh7r3z2jme91jjxn.png",
+  chestBasic: require("./assets/images/chest-basic.webp"),
+  chestElementary: require("./assets/images/chest-elementary.webp"),
+  chestIntermediate: require("./assets/images/chest-intermediate.webp"),
+  chestAdvanced: require("./assets/images/chest-advanced.webp"),
+  chestMaster: require("./assets/images/chest-master.webp"),
 };
 
 
