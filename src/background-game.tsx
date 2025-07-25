@@ -1,3 +1,5 @@
+// --- background-game.tsx (8).txt ---
+
 // --- background-game.tsx (7).txt (MERGED) ---
 
 // --- background-game.tsx (4).txt (CORRECTED - Header UI reverted) ---
@@ -27,7 +29,6 @@ import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './can-cu.tsx';
 import SkillScreen from './skill.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
-import gemImage from './library/image/gems.png';
 import StatsIconImage from './library/image/stats-icon.png';
 
 
@@ -70,8 +71,8 @@ const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', cl
   return (
     <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
       <img
-        // Sử dụng ảnh đã import từ đường dẫn cục bộ
-        src={gemImage}
+        // Sử dụng ảnh từ URL mới
+        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d794623091baff4d12be0965.png"
         alt="Tourmaline Gem Icon" // Alt text cho khả năng tiếp cận
         className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
         // Xử lý lỗi tải ảnh cục bộ (tùy chọn, thường không cần thiết với asset được bundle)
