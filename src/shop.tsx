@@ -239,19 +239,19 @@ const GemPackageCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => v
         >
             {/* Overlays for Gem Count and Bonus */}
             <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
-                <div className="flex items-center gap-2 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-600/50">
+                <div className="flex items-center gap-1.5 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-600/50">
                     <Gem className="w-4 h-4" />
                     <span className="text-sm font-bold text-white">{pkg.gems.toLocaleString()}</span>
                 </div>
                 {pkg.bonus && (
                     <div className="px-2.5 py-1 text-xs font-bold bg-yellow-400/20 text-yellow-200 rounded-full border border-yellow-500/40">
-                        {pkg.bonus}
+                        -{pkg.bonus.replace(' bonus', '')}
                     </div>
                 )}
             </div>
 
             {/* Main Visual: Large Gem */}
-            <div className="relative flex-grow flex items-center justify-center p-12">
+            <div className="relative flex-grow flex items-center justify-center p-8">
                 <Gem className="w-24 h-24 object-contain transition-transform duration-300 group-hover:scale-110" />
             </div>
 
