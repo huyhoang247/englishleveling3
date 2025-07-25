@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { db } from './firebase.js'; 
 import { doc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
 
+// -- BƯỚC 1: IMPORT TÀI NGUYÊN TẬP TRUNG --
+import { uiAssets, treasureAssets } from './game-assets.ts'; 
 import { defaultImageUrls } from './image-url.ts'; 
 import ImagePreloader from './ImagePreloader.tsx'; 
 import { defaultVocabulary } from './list-vocabulary.ts';
@@ -228,9 +230,9 @@ const CardCapacityDisplay = ({ current, max }: { current: number; max: number })
         {/* Shiny effect on hover */}
         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-blue-500/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
         
-        {/* Icon */}
+        {/* -- BƯỚC 2: CẬP NHẬT URL TẠI ĐÂY -- */}
         <div className="relative mr-1 flex items-center justify-center">
-            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png" alt="Sức chứa thẻ" className="w-4 h-4" />
+            <img src={uiAssets.cardCapacityIcon} alt="Sức chứa thẻ" className="w-4 h-4" />
         </div>
 
         {/* Text: current / max */}
@@ -393,13 +395,15 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, inf
                     <button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}>
                         <span>Mở x1</span>
                         {typeof price1 === 'number' && (
-                           <span className="button-price"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />{price1}</span>
+                           // -- BƯỚC 3: CẬP NHẬT URL TẠI ĐÂY --
+                           <span className="button-price"><img src={uiAssets.priceIcon} alt="price icon" className="price-icon" />{price1}</span>
                         )}
                     </button>
                     {price10 !== null && (
                         <button className="chest-button btn-get-10" onClick={onOpen10} disabled={isComingSoon || remainingCount < 4}>
                             <span>Mở x4</span>
-                            <span className="button-price"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="price icon" className="price-icon" />{price10}</span>
+                            {/* -- BƯỚC 4: CẬP NHẬT URL TẠI ĐÂY -- */}
+                            <span className="button-price"><img src={uiAssets.priceIcon} alt="price icon" className="price-icon" />{price10}</span>
                         </button>
                     )}
                 </div>
@@ -408,12 +412,13 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, inf
     );
 };
 
+// -- BƯỚC 5: CẬP NHẬT CÁC URL TRONG ĐỊNH NGHĨA --
 const CHEST_DEFINITIONS = {
-    basic: { id: 'basic_vocab_chest', chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1429_Kh%E1%BB%91i%20%C4%90%C3%A1%20B%C3%AD%20%E1%BA%A8n_remix_01k0v2tww9fgvrgdsnpy1v6jcr.png", infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 1200, isComingSoon: false, range: [0, 2399] as const, },
-    elementary: { id: 'elementary_vocab_chest', chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1403_Cube%20B%C3%AD%20%E1%BA%A8n%20Anime_simple_compose_01k0v1f7pvenxtv1etzcmr7vw8.png", infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 320, price10: 1200, isComingSoon: false, range: [2400, 4099] as const, },
-    intermediate: { id: 'intermediate_vocab_chest', chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1349_H%E1%BB%99p%20M%C3%A0u%20T%C3%ADm%20B%C3%AD%20%E1%BA%A8n_remix_01k0v0m8twfmg83nazwc1pdeqv.png", infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 320, price10: 1200, isComingSoon: false, range: [4100, 6499] as const, },
-    advanced: { id: 'advanced_vocab_chest', chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1326_D%E1%BA%A5u%20H%E1%BB%8Fi%20Ruby_remix_01k0tz9qp5eppbwcgjy10vs786.png", infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 320, price10: 1200, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, },
-    master: { id: 'master_vocab_chest', chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1306_H%E1%BB%99p%20Ph%C3%A9p%20M%C3%A0u_remix_01k0ty5vryfh7r3z2jme91jjxn.png", infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, price1: 320, price10: 1200, isComingSoon: true, range: [null, null] as const, },
+    basic: { id: 'basic_vocab_chest', chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: treasureAssets.chestBasic, infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 1200, isComingSoon: false, range: [0, 2399] as const, },
+    elementary: { id: 'elementary_vocab_chest', chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: treasureAssets.chestElementary, infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 320, price10: 1200, isComingSoon: false, range: [2400, 4099] as const, },
+    intermediate: { id: 'intermediate_vocab_chest', chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: treasureAssets.chestIntermediate, infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 320, price10: 1200, isComingSoon: false, range: [4100, 6499] as const, },
+    advanced: { id: 'advanced_vocab_chest', chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: treasureAssets.chestAdvanced, infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 320, price10: 1200, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, },
+    master: { id: 'master_vocab_chest', chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: treasureAssets.chestMaster, infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, price1: 320, price10: 1200, isComingSoon: true, range: [null, null] as const, },
 };
 
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
