@@ -1,23 +1,65 @@
-
-
 import React from 'react';
 
 // --- START: CÁC ICON CHO KỸ NĂNG ---
 // Lưu ý: Các component Icon này được export để có thể truy cập từ bên ngoài nếu cần, 
 // nhưng chúng chủ yếu được sử dụng trực tiếp trong mảng ALL_SKILLS bên dưới.
 
-export const LifeStealIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2212_Gi%E1%BB%8Dt%20M%C3%A1u%20Ho%E1%BA%A1t%20H%C3%ACnh_remix_01k0m678x3ez18zw0gk2f1e0we.png" alt="Hút Máu" className={className} /> );
-export const ThornsIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2221_Icon%20Ph%E1%BA%A3n%20Damage_simple_compose_01k0m6s5jjfka88wjk06ef9v2d.png" alt="Phản Damage" className={className} /> );
-export const DamageBoostIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2231_Ki%E1%BA%BFm%20L%E1%BB%ADa%20v%C3%A0%20M%C5%A9i%20T%C3%AAn_remix_01k0m79rbbf2v806gsc8aqw0z4.png" alt="Tăng Sát Thương" className={className} /> );
-export const ArmorPenetrationIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2241_Icon%20Xuy%C3%AAn%20Gi%C3%A1p%20Anime_simple_compose_01k0m7x70ae8z851pvvjptrs7f.png" alt="Xuyên Giáp" className={className} /> );
+export const LifeStealIcon = ({ className = '' }: { className?: string }) => (
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2212_Gi%E1%BB%8Dt%20M%C3%A1u%20Ho%E1%BA%A1t%20H%C3%ACnh_remix_01k0m678x3ez18zw0gk2f1e0we.png" alt="Hút Máu" className={className} />
+);
+export const ThornsIcon = ({ className = '' }: { className?: string }) => (
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2221_Icon%20Ph%E1%BA%A3n%20Damage_simple_compose_01k0m6s5jjfka88wjk06ef9v2d.png" alt="Phản Damage" className={className} />
+);
+export const DamageBoostIcon = ({ className = '' }: { className?: string }) => (
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2231_Ki%E1%BA%BFm%20L%E1%BB%ADa%20v%C3%A0%20M%C5%A9i%20T%C3%AAn_remix_01k0m79rbbf2v806gsc8aqw0z4.png" alt="Tăng Sát Thương" className={className} />
+);
+export const ArmorPenetrationIcon = ({ className = '' }: { className?: string }) => (
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2241_Icon%20Xuy%C3%AAn%20Gi%C3%A1p%20Anime_simple_compose_01k0m7x70ae8z851pvvjptrs7f.png" alt="Xuyên Giáp" className={className} />
+);
 // --- END: CÁC ICON CHO KỸ NĂNG ---
 
 
 // --- START: CÁC HÀM HELPER VỀ ĐỘ HIẾM VÀ KỸ NĂNG ---
-export const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; default: return 'border-gray-600'; } };
-export const getRarityGradient = (rarity: string) => { switch(rarity) { case 'E': return 'from-gray-800/95 to-gray-900/95'; case 'D': return 'from-green-900/70 to-gray-900'; case 'B': return 'from-blue-800/80 to-gray-900'; case 'A': return 'from-purple-800/80 via-black/30 to-gray-900'; case 'S': return 'from-yellow-800/70 via-black/40 to-gray-900'; case 'SR': return 'from-red-800/80 via-orange-900/30 to-black'; default: return 'from-gray-800/95 to-gray-900/95'; } };
-export const getRarityTextColor = (rarity: string) => { switch(rarity) { case 'E': return 'text-gray-400'; case 'D': return 'text-green-400'; case 'B': return 'text-blue-400'; case 'A': return 'text-purple-400'; case 'S': return 'text-yellow-300'; case 'SR': return 'text-red-400'; default: return 'text-gray-400'; } };
-export const getRarityDisplayName = (rarity: string) => { if (!rarity) return 'Unknown Rank'; return `${rarity.toUpperCase()} Rank`; };
+export const getRarityColor = (rarity: string) => {
+    switch(rarity) {
+        case 'E': return 'border-gray-600';
+        case 'D': return 'border-green-700';
+        case 'B': return 'border-blue-500';
+        case 'A': return 'border-purple-500';
+        case 'S': return 'border-yellow-400';
+        case 'SR': return 'border-red-500';
+        default: return 'border-gray-600';
+    }
+};
+
+export const getRarityGradient = (rarity: string) => {
+    switch(rarity) {
+        case 'E': return 'from-gray-800/95 to-gray-900/95';
+        case 'D': return 'from-green-900/70 to-gray-900';
+        case 'B': return 'from-blue-800/80 to-gray-900';
+        case 'A': return 'from-purple-800/80 via-black/30 to-gray-900';
+        case 'S': return 'from-yellow-800/70 via-black/40 to-gray-900';
+        case 'SR': return 'from-red-800/80 via-orange-900/30 to-black';
+        default: return 'from-gray-800/95 to-gray-900/95';
+    }
+};
+
+export const getRarityTextColor = (rarity: string) => {
+    switch(rarity) {
+        case 'E': return 'text-gray-400';
+        case 'D': return 'text-green-400';
+        case 'B': return 'text-blue-400';
+        case 'A': return 'text-purple-400';
+        case 'S': return 'text-yellow-300';
+        case 'SR': return 'text-red-400';
+        default: return 'text-gray-400';
+    }
+};
+
+export const getRarityDisplayName = (rarity: string) => {
+    if (!rarity) return 'Unknown Rank';
+    return `${rarity.toUpperCase()} Rank`;
+};
 
 export const getActivationChance = (rarity: string) => {
     switch (rarity) {
@@ -29,6 +71,13 @@ export const getActivationChance = (rarity: string) => {
         case 'SR': return 30;
         default: return 0;
     }
+};
+
+export const getUpgradeCost = (baseCost: number, currentLevel: number): number => {
+    // Chi phí tăng 20% mỗi cấp, tính theo công thức lãi kép
+    // Chi phí để nâng từ level `n` lên `n+1`
+    const cost = baseCost * Math.pow(1.2, currentLevel - 1);
+    return Math.floor(cost); // Làm tròn xuống để có số nguyên
 };
 
 export const getRandomRarity = (): 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' => {
@@ -64,8 +113,7 @@ export interface SkillBlueprint {
   icon: (props: { className?: string }) => React.ReactElement;
   baseEffectValue?: number;
   effectValuePerLevel?: number;
-  upgradeCost?: number;
-  maxLevel?: number;
+  upgradeCost?: number; // Đây sẽ là chi phí CƠ BẢN (base cost)
 }
 
 export interface OwnedSkill {
@@ -89,7 +137,6 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    maxLevel: 26,
   },
   {
     id: 'thorns',
@@ -99,7 +146,6 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    maxLevel: 26,
   },
   {
     id: 'damage_boost',
@@ -109,7 +155,6 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    maxLevel: 26,
   },
   {
     id: 'armor_penetration',
@@ -119,7 +164,6 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    maxLevel: 26,
   },
 ];
 // --- END: DANH SÁCH TẤT CẢ KỸ NĂNG TRONG GAME ---
