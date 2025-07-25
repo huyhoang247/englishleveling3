@@ -1,3 +1,5 @@
+--- START OF FILE lat-the.tsx (8).txt ---
+
 // --- START OF FILE: lat-the.tsx (FULL CODE - RE-DESIGNED CARD CAPACITY) ---
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
@@ -216,6 +218,26 @@ const ScopedStyles = () => (
 // === 2. CÁC COMPONENT CON VÀ DATA =======================================
 // ========================================================================
 
+// START: Thêm GemIcon component
+interface GemIconProps {
+  size?: number;
+  color?: string;
+  className?: string;
+  [key: string]: any;
+}
+const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => {
+  return (
+    <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
+      <img
+        src={uiAssets.gemIcon}
+        alt="Tourmaline Gem Icon"
+        className="w-full h-full object-contain"
+      />
+    </div>
+  );
+};
+// END: Thêm GemIcon component
+
 const HomeIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
         <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
@@ -433,6 +455,7 @@ interface VocabularyChestScreenProps {
     onUpdateCoins: (amount: number) => void; 
     onGemReward: (amount: number) => void;
     displayedCoins: number; 
+    gems: number;
     totalVocabCollected: number;
     cardCapacity: number;
     onVocabUpdate: (count: number) => void;
@@ -440,7 +463,7 @@ interface VocabularyChestScreenProps {
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced';
 const PRELOAD_POOL_SIZE = 20;
 
-const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onUpdateCoins, onGemReward, displayedCoins, totalVocabCollected, cardCapacity, onVocabUpdate }) => {
+const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onUpdateCoins, onGemReward, displayedCoins, gems, totalVocabCollected, cardCapacity, onVocabUpdate }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [] });
     const [preloadPool, setPreloadPool] = useState<number[]>([]);
@@ -692,6 +715,18 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                     
                     <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <CardCapacityDisplay current={totalVocabCollected} max={cardCapacity} />
+                        
+                        {/* START: Thêm hiển thị Gems */}
+                        <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+                            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+                            <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={16} color="#a78bfa" className="relative z-20" /></div>
+                            <div className="font-bold text-purple-200 text-xs tracking-wide">{gems.toLocaleString()}</div>
+                            <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"><span className="text-white font-bold text-xs">+</span></div>
+                            <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                            <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
+                        </div>
+                        {/* END: Thêm hiển thị Gems */}
+
                         <CoinDisplay displayedCoins={localDisplayedCoins} isStatsFullscreen={false} />
                     </div>
                 </header>
