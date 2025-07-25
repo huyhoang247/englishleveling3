@@ -1,5 +1,3 @@
-// --- START OF FILE shop.tsx ---
-
 import React, { useState, useEffect } from 'react';
 import { itemDatabase, ItemRank } from './inventory/item-database.ts';
 import { uiAssets } from './game-assets.ts';
@@ -109,7 +107,7 @@ const renderItemSkills = (item: any) => {
 // --- SVG Icon Components (thay thế cho lucide-react) ---
 const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children: React.ReactNode }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg> );
 const Shield = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></Icon> );
-const Gem = (props: any) => ( <img src="https://englishleveling3.vercel.app/static/media/gems.028f7333d86c97f63a44.png" alt="Gems" {...props} /> );
+const Gem = (props: any) => ( <img src={uiAssets.gemIcon} alt="Gems" {...props} /> );
 const Swords = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M14.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4-4L14.5 3.5z"/><path d="M19.5 8.5a2.12 2.12 0 0 1-3-3L10 12l4 4L19.5 8.5z"/></Icon> );
 const Coins = (props: any) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" {...props} /> );
 const Sparkles = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="m12 3-1.9 4.2-4.3.4 3.3 2.9-1 4.2 3.6-2.3 3.6 2.3-1-4.2 3.3-2.9-4.3-.4L12 3z"/><path d="M5 12.5 3.1 14 5 15.5"/><path d="M19 12.5 20.9 14 19 15.5"/></Icon> );
