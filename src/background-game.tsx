@@ -820,7 +820,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       { id: 'inventory', iconSrc: uiAssets.inventoryIcon, alt: "Inventory Icon", onClick: toggleInventory, tooltip: 'Hành Trang' },
       { id: 'skill', iconSrc: uiAssets.skillIcon, alt: "Skill Icon", onClick: toggleSkillScreen, tooltip: 'Kỹ Năng' },
       { id: 'vocab', iconSrc: uiAssets.vocabularyChestIcon, alt: "Vocabulary Chest Icon", onClick: toggleVocabularyChest, tooltip: 'Rương Từ' },
-      // { id: 'mission', iconSrc: uiAssets.missionIcon, alt: "Mission Icon", onClick: () => alert("Chức năng đang phát triển!"), tooltip: 'Nhiệm Vụ' },
+      { id: 'mission', iconSrc: uiAssets.missionIcon, alt: "Mission Icon", onClick: () => alert("Chức năng đang phát triển!"), tooltip: 'Nhiệm Vụ' },
   ];
 
 
