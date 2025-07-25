@@ -232,32 +232,37 @@ const ShopItemCard = ({ item, onSelect }: { item: any; onSelect: (item: any) => 
 
 // --- START: COMPONENT THẺ GÓI GEMS MỚI (REDESIGNED) ---
 const GemPackageCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => void }) => {
+    const isHighlighted = pkg.gems === 100;
+
     return (
         <div 
-            className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-800/80 to-purple-900/40 border border-slate-700 transition-all duration-300 hover:border-purple-500 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer flex flex-col"
+            className={`group relative overflow-hidden rounded-xl bg-slate-800/40 border-2 transition-all duration-300 cursor-pointer flex flex-col p-3 space-y-2
+                ${isHighlighted ? 'border-purple-500' : 'border-slate-700/60 hover:border-purple-500'} `}
             onClick={() => onSelect(pkg)}
         >
-            {/* Overlays for Gem Count and Bonus */}
-            <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
-                <div className="flex items-center gap-1.5 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-600/50">
+            {/* Top row for Gem count and Bonus */}
+            <div className="flex justify-between items-center h-8">
+                {/* Gem Count Badge */}
+                <div className="flex items-center gap-1.5 bg-black/30 px-3 py-1 rounded-full">
                     <Gem className="w-4 h-4" />
                     <span className="text-sm font-bold text-white">{pkg.gems.toLocaleString()}</span>
                 </div>
+                {/* Bonus Badge */}
                 {pkg.bonus && (
-                    <div className="px-2.5 py-1 text-xs font-bold bg-yellow-400/20 text-yellow-200 rounded-full border border-yellow-500/40">
+                    <div className="flex items-center justify-center px-3 py-1 text-xs font-bold bg-yellow-900/50 text-yellow-300 rounded-full border border-yellow-600/50">
                         -{pkg.bonus.replace(' bonus', '')}
                     </div>
                 )}
             </div>
 
             {/* Main Visual: Large Gem */}
-            <div className="relative flex-grow flex items-center justify-center p-8">
-                <Gem className="w-24 h-24 object-contain transition-transform duration-300 group-hover:scale-110" />
+            <div className="relative flex-grow flex items-center justify-center min-h-[80px]">
+                <Gem className="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110" />
             </div>
 
             {/* Bottom section: Price */}
-            <div className="p-4 bg-black/40 border-t border-slate-700 group-hover:border-purple-500 transition-colors duration-300 mt-auto">
-                <p className="text-lg font-semibold text-purple-300 text-center">
+            <div className="bg-black/20 rounded-lg p-3 text-center mt-auto">
+                <p className="text-base font-semibold text-gray-200">
                     {pkg.price.toLocaleString('vi-VN')} VNĐ
                 </p>
             </div>
