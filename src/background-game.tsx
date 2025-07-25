@@ -9,7 +9,7 @@ import HeaderBackground from './header-background.tsx';
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
 import Inventory from './inventory.tsx';
-import DungeonCanvasBackground from './DungeonCanvasBackground.tsx';
+import DungeonCanvasBackground from './background-canvas.tsx';
 import LuckyChestGame from './lucky-game.tsx';
 import { uiAssets, lottieAssets } from './game-assets.ts';
 import BossBattle from './boss.tsx';
