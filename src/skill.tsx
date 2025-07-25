@@ -24,12 +24,7 @@ const Header = ({ gold, onClose }: { gold: number; onClose: () => void; }) => {
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
-                 <button
-                    onClick={onClose}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
-                    aria-label="Quay lại Trang Chính"
-                    title="Quay lại Trang Chính"
-                >
+                 <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
                     <HomeIcon className="w-5 h-5 text-slate-300" />
                     <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
                 </button>
@@ -50,11 +45,7 @@ const SkillSlot = ({ ownedSkill, onClick, isProcessing }: { ownedSkill: OwnedSki
   const IconComponent = skillBlueprint?.icon;
 
   return (
-    <div 
-        className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} 
-        onClick={!isProcessing ? onClick : undefined}
-        title={skillBlueprint ? `${skillBlueprint.name} - Lv.${ownedSkill?.level}` : 'Ô trống'}
-    >
+    <div className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} onClick={!isProcessing ? onClick : undefined} title={skillBlueprint ? `${skillBlueprint.name} - Lv.${ownedSkill?.level}` : 'Ô trống'}>
       {ownedSkill && skillBlueprint && IconComponent ? (
         <>
           <div className="transition-all duration-300 group-hover:scale-110">
@@ -78,12 +69,14 @@ const SkillCard = ({ ownedSkill, onClick, isEquipped, isProcessing }: { ownedSki
   if (!skillBlueprint) return null;
 
   const baseClasses = "relative w-full p-3 rounded-lg border-2 flex items-center gap-4 transition-all duration-200";
+  // THAY ĐỔI: isEquipped sẽ không bao giờ là true ở đây nữa, nhưng logic vẫn giữ để an toàn
   const interactivity = isEquipped ? 'opacity-50 cursor-not-allowed' : (isProcessing ? 'cursor-wait' : `cursor-pointer hover:border-slate-600 hover:bg-slate-800/50 hover:shadow-lg hover:shadow-cyan-500/10`);
   const IconComponent = skillBlueprint.icon;
   
   return (
     <div className={`${baseClasses} border-slate-700 bg-slate-900/70 ${interactivity}`} onClick={!isEquipped && !isProcessing ? onClick : undefined}>
-      {isEquipped && <div className="absolute inset-0 bg-black/40 rounded-lg z-10 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-cyan-400">Đã Trang Bị</div>}
+      {/* THAY ĐỔI: Chữ 'Đã Trang Bị' đổi thành 'Equipped' */}
+      {isEquipped && <div className="absolute inset-0 bg-black/40 rounded-lg z-10 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-cyan-400">Equipped</div>}
       <div className={`flex-shrink-0 w-14 h-14 flex items-center justify-center rounded-md border ${getRarityColor(ownedSkill.rarity)} bg-black/20`}>
         <IconComponent className={`w-9 h-9 ${getRarityTextColor(ownedSkill.rarity)}`} />
       </div>
@@ -100,7 +93,6 @@ const SkillCard = ({ ownedSkill, onClick, isEquipped, isProcessing }: { ownedSki
   );
 };
 
-// THAY ĐỔI: Thêm prop onUnequip vào SkillDetailModal
 const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onUnequip, onDisenchant, onUpgrade, isEquipped, gold, isProcessing }: { ownedSkill: OwnedSkill, onClose: () => void, onEquip: (skill: OwnedSkill) => void, onUnequip: (skill: OwnedSkill) => void, onDisenchant: (skill: OwnedSkill) => void, onUpgrade: (skill: OwnedSkill) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
     if (!skill) return null;
@@ -117,8 +109,8 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onUnequip, onDisenchan
 
     const actionDisabled = isProcessing;
 
-    // THAY ĐỔI: Xác định style và text cho nút hành động chính
-    const mainActionText = isEquipped ? 'Gỡ Bỏ' : 'Trang Bị';
+    // THAY ĐỔI: Chữ 'Gỡ Bỏ' -> 'Remove', 'Trang Bị' -> 'Equip'
+    const mainActionText = isEquipped ? 'Remove' : 'Equip';
     const mainActionHandler = () => isEquipped ? onUnequip(ownedSkill) : onEquip(ownedSkill);
     const mainActionStyle = isEquipped 
         ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-orange-500/25 active:scale-100'
@@ -146,14 +138,7 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onUnequip, onDisenchan
               <div className="flex flex-col items-center text-center gap-4">
                 <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)}`} /></div>
                 <p className="text-slate-300 text-base leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
-                {isUpgradable && (
-                  <div className="w-full text-left text-sm mt-2 p-3 bg-black/20 rounded-lg border border-slate-700/50">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span>
-                      <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span>
-                    </div>
-                  </div>
-                )}
+                {isUpgradable && ( <div className="w-full text-left text-sm mt-2 p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
                 {isUpgradable && (
                     <div className="w-full mt-2 mb-4 space-y-2">
                         <button onClick={() => onUpgrade(ownedSkill)} disabled={isMaxLevel || !canAffordUpgrade || isEquipped || actionDisabled} className="w-full relative p-3 rounded-lg transition-all duration-300 text-left flex items-center justify-between disabled:cursor-not-allowed group bg-black/20 border border-slate-700/80 hover:border-purple-500 disabled:hover:border-slate-700/80 hover:bg-purple-900/20">
@@ -178,7 +163,6 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onUnequip, onDisenchan
             
             <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
               <div className="flex items-center gap-3">
-                {/* THAY ĐỔI: Nút hành động chính đa năng */}
                 <button onClick={mainActionHandler} disabled={actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${actionDisabled ? mainActionDisabledStyle : mainActionStyle}`}>
                   {mainActionText}
                 </button>
@@ -195,15 +179,12 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onUnequip, onDisenchan
 const CraftingSuccessModal = ({ ownedSkill, onClose }: { ownedSkill: OwnedSkill, onClose: () => void }) => {
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
     if (!skill) return null;
-
     const IconComponent = skill.icon;
     const rarityTextColor = getRarityTextColor(ownedSkill.rarity);
     const rarityColor = getRarityColor(ownedSkill.rarity).replace('border-', ''); 
     const shadowStyle = { boxShadow: `0 0 25px -5px ${rarityColor}, 0 0 15px -10px ${rarityColor}` };
-
     return ( <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div> <div className="relative w-full max-w-sm"> <div className="absolute inset-0.5 animate-spin-slow-360"> <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(ownedSkill.rarity)} opacity-50 rounded-full blur-2xl`}></div> </div> <div className={`relative bg-gradient-to-b ${getRarityGradient(ownedSkill.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(ownedSkill.rarity)} text-center flex flex-col items-center gap-4`} style={shadowStyle}> <h2 className="text-2xl font-black tracking-widest uppercase text-white title-glow">Chế Tạo Thành Công</h2> <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}> <IconComponent className={`w-20 h-20 ${rarityTextColor}`} /> </div> <div className="flex flex-col"> <span className={`text-2xl font-bold ${rarityTextColor}`}>{skill.name}</span> <span className="font-semibold text-slate-300">{getRarityDisplayName(ownedSkill.rarity)}</span> </div> <p className="text-sm text-slate-400">{skill.description(1, ownedSkill.rarity)}</p> <button onClick={onClose} className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"> Tuyệt vời! </button> </div> </div> </div> );
 };
-
 
 // --- COMPONENT CHÍNH ---
 interface SkillScreenProps {
@@ -238,46 +219,36 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
     if (equippedSkills.some(s => s?.id === skillToEquip.id)) { showMessage("Kỹ năng đã được trang bị."); return; }
     const firstEmptySlotIndex = equippedSkills.findIndex(slot => slot === null);
     if (firstEmptySlotIndex === -1) { showMessage("Các ô kỹ năng đã đầy."); return; }
-
     setIsProcessing(true);
     const newEquippedIds = [...equippedSkillIds];
     newEquippedIds[firstEmptySlotIndex] = skillToEquip.id;
-
     try {
       await onSkillsUpdate({ newOwned: ownedSkills, newEquippedIds: newEquippedIds, goldChange: 0, booksChange: 0, });
       setSelectedSkill(null);
     } catch (error: any) { showMessage(`Lỗi: ${error.message || 'Không thể trang bị'}`); } finally { setIsProcessing(false); }
   };
 
-  // THAY ĐỔI: Hàm để gỡ bỏ kỹ năng, được gọi từ modal
   const handleUnequipSkill = async (skillToUnequip: OwnedSkill) => {
     if (isProcessing) return;
     const slotIndex = equippedSkillIds.findIndex(id => id === skillToUnequip.id);
-    if (slotIndex === -1) {
-      showMessage("Lỗi: Không tìm thấy kỹ năng đã trang bị.");
-      return;
-    }
-
+    if (slotIndex === -1) { showMessage("Lỗi: Không tìm thấy kỹ năng đã trang bị."); return; }
     setIsProcessing(true);
     const newEquippedIds = [...equippedSkillIds];
     newEquippedIds[slotIndex] = null;
-
     try {
       await onSkillsUpdate({ newOwned: ownedSkills, newEquippedIds: newEquippedIds, goldChange: 0, booksChange: 0, });
-      setSelectedSkill(null); // Đóng modal sau khi gỡ bỏ thành công
+      setSelectedSkill(null);
     } catch (error: any) { showMessage(`Lỗi: ${error.message || 'Không thể tháo'}`); } finally { setIsProcessing(false); }
   };
   
   const handleCraftSkill = async () => {
     if (isProcessing) return;
     if (ancientBooks < CRAFTING_COST) { showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`); return; }
-    
     setIsProcessing(true);
     const newSkillBlueprint = ALL_SKILLS[Math.floor(Math.random() * ALL_SKILLS.length)];
     const newRarity = getRandomRarity();
     const newOwnedSkill: OwnedSkill = { id: `owned-${Date.now()}-${newSkillBlueprint.id}-${Math.random()}`, skillId: newSkillBlueprint.id, level: 1, rarity: newRarity, };
     const newOwnedList = [...ownedSkills, newOwnedSkill];
-
     try {
       await onSkillsUpdate({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: 0, booksChange: -CRAFTING_COST, });
       setNewlyCraftedSkill(newOwnedSkill);
@@ -287,12 +258,10 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
   const handleDisenchantSkill = async (skillToDisenchant: OwnedSkill) => {
     if (isProcessing) return;
     if (equippedSkills.some(s => s?.id === skillToDisenchant.id)) { showMessage("Không thể phân rã kỹ năng đang trang bị."); return; }
-    
     setIsProcessing(true);
     const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToDisenchant.skillId)!;
     const booksToReturn = Math.floor(CRAFTING_COST / 2);
     const newOwnedList = ownedSkills.filter(s => s.id !== skillToDisenchant.id);
-
     try {
       await onSkillsUpdate({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: 0, booksChange: booksToReturn });
       setSelectedSkill(null);
@@ -307,11 +276,9 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
       if (equippedSkills.some(s => s?.id === skillToUpgrade.id)) { showMessage("Vui lòng tháo kỹ năng trước khi nâng cấp."); return; }
       if (skillToUpgrade.level >= skillBlueprint.maxLevel) { showMessage("Kỹ năng đã đạt level tối đa."); return; }
       if (gold < skillBlueprint.upgradeCost) { showMessage(`Không đủ vàng. Cần ${skillBlueprint.upgradeCost}.`); return; }
-
       setIsProcessing(true);
       const updatedSkill = { ...skillToUpgrade, level: skillToUpgrade.level + 1 };
       const newOwnedList = ownedSkills.map(s => s.id === skillToUpgrade.id ? updatedSkill : s);
-
       try {
         await onSkillsUpdate({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: -skillBlueprint.upgradeCost, booksChange: 0, });
         setSelectedSkill(updatedSkill);
@@ -322,32 +289,15 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
   return (
     <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
        <style>{` .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
-      
       {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-50">{message}</div>}
-      
-      {selectedSkill && <SkillDetailModal 
-          ownedSkill={selectedSkill} 
-          onClose={() => setSelectedSkill(null)} 
-          onEquip={handleEquipSkill} 
-          onUnequip={handleUnequipSkill} // THAY ĐỔI: Truyền hàm gỡ bỏ vào modal
-          onDisenchant={handleDisenchantSkill}
-          onUpgrade={handleUpgradeSkill}
-          isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)} 
-          gold={gold}
-          isProcessing={isProcessing}
-      />}
-
+      {selectedSkill && <SkillDetailModal ownedSkill={selectedSkill} onClose={() => setSelectedSkill(null)} onEquip={handleEquipSkill} onUnequip={handleUnequipSkill} onDisenchant={handleDisenchantSkill} onUpgrade={handleUpgradeSkill} isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)} gold={gold} isProcessing={isProcessing}/>}
       {newlyCraftedSkill && <CraftingSuccessModal ownedSkill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
-
       <div className="relative z-10 flex flex-col w-full h-screen">
         <Header gold={gold} onClose={onClose} />
         <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
             <section className="flex-shrink-0 py-4">
                 <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
-                    {/* THAY ĐỔI: onClick sẽ mở modal thay vì gỡ bỏ trực tiếp */}
-                    {equippedSkills.map((skill, index) => (
-                        <SkillSlot key={`equipped-${index}`} ownedSkill={skill} onClick={() => skill && setSelectedSkill(skill)} isProcessing={isProcessing} />
-                    ))}
+                    {equippedSkills.map((skill, index) => ( <SkillSlot key={`equipped-${index}`} ownedSkill={skill} onClick={() => skill && setSelectedSkill(skill)} isProcessing={isProcessing} /> ))}
                 </div>
             </section>
             <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
@@ -366,16 +316,20 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
                 <h2 className="text-lg font-bold text-cyan-400 mb-4 text-center uppercase tracking-widest flex-shrink-0 title-glow">Kho Kỹ Năng</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto hide-scrollbar">
                     {ownedSkills.length > 0 ? (
-                        ownedSkills.slice().sort((a, b) => {
-                            const rarityOrder = ['E', 'D', 'B', 'A', 'S', 'SR'];
-                            const rarityIndexA = rarityOrder.indexOf(a.rarity);
-                            const rarityIndexB = rarityOrder.indexOf(b.rarity);
-                            if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
-                            if (a.level !== b.level) return b.level - a.level;
-                            const skillA = ALL_SKILLS.find(s => s.id === a.skillId)!;
-                            const skillB = ALL_SKILLS.find(s => s.id === b.skillId)!;
-                            return skillA.name.localeCompare(skillB.name);
-                        }).map(ownedSkill => ( <SkillCard key={ownedSkill.id} ownedSkill={ownedSkill} onClick={() => setSelectedSkill(ownedSkill)} isEquipped={equippedSkills.some(s => s?.id === ownedSkill.id)} isProcessing={isProcessing} /> ))
+                        ownedSkills
+                            // THAY ĐỔI: Lọc ra những kỹ năng chưa được trang bị
+                            .filter(ownedSkill => !equippedSkillIds.includes(ownedSkill.id))
+                            .sort((a, b) => {
+                                const rarityOrder = ['E', 'D', 'B', 'A', 'S', 'SR'];
+                                const rarityIndexA = rarityOrder.indexOf(a.rarity);
+                                const rarityIndexB = rarityOrder.indexOf(b.rarity);
+                                if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
+                                if (a.level !== b.level) return b.level - a.level;
+                                const skillA = ALL_SKILLS.find(s => s.id === a.skillId)!;
+                                const skillB = ALL_SKILLS.find(s => s.id === b.skillId)!;
+                                return skillA.name.localeCompare(skillB.name);
+                            })
+                            .map(ownedSkill => ( <SkillCard key={ownedSkill.id} ownedSkill={ownedSkill} onClick={() => setSelectedSkill(ownedSkill)} isEquipped={false} isProcessing={isProcessing} /> ))
                     ) : ( <div className="col-span-full flex items-center justify-center h-full text-slate-500"><p>Chưa có kỹ năng. Hãy dùng Sách Cổ để Craft!</p></div> )}
                 </div>
             </section>
