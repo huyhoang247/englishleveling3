@@ -63,8 +63,8 @@ const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', cl
   return (
     <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
       <img
-        // Sử dụng ảnh từ URL mới
-        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d794623091baff4d12be0965.png"
+        // Sử dụng ảnh từ tệp tài nguyên tập trung
+        src={uiAssets.gemIcon}
         alt="Tourmaline Gem Icon" // Alt text cho khả năng tiếp cận
         className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
         // Xử lý lỗi tải ảnh cục bộ (tùy chọn, thường không cần thiết với asset được bundle)
@@ -96,7 +96,7 @@ const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => {
     >
       {/* Thẻ img cho icon */}
       <img
-        src={'./library/image/stats-icon.png'} // Sử dụng biến import ảnh
+        src={uiAssets.statsIcon} // Sử dụng biến từ tệp tài nguyên
         alt="Award Icon" // Alt text cho khả năng tiếp cận
         className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
         // Xử lý lỗi tải ảnh
@@ -829,9 +829,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000fe00622fb8cc4792a683dcb3.png" alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest },
+              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest },
                  { icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" /> },
-                 { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250721_0918_K%E1%BB%B9%20N%C4%83ng%20R%E1%BB%B1c%20L%E1%BB%ADa_remix_01k0nc8f7je2mr0869c2fhg979.png" alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen },
+                 { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen },
               ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
           </div>
