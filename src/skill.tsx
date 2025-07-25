@@ -50,15 +50,20 @@ const SkillSlot = ({ ownedSkill, onClick, isProcessing }: { ownedSkill: OwnedSki
   const IconComponent = skillBlueprint?.icon;
 
   return (
-    <div className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} onClick={!isProcessing ? onClick : undefined}>
+    // Tooltip vẫn được giữ lại trên div cha để người dùng biết đây là kỹ năng gì
+    <div 
+        className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} 
+        onClick={!isProcessing ? onClick : undefined}
+        title={skillBlueprint ? `${skillBlueprint.name} - Lv.${ownedSkill?.level}` : 'Ô trống'}
+    >
       {ownedSkill && skillBlueprint && IconComponent ? (
         <>
-          <div className="text-center p-2 flex flex-col items-center gap-2">
-            <div className="transition-all duration-300 group-hover:scale-110">
-               <IconComponent className={`w-10 h-10 ${getRarityTextColor(ownedSkill.rarity)}`} />
-            </div>
-            <p className="text-xs sm:text-sm font-bold tracking-wider text-white">{skillBlueprint.name}</p>
+          {/* Thay đổi ở đây: Bỏ hoàn toàn cấu trúc flex-col và tên, chỉ giữ lại icon */}
+          <div className="transition-all duration-300 group-hover:scale-110">
+             {/* Phóng to icon một chút để lấp đầy không gian tốt hơn */}
+             <IconComponent className={`w-12 h-12 sm:w-14 sm:h-14 ${getRarityTextColor(ownedSkill.rarity)}`} />
           </div>
+          
           <span className="absolute top-1 right-1.5 px-1.5 py-0.5 text-xs font-bold bg-black/60 text-white rounded-md border border-slate-600">
             Lv.{ownedSkill?.level}
           </span>
