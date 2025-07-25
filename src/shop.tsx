@@ -1,4 +1,4 @@
-// --- START OF FILE shop.tsx.txt ---
+// --- START OF FILE shop.tsx (4).txt ---
 
 import React, { useState, useEffect } from 'react';
 import { itemDatabase, ItemRank } from './inventory/item-database.ts';
