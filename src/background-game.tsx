@@ -1,3 +1,4 @@
+--- START OF FILE background-game.tsx (11).txt ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -366,6 +367,31 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     } catch (error) { console.error("Firestore Transaction failed for coins: ", error); }
   };
 
+  const updateGemsInFirestore = async (userId: string, amount: number) => {
+    if (!userId) {
+      console.error("Cannot update gems: User not authenticated.");
+      return;
+    }
+    const userDocRef = doc(db, 'users', userId);
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) {
+          transaction.set(userDocRef, { gems: amount, createdAt: new Date() });
+        } else {
+          const currentGems = userDoc.data().gems || 0;
+          const newGems = currentGems + amount;
+          const finalGems = Math.max(0, newGems);
+          transaction.update(userDocRef, { gems: finalGems });
+          console.log(`Gems updated in Firestore for user ${userId}: ${currentGems} -> ${finalGems}`);
+          setGems(finalGems);
+        }
+      });
+    } catch (error) {
+      console.error("Firestore Transaction failed for gems: ", error);
+    }
+  };
+
   const updateMasteryCardsInFirestore = async (userId: string, amount: number) => {
     if (!userId) { console.error("Cannot update mastery cards: User not authenticated."); return; }
     const userDocRef = doc(db, 'users', userId);
@@ -482,7 +508,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       } catch (error) { console.error("Firestore Transaction failed for jackpot pool: ", error); }
   };
 
-  const handleGemReward = (amount: number) => { setGems(prev => prev + amount); };
+  const handleGemReward = async (amount: number) => {
+    if (auth.currentUser) {
+      await updateGemsInFirestore(auth.currentUser.uid, amount);
+    }
+  };
     
   const handleConfirmStatUpgrade = async (
     userId: string,
@@ -881,6 +911,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClose={toggleVocabularyChest} 
                         currentUserId={currentUser.uid} 
                         onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)} 
+                        onUpdateGems={(amount) => updateGemsInFirestore(currentUser.uid, amount)}
                         onGemReward={handleGemReward} 
                         displayedCoins={displayedCoins} 
                         gems={gems}
