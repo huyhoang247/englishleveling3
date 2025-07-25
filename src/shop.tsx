@@ -230,30 +230,37 @@ const ShopItemCard = ({ item, onSelect }: { item: any; onSelect: (item: any) => 
     );
 };
 
-// --- START: COMPONENT THẺ GÓI GEMS MỚI ---
+// --- START: COMPONENT THẺ GÓI GEMS MỚI (REDESIGNED) ---
 const GemPackageCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => void }) => {
     return (
         <div 
-            className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-800/80 to-slate-900 border border-slate-700 transition-all duration-300 hover:border-purple-500 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer flex flex-col text-center p-4"
+            className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-800/80 to-purple-900/40 border border-slate-700 transition-all duration-300 hover:border-purple-500 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer flex flex-col"
             onClick={() => onSelect(pkg)}
         >
-            {pkg.bonus && (
-                <div className="absolute top-2 right-2 px-2.5 py-1 text-xs font-bold bg-yellow-400/20 text-yellow-200 rounded-full border border-yellow-500/40">
-                    {pkg.bonus}
+            {/* Overlays for Gem Count and Bonus */}
+            <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
+                <div className="flex items-center gap-2 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-600/50">
+                    <Gem className="w-4 h-4" />
+                    <span className="text-sm font-bold text-white">{pkg.gems.toLocaleString()}</span>
                 </div>
-            )}
-
-            <h3 className="text-3xl font-bold text-white">
-                {pkg.gems.toLocaleString()}
-            </h3>
-
-            <div className="flex-grow flex items-center justify-center my-3">
-                <Gem className="w-12 h-12 object-contain transition-transform duration-300 group-hover:scale-110" />
+                {pkg.bonus && (
+                    <div className="px-2.5 py-1 text-xs font-bold bg-yellow-400/20 text-yellow-200 rounded-full border border-yellow-500/40">
+                        {pkg.bonus}
+                    </div>
+                )}
             </div>
-            
-            <p className="text-lg font-semibold text-purple-300">
-                {pkg.price.toLocaleString('vi-VN')} VNĐ
-            </p>
+
+            {/* Main Visual: Large Gem */}
+            <div className="relative flex-grow flex items-center justify-center p-12">
+                <Gem className="w-24 h-24 object-contain transition-transform duration-300 group-hover:scale-110" />
+            </div>
+
+            {/* Bottom section: Price */}
+            <div className="p-4 bg-black/40 border-t border-slate-700 group-hover:border-purple-500 transition-colors duration-300 mt-auto">
+                <p className="text-lg font-semibold text-purple-300 text-center">
+                    {pkg.price.toLocaleString('vi-VN')} VNĐ
+                </p>
+            </div>
         </div>
     );
 };
@@ -533,6 +540,11 @@ const GameShopUI = ({ onClose, onPurchase, currentUser }: { onClose: () => void;
         const dailyWeapons = getShopItems();
         setAllItems([...dailyWeapons, ...sampleItemsNonWeapons]);
     }, []);
+    
+    useEffect(() => {
+        // Set default category to "Nạp Gems" when the component mounts
+        setActiveCategory('Nạp Gems');
+    }, []);
 
     const handleSelectItem = (shopItem: any) => {
         const baseItem = itemDatabase.get(shopItem.id);
@@ -566,7 +578,7 @@ const GameShopUI = ({ onClose, onPurchase, currentUser }: { onClose: () => void;
                         </div>
                         
                         {activeCategory === 'Nạp Gems' ? (
-                            <div className="grid grid-cols-2 gap-4 md:gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
                                 {gemPackages.map(pkg => (
                                     <GemPackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectGemPackage} />
                                 ))}
