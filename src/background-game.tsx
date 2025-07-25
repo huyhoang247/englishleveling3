@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './coin-display.tsx';
@@ -23,7 +22,6 @@ import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './can-cu.tsx';
 import SkillScreen from './skill.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
-import StatsIconImage from './library/image/stats-icon.png';
 
 
 // --- SVG Icon Components ---
@@ -98,7 +96,7 @@ const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => {
     >
       {/* Thẻ img cho icon */}
       <img
-        src={StatsIconImage} // Sử dụng biến import ảnh
+        src={'./library/image/stats-icon.png'} // Sử dụng biến import ảnh
         alt="Award Icon" // Alt text cho khả năng tiếp cận
         className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
         // Xử lý lỗi tải ảnh
