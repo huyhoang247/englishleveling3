@@ -117,6 +117,8 @@ const ShoppingCart = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props
 const Tag = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.432 0l6.568-6.568a2.426 2.426 0 0 0 0-3.432L12.586 2.586z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></Icon> );
 const RefreshCw = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></Icon> );
 const ArrowUpCircle = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></Icon> );
+const ClipboardCopy = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></Icon> );
+const BankIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="m16 14-4 4-4-4"/><path d="M12 18V9"/><path d="M3 21h18"/></Icon> );
 
 
 // --- Dữ liệu tĩnh cho các loại vật phẩm khác ---
@@ -369,6 +371,126 @@ const ItemDetailModal = ({ item, onClose, onPurchase }: { item: any | null; onCl
 };
 // --- END: MODAL CHI TIẾT VẬT PHẨM ĐƯỢC THIẾT KẾ LẠI ---
 
+// --- START: MODAL NẠP GEMS ---
+const gemPackages = [
+    { gems: 100, price: 20000, label: 'Gói Tiểu' },
+    { gems: 525, price: 100000, label: 'Gói Trung', bonus: '5% bonus' },
+    { gems: 1100, price: 200000, label: 'Gói Đại', bonus: '10% bonus' },
+    { gems: 2875, price: 500000, label: 'Gói Khổng Lồ', bonus: '15% bonus' },
+    { gems: 6000, price: 1000000, label: 'Gói Thần Thánh', bonus: '20% bonus' },
+];
+
+const BANK_INFO = {
+    ID: '970422', // Techcombank
+    ACCOUNT_NO: '19036924369018',
+    ACCOUNT_NAME: 'LE VAN LONG'
+};
+
+const GemPurchaseModal = ({ onClose, currentUser }: { onClose: () => void; currentUser: any | null }) => {
+    const [selectedPackage, setSelectedPackage] = useState<any | null>(null);
+    const [transactionMemo, setTransactionMemo] = useState('');
+    const [qrCodeUrl, setQrCodeUrl] = useState('');
+    const [copyText, setCopyText] = useState('SAO CHÉP');
+
+    useEffect(() => {
+        if (selectedPackage && currentUser) {
+            // Tạo nội dung chuyển khoản duy nhất để định danh giao dịch
+            const memo = `NAPGEM${currentUser.uid.slice(0, 8)}${Date.now()}`.toUpperCase();
+            setTransactionMemo(memo);
+
+            // Tạo URL VietQR
+            const url = `https://img.vietqr.io/image/${BANK_INFO.ID}-${BANK_INFO.ACCOUNT_NO}-compact2.png?amount=${selectedPackage.price}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(BANK_INFO.ACCOUNT_NAME)}`;
+            setQrCodeUrl(url);
+        }
+    }, [selectedPackage, currentUser]);
+    
+    const handleCopyMemo = () => {
+        if (!transactionMemo) return;
+        navigator.clipboard.writeText(transactionMemo);
+        setCopyText('ĐÃ CHÉP!');
+        setTimeout(() => setCopyText('SAO CHÉP'), 2000);
+    };
+
+    return (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-3">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
+          <div className="relative bg-gradient-to-br from-slate-900 via-slate-900 to-purple-900/50 p-5 rounded-xl border-2 border-purple-500 shadow-2xl w-full max-w-3xl max-h-[90vh] z-50 flex flex-col">
+            {/* Header */}
+            <div className="flex-shrink-0 border-b border-purple-700/50 pb-4 mb-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-2xl font-bold text-purple-300 flex items-center gap-3"><Gem className="w-8 h-8"/> Cửa Hàng Gems</h3>
+                <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Close" className="w-5 h-5" /></button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
+                {/* Left: Package Selection */}
+                <div className="md:w-1/3 flex-shrink-0 space-y-3 overflow-y-auto pr-2 scrollbar-hidden">
+                    {gemPackages.map(pkg => (
+                        <button key={pkg.gems} onClick={() => setSelectedPackage(pkg)} className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ${selectedPackage?.gems === pkg.gems ? 'bg-purple-500/20 border-purple-400' : 'bg-slate-800/70 border-slate-700 hover:border-purple-600'}`}>
+                           <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                    <Gem className="w-6 h-6" />
+                                    <span className="font-bold text-lg text-white">{pkg.gems.toLocaleString()}</span>
+                                </div>
+                                {pkg.bonus && <span className="px-2 py-0.5 text-xs font-semibold bg-yellow-400/20 text-yellow-300 rounded-full border border-yellow-500/30">{pkg.bonus}</span>}
+                           </div>
+                           <p className="text-sm text-purple-300 font-semibold mt-1">{pkg.price.toLocaleString('vi-VN')} VNĐ</p>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Right: QR Code & Instructions */}
+                <div className="md:w-2/3 bg-slate-900/50 rounded-lg p-6 flex-1 flex flex-col items-center justify-center border border-slate-700/50">
+                    {selectedPackage ? (
+                        <div className="text-center w-full max-w-sm mx-auto">
+                            <h4 className="text-xl font-bold text-white mb-1">Thanh toán cho gói: {selectedPackage.gems.toLocaleString()} Gems</h4>
+                            <p className="text-2xl font-bold text-purple-400 mb-4">{selectedPackage.price.toLocaleString('vi-VN')} VNĐ</p>
+                            
+                            <div className="bg-white p-3 rounded-lg shadow-lg w-48 h-48 mx-auto">
+                               {qrCodeUrl ? <img src={qrCodeUrl} alt="VietQR Code" className="w-full h-full object-contain" /> : <div className="w-full h-full bg-gray-200 animate-pulse"></div> }
+                            </div>
+                            
+                            <div className="mt-4 text-sm text-slate-300 space-y-3">
+                                <p>Quét mã QR bằng ứng dụng ngân hàng của bạn để thanh toán.</p>
+                                <div className="bg-slate-800/60 p-3 rounded-lg border border-slate-700">
+                                    <p className="text-xs text-slate-400">Nội dung chuyển khoản (BẮT BUỘC):</p>
+                                    <div className="flex items-center justify-between gap-2 mt-1">
+                                       <p className="text-base font-mono font-bold text-yellow-300 tracking-widest">{transactionMemo}</p>
+                                       <button onClick={handleCopyMemo} className="flex items-center gap-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-2 py-1 rounded-md transition-colors">
+                                           <ClipboardCopy className="w-3 h-3"/> {copyText}
+                                       </button>
+                                    </div>
+                                </div>
+                                <div className="bg-blue-900/30 text-blue-200 text-xs p-3 rounded-lg border border-blue-700/50">
+                                    <p className="font-bold mb-1">Lưu ý quan trọng:</p>
+                                    <ul className="list-disc list-inside text-left space-y-0.5">
+                                        <li>Chuyển đúng số tiền và nội dung hiển thị.</li>
+                                        <li>Gems sẽ được tự động cộng vào tài khoản sau vài phút.</li>
+                                        <li>Không đóng cửa sổ này cho đến khi bạn hoàn tất thanh toán.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center text-slate-400">
+                            <Gem className="w-24 h-24 mx-auto opacity-20 mb-4" />
+                            <h4 className="text-lg font-semibold">Vui lòng chọn một gói nạp</h4>
+                            <p className="text-sm">Thông tin thanh toán sẽ hiện ở đây.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+          </div>
+          <style jsx>{` .scrollbar-hidden::-webkit-scrollbar { display: none; } .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
+        </div>
+    );
+};
+
+// --- END: MODAL NẠP GEMS ---
+
+
 // --- Component Đồng hồ đếm ngược ---
 const ShopCountdown = () => {
     const [timeLeft, setTimeLeft] = useState({ hours: '00', minutes: '00', seconds: '00' });
@@ -405,7 +527,7 @@ const ShopCountdown = () => {
 
 
 // --- START: HEADER MỚI CỦA CỬA HÀNG (ĐÃ CẬP NHẬT) ---
-const ShopHeader = ({ onClose }: { onClose: () => void }) => {
+const ShopHeader = ({ onClose, onOpenGemModal }: { onClose: () => void; onOpenGemModal: () => void; }) => {
     // Giá trị tiền tệ mẫu, trong ứng dụng thật sẽ lấy từ state hoặc context
     const userGold = 15280;
     const userGems = 3250;
@@ -446,7 +568,7 @@ const ShopHeader = ({ onClose }: { onClose: () => void }) => {
                             <span className="font-bold text-sm">{userGems.toLocaleString()}</span>
                         </div>
                     </div>
-                    <button className="bg-yellow-500 text-slate-900 font-bold text-xs px-3 py-2 rounded-md hover:bg-yellow-400 transition-colors hidden sm:block">NẠP</button>
+                    <button onClick={onOpenGemModal} className="bg-yellow-500 text-slate-900 font-bold text-xs px-3 py-2 rounded-md hover:bg-yellow-400 transition-colors hidden sm:block">NẠP</button>
                 </div>
             </div>
         </header>
@@ -456,10 +578,11 @@ const ShopHeader = ({ onClose }: { onClose: () => void }) => {
 
 
 // --- Component Chính Của Cửa Hàng ---
-const GameShopUI = ({ onClose, onPurchase }: { onClose: () => void; onPurchase: (item: any, quantity: number) => Promise<void> }) => {
+const GameShopUI = ({ onClose, onPurchase, currentUser }: { onClose: () => void; onPurchase: (item: any, quantity: number) => Promise<void>; currentUser: any | null; }) => {
     const [activeCategory, setActiveCategory] = useState('Vũ khí');
     const [selectedItem, setSelectedItem] = useState<any | null>(null);
     const [allItems, setAllItems] = useState<any[]>([]);
+    const [isGemModalOpen, setIsGemModalOpen] = useState(false);
 
     useEffect(() => {
         const dailyWeapons = getShopItems();
@@ -485,7 +608,7 @@ const GameShopUI = ({ onClose, onPurchase }: { onClose: () => void; onPurchase: 
 
     return (
         <div className="w-full h-full overflow-y-auto bg-slate-900 font-sans text-white">
-            <ShopHeader onClose={onClose} />
+            <ShopHeader onClose={onClose} onOpenGemModal={() => setIsGemModalOpen(true)} />
             
             <div className="absolute inset-0 top-16 bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]"></div>
 
@@ -506,6 +629,7 @@ const GameShopUI = ({ onClose, onPurchase }: { onClose: () => void; onPurchase: 
                     </section>
                 </main>
                 {selectedItem && <ItemDetailModal item={selectedItem} onClose={handleCloseModal} onPurchase={onPurchase} />}
+                {isGemModalOpen && <GemPurchaseModal onClose={() => setIsGemModalOpen(false)} currentUser={currentUser} />}
             </div>
             <style jsx global>{`
               .bg-grid-slate-800\\/40 {
@@ -521,6 +645,6 @@ const GameShopUI = ({ onClose, onPurchase }: { onClose: () => void; onPurchase: 
 };
 
 // --- Component Wrapper để export ---
-export default function App({ onClose, onPurchase }: { onClose: () => void; onPurchase: (item: any, quantity: number) => Promise<void> }) {
-    return <GameShopUI onClose={onClose} onPurchase={onPurchase} />;
+export default function App({ onClose, onPurchase, currentUser }: { onClose: () => void; onPurchase: (item: any, quantity: number) => Promise<void>; currentUser: any | null; }) {
+    return <GameShopUI onClose={onClose} onPurchase={onPurchase} currentUser={currentUser} />;
 }
