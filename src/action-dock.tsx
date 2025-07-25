@@ -46,7 +46,7 @@ const ActionButton: React.FC<{ item: ActionItem }> = ({ item }) => (
 const ActionDock: React.FC<ActionDockProps> = ({ actions }) => {
   return (
     // Container chính của dock, định vị ở cuối và giữa màn hình
-    <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30">
+    <div className="absolute bottom-50 left-1/2 -translate-x-1/2 z-30">
       <div
         className="flex items-center justify-center gap-x-3 sm:gap-x-4 p-2
                    bg-black/30 backdrop-blur-md 
