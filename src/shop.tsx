@@ -531,7 +531,7 @@ const ShopHeader = ({ onClose, setActiveCategory }: { onClose: () => void; setAc
 
 // --- Component Chính Của Cửa Hàng ---
 const GameShopUI = ({ onClose, onPurchase, currentUser }: { onClose: () => void; onPurchase: (item: any, quantity: number) => Promise<void>; currentUser: any | null; }) => {
-    const [activeCategory, setActiveCategory] = useState('Vũ khí');
+    const [activeCategory, setActiveCategory] = useState('Nạp Gems');
     const [selectedItem, setSelectedItem] = useState<any | null>(null);
     const [selectedGemPackage, setSelectedGemPackage] = useState<any | null>(null);
     const [allItems, setAllItems] = useState<any[]>([]);
@@ -539,11 +539,6 @@ const GameShopUI = ({ onClose, onPurchase, currentUser }: { onClose: () => void;
     useEffect(() => {
         const dailyWeapons = getShopItems();
         setAllItems([...dailyWeapons, ...sampleItemsNonWeapons]);
-    }, []);
-    
-    useEffect(() => {
-        // Set default category to "Nạp Gems" when the component mounts
-        setActiveCategory('Nạp Gems');
     }, []);
 
     const handleSelectItem = (shopItem: any) => {
@@ -578,7 +573,7 @@ const GameShopUI = ({ onClose, onPurchase, currentUser }: { onClose: () => void;
                         </div>
                         
                         {activeCategory === 'Nạp Gems' ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
+                            <div className="grid grid-cols-2 gap-4 md:gap-6">
                                 {gemPackages.map(pkg => (
                                     <GemPackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectGemPackage} />
                                 ))}
