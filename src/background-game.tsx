@@ -1,8 +1,3 @@
-// --- background-game.tsx (8).txt ---
-
-// --- background-game.tsx (7).txt (MERGED) ---
-
-// --- background-game.tsx (4).txt (CORRECTED - Header UI reverted) ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -12,7 +7,6 @@ import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
-// import { GemIcon } from './library/icon.tsx'; // Import removed, component will be defined in this file.
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
 import Inventory from './inventory.tsx';
