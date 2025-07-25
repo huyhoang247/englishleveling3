@@ -1,4 +1,3 @@
---- START OF FILE lat-the.tsx (8).txt ---
 
 // --- START OF FILE: lat-the.tsx (FULL CODE - RE-DESIGNED CARD CAPACITY) ---
 
