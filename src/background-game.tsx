@@ -1,4 +1,4 @@
-
+// --- START OF FILE background-game.tsx (14).txt ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -24,6 +24,8 @@ import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './can-cu.tsx';
 import SkillScreen from './skill.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
+// --- BƯỚC 1: THÊM IMPORT CHO ACTION DOCK ---
+import ActionDock from './action-dock.tsx';
 
 
 // --- SVG Icon Components ---
@@ -811,6 +813,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return equippedDetails as (OwnedSkill & SkillBlueprint)[];
   };
 
+  // --- BƯỚC 2: ĐỊNH NGHĨA CÁC HÀNH ĐỘNG CHO DOCK ---
+  const gameActions = [
+      { id: 'boss', iconSrc: uiAssets.towerIcon, alt: "Boss Battle Icon", onClick: toggleBossBattle, tooltip: 'Đấu Boss' },
+      { id: 'shop', iconSrc: uiAssets.shopIcon, alt: "Shop Icon", onClick: toggleShop, tooltip: 'Cửa Hàng' },
+      { id: 'inventory', iconSrc: uiAssets.inventoryIcon, alt: "Inventory Icon", onClick: toggleInventory, tooltip: 'Hành Trang' },
+      { id: 'skill', iconSrc: uiAssets.skillIcon, alt: "Skill Icon", onClick: toggleSkillScreen, tooltip: 'Kỹ Năng' },
+      { id: 'vocab', iconSrc: uiAssets.vocabularyChestIcon, alt: "Vocabulary Chest Icon", onClick: toggleVocabularyChest, tooltip: 'Rương Từ' },
+      // { id: 'mission', iconSrc: uiAssets.missionIcon, alt: "Mission Icon", onClick: () => alert("Chức năng đang phát triển!"), tooltip: 'Nhiệm Vụ' },
+  ];
+
+
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
       <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank}
@@ -852,19 +865,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <span>Bạn thao tác quá nhanh...</span>
                 </div>
             </div>
+            
+            {/* --- BƯỚC 3: SỬ DỤNG ACTION DOCK VÀ XÓA BỎ CÁC CỘT ICON CŨ --- */}
+            <ActionDock actions={gameActions} />
+            
+            {/* CÁC DIV CHỨA ICON CŨ ĐÃ ĐƯỢC XÓA BỎ */}
 
-            <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle },
-                 { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop },
-                 { icon: <img src={uiAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" />, onClick: toggleInventory }
-              ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
-            </div>
-            <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest },
-                 { icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" /> },
-                 { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen },
-              ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
-            </div>
           </div>
         </div>
 
