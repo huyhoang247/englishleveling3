@@ -1,4 +1,4 @@
-
+--- START OF FILE lat-the.tsx (8).txt ---
 
 // --- START OF FILE: lat-the.tsx (FULL CODE - RE-DESIGNED CARD CAPACITY) ---
 
@@ -218,7 +218,6 @@ const ScopedStyles = () => (
 // === 2. CÁC COMPONENT CON VÀ DATA =======================================
 // ========================================================================
 
-// START: Thêm GemIcon component
 interface GemIconProps {
   size?: number;
   color?: string;
@@ -236,7 +235,6 @@ const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', cl
     </div>
   );
 };
-// END: Thêm GemIcon component
 
 const HomeIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
@@ -249,15 +247,12 @@ const CardCapacityDisplay = ({ current, max }: { current: number; max: number })
         className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg p-0.5 flex items-center shadow-lg border border-slate-600 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"
         title="Nâng cấp sức chứa thẻ"
     >
-        {/* Shiny effect on hover */}
         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-blue-500/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
         
-        {/* -- BƯỚC 2: CẬP NHẬT URL TẠI ĐÂY -- */}
         <div className="relative mr-1 flex items-center justify-center">
             <img src={uiAssets.cardCapacityIcon} alt="Sức chứa thẻ" className="w-4 h-4" />
         </div>
 
-        {/* Text: current / max */}
         <div className="font-bold text-white text-xs tracking-wide">
             {current.toLocaleString()}
             <span className="text-slate-400/80 font-medium opacity-90">
@@ -265,12 +260,10 @@ const CardCapacityDisplay = ({ current, max }: { current: number; max: number })
             </span>
         </div>
 
-        {/* Plus button for upgrading capacity */}
         <div className="ml-1 w-3 h-3 bg-gradient-to-br from-slate-700 to-slate-800 rounded-full flex items-center justify-center cursor-pointer border border-slate-500 shadow-inner hover:shadow-blue-500/50 hover:scale-110 transition-all duration-200">
             <span className="text-white font-bold text-xs">+</span>
         </div>
 
-        {/* Sparkles */}
         <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
         <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-blue-400 rounded-full animate-pulse-fast"></div>
     </div>
@@ -387,9 +380,9 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
     );
 };
 
-interface ChestUIProps { headerTitle: string; levelName: string | null; imageUrl: string; infoText: React.ReactNode; price1: number | string; price10: number | null; onOpen1: () => void; onOpen10: () => void; isComingSoon: boolean; remainingCount: number; }
+interface ChestUIProps { headerTitle: string; levelName: string | null; imageUrl: string; infoText: React.ReactNode; price1: number | string; price10: number | null; priceIconUrl: string; onOpen1: () => void; onOpen10: () => void; isComingSoon: boolean; remainingCount: number; }
 
-const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, infoText, price1, price10, onOpen1, onOpen10, isComingSoon, remainingCount }) => {
+const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, infoText, price1, price10, priceIconUrl, onOpen1, onOpen10, isComingSoon, remainingCount }) => {
     return (
         <div className={`chest-ui-container ${isComingSoon ? 'is-coming-soon' : ''}`}>
             <header className="chest-header">{headerTitle}</header>
@@ -417,15 +410,13 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, inf
                     <button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}>
                         <span>Mở x1</span>
                         {typeof price1 === 'number' && (
-                           // -- BƯỚC 3: CẬP NHẬT URL TẠI ĐÂY --
-                           <span className="button-price"><img src={uiAssets.priceIcon} alt="price icon" className="price-icon" />{price1}</span>
+                           <span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price1.toLocaleString()}</span>
                         )}
                     </button>
                     {price10 !== null && (
                         <button className="chest-button btn-get-10" onClick={onOpen10} disabled={isComingSoon || remainingCount < 4}>
                             <span>Mở x4</span>
-                            {/* -- BƯỚC 4: CẬP NHẬT URL TẠI ĐÂY -- */}
-                            <span className="button-price"><img src={uiAssets.priceIcon} alt="price icon" className="price-icon" />{price10}</span>
+                            <span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price10.toLocaleString()}</span>
                         </button>
                     )}
                 </div>
@@ -434,13 +425,12 @@ const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, inf
     );
 };
 
-// -- BƯỚC 5: CẬP NHẬT CÁC URL TRONG ĐỊNH NGHĨA --
 const CHEST_DEFINITIONS = {
-    basic: { id: 'basic_vocab_chest', chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: treasureAssets.chestBasic, infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 1200, isComingSoon: false, range: [0, 2399] as const, },
-    elementary: { id: 'elementary_vocab_chest', chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: treasureAssets.chestElementary, infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 320, price10: 1200, isComingSoon: false, range: [2400, 4099] as const, },
-    intermediate: { id: 'intermediate_vocab_chest', chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: treasureAssets.chestIntermediate, infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 320, price10: 1200, isComingSoon: false, range: [4100, 6499] as const, },
-    advanced: { id: 'advanced_vocab_chest', chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: treasureAssets.chestAdvanced, infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 320, price10: 1200, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, },
-    master: { id: 'master_vocab_chest', chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: treasureAssets.chestMaster, infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, price1: 320, price10: 1200, isComingSoon: true, range: [null, null] as const, },
+    basic: { id: 'basic_vocab_chest', currency: 'gold' as const, chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: treasureAssets.chestBasic, infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 1200, isComingSoon: false, range: [0, 2399] as const, },
+    elementary: { id: 'elementary_vocab_chest', currency: 'gem' as const, chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: treasureAssets.chestElementary, infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 10, price10: 40, isComingSoon: false, range: [2400, 4099] as const, },
+    intermediate: { id: 'intermediate_vocab_chest', currency: 'gem' as const, chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: treasureAssets.chestIntermediate, infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 10, price10: 40, isComingSoon: false, range: [4100, 6499] as const, },
+    advanced: { id: 'advanced_vocab_chest', currency: 'gem' as const, chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: treasureAssets.chestAdvanced, infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 10, price10: 40, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, },
+    master: { id: 'master_vocab_chest', currency: 'gem' as const, chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: treasureAssets.chestMaster, infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, price1: 0, price10: 0, isComingSoon: true, range: [null, null] as const, },
 };
 
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
@@ -453,6 +443,7 @@ interface VocabularyChestScreenProps {
     onClose: () => void; 
     currentUserId: string | null; 
     onUpdateCoins: (amount: number) => void; 
+    onUpdateGems: (amount: number) => void;
     onGemReward: (amount: number) => void;
     displayedCoins: number; 
     gems: number;
@@ -460,12 +451,12 @@ interface VocabularyChestScreenProps {
     cardCapacity: number;
     onVocabUpdate: (count: number) => void;
 }
-type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced';
+type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced' | 'master';
 const PRELOAD_POOL_SIZE = 20;
 
-const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onUpdateCoins, onGemReward, displayedCoins, gems, totalVocabCollected, cardCapacity, onVocabUpdate }) => {
+const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onUpdateCoins, onUpdateGems, onGemReward, displayedCoins, gems, totalVocabCollected, cardCapacity, onVocabUpdate }) => {
     const [isLoading, setIsLoading] = useState(true);
-    const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [] });
+    const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [], master: [] });
     const [preloadPool, setPreloadPool] = useState<number[]>([]);
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
     const [showFourOverlay, setShowFourOverlay] = useState(false);
@@ -510,13 +501,18 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 const totalImages = defaultImageUrls.length;
                 const totalItems = Math.min(totalVocab, totalImages);
                 
+                const allIndices: Record<ChestType, number[]> = { basic: [], elementary: [], intermediate: [], advanced: [], master: [] };
+                for (const key in CHEST_DEFINITIONS) {
+                    const chest = CHEST_DEFINITIONS[key as ChestType];
+                    if (chest.isComingSoon || !chest.range[0] === null) continue;
+                    const endRange = chest.range[1] ?? (totalItems - 1);
+                    for (let i = chest.range[0]!; i <= endRange && i < totalItems; i++) {
+                        allIndices[key as ChestType].push(i);
+                    }
+                }
+                
                 if (!currentUserId) {
-                    setAvailableIndices({
-                        basic: Array.from({ length: CHEST_DEFINITIONS.basic.range[1] - CHEST_DEFINITIONS.basic.range[0] + 1 }, (_, i) => CHEST_DEFINITIONS.basic.range[0] + i),
-                        elementary: Array.from({ length: CHEST_DEFINITIONS.elementary.range[1] - CHEST_DEFINITIONS.elementary.range[0] + 1 }, (_, i) => CHEST_DEFINITIONS.elementary.range[0] + i),
-                        intermediate: Array.from({ length: Math.max(0, CHEST_DEFINITIONS.intermediate.range[1] - CHEST_DEFINITIONS.intermediate.range[0] + 1) }, (_, i) => CHEST_DEFINITIONS.intermediate.range[0] + i),
-                        advanced: CHEST_DEFINITIONS.advanced.isComingSoon ? [] : Array.from({ length: Math.max(0, (totalItems - 1) - CHEST_DEFINITIONS.advanced.range[0] + 1) }, (_, i) => CHEST_DEFINITIONS.advanced.range[0] + i)
-                    });
+                    setAvailableIndices(allIndices);
                     return;
                 }
 
@@ -528,34 +524,13 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                     openedIndices0Based.add(Number(doc.id) - 1);
                 });
                 
-                const remainingForBasic: number[] = [];
-                for (let i = CHEST_DEFINITIONS.basic.range[0]; i <= CHEST_DEFINITIONS.basic.range[1] && i < totalItems; i++) {
-                    if (!openedIndices0Based.has(i)) remainingForBasic.push(i);
+                const remainingIndices: Record<ChestType, number[]> = { basic: [], elementary: [], intermediate: [], advanced: [], master: [] };
+                for (const key in allIndices) {
+                    const chestType = key as ChestType;
+                    remainingIndices[chestType] = allIndices[chestType].filter(index => !openedIndices0Based.has(index));
                 }
 
-                const remainingForElementary: number[] = [];
-                for (let i = CHEST_DEFINITIONS.elementary.range[0]; i <= CHEST_DEFINITIONS.elementary.range[1] && i < totalItems; i++) {
-                     if (!openedIndices0Based.has(i)) remainingForElementary.push(i);
-                }
-                
-                const remainingForIntermediate: number[] = [];
-                for (let i = CHEST_DEFINITIONS.intermediate.range[0]; i <= CHEST_DEFINITIONS.intermediate.range[1] && i < totalItems; i++) {
-                     if (!openedIndices0Based.has(i)) remainingForIntermediate.push(i);
-                }
-
-                const remainingForAdvanced: number[] = [];
-                if (!CHEST_DEFINITIONS.advanced.isComingSoon && CHEST_DEFINITIONS.advanced.range[0] !== null) {
-                    for (let i = CHEST_DEFINITIONS.advanced.range[0]; i < totalItems; i++) {
-                         if (!openedIndices0Based.has(i)) remainingForAdvanced.push(i);
-                    }
-                }
-
-                setAvailableIndices({ 
-                    basic: remainingForBasic, 
-                    elementary: remainingForElementary,
-                    intermediate: remainingForIntermediate,
-                    advanced: remainingForAdvanced
-                });
+                setAvailableIndices(remainingIndices);
             } catch (error) {
                 console.error("Error fetching user data from subcollection:", error);
             } finally {
@@ -566,7 +541,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     }, [currentUserId]);
 
     useEffect(() => {
-        const allAvailable = [...availableIndices.basic, ...availableIndices.elementary, ...availableIndices.intermediate, ...availableIndices.advanced];
+        const allAvailable = Object.values(availableIndices).flat();
         if (preloadPool.length < PRELOAD_POOL_SIZE && allAvailable.length > 0) {
             const needed = PRELOAD_POOL_SIZE - preloadPool.length;
             const indicesToAddToPool = allAvailable.filter(idx => !preloadPool.includes(idx)).slice(0, needed);
@@ -618,7 +593,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             if (err.code === 'not-found') {
                 console.log('User document not found, creating a new one...');
                 try {
-                   await setDoc(userDocRef, { totalVocabCollected: 0, cardCapacity: 100 }); 
+                   await setDoc(userDocRef, { totalVocabCollected: 0, cardCapacity: 100, gems: 0, coins: 0 }); 
                    await updateUserProgressInFirestore(imageIds, chestType); 
                 } catch(creationError) {
                     console.error("Error creating user document:", creationError);
@@ -629,19 +604,32 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         }
     };
     
-    const handleOpenCards = async (count: 1 | 4, chestType: ChestType, price: number) => {
+    const handleOpenCards = async (count: 1 | 4, chestType: ChestType) => {
         if (isProcessingClick) return;
+
+        const chestDef = CHEST_DEFINITIONS[chestType];
+        if (!chestDef || chestDef.isComingSoon) return;
+
+        const price = count === 1 ? chestDef.price1 : chestDef.price10;
+        if (price === null) return;
 
         if (totalVocabCollected + count > cardCapacity) {
             alert(`Kho thẻ đã đầy! (${totalVocabCollected}/${cardCapacity}).\nVui lòng nâng cấp sức chứa trong Cửa hàng để tiếp tục.`);
             return;
         }
 
-        if (displayedCoins < price) {
-            alert(`Bạn không đủ coin! Cần ${price.toLocaleString()}, bạn đang có ${displayedCoins.toLocaleString()}.`);
-            return;
+        if (chestDef.currency === 'gold') {
+            if (displayedCoins < price) {
+                alert(`Bạn không đủ vàng! Cần ${price.toLocaleString()}, bạn đang có ${displayedCoins.toLocaleString()}.`);
+                return;
+            }
+        } else if (chestDef.currency === 'gem') {
+            if (gems < price) {
+                alert(`Bạn không đủ gem! Cần ${price.toLocaleString()}, bạn đang có ${gems.toLocaleString()}.`);
+                return;
+            }
         }
-        
+
         const targetPool = availableIndices[chestType];
         if (targetPool.length < count) {
             alert(`Không đủ thẻ trong rương này để mở (cần ${count}, còn ${targetPool.length}).`);
@@ -651,9 +639,12 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         setIsProcessingClick(true);
         setLastOpenedChest({ count, type: chestType, price }); 
 
-        const newCoinTotal = displayedCoins - price;
-        startCoinCountAnimation(displayedCoins, newCoinTotal);
-        onUpdateCoins(-price);
+        if (chestDef.currency === 'gold') {
+            startCoinCountAnimation(displayedCoins, displayedCoins - price);
+            onUpdateCoins(-price);
+        } else {
+            onUpdateGems(-price);
+        }
 
         let tempPool = [...targetPool];
         const selectedCards: ImageCard[] = [];
@@ -691,7 +682,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     
     const handleOpenAgain = () => {
         if (lastOpenedChest) {
-            handleOpenCards(lastOpenedChest.count, lastOpenedChest.type, lastOpenedChest.price);
+            handleOpenCards(lastOpenedChest.count, lastOpenedChest.type);
         }
     };
     
@@ -716,7 +707,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                     <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <CardCapacityDisplay current={totalVocabCollected} max={cardCapacity} />
                         
-                        {/* START: Thêm hiển thị Gems */}
                         <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                             <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                             <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={16} color="#a78bfa" className="relative z-20" /></div>
@@ -725,7 +715,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                             <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
                             <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                         </div>
-                        {/* END: Thêm hiển thị Gems */}
 
                         <CoinDisplay displayedCoins={localDisplayedCoins} isStatsFullscreen={false} />
                     </div>
@@ -735,28 +724,17 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             {!showSingleOverlay && !showFourOverlay && !isLoading && (
                 <div className="chest-gallery-container">
                     {CHEST_DATA.map((chest) => {
-                        if (chest.isComingSoon) {
-                            return (
-                                <ChestUI
-                                    key={chest.id}
-                                    {...chest}
-                                    price10={chest.price10 ?? 0}
-                                    remainingCount={0}
-                                    onOpen1={() => {}}
-                                    onOpen10={() => {}}
-                                />
-                            );
-                        }
-                        const chestKey = chest.chestType as ChestType;
-                        const remainingCount = availableIndices[chestKey]?.length ?? 0;
+                        const remainingCount = availableIndices[chest.chestType]?.length ?? 0;
+                        const priceIcon = chest.currency === 'gem' ? uiAssets.gemIcon : uiAssets.priceIcon;
+
                         return (
                             <ChestUI
                                 key={chest.id}
                                 {...chest}
-                                price10={chest.price10 ?? 0}
+                                priceIconUrl={priceIcon}
                                 remainingCount={remainingCount}
-                                onOpen1={() => handleOpenCards(1, chestKey, chest.price1)}
-                                onOpen10={() => chest.price10 && handleOpenCards(4, chestKey, chest.price10)}
+                                onOpen1={() => handleOpenCards(1, chest.chestType)}
+                                onOpen10={() => handleOpenCards(4, chest.chestType)}
                             />
                         );
                     })}
