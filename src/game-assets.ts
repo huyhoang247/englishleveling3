@@ -16,13 +16,16 @@ export const uiAssets = {
   shopIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/file_000000007f8461f98fd8bdaccb0b0f6b%20(3).png",
   inventoryIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png",
   missionIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/file_00000000842461f9822fc46798d5a372.png",
-  blacksmithIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png",
+  blacksmithIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%2C%202025%2C%2003_52_48%20PM.png",
   closeIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/close.png",
   towerIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%2014%2C%202025%2C%2004_53_18%20PM.png",
   gemIcon: require("./assets/images/gems.webp"),
   statsIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/stats-icon.png", // Được chuyển từ đường dẫn local
   vocabularyChestIcon: require("./assets/images/vocabulary-chest.webp"),
   skillIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/20250721_0918_K%E1%BB%B9%20N%C4%83ng%20R%E1%BB%B1c%20L%E1%BB%ADa_remix_01k0nc8f7je2mr0869c2fhg979.png",
+  // -- Thêm mới từ lat-the.tsx --
+  priceIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png",
+  cardCapacityIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png",
 };
 
 /**
@@ -88,6 +91,12 @@ export const lottieAssets = {
  */
 export const treasureAssets = {
   chestClosed: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/treasure-chest%20(1).png",
+  // -- Thêm mới từ lat-the.tsx: Hình ảnh các loại rương từ vựng --
+  chestBasic: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1429_Kh%E1%BB%91i%20%C4%90%C3%A1%20B%C3%AD%20%E1%BA%A8n_remix_01k0v2tww9fgvrgdsnpy1v6jcr.png",
+  chestElementary: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1403_Cube%20B%C3%AD%20%E1%BA%A8n%20Anime_simple_compose_01k0v1f7pvenxtv1etzcmr7vw8.png",
+  chestIntermediate: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1349_H%E1%BB%99p%20M%C3%A0u%20T%C3%ADm%20B%C3%AD%20%E1%BA%A8n_remix_01k0v0m8twfmg83nazwc1pdeqv.png",
+  chestAdvanced: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1326_D%E1%BA%A5u%20H%E1%BB%8Fi%20Ruby_remix_01k0tz9qp5eppbwcgjy10vs786.png",
+  chestMaster: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/20250723_1306_H%E1%BB%99p%20Ph%C3%A1p%20M%C3%A0u_remix_01k0ty5vryfh7r3z2jme91jjxn.png",
 };
 
 
