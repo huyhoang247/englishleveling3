@@ -563,7 +563,7 @@ const GameShopUI = ({ onClose, onPurchase, currentUser }: { onClose: () => void;
         <div className="w-full h-full overflow-y-auto bg-slate-900 font-sans text-white">
             <ShopHeader onClose={onClose} setActiveCategory={setActiveCategory} />
             <div className="absolute inset-0 top-16 bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]"></div>
-            <div className="relative max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 pt-8">
+            <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24">
                 <main>
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
                     <section>
