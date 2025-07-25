@@ -19,7 +19,7 @@ export const uiAssets = {
   blacksmithIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png",
   closeIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/close.png",
   towerIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%2014%2C%202025%2C%2004_53_18%20PM.png",
-  gemIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/file_00000000d794623091baff4d12be0965.png",
+  gemIcon: "./assets/images/gems.webp",
   statsIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/stats-icon.png", // Được chuyển từ đường dẫn local
   vocabularyChestIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/file_00000000fe00622fb8cc4792a683dcb3.png",
   skillIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/20250721_0918_K%E1%BB%B9%20N%C4%83ng%20R%E1%BB%B1c%20L%E1%BB%ADa_remix_01k0nc8f7je2mr0869c2fhg979.png",
