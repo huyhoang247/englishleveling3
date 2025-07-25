@@ -805,7 +805,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 )}
             </ErrorBoundary>
         </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} onPurchase={handleShopPurchase} />}</ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} onPurchase={handleShopPurchase} currentUser={auth.currentUser} />}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> <ErrorBoundary>{isVocabularyChestOpen && currentUser && ( <VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)} onGemReward={handleGemReward} displayedCoins={displayedCoins} totalVocabCollected={totalVocabCollected} cardCapacity={cardCapacity} onVocabUpdate={(count) => setTotalVocabCollected(prev => prev + count)} /> )}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}> <ErrorBoundary> {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && ( <AchievementsScreen onClose={toggleAchievements} userId={auth.currentUser.uid} initialData={vocabularyData} onClaimReward={handleRewardClaim} masteryCardsCount={masteryCards} displayedCoins={displayedCoins} /> )} </ErrorBoundary> </div>
         
