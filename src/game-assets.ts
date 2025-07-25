@@ -24,8 +24,8 @@ export const uiAssets = {
   vocabularyChestIcon: require("./assets/images/vocabulary-chest.webp"),
   skillIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/20250721_0918_K%E1%BB%B9%20N%C4%83ng%20R%E1%BB%B1c%20L%E1%BB%ADa_remix_01k0nc8f7je2mr0869c2fhg979.png",
   // -- Thêm mới từ lat-the.tsx --
-  priceIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png",
-  cardCapacityIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png",
+  priceIcon: require("./assets/images/coin.webp"),
+  cardCapacityIcon: require("./assets/images/card-capacity.webp"),
 };
 
 /**
