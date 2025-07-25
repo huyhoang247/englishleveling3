@@ -23,37 +23,6 @@ const dungeonStyles = `
   100% { filter: brightness(1) contrast(1.2); }
 }
 
-.dungeon-icon-container {
-  position: absolute;
-  top: 25%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 5;
-  opacity: 0.8;
-  filter: drop-shadow(0 0 30px rgba(100, 150, 255, 0.3));
-  animation: iconFloat 8s ease-in-out infinite alternate;
-}
-
-@keyframes iconFloat {
-  0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-  100% { transform: translate(-50%, -55%) scale(1.05) rotate(1deg); }
-}
-
-.dungeon-icon-image {
-  width: 192px;
-  height: 192px;
-  border-radius: 20px;
-  box-shadow: 
-    0 0 40px rgba(100, 150, 255, 0.2),
-    inset 0 0 20px rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-}
-
-.dungeon-icon-image:hover {
-  transform: scale(1.1);
-  filter: brightness(1.2);
-}
-
 .dungeon-light-overlay {
   position: absolute;
   inset: 0;
@@ -238,7 +207,6 @@ const dungeonStyles = `
 }
 
 @media (max-width: 768px) {
-  .dungeon-icon-image { width: 128px; height: 128px; }
   .torch-left, .torch-right { width: 150px; height: 150px; }
 }
 `;
@@ -303,14 +271,6 @@ const DungeonBackground: React.FC<DungeonBackgroundProps> = ({ isPaused }) => {
             <div className={`dungeon-background ${isPaused ? 'paused' : ''}`}>
                 {godRays.map(ray => <div key={ray.id} className="god-ray" style={ray.style} />)}
                 {floatingMotes.map(mote => <div key={mote.id} className="floating-mote" style={mote.style} />)}
-                <div className="dungeon-icon-container">
-                    <img
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2004_19_40%20PM.png"
-                        alt="Dungeon Icon"
-                        className="dungeon-icon-image"
-                        onError={(e) => { (e.target as HTMLImageElement).src="https://placehold.co/192x192/2D1B69/FFFFFF?text=🏰"; }}
-                    />
-                </div>
                 <div className="dungeon-light-overlay" />
                 <div className="dungeon-texture-overlay" />
                 {cracks.map(crack => <div key={crack.id} className="dungeon-crack" style={crack.style} />)}
