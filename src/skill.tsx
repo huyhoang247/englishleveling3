@@ -12,6 +12,7 @@ import {
 } from './skill-data.tsx';
 
 // --- CÁC ICON GIAO DIỆN CHUNG ---
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const BookIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png" alt="Sách Cổ" className={className} /> );
 const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> );
 const GoldIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className={className} /> );
@@ -393,8 +394,9 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
        <button 
             onClick={onClose} 
             className="absolute top-4 right-4 z-50 text-slate-400 hover:text-white transition-colors p-2 bg-black/20 rounded-full hover:bg-black/40"
-            aria-label="Close">
-            <CloseIcon className="w-6 h-6" />
+            aria-label="Quay lại Trang Chính"
+            title="Quay lại Trang Chính">
+            <HomeIcon className="w-6 h-6" />
         </button>
        <style>{`
         .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); }
