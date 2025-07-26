@@ -568,4 +568,3 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
   );
 }
 
---- END OF FILE skill.tsx ---
