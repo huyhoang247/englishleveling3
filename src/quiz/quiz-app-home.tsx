@@ -646,7 +646,6 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 const rewardId = `${selectedType}-${levelNumber}-${milestone}`;
                 const isClaimed = claimedRewards[rewardId];
                 
-                // If the reward is already claimed, skip rendering this tier
                 if (isClaimed) {
                     continue;
                 }
@@ -685,7 +684,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                                     ></div>
                                 </div>
                                 <div className="flex-shrink-0 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full px-2.5 py-1 flex items-center gap-1">
-                                    {!isCompleted && <LockIcon className="w-3.5 h-3.5 text-gray-400"/>}
+                                    {!isCompleted && levelProgress.completed === 0 && <LockIcon className="w-3.5 h-3.5 text-gray-400"/>}
                                     <span>{`${levelProgress.completed}/${milestone}`}</span>
                                 </div>
                             </div>
@@ -744,7 +743,6 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             if (previewTiers) tiers.push(previewTiers);
         }
         
-        // If there are no tiers to show (all claimed or no questions available)
         if (tiers.length === 0) {
              const hasQuestions = mainProgress && mainProgress.total > 0;
              return (
