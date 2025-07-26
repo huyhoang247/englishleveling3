@@ -652,6 +652,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 }
 
                 const isCompleted = levelProgress.completed >= milestone;
+                const isLockedDueToNoProgress = levelProgress.completed === 0 && milestone > 0;
                 const rewardAmount = i * BASE_REWARD_PER_100_Q * multiplier;
                 const capacityRewardAmount = 10;
                 const progressPercentage = Math.min((levelProgress.completed / milestone) * 100, 100);
@@ -672,7 +673,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 
                 levelTiers.push(
                     <div key={rewardId} className="relative bg-white p-4 rounded-lg shadow-sm overflow-hidden">
-                        <div className="absolute top-0 left-0 bg-gray-800/70 text-white text-xs font-bold px-3 py-1 rounded-br-lg">
+                        <div className="absolute top-0 left-0 bg-gray-800/70 text-white text-xs font-bold px-3 py-1 rounded-br-lg z-20">
                             Stage {i}
                         </div>
                         
@@ -708,6 +709,12 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                                 </div>
                             </div>
                         </div>
+                        {isLockedDueToNoProgress && (
+                            <div className="absolute inset-0 bg-gray-500/40 backdrop-blur-sm flex flex-col items-center justify-center text-white p-4 rounded-lg z-10">
+                                <LockIcon className="w-10 h-10 drop-shadow-md" />
+                                <p className="mt-2 font-bold text-center text-sm drop-shadow-md">Bắt đầu luyện tập để mở khóa</p>
+                            </div>
+                        )}
                     </div>
                 );
             }
