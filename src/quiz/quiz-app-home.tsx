@@ -650,67 +650,64 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 const isClaimed = claimedRewards[rewardId];
                 const rewardAmount = i * BASE_REWARD_PER_100_Q * multiplier;
                 const capacityRewardAmount = 10;
-                
-                // Calculate progress percentage, ensuring it doesn't exceed 100%
-                const progressPercentage = Math.min((levelProgress.completed / milestone), 1) * 100;
-                // Clamp completed count to not exceed milestone for display purposes
-                const displayCompleted = Math.min(levelProgress.completed, milestone);
+                const progressPercentage = Math.min((levelProgress.completed / milestone) * 100, 100);
+
+                let actionComponent;
+                if (isClaimed) {
+                    actionComponent = <div className="px-3 py-1.5 text-xs font-bold text-green-700 bg-green-200 rounded-full flex items-center gap-1.5"><CompletedIcon className="w-4 h-4" />Đã nhận</div>;
+                } else if (isCompleted) {
+                    actionComponent = <button onClick={() => handleClaim(rewardId, rewardAmount, capacityRewardAmount)} disabled={isClaiming === rewardId} className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 disabled:bg-indigo-400 transition w-[60px] text-center">{isClaiming === rewardId ? '...' : 'Nhận'}</button>;
+                } else {
+                    // No action button when locked. The lock status is shown on the progress bar row.
+                    actionComponent = null;
+                }
 
                 levelTiers.push(
-                    <div key={rewardId} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        {/* Top: Info & Rewards */}
-                        <div className="flex items-start justify-between mb-4">
-                            <div>
-                                <span className="font-bold text-gray-800">Stage {i}: Hoàn thành {milestone} câu</span>
-                                <p className="text-xs text-gray-500 mt-0.5">Phần thưởng cho cột mốc này.</p>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                                <div className="bg-orange-100 rounded-full px-2.5 py-1 flex items-center gap-1.5">
-                                    <GoldCoinIcon className="w-4 h-4" />
-                                    <span className="text-sm font-bold text-orange-700">{rewardAmount.toLocaleString()}</span>
-                                </div>
-                                <div className="bg-blue-100 rounded-full px-2.5 py-1 flex items-center gap-1.5">
-                                    <CardCapacityIcon className="w-4 h-4" />
-                                    <span className="text-sm font-bold text-blue-700">{capacityRewardAmount}</span>
-                                </div>
-                            </div>
+                    <div key={rewardId} className="relative bg-white p-4 rounded-lg shadow-sm overflow-hidden">
+                        {/* Stage Badge */}
+                        <div className="absolute top-0 left-0 bg-gray-800/70 text-white text-xs font-bold px-3 py-1 rounded-br-lg">
+                            Stage {i}
                         </div>
-
-                        {/* Bottom: Progress & Claim Action */}
-                        <div className="flex items-center gap-4">
-                            {/* Progress Bar with Icon and Text */}
-                            <div className="flex-grow flex items-center gap-3">
-                                <div className="flex-shrink-0">
-                                    {isCompleted ? <CompletedIcon className="w-5 h-5 text-green-500" /> : <LockIcon className="w-5 h-5 text-gray-400" />}
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div
-                                        className={`h-2.5 rounded-full transition-all duration-500 ${isCompleted ? 'bg-green-500' : 'bg-indigo-600'}`}
-                                        style={{ width: `${progressPercentage}%` }}
-                                    ></div>
-                                </div>
-                                <div className="flex-shrink-0 text-sm font-medium text-gray-600 w-16 text-right">
-                                    {displayCompleted}/{milestone}
-                                </div>
-                            </div>
-
-                            {/* Claim Button */}
-                            <div className="flex-shrink-0 w-[85px] text-center">
-                                {isClaimed ? (
-                                    <div className="text-xs font-bold text-green-700 flex items-center justify-center gap-1.5">
-                                        <CompletedIcon className="w-4 h-4" />
-                                        Đã nhận
+                        
+                        {/* Main Content */}
+                        <div className="pt-5 flex flex-col gap-3">
+                            {/* Top Row: Rewards & Action */}
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3 flex-wrap">
+                                    {/* Coin Reward */}
+                                    <div className="bg-orange-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
+                                        <GoldCoinIcon className="w-4 h-4" />
+                                        <span className="text-sm font-bold text-orange-700">{rewardAmount.toLocaleString()}</span>
                                     </div>
-                                ) : isCompleted ? (
-                                    <button onClick={() => handleClaim(rewardId, rewardAmount, capacityRewardAmount)} disabled={isClaiming === rewardId} className="w-full px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-wait transition">
-                                        {isClaiming === rewardId ? '...' : 'Nhận'}
-                                    </button>
-                                ) : (
-                                    <button disabled className="w-full px-3 py-1.5 text-xs font-bold text-gray-500 bg-gray-300 rounded-full cursor-not-allowed">
-                                        Nhận
-                                    </button>
-                                )}
+                                    {/* Capacity Reward */}
+                                    <div className="bg-blue-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
+                                        <CardCapacityIcon className="w-4 h-4" />
+                                        <span className="text-sm font-bold text-blue-700">{capacityRewardAmount}</span>
+                                    </div>
+                                </div>
+                                {/* Action button or 'Claimed' badge */}
+                                <div className="flex-shrink-0 ml-2">
+                                    {actionComponent}
+                                </div>
                             </div>
+
+                            {/* Bottom Row: Progress Bar (only if not claimed) */}
+                            {!isClaimed && (
+                                <div className="flex items-center gap-2">
+                                    {/* Progress Bar Container */}
+                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                        <div 
+                                            className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500" 
+                                            style={{ width: `${progressPercentage}%` }}
+                                        ></div>
+                                    </div>
+                                    {/* Progress Text & Lock Icon */}
+                                    <div className="flex items-center text-xs font-semibold text-gray-600 whitespace-nowrap">
+                                        {!isCompleted && <LockIcon className="w-3.5 h-3.5 mr-1 text-gray-400"/>}
+                                        <span>{`${levelProgress.completed}/${milestone}`}</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
