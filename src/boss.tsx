@@ -436,7 +436,7 @@ export default function BossBattle({
                     <h3 className="text-xl font-bold text-blue-300 text-shadow">{currentBossData.floor}</h3>
                 </div>
                 
-                <div className="flex items-center">
+                <div className="flex items-center font-sans">
                     <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                 </div>
 
