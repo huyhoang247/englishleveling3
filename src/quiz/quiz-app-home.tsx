@@ -671,7 +671,25 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                         
                         {/* Main Content */}
                         <div className="pt-5 flex flex-col gap-3">
-                            {/* Top Row: Rewards & Action */}
+                            {/* Progress Bar (only if not claimed) */}
+                            {!isClaimed && (
+                                <div className="flex items-center gap-2">
+                                    {/* Progress Bar Container */}
+                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                        <div 
+                                            className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500" 
+                                            style={{ width: `${progressPercentage}%` }}
+                                        ></div>
+                                    </div>
+                                    {/* Progress Text & Lock Icon */}
+                                    <div className="flex items-center text-xs font-semibold text-gray-600 whitespace-nowrap">
+                                        {!isCompleted && <LockIcon className="w-3.5 h-3.5 mr-1 text-gray-400"/>}
+                                        <span>{`${levelProgress.completed}/${milestone}`}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                             {/* Rewards & Action */}
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-3 flex-wrap">
                                     {/* Coin Reward */}
@@ -690,24 +708,6 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                                     {actionComponent}
                                 </div>
                             </div>
-
-                            {/* Bottom Row: Progress Bar (only if not claimed) */}
-                            {!isClaimed && (
-                                <div className="flex items-center gap-2">
-                                    {/* Progress Bar Container */}
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                        <div 
-                                            className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500" 
-                                            style={{ width: `${progressPercentage}%` }}
-                                        ></div>
-                                    </div>
-                                    {/* Progress Text & Lock Icon */}
-                                    <div className="flex items-center text-xs font-semibold text-gray-600 whitespace-nowrap">
-                                        {!isCompleted && <LockIcon className="w-3.5 h-3.5 mr-1 text-gray-400"/>}
-                                        <span>{`${levelProgress.completed}/${milestone}`}</span>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
                 );
