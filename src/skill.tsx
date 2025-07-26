@@ -138,7 +138,8 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onUnequip, onDisenchan
                 {isUpgradable && ( <div className="w-full text-left text-sm mt-2 p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
                 {isUpgradable && (
                     <div className="w-full mt-2 mb-4 space-y-2">
-                        <button onClick={() => onUpgrade(ownedSkill)} disabled={isMaxLevel || !canAffordUpgrade || isEquipped || actionDisabled} className="w-full relative p-3 rounded-lg transition-all duration-300 text-left flex items-center justify-between disabled:cursor-not-allowed group bg-black/20 border border-slate-700/80 hover:border-purple-500 disabled:hover:border-slate-700/80 hover:bg-purple-900/20">
+                        {/* --- THAY ĐỔI BẮT ĐẦU: Nút nâng cấp --- */}
+                        <button onClick={() => onUpgrade(ownedSkill)} disabled={isMaxLevel || !canAffordUpgrade || actionDisabled} className="w-full relative p-3 rounded-lg transition-all duration-300 text-left flex items-center justify-between disabled:cursor-not-allowed group bg-black/20 border border-slate-700/80 hover:border-purple-500 disabled:hover:border-slate-700/80 hover:bg-purple-900/20">
                             <div className="flex flex-col">
                                 <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
                                 {isMaxLevel ? ( <span className="font-bold text-yellow-400 mt-1">Đã đạt level tối đa</span> ) : (
@@ -151,8 +152,8 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onUnequip, onDisenchan
                             </div>
                             {!isMaxLevel && ( <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${!canAffordUpgrade ? 'bg-slate-700 border border-slate-600' : 'bg-slate-800 border border-slate-600 group-hover:bg-purple-600/50 group-hover:border-purple-500'}`}> <GoldIcon className="w-5 h-5"/> <span className={`font-bold text-sm transition-colors ${!canAffordUpgrade ? 'text-slate-500' : 'text-yellow-300'}`}>{skill.upgradeCost?.toLocaleString()}</span> </div> )}
                         </button>
-                        {isEquipped && <p className="text-center text-xs text-red-400 mt-1">Tháo kỹ năng để nâng cấp</p>}
-                        {!isEquipped && !isMaxLevel && !canAffordUpgrade && <p className="text-center text-xs text-red-400 mt-1">Không đủ vàng</p>}
+                        {!isMaxLevel && !canAffordUpgrade && <p className="text-center text-xs text-red-400 mt-1">Không đủ vàng</p>}
+                        {/* --- THAY ĐỔI KẾT THÚC: Nút nâng cấp --- */}
                     </div>
                 )}
               </div>
@@ -272,7 +273,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
       if (isProcessing) return;
       const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToUpgrade.skillId);
       if (!skillBlueprint || skillBlueprint.upgradeCost === undefined || skillBlueprint.maxLevel === undefined) { showMessage("Kỹ năng này không thể nâng cấp."); return; }
-      if (equippedSkills.some(s => s?.id === skillToUpgrade.id)) { showMessage("Vui lòng tháo kỹ năng trước khi nâng cấp."); return; }
+      // --- THAY ĐỔI: Đã xóa dòng kiểm tra kỹ năng có đang trang bị hay không ---
       if (skillToUpgrade.level >= skillBlueprint.maxLevel) { showMessage("Kỹ năng đã đạt level tối đa."); return; }
       if (gold < skillBlueprint.upgradeCost) { showMessage(`Không đủ vàng. Cần ${skillBlueprint.upgradeCost}.`); return; }
       setIsProcessing(true);
@@ -280,7 +281,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
       const newOwnedList = ownedSkills.map(s => s.id === skillToUpgrade.id ? updatedSkill : s);
       try {
         await onSkillsUpdate({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: -skillBlueprint.upgradeCost, booksChange: 0, });
-        setSelectedSkill(updatedSkill);
+        setSelectedSkill(updatedSkill); // Cập nhật modal với thông tin mới
         showMessage(`Nâng cấp ${skillBlueprint.name} lên Level ${updatedSkill.level} thành công!`);
       } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Nâng cấp thất bại'}`); } finally { setIsProcessing(false); }
   }
@@ -312,7 +313,6 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
                 </button>
             </section>
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
-                {/* --- THAY ĐỔI BẮT ĐẦU TẠI ĐÂY --- */}
                 <div className="flex justify-between items-baseline mb-4 flex-shrink-0">
                     <div className="flex items-baseline gap-2">
                         <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
@@ -321,9 +321,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
                             <span className="text-xs text-slate-500"> / {MAX_SKILLS_IN_STORAGE}</span>
                         </span>
                     </div>
-                    {/* Có thể thêm các nút sắp xếp/lọc ở đây trong tương lai */}
                 </div>
-                {/* --- THAY ĐỔI KẾT THÚC TẠI ĐÂY --- */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto hide-scrollbar">
                     {ownedSkills.length > 0 ? (
                         ownedSkills
