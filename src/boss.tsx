@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import BOSS_DATA from './boss/bossData.ts';
+import CoinDisplay from './coin-display.tsx';
 import { 
     OwnedSkill, 
     SkillBlueprint, 
@@ -26,6 +27,7 @@ interface BossBattleProps {
   initialFloor: number;
   onFloorComplete: (newFloor: number) => void;
   equippedSkills: ActiveSkill[];
+  displayedCoins: number;
 }
 
 
@@ -176,7 +178,8 @@ export default function BossBattle({
   onBattleEnd, 
   initialFloor, 
   onFloorComplete,
-  equippedSkills 
+  equippedSkills,
+  displayedCoins
 }: BossBattleProps) {
   
   // --- STATE MANAGEMENT ---
@@ -409,6 +412,8 @@ export default function BossBattle({
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
+        @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
+        .animate-pulse-fast { animation: pulse-fast 1s infinite; }
       `}</style>
 
       {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
@@ -430,6 +435,11 @@ export default function BossBattle({
                     </button>
                     <h3 className="text-xl font-bold text-blue-300 text-shadow">{currentBossData.floor}</h3>
                 </div>
+                
+                <div className="flex items-center">
+                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
+                </div>
+
             </div>
         </header>
 
