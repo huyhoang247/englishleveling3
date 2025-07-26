@@ -421,11 +421,12 @@ export default function BossBattle({
                 <div className="flex items-center gap-3">
                     <button
                       onClick={onClose}
-                      className="p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors flex items-center justify-center"
-                      aria-label="Thoát về Trang chính"
-                      title="Thoát về Trang chính"
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
+                      aria-label="Go Home"
+                      title="Go Home"
                     >
                       <HomeIcon className="w-5 h-5 text-slate-300" />
+                      <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                     </button>
                     <h3 className="text-xl font-bold text-blue-300 text-shadow">{currentBossData.floor}</h3>
                 </div>
