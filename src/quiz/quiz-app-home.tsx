@@ -663,8 +663,8 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 levelTiers.push(
                     <div key={rewardId} className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
                         <div>
-                            <p className="font-bold text-lg text-gray-800">Stage {i}</p>
-                            <div className="flex items-center gap-3 mt-1.5">
+                            <p className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">Stage {i}</p>
+                            <div className="flex items-center gap-3 mt-2">
                                 <div className="bg-orange-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
                                     <GoldCoinIcon className="w-4 h-4" />
                                     <span className="text-sm font-bold text-orange-700">{rewardAmount.toLocaleString()}</span>
