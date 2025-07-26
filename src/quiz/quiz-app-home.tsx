@@ -205,14 +205,14 @@ export default function QuizAppHome() {
   );
 }
 
-// --- ICON COMPONENTS ---
-
+// --- NEW --- Icon for completed state
 const CompletedIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
     </svg>
 );
 
+// SVG Icons (LockIcon, RefreshIcon, GiftIcon)
 const LockIcon = ({ className }: { className: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
     <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
@@ -235,12 +235,12 @@ const GoldCoinIcon = ({ className }: { className: string }) => (
     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className={className} />
 );
 
+// --- NEW --- Card Capacity Icon
 const CardCapacityIcon = ({ className }: { className: string }) => (
     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png" alt="Card Capacity Icon" className={className} />
 );
 
-// --- PRACTICE LIST COMPONENT ---
-
+// Component to display practice list with progress
 const PracticeList = ({ selectedType, onPracticeSelect }) => {
   const [progressData, setProgressData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -599,85 +599,7 @@ const PracticeList = ({ selectedType, onPracticeSelect }) => {
   );
 };
 
-
-// --- REDESIGNED REWARDS POPUP AND HELPER COMPONENTS ---
-
-// A more visually appealing icon for rewards
-const TreasureChestIcon = ({ className }: { className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M20 7.55V7H18V5H16V3H8V5H6V7H4V7.55C4 10 5.14 12.27 7 13.82V15H6V17H8V19H16V17H18V15H17V13.82C18.86 12.27 20 10 20 7.55ZM12 12C10.34 12 9 10.66 9 9H7C7 11.76 9.24 14 12 14S17 11.76 17 9H15C15 10.66 13.66 12 12 12Z" />
-        <path d="M12 5C13.1 5 14 5.9 14 7H10C10 5.9 10.9 5 12 5Z" />
-    </svg>
-);
-
-
-// Progress bar component for visual feedback
-const ProgressBar = ({ current, total }: { current: number; total: number }) => {
-    const percentage = total > 0 ? (current / total) * 100 : 0;
-    return (
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div
-                className="bg-gradient-to-r from-yellow-400 to-orange-500 h-2.5 rounded-full transition-all duration-500"
-                style={{ width: `${percentage}%` }}
-            ></div>
-        </div>
-    );
-};
-
-// Redesigned reward tier card
-const RewardTierCard = ({ stage, rewards, status, progress, onClaim, isClaiming }) => {
-    const statusConfig = {
-        claimed: {
-            icon: <CompletedIcon className="w-8 h-8 text-green-500" />,
-            button: <div className="px-4 py-2 text-sm font-bold text-green-700 bg-green-100 rounded-full">Đã nhận</div>,
-            cardClass: "bg-green-50 border-green-200",
-        },
-        claimable: {
-            icon: <TreasureChestIcon className="w-8 h-8 text-yellow-500" />,
-            button: <button onClick={onClaim} disabled={isClaiming} className="px-5 py-2 text-sm font-bold text-white bg-indigo-600 rounded-full shadow-lg hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-wait transition-all transform hover:scale-105">{isClaiming ? 'Đang xử lý...' : 'Nhận'}</button>,
-            cardClass: "bg-white border-indigo-300 animate-pulse-once border-2",
-        },
-        locked: {
-            icon: <LockIcon className="w-8 h-8 text-gray-400" />,
-            button: (
-                <div className="w-full text-right">
-                    <p className="text-sm font-bold text-gray-700">{progress.current.toLocaleString()}<span className="text-gray-400"> / {progress.target.toLocaleString()}</span></p>
-                    <ProgressBar current={progress.current} total={progress.target} />
-                </div>
-            ),
-            cardClass: "bg-gray-100 border-gray-200 opacity-80",
-        }
-    };
-
-    const config = statusConfig[status];
-
-    return (
-        <div className={`flex items-center p-4 rounded-2xl border transition-all duration-300 ${config.cardClass}`}>
-            <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center mr-4">
-                {config.icon}
-            </div>
-            <div className="flex-grow">
-                <p className="font-bold text-lg text-gray-800">Mốc {stage}</p>
-                <div className="flex items-center gap-4 mt-1.5">
-                    <div className="inline-flex items-center gap-1.5">
-                        <GoldCoinIcon className="w-5 h-5" />
-                        <span className="text-md font-semibold text-orange-600">{rewards.coins.toLocaleString()}</span>
-                    </div>
-                    <div className="inline-flex items-center gap-1.5">
-                        <CardCapacityIcon className="w-5 h-5" />
-                        <span className="text-md font-semibold text-blue-600">+{rewards.capacity}</span>
-                    </div>
-                </div>
-            </div>
-            <div className="ml-4 flex-shrink-0 w-36 flex justify-end items-center">
-                {config.button}
-            </div>
-        </div>
-    );
-};
-
-
-// Redesigned Rewards Popup Component
+// --- NEW --- Rewards Popup Component
 const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }) => {
     const [isClaiming, setIsClaiming] = useState(null);
 
@@ -694,6 +616,8 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             });
             
             setClaimedRewards(prev => ({ ...prev, [rewardId]: true }));
+            // Note: The main coin display in the header won't update live as its state is not managed here.
+            // The user will receive the coins, and the display will be correct on the next app load.
         } catch (error) {
             console.error("Error claiming reward:", error);
             alert("Đã có lỗi xảy ra khi nhận thưởng.");
@@ -703,129 +627,111 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
     };
 
     const renderRewardTiers = () => {
+        const tiers = [];
+        const BASE_REWARD_PER_100_Q = 1000;
         const MILESTONE_STEP = 100;
-        const BASE_REWARD_PER_MILESTONE = 1000;
-        const CAPACITY_REWARD_PER_MILESTONE = 10;
-        
+        const MAX_MILESTONES_TO_DISPLAY = 5;
+
+        // Function to generate tiers for a given level
         const generateTiersForLevel = (levelProgress, levelNumber, levelTitle, multiplier) => {
             if (!levelProgress || levelProgress.total === 0) {
                 return null;
             }
 
             const levelTiers = [];
-            const maxMilestones = Math.floor(levelProgress.total / MILESTONE_STEP);
-            let nextMilestoneShown = false;
+            const maxPossibleMilestone = Math.floor(levelProgress.total / MILESTONE_STEP) * MILESTONE_STEP;
 
-            // Loop through all possible milestones + 1 to show the next locked one
-            for (let i = 1; i <= maxMilestones + 1; i++) {
-                const milestoneTarget = i * MILESTONE_STEP;
+            for (let i = 1; i <= MAX_MILESTONES_TO_DISPLAY; i++) {
+                const milestone = i * MILESTONE_STEP;
+                if (milestone > maxPossibleMilestone + MILESTONE_STEP) break; // Don't show excessively high, unreachable milestones
 
-                // Stop if the milestone is impossible to reach
-                if (milestoneTarget > levelProgress.total && milestoneTarget - MILESTONE_STEP > levelProgress.total) break;
+                const rewardId = `${selectedType}-${levelNumber}-${milestone}`;
+                const isCompleted = levelProgress.completed >= milestone;
+                const isClaimed = claimedRewards[rewardId];
+                const rewardAmount = i * BASE_REWARD_PER_100_Q * multiplier;
+                const capacityRewardAmount = 10;
 
-                const isCompleted = levelProgress.completed >= milestoneTarget;
-
-                // Logic: Show if completed, or if it's the very next locked one.
-                if (!isCompleted) {
-                    if (nextMilestoneShown) continue; // Already shown a locked one, so skip others
-                    nextMilestoneShown = true;
+                let statusComponent;
+                if (isClaimed) {
+                    statusComponent = <div className="px-3 py-1.5 text-xs font-bold text-green-700 bg-green-200 rounded-full flex items-center gap-1.5"><CompletedIcon className="w-4 h-4" />Đã nhận</div>;
+                } else if (isCompleted) {
+                    statusComponent = <button onClick={() => handleClaim(rewardId, rewardAmount, capacityRewardAmount)} disabled={isClaiming === rewardId} className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 disabled:bg-indigo-400 transition w-[60px] text-center">{isClaiming === rewardId ? '...' : 'Nhận'}</button>;
+                } else {
+                    statusComponent = <div className="px-3 py-1.5 text-xs font-bold text-gray-500 bg-gray-200 rounded-full flex items-center gap-1.5"><LockIcon className="w-4 h-4" />{`${levelProgress.completed}/${milestone}`}</div>;
                 }
 
-                const rewardId = `${selectedType}-${levelNumber}-${milestoneTarget}`;
-                const isClaimed = claimedRewards[rewardId];
-                
-                const reward = {
-                    coins: i * BASE_REWARD_PER_MILESTONE * multiplier,
-                    capacity: CAPACITY_REWARD_PER_MILESTONE
-                };
-                
-                let status = 'locked';
-                if (isClaimed) status = 'claimed';
-                else if (isCompleted) status = 'claimable';
-
                 levelTiers.push(
-                    <RewardTierCard
-                        key={rewardId}
-                        stage={i}
-                        rewards={reward}
-                        status={status}
-                        progress={{ current: levelProgress.completed, target: milestoneTarget }}
-                        onClaim={() => handleClaim(rewardId, reward.coins, reward.capacity)}
-                        isClaiming={isClaiming === rewardId}
-                    />
+                    <div key={rewardId} className="relative bg-white p-4 rounded-lg shadow-sm overflow-hidden">
+                        <div className="absolute top-0 left-0 bg-gray-100 text-gray-700 text-xs font-bold px-3 py-1 rounded-br-lg">
+                            Stage {i}
+                        </div>
+                        <div className="flex items-center justify-between pt-5">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-orange-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
+                                    <GoldCoinIcon className="w-4 h-4" />
+                                    <span className="text-sm font-bold text-orange-700">{rewardAmount.toLocaleString()}</span>
+                                </div>
+                                <div className="bg-blue-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
+                                    <CardCapacityIcon className="w-4 h-4" />
+                                    <span className="text-sm font-bold text-blue-700">{capacityRewardAmount}</span>
+                                </div>
+                            </div>
+                            {statusComponent}
+                        </div>
+                    </div>
                 );
             }
 
             if (levelTiers.length > 0) {
               return (
-                <div key={levelNumber} className="bg-gray-100/50 p-4 rounded-2xl">
-                    <h4 className="font-bold text-lg text-gray-800 mb-3">{levelTitle}</h4>
-                    <div className="space-y-3">{levelTiers}</div>
+                <div key={levelNumber} className="bg-gray-100 p-4 rounded-lg">
+                    <h4 className="font-bold text-gray-700">{levelTitle}</h4>
+                    <div className="space-y-3 mt-3">{levelTiers}</div>
                 </div>
               );
             }
             return null;
         };
 
-        const allTiers = [];
-        
         // Main Practice Tiers
         const mainProgress = progressData[practiceNumber];
         const mainTiers = generateTiersForLevel(mainProgress, practiceNumber, "Luyện tập chính", 1);
-        if (mainTiers) {
-            allTiers.push(mainTiers);
-        } else {
-            allTiers.push(
-                <div key="no-main" className="text-center py-10 bg-gray-100/50 rounded-2xl">
-                    <p className="text-gray-500 font-medium">Chưa có câu hỏi cho phần luyện tập này.</p>
-                    <p className="text-sm text-gray-400 mt-1">Hãy học thêm từ vựng để mở khóa.</p>
-                </div>
-            )
-        }
+        if (mainTiers) tiers.push(mainTiers);
+        else tiers.push(<p key="no-main" className="text-sm text-gray-500 text-center py-4">Chưa có câu hỏi cho phần luyện tập này.</p>)
 
         // Preview Levels Tiers
         for (let i = 1; i <= MAX_PREVIEWS; i++) {
             const previewNumber = (i * 100) + practiceNumber;
             const previewProgress = progressData[previewNumber];
             const multiplier = Math.pow(2, i);
-            const previewTiers = generateTiersForLevel(previewProgress, previewNumber, `Ôn tập ${i} (x${multiplier} Thưởng)`, multiplier);
-            if (previewTiers) allTiers.push(previewTiers);
+            const previewTiers = generateTiersForLevel(previewProgress, previewNumber, `Preview ${i} (x${multiplier} Thưởng)`, multiplier);
+            if (previewTiers) tiers.push(previewTiers);
         }
 
-        return allTiers;
+        return tiers;
     };
 
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
-            <div className="bg-gray-50 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col transform transition-all animate-scale-up">
-                <div className="flex items-center justify-between p-5 border-b border-gray-200 bg-white">
-                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                       <GiftIcon className="w-7 h-7 text-yellow-500"/>
-                       Phần thưởng: {practiceTitle}
+            <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all animate-scale-up" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                       <GiftIcon className="w-6 h-6 text-yellow-500"/>
+                       Rewards: {practiceTitle}
                     </h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 rounded-full p-1.5 bg-gray-100 hover:bg-gray-200 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
                 </div>
-                <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 hide-scrollbar">
+                <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50 hide-scrollbar">
                     {renderRewardTiers()}
                 </div>
             </div>
             <style jsx>{`
                 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-                @keyframes scale-up { from { transform: scale(0.95) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+                @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
                 .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
                 .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
-                @keyframes pulse-once {
-                  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
-                  70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
-                  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
-                }
-                .animate-pulse-once {
-                  animation: pulse-once 1.5s infinite;
-                }
                 .hide-scrollbar {
                   -ms-overflow-style: none; /* IE and Edge */
                   scrollbar-width: none; /* Firefox */
