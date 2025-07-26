@@ -698,23 +698,25 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                                 </div>
                             )}
 
-                             {/* Rewards & Action */}
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-3 flex-wrap">
-                                    {/* Coin Reward */}
-                                    <div className="bg-orange-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
-                                        <GoldCoinIcon className="w-4 h-4" />
-                                        <span className="text-sm font-bold text-orange-700">{rewardAmount.toLocaleString()}</span>
+                             {/* Rewards & Action Wrapper */}
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-3 flex-wrap">
+                                        {/* Coin Reward */}
+                                        <div className="bg-orange-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
+                                            <GoldCoinIcon className="w-4 h-4" />
+                                            <span className="text-sm font-bold text-orange-700">{rewardAmount.toLocaleString()}</span>
+                                        </div>
+                                        {/* Capacity Reward */}
+                                        <div className="bg-blue-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
+                                            <CardCapacityIcon className="w-4 h-4" />
+                                            <span className="text-sm font-bold text-blue-700">{capacityRewardAmount}</span>
+                                        </div>
                                     </div>
-                                    {/* Capacity Reward */}
-                                    <div className="bg-blue-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
-                                        <CardCapacityIcon className="w-4 h-4" />
-                                        <span className="text-sm font-bold text-blue-700">{capacityRewardAmount}</span>
+                                    {/* Action button or 'Claimed' badge */}
+                                    <div className="flex-shrink-0 ml-2">
+                                        {actionComponent}
                                     </div>
-                                </div>
-                                {/* Action button or 'Claimed' badge */}
-                                <div className="flex-shrink-0 ml-2">
-                                    {actionComponent}
                                 </div>
                             </div>
                         </div>
