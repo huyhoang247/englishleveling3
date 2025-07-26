@@ -275,17 +275,38 @@ const MergeModal = ({ isOpen, onClose, ownedSkills, onMerge, isProcessing, equip
             mergeableGroups.map(group => {
               const Icon = group.blueprint.icon;
               return (
-                <div key={`${group.skillId}-${group.rarity}`} className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-3 w-2/5">
-                    <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md border ${getRarityColor(group.rarity)} bg-black/20`}><Icon className={`w-8 h-8 ${getRarityTextColor(group.rarity)}`} /></div>
-                    <div><span className={`font-bold ${getRarityTextColor(group.rarity)}`}>{group.blueprint.name}</span><div className="text-xs text-slate-400 flex flex-wrap gap-x-2"><span>{getRarityDisplayName(group.rarity)}</span><span>x {group.skills.length}</span></div></div>
+                <div key={`${group.skillId}-${group.rarity}`} className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 flex items-center gap-3">
+                  {/* Input Side */}
+                  <div className="flex flex-1 items-center gap-3 min-w-0">
+                    <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md border ${getRarityColor(group.rarity)} bg-black/20`}>
+                      <Icon className={`w-8 h-8 ${getRarityTextColor(group.rarity)}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className={`font-bold truncate ${getRarityTextColor(group.rarity)}`}>{group.blueprint.name}</p>
+                      <div className="text-xs text-slate-400">
+                         <span>{getRarityDisplayName(group.rarity)} (x{group.skills.length})</span>
+                      </div>
+                    </div>
                   </div>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400 flex-shrink-0 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                  <div className="flex items-center gap-3 w-2/5">
-                     <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md border ${getRarityColor(group.nextRarity!)} bg-black/20`}><Icon className={`w-8 h-8 ${getRarityTextColor(group.nextRarity!)}`} /></div>
-                     <div><span className={`font-bold ${getRarityTextColor(group.nextRarity!)}`}>{group.blueprint.name}</span><p className="text-xs text-slate-300">{getRarityDisplayName(group.nextRarity!)} - <span className="font-bold text-white">Dự kiến Lv. {group.estimatedResult.level}</span></p></div>
+
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  
+                  {/* Output Side */}
+                  <div className="flex flex-1 items-center gap-3 min-w-0">
+                     <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md border ${getRarityColor(group.nextRarity!)} bg-black/20`}>
+                       <Icon className={`w-8 h-8 ${getRarityTextColor(group.nextRarity!)}`} />
+                     </div>
+                     <div className="min-w-0">
+                       <p className={`font-bold truncate ${getRarityTextColor(group.nextRarity!)}`}>{group.blueprint.name}</p>
+                       <p className="text-xs text-slate-300">
+                         {getRarityDisplayName(group.nextRarity!)} - <span className="font-bold text-white">Lv. {group.estimatedResult.level}</span>
+                       </p>
+                     </div>
                   </div>
-                  <button onClick={() => onMerge(group)} disabled={isProcessing} className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait">Hợp Nhất</button>
+                  
+                  <button onClick={() => onMerge(group)} disabled={isProcessing} className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait">
+                    Hợp Nhất
+                  </button>
                 </div>
               );
             })
@@ -326,7 +347,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
   const showMessage = (text: string) => {
     setMessage(text);
     setMessageKey(prev => prev + 1);
-    const timer = setTimeout(() => setMessage(''), 4000); // Tăng thời gian hiển thị thông báo
+    const timer = setTimeout(() => setMessage(''), 4000);
     return () => clearTimeout(timer);
   };
   
@@ -378,7 +399,6 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
     setIsProcessing(true);
     const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToDisenchant.skillId)!;
     const booksToReturn = Math.floor(CRAFTING_COST / 2);
-    // Hoàn lại cả vàng đã nâng cấp
     const goldToReturn = getTotalUpgradeCost(skillBlueprint, skillToDisenchant.level);
 
     const newOwnedList = ownedSkills.filter(s => s.id !== skillToDisenchant.id);
