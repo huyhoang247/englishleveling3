@@ -5,22 +5,31 @@ import {
     getRandomRarity,
     getActivationChance,
     getUpgradeCost,
+    getTotalUpgradeCost, // Import hàm mới
     getRarityColor,
     getRarityGradient,
     getRarityTextColor,
     getRarityDisplayName,
-    getNextRarity, // Import hàm mới
-    type Rarity,   // Import type mới
+    getNextRarity,
+    type Rarity,
     type OwnedSkill,
+    type SkillBlueprint,
 } from './skill-data.tsx';
-import CoinDisplay from './coin-display.tsx';
+// Giả định CoinDisplay là một component đã có
+const CoinDisplay = ({ displayedCoins, isStatsFullscreen }: { displayedCoins: number, isStatsFullscreen: boolean }) => (
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700">
+        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className="w-6 h-6" />
+        <span className="text-base font-bold text-yellow-300 tracking-wider">
+            {displayedCoins.toLocaleString()}
+        </span>
+    </div>
+);
 
 // --- CÁC ICON GIAO DIỆN CHUNG ---
 const BookIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png" alt="Sách Cổ" className={className} /> );
 const CloseIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> );
 const GoldIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className={className} /> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
-// Thêm icon mới cho nút Merge
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}> <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l-2.72-2.72a1 1 0 010-1.414l4.243-4.243a1 1 0 011.414 0l2.72 2.72a4 4 0 011.343 2.863l3.155-1.262a1 1 0 011.23 1.23l-1.262 3.155a4 4 0 01-1.343 2.863l2.72 2.72a1 1 0 010 1.414l-4.243 4.243a1 1 0 01-1.414 0l-2.72-2.72a4 4 0 01-2.863-1.343L6.663 15.147a1 1 0 01-1.23-1.23z" /> <path d="M11.379 4.424a1 1 0 01-1.414 0L4.424 9.965a1 1 0 010 1.414l2.121 2.121a1 1 0 011.414 0l5.54-5.54a1 1 0 010-1.414l-2.121-2.121z" /> </svg>);
 
 
@@ -140,7 +149,7 @@ const SkillDetailModal = ({ ownedSkill, onClose, onEquip, onUnequip, onDisenchan
               <div className="flex flex-col items-center text-center gap-4">
                 <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)}`} /></div>
                 <p className="text-slate-300 text-base leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
-                {isUpgradable && ( <div className="w-full text-left text-sm mt-2 p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
+                {skill.baseEffectValue !== undefined && ( <div className="w-full text-left text-sm mt-2 p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
                 {isUpgradable && (
                     <div className="w-full mt-2 mb-4 space-y-2">
                         <button onClick={() => onUpgrade(ownedSkill)} disabled={!canAffordUpgrade || actionDisabled} className="w-full relative p-3 rounded-lg transition-all duration-300 text-left flex items-center justify-between disabled:cursor-not-allowed group bg-black/20 border border-slate-700/80 hover:border-purple-500 disabled:hover:border-slate-700/80 hover:bg-purple-900/20">
@@ -186,106 +195,109 @@ const CraftingSuccessModal = ({ ownedSkill, onClose }: { ownedSkill: OwnedSkill,
 };
 
 
-// --- START: COMPONENT MỚI CHO MERGE MODAL ---
+// --- START: COMPONENT MERGE MODAL ĐÃ CẬP NHẬT ---
+interface MergeResult {
+    level: number;
+    refundGold: number;
+}
+
 interface MergeGroup {
   skillId: string;
   rarity: Rarity;
   skills: OwnedSkill[];
-  blueprint: ReturnType<typeof ALL_SKILLS.find>;
+  blueprint: SkillBlueprint;
   nextRarity: Rarity | null;
+  estimatedResult: MergeResult;
 }
 
-const MergeModal = ({ isOpen, onClose, ownedSkills, onMerge, isProcessing }: { isOpen: boolean; onClose: () => void; ownedSkills: OwnedSkill[]; onMerge: (group: MergeGroup) => void; isProcessing: boolean; }) => {
+const calculateMergeResult = (skillsToMerge: OwnedSkill[], blueprint: SkillBlueprint): MergeResult => {
+    if (skillsToMerge.length < 3 || !blueprint.upgradeCost) {
+        return { level: 1, refundGold: 0 };
+    }
+    const totalInvestedGold = skillsToMerge.reduce((total, skill) => {
+        return total + getTotalUpgradeCost(blueprint, skill.level);
+    }, 0);
+    let finalLevel = 1;
+    let remainingGold = totalInvestedGold;
+    while (true) {
+        const costForNextLevel = getUpgradeCost(blueprint.upgradeCost, finalLevel);
+        if (remainingGold >= costForNextLevel) {
+            remainingGold -= costForNextLevel;
+            finalLevel++;
+        } else {
+            break;
+        }
+    }
+    return { level: finalLevel, refundGold: remainingGold };
+};
+
+
+const MergeModal = ({ isOpen, onClose, ownedSkills, onMerge, isProcessing, equippedSkillIds }: { isOpen: boolean; onClose: () => void; ownedSkills: OwnedSkill[]; onMerge: (group: MergeGroup) => void; isProcessing: boolean; equippedSkillIds: (string | null)[] }) => {
   const mergeableGroups = useMemo<MergeGroup[]>(() => {
     if (!isOpen) return [];
-
-    const unequippedSkills = ownedSkills.filter(s => s.level === 1); // Chỉ hợp nhất được skill level 1
+    const unequippedSkills = ownedSkills.filter(s => !equippedSkillIds.includes(s.id));
     const groups: Record<string, OwnedSkill[]> = {};
-
     for (const skill of unequippedSkills) {
       const key = `${skill.skillId}-${skill.rarity}`;
       if (!groups[key]) groups[key] = [];
       groups[key].push(skill);
     }
-
     return Object.values(groups)
       .filter(group => group.length >= 3)
       .map(group => {
         const firstSkill = group[0];
+        const blueprint = ALL_SKILLS.find(s => s.id === firstSkill.skillId)!;
         const nextRarity = getNextRarity(firstSkill.rarity);
-        return {
-          skillId: firstSkill.skillId,
-          rarity: firstSkill.rarity,
-          skills: group,
-          blueprint: ALL_SKILLS.find(s => s.id === firstSkill.skillId)!,
-          nextRarity: nextRarity,
-        };
+        const sortedSkills = [...group].sort((a, b) => b.level - a.level);
+        const top3Skills = sortedSkills.slice(0, 3);
+        const estimatedResult = calculateMergeResult(top3Skills, blueprint);
+        return { skillId: firstSkill.skillId, rarity: firstSkill.rarity, skills: sortedSkills, blueprint, nextRarity, estimatedResult };
       })
-      .filter(group => group.nextRarity !== null) // Loại bỏ những group đã ở rank cao nhất (SR)
+      .filter(group => group.nextRarity !== null)
       .sort((a,b) => a.blueprint.name.localeCompare(b.blueprint.name));
-
-  }, [isOpen, ownedSkills]);
+  }, [isOpen, ownedSkills, equippedSkillIds]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-lg max-h-[90vh] z-50 flex flex-col">
+      <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-xl max-h-[90vh] z-50 flex flex-col">
         <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-bold text-cyan-300">Hợp Nhất Kỹ Năng</h3>
             <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
           </div>
-          <p className="text-sm text-slate-400 mt-1">Hợp nhất 3 kỹ năng <span className="font-bold text-white">cùng loại, cùng hạng, level 1</span> để tạo 1 kỹ năng hạng cao hơn.</p>
+          <p className="text-sm text-slate-400 mt-1">Hợp nhất 3 kỹ năng <span className="font-bold text-white">cùng loại, cùng hạng</span> để tạo 1 kỹ năng hạng cao hơn. Hệ thống sẽ ưu tiên các kỹ năng cấp cao nhất.</p>
         </div>
-
         <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2 space-y-3">
           {mergeableGroups.length > 0 ? (
             mergeableGroups.map(group => {
               const Icon = group.blueprint.icon;
               return (
                 <div key={`${group.skillId}-${group.rarity}`} className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md border ${getRarityColor(group.rarity)} bg-black/20`}>
-                      <Icon className={`w-8 h-8 ${getRarityTextColor(group.rarity)}`} />
-                    </div>
-                    <div className="flex flex-col text-sm">
-                      <span className={`font-bold ${getRarityTextColor(group.rarity)}`}>{group.blueprint.name}</span>
-                      <span className="text-slate-400">{getRarityDisplayName(group.rarity)}</span>
-                    </div>
-                    <div className="text-slate-400 font-bold">x {Math.floor(group.skills.length / 3) * 3}</div>
+                  <div className="flex items-center gap-3 w-2/5">
+                    <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md border ${getRarityColor(group.rarity)} bg-black/20`}><Icon className={`w-8 h-8 ${getRarityTextColor(group.rarity)}`} /></div>
+                    <div><span className={`font-bold ${getRarityTextColor(group.rarity)}`}>{group.blueprint.name}</span><div className="text-xs text-slate-400 flex flex-wrap gap-x-2"><span>{getRarityDisplayName(group.rarity)}</span><span>x {group.skills.length}</span></div></div>
                   </div>
-
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400 flex-shrink-0 mx-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                  
-                  <div className="flex items-center gap-3 flex-1">
-                     <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md border ${getRarityColor(group.nextRarity!)} bg-black/20`}>
-                       <Icon className={`w-8 h-8 ${getRarityTextColor(group.nextRarity!)}`} />
-                     </div>
-                     <div className="flex flex-col text-sm">
-                       <span className={`font-bold ${getRarityTextColor(group.nextRarity!)}`}>{group.blueprint.name}</span>
-                       <span className="text-slate-400">{getRarityDisplayName(group.nextRarity!)}</span>
-                     </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400 flex-shrink-0 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  <div className="flex items-center gap-3 w-2/5">
+                     <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md border ${getRarityColor(group.nextRarity!)} bg-black/20`}><Icon className={`w-8 h-8 ${getRarityTextColor(group.nextRarity!)}`} /></div>
+                     <div><span className={`font-bold ${getRarityTextColor(group.nextRarity!)}`}>{group.blueprint.name}</span><p className="text-xs text-slate-300">{getRarityDisplayName(group.nextRarity!)} - <span className="font-bold text-white">Dự kiến Lv. {group.estimatedResult.level}</span></p></div>
                   </div>
-                  
-                  <button onClick={() => onMerge(group)} disabled={isProcessing} className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait">
-                    Hợp Nhất
-                  </button>
+                  <button onClick={() => onMerge(group)} disabled={isProcessing} className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait">Hợp Nhất</button>
                 </div>
               );
             })
           ) : (
-            <div className="flex items-center justify-center h-full text-slate-500 text-center py-10">
-              <p>Không có kỹ năng nào có thể hợp nhất.<br/>Cần ít nhất 3 kỹ năng giống hệt nhau (Lv.1).</p>
-            </div>
+            <div className="flex items-center justify-center h-full text-slate-500 text-center py-10"><p>Không có kỹ năng nào có thể hợp nhất.<br/>Cần ít nhất 3 kỹ năng cùng loại, cùng hạng và chưa trang bị.</p></div>
           )}
         </div>
       </div>
     </div>
   );
 };
-// --- END: COMPONENT MỚI CHO MERGE MODAL ---
+// --- END: COMPONENT MERGE MODAL ĐÃ CẬP NHẬT ---
 
 
 // --- COMPONENT CHÍNH ---
@@ -301,7 +313,7 @@ interface SkillScreenProps {
 export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, equippedSkillIds, onSkillsUpdate }: SkillScreenProps) {
   const [selectedSkill, setSelectedSkill] = useState<OwnedSkill | null>(null);
   const [newlyCraftedSkill, setNewlyCraftedSkill] = useState<OwnedSkill | null>(null);
-  const [isMergeModalOpen, setIsMergeModalOpen] = useState(false); // State mới
+  const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -314,7 +326,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
   const showMessage = (text: string) => {
     setMessage(text);
     setMessageKey(prev => prev + 1);
-    const timer = setTimeout(() => setMessage(''), 3000);
+    const timer = setTimeout(() => setMessage(''), 4000); // Tăng thời gian hiển thị thông báo
     return () => clearTimeout(timer);
   };
   
@@ -366,11 +378,18 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
     setIsProcessing(true);
     const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToDisenchant.skillId)!;
     const booksToReturn = Math.floor(CRAFTING_COST / 2);
+    // Hoàn lại cả vàng đã nâng cấp
+    const goldToReturn = getTotalUpgradeCost(skillBlueprint, skillToDisenchant.level);
+
     const newOwnedList = ownedSkills.filter(s => s.id !== skillToDisenchant.id);
     try {
-      await onSkillsUpdate({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: 0, booksChange: booksToReturn });
+      await onSkillsUpdate({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: goldToReturn, booksChange: booksToReturn });
       setSelectedSkill(null);
-      showMessage(`Đã phân rã ${skillBlueprint.name}, nhận lại ${booksToReturn} Sách Cổ.`);
+      let disenchantMsg = `Đã phân rã ${skillBlueprint.name}, nhận lại ${booksToReturn} Sách Cổ.`;
+      if (goldToReturn > 0) {
+        disenchantMsg += ` Hoàn lại ${goldToReturn.toLocaleString()} vàng.`
+      }
+      showMessage(disenchantMsg);
     } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Phân rã thất bại'}`); } finally { setIsProcessing(false); }
   };
 
@@ -390,73 +409,45 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
       const updatedSkill = { ...skillToUpgrade, level: skillToUpgrade.level + 1 };
       const newOwnedList = ownedSkills.map(s => s.id === skillToUpgrade.id ? updatedSkill : s);
       try {
-        await onSkillsUpdate({ 
-            newOwned: newOwnedList, 
-            newEquippedIds: equippedSkillIds, 
-            goldChange: -cost,
-            booksChange: 0, 
-        });
+        await onSkillsUpdate({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: -cost, booksChange: 0 });
         setSelectedSkill(updatedSkill);
-      } catch(error: any) { 
-          showMessage(`Lỗi: ${error.message || 'Nâng cấp thất bại'}`); 
-      } finally { 
-          setIsProcessing(false); 
-      }
+      } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Nâng cấp thất bại'}`); } finally { setIsProcessing(false); }
   }
 
-  // --- START: LOGIC MỚI CHO VIỆC HỢP NHẤT ---
   const handleMergeSkills = async (group: MergeGroup) => {
       if (isProcessing) return;
-      if (group.skills.length < 3) {
-          showMessage("Không đủ kỹ năng để hợp nhất.");
+      if (group.skills.length < 3 || !group.nextRarity) {
+          showMessage("Không đủ điều kiện để hợp nhất.");
           return;
       }
-      if (!group.nextRarity) {
-          showMessage("Kỹ năng đã đạt hạng cao nhất.");
-          return;
-      }
-
       setIsProcessing(true);
-
       const skillsToConsume = group.skills.slice(0, 3);
       const skillIdsToConsume = skillsToConsume.map(s => s.id);
-
-      const newUpgradedSkill: OwnedSkill = {
-          id: `owned-${Date.now()}-${group.skillId}-${Math.random()}`,
-          skillId: group.skillId,
-          level: 1,
-          rarity: group.nextRarity,
-      };
-
-      const newOwnedList = ownedSkills
-          .filter(s => !skillIdsToConsume.includes(s.id))
-          .concat(newUpgradedSkill);
-
+      const { level: finalLevel, refundGold } = calculateMergeResult(skillsToConsume, group.blueprint);
+      const newUpgradedSkill: OwnedSkill = { id: `owned-${Date.now()}-${group.skillId}-${Math.random()}`, skillId: group.skillId, level: finalLevel, rarity: group.nextRarity };
+      const newOwnedList = ownedSkills.filter(s => !skillIdsToConsume.includes(s.id)).concat(newUpgradedSkill);
       try {
-          await onSkillsUpdate({
-              newOwned: newOwnedList,
-              newEquippedIds: equippedSkillIds,
-              goldChange: 0,
-              booksChange: 0,
-          });
-          showMessage(`Hợp nhất thành công ${group.blueprint.name} [${group.nextRarity}]!`);
+          await onSkillsUpdate({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: refundGold, booksChange: 0 });
+          let successMsg = `Hợp nhất thành công ${group.blueprint.name} [${group.nextRarity}] - Đạt Lv. ${finalLevel}!`;
+          if(refundGold > 0) {
+            successMsg += ` Hoàn lại ${refundGold.toLocaleString()} vàng.`
+          }
+          showMessage(successMsg);
       } catch (error: any) {
           showMessage(`Lỗi: ${error.message || 'Hợp nhất thất bại'}`);
       } finally {
           setIsProcessing(false);
       }
   };
-  // --- END: LOGIC MỚI CHO VIỆC HỢP NHẤT ---
 
   return (
     <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
        <style>{` .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
       
-      {/* Các Modal */}
-      {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-50">{message}</div>}
+      {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[101]">{message}</div>}
       {selectedSkill && <SkillDetailModal ownedSkill={selectedSkill} onClose={() => setSelectedSkill(null)} onEquip={handleEquipSkill} onUnequip={handleUnequipSkill} onDisenchant={handleDisenchantSkill} onUpgrade={handleUpgradeSkill} isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)} gold={gold} isProcessing={isProcessing}/>}
       {newlyCraftedSkill && <CraftingSuccessModal ownedSkill={newlyCraftedSkill} onClose={() => setNewlyCraftedSkill(null)} />}
-      <MergeModal isOpen={isMergeModalOpen} onClose={() => setIsMergeModalOpen(false)} ownedSkills={ownedSkills} onMerge={handleMergeSkills} isProcessing={isProcessing} />
+      <MergeModal isOpen={isMergeModalOpen} onClose={() => setIsMergeModalOpen(false)} ownedSkills={ownedSkills} onMerge={handleMergeSkills} isProcessing={isProcessing} equippedSkillIds={equippedSkillIds} />
 
       <div className="relative z-10 flex flex-col w-full h-screen">
         <Header gold={gold} onClose={onClose} />
@@ -469,37 +460,20 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
             <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <BookIcon className="w-10 h-10" />
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-xl font-bold text-white">{ancientBooks}</span>
-                        <span className="text-base text-slate-400">/ {CRAFTING_COST}</span>
-                    </div>
+                    <div className="flex items-baseline gap-1"><span className="text-xl font-bold text-white">{ancientBooks}</span><span className="text-base text-slate-400">/ {CRAFTING_COST}</span></div>
                 </div>
-                <button onClick={handleCraftSkill} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={ancientBooks < CRAFTING_COST || isProcessing}>
-                  Craft
-                </button>
+                <button onClick={handleCraftSkill} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={ancientBooks < CRAFTING_COST || isProcessing}>Craft</button>
             </section>
             <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
-                {/* --- START: CẬP NHẬT TIÊU ĐỀ STORAGE --- */}
                 <div className="flex justify-between items-center mb-4 flex-shrink-0">
                     <div className="flex items-baseline gap-2">
                         <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
-                        <span className="text-sm font-semibold text-slate-300">
-                            {ownedSkills.length}
-                            <span className="text-xs text-slate-500"> / {MAX_SKILLS_IN_STORAGE}</span>
-                        </span>
+                        <span className="text-sm font-semibold text-slate-300">{ownedSkills.length}<span className="text-xs text-slate-500"> / {MAX_SKILLS_IN_STORAGE}</span></span>
                     </div>
-                    <button 
-                      onClick={() => setIsMergeModalOpen(true)} 
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={isProcessing}
-                    >
-                      <MergeIcon className="w-4 h-4" />
-                      Hợp Nhất
-                    </button>
+                    <button onClick={() => setIsMergeModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Hợp Nhất</button>
                 </div>
-                {/* --- END: CẬP NHẬT TIÊU ĐỀ STORAGE --- */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto hide-scrollbar">
-                    {ownedSkills.length > 0 ? (
+                    {ownedSkills.filter(s => !equippedSkillIds.includes(s.id)).length > 0 ? (
                         ownedSkills
                             .filter(ownedSkill => !equippedSkillIds.includes(ownedSkill.id))
                             .sort((a, b) => {
@@ -513,7 +487,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
                                 return skillA.name.localeCompare(skillB.name);
                             })
                             .map(ownedSkill => ( <SkillCard key={ownedSkill.id} ownedSkill={ownedSkill} onClick={() => setSelectedSkill(ownedSkill)} isEquipped={false} isProcessing={isProcessing} /> ))
-                    ) : ( <div className="col-span-full flex items-center justify-center h-full text-slate-500"><p>Chưa có kỹ năng. Hãy dùng Sách Cổ để Craft!</p></div> )}
+                    ) : ( <div className="col-span-full flex items-center justify-center h-full text-slate-500"><p>Kho chứa trống hoặc tất cả kỹ năng đã được trang bị.</p></div> )}
                 </div>
             </section>
         </main>
