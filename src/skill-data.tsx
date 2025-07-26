@@ -1,3 +1,5 @@
+--- START OF FILE skill-data.tsx ---
+
 import React from 'react';
 
 // --- START: CÁC ICON CHO KỸ NĂNG ---
@@ -33,6 +35,25 @@ export const getUpgradeCost = (baseCost: number, currentLevel: number): number =
     // Chi phí để nâng cấp từ level L -> L+1 là baseCost * (1.2 ^ (L - 1))
     return Math.floor(baseCost * Math.pow(1.2, currentLevel - 1));
 };
+
+// --- Các hàm và hằng số mới cho tính năng Gộp (Merge) ---
+export const RARITY_ORDER: readonly string[] = ['E', 'D', 'B', 'A', 'S', 'SR'];
+
+export const getNextRarity = (currentRarity: string): string | null => {
+    const currentIndex = RARITY_ORDER.indexOf(currentRarity);
+    if (currentIndex === -1 || currentIndex >= RARITY_ORDER.length - 1) {
+        return null; // Không thể gộp nếu là rank cao nhất hoặc không tìm thấy
+    }
+    return RARITY_ORDER[currentIndex + 1];
+};
+
+export const getMergeCost = (rarity: string): number => {
+    const rarityIndex = RARITY_ORDER.indexOf(rarity);
+    if (rarityIndex === -1) return 9999999; // Chi phí lớn nếu rank không hợp lệ
+    // Chi phí tăng theo cấp số nhân: E=500, D=2500, B=12500, A=62500, S=312500
+    return 500 * Math.pow(5, rarityIndex); 
+};
+// --- Kết thúc các hàm mới ---
 
 export const getRandomRarity = (): 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' => {
     const rarities = [
@@ -121,3 +142,5 @@ export const ALL_SKILLS: SkillBlueprint[] = [
   },
 ];
 // --- END: DANH SÁCH TẤT CẢ KỸ NĂNG TRONG GAME ---
+
+--- END OF FILE skill-data.tsx ---
