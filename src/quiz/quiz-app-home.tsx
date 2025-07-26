@@ -655,11 +655,20 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 let actionComponent;
                 if (isClaimed) {
                     actionComponent = <div className="px-3 py-1.5 text-xs font-bold text-green-700 bg-green-200 rounded-full flex items-center gap-1.5"><CompletedIcon className="w-4 h-4" />Đã nhận</div>;
-                } else if (isCompleted) {
-                    actionComponent = <button onClick={() => handleClaim(rewardId, rewardAmount, capacityRewardAmount)} disabled={isClaiming === rewardId} className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-full hover:bg-indigo-700 disabled:bg-indigo-400 transition w-[60px] text-center">{isClaiming === rewardId ? '...' : 'Nhận'}</button>;
                 } else {
-                    // No action button when locked. The lock status is shown on the progress bar row.
-                    actionComponent = null;
+                    actionComponent = (
+                        <button
+                            onClick={() => handleClaim(rewardId, rewardAmount, capacityRewardAmount)}
+                            disabled={!isCompleted || isClaiming === rewardId}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-full transition w-[60px] text-center ${
+                                isCompleted
+                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-400'
+                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            }`}
+                        >
+                            {isClaiming === rewardId ? '...' : 'Nhận'}
+                        </button>
+                    );
                 }
 
                 levelTiers.push(
