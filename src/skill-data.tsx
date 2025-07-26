@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 
 // --- START: CÁC ICON CHO KỸ NĂNG ---
@@ -29,6 +27,11 @@ export const getActivationChance = (rarity: string) => {
         case 'SR': return 30;
         default: return 0;
     }
+};
+
+export const getUpgradeCost = (baseCost: number, currentLevel: number): number => {
+    // Chi phí để nâng cấp từ level L -> L+1 là baseCost * (1.2 ^ (L - 1))
+    return Math.floor(baseCost * Math.pow(1.2, currentLevel - 1));
 };
 
 export const getRandomRarity = (): 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' => {
@@ -64,8 +67,7 @@ export interface SkillBlueprint {
   icon: (props: { className?: string }) => React.ReactElement;
   baseEffectValue?: number;
   effectValuePerLevel?: number;
-  upgradeCost?: number;
-  maxLevel?: number;
+  upgradeCost?: number; // Chi phí CƠ BẢN (từ level 1 -> 2)
 }
 
 export interface OwnedSkill {
@@ -89,7 +91,6 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    maxLevel: 26,
   },
   {
     id: 'thorns',
@@ -99,7 +100,6 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    maxLevel: 26,
   },
   {
     id: 'damage_boost',
@@ -109,7 +109,6 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    maxLevel: 26,
   },
   {
     id: 'armor_penetration',
@@ -119,7 +118,6 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    maxLevel: 26,
   },
 ];
 // --- END: DANH SÁCH TẤT CẢ KỸ NĂNG TRONG GAME ---
