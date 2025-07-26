@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import BOSS_DATA from './boss/bossData.ts';
 import { 
@@ -32,6 +30,8 @@ interface BossBattleProps {
 
 
 // --- UI HELPER COMPONENTS ---
+
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
 const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
   const percentage = Math.max(0, (current / max) * 100);
@@ -417,11 +417,20 @@ export default function BossBattle({
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
-            <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-2">
-                <div className="w-1/2"><h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">{currentBossData.floor}</h3><HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" /></div>
+            <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-4">
+                <div className="flex items-center gap-3 w-1/2">
+                    <button
+                      onClick={onClose}
+                      className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
+                      aria-label="Thoát về Trang chính"
+                      title="Thoát về Trang chính"
+                    >
+                      <HomeIcon className="w-5 h-5 text-slate-300" />
+                    </button>
+                    <div className="flex-1"><h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">{currentBossData.floor}</h3><HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" /></div>
+                </div>
                 <div className="flex items-center justify-end gap-4 w-1/2">
                     {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />}
-                    <button onClick={onClose} className="w-9 h-9 flex items-center justify-center bg-slate-800/70 hover:bg-red-500/80 rounded-full text-slate-300 hover:text-white transition-colors text-xl font-sans flex-shrink-0" aria-label="Thoát">✕</button>
                 </div>
             </div>
         </header>
