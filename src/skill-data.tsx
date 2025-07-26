@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 // --- START: CÁC ICON CHO KỸ NĂNG ---
@@ -13,12 +12,18 @@ export const ArmorPenetrationIcon = ({ className = '' }: { className?: string })
 
 
 // --- START: CÁC HÀM HELPER VỀ ĐỘ HIẾM VÀ KỸ NĂNG ---
-export const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; default: return 'border-gray-600'; } };
-export const getRarityGradient = (rarity: string) => { switch(rarity) { case 'E': return 'from-gray-800/95 to-gray-900/95'; case 'D': return 'from-green-900/70 to-gray-900'; case 'B': return 'from-blue-800/80 to-gray-900'; case 'A': return 'from-purple-800/80 via-black/30 to-gray-900'; case 'S': return 'from-yellow-800/70 via-black/40 to-gray-900'; case 'SR': return 'from-red-800/80 via-orange-900/30 to-black'; default: return 'from-gray-800/95 to-gray-900/95'; } };
-export const getRarityTextColor = (rarity: string) => { switch(rarity) { case 'E': return 'text-gray-400'; case 'D': return 'text-green-400'; case 'B': return 'text-blue-400'; case 'A': return 'text-purple-400'; case 'S': return 'text-yellow-300'; case 'SR': return 'text-red-400'; default: return 'text-gray-400'; } };
-export const getRarityDisplayName = (rarity: string) => { if (!rarity) return 'Unknown Rank'; return `${rarity.toUpperCase()} Rank`; };
+// Thêm type Rarity để sử dụng nhất quán
+export type Rarity = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
 
-export const getActivationChance = (rarity: string) => {
+// Thêm hằng số thứ tự độ hiếm
+export const RARITY_ORDER: Rarity[] = ['E', 'D', 'B', 'A', 'S', 'SR'];
+
+export const getRarityColor = (rarity: Rarity) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; default: return 'border-gray-600'; } };
+export const getRarityGradient = (rarity: Rarity) => { switch(rarity) { case 'E': return 'from-gray-800/95 to-gray-900/95'; case 'D': return 'from-green-900/70 to-gray-900'; case 'B': return 'from-blue-800/80 to-gray-900'; case 'A': return 'from-purple-800/80 via-black/30 to-gray-900'; case 'S': return 'from-yellow-800/70 via-black/40 to-gray-900'; case 'SR': return 'from-red-800/80 via-orange-900/30 to-black'; default: return 'from-gray-800/95 to-gray-900/95'; } };
+export const getRarityTextColor = (rarity: Rarity) => { switch(rarity) { case 'E': return 'text-gray-400'; case 'D': return 'text-green-400'; case 'B': return 'text-blue-400'; case 'A': return 'text-purple-400'; case 'S': return 'text-yellow-300'; case 'SR': return 'text-red-400'; default: return 'text-gray-400'; } };
+export const getRarityDisplayName = (rarity: Rarity) => { if (!rarity) return 'Unknown Rank'; return `${rarity.toUpperCase()} Rank`; };
+
+export const getActivationChance = (rarity: Rarity) => {
     switch (rarity) {
         case 'E': return 5;
         case 'D': return 10;
@@ -30,31 +35,21 @@ export const getActivationChance = (rarity: string) => {
     }
 };
 
+// Hàm mới: Lấy độ hiếm tiếp theo
+export const getNextRarity = (currentRarity: Rarity): Rarity | null => {
+    const currentIndex = RARITY_ORDER.indexOf(currentRarity);
+    if (currentIndex === -1 || currentIndex >= RARITY_ORDER.length - 1) {
+        return null; // Không thể nâng cấp nếu là SR hoặc không tìm thấy
+    }
+    return RARITY_ORDER[currentIndex + 1];
+};
+
 export const getUpgradeCost = (baseCost: number, currentLevel: number): number => {
     // Chi phí để nâng cấp từ level L -> L+1 là baseCost * (1.2 ^ (L - 1))
     return Math.floor(baseCost * Math.pow(1.2, currentLevel - 1));
 };
 
-// --- Các hàm và hằng số mới cho tính năng Gộp (Merge) ---
-export const RARITY_ORDER: readonly string[] = ['E', 'D', 'B', 'A', 'S', 'SR'];
-
-export const getNextRarity = (currentRarity: string): string | null => {
-    const currentIndex = RARITY_ORDER.indexOf(currentRarity);
-    if (currentIndex === -1 || currentIndex >= RARITY_ORDER.length - 1) {
-        return null; // Không thể gộp nếu là rank cao nhất hoặc không tìm thấy
-    }
-    return RARITY_ORDER[currentIndex + 1];
-};
-
-export const getMergeCost = (rarity: string): number => {
-    const rarityIndex = RARITY_ORDER.indexOf(rarity);
-    if (rarityIndex === -1) return 9999999; // Chi phí lớn nếu rank không hợp lệ
-    // Chi phí tăng theo cấp số nhân: E=500, D=2500, B=12500, A=62500, S=312500
-    return 500 * Math.pow(5, rarityIndex); 
-};
-// --- Kết thúc các hàm mới ---
-
-export const getRandomRarity = (): 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' => {
+export const getRandomRarity = (): Rarity => {
     const rarities = [
         { rarity: 'E', weight: 50 },
         { rarity: 'D', weight: 30 },
@@ -94,7 +89,7 @@ export interface OwnedSkill {
   id: string;
   skillId: string;
   level: number;
-  rarity: 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
+  rarity: Rarity; // Cập nhật type
 }
 
 export const CRAFTING_COST = 10;
@@ -141,4 +136,3 @@ export const ALL_SKILLS: SkillBlueprint[] = [
   },
 ];
 // --- END: DANH SÁCH TẤT CẢ KỸ NĂNG TRONG GAME ---
-
