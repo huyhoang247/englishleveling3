@@ -663,13 +663,13 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 levelTiers.push(
                     <div key={rewardId} className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
                         <div>
-                            <p className="font-semibold text-gray-800">Hoàn thành {milestone} câu</p>
-                            <div className="flex items-center gap-2 mt-2">
-                                <div className="bg-orange-50 rounded-md px-2 py-1 inline-flex items-center gap-1.5">
+                            <p className="font-bold text-lg text-gray-800">Stage {i}</p>
+                            <div className="flex items-center gap-3 mt-1.5">
+                                <div className="bg-orange-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
                                     <GoldCoinIcon className="w-4 h-4" />
                                     <span className="text-sm font-bold text-orange-700">{rewardAmount.toLocaleString()}</span>
                                 </div>
-                                <div className="bg-blue-50 rounded-md px-2 py-1 inline-flex items-center gap-1.5">
+                                <div className="bg-blue-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
                                     <CardCapacityIcon className="w-4 h-4" />
                                     <span className="text-sm font-bold text-blue-700">{capacityRewardAmount}</span>
                                 </div>
