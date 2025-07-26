@@ -662,7 +662,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
 
                 levelTiers.push(
                     <div key={rewardId} className="relative bg-white p-4 rounded-lg shadow-sm overflow-hidden">
-                        <div className="absolute top-0 left-0 bg-gray-100 text-gray-700 text-xs font-bold px-3 py-1 rounded-br-lg">
+                        <div className="absolute top-0 left-0 bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded-br-lg">
                             Stage {i}
                         </div>
                         <div className="flex items-center justify-between pt-5">
