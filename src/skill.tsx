@@ -5,7 +5,7 @@ import {
     getRandomRarity,
     getActivationChance,
     getUpgradeCost,
-    getTotalUpgradeCost, // Import hàm mới
+    getTotalUpgradeCost,
     getRarityColor,
     getRarityGradient,
     getRarityTextColor,
@@ -262,7 +262,7 @@ const MergeModal = ({ isOpen, onClose, ownedSkills, onMerge, isProcessing, equip
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-xl max-h-[90vh] z-50 flex flex-col">
+      <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col">
         <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-bold text-cyan-300">Hợp Nhất Kỹ Năng</h3>
@@ -270,41 +270,32 @@ const MergeModal = ({ isOpen, onClose, ownedSkills, onMerge, isProcessing, equip
           </div>
           <p className="text-sm text-slate-400 mt-1">Hợp nhất 3 kỹ năng <span className="font-bold text-white">cùng loại, cùng hạng</span> để tạo 1 kỹ năng hạng cao hơn. Hệ thống sẽ ưu tiên các kỹ năng cấp cao nhất.</p>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2 space-y-3">
+        <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2 space-y-4">
           {mergeableGroups.length > 0 ? (
             mergeableGroups.map(group => {
               const Icon = group.blueprint.icon;
               return (
-                <div key={`${group.skillId}-${group.rarity}`} className="bg-slate-800/50 border border-slate-700 rounded-lg p-3 flex items-center gap-3">
-                  {/* Input Side */}
-                  <div className="flex flex-1 items-center gap-3 min-w-0">
-                    <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md border ${getRarityColor(group.rarity)} bg-black/20`}>
-                      <Icon className={`w-8 h-8 ${getRarityTextColor(group.rarity)}`} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className={`font-bold truncate ${getRarityTextColor(group.rarity)}`}>{group.blueprint.name}</p>
-                      <div className="text-xs text-slate-400">
-                         <span>{getRarityDisplayName(group.rarity)} (x{group.skills.length})</span>
+                <div key={`${group.skillId}-${group.rarity}`} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 flex items-center justify-between gap-4">
+                  <div className="flex flex-1 items-center justify-center gap-4 sm:gap-6">
+                      <div className="flex flex-col items-center">
+                          <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.rarity)} bg-black/30`}>
+                              <Icon className={`w-10 h-10 ${getRarityTextColor(group.rarity)}`} />
+                              <span className="absolute -top-2 -right-2 bg-cyan-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">
+                                  3/3
+                              </span>
+                          </div>
                       </div>
-                    </div>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                      <div className="flex flex-col items-center">
+                          <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.nextRarity!)} bg-black/30`}>
+                              <Icon className={`w-10 h-10 ${getRarityTextColor(group.nextRarity!)}`} />
+                          </div>
+                          <p className="mt-1.5 text-xs font-semibold text-slate-300">
+                              Lv. <span className="font-bold text-white">{group.estimatedResult.level}</span>
+                          </p>
+                      </div>
                   </div>
-
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                  
-                  {/* Output Side */}
-                  <div className="flex flex-1 items-center gap-3 min-w-0">
-                     <div className={`flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-md border ${getRarityColor(group.nextRarity!)} bg-black/20`}>
-                       <Icon className={`w-8 h-8 ${getRarityTextColor(group.nextRarity!)}`} />
-                     </div>
-                     <div className="min-w-0">
-                       <p className={`font-bold truncate ${getRarityTextColor(group.nextRarity!)}`}>{group.blueprint.name}</p>
-                       <p className="text-xs text-slate-300">
-                         {getRarityDisplayName(group.nextRarity!)} - <span className="font-bold text-white">Lv. {group.estimatedResult.level}</span>
-                       </p>
-                     </div>
-                  </div>
-                  
-                  <button onClick={() => onMerge(group)} disabled={isProcessing} className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait">
+                  <button onClick={() => onMerge(group)} disabled={isProcessing} className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold h-12 px-5 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait">
                     Hợp Nhất
                   </button>
                 </div>
