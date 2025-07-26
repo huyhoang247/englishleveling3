@@ -1,4 +1,3 @@
---- START OF FILE skill.tsx ---
 
 import React, { useState, useMemo } from 'react';
 import {
