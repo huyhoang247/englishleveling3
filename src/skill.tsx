@@ -294,7 +294,7 @@ const MergeModal = ({ isOpen, onClose, ownedSkills, onMerge, isProcessing, equip
                           </span>
                       </div>
                   </div>
-                  <button onClick={() => onMerge(group)} disabled={isProcessing} title="Hợp Nhất" className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold text-sm h-9 px-4 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait flex items-center justify-center">
+                  <button onClick={() => onMerge(group)} disabled={isProcessing} title="Hợp Nhất" className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold text-sm h-8 px-4 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait flex items-center justify-center">
                     Merge
                   </button>
                 </div>
