@@ -681,9 +681,9 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                                             style={{ width: `${progressPercentage}%` }}
                                         ></div>
                                     </div>
-                                    {/* Progress Text & Lock Icon */}
-                                    <div className="flex items-center text-xs font-semibold text-gray-600 whitespace-nowrap">
-                                        {!isCompleted && <LockIcon className="w-3.5 h-3.5 mr-1 text-gray-400"/>}
+                                    {/* Progress Text & Lock Icon with background */}
+                                    <div className="flex-shrink-0 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full px-2.5 py-1 flex items-center gap-1">
+                                        {!isCompleted && <LockIcon className="w-3.5 h-3.5 text-gray-400"/>}
                                         <span>{`${levelProgress.completed}/${milestone}`}</span>
                                     </div>
                                 </div>
