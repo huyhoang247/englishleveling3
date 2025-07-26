@@ -416,12 +416,12 @@ export default function BossBattle({
       {showRewardsModal && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
-        <header className="fixed top-0 left-0 w-full z-20 p-3 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-20">
-            <div className="w-full max-w-6xl mx-auto flex justify-between items-center gap-4">
+        <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-16">
+            <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
                 <div className="flex items-center gap-3">
                     <button
                       onClick={onClose}
-                      className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
+                      className="p-2.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors flex items-center justify-center"
                       aria-label="Thoát về Trang chính"
                       title="Thoát về Trang chính"
                     >
@@ -429,11 +429,10 @@ export default function BossBattle({
                     </button>
                     <h3 className="text-xl font-bold text-blue-300 text-shadow">{currentBossData.floor}</h3>
                 </div>
-                {/* Energy display was moved from here */}
             </div>
         </header>
 
-        <main className="w-full h-full flex flex-col justify-start items-center pt-24 p-4">
+        <main className="w-full h-full flex flex-col justify-start items-center pt-20 p-4">
             <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-center gap-4">
                 <div className="w-1/2">
                     <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
