@@ -691,13 +691,13 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                             <div className="bg-gray-50 p-3 rounded-lg">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-3 flex-wrap">
-                                        <div className="bg-orange-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
-                                            <GoldCoinIcon className="w-4 h-4" />
-                                            <span className="text-sm font-bold text-orange-700">{rewardAmount.toLocaleString()}</span>
+                                        <div className={`${isLockedDueToNoProgress ? 'bg-gray-200' : 'bg-orange-100'} rounded-full px-3 py-1 inline-flex items-center gap-1.5 transition-colors`}>
+                                            <GoldCoinIcon className={`w-4 h-4 transition-all ${isLockedDueToNoProgress ? 'grayscale' : ''}`} />
+                                            <span className={`text-sm font-bold ${isLockedDueToNoProgress ? 'text-gray-500' : 'text-orange-700'} transition-colors`}>{rewardAmount.toLocaleString()}</span>
                                         </div>
-                                        <div className="bg-blue-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
-                                            <CardCapacityIcon className="w-4 h-4" />
-                                            <span className="text-sm font-bold text-blue-700">{capacityRewardAmount}</span>
+                                        <div className={`${isLockedDueToNoProgress ? 'bg-gray-200' : 'bg-blue-100'} rounded-full px-3 py-1 inline-flex items-center gap-1.5 transition-colors`}>
+                                            <CardCapacityIcon className={`w-4 h-4 transition-all ${isLockedDueToNoProgress ? 'grayscale' : ''}`} />
+                                            <span className={`text-sm font-bold ${isLockedDueToNoProgress ? 'text-gray-500' : 'text-blue-700'} transition-colors`}>{capacityRewardAmount}</span>
                                         </div>
                                     </div>
                                     <div className="flex-shrink-0 ml-2">
@@ -712,12 +712,6 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                                 </div>
                             </div>
                         </div>
-                        {isLockedDueToNoProgress && (
-                            <div className="absolute inset-0 bg-gray-500/40 backdrop-blur-sm flex flex-col items-center justify-center text-white p-4 rounded-lg z-10">
-                                <LockIcon className="w-10 h-10 drop-shadow-md" />
-                                <p className="mt-2 font-bold text-center text-sm drop-shadow-md">Bắt đầu luyện tập để mở khóa</p>
-                            </div>
-                        )}
                     </div>
                 );
             }
