@@ -427,7 +427,9 @@ export default function BossBattle({
                     >
                       <HomeIcon className="w-5 h-5 text-slate-300" />
                     </button>
-                    <div className="flex-1"><h3 className="text-xl font-bold text-blue-300 text-shadow mb-1">{currentBossData.floor}</h3><HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" /></div>
+                    <div className="flex-1">
+                        <h3 className="text-xl font-bold text-blue-300 text-shadow text-center">{currentBossData.floor}</h3>
+                    </div>
                 </div>
                 <div className="flex items-center justify-end gap-4 w-1/2">
                     {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />}
@@ -435,7 +437,12 @@ export default function BossBattle({
             </div>
         </header>
 
-        <main className="w-full h-full flex flex-col justify-center items-center pt-24 p-4">
+        <main className="w-full h-full flex flex-col justify-start items-center pt-24 p-4">
+            <div className="w-full max-w-2xl mx-auto mb-4">
+                <h3 className="text-xl font-bold text-blue-300 text-shadow mb-2 text-center select-none">YOU</h3>
+                <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
+            </div>
+
             <div className="w-full flex justify-center items-center gap-4 mb-4 h-10">
                 <button onClick={() => setShowStats(true)} className="px-6 py-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-sm transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md">View Stats</button>
                 {battleState === 'idle' && (
