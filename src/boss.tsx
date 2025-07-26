@@ -433,7 +433,7 @@ export default function BossBattle({
             </div>
         </header>
 
-        <main className="w-full h-full flex flex-col justify-start items-center pt-20 p-4">
+        <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
             <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-center gap-4">
                 <div className="w-1/2">
                     <HealthBar current={playerStats.hp} max={playerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
