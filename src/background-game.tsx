@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './coin-display.tsx';
@@ -840,7 +838,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
                         <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                     </div>
-                    <CoinDisplay displayedCoins={displayedCoins} />
+                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                 </div>
             </div>
 
@@ -899,6 +897,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         initialFloor={bossBattleHighestFloor}
                         onFloorComplete={handleBossFloorUpdate}
                         equippedSkills={getEquippedSkillsDetails()}
+                        displayedCoins={displayedCoins}
                     />
                 )}
             </ErrorBoundary>
