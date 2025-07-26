@@ -285,14 +285,16 @@ const MergeModal = ({ isOpen, onClose, ownedSkills, onMerge, isProcessing, equip
                               </span>
                           </div>
                       </div>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
                       <div className="flex flex-col items-center">
                           <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.nextRarity!)} bg-black/30`}>
                               <Icon className={`w-10 h-10 ${getRarityTextColor(group.nextRarity!)}`} />
+                              <span className="absolute -bottom-2 -right-2 bg-slate-800 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">
+                                Lv.{group.estimatedResult.level}
+                              </span>
                           </div>
-                          <p className="mt-1.5 text-xs font-semibold text-slate-300">
-                              Lv. <span className="font-bold text-white">{group.estimatedResult.level}</span>
-                          </p>
                       </div>
                   </div>
                   <button onClick={() => onMerge(group)} disabled={isProcessing} className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold h-12 px-5 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait">
