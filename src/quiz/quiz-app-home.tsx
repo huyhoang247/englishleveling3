@@ -685,8 +685,15 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             if (levelTiers.length > 0) {
               return (
                 <div key={levelNumber} className="bg-gray-100 p-4 rounded-lg">
-                    <h4 className="font-bold text-gray-700">{levelTitle}</h4>
-                    <div className="space-y-3 mt-3">{levelTiers}</div>
+                    <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-bold text-gray-700">{levelTitle}</h4>
+                        {multiplier > 1 && (
+                            <div className="text-sm font-bold text-white bg-gradient-to-r from-amber-500 to-orange-600 px-2.5 py-1 rounded-full shadow">
+                                x{multiplier} Thưởng
+                            </div>
+                        )}
+                    </div>
+                    <div className="space-y-3">{levelTiers}</div>
                 </div>
               );
             }
@@ -704,7 +711,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             const previewNumber = (i * 100) + practiceNumber;
             const previewProgress = progressData[previewNumber];
             const multiplier = Math.pow(2, i);
-            const previewTiers = generateTiersForLevel(previewProgress, previewNumber, `Preview ${i} (x${multiplier} Thưởng)`, multiplier);
+            const previewTiers = generateTiersForLevel(previewProgress, previewNumber, `Preview ${i}`, multiplier);
             if (previewTiers) tiers.push(previewTiers);
         }
 
