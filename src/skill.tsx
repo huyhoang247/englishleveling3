@@ -293,8 +293,8 @@ const MergeModal = ({ isOpen, onClose, ownedSkills, onMerge, isProcessing, equip
                           </span>
                       </div>
                   </div>
-                  <button onClick={() => onMerge(group)} disabled={isProcessing} className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold h-12 px-5 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait">
-                    Hợp Nhất
+                  <button onClick={() => onMerge(group)} disabled={isProcessing} title="Hợp Nhất" className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white w-12 h-12 rounded-lg shadow-md hover:scale-110 transition-all disabled:opacity-50 disabled:cursor-wait flex items-center justify-center">
+                    <MergeIcon className="w-6 h-6" />
                   </button>
                 </div>
               );
