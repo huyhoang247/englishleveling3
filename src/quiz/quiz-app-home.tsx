@@ -616,8 +616,6 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             });
             
             setClaimedRewards(prev => ({ ...prev, [rewardId]: true }));
-            // Note: The main coin display in the header won't update live as its state is not managed here.
-            // The user will receive the coins, and the display will be correct on the next app load.
         } catch (error) {
             console.error("Error claiming reward:", error);
             alert("Đã có lỗi xảy ra khi nhận thưởng.");
@@ -643,77 +641,67 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
 
             for (let i = 1; i <= MAX_MILESTONES_TO_DISPLAY; i++) {
                 const milestone = i * MILESTONE_STEP;
-                if (milestone > maxPossibleMilestone + MILESTONE_STEP) break; // Don't show excessively high, unreachable milestones
+                if (milestone > maxPossibleMilestone + MILESTONE_STEP) break;
 
                 const rewardId = `${selectedType}-${levelNumber}-${milestone}`;
-                const isCompleted = levelProgress.completed >= milestone;
                 const isClaimed = claimedRewards[rewardId];
+                
+                // If the reward is already claimed, skip rendering this tier
+                if (isClaimed) {
+                    continue;
+                }
+
+                const isCompleted = levelProgress.completed >= milestone;
                 const rewardAmount = i * BASE_REWARD_PER_100_Q * multiplier;
                 const capacityRewardAmount = 10;
                 const progressPercentage = Math.min((levelProgress.completed / milestone) * 100, 100);
 
-                let actionComponent;
-                if (isClaimed) {
-                    actionComponent = <div className="px-3 py-1.5 text-xs font-bold text-green-700 bg-green-200 rounded-full flex items-center gap-1.5"><CompletedIcon className="w-4 h-4" />Đã nhận</div>;
-                } else {
-                    actionComponent = (
-                        <button
-                            onClick={() => handleClaim(rewardId, rewardAmount, capacityRewardAmount)}
-                            disabled={!isCompleted || isClaiming === rewardId}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-full transition w-[60px] text-center ${
-                                isCompleted
-                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-400'
-                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            }`}
-                        >
-                            {isClaiming === rewardId ? '...' : 'Nhận'}
-                        </button>
-                    );
-                }
-
+                const actionComponent = (
+                    <button
+                        onClick={() => handleClaim(rewardId, rewardAmount, capacityRewardAmount)}
+                        disabled={!isCompleted || isClaiming === rewardId}
+                        className={`px-3 py-1.5 text-xs font-bold rounded-full transition w-[60px] text-center ${
+                            isCompleted
+                                ? 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-400'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
+                    >
+                        {isClaiming === rewardId ? '...' : 'Nhận'}
+                    </button>
+                );
+                
                 levelTiers.push(
                     <div key={rewardId} className="relative bg-white p-4 rounded-lg shadow-sm overflow-hidden">
-                        {/* Stage Badge */}
                         <div className="absolute top-0 left-0 bg-gray-800/70 text-white text-xs font-bold px-3 py-1 rounded-br-lg">
                             Stage {i}
                         </div>
                         
-                        {/* Main Content */}
                         <div className="pt-5 flex flex-col gap-3">
-                            {/* Progress Bar (only if not claimed) */}
-                            {!isClaimed && (
-                                <div className="flex items-center gap-2">
-                                    {/* Progress Bar Container */}
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                        <div 
-                                            className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500" 
-                                            style={{ width: `${progressPercentage}%` }}
-                                        ></div>
-                                    </div>
-                                    {/* Progress Text & Lock Icon with background */}
-                                    <div className="flex-shrink-0 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full px-2.5 py-1 flex items-center gap-1">
-                                        {!isCompleted && <LockIcon className="w-3.5 h-3.5 text-gray-400"/>}
-                                        <span>{`${levelProgress.completed}/${milestone}`}</span>
-                                    </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div 
+                                        className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500" 
+                                        style={{ width: `${progressPercentage}%` }}
+                                    ></div>
                                 </div>
-                            )}
+                                <div className="flex-shrink-0 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full px-2.5 py-1 flex items-center gap-1">
+                                    {!isCompleted && <LockIcon className="w-3.5 h-3.5 text-gray-400"/>}
+                                    <span>{`${levelProgress.completed}/${milestone}`}</span>
+                                </div>
+                            </div>
 
-                             {/* Rewards & Action Wrapper */}
                             <div className="bg-gray-50 p-3 rounded-lg">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-3 flex-wrap">
-                                        {/* Coin Reward */}
                                         <div className="bg-orange-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
                                             <GoldCoinIcon className="w-4 h-4" />
                                             <span className="text-sm font-bold text-orange-700">{rewardAmount.toLocaleString()}</span>
                                         </div>
-                                        {/* Capacity Reward */}
                                         <div className="bg-blue-100 rounded-full px-3 py-1 inline-flex items-center gap-1.5">
                                             <CardCapacityIcon className="w-4 h-4" />
                                             <span className="text-sm font-bold text-blue-700">{capacityRewardAmount}</span>
                                         </div>
                                     </div>
-                                    {/* Action button or 'Claimed' badge */}
                                     <div className="flex-shrink-0 ml-2">
                                         {actionComponent}
                                     </div>
@@ -746,7 +734,6 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         const mainProgress = progressData[practiceNumber];
         const mainTiers = generateTiersForLevel(mainProgress, practiceNumber, "Luyện tập chính", 1);
         if (mainTiers) tiers.push(mainTiers);
-        else tiers.push(<p key="no-main" className="text-sm text-gray-500 text-center py-4">Chưa có câu hỏi cho phần luyện tập này.</p>)
 
         // Preview Levels Tiers
         for (let i = 1; i <= MAX_PREVIEWS; i++) {
@@ -755,6 +742,18 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             const multiplier = Math.pow(2, i);
             const previewTiers = generateTiersForLevel(previewProgress, previewNumber, `Preview ${i}`, multiplier);
             if (previewTiers) tiers.push(previewTiers);
+        }
+        
+        // If there are no tiers to show (all claimed or no questions available)
+        if (tiers.length === 0) {
+             const hasQuestions = mainProgress && mainProgress.total > 0;
+             return (
+                <div className="text-center py-8 text-gray-500">
+                    <GiftIcon className="w-12 h-12 mx-auto text-green-500 mb-4" />
+                    <h4 className="font-bold text-lg text-gray-700">{hasQuestions ? "Hoàn thành!" : "Chưa có phần thưởng"}</h4>
+                    <p className="mt-1">{hasQuestions ? "Bạn đã nhận tất cả phần thưởng có sẵn." : "Phần luyện tập này chưa có câu hỏi."}</p>
+                </div>
+             );
         }
 
         return tiers;
