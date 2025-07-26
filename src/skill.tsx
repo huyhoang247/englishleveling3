@@ -15,15 +15,16 @@ import {
     type OwnedSkill,
     type SkillBlueprint,
 } from './skill-data.tsx';
-// Giả định CoinDisplay là một component đã có
-const CoinDisplay = ({ displayedCoins, isStatsFullscreen }: { displayedCoins: number, isStatsFullscreen: boolean }) => (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700">
-        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className="w-6 h-6" />
-        <span className="text-base font-bold text-yellow-300 tracking-wider">
-            {displayedCoins.toLocaleString()}
-        </span>
-    </div>
-);
+
+// --- BẮT ĐẦU THAY ĐỔI ---
+
+// 1. Xóa component CoinDisplay được định nghĩa tại đây
+// 2. Thay thế bằng import thực sự từ file component của bạn
+// (Giả sử bạn có file tên là ./coin-display.tsx)
+import CoinDisplay from './coin-display.tsx'; 
+
+// --- KẾT THÚC THAY ĐỔI ---
+
 
 // --- CÁC ICON GIAO DIỆN CHUNG ---
 const BookIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png" alt="Sách Cổ" className={className} /> );
