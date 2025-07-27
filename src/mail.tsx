@@ -102,12 +102,12 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
-      <div className="relative w-full max-w-2xl max-h-[90vh] bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="relative w-full max-w-2xl max-h-[90vh] bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-sans flex flex-col" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
 
         {/* Header */}
         <div className="p-5 border-b border-slate-700 text-center">
-          <h2 className="text-3xl font-bold text-yellow-300 text-shadow tracking-wide">{mail.subject}</h2>
+          <h2 className="font-lilita text-3xl font-bold text-yellow-300 text-shadow tracking-wide">{mail.subject}</h2>
           <div className="flex items-center justify-between mt-2 text-sm text-slate-400 font-sans">
             <span>Từ: <span className="font-semibold text-slate-200">{mail.sender}</span></span>
             <span>{new Date(mail.timestamp).toLocaleString('vi-VN')}</span>
@@ -122,7 +122,7 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
         {/* Items */}
         {mail.items && mail.items.length > 0 && (
           <div className="p-5 border-t border-slate-700">
-            <h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-4 uppercase">Vật phẩm</h3>
+            <h3 className="font-lilita text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-4 uppercase">Vật phẩm</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {mail.items.map((item, index) => (
                 <div key={index} className="bg-slate-800/50 p-3 rounded-lg text-center flex flex-col items-center justify-center transition-transform duration-200 border border-slate-700 hover:border-cyan-500/50 hover:scale-105">
@@ -130,7 +130,7 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
                     <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-md"></div>
                     <Icon name={item.icon} className="w-8 h-8 text-cyan-300 drop-shadow-[0_2px_3px_rgba(34,211,238,0.4)]" />
                   </div>
-                  <p className="font-bold text-white text-shadow-sm">{item.name}</p>
+                  <p className="font-lilita font-bold text-white text-shadow-sm">{item.name}</p>
                   <p className="text-sm text-slate-400 font-sans">x{item.quantity}</p>
                 </div>
               ))}
@@ -147,13 +147,13 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
           {canClaim && (
             <button onClick={() => onClaim(mail.id)} className="btn-shine relative overflow-hidden px-8 py-3 bg-teal-600/80 text-white font-bold rounded-lg hover:bg-teal-500 transition-all duration-300 flex items-center space-x-2 shadow-[0_0_20px_theme(colors.teal.600/0.5)] active:scale-95 border border-teal-500 hover:border-teal-400">
               <Icon name="gift" className="w-5 h-5" />
-              <span className="uppercase tracking-wider">Nhận</span>
+              <span className="font-lilita uppercase tracking-wider">Nhận</span>
             </button>
           )}
           {mail.isClaimed && (
              <div className="px-8 py-3 bg-slate-800 text-slate-500 font-bold rounded-lg flex items-center space-x-2 cursor-not-allowed border border-slate-700">
                <Icon name="check" className="w-5 h-5" />
-              <span className="uppercase tracking-wider">Đã Nhận</span>
+              <span className="font-lilita uppercase tracking-wider">Đã Nhận</span>
              </div>
           )}
         </div>
@@ -243,7 +243,7 @@ export default function Mailbox({ onClose }: MailboxProps) {
             <div className="bg-slate-900/50 rounded-xl shadow-2xl shadow-black/50 flex flex-col border border-slate-700/50 backdrop-blur-sm">
                 {/* Header */}
                 <div className="p-4 border-b border-slate-700 flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-cyan-300 text-shadow">Hộp Thư</h1>
+                    <h1 className="text-2xl font-bold text-cyan-300 text-shadow tracking-widest">MAIL BOX</h1>
                     {unreadCount > 0 && (<span className="bg-teal-400 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-full animate-pulse">{unreadCount}</span>)}
                 </div>
                 
