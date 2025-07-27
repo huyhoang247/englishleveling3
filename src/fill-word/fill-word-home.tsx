@@ -64,10 +64,12 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   const [activeBlankIndex, setActiveBlankIndex] = useState<number | null>(null);
   const [shake, setShake] = useState(false);
 
+  const isMultiWordGame = useMemo(() => [3, 4, 5].includes(selectedPractice % 100), [selectedPractice]);
+
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
   
   const resetMultiWordState = (wordItem: VocabularyItem | null) => {
-    if ((selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) && wordItem) {
+    if (isMultiWordGame && wordItem) {
       const wordCount = wordItem.word.split(' ').length;
       setFilledWords(Array(wordCount).fill(''));
       setActiveBlankIndex(0);
@@ -101,7 +103,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         const gameModeId = `fill-word-${selectedPractice}`;
         const fetchedCompletedWords = new Set<string>();
 
-        if (selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) {
+        if (isMultiWordGame) {
             // For multi-word practices, check the new subcollection for this specific game mode
             completedMultiWordSnapshot.forEach(docSnap => {
                 const data = docSnap.data();
@@ -166,6 +168,21 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                     gameVocabulary.push({ word: `${word1} ${word2} ${word3}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 3 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
                 }
             });
+        } else if (selectedPractice === 5 || selectedPractice === 105) {
+             exampleData.forEach(sentence => {
+                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                if (wordsInSentence.length >= 4) {
+                    const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 4);
+                    const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
+                    const [word1, word2, word3, word4] = correctlyOrderedWords;
+                    let questionText = sentence.english;
+                    questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
+                    questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
+                    questionText = questionText.replace(new RegExp(`\\b${word3}\\b`, 'i'), '___');
+                    questionText = questionText.replace(new RegExp(`\\b${word4}\\b`, 'i'), '___');
+                    gameVocabulary.push({ word: `${word1} ${word2} ${word3} ${word4}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 4 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
+                }
+            });
         }
 
         setVocabularyList(gameVocabulary);
@@ -183,7 +200,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     };
 
     fetchUserData();
-  }, [user, selectedPractice]);
+  }, [user, selectedPractice, isMultiWordGame]);
 
   useEffect(() => {
     if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
@@ -237,7 +254,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
     setUsedWords(prev => new Set(prev).add(currentWord.word.toLowerCase()));
 
-    const coinReward = (masteryCount * newStreak) * ((selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) ? 2 : 1);
+    const coinReward = (masteryCount * newStreak) * (isMultiWordGame ? 2 : 1);
     const updatedCoins = coins + coinReward;
     setCoins(updatedCoins);
     startCoinCountAnimation(coins, updatedCoins);
@@ -247,7 +264,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       const batch = writeBatch(db);
       const gameModeId = `fill-word-${selectedPractice}`;
       
-      if (selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) {
+      if (isMultiWordGame) {
         // --- LOGIC FOR MULTI-WORD PRACTICES ---
         // 1. Give EXP to individual words in `completedWords` collection
         const individualWords = currentWord.word.split(' ');
@@ -260,7 +277,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         const questionId = currentWord.word.toLowerCase();
         const completedMultiWordRef = doc(db, 'users', user.uid, 'completedMultiWord', questionId);
         
-        // SỬA LỖI TẠI ĐÂY: Thay đổi cách lưu dữ liệu để tạo object lồng nhau, khớp với logic đọc.
         batch.set(completedMultiWordRef, {
             completedIn: {
                 [gameModeId]: true
@@ -287,7 +303,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     
     setTimeout(() => setShowConfetti(false), 2000);
     setTimeout(selectNextWord, 1500);
-  }, [currentWord, user, streak, masteryCount, selectedPractice, coins, startCoinCountAnimation, selectNextWord]);
+  }, [currentWord, user, streak, masteryCount, selectedPractice, coins, startCoinCountAnimation, selectNextWord, isMultiWordGame]);
 
   const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect) return;
@@ -354,12 +370,12 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   const handleImageClick = useCallback(() => setShowImagePopup(true), []);
   
   const multiWordCurrentBlankLength = useMemo(() => {
-    if ((selectedPractice !== 3 && selectedPractice !== 103 && selectedPractice !== 4 && selectedPractice !== 104) || !currentWord || activeBlankIndex === null) {
+    if (!isMultiWordGame || !currentWord || activeBlankIndex === null) {
       return Infinity;
     }
     const correctWords = currentWord.word.split(' ');
     return correctWords[activeBlankIndex]?.length ?? Infinity;
-  }, [currentWord, activeBlankIndex, selectedPractice]);
+  }, [currentWord, activeBlankIndex, selectedPractice, isMultiWordGame]);
 
   if (loading) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">Đang tải dữ liệu...</div>;
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 text-center p-4">{error}</div>;
@@ -367,7 +383,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     <div className="flex flex-col items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">
         Bạn không có đủ từ vựng cho bài tập này.
         <br/>
-        {(selectedPractice === 4 || selectedPractice === 104) ? "Cần có câu chứa ít nhất 3 từ bạn đã học." : (selectedPractice === 3 || selectedPractice === 103) ? "Cần có câu chứa ít nhất 2 từ bạn đã học." : "Hãy vào màn hình 'Lật thẻ' để học thêm!"}
+        {(selectedPractice === 5 || selectedPractice === 105) ? "Cần có câu chứa ít nhất 4 từ bạn đã học." : (selectedPractice === 4 || selectedPractice === 104) ? "Cần có câu chứa ít nhất 3 từ bạn đã học." : (selectedPractice === 3 || selectedPractice === 103) ? "Cần có câu chứa ít nhất 2 từ bạn đã học." : "Hãy vào màn hình 'Lật thẻ' để học thêm!"}
     </div>
   );
   
@@ -401,7 +417,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                   <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
                 </div>
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${progressPercentage}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
-                { (selectedPractice === 2 || selectedPractice === 102 || selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) && currentWord && (
+                { (selectedPractice % 100 !== 1) && currentWord && (
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
                     <p className="text-lg sm:text-xl font-semibold text-white leading-tight">{currentWord.question?.split('___').map((part, i, arr) => ( <React.Fragment key={i}> {part} {i < arr.length - 1 && <span className="font-bold text-indigo-300">___</span>} </React.Fragment> ))}</p>
                     {currentWord.vietnameseHint && (<p className="text-white/80 text-sm mt-2 italic">{currentWord.vietnameseHint}</p>)}
@@ -411,9 +427,9 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
               
               {currentWord ? (
                 <div className="w-full mt-6 space-y-6">
-                  {(selectedPractice === 1 || selectedPractice === 101) && <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />}
+                  {(selectedPractice % 100 === 1) && <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />}
                   
-                  {(selectedPractice === 3 || selectedPractice === 103 || selectedPractice === 4 || selectedPractice === 104) ? (
+                  {isMultiWordGame ? (
                     <div className="w-full flex flex-col items-center gap-4">
                       <div className={`p-4 bg-white rounded-lg shadow-md w-full transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
                         <p className="text-lg sm:text-xl font-medium text-gray-700 leading-relaxed">
@@ -451,7 +467,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
             </>
           )}
         </div>
-        {showImagePopup && currentWord && (selectedPractice === 1 || selectedPractice === 101) && (
+        {showImagePopup && currentWord && (selectedPractice % 100 === 1) && (
           <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
             <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-2xl">
               <button onClick={() => setShowImagePopup(false)} className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-all"><span className="text-xl font-bold">✕</span></button>
