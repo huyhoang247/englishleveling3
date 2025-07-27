@@ -108,7 +108,7 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
 
         {/* Header */}
         <div className="p-5 border-b border-slate-700 text-center">
-          <h2 className="font-lilita text-3xl font-bold text-yellow-300 text-shadow tracking-wide">{mail.subject}</h2>
+          <h2 className="font-sans text-3xl font-bold text-yellow-300 text-shadow tracking-wide">{mail.subject}</h2>
           <div className="flex items-center justify-between mt-2 text-sm text-slate-400 font-sans">
             <span>Từ: <span className="font-semibold text-slate-200">{mail.sender}</span></span>
             <span>{new Date(mail.timestamp).toLocaleString('vi-VN')}</span>
@@ -123,7 +123,7 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
         {/* Items */}
         {mail.items && mail.items.length > 0 && (
           <div className="p-5 border-t border-slate-700">
-            <h3 className="font-lilita text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-4 uppercase">Vật phẩm</h3>
+            <h3 className="font-lilita text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-4 uppercase">Items</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {mail.items.map((item, index) => (
                 <div key={index} className="bg-slate-800/50 p-3 rounded-lg text-center flex flex-col items-center justify-center transition-transform duration-200 border border-slate-700 hover:border-cyan-500/50 hover:scale-105">
