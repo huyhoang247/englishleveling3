@@ -27,7 +27,7 @@ export const uiAssets = {
   priceIcon: require("./assets/images/coin.webp"),
   cardCapacityIcon: require("./assets/images/card-capacity.webp"),
   // -- Thêm mới từ upgrade-stats.tsx --
-  statCoinIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png",
+  statCoinIcon: require("./assets/images/coin.webp"),
   statHpIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000384c61f89f8572bc1cce6ca4.png",
   statAtkIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000002e7061f7aa3134f2cd28f2f5.png",
   statDefIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000255061f7915533f0d00520b8.png",
