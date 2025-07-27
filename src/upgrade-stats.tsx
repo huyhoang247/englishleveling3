@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
+import { uiAssets } from './game-assets.ts'; // IMPORT TÀI NGUYÊN TẬP TRUNG
 
 // --- ICONS ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -9,25 +10,25 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const icons = {
   coin: (
     <img
-      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png"
+      src={uiAssets.statCoinIcon} // SỬ DỤNG TỪ ASSETS
       alt="Gold Coin Icon"
     />
   ),
   heart: (
     <img
-      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000384c61f89f8572bc1cce6ca4.png"
+      src={uiAssets.statHpIcon} // SỬ DỤNG TỪ ASSETS
       alt="HP Icon"
     />
   ),
   sword: (
     <img
-      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000002e7061f7aa3134f2cd28f2f5.png"
+      src={uiAssets.statAtkIcon} // SỬ DỤNG TỪ ASSETS
       alt="ATK Icon"
     />
   ),
   shield: (
     <img
-      src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000255061f7915533f0d00520b8.png"
+      src={uiAssets.statDefIcon} // SỬ DỤNG TỪ ASSETS
       alt="DEF Icon"
     />
   )
@@ -281,7 +282,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
           <div className="mb-4 w-48 h-48 flex items-center justify-center animate-breathing">
-            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-16_15-55-32-819.png" alt="Hero Stone Icon" className="w-full h-full object-contain" />
+            <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
           </div>
 
           <div className="w-full max-w-xs bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center">
