@@ -52,7 +52,7 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
 const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
     return (
       <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-cyan-500/30">
-          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png" alt="Energy" className="w-5 h-5" />
+          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="Energy" className="w-5 h-5" />
           <span className="font-bold text-base text-cyan-300 text-shadow-sm tracking-wider">{current}/{max}</span>
       </div>
     );
@@ -116,7 +116,7 @@ const RewardsModal = ({ onClose, rewards }: { onClose: () => void, rewards: { co
               <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
             </div>
             <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png" alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
+              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
               <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
             </div>
           </div>
@@ -140,7 +140,7 @@ const VictoryModal = ({ onRestart, onNextFloor, isLastBoss, rewards }: { onResta
                       <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
                   </div>
                   <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                      <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png" alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
+                      <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
                       <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
                   </div>
               </div>
@@ -489,7 +489,7 @@ export default function BossBattle({
                     <div className="flex flex-col items-center gap-0.5">
                         <span className="font-bold text-lg tracking-widest uppercase">Fight</span>
                         <div className="flex items-center gap-1 text-xs font-semibold text-cyan-400/80">
-                            <span>10</span><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-17_09-36-49-746.png" alt="" className="w-3 h-3"/>
+                            <span>10</span><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="" className="w-3 h-3"/>
                         </div>
                     </div>
                 </button>
