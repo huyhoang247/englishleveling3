@@ -148,13 +148,13 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
           {canClaim && (
             <button onClick={() => onClaim(mail.id)} className="btn-shine relative overflow-hidden px-8 py-3 bg-teal-600/80 text-white font-bold rounded-lg hover:bg-teal-500 transition-all duration-300 flex items-center space-x-2 shadow-[0_0_20px_theme(colors.teal.600/0.5)] active:scale-95 border border-teal-500 hover:border-teal-400">
               <Icon name="gift" className="w-5 h-5" />
-              <span className="font-lilita uppercase tracking-wider">Nhận</span>
+              <span className="font-sans font-semibold">Nhận</span>
             </button>
           )}
           {mail.isClaimed && (
              <div className="px-8 py-3 bg-slate-800 text-slate-500 font-bold rounded-lg flex items-center space-x-2 cursor-not-allowed border border-slate-700">
                <Icon name="check" className="w-5 h-5" />
-              <span className="font-lilita uppercase tracking-wider">Đã Nhận</span>
+              <span className="font-sans font-semibold">Đã Nhận</span>
              </div>
           )}
         </div>
@@ -278,7 +278,7 @@ export default function Mailbox({ onClose }: MailboxProps) {
                       disabled={!canClaimAny}
                       className="btn-shine relative overflow-hidden flex-1 px-4 py-2.5 bg-teal-600/80 text-white font-bold rounded-lg hover:bg-teal-500 transition-all duration-300 flex items-center justify-center space-x-2 shadow-[0_0_20px_theme(colors.teal.600/0.5)] active:scale-95 border border-teal-500 hover:border-teal-400 disabled:bg-slate-800/50 disabled:border-slate-700 disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed">
                       <Icon name="gift" className="w-5 h-5" />
-                      <span className="font-lilita uppercase tracking-wider text-sm">Nhận tất cả</span>
+                      <span className="font-sans font-semibold text-sm">Nhận tất cả</span>
                     </button>
                 </div>
             </div>
