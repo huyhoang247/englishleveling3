@@ -272,7 +272,7 @@ const MergeModal = ({ isOpen, onClose, ownedSkills, onMerge, isProcessing, equip
                 Hợp Nhất Kỹ Năng
               </h3>
             </div>
-            <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-7 h-7 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-4 h-4" /></button>
+            <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
           </div>
           <p className="text-sm text-slate-400 mt-2">Hợp nhất 3 kỹ năng <span className="font-bold text-white">cùng loại, cùng hạng</span> để tạo 1 kỹ năng hạng cao hơn. Hệ thống sẽ ưu tiên các kỹ năng cấp cao nhất.</p>
         </div>
