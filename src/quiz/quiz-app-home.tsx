@@ -429,9 +429,9 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             });
 
         } else if (selectedType === 'dienTu') {
-            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-4'];
+            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-4', 'fill-word-5'];
             for(let i = 1; i <= MAX_PREVIEWS; i++) {
-                allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`, `fill-word-${i*100 + 4}`);
+                allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`, `fill-word-${i*100 + 4}`, `fill-word-${i*100 + 5}`);
             }
 
             allFillModes.forEach(mode => {
@@ -465,6 +465,15 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                      const gameModeId = `fill-word-${practiceNum}`;
                      const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
                      progress = { completed: completedSet.size, total: totalP4 };
+                } else if (practiceNum % 100 === 5) {
+                     let totalP5 = 0;
+                     exampleData.forEach(sentence => {
+                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                         if (wordsInSentence.length >= 4) totalP5++;
+                     });
+                     const gameModeId = `fill-word-${practiceNum}`;
+                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
+                     progress = { completed: completedSet.size, total: totalP5 };
                 }
                 newProgressData[practiceNum] = progress;
             });
@@ -489,6 +498,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
       '3': { title: 'Practice 3', desc: 'Điền 2 từ vào câu (Khó)', color: 'teal' },
       '4': { title: 'Practice 4', desc: 'Điền 3 từ vào câu (Rất Khó)', color: 'orange' },
+      '5': { title: 'Practice 5', desc: 'Điền 4 từ vào câu (Siêu Khó)', color: 'purple' },
     },
   }), []);
   
