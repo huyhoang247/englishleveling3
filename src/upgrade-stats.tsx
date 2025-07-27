@@ -96,7 +96,7 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
         <div className="w-10 h-10">{icon}</div>
         <div className="flex-grow flex flex-col items-center gap-1">
           <p className="text-lg uppercase font-bold tracking-wider">{name}</p>
-          <p className="text-2xl font-black text-shadow-cyan">+{formatNumber(calculateTotalStatValue(level, baseUpgradeBonus))}</p>
+          <p className="text-xl font-black text-shadow-cyan">+{formatNumber(calculateTotalStatValue(level, baseUpgradeBonus))}</p>
           <p className="text-xs text-slate-400">Level {level}</p>
         </div>
         <button
