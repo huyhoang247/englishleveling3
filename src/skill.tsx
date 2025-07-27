@@ -306,7 +306,7 @@ const MergeModal = ({ isOpen, onClose, ownedSkills, onMerge, isProcessing, equip
               );
             })
           ) : (
-            <div className="flex items-center justify-center h-full text-slate-500 text-center py-10"><p>Không có kỹ năng nào có thể hợp nhất.<br/>Cần ít nhất 3 kỹ năng cùng loại, cùng hạng và chưa trang bị.</p></div>
+            <div className="flex items-center justify-center h-full text-slate-500 text-center py-10"><p>Không có kỹ năng nào có thể hợp nhất.</p></div>
           )}
         </div>
       </div>
