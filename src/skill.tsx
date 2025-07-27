@@ -265,7 +265,7 @@ const MergeModal = ({ isOpen, onClose, ownedSkills, onMerge, isProcessing, equip
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col">
         <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-3">
               <MergeIcon className="w-7 h-7 text-purple-400" />
               <h3 className="text-xl font-black uppercase tracking-wider bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
