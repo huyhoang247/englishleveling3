@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import QuizApp from './quiz.tsx';
 import Breadcrumbs from '../bread-crumbs.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
+import QuizPvp from './quiz-pvp.tsx'; // <-- IMPORT MỚI
 
 // Imports for progress calculation
 import { db, auth } from '../firebase.js';
@@ -25,6 +26,12 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   }, []);
 
+  // --- THÊM HÀM MỚI ---
+  const handlePvpSelect = useCallback(() => {
+    setCurrentView('pvp_matchmaking');
+  }, []);
+  // --------------------
+
   const handleTypeSelect = useCallback((type) => {
     setSelectedType(type);
     setCurrentView('practices');
@@ -41,7 +48,10 @@ export default function QuizAppHome() {
   }, [selectedType]);
 
   const goBack = useCallback(() => {
-    if (currentView === 'vocabularyGame' || currentView === 'quiz') {
+    // --- CẬP NHẬT goBack ---
+    if (currentView === 'pvp_matchmaking') {
+       setCurrentView('main');
+    } else if (currentView === 'vocabularyGame' || currentView === 'quiz') {
       setCurrentView('practices');
       setSelectedPractice(null);
     } else if (currentView === 'quizTypes') {
@@ -62,6 +72,16 @@ export default function QuizAppHome() {
     setSelectedType(null);
     setSelectedPractice(null);
   }, []);
+
+  // --- THÊM VIEW MỚI ---
+  if (currentView === 'pvp_matchmaking') {
+    return (
+      <div className="fixed inset-0 z-[51] bg-white">
+        <QuizPvp onGoBack={goBack} />
+      </div>
+    );
+  }
+  // -----------------------
 
   if (currentView === 'vocabularyGame') {
     return (
@@ -99,13 +119,30 @@ export default function QuizAppHome() {
                   <span className="text-4xl">📚</span>
                 </div>
                 <div className="ml-5 text-left flex-grow">
-                  <h3 className="text-xl font-bold text-gray-800">Quiz</h3>
+                  <h3 className="text-xl font-bold text-gray-800">Luyện tập (Solo)</h3>
                   <p className="text-gray-500 text-sm mt-1">Luyện tập các câu hỏi trắc nghiệm</p>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
+              {/* --- THÊM NÚT PVP MỚI --- */}
+              <button
+                onClick={handlePvpSelect}
+                className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-red-300 group"
+              >
+                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-red-500 to-orange-500 text-white shadow-md">
+                  <span className="text-4xl">⚔️</span>
+                </div>
+                <div className="ml-5 text-left flex-grow">
+                  <h3 className="text-xl font-bold text-gray-800">PvP Battle</h3>
+                  <p className="text-gray-500 text-sm mt-1">Thách đấu với người chơi khác</p>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              {/* ----------------------------- */}
               <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
                 <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Sắp ra mắt</div>
                 <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm"><span className="text-4xl">📄</span></div>
