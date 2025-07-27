@@ -87,6 +87,7 @@ const Icon = ({ name, className }: { name: string, className: string }) => {
     chest: <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />,
     trash: <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />,
     check: <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />,
+    "gift-all": <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.5v7.5c0 1.027.845 1.99 1.976 2.094a48.505 48.505 0 004.024.166m0 0c1.355 0 2.697-.056 4.024-.166C17.155 20.01 18 19.027 18 18v-7.5c0-1.027-.845-1.99-1.976-2.094A48.455 48.455 0 0012 8.25zM12 15V6.75m0 0l-3 3m3-3l3 3" />,
   };
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
@@ -180,7 +181,7 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
       
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-baseline">
-          <p className={`font-bold text-lg truncate ${mail.isRead ? 'text-slate-400' : 'text-white text-shadow-sm'}`}>{mail.subject}</p>
+          <p className={`font-sans font-bold text-lg truncate ${mail.isRead ? 'text-slate-400' : 'text-white'}`}>{mail.subject}</p>
           <p className="text-xs text-slate-500 flex-shrink-0 ml-2 font-sans">{new Date(mail.timestamp).toLocaleDateString('vi-VN')}</p>
         </div>
         <p className="text-sm text-slate-400 truncate font-sans">Từ: {mail.sender}</p>
@@ -221,6 +222,9 @@ export default function Mailbox({ onClose }: MailboxProps) {
   };
   
   const unreadCount = mails.filter(m => !m.isRead).length;
+  const canClaimAny = mails.some(m => m.items?.length > 0 && !m.isClaimed);
+  const hasAnyRead = mails.some(m => m.isRead && !(m.items?.length > 0 && !m.isClaimed));
+
 
   return (
     <>
@@ -243,7 +247,7 @@ export default function Mailbox({ onClose }: MailboxProps) {
             <div className="bg-slate-900/50 rounded-xl shadow-2xl shadow-black/50 flex flex-col border border-slate-700/50 backdrop-blur-sm">
                 {/* Header */}
                 <div className="p-4 border-b border-slate-700 flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-cyan-300 text-shadow tracking-widest">MAIL BOX</h1>
+                    <h1 className="text-xl font-bold text-cyan-300 text-shadow tracking-wider">MAIL BOX</h1>
                     {unreadCount > 0 && (<span className="bg-teal-400 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-full animate-pulse">{unreadCount}</span>)}
                 </div>
                 
@@ -261,9 +265,21 @@ export default function Mailbox({ onClose }: MailboxProps) {
                 </ul>
                 
                 {/* Footer Actions */}
-                <div className="p-3 border-t border-slate-700 flex-shrink-0 flex items-center justify-around space-x-2 bg-slate-900/60 rounded-b-xl">
-                    <button onClick={handleClaimAll} className="flex-1 px-4 py-2.5 text-sm bg-blue-600/80 text-white font-bold rounded-lg hover:bg-blue-600 transition-colors duration-200 shadow-lg shadow-blue-900/50 border border-blue-500/50 active:scale-95 font-sans">Nhận tất cả</button>
-                    <button onClick={handleDeleteAllRead} className="flex-1 px-4 py-2.5 text-sm bg-slate-700/80 text-white font-bold rounded-lg hover:bg-slate-700 transition-colors duration-200 border border-slate-600/50 active:scale-95 font-sans">Xóa thư đã đọc</button>
+                <div className="p-3 border-t border-slate-700 flex-shrink-0 flex items-center justify-around gap-3 bg-slate-900/60 rounded-b-xl">
+                    <button 
+                      onClick={handleDeleteAllRead} 
+                      disabled={!hasAnyRead}
+                      className="flex-1 px-4 py-2.5 bg-slate-700/80 text-slate-300 font-bold rounded-lg hover:bg-red-600/80 hover:text-white transition-all duration-300 flex items-center justify-center space-x-2 active:scale-95 border border-slate-600 hover:border-red-500 disabled:bg-slate-800/50 disabled:border-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed">
+                      <Icon name="trash" className="w-5 h-5" />
+                      <span className="font-sans font-semibold text-sm">Xóa đã đọc</span>
+                    </button>
+                    <button 
+                      onClick={handleClaimAll} 
+                      disabled={!canClaimAny}
+                      className="btn-shine relative overflow-hidden flex-1 px-4 py-2.5 bg-teal-600/80 text-white font-bold rounded-lg hover:bg-teal-500 transition-all duration-300 flex items-center justify-center space-x-2 shadow-[0_0_20px_theme(colors.teal.600/0.5)] active:scale-95 border border-teal-500 hover:border-teal-400 disabled:bg-slate-800/50 disabled:border-slate-700 disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed">
+                      <Icon name="gift" className="w-5 h-5" />
+                      <span className="font-lilita uppercase tracking-wider text-sm">Nhận tất cả</span>
+                    </button>
                 </div>
             </div>
         </main>
