@@ -657,6 +657,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         const generateTiersForLevel = (levelProgress, levelNumber, levelTitle, multiplier) => {
             if (!levelProgress || levelProgress.total === 0) return null;
 
+            const isInactivePreview = levelProgress.completed === 0;
             const levelTiers = [];
             const maxPossibleMilestone = Math.floor(levelProgress.total / MILESTONE_STEP) * MILESTONE_STEP;
 
@@ -722,7 +723,11 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                     <div className="flex justify-between items-center mb-3">
                         <h4 className="font-bold text-gray-700">{levelTitle}</h4>
                         {multiplier > 1 && (
-                            <div className="text-sm font-bold text-white bg-gradient-to-r from-amber-500 to-orange-600 px-2.5 py-1 rounded-full shadow">
+                            <div className={`text-sm font-bold px-2.5 py-1 rounded-full shadow transition-colors ${
+                                isInactivePreview
+                                ? 'bg-gray-300 text-gray-500'
+                                : 'text-white bg-gradient-to-r from-amber-500 to-orange-600'
+                            }`}>
                                 x{multiplier} Thưởng
                             </div>
                         )}
