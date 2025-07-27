@@ -266,10 +266,15 @@ const MergeModal = ({ isOpen, onClose, ownedSkills, onMerge, isProcessing, equip
       <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col">
         <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-xl font-bold text-cyan-300">Hợp Nhất Kỹ Năng</h3>
+            <div className="flex items-center gap-3">
+              <MergeIcon className="w-8 h-8 text-purple-400" />
+              <h3 className="text-2xl font-black uppercase tracking-wider bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                Hợp Nhất Kỹ Năng
+              </h3>
+            </div>
             <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
           </div>
-          <p className="text-sm text-slate-400 mt-1">Hợp nhất 3 kỹ năng <span className="font-bold text-white">cùng loại, cùng hạng</span> để tạo 1 kỹ năng hạng cao hơn. Hệ thống sẽ ưu tiên các kỹ năng cấp cao nhất.</p>
+          <p className="text-sm text-slate-400 mt-2">Hợp nhất 3 kỹ năng <span className="font-bold text-white">cùng loại, cùng hạng</span> để tạo 1 kỹ năng hạng cao hơn. Hệ thống sẽ ưu tiên các kỹ năng cấp cao nhất.</p>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2 space-y-4">
           {mergeableGroups.length > 0 ? (
