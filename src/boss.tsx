@@ -53,7 +53,10 @@ const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
     return (
       <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-cyan-500/30">
           <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="Energy" className="w-5 h-5" />
-          <span className="font-bold text-base text-cyan-300 text-shadow-sm tracking-wider">{current}/{max}</span>
+          <div className="flex items-baseline text-shadow-sm tracking-wider">
+              <span className="font-bold text-base text-cyan-300">{current}</span>
+              <span className="font-semibold text-sm text-cyan-400/80">/{max}</span>
+          </div>
       </div>
     );
 };
