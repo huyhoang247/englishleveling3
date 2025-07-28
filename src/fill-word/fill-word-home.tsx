@@ -449,7 +449,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                     <div className="w-full flex flex-col items-center gap-4">
                       <div className={`p-4 bg-white rounded-lg shadow-md w-full transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
                         {/* --- START OF FIX --- */}
-                        <div className="text-lg sm:text-xl font-medium text-gray-700 leading-loose">
+                        <div className="text-lg sm:text-xl font-medium text-gray-700 leading-normal">
                            {currentWord.question?.split('___').map((part, index, arr) => (
                             <React.Fragment key={index}>
                               <span>{part}</span>
