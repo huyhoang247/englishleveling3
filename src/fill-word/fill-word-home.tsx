@@ -449,7 +449,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                     <div className="w-full flex flex-col items-center gap-4">
                       <div className={`p-4 bg-white rounded-lg shadow-md w-full transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
                         {/* --- START OF FIX --- */}
-                        <div className="text-lg sm:text-xl font-medium text-gray-700 leading-9">
+                        <div className="text-lg sm:text-xl font-medium text-gray-700 leading-10">
                            {currentWord.question?.split('___').map((part, index, arr) => (
                             <React.Fragment key={index}>
                               <span>{part}</span>
@@ -457,7 +457,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                                 <button
                                   onClick={() => !isCorrect && setActiveBlankIndex(index)}
                                   disabled={!!isCorrect}
-                                  className={`inline-block align-baseline mx-1 px-3 rounded-md font-medium transition-all duration-200 ${filledWords[index] ? 'bg-green-100 text-green-700 cursor-default' : 'bg-gray-200 text-gray-500'} ${activeBlankIndex === index && !isCorrect ? 'ring-2 ring-indigo-500 shadow-md bg-indigo-50 text-indigo-700' : ''} ${isCorrect ? 'cursor-not-allowed' : 'hover:bg-indigo-100'}`}
+                                  className={`inline-block align-baseline mx-1 my-1 px-3 rounded-md font-medium transition-all duration-200 ${filledWords[index] ? 'bg-green-100 text-green-700 cursor-default' : 'bg-gray-200 text-gray-500'} ${activeBlankIndex === index && !isCorrect ? 'ring-2 ring-indigo-500 shadow-md bg-indigo-50 text-indigo-700' : ''} ${isCorrect ? 'cursor-not-allowed' : 'hover:bg-indigo-100'}`}
                                 >
                                   {filledWords[index] ? filledWords[index].toLowerCase() : (activeBlankIndex === index && !isCorrect) ? (userInput.toLowerCase() || '...') : '...'}
                                 </button>
