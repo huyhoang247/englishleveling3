@@ -457,7 +457,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                                 <button
                                   onClick={() => !isCorrect && setActiveBlankIndex(index)}
                                   disabled={!!isCorrect}
-                                  className={`inline-block align-baseline mx-1 px-3 py-0.5 rounded-md font-medium transition-all duration-200 ${filledWords[index] ? 'bg-green-100 text-green-700 cursor-default' : 'bg-gray-200 text-gray-500'} ${activeBlankIndex === index && !isCorrect ? 'ring-2 ring-indigo-500 shadow-md bg-indigo-50 text-indigo-700' : ''} ${isCorrect ? 'cursor-not-allowed' : 'hover:bg-indigo-100'}`}
+                                  className={`inline-block align-baseline mx-1 my-1 px-3 rounded-md font-medium transition-all duration-200 ${filledWords[index] ? 'bg-green-100 text-green-700 cursor-default' : 'bg-gray-200 text-gray-500'} ${activeBlankIndex === index && !isCorrect ? 'ring-2 ring-indigo-500 shadow-md bg-indigo-50 text-indigo-700' : ''} ${isCorrect ? 'cursor-not-allowed' : 'hover:bg-indigo-100'}`}
                                 >
                                   {filledWords[index] ? filledWords[index].toLowerCase() : (activeBlankIndex === index && !isCorrect) ? (userInput.toLowerCase() || '...') : '...'}
                                 </button>
