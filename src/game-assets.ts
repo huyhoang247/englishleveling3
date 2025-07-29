@@ -39,9 +39,6 @@ export const uiAssets = {
  */
 export const itemAssets = {
     // Weapons
-    kiemGo: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/kiem-go.png',
-    kiemSat: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_00000000a42c61f78b535b5ca4f2e8f2.png',
-    songKiem: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_00000000c5b061f8a19ee9d3e000e95b.png',
     nomadSword: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_000000004f0c62309cbdcc6fea779fc6.png',
     frostbiteSpear: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_0000000062ac62309ccc99e40040f892.png',
     warriorsBlade: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_0000000092d861f895a04893e27da729.png',
