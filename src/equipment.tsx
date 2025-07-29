@@ -23,6 +23,20 @@ export type EquippedItems = {
 const ALL_ITEMS: ItemDefinition[] = Array.from(itemDatabase.values());
 const CRAFTABLE_ITEMS = ALL_ITEMS.filter(item => ['weapon', 'armor', 'accessory'].includes(item.type));
 
+// THAY ĐỔI: Tạo một "blueprint" map để nhóm các vật phẩm có cùng tên
+// Key: Tên vật phẩm (ví dụ: 'Nomad Sword')
+// Value: Mảng các ItemDefinition cho vật phẩm đó ở các rank khác nhau
+const CRAFTABLE_ITEM_BLUEPRINTS = new Map<string, ItemDefinition[]>();
+CRAFTABLE_ITEMS.forEach(item => {
+    if (!CRAFTABLE_ITEM_BLUEPRINTS.has(item.name)) {
+        CRAFTABLE_ITEM_BLUEPRINTS.set(item.name, []);
+    }
+    CRAFTABLE_ITEM_BLUEPRINTS.get(item.name)!.push(item);
+});
+// Chuyển thành mảng các tên vật phẩm có thể chế tạo
+const CRAFTABLE_NAMES = Array.from(CRAFTABLE_ITEM_BLUEPRINTS.keys());
+
+
 // 5. Các hàm tiện ích cho Rarity (ItemRank)
 const getRarityColor = (rank: ItemRank): string => {
     switch (rank) {
@@ -70,9 +84,9 @@ const getNextRank = (rank: ItemRank): ItemRank | null => {
     return ranks[currentIndex + 1];
 };
 
-// THAY ĐỔI: Thêm hàm lấy Rank ngẫu nhiên khi chế tạo, tương tự skill.tsx
 const getRandomRank = (): ItemRank => {
     const rand = Math.random() * 100;
+    // Tỉ lệ giống hệt skill.tsx
     if (rand < 0.1) return 'SR';    // 0.1%
     if (rand < 1) return 'S';       // 0.9%
     if (rand < 5) return 'A';       // 4%
@@ -80,7 +94,6 @@ const getRandomRank = (): ItemRank => {
     if (rand < 50) return 'D';      // 30%
     return 'E';                     // 50%
 };
-
 
 const RARITY_ORDER: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR', 'SSR'];
 
@@ -459,34 +472,60 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
   
     const handleCraftItem = useCallback(async () => {
         if (isProcessing) return;
-        if (ancientBooks < CRAFTING_COST) { showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`); return; }
-        if (ownedItems.length >= MAX_ITEMS_IN_STORAGE) { showMessage(`Kho chứa đã đầy.`); return; }
+        if (ancientBooks < CRAFTING_COST) { 
+            showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`); 
+            return; 
+        }
+        if (ownedItems.length >= MAX_ITEMS_IN_STORAGE) { 
+            showMessage(`Kho chứa đã đầy.`); 
+            return; 
+        }
         
         setIsProcessing(true);
 
-        // THAY ĐỔI: Chế tạo trang bị với rank ngẫu nhiên theo tỉ lệ
-        const newRank = getRandomRank();
-        const itemsOfNewRank = CRAFTABLE_ITEMS.filter(item => item.rarity === newRank);
-        
-        let newItemDef: ItemDefinition;
+        // BƯỚC 1: Chọn một "loại" vật phẩm ngẫu nhiên (ví dụ: 'Nomad Sword')
+        const randomItemName = CRAFTABLE_NAMES[Math.floor(Math.random() * CRAFTABLE_NAMES.length)];
+        const itemVariants = CRAFTABLE_ITEM_BLUEPRINTS.get(randomItemName)!;
 
-        if (itemsOfNewRank.length > 0) {
-            // Chọn một vật phẩm ngẫu nhiên từ danh sách các vật phẩm có rank đã chọn
-            newItemDef = itemsOfNewRank[Math.floor(Math.random() * itemsOfNewRank.length)];
-        } else {
-            // Fallback phòng trường hợp không có vật phẩm nào ở rank đã roll (hiếm khi xảy ra)
-            // Lấy một vật phẩm rank E ngẫu nhiên để đảm bảo người chơi luôn nhận được gì đó.
-            const fallbackItems = CRAFTABLE_ITEMS.filter(item => item.rarity === 'E');
-            newItemDef = fallbackItems[Math.floor(Math.random() * fallbackItems.length)];
+        // BƯỚC 2: Quay ngẫu nhiên một rank mong muốn
+        const targetRank = getRandomRank();
+
+        // BƯỚC 3: Tìm phiên bản vật phẩm có rank phù hợp nhất
+        let finalItemDef: ItemDefinition | undefined;
+
+        // Cố gắng tìm chính xác rank mong muốn
+        finalItemDef = itemVariants.find(v => v.rarity === targetRank);
+
+        // Fallback: Nếu không có rank đó, tìm rank cao nhất có sẵn nhưng thấp hơn rank mong muốn
+        if (!finalItemDef) {
+            const availableRanks = itemVariants.map(v => v.rarity);
+            const targetRankIndex = RARITY_ORDER.indexOf(targetRank);
+
+            for (let i = targetRankIndex; i >= 0; i--) {
+                const lowerRank = RARITY_ORDER[i];
+                if (availableRanks.includes(lowerRank)) {
+                    finalItemDef = itemVariants.find(v => v.rarity === lowerRank);
+                    break;
+                }
+            }
+        }
+        
+        // Fallback cuối cùng: Nếu vẫn không tìm được (trường hợp cực hiếm), lấy rank thấp nhất của vật phẩm đó
+        if (!finalItemDef) {
+            finalItemDef = itemVariants.sort((a,b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity))[0];
         }
 
-        const newOwnedItem: OwnedItem = { id: `owned-${Date.now()}-${newItemDef.id}-${Math.random()}`, itemId: newItemDef.id, level: 1 };
+        const newOwnedItem: OwnedItem = { id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, itemId: finalItemDef.id, level: 1 };
         const newOwnedList = [...ownedItems, newOwnedItem];
         
         try {
             await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, booksChange: -CRAFTING_COST });
             setNewlyCraftedItem(newOwnedItem);
-        } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Chế tạo thất bại'}`); } finally { setIsProcessing(false); }
+        } catch(error: any) { 
+            showMessage(`Lỗi: ${error.message || 'Chế tạo thất bại'}`); 
+        } finally { 
+            setIsProcessing(false); 
+        }
     }, [isProcessing, ancientBooks, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
 
     const handleDismantleItem = useCallback(async (itemToDismantle: OwnedItem) => {
