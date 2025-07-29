@@ -26,6 +26,7 @@ export interface ItemDefinition {
 }
 
 // THAY ĐỔI: Cập nhật toàn bộ database với hệ thống Rank mới và tham chiếu từ itemAssets.
+// LƯU Ý QUAN TRỌNG: Để mô phỏng việc chế tạo ra rank ngẫu nhiên, chúng ta định nghĩa nhiều phiên bản của cùng một vật phẩm với các rank và ID khác nhau.
 export const itemDatabase = new Map<number, ItemDefinition>([
     [2, { id: 2, name: 'Hard Armor', type: 'armor', rarity: 'B', description: 'Áo giáp cứng cáp, cung cấp khả năng phòng thủ vượt trội.', stats: { defense: 25, durability: 120 }, icon: itemAssets.hardArmor, maxLevel: 25 }],
     [26, { id: 26, name: 'Lá cây hiếm', type: 'material', rarity: 'D', description: 'Lá cây dùng để chế thuốc.', icon: '🍃' }],
@@ -41,14 +42,24 @@ export const itemDatabase = new Map<number, ItemDefinition>([
     [52, { id: 52, name: 'Mảnh ghép găng tay', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một đôi găng tay ngẫu nhiên.', icon: itemAssets.manhGhepGangTay }],
     [53, { id: 53, name: 'Mảnh ghép giày', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một đôi giày ngẫu nhiên.', icon: itemAssets.manhGhepGiay }],
     [54, { id: 54, name: 'Mảnh ghép trang sức', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một món trang sức ngẫu nhiên.', icon: itemAssets.manhGhepTrangSuc }],
+    
+    // --- Các phiên bản của Nomad Sword ---
     [55, { id: 55, name: 'Nomad Sword', type: 'weapon', rarity: 'E', description: 'Thanh kiếm của dân du mục, thích hợp cho những chuyến đi dài.', stats: { damage: 8, durability: 30 }, icon: itemAssets.nomadSword, maxLevel: 10, skills: [] }],
+    [1001, { id: 1001, name: 'Nomad Sword', type: 'weapon', rarity: 'D', description: 'Thanh kiếm của dân du mục, được gia cố tốt hơn.', stats: { damage: 12, durability: 45 }, icon: itemAssets.nomadSword, maxLevel: 15, skills: [] }],
+    [1002, { id: 1002, name: 'Nomad Sword', type: 'weapon', rarity: 'B', description: 'Thanh kiếm của dân du mục, một tác phẩm đáng tin cậy.', stats: { damage: 20, durability: 70, agility: 5 }, icon: itemAssets.nomadSword, maxLevel: 25, skills: [] }],
+
     [56, { 
         id: 56, name: 'Frostbite Spear', type: 'weapon', rarity: 'D', description: 'Ngọn giáo phủ băng, gây sát thương kèm hiệu ứng làm chậm.', 
         stats: { damage: 18, durability: 60, coldDamage: 5, slowEffect: 0.15 }, icon: itemAssets.frostbiteSpear, maxLevel: 20,
         skills: []
     }],
     [57, { id: 57, name: 'Warrior\'s Blade', type: 'weapon', rarity: 'E', description: 'Lưỡi kiếm tiêu chuẩn của chiến binh, bền bỉ và đáng tin cậy.', stats: { damage: 10, durability: 40 }, icon: itemAssets.warriorsBlade, maxLevel: 15, skills: [] }],
+    
+    // --- Các phiên bản của Tunic ---
     [58, { id: 58, name: 'Tunic', type: 'armor', rarity: 'E', description: 'Một chiếc áo tunic đơn giản, cung cấp sự bảo vệ cơ bản.', stats: { defense: 8, magicResist: 2 }, icon: itemAssets.tunic, maxLevel: 10 }],
+    [1003, { id: 1003, name: 'Tunic', type: 'armor', rarity: 'D', description: 'Một chiếc áo tunic được may cẩn thận, bảo vệ tốt hơn.', stats: { defense: 12, magicResist: 4 }, icon: itemAssets.tunic, maxLevel: 15 }],
+    [1004, { id: 1004, name: 'Tunic', type: 'armor', rarity: 'B', description: 'Một chiếc áo tunic bằng vải cao cấp, khá bền và nhẹ.', stats: { defense: 18, magicResist: 8 }, icon: itemAssets.tunic, maxLevel: 25 }],
+
     [59, { 
         id: 59, name: 'Giant\'s Hammer', type: 'weapon', rarity: 'B', description: 'Cây búa khổng lồ, gây sát thương vật lý cực lớn.', 
         stats: { damage: 30, durability: 80, strength: 10 }, icon: itemAssets.giantsHammer, maxLevel: 30,
@@ -76,11 +87,19 @@ export const itemDatabase = new Map<number, ItemDefinition>([
         stats: { damage: 22, range: 40, durability: 70, agility: 8 }, icon: itemAssets.nomadBow, maxLevel: 30,
         skills: []
     }],
+
+    // --- Các phiên bản của Warrior's Sword ---
     [66, { 
         id: 66, name: 'Warrior\'s Sword', type: 'weapon', rarity: 'A', description: 'Thanh kiếm được rèn cho những chiến binh dũng cảm, cực kỳ sắc bén và bền bỉ.', 
         stats: { damage: 38, durability: 120, strength: 15, critChance: 0.05 }, icon: itemAssets.warriorsSword, maxLevel: 40,
         skills: []
     }],
+    [1005, { 
+        id: 1005, name: 'Warrior\'s Sword', type: 'weapon', rarity: 'S', description: 'Kiệt tác của thợ rèn, thanh kiếm dành cho những vị tướng.', 
+        stats: { damage: 50, durability: 160, strength: 22, critChance: 0.08 }, icon: itemAssets.warriorsSword, maxLevel: 50,
+        skills: []
+    }],
+
     [67, { id: 67, name: 'Dragon\'s Breath Armor', type: 'armor', rarity: 'E', description: 'Bộ giáp được làm từ vảy rồng non, cung cấp sự bảo vệ cơ bản và khả năng chống lửa nhẹ.', stats: { defense: 12, magicResist: 3, fireResist: 0.10 }, icon: itemAssets.dragonsBreathArmor, maxLevel: 10 }],
     [68, { id: 68, name: 'Angel Bow', type: 'weapon', rarity: 'B', description: 'Cung của Thiên thần, bắn ra những mũi tên ánh sáng với độ chính xác và sát thương cao.', stats: { damage: 28, range: 45, accuracy: 0.90, lightDamage: 10 }, icon: itemAssets.angelBow, maxLevel: 30, skills: [] }],
     [69, { id: 69, name: 'Demon King\'s Longsword', type: 'weapon', rarity: 'S', description: 'Thanh trường kiếm được rèn từ trái tim của Quỷ Vương, chứa đựng sức mạnh hắc ám khủng khiếp.', stats: { damage: 55, durability: 180, strength: 25, darkDamage: 25, lifeSteal: 0.05 }, icon: itemAssets.demonKingsLongsword, maxLevel: 50, skills: [] }],
