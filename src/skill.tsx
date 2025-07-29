@@ -16,7 +16,7 @@ import {
     type Rarity,
     type OwnedSkill,
     type SkillBlueprint,
-} from './skill-data';
+} from './skill-data.tsx';
 import { uiAssets } from './game-assets.ts'; // Import tài nguyên UI tập trung
 import CoinDisplay from './coin-display.tsx'; // Giả sử import
 
