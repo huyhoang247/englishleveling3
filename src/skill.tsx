@@ -147,7 +147,6 @@ const SkillDetailModal = memo(({ ownedSkill, onClose, onEquip, onUnequip, onDise
                 {skill.baseEffectValue !== undefined && ( <div className="w-full text-left text-sm p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
                 {isUpgradable && (
                     <div className="w-full mb-4 space-y-2">
-                        {/* Container is now a DIV, not a BUTTON */}
                         <div className="w-full relative p-3 rounded-lg transition-colors duration-300 text-left flex items-center justify-between bg-black/20 border border-slate-700/80">
                             <div className="flex flex-col">
                                 <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
@@ -157,7 +156,6 @@ const SkillDetailModal = memo(({ ownedSkill, onClose, onEquip, onUnequip, onDise
                                     <span className="text-green-400">{getCurrentEffectValue() + skill.effectValuePerLevel!}%</span>
                                 </div>
                             </div>
-                            {/* This is the actual BUTTON now */}
                             <button 
                                 onClick={() => onUpgrade(ownedSkill)} 
                                 disabled={!canAffordUpgrade || actionDisabled} 
@@ -201,7 +199,6 @@ const CraftingSuccessModal = memo(({ ownedSkill, onClose }: { ownedSkill: OwnedS
     const shadowStyle = { boxShadow: `0 0 25px -5px ${rarityColor}, 0 0 15px -10px ${rarityColor}` };
     return ( <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div> <div className="relative w-full max-w-sm"> <div className="absolute inset-0.5 animate-spin-slow-360"> <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(ownedSkill.rarity)} opacity-50 rounded-full blur-2xl`}></div> </div> <div className={`relative bg-gradient-to-b ${getRarityGradient(ownedSkill.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(ownedSkill.rarity)} text-center flex flex-col items-center gap-4`} style={shadowStyle}> <h2 className="text-2xl font-black tracking-widest uppercase text-white title-glow">Chế Tạo Thành Công</h2> <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}> <IconComponent className={`w-20 h-20 ${rarityTextColor}`} /> </div> <div className="flex flex-col"> <span className={`text-2xl font-bold ${rarityTextColor}`}>{skill.name}</span> <span className="font-semibold text-slate-300">{getRarityDisplayName(ownedSkill.rarity)}</span> </div> <p className="text-sm text-slate-400">{skill.description(1, ownedSkill.rarity)}</p> <button onClick={onClose} className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"> Tuyệt vời! </button> </div> </div> </div> );
 });
-
 
 // --- MERGE MODAL ---
 interface MergeResult { level: number; refundGold: number; }
@@ -301,6 +298,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
   const [messageKey, setMessageKey] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [mergeToast, setMergeToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+  const [craftErrorToast, setCraftErrorToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
   const MAX_SKILLS_IN_STORAGE = 20;
 
   const equippedSkills = useMemo(() => {
@@ -358,8 +356,15 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
   
   const handleCraftSkill = useCallback(async () => {
     if (isProcessing) return;
-    if (ancientBooks < CRAFTING_COST) { showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`); return; }
-    if (ownedSkills.length >= MAX_SKILLS_IN_STORAGE) { showMessage(`Kho chứa đã đầy (${MAX_SKILLS_IN_STORAGE}/${MAX_SKILLS_IN_STORAGE}). Không thể chế tạo thêm.`); return; }
+    if (ancientBooks < CRAFTING_COST) { 
+        showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`); 
+        return; 
+    }
+    if (ownedSkills.length >= MAX_SKILLS_IN_STORAGE) { 
+        setCraftErrorToast({ show: true, message: 'Kho kỹ năng đã đầy...' });
+        setTimeout(() => setCraftErrorToast(prev => ({ ...prev, show: false })), 4000);
+        return; 
+    }
     setIsProcessing(true);
     const newSkillBlueprint = ALL_SKILLS[Math.floor(Math.random() * ALL_SKILLS.length)];
     const newRarity = getRandomRarity();
@@ -426,9 +431,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
       const newOwnedList = ownedSkills.filter(s => !skillIdsToConsume.includes(s.id)).concat(newUpgradedSkill);
       try {
           await onSkillsUpdate({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: refundGold, booksChange: 0 });
-          
           const successMsg = 'Hợp nhất thành công!';
-          
           setMergeToast({ show: true, message: successMsg });
           setTimeout(() => setMergeToast(prev => ({...prev, show: false})), 4000);
           setIsMergeModalOpen(false);
@@ -445,12 +448,13 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
   const handleCloseMergeModal = useCallback(() => setIsMergeModalOpen(false), []);
   const handleOpenMergeModal = useCallback(() => setIsMergeModalOpen(true), []);
 
-
   return (
     <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
        <style>{` .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
       
       <RateLimitToast show={mergeToast.show} message={mergeToast.message} showIcon={false} />
+      {/* <<< THAY ĐỔI: Thêm prop showIcon={false} để ẩn icon >>> */}
+      <RateLimitToast show={craftErrorToast.show} message={craftErrorToast.message} showIcon={false} />
 
       {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[101]">{message}</div>}
       {selectedSkill && <SkillDetailModal ownedSkill={selectedSkill} onClose={handleCloseDetailModal} onEquip={handleEquipSkill} onUnequip={handleUnequipSkill} onDisenchant={handleDisenchantSkill} onUpgrade={handleUpgradeSkill} isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)} gold={gold} isProcessing={isProcessing}/>}
