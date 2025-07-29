@@ -151,17 +151,30 @@ const SkillDetailModal = memo(({ ownedSkill, onClose, onEquip, onUnequip, onDise
                 {skill.baseEffectValue !== undefined && ( <div className="w-full text-left text-sm p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
                 {isUpgradable && (
                     <div className="w-full mb-4 space-y-2">
-                        <button onClick={() => onUpgrade(ownedSkill)} disabled={!canAffordUpgrade || actionDisabled} className="w-full relative p-3 rounded-lg transition-all duration-300 text-left flex items-center justify-between disabled:cursor-not-allowed group bg-black/20 border border-slate-700/80 hover:border-purple-500 disabled:hover:border-slate-700/80 hover:bg-purple-900/20">
+                        {/* Container is now a DIV, not a BUTTON */}
+                        <div className="w-full relative p-3 rounded-lg transition-colors duration-300 text-left flex items-center justify-between bg-black/20 border border-slate-700/80">
                             <div className="flex flex-col">
                                 <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
                                 <div className="flex items-center gap-2 font-bold text-lg mt-1">
                                     <span className="text-slate-300">{getCurrentEffectValue()}%</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                                     <span className="text-green-400">{getCurrentEffectValue() + skill.effectValuePerLevel!}%</span>
                                 </div>
                             </div>
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${!canAffordUpgrade ? 'bg-slate-700 border border-slate-600' : 'bg-slate-800 border border-slate-600 group-hover:bg-purple-600/50 group-hover:border-purple-500'}`}> <GoldIcon className="w-5 h-5"/> <span className={`font-bold text-sm transition-colors ${!canAffordUpgrade ? 'text-slate-500' : 'text-yellow-300'}`}>{currentUpgradeCost.toLocaleString()}</span> </div>
-                        </button>
+                            {/* This is the actual BUTTON now */}
+                            <button 
+                                onClick={() => onUpgrade(ownedSkill)} 
+                                disabled={!canAffordUpgrade || actionDisabled} 
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-200 transform
+                                ${!canAffordUpgrade || actionDisabled 
+                                    ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' 
+                                    : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:bg-purple-600 hover:border-purple-500 hover:scale-105 active:scale-100'
+                                }`}
+                            >
+                                <GoldIcon className="w-5 h-5"/> 
+                                <span className={`font-bold text-sm`}>{currentUpgradeCost.toLocaleString()}</span>
+                            </button>
+                        </div>
                         {!canAffordUpgrade && <p className="text-center text-xs text-red-400 mt-1">Không đủ vàng</p>}
                     </div>
                 )}
