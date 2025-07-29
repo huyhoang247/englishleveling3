@@ -238,7 +238,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                 {Object.entries(itemDef.stats).map(([key, value]) => (
                                     <div key={key} className="flex justify-between capitalize">
                                         <span className="text-slate-400">{key}:</span>
-                                        <span className="font-semibold text-cyan-300">{value}</span>
+                                        <span className="font-semibold text-cyan-300">{typeof value === 'number' ? value.toLocaleString() : value}</span>
                                     </div>
                                 ))}
                             </div>
@@ -486,7 +486,12 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         try {
             const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
             const targetRank = getRandomRank();
-            const finalItemDef = generateItemDefinition(randomBlueprint, targetRank);
+            
+            // THAY ĐỔI: Gọi generateItemDefinition với isRandomizedCraft = true
+            // Điều này tạo ra một định nghĩa vật phẩm với chỉ số ngẫu nhiên nếu là vũ khí,
+            // nhưng vẫn giữ nguyên ID để hệ thống có thể tra cứu.
+            const finalItemDef = generateItemDefinition(randomBlueprint, targetRank, true);
+            
             const newOwnedItem: OwnedItem = { 
                 id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, 
                 itemId: finalItemDef.id, 
@@ -549,7 +554,8 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
             const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
             
-            const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank);
+            // THAY ĐỔI: Tạo vật phẩm được rèn với chỉ số ngẫu nhiên nếu là vũ khí.
+            const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank, true);
 
             const newForgedItem: OwnedItem = { 
                 id: `owned-${Date.now()}-${upgradedItemDef.id}`, 
