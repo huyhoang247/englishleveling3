@@ -168,7 +168,7 @@ const SkillDetailModal = memo(({ ownedSkill, onClose, onEquip, onUnequip, onDise
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-200 transform
                                 ${!canAffordUpgrade || actionDisabled 
                                     ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' 
-                                    : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:bg-purple-600 hover:border-purple-500 hover:scale-105 active:scale-100'
+                                    : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 active:scale-100'
                                 }`}
                             >
                                 <GoldIcon className="w-5 h-5"/> 
