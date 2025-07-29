@@ -68,12 +68,6 @@ const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', cl
         src={uiAssets.gemIcon}
         alt="Tourmaline Gem Icon" // Alt text cho khả năng tiếp cận
         className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
-        // Xử lý lỗi tải ảnh cục bộ (tùy chọn, thường không cần thiết với asset được bundle)
-        // onError={(e) => {
-        //   const target = e as any;
-        //   target.onerror = null;
-        //   target.src = `https://placehold.co/${size}x${size}/8a2be2/ffffff?text=Gem`; // Placeholder
-        // }}
       />
     </div>
   );
@@ -622,7 +616,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       newOwned: OwnedItem[];
       newEquipped: EquippedItems;
       goldChange: number;
-      piecesChange: number;
+      booksChange: number;
   }) => {
       const userId = auth.currentUser?.uid;
       if (!userId) { throw new Error("User not authenticated for inventory update."); }
@@ -636,23 +630,29 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               if (!userDoc.exists()) { throw new Error("User document does not exist!"); }
 
               const currentCoins = userDoc.data().coins || 0;
+              const currentBooks = userDoc.data().ancientBooks || 0;
               const currentEquipment = userDoc.data().equipment || { pieces: 0, owned: [], equipped: { weapon: null, armor: null, accessory: null } };
-              const currentPieces = currentEquipment.pieces || 0;
 
               const newCoins = currentCoins + updates.goldChange;
-              const newPieces = currentPieces + updates.piecesChange;
+              const newBooks = currentBooks + updates.booksChange;
 
               if (newCoins < 0) { throw new Error("Không đủ vàng."); }
-              if (newPieces < 0) { throw new Error("Không đủ Mảnh Ghép."); }
+              if (newBooks < 0) { throw new Error("Không đủ Sách Cổ."); }
 
               transaction.update(userDocRef, {
                   coins: newCoins,
-                  equipment: { pieces: newPieces, owned: updates.newOwned, equipped: updates.newEquipped }
+                  ancientBooks: newBooks,
+                  equipment: { 
+                      ...currentEquipment, // Giữ lại các thuộc tính khác của equipment
+                      owned: updates.newOwned, 
+                      equipped: updates.newEquipped 
+                  }
               });
           });
 
+          // Cập nhật state cục bộ sau khi giao dịch thành công
           setCoins(prev => prev + updates.goldChange);
-          setEquipmentPieces(prev => prev + updates.piecesChange);
+          setAncientBooks(prev => prev + updates.booksChange);
           setOwnedItems(updates.newOwned);
           setEquippedItems(updates.newEquipped);
           
@@ -660,9 +660,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
       } catch (error) {
           console.error("Firestore transaction for equipment update failed:", error);
+          // Ném lỗi ra để component con (EquipmentScreen) có thể xử lý
           throw error;
       } finally { setIsSyncingData(false); }
   };    
+
   // START: CẬP NHẬT LOGIC MUA HÀNG
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
@@ -1033,7 +1035,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <EquipmentScreen 
                         onClose={toggleEquipmentScreen} 
                         gold={coins}
-                        equipmentPieces={equipmentPieces}
+                        ancientBooks={ancientBooks}
                         ownedItems={ownedItems}
                         equippedItems={equippedItems}
                         onInventoryUpdate={handleInventoryUpdate}
