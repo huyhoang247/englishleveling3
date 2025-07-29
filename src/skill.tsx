@@ -1,3 +1,5 @@
+// --- START OF FILE skill.tsx ---
+
 import React, { useState, useMemo, useCallback, memo } from 'react';
 import {
     ALL_SKILLS,
@@ -14,18 +16,12 @@ import {
     type Rarity,
     type OwnedSkill,
     type SkillBlueprint,
-} from './skill-data.tsx';
-
-// 1. Xóa component CoinDisplay được định nghĩa tại đây
-// 2. Thay thế bằng import thực sự từ file component của bạn
-// (Giả sử bạn có file tên là ./coin-display.tsx)
-import CoinDisplay from './coin-display.tsx';
+} from './skill-data';
+import { uiAssets } from './game-assets.ts'; // Import tài nguyên UI tập trung
+import CoinDisplay from './coin-display.tsx'; // Giả sử import
 
 
-// --- CÁC ICON GIAO DIỆN CHUNG ---
-const BookIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png" alt="Sách Cổ" className={className} /> );
-const CloseIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/close.png" alt="Đóng" className={className} /> );
-const GoldIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className={className} /> );
+// --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}> <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l-2.72-2.72a1 1 0 010-1.414l4.243-4.243a1 1 0 011.414 0l2.72 2.72a4 4 0 011.343 2.863l3.155-1.262a1 1 0 011.23 1.23l-1.262 3.155a4 4 0 01-1.343 2.863l2.72 2.72a1 1 0 010 1.414l-4.243 4.243a1 1 0 01-1.414 0l-2.72-2.72a4 4 0 01-2.863-1.343L6.663 15.147a1 1 0 01-1.23-1.23z" /> <path d="M11.379 4.424a1 1 0 01-1.414 0L4.424 9.965a1 1 0 010 1.414l2.121 2.121a1 1 0 011.414 0l5.54-5.54a1 1 0 010-1.414l-2.121-2.121z" /> </svg>);
 
@@ -133,7 +129,7 @@ const SkillDetailModal = memo(({ ownedSkill, onClose, onEquip, onUnequip, onDise
             <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
               <div className="flex justify-between items-start mb-2">
                 <h3 className={`text-2xl font-bold ${getRarityTextColor(ownedSkill.rarity)}`}>{skill.name}</h3>
-                <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
+                <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Đóng" className="w-5 h-5" /></button>
               </div>
               <div className="flex items-center gap-2">
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(ownedSkill.rarity)} bg-gray-800/70 border ${getRarityColor(ownedSkill.rarity)} capitalize`}>{getRarityDisplayName(ownedSkill.rarity)}</span>
@@ -171,7 +167,7 @@ const SkillDetailModal = memo(({ ownedSkill, onClose, onEquip, onUnequip, onDise
                                     : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 active:scale-100'
                                 }`}
                             >
-                                <GoldIcon className="w-5 h-5"/> 
+                                <img src={uiAssets.goldIcon} alt="Vàng" className="w-5 h-5"/> 
                                 <span className={`font-bold text-sm`}>{currentUpgradeCost.toLocaleString()}</span>
                             </button>
                         </div>
@@ -195,6 +191,8 @@ const SkillDetailModal = memo(({ ownedSkill, onClose, onEquip, onUnequip, onDise
         </div>
     );
 });
+
+// ... (Các component khác như CraftingSuccessModal, MergeModal giữ nguyên phần logic, chỉ thay đổi icon)
 
 const CraftingSuccessModal = memo(({ ownedSkill, onClose }: { ownedSkill: OwnedSkill, onClose: () => void }) => {
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
@@ -258,7 +256,7 @@ const MergeModal = memo(({ isOpen, onClose, ownedSkills, onMerge, isProcessing, 
               <MergeIcon className="w-7 h-7 text-purple-400" />
               <h3 className="text-xl font-black uppercase tracking-wider bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Hợp Nhất Kỹ Năng</h3>
             </div>
-            <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
+            <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Đóng" className="w-5 h-5" /></button>
           </div>
           <p className="text-sm text-slate-400 mt-2">Hợp nhất 3 kỹ năng <span className="font-bold text-white">cùng loại, cùng hạng</span> để tạo 1 kỹ năng hạng cao hơn. Hệ thống sẽ ưu tiên các kỹ năng cấp cao nhất.</p>
         </div>
@@ -288,6 +286,7 @@ const MergeModal = memo(({ isOpen, onClose, ownedSkills, onMerge, isProcessing, 
 });
 
 // --- COMPONENT CHÍNH ---
+// ... (Phần logic của component chính không thay đổi)
 interface SkillScreenProps {
   onClose: () => void;
   gold: number;
@@ -311,7 +310,6 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
     return equippedSkillIds.map(id => ownedSkills.find(s => s.id === id) || null);
   }, [equippedSkillIds, ownedSkills]);
   
-  // TỐI ƯU HÓA QUAN TRỌNG: Chỉ lọc và sắp xếp lại danh sách khi cần thiết.
   const unequippedSkillsSorted = useMemo(() => {
       return ownedSkills
           .filter(ownedSkill => !equippedSkillIds.includes(ownedSkill.id))
@@ -326,7 +324,6 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
               return skillA.name.localeCompare(skillB.name);
           });
   }, [ownedSkills, equippedSkillIds]);
-
 
   // --- TỐI ƯU HÓA: SỬ DỤNG useCallback CHO CÁC HÀM XỬ LÝ ---
   const showMessage = useCallback((text: string) => {
@@ -472,7 +469,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
             </section>
             <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                    <BookIcon className="w-10 h-10" />
+                    <img src={uiAssets.bookIcon} alt="Sách Cổ" className="w-10 h-10" />
                     <div className="flex items-baseline gap-1"><span className="text-xl font-bold text-white">{ancientBooks}</span><span className="text-base text-slate-400">/ {CRAFTING_COST}</span></div>
                 </div>
                 <button onClick={handleCraftSkill} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={ancientBooks < CRAFTING_COST || isProcessing}>Craft</button>
@@ -504,3 +501,5 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
     </div>
   );
 }
+
+// --- END OF FILE skill.tsx ---
