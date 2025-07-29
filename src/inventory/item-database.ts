@@ -23,7 +23,6 @@ export interface ItemDefinition {
     icon: string;
     stats?: { [key: string]: any };
     skills?: SkillDefinition[];
-    maxLevel?: number;
     // THAY ĐỔI: Thêm baseId để biết vật phẩm này thuộc blueprint nào
     baseId?: number; 
 }
@@ -37,32 +36,31 @@ export interface ItemBlueprint {
     type: 'weapon' | 'armor' | 'accessory';
     baseDescription: string;
     icon: string;
-    // Chỉ số và level ở Rank E (cấp thấp nhất)
+    // Chỉ số ở Rank E (cấp thấp nhất)
     baseStats: { [key: string]: number };
-    baseMaxLevel: number;
 }
 
 // THAY ĐỔI: Hệ số nhân chỉ số và các thuộc tính khác dựa trên Rank
-const rankModifiers: { [key in ItemRank]: { statMultiplier: number; levelMultiplier: number; desc: string; specialStats?: { [key: string]: any } } } = {
-    E:   { statMultiplier: 1.0, levelMultiplier: 1.0, desc: 'một phiên bản cơ bản' },
-    D:   { statMultiplier: 1.5, levelMultiplier: 1.2, desc: 'một phiên bản được gia cố' },
-    B:   { statMultiplier: 2.5, levelMultiplier: 1.8, desc: 'một tác phẩm đáng tin cậy', specialStats: { agility: 5 } },
-    A:   { statMultiplier: 4.0, levelMultiplier: 2.5, desc: 'một kiệt tác của thợ rèn', specialStats: { agility: 10, critChance: 0.05 } },
-    S:   { statMultiplier: 6.5, levelMultiplier: 3.5, desc: 'một vũ khí huyền thoại', specialStats: { strength: 15, critChance: 0.10, lifeSteal: 0.03 } },
-    SR:  { statMultiplier: 10.0, levelMultiplier: 4.5, desc: 'một báu vật thần thoại', specialStats: { strength: 25, critChance: 0.15, lifeSteal: 0.07 } },
-    SSR: { statMultiplier: 15.0, levelMultiplier: 6.0, desc: 'một tạo tác vô song của các vị thần', specialStats: { strength: 40, critChance: 0.20, lifeSteal: 0.12, divinePower: 100 } },
+const rankModifiers: { [key in ItemRank]: { statMultiplier: number; desc: string; specialStats?: { [key: string]: any } } } = {
+    E:   { statMultiplier: 1.0, desc: 'một phiên bản cơ bản' },
+    D:   { statMultiplier: 1.5, desc: 'một phiên bản được gia cố' },
+    B:   { statMultiplier: 2.5, desc: 'một tác phẩm đáng tin cậy', specialStats: { agility: 5 } },
+    A:   { statMultiplier: 4.0, desc: 'một kiệt tác của thợ rèn', specialStats: { agility: 10, critChance: 0.05 } },
+    S:   { statMultiplier: 6.5, desc: 'một vũ khí huyền thoại', specialStats: { strength: 15, critChance: 0.10, lifeSteal: 0.03 } },
+    SR:  { statMultiplier: 10.0, desc: 'một báu vật thần thoại', specialStats: { strength: 25, critChance: 0.15, lifeSteal: 0.07 } },
+    SSR: { statMultiplier: 15.0, desc: 'một tạo tác vô song của các vị thần', specialStats: { strength: 40, critChance: 0.20, lifeSteal: 0.12, divinePower: 100 } },
 };
 
 // THAY ĐỔI: Database giờ chỉ chứa các blueprint cho vật phẩm có thể chế tạo/rèn
 export const itemBlueprints: ItemBlueprint[] = [
-    { baseId: 1000, name: 'Nomad Sword', type: 'weapon', baseDescription: 'Thanh kiếm của dân du mục, thích hợp cho những chuyến đi dài.', icon: itemAssets.nomadSword, baseStats: { damage: 8, durability: 30 }, baseMaxLevel: 10 },
-    { baseId: 2000, name: 'Tunic', type: 'armor', baseDescription: 'Một chiếc áo tunic đơn giản, cung cấp sự bảo vệ cơ bản.', icon: itemAssets.tunic, baseStats: { defense: 8, magicResist: 2 }, baseMaxLevel: 10 },
-    { baseId: 3000, name: 'Warrior\'s Sword', type: 'weapon', baseDescription: 'Thanh kiếm được rèn cho những chiến binh dũng cảm.', icon: itemAssets.warriorsSword, baseStats: { damage: 15, durability: 50 }, baseMaxLevel: 15 },
-    { baseId: 4000, name: 'Frostbite Spear', type: 'weapon', baseDescription: 'Ngọn giáo phủ băng, gây sát thương kèm hiệu ứng làm chậm.', icon: itemAssets.frostbiteSpear, baseStats: { damage: 12, durability: 40, coldDamage: 3 }, baseMaxLevel: 15 },
-    { baseId: 5000, name: 'Giant\'s Hammer', type: 'weapon', baseDescription: 'Cây búa khổng lồ, gây sát thương vật lý cực lớn.', icon: itemAssets.giantsHammer, baseStats: { damage: 20, durability: 60, strength: 5 }, baseMaxLevel: 20 },
-    { baseId: 6000, name: 'Forest Staff', type: 'weapon', baseDescription: 'Cây trượng làm từ gỗ rừng cổ thụ, tăng cường sức mạnh phép thuật tự nhiên.', icon: itemAssets.forestStaff, baseStats: { magicDamage: 10, manaRegen: 2 }, baseMaxLevel: 15 },
-    { baseId: 7000, name: 'Hawkeye Bow', type: 'weapon', baseDescription: 'Cung của xạ thủ đại bàng, tầm bắn xa và độ chính xác cao.', icon: itemAssets.hawkeyeBow, baseStats: { damage: 10, range: 30 }, baseMaxLevel: 15 },
-    { baseId: 8000, name: 'Assassin\'s Dagger', type: 'weapon', baseDescription: 'Con dao găm của sát thủ, sắc bén và dễ dàng ẩn mình.', icon: itemAssets.assassinsDagger, baseStats: { damage: 9, attackSpeed: 10, critChance: 0.03 }, baseMaxLevel: 15 },
+    { baseId: 1000, name: 'Nomad Sword', type: 'weapon', baseDescription: 'Thanh kiếm của dân du mục, thích hợp cho những chuyến đi dài.', icon: itemAssets.nomadSword, baseStats: { damage: 8, durability: 30 } },
+    { baseId: 2000, name: 'Tunic', type: 'armor', baseDescription: 'Một chiếc áo tunic đơn giản, cung cấp sự bảo vệ cơ bản.', icon: itemAssets.tunic, baseStats: { defense: 8, magicResist: 2 } },
+    { baseId: 3000, name: 'Warrior\'s Sword', type: 'weapon', baseDescription: 'Thanh kiếm được rèn cho những chiến binh dũng cảm.', icon: itemAssets.warriorsSword, baseStats: { damage: 15, durability: 50 } },
+    { baseId: 4000, name: 'Frostbite Spear', type: 'weapon', baseDescription: 'Ngọn giáo phủ băng, gây sát thương kèm hiệu ứng làm chậm.', icon: itemAssets.frostbiteSpear, baseStats: { damage: 12, durability: 40, coldDamage: 3 } },
+    { baseId: 5000, name: 'Giant\'s Hammer', type: 'weapon', baseDescription: 'Cây búa khổng lồ, gây sát thương vật lý cực lớn.', icon: itemAssets.giantsHammer, baseStats: { damage: 20, durability: 60, strength: 5 } },
+    { baseId: 6000, name: 'Forest Staff', type: 'weapon', baseDescription: 'Cây trượng làm từ gỗ rừng cổ thụ, tăng cường sức mạnh phép thuật tự nhiên.', icon: itemAssets.forestStaff, baseStats: { magicDamage: 10, manaRegen: 2 } },
+    { baseId: 7000, name: 'Hawkeye Bow', type: 'weapon', baseDescription: 'Cung của xạ thủ đại bàng, tầm bắn xa và độ chính xác cao.', icon: itemAssets.hawkeyeBow, baseStats: { damage: 10, range: 30 } },
+    { baseId: 8000, name: 'Assassin\'s Dagger', type: 'weapon', baseDescription: 'Con dao găm của sát thủ, sắc bén và dễ dàng ẩn mình.', icon: itemAssets.assassinsDagger, baseStats: { damage: 9, attackSpeed: 10, critChance: 0.03 } },
 ];
 
 // THAY ĐỔI: Tạo một map để tra cứu blueprint nhanh chóng bằng baseId hoặc name
@@ -99,7 +97,6 @@ export function generateItemDefinition(blueprint: ItemBlueprint, rank: ItemRank)
         description: `${blueprint.baseDescription} Đây là ${modifier.desc}.`,
         icon: blueprint.icon,
         stats: newStats,
-        maxLevel: Math.round(blueprint.baseMaxLevel * modifier.levelMultiplier),
         skills: [], // Có thể thêm logic tạo skill động ở đây
     };
 }
@@ -110,7 +107,7 @@ export function generateItemDefinition(blueprint: ItemBlueprint, rank: ItemRank)
 // THAY ĐỔI: itemDatabase giờ là một cache. Nó chứa các vật phẩm tĩnh và các vật phẩm được tạo ra trong quá trình chơi.
 export const itemDatabase = new Map<number, ItemDefinition>([
     // Các vật phẩm tĩnh không theo blueprint (nguyên liệu, quest item, etc.)
-    [2, { id: 2, name: 'Hard Armor', type: 'armor', rarity: 'B', description: 'Áo giáp cứng cáp, cung cấp khả năng phòng thủ vượt trội.', stats: { defense: 25, durability: 120 }, icon: itemAssets.hardArmor, maxLevel: 25 }],
+    [2, { id: 2, name: 'Hard Armor', type: 'armor', rarity: 'B', description: 'Áo giáp cứng cáp, cung cấp khả năng phòng thủ vượt trội.', stats: { defense: 25, durability: 120 }, icon: itemAssets.hardArmor }],
     [26, { id: 26, name: 'Lá cây hiếm', type: 'material', rarity: 'D', description: 'Lá cây dùng để chế thuốc.', icon: '🍃' }],
     [43, { id: 43, name: 'Sắt', type: 'material', rarity: 'E', description: 'Nguyên liệu cơ bản để rèn trang bị.', icon: itemAssets.sat }],
     [44, { id: 44, name: 'Gỗ', type: 'material', rarity: 'E', description: 'Nguyên liệu cơ bản để chế tạo vật phẩm.', icon: itemAssets.go }],
