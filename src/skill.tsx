@@ -19,7 +19,7 @@ import {
 } from './skill-data.tsx';
 import { uiAssets } from './game-assets.ts'; // Import tài nguyên UI tập trung
 import CoinDisplay from './coin-display.tsx'; // Giả sử import
-import RateLimitToast from './thong-bao.tsx'; // <<< THÊM DÒNG IMPORT NÀY
+import RateLimitToast from './thong-bao.tsx'; // <<< Dòng import component
 
 // --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -301,7 +301,6 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  // <<< THÊM STATE ĐỂ ĐIỀU KHIỂN TOAST HỢP NHẤT
   const [mergeToast, setMergeToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
   const MAX_SKILLS_IN_STORAGE = 20;
 
@@ -430,11 +429,10 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
       const newOwnedList = ownedSkills.filter(s => !skillIdsToConsume.includes(s.id)).concat(newUpgradedSkill);
       try {
           await onSkillsUpdate({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: refundGold, booksChange: 0 });
-          let successMsg = `Hợp nhất thành công ${group.blueprint.name} [${group.nextRarity}] - Đạt Lv. ${finalLevel}!`;
-          if(refundGold > 0) {
-            successMsg += ` Hoàn lại ${refundGold.toLocaleString()} vàng.`
-          }
-          // <<< CẬP NHẬT STATE CỦA TOAST
+          
+          // <<< THAY ĐỔI DÒNG NÀY
+          const successMsg = 'Hợp nhất thành công!';
+          
           setMergeToast({ show: true, message: successMsg });
           setTimeout(() => setMergeToast(prev => ({...prev, show: false})), 4000);
           setIsMergeModalOpen(false);
@@ -456,7 +454,6 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
     <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
        <style>{` .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
       
-      {/* <<< SỬ DỤNG COMPONENT ĐÃ IMPORT */}
       <RateLimitToast show={mergeToast.show} message={mergeToast.message} />
 
       {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[101]">{message}</div>}
