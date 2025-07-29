@@ -70,6 +70,18 @@ const getNextRank = (rank: ItemRank): ItemRank | null => {
     return ranks[currentIndex + 1];
 };
 
+// THAY ĐỔI: Thêm hàm lấy Rank ngẫu nhiên khi chế tạo, tương tự skill.tsx
+const getRandomRank = (): ItemRank => {
+    const rand = Math.random() * 100;
+    if (rand < 0.1) return 'SR';    // 0.1%
+    if (rand < 1) return 'S';       // 0.9%
+    if (rand < 5) return 'A';       // 4%
+    if (rand < 20) return 'B';      // 15%
+    if (rand < 50) return 'D';      // 30%
+    return 'E';                     // 50%
+};
+
+
 const RARITY_ORDER: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR', 'SSR'];
 
 // 6. Logic chi phí
@@ -451,9 +463,26 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         if (ownedItems.length >= MAX_ITEMS_IN_STORAGE) { showMessage(`Kho chứa đã đầy.`); return; }
         
         setIsProcessing(true);
-        const newItemDef = CRAFTABLE_ITEMS[Math.floor(Math.random() * CRAFTABLE_ITEMS.length)];
+
+        // THAY ĐỔI: Chế tạo trang bị với rank ngẫu nhiên theo tỉ lệ
+        const newRank = getRandomRank();
+        const itemsOfNewRank = CRAFTABLE_ITEMS.filter(item => item.rarity === newRank);
+        
+        let newItemDef: ItemDefinition;
+
+        if (itemsOfNewRank.length > 0) {
+            // Chọn một vật phẩm ngẫu nhiên từ danh sách các vật phẩm có rank đã chọn
+            newItemDef = itemsOfNewRank[Math.floor(Math.random() * itemsOfNewRank.length)];
+        } else {
+            // Fallback phòng trường hợp không có vật phẩm nào ở rank đã roll (hiếm khi xảy ra)
+            // Lấy một vật phẩm rank E ngẫu nhiên để đảm bảo người chơi luôn nhận được gì đó.
+            const fallbackItems = CRAFTABLE_ITEMS.filter(item => item.rarity === 'E');
+            newItemDef = fallbackItems[Math.floor(Math.random() * fallbackItems.length)];
+        }
+
         const newOwnedItem: OwnedItem = { id: `owned-${Date.now()}-${newItemDef.id}-${Math.random()}`, itemId: newItemDef.id, level: 1 };
         const newOwnedList = [...ownedItems, newOwnedItem];
+        
         try {
             await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, booksChange: -CRAFTING_COST });
             setNewlyCraftedItem(newOwnedItem);
