@@ -199,7 +199,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     const itemDef = getItemDefinition(ownedItem.itemId);
     if (!itemDef) return null;
 
-    const isUpgradable = itemDef.maxLevel !== undefined && ownedItem.level < itemDef.maxLevel;
+    const isUpgradable = !!itemDef.stats; // An item is upgradable if it has stats.
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(itemDef, ownedItem.level) : 0;
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
 
@@ -222,7 +222,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                     </div>
                     <div className="flex items-center gap-2">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(itemDef.rarity)} bg-gray-800/70 border ${getRarityColor(itemDef.rarity)}`}>{itemDef.rarity}</span>
-                        <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Level {ownedItem.level} / {itemDef.maxLevel || 'N/A'}</span>
+                        <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Level {ownedItem.level}</span>
                     </div>
                 </div>
 
@@ -302,7 +302,7 @@ const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinit
     if (itemsToForge.length < 3) return { level: 1, refundGold: 0 };
     const totalInvestedGold = itemsToForge.reduce((total, item) => total + getTotalUpgradeCost(definition, item.level), 0);
     let finalLevel = 1, remainingGold = totalInvestedGold;
-    while (finalLevel < (definition.maxLevel || Infinity)) {
+    while (true) { // Loop indefinitely as there's no max level
         const costForNextLevel = getUpgradeCost(definition, finalLevel);
         if (remainingGold >= costForNextLevel) { remainingGold -= costForNextLevel; finalLevel++; } else { break; }
     }
@@ -412,7 +412,6 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         return map;
     }, [equippedItems, ownedItems]);
     
-    // ==================FIXED CODE BLOCK==================
     const unequippedItemsSorted = useMemo(() => {
         const equippedIds = Object.values(equippedItems).filter(id => id !== null);
         return ownedItems
@@ -421,11 +420,9 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
                 const itemDefA = getItemDefinition(a.itemId);
                 const itemDefB = getItemDefinition(b.itemId);
 
-                // Xử lý an toàn nếu không tìm thấy định nghĩa vật phẩm
-                if (!itemDefA) return 1;  // Đẩy vật phẩm không hợp lệ A xuống cuối
-                if (!itemDefB) return -1; // Đẩy vật phẩm không hợp lệ B xuống cuối
+                if (!itemDefA) return 1;
+                if (!itemDefB) return -1;
 
-                // Logic sắp xếp ban đầu, bây giờ đã an toàn
                 const rarityIndexA = RARITY_ORDER.indexOf(itemDefA.rarity);
                 const rarityIndexB = RARITY_ORDER.indexOf(itemDefB.rarity);
                 if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
@@ -433,7 +430,6 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
                 return itemDefA.name.localeCompare(itemDefB.name);
             });
     }, [ownedItems, equippedItems]);
-    // =====================================================
 
     const showMessage = useCallback((text: string) => {
         setMessage(text); setMessageKey(prev => prev + 1);
@@ -488,16 +484,9 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         setIsProcessing(true);
 
         try {
-            // BƯỚC 1: Chọn một "blueprint" ngẫu nhiên
             const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
-
-            // BƯỚC 2: Quay ngẫu nhiên một rank mong muốn
             const targetRank = getRandomRank();
-
-            // BƯỚC 3: Tạo ra ItemDefinition động từ blueprint và rank
             const finalItemDef = generateItemDefinition(randomBlueprint, targetRank);
-
-            // BƯỚC 4: Tạo vật phẩm mới cho người chơi
             const newOwnedItem: OwnedItem = { 
                 id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, 
                 itemId: finalItemDef.id, 
@@ -536,7 +525,6 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
     const handleUpgradeItem = useCallback(async (itemToUpgrade: OwnedItem) => {
         if (isProcessing) return;
         const itemDef = getItemDefinition(itemToUpgrade.itemId)!;
-        if (!itemDef.maxLevel || itemToUpgrade.level >= itemDef.maxLevel) { showMessage("Trang bị đã đạt cấp tối đa."); return; }
         
         const cost = getUpgradeCost(itemDef, itemToUpgrade.level);
         if (gold < cost) { showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); return; }
@@ -561,7 +549,6 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
             const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
             
-            // Tạo ra vật phẩm đã được nâng cấp hạng
             const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank);
 
             const newForgedItem: OwnedItem = { 
