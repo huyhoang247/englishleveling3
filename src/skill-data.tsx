@@ -105,7 +105,7 @@ export const ALL_SKILLS: SkillBlueprint[] = [
   {
     id: 'damage_boost',
     name: 'Damage Boost',
-    description: (level) => `Khi tấn công, có tỉ lệ kích hoạt, tăng ${5 + (level - 1) * 1}% Sát thương cho đòn đánh đó.`,
+    description: (level) => `Tăng ${5 + (level - 1) * 1}% Sát thương lên kẻ địch.`,
     icon: DamageBoostIcon,
     baseEffectValue: 5,
     effectValuePerLevel: 1,
@@ -114,7 +114,7 @@ export const ALL_SKILLS: SkillBlueprint[] = [
   {
     id: 'armor_penetration',
     name: 'Armor Penetration',
-    description: (level) => `Khi tấn công, có tỉ lệ kích hoạt, bỏ qua ${5 + (level - 1) * 1}% giáp của đối phương.`,
+    description: (level) => `Bỏ qua ${5 + (level - 1) * 1}% giáp của đối phương khi tấn công.`,
     icon: ArmorPenetrationIcon,
     baseEffectValue: 5,
     effectValuePerLevel: 1,
