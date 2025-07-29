@@ -1,10 +1,8 @@
-// --- START OF FILE item-database.ts (REFACTORED - FULL CODE) ---
+// --- START OF FILE item-database.ts (UPGRADED RANDOMNESS) ---
 
 import { itemAssets } from '../game-assets.ts';
 
-// --- CÁC ĐỊNH NGHĨA CỐT LÕI ---
-
-// Giữ nguyên: Định nghĩa ItemRank và các cấu trúc cơ bản
+// --- CÁC ĐỊNH NGHĨA CỐT LÕI (Không đổi) ---
 export type ItemRank = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' | 'SSR';
 export const RARITY_ORDER: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR', 'SSR'];
 
@@ -27,20 +25,16 @@ export interface ItemDefinition {
     baseId?: number; 
 }
 
-// --- HỆ THỐNG BLUEPRINT MỚI ---
-
 export interface ItemBlueprint {
-    baseId: number; // ID cơ sở, phải là duy nhất cho mỗi blueprint
+    baseId: number;
     name: string;
     type: 'weapon' | 'armor' | 'accessory';
     baseDescription: string;
     icon: string;
-    // THAY ĐỔI: Chỉ số cơ bản của vũ khí giờ là HP, ATK, DEF
     baseStats: { [key: string]: number };
     baseMaxLevel: number;
 }
 
-// THAY ĐỔI: Hệ số nhân chỉ số và các thuộc tính khác dựa trên Rank
 const rankModifiers: { [key in ItemRank]: { statMultiplier: number; levelMultiplier: number; desc: string; specialStats?: { [key: string]: any } } } = {
     E:   { statMultiplier: 1.0,  levelMultiplier: 1.0, desc: 'một phiên bản cơ bản' },
     D:   { statMultiplier: 2.0,  levelMultiplier: 1.2, desc: 'một phiên bản được gia cố' },
@@ -51,8 +45,6 @@ const rankModifiers: { [key in ItemRank]: { statMultiplier: number; levelMultipl
     SSR: { statMultiplier: 64.0, levelMultiplier: 6.0, desc: 'một tạo tác vô song của các vị thần', specialStats: { strength: 40, critChance: 0.20, lifeSteal: 0.12, divinePower: 100 } },
 };
 
-// THAY ĐỔI: Database giờ chứa các blueprint. Vũ khí đã được cập nhật với chỉ số HP, ATK, DEF.
-// Các giá trị này đóng vai trò là giá trị "cơ bản" hoặc "mặc định".
 export const itemBlueprints: ItemBlueprint[] = [
     { baseId: 1000, name: 'Nomad Sword', type: 'weapon', baseDescription: 'Thanh kiếm của dân du mục, thích hợp cho những chuyến đi dài.', icon: itemAssets.nomadSword, baseStats: { HP: 1000, ATK: 100, DEF: 50 }, baseMaxLevel: 10 },
     { baseId: 2000, name: 'Tunic', type: 'armor', baseDescription: 'Một chiếc áo tunic đơn giản, cung cấp sự bảo vệ cơ bản.', icon: itemAssets.tunic, baseStats: { defense: 8, magicResist: 2 }, baseMaxLevel: 10 },
@@ -68,13 +60,22 @@ const blueprintByBaseId = new Map<number, ItemBlueprint>(itemBlueprints.map(bp =
 const blueprintByName = new Map<string, ItemBlueprint>(itemBlueprints.map(bp => [bp.name, bp]));
 
 
-// --- HÀM TẠO VẬT PHẨM ĐỘNG ---
+// --- NÂNG CẤP HỆ THỐNG RANDOM ---
+
+// 1. Định nghĩa các Phân loại (Archetypes)
+const archetypes = [
+    { name: 'Balanced',   weights: { HP: {min: 0.8, max: 1.2}, ATK: {min: 0.8, max: 1.2}, DEF: {min: 0.8, max: 1.2} } }, // Cân bằng
+    { name: 'Sturdy',     weights: { HP: {min: 1.5, max: 2.0}, ATK: {min: 0.5, max: 0.8}, DEF: {min: 1.3, max: 1.8} } }, // Trâu bò, phòng thủ
+    { name: 'GlassCannon',weights: { HP: {min: 0.5, max: 0.8}, ATK: {min: 1.6, max: 2.2}, DEF: {min: 0.4, max: 0.7} } }, // Sát thương cao, máu giấy
+    { name: 'Bruiser',    weights: { HP: {min: 1.2, max: 1.6}, ATK: {min: 1.1, max: 1.5}, DEF: {min: 0.6, max: 0.9} } }, // Đấu sĩ, công và máu cao
+];
+
+// Hàm tiện ích để lấy số ngẫu nhiên trong khoảng
+const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
 
 /**
- * THAY ĐỔI: Sửa lại logic để đảm bảo chỉ số ngẫu nhiên được áp dụng đúng cách.
- * @param blueprint Bản thiết kế của vật phẩm.
- * @param rank Hạng của vật phẩm.
- * @param isRandomizedCraft - NẾU LÀ TRUE, vũ khí sẽ được tạo với chỉ số cơ bản ngẫu nhiên.
+ * THAY ĐỔI LỚN: Sử dụng hệ thống Archetype để tạo chỉ số ngẫu nhiên có "cá tính" hơn.
  */
 export function generateItemDefinition(blueprint: ItemBlueprint, rank: ItemRank, isRandomizedCraft: boolean = false): ItemDefinition {
     const modifier = rankModifiers[rank];
@@ -83,17 +84,22 @@ export function generateItemDefinition(blueprint: ItemBlueprint, rank: ItemRank,
     let workingStats: { [key: string]: number };
 
     // BƯỚC 1: Xác định bộ chỉ số "gốc" sẽ được sử dụng.
-    // Logic này đảm bảo việc chọn chỉ số ngẫu nhiên hay chỉ số từ blueprint được tách bạch.
     if (blueprint.type === 'weapon' && isRandomizedCraft) {
-        // Nếu là chế tạo vũ khí ngẫu nhiên, tạo ra bộ chỉ số mới.
+        // A. Chọn ngẫu nhiên một archetype
+        const selectedArchetype = archetypes[Math.floor(Math.random() * archetypes.length)];
+
+        // B. Lấy chỉ số cơ bản của blueprint làm nền
+        const base = blueprint.baseStats;
+
+        // C. Tạo chỉ số mới dựa trên archetype đã chọn
         workingStats = {
-            HP: Math.floor(Math.random() * (5000 - 1000 + 1)) + 1000,
-            ATK: Math.floor(Math.random() * (500 - 100 + 1)) + 100,
-            DEF: Math.floor(Math.random() * (250 - 50 + 1)) + 50,
+            HP:  Math.round(base.HP  * randomInRange(selectedArchetype.weights.HP.min,  selectedArchetype.weights.HP.max)),
+            ATK: Math.round(base.ATK * randomInRange(selectedArchetype.weights.ATK.min, selectedArchetype.weights.ATK.max)),
+            DEF: Math.round(base.DEF * randomInRange(selectedArchetype.weights.DEF.min, selectedArchetype.weights.DEF.max)),
         };
+
     } else {
-        // Nếu không, sử dụng chỉ số cơ bản từ blueprint.
-        // Tạo một bản sao để tránh thay đổi blueprint gốc.
+        // Nếu không phải chế tạo ngẫu nhiên, dùng chỉ số cơ bản
         workingStats = { ...blueprint.baseStats };
     }
 
@@ -103,7 +109,6 @@ export function generateItemDefinition(blueprint: ItemBlueprint, rank: ItemRank,
         finalStats[key] = Math.round(workingStats[key] * modifier.statMultiplier);
     }
     
-    // Gộp các chỉ số đặc biệt từ rank modifier (không áp dụng cho vũ khí)
     if (blueprint.type !== 'weapon' && modifier.specialStats) {
         Object.assign(finalStats, modifier.specialStats);
     }
@@ -117,17 +122,16 @@ export function generateItemDefinition(blueprint: ItemBlueprint, rank: ItemRank,
         rarity: rank,
         description: `${blueprint.baseDescription} Đây là ${modifier.desc}.`,
         icon: blueprint.icon,
-        stats: finalStats, // Sử dụng chỉ số cuối cùng
+        stats: finalStats,
         maxLevel: Math.round(blueprint.baseMaxLevel * modifier.levelMultiplier),
         skills: [],
     };
 }
 
 
-// --- DATABASE TRUNG TÂM VÀ HÀM TRUY CẬP ---
+// --- DATABASE TRUNG TÂM VÀ HÀM TRUY CẬP (Không đổi) ---
 
 export const itemDatabase = new Map<number, ItemDefinition>([
-    // Các vật phẩm tĩnh không theo blueprint (nguyên liệu, quest item, etc.)
     [2, { id: 2, name: 'Hard Armor', type: 'armor', rarity: 'B', description: 'Áo giáp cứng cáp, cung cấp khả năng phòng thủ vượt trội.', stats: { defense: 25, durability: 120 }, icon: itemAssets.hardArmor, maxLevel: 25 }],
     [26, { id: 26, name: 'Lá cây hiếm', type: 'material', rarity: 'D', description: 'Lá cây dùng để chế thuốc.', icon: '🍃' }],
     [43, { id: 43, name: 'Sắt', type: 'material', rarity: 'E', description: 'Nguyên liệu cơ bản để rèn trang bị.', icon: itemAssets.sat }],
@@ -144,43 +148,31 @@ export const itemDatabase = new Map<number, ItemDefinition>([
     [54, { id: 54, name: 'Mảnh ghép trang sức', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một món trang sức ngẫu nhiên.', icon: itemAssets.manhGhepTrangSuc }],
 ]);
 
-/**
- * THAY ĐỔI: Hàm này sẽ tạo và cache vật phẩm. Vì generateItemDefinition đã thay đổi,
- * mỗi khi một ID vật phẩm chưa có trong cache được gọi, nó sẽ được tạo ra với
- * chỉ số (có thể ngẫu nhiên nếu là vũ khí) và được lưu lại cho các lần gọi sau trong cùng phiên.
- */
+
 export function getItemDefinition(id: number): ItemDefinition | undefined {
-    // 1. Kiểm tra cache trước
     if (itemDatabase.has(id)) {
         return itemDatabase.get(id);
     }
 
-    // 2. Nếu không có, thử tạo từ blueprint
     const baseId = Math.floor(id / 1000) * 1000;
     const rankIndex = id - baseId;
     
     const blueprint = blueprintByBaseId.get(baseId);
     if (blueprint && rankIndex >= 0 && rankIndex < RARITY_ORDER.length) {
         const rank = RARITY_ORDER[rankIndex];
-        // Gọi hàm generate với isRandomizedCraft = false vì đây chỉ là để lấy thông tin chung,
-        // không phải chế tạo thực tế. Logic chế tạo thực tế nằm ở equipment.tsx.
-        // Tuy nhiên, để nhất quán, ta vẫn có thể gọi với `true` và cache lại.
-        const newItemDef = generateItemDefinition(blueprint, rank, true);
+        const newItemDef = generateItemDefinition(blueprint, rank, true); // Vẫn gọi với true để cache lần đầu
         
-        // 3. Lưu vào cache cho lần truy cập sau
         itemDatabase.set(newItemDef.id, newItemDef);
         
         return newItemDef;
     }
 
-    // 4. Nếu không tìm thấy, trả về undefined
     console.warn(`Không thể tìm hoặc tạo ItemDefinition cho ID: ${id}`);
     return undefined;
 }
 
-
-export function getBlueprintByName(string: string): ItemBlueprint | undefined {
-    return blueprintByName.get(string);
+export function getBlueprintByName(name: string): ItemBlueprint | undefined {
+    return blueprintByName.get(name);
 }
 
-// --- END OF FILE item-database.ts (REFACTORED - FULL CODE) ---
+// --- END OF FILE item-database.ts (UPGRADED RANDOMNESS) ---
