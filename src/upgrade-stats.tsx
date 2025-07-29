@@ -82,10 +82,12 @@ const formatNumber = (num: number) => {
 };
 
 
-// --- COMPONENT STAT CARD (Đã loại bỏ Spinner) ---
+// --- COMPONENT STAT CARD (Đã sửa logic hiển thị bonus) ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: string) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
   const upgradeCost = calculateUpgradeCost(level);
+  // SỬA LỖI: Tính toán số điểm sẽ nhận được cho lần nâng cấp TIẾP THEO (level + 1)
+  const bonusForNextLevel = getBonusForLevel(level + 1, baseUpgradeBonus);
 
   return (
     <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px
@@ -97,7 +99,8 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
         <div className="w-10 h-10">{icon}</div>
         <div className="flex-grow flex flex-col items-center gap-1">
           <p className="text-lg uppercase font-bold tracking-wider">{name}</p>
-          <p className="text-xl font-black text-shadow-cyan">+{formatNumber(calculateTotalStatValue(level, baseUpgradeBonus))}</p>
+          {/* SỬA LỖI: Hiển thị bonus cho lần nâng cấp tiếp theo, không phải tổng chỉ số */}
+          <p className="text-xl font-black text-shadow-cyan">+{formatNumber(bonusForNextLevel)}</p>
           <p className="text-xs text-slate-400">Level {level}</p>
         </div>
         <button
@@ -299,7 +302,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
             <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
                 <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-[0_0_8px_rgba(0,246,255,0.45)] transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }}></div>
                 <div className="absolute inset-0 flex justify-end items-center px-4 text-sm text-white text-shadow-sm font-bold">
-                    <span>{currentProgress}<span className="text-slate-300">/{maxProgress}</span></span>
+                    <span>{currentProgress}<span className="text-slate-300">/ {maxProgress}</span></span>
                 </div>
             </div>
           </div>
