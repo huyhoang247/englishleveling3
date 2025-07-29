@@ -1,41 +1,32 @@
+// --- START OF FILE equipment.tsx (UPDATED FOR BLUEPRINT SYSTEM - FULL CODE) ---
+
 import React, { useState, useMemo, useCallback, memo } from 'react';
-import { itemDatabase, type ItemDefinition, type ItemRank } from './inventory/item-database.ts';
+// THAY ĐỔI: Import các hàm và cấu trúc mới từ item-database
+import { 
+    getItemDefinition, 
+    itemBlueprints, 
+    generateItemDefinition,
+    getBlueprintByName,
+    type ItemBlueprint,
+    type ItemDefinition, 
+    type ItemRank, 
+    RARITY_ORDER 
+} from './inventory/item-database.ts';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
-// 1. Định nghĩa kiểu dữ liệu cho một trang bị mà người chơi sở hữu
 export interface OwnedItem {
-    id: string;      // ID duy nhất cho mỗi instance của trang bị
-    itemId: number;  // ID của trang bị trong itemDatabase
+    id: string;
+    itemId: number;
     level: number;
 }
 
-// 2. Định nghĩa các loại ô trang bị
 export type EquipmentSlotType = 'weapon' | 'armor' | 'accessory';
 export const EQUIPMENT_SLOT_TYPES: EquipmentSlotType[] = ['weapon', 'armor', 'accessory'];
 
-// 3. Định nghĩa cấu trúc cho các trang bị đang được mặc
 export type EquippedItems = {
-    [key in EquipmentSlotType]: string | null; // Lưu trữ ID của OwnedItem
+    [key in EquipmentSlotType]: string | null;
 };
-
-// 4. Lấy toàn bộ ItemDefinition từ Map và chuyển thành Array để dễ xử lý
-const ALL_ITEMS: ItemDefinition[] = Array.from(itemDatabase.values());
-const CRAFTABLE_ITEMS = ALL_ITEMS.filter(item => ['weapon', 'armor', 'accessory'].includes(item.type));
-
-// THAY ĐỔI: Tạo một "blueprint" map để nhóm các vật phẩm có cùng tên
-// Key: Tên vật phẩm (ví dụ: 'Nomad Sword')
-// Value: Mảng các ItemDefinition cho vật phẩm đó ở các rank khác nhau
-const CRAFTABLE_ITEM_BLUEPRINTS = new Map<string, ItemDefinition[]>();
-CRAFTABLE_ITEMS.forEach(item => {
-    if (!CRAFTABLE_ITEM_BLUEPRINTS.has(item.name)) {
-        CRAFTABLE_ITEM_BLUEPRINTS.set(item.name, []);
-    }
-    CRAFTABLE_ITEM_BLUEPRINTS.get(item.name)!.push(item);
-});
-// Chuyển thành mảng các tên vật phẩm có thể chế tạo
-const CRAFTABLE_NAMES = Array.from(CRAFTABLE_ITEM_BLUEPRINTS.keys());
-
 
 // 5. Các hàm tiện ích cho Rarity (ItemRank)
 const getRarityColor = (rank: ItemRank): string => {
@@ -78,28 +69,24 @@ const getRarityGradient = (rank: ItemRank): string => {
 };
 
 const getNextRank = (rank: ItemRank): ItemRank | null => {
-    const ranks: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR', 'SSR'];
-    const currentIndex = ranks.indexOf(rank);
-    if (currentIndex === -1 || currentIndex === ranks.length - 1) return null;
-    return ranks[currentIndex + 1];
+    const currentIndex = RARITY_ORDER.indexOf(rank);
+    if (currentIndex === -1 || currentIndex === RARITY_ORDER.length - 1) return null;
+    return RARITY_ORDER[currentIndex + 1];
 };
 
 const getRandomRank = (): ItemRank => {
     const rand = Math.random() * 100;
-    // Tỉ lệ giống hệt skill.tsx
-    if (rand < 0.1) return 'SR';    // 0.1%
-    if (rand < 1) return 'S';       // 0.9%
-    if (rand < 5) return 'A';       // 4%
-    if (rand < 20) return 'B';      // 15%
-    if (rand < 50) return 'D';      // 30%
-    return 'E';                     // 50%
+    if (rand < 0.1) return 'SR';
+    if (rand < 1) return 'S';
+    if (rand < 5) return 'A';
+    if (rand < 20) return 'B';
+    if (rand < 50) return 'D';
+    return 'E';
 };
 
-const RARITY_ORDER: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR', 'SSR'];
-
 // 6. Logic chi phí
-const CRAFTING_COST = 50; // Chi phí Sách Cổ để chế tạo
-const DISMANTLE_RETURN_BOOKS = 25; // Số Sách Cổ nhận lại
+const CRAFTING_COST = 50;
+const DISMANTLE_RETURN_BOOKS = 25;
 
 const getUpgradeCost = (itemDef: ItemDefinition, level: number): number => {
     const rarityMultiplier = { E: 1, D: 1.5, B: 2.5, A: 4, S: 7, SR: 12, SSR: 20 };
@@ -123,7 +110,7 @@ const ForgeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http:/
 const AncientBookIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/sach-co.png" alt="Sách Cổ" className={className} /> );
 
 // --- CoinDisplay Component ---
-const CoinDisplay = ({ displayedCoins }: { displayedCoins: number; isStatsFullscreen: boolean }) => (
+const CoinDisplay = ({ displayedCoins }: { displayedCoins: number; }) => (
     <div className="flex items-center gap-2 px-4 py-2 bg-black/30 rounded-full border border-slate-700">
         <GoldIcon className="w-6 h-6" />
         <span className="text-base font-bold text-yellow-300 tracking-wider">{displayedCoins.toLocaleString()}</span>
@@ -141,7 +128,7 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
                     <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
                 </button>
                 <div className="flex items-center gap-4 sm:gap-6">
-                    <CoinDisplay displayedCoins={gold} isStatsFullscreen={false} />
+                    <CoinDisplay displayedCoins={gold} />
                 </div>
             </div>
         </header>
@@ -149,7 +136,7 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
 });
 
 const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { slotType: EquipmentSlotType, ownedItem: OwnedItem | null, onClick: () => void, isProcessing: boolean }) => {
-    const itemDef = ownedItem ? itemDatabase.get(ownedItem.itemId) : null;
+    const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
     const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex flex-col items-center justify-center group";
     const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer';
     const borderStyle = itemDef ? `${getRarityColor(itemDef.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
@@ -182,9 +169,8 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
     );
 });
 
-
 const ItemCard = memo(({ ownedItem, onClick, isEquipped, isProcessing }: { ownedItem: OwnedItem, onClick: (item: OwnedItem) => void, isEquipped: boolean, isProcessing: boolean }) => {
-    const itemDef = itemDatabase.get(ownedItem.itemId);
+    const itemDef = getItemDefinition(ownedItem.itemId);
     if (!itemDef) return null;
 
     const baseClasses = "relative w-full p-3 rounded-lg border-2 flex items-center gap-4 transition-all duration-200";
@@ -209,9 +195,8 @@ const ItemCard = memo(({ ownedItem, onClick, isEquipped, isProcessing }: { owned
     );
 });
 
-
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
-    const itemDef = itemDatabase.get(ownedItem.itemId);
+    const itemDef = getItemDefinition(ownedItem.itemId);
     if (!itemDef) return null;
 
     const isUpgradable = itemDef.maxLevel !== undefined && ownedItem.level < itemDef.maxLevel;
@@ -293,7 +278,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
 });
 
 const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedItem, onClose: () => void }) => {
-    const itemDef = itemDatabase.get(ownedItem.itemId);
+    const itemDef = getItemDefinition(ownedItem.itemId);
     if (!itemDef) return null;
     
     const rarityTextColor = getRarityTextColor(itemDef.rarity);
@@ -305,7 +290,13 @@ const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedIte
 
 // --- FORGE MODAL (Hợp nhất/Rèn) ---
 interface ForgeResult { level: number; refundGold: number; }
-interface ForgeGroup { itemId: number; rarity: ItemRank; items: OwnedItem[]; definition: ItemDefinition; nextRank: ItemRank | null; estimatedResult: ForgeResult; }
+interface ForgeGroup { 
+    blueprint: ItemBlueprint;
+    rarity: ItemRank; 
+    items: OwnedItem[]; 
+    nextRank: ItemRank | null; 
+    estimatedResult: ForgeResult; 
+}
 
 const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinition): ForgeResult => {
     if (itemsToForge.length < 3) return { level: 1, refundGold: 0 };
@@ -322,26 +313,31 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
     const forgeableGroups = useMemo<ForgeGroup[]>(() => {
         if (!isOpen) return [];
         const unequippedItems = ownedItems.filter(s => !equippedItemIds.includes(s.id));
+        
         const groups: Record<string, OwnedItem[]> = {};
         for (const item of unequippedItems) {
-            const definition = itemDatabase.get(item.itemId)!;
-            const key = `${item.itemId}-${definition.rarity}`;
+            const definition = getItemDefinition(item.itemId);
+            if (!definition || !definition.baseId) continue; // Bỏ qua vật phẩm không có blueprint
+
+            const key = `${definition.baseId}-${definition.rarity}`;
             if (!groups[key]) groups[key] = [];
             groups[key].push(item);
         }
+
         return Object.values(groups)
             .filter(group => group.length >= 3)
             .map(group => {
-                const firstItem = group[0];
-                const definition = itemDatabase.get(firstItem.itemId)!;
-                const nextRank = getNextRank(definition.rarity);
+                const firstItemDef = getItemDefinition(group[0].itemId)!;
+                const blueprint = getBlueprintByName(firstItemDef.name)!;
+                const nextRank = getNextRank(firstItemDef.rarity);
                 const sortedItems = [...group].sort((a, b) => b.level - a.level);
                 const top3Items = sortedItems.slice(0, 3);
-                const estimatedResult = calculateForgeResult(top3Items, definition);
-                return { itemId: firstItem.itemId, rarity: definition.rarity, items: sortedItems, definition, nextRank, estimatedResult };
+                const estimatedResult = calculateForgeResult(top3Items, firstItemDef);
+                
+                return { blueprint, rarity: firstItemDef.rarity, items: sortedItems, nextRank, estimatedResult };
             })
             .filter(group => group.nextRank !== null)
-            .sort((a,b) => a.definition.name.localeCompare(b.definition.name));
+            .sort((a, b) => a.blueprint.name.localeCompare(b.blueprint.name));
     }, [isOpen, ownedItems, equippedItemIds]);
 
     if (!isOpen) return null;
@@ -363,15 +359,15 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
                 <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2 space-y-4">
                     {forgeableGroups.length > 0 ? (
                         forgeableGroups.map(group => (
-                            <div key={`${group.itemId}-${group.rarity}`} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 flex items-center justify-between gap-4">
+                            <div key={`${group.blueprint.baseId}-${group.rarity}`} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 flex items-center justify-between gap-4">
                                 <div className="flex flex-1 items-center justify-center gap-4 sm:gap-6">
                                     <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.rarity)} bg-black/30`}>
-                                        <img src={group.definition.icon} className="w-12 h-12 object-contain" />
+                                        <img src={group.blueprint.icon} className="w-12 h-12 object-contain" />
                                         <span className="absolute -top-2 -right-2 bg-cyan-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">3/{group.items.length}</span>
                                     </div>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                                     <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.nextRank!)} bg-black/30`}>
-                                        <img src={group.definition.icon} className="w-12 h-12 object-contain" />
+                                        <img src={group.blueprint.icon} className="w-12 h-12 object-contain" />
                                         <span className="absolute -top-2 -right-2 bg-slate-800 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">Lv.{group.estimatedResult.level}</span>
                                     </div>
                                 </div>
@@ -421,8 +417,8 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         return ownedItems
             .filter(item => !equippedIds.includes(item.id))
             .sort((a, b) => {
-                const itemDefA = itemDatabase.get(a.itemId)!;
-                const itemDefB = itemDatabase.get(b.itemId)!;
+                const itemDefA = getItemDefinition(a.itemId)!;
+                const itemDefB = getItemDefinition(b.itemId)!;
                 const rarityIndexA = RARITY_ORDER.indexOf(itemDefA.rarity);
                 const rarityIndexB = RARITY_ORDER.indexOf(itemDefB.rarity);
                 if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
@@ -439,7 +435,7 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
     
     const handleEquipItem = useCallback(async (itemToEquip: OwnedItem) => {
         if (isProcessing) return;
-        const itemDef = itemDatabase.get(itemToEquip.itemId);
+        const itemDef = getItemDefinition(itemToEquip.itemId);
         if (!itemDef || !EQUIPMENT_SLOT_TYPES.includes(itemDef.type as any)) {
             showMessage("Vật phẩm này không thể trang bị."); return;
         }
@@ -456,7 +452,7 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
 
     const handleUnequipItem = useCallback(async (itemToUnequip: OwnedItem) => {
         if (isProcessing) return;
-        const itemDef = itemDatabase.get(itemToUnequip.itemId);
+        const itemDef = getItemDefinition(itemToUnequip.itemId);
         if (!itemDef) return;
 
         const slotType = itemDef.type as EquipmentSlotType;
@@ -483,44 +479,27 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         
         setIsProcessing(true);
 
-        // BƯỚC 1: Chọn một "loại" vật phẩm ngẫu nhiên (ví dụ: 'Nomad Sword')
-        const randomItemName = CRAFTABLE_NAMES[Math.floor(Math.random() * CRAFTABLE_NAMES.length)];
-        const itemVariants = CRAFTABLE_ITEM_BLUEPRINTS.get(randomItemName)!;
-
-        // BƯỚC 2: Quay ngẫu nhiên một rank mong muốn
-        const targetRank = getRandomRank();
-
-        // BƯỚC 3: Tìm phiên bản vật phẩm có rank phù hợp nhất
-        let finalItemDef: ItemDefinition | undefined;
-
-        // Cố gắng tìm chính xác rank mong muốn
-        finalItemDef = itemVariants.find(v => v.rarity === targetRank);
-
-        // Fallback: Nếu không có rank đó, tìm rank cao nhất có sẵn nhưng thấp hơn rank mong muốn
-        if (!finalItemDef) {
-            const availableRanks = itemVariants.map(v => v.rarity);
-            const targetRankIndex = RARITY_ORDER.indexOf(targetRank);
-
-            for (let i = targetRankIndex; i >= 0; i--) {
-                const lowerRank = RARITY_ORDER[i];
-                if (availableRanks.includes(lowerRank)) {
-                    finalItemDef = itemVariants.find(v => v.rarity === lowerRank);
-                    break;
-                }
-            }
-        }
-        
-        // Fallback cuối cùng: Nếu vẫn không tìm được (trường hợp cực hiếm), lấy rank thấp nhất của vật phẩm đó
-        if (!finalItemDef) {
-            finalItemDef = itemVariants.sort((a,b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity))[0];
-        }
-
-        const newOwnedItem: OwnedItem = { id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, itemId: finalItemDef.id, level: 1 };
-        const newOwnedList = [...ownedItems, newOwnedItem];
-        
         try {
+            // BƯỚC 1: Chọn một "blueprint" ngẫu nhiên
+            const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
+
+            // BƯỚC 2: Quay ngẫu nhiên một rank mong muốn
+            const targetRank = getRandomRank();
+
+            // BƯỚC 3: Tạo ra ItemDefinition động từ blueprint và rank
+            const finalItemDef = generateItemDefinition(randomBlueprint, targetRank);
+
+            // BƯỚC 4: Tạo vật phẩm mới cho người chơi
+            const newOwnedItem: OwnedItem = { 
+                id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, 
+                itemId: finalItemDef.id, 
+                level: 1 
+            };
+            const newOwnedList = [...ownedItems, newOwnedItem];
+            
             await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, booksChange: -CRAFTING_COST });
             setNewlyCraftedItem(newOwnedItem);
+
         } catch(error: any) { 
             showMessage(`Lỗi: ${error.message || 'Chế tạo thất bại'}`); 
         } finally { 
@@ -533,7 +512,7 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         if (Object.values(equippedItems).includes(itemToDismantle.id)) { showMessage("Không thể phân rã trang bị đang mặc."); return; }
         
         setIsProcessing(true);
-        const itemDef = itemDatabase.get(itemToDismantle.itemId)!;
+        const itemDef = getItemDefinition(itemToDismantle.itemId)!;
         const goldToReturn = getTotalUpgradeCost(itemDef, itemToDismantle.level);
         const newOwnedList = ownedItems.filter(s => s.id !== itemToDismantle.id);
         
@@ -548,7 +527,7 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
 
     const handleUpgradeItem = useCallback(async (itemToUpgrade: OwnedItem) => {
         if (isProcessing) return;
-        const itemDef = itemDatabase.get(itemToUpgrade.itemId)!;
+        const itemDef = getItemDefinition(itemToUpgrade.itemId)!;
         if (!itemDef.maxLevel || itemToUpgrade.level >= itemDef.maxLevel) { showMessage("Trang bị đã đạt cấp tối đa."); return; }
         
         const cost = getUpgradeCost(itemDef, itemToUpgrade.level);
@@ -569,24 +548,32 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         setIsProcessing(true);
         const itemsToConsume = group.items.slice(0, 3);
         const itemIdsToConsume = itemsToConsume.map(s => s.id);
-        const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, group.definition);
         
-        const upgradedItemDef = ALL_ITEMS.find(i => i.name === group.definition.name && i.rarity === group.nextRank);
-        if(!upgradedItemDef) {
-            showMessage(`Lỗi: Không tìm thấy phiên bản [${group.nextRank}] của ${group.definition.name}.`);
-            setIsProcessing(false);
-            return;
-        }
-
-        const newForgedItem: OwnedItem = { id: `owned-${Date.now()}-${upgradedItemDef.id}`, itemId: upgradedItemDef.id, level: finalLevel };
-        const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
         try {
+            const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
+            const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
+            
+            // Tạo ra vật phẩm đã được nâng cấp hạng
+            const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank);
+
+            const newForgedItem: OwnedItem = { 
+                id: `owned-${Date.now()}-${upgradedItemDef.id}`, 
+                itemId: upgradedItemDef.id, 
+                level: finalLevel 
+            };
+            const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
+            
             await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: refundGold, booksChange: 0 });
+            
             let successMsg = `Rèn thành công ${upgradedItemDef.name} [${group.nextRank}] - Đạt Lv. ${finalLevel}!`;
             if (refundGold > 0) successMsg += ` Hoàn lại ${refundGold.toLocaleString()} vàng.`;
             showMessage(successMsg);
             setIsForgeModalOpen(false);
-        } catch (error: any) { showMessage(`Lỗi: ${error.message || 'Rèn thất bại'}`); } finally { setIsProcessing(false); }
+        } catch (error: any) { 
+            showMessage(`Lỗi: ${error.message || 'Rèn thất bại'}`); 
+        } finally { 
+            setIsProcessing(false); 
+        }
     }, [isProcessing, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
 
     const handleSelectSlot = useCallback((slotType: EquipmentSlotType) => {
@@ -645,3 +632,4 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         </div>
     );
 }
+// --- END OF FILE equipment.tsx (UPDATED FOR BLUEPRINT SYSTEM - FULL CODE) ---
