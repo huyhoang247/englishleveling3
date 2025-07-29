@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect, useMemo, FC, ReactNode } from 'react';
 import { db, auth } from '../firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, QuerySnapshot, DocumentData } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { 
     AreaChart, Area, BarChart, Bar, Radar, RadarChart, PolarGrid, 
     PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, 
     Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
-import { defaultVocabulary } from '../list-vocabulary.ts'; // Điều chỉnh đường dẫn
+import { defaultVocabulary } from './list-vocabulary.ts'; // Điều chỉnh đường dẫn
 
 // --- Icons (Sử dụng các icon SVG đơn giản để không phụ thuộc vào file ngoài) ---
 const BookOpenIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
@@ -79,7 +79,7 @@ export default function AnalysisDashboard() {
         const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
         const allCompletions: { word: string; date: Date }[] = [];
 
-        const processSnapshot = (snapshot: typeof completedWordsSnapshot, type: 'single' | 'multi') => {
+        const processSnapshot = (snapshot: QuerySnapshot<DocumentData>, type: 'single' | 'multi') => {
           snapshot.forEach(doc => {
             const data = doc.data();
             const lastCompletedAt = data.lastCompletedAt?.toDate();
