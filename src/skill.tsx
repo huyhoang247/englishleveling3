@@ -483,7 +483,7 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
                         <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
                         <span className="text-sm font-semibold text-slate-300">{ownedSkills.length}<span className="text-xs text-slate-500"> / {MAX_SKILLS_IN_STORAGE}</span></span>
                     </div>
-                    <button onClick={handleOpenMergeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Hợp Nhất</button>
+                    <button onClick={handleOpenMergeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto hide-scrollbar">
                     {unequippedSkillsSorted.length > 0 ? (
