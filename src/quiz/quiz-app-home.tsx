@@ -1,9 +1,10 @@
-// --- START OF FILE quiz-app-home.tsx ---
+// --- START OF FILE: quiz-app-home.tsx ---
 
 import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import QuizApp from './quiz.tsx';
 import Breadcrumbs from '../bread-crumbs.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
+import AnalysisDashboard from '../AnalysisDashboard.tsx'; // --- ĐÃ THÊM
 
 // Imports for progress calculation
 import { db, auth } from '../firebase.js';
@@ -63,6 +64,21 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   }, []);
 
+  // --- ĐÃ THÊM: Xử lý hiển thị cho trang phân tích ---
+  if (currentView === 'analysis') {
+    return (
+        <div className="fixed inset-0 z-[51] bg-white overflow-y-auto">
+            <div className="sticky top-0 bg-white/80 backdrop-blur-sm z-10 p-4 border-b">
+                <button onClick={goHome} className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                    Quay lại trang chính
+                </button>
+            </div>
+            <AnalysisDashboard />
+        </div>
+    );
+  }
+
   if (currentView === 'vocabularyGame') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
@@ -106,6 +122,24 @@ export default function QuizAppHome() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
+
+              {/* --- ĐÃ THÊM: Nút dẫn đến trang phân tích --- */}
+              <button
+                  onClick={() => setCurrentView('analysis')}
+                  className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-teal-300 group"
+              >
+                  <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 text-white shadow-md">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>
+                  </div>
+                  <div className="ml-5 text-left flex-grow">
+                      <h3 className="text-xl font-bold text-gray-800">Phân Tích</h3>
+                      <p className="text-gray-500 text-sm mt-1">Xem tiến trình học tập của bạn</p>
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-teal-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+              </button>
+              
               <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
                 <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Sắp ra mắt</div>
                 <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm"><span className="text-4xl">📄</span></div>
@@ -818,3 +852,5 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         </div>
     );
 };
+
+// --- END OF FILE: quiz-app-home.tsx ---
