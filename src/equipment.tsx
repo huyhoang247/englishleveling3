@@ -1,4 +1,4 @@
-// --- START OF FILE equipment.tsx (UPDATED FOR BLUEPRINT SYSTEM - FULL CODE) ---
+// --- START OF FILE equipment.tsx (FIXED) ---
 
 import React, { useState, useMemo, useCallback, memo } from 'react';
 // THAY ĐỔI: Import các hàm và cấu trúc mới từ item-database
@@ -412,13 +412,20 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         return map;
     }, [equippedItems, ownedItems]);
     
+    // ==================FIXED CODE BLOCK==================
     const unequippedItemsSorted = useMemo(() => {
         const equippedIds = Object.values(equippedItems).filter(id => id !== null);
         return ownedItems
             .filter(item => !equippedIds.includes(item.id))
             .sort((a, b) => {
-                const itemDefA = getItemDefinition(a.itemId)!;
-                const itemDefB = getItemDefinition(b.itemId)!;
+                const itemDefA = getItemDefinition(a.itemId);
+                const itemDefB = getItemDefinition(b.itemId);
+
+                // Xử lý an toàn nếu không tìm thấy định nghĩa vật phẩm
+                if (!itemDefA) return 1;  // Đẩy vật phẩm không hợp lệ A xuống cuối
+                if (!itemDefB) return -1; // Đẩy vật phẩm không hợp lệ B xuống cuối
+
+                // Logic sắp xếp ban đầu, bây giờ đã an toàn
                 const rarityIndexA = RARITY_ORDER.indexOf(itemDefA.rarity);
                 const rarityIndexB = RARITY_ORDER.indexOf(itemDefB.rarity);
                 if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
@@ -426,6 +433,7 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
                 return itemDefA.name.localeCompare(itemDefB.name);
             });
     }, [ownedItems, equippedItems]);
+    // =====================================================
 
     const showMessage = useCallback((text: string) => {
         setMessage(text); setMessageKey(prev => prev + 1);
@@ -632,4 +640,4 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         </div>
     );
 }
-// --- END OF FILE equipment.tsx (UPDATED FOR BLUEPRINT SYSTEM - FULL CODE) ---
+// --- END OF FILE equipment.tsx (FIXED) ---
