@@ -145,10 +145,12 @@ const SkillDetailModal = memo(({ ownedSkill, onClose, onEquip, onUnequip, onDise
             <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2">
               <div className="flex flex-col items-center text-center gap-4">
                 <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)}`} /></div>
-                <p className="text-slate-300 text-base leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
-                {skill.baseEffectValue !== undefined && ( <div className="w-full text-left text-sm mt-2 p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
+                <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50">
+                    <p className="text-slate-300 text-base leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
+                </div>
+                {skill.baseEffectValue !== undefined && ( <div className="w-full text-left text-sm p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
                 {isUpgradable && (
-                    <div className="w-full mt-2 mb-4 space-y-2">
+                    <div className="w-full mb-4 space-y-2">
                         <button onClick={() => onUpgrade(ownedSkill)} disabled={!canAffordUpgrade || actionDisabled} className="w-full relative p-3 rounded-lg transition-all duration-300 text-left flex items-center justify-between disabled:cursor-not-allowed group bg-black/20 border border-slate-700/80 hover:border-purple-500 disabled:hover:border-slate-700/80 hover:bg-purple-900/20">
                             <div className="flex flex-col">
                                 <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
