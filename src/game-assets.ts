@@ -22,7 +22,7 @@ export const uiAssets = {
   gemIcon: require("./assets/images/gems.webp"),
   statsIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/stats-icon.png", // Được chuyển từ đường dẫn local
   vocabularyChestIcon: require("./assets/images/vocabulary-chest.webp"),
-  skillIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/20250721_0918_K%E1%BB%B9%20N%C4%83ng%20R%E1%BB%B1c%20L%E1%BB%ADa_remix_01k0nc8f7je2mr0869c2fhg979.png",
+  skillIcon: require("./assets/images/skill-icon.webp"),
   // -- Thêm mới từ lat-the.tsx --
   priceIcon: require("./assets/images/coin.webp"),
   cardCapacityIcon: require("./assets/images/card-capacity.webp"),
