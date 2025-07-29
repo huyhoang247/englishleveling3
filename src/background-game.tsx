@@ -22,6 +22,7 @@ import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './can-cu.tsx';
 import SkillScreen from './skill.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
+import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
 
 
 // --- SVG Icon Components ---
@@ -194,6 +195,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([null, null, null]);
   const [totalVocabCollected, setTotalVocabCollected] = useState(0);
   const [cardCapacity, setCardCapacity] = useState(100);
+  const [equipmentPieces, setEquipmentPieces] = useState(0);
+  const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
+  const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, accessory: null });
+
+
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
@@ -208,6 +214,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [isUpgradeScreenOpen, setIsUpgradeScreenOpen] = useState(false);
   const [isBaseBuildingOpen, setIsBaseBuildingOpen] = useState(false);
   const [isSkillScreenOpen, setIsSkillScreenOpen] = useState(false);
+  const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
 
   // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
@@ -288,6 +295,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setEquippedSkillIds(skillsData.equipped);
         setTotalVocabCollected(userData.totalVocabCollected || 0);
         setCardCapacity(userData.cardCapacity || 100);
+        const equipmentData = userData.equipment || { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } };
+        setEquipmentPieces(equipmentData.pieces);
+        setOwnedItems(equipmentData.owned);
+        setEquippedItems(equipmentData.equipped);
       } else {
         console.log("No user document found, creating default.");
         await setDoc(userDocRef, {
@@ -297,6 +308,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           ancientBooks: 0,
           skills: { owned: [], equipped: [null, null, null] },
           totalVocabCollected: 0,
+          equipment: { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } },
           cardCapacity: 100,
           createdAt: new Date(),
         });
@@ -307,6 +319,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setOwnedSkills([]);
         setEquippedSkillIds([null, null, null]);
         setTotalVocabCollected(0);
+        setEquipmentPieces(100);
+        setOwnedItems([]);
+        setEquippedItems({ weapon: null, armor: null, accessory: null });
         setCardCapacity(100);
       }
     } catch (error) { console.error("Error fetching user data:", error); } 
@@ -603,6 +618,51 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
     
+  const handleInventoryUpdate = async (updates: {
+      newOwned: OwnedItem[];
+      newEquipped: EquippedItems;
+      goldChange: number;
+      piecesChange: number;
+  }) => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) { throw new Error("User not authenticated for inventory update."); }
+
+      const userDocRef = doc(db, 'users', userId);
+      setIsSyncingData(true);
+
+      try {
+          await runTransaction(db, async (transaction) => {
+              const userDoc = await transaction.get(userDocRef);
+              if (!userDoc.exists()) { throw new Error("User document does not exist!"); }
+
+              const currentCoins = userDoc.data().coins || 0;
+              const currentEquipment = userDoc.data().equipment || { pieces: 0, owned: [], equipped: { weapon: null, armor: null, accessory: null } };
+              const currentPieces = currentEquipment.pieces || 0;
+
+              const newCoins = currentCoins + updates.goldChange;
+              const newPieces = currentPieces + updates.piecesChange;
+
+              if (newCoins < 0) { throw new Error("Không đủ vàng."); }
+              if (newPieces < 0) { throw new Error("Không đủ Mảnh Ghép."); }
+
+              transaction.update(userDocRef, {
+                  coins: newCoins,
+                  equipment: { pieces: newPieces, owned: updates.newOwned, equipped: updates.newEquipped }
+              });
+          });
+
+          setCoins(prev => prev + updates.goldChange);
+          setEquipmentPieces(prev => prev + updates.piecesChange);
+          setOwnedItems(updates.newOwned);
+          setEquippedItems(updates.newEquipped);
+          
+          console.log("Equipment data and resources updated successfully in Firestore.");
+
+      } catch (error) {
+          console.error("Firestore transaction for equipment update failed:", error);
+          throw error;
+      } finally { setIsSyncingData(false); }
+  };    
   // START: CẬP NHẬT LOGIC MUA HÀNG
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
@@ -679,6 +739,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setOwnedSkills([]);
         setEquippedSkillIds([null, null, null]);
         setTotalVocabCollected(0);
+        setEquipmentPieces(0);
+        setOwnedItems([]);
+        setEquippedItems({ weapon: null, armor: null, accessory: null });
         setCardCapacity(100);
         setJackpotPool(0); setIsLoadingUserData(true); setVocabularyData(null);
       }
@@ -750,7 +813,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             if (newState) {
                 hideNavBar();
                 [ setIsRankOpen, setIsInventoryOpen, setIsLuckyGameOpen, 
-                  setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen,
+                  setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen,
                   setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen
                 ].forEach(s => { if (s !== setter) s(false); });
             } else { showNavBar(); }
@@ -770,10 +833,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const toggleAdminPanel = createToggleFunction(setIsAdminPanelOpen);
   const toggleUpgradeScreen = createToggleFunction(setIsUpgradeScreenOpen);
   const toggleSkillScreen = createToggleFunction(setIsSkillScreenOpen);
+  const toggleEquipmentScreen = createToggleFunction(setIsEquipmentOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
   const handleSetToggleSidebar = (toggleFn: () => void) => { sidebarToggleRef.current = toggleFn; };
 
-  const isAnyOverlayOpen = isRankOpen || isInventoryOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen;
+  const isAnyOverlayOpen = isRankOpen || isInventoryOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
@@ -859,7 +923,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             </div>
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
               {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest },
-                 { icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" /> },
+                 { icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen },
                  { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen },
               ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
@@ -958,6 +1022,21 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         ownedSkills={ownedSkills}
                         equippedSkillIds={equippedSkillIds}
                         onSkillsUpdate={handleSkillsUpdate}
+                    />
+                )}
+            </ErrorBoundary>
+        </div>
+
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
+            <ErrorBoundary>
+                {isEquipmentOpen && auth.currentUser && (
+                    <EquipmentScreen 
+                        onClose={toggleEquipmentScreen} 
+                        gold={coins}
+                        equipmentPieces={equipmentPieces}
+                        ownedItems={ownedItems}
+                        equippedItems={equippedItems}
+                        onInventoryUpdate={handleInventoryUpdate}
                     />
                 )}
             </ErrorBoundary>
