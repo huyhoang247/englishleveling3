@@ -1,4 +1,4 @@
-// --- START OF FILE game-assets.ts (UPDATED & CENTRALIZED) ---
+// --- START OF FILE game-assets.ts ---
 
 // ========================================================
 // TRUNG TÂM QUẢN LÝ TÀI NGUYÊN GAME
@@ -32,6 +32,9 @@ export const uiAssets = {
   statAtkIcon: require("./assets/images/stats-atk.webp"),
   statDefIcon: require("./assets/images/stats-def.webp"),
   statHeroStoneIcon: require("./assets/images/character-stone.webp"),
+  // -- Thêm mới từ skill.tsx & skill-data.tsx --
+  bookIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png",
+  goldIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png",
 };
 
 /**
@@ -83,6 +86,16 @@ export const itemAssets = {
 };
 
 /**
+ * Tài nguyên cho các kỹ năng (Skills)
+ */
+export const skillAssets = {
+    lifeSteal: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2212_Gi%E1%BB%8Dt%20M%C3%A1u%20Ho%E1%BA%A1t%20H%C3%ACnh_remix_01k0m678x3ez18zw0gk2f1e0we.png",
+    thorns: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2221_Icon%20Ph%E1%BA%A3n%20Damage_simple_compose_01k0m6s5jjfka88wjk06ef9v2d.png",
+    damageBoost: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2231_Ki%E1%BA%BFm%20L%E1%BB%ADa%20v%C3%A0%20M%C5%A9i%20T%C3%AAn_remix_01k0m79rbbf2v806gsc8aqw0z4.png",
+    armorPenetration: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2241_Icon%20Xuy%C3%AAn%20Gi%C3%A1p%20Anime_simple_compose_01k0m7x70ae8z851pvvjptrs7f.png",
+};
+
+/**
  * Tài nguyên Lottie Animation
  */
 export const lottieAssets = {
@@ -110,5 +123,8 @@ export const treasureAssets = {
 export const allImageUrls = [
     ...Object.values(uiAssets),
     ...Object.values(itemAssets),
+    ...Object.values(skillAssets),
     ...Object.values(treasureAssets),
 ];
+
+// --- END OF FILE game-assets.ts ---
