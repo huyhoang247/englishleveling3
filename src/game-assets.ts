@@ -33,8 +33,8 @@ export const uiAssets = {
   statDefIcon: require("./assets/images/stats-def.webp"),
   statHeroStoneIcon: require("./assets/images/character-stone.webp"),
   // -- Thêm mới từ skill.tsx & skill-data.tsx --
-  bookIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png",
-  goldIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png",
+  bookIcon: require("./assets/images/ancient-book.webp"),
+  goldIcon: require("./assets/images/coin.webp"),
 };
 
 /**
