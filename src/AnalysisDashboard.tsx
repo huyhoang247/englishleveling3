@@ -25,7 +25,8 @@ const SortIcon = ({ direction }: { direction?: 'asc' | 'desc' }) => (
 // --- Định nghĩa kiểu dữ liệu cho phân tích ---
 interface LearningActivity {
   date: string;
-  count: number;
+  new: number;
+  review: number;
 }
 interface MasteryByGame {
   game: string;
@@ -89,10 +90,9 @@ export default function AnalysisDashboard() {
             getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
         ]);
 
-        const dailyCounts: { [key: string]: number } = {};
         const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
-        const allCompletions: { word: string; date: Date }[] = [];
         const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
+        const allCompletionsForActivity: { word: string; date: Date }[] = [];
 
         const processSnapshot = (snapshot: QuerySnapshot<DocumentData>, type: 'single' | 'multi') => {
           snapshot.forEach(doc => {
@@ -100,9 +100,7 @@ export default function AnalysisDashboard() {
             const lastCompletedAt = data.lastCompletedAt?.toDate();
 
             if (lastCompletedAt) {
-              const dateString = lastCompletedAt.toISOString().split('T')[0]; // YYYY-MM-DD
-              dailyCounts[dateString] = (dailyCounts[dateString] || 0) + 1;
-              allCompletions.push({ word: doc.id, date: lastCompletedAt });
+                allCompletionsForActivity.push({ word: doc.id, date: lastCompletedAt });
             }
             
             const gameModes = type === 'single' ? data.gameModes : data.completedIn;
@@ -132,19 +130,39 @@ export default function AnalysisDashboard() {
         processSnapshot(completedWordsSnapshot, 'single');
         processSnapshot(completedMultiWordSnapshot, 'multi');
 
-        const sortedDailyCounts = Object.entries(dailyCounts)
-          .map(([date, count]) => ({ date, count }))
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        // --- NEW LOGIC for Learning Activity (New vs Review) ---
+        allCompletionsForActivity.sort((a, b) => a.date.getTime() - b.date.getTime());
+        const dailyActivity: { [key: string]: { new: number; review: number } } = {};
+        const learnedWordsOnPreviousDays = new Set<string>();
+        
+        for (const completion of allCompletionsForActivity) {
+            const dateString = completion.date.toISOString().split('T')[0];
+            if (!dailyActivity[dateString]) {
+                dailyActivity[dateString] = { new: 0, review: 0 };
+            }
 
+            if (learnedWordsOnPreviousDays.has(completion.word)) {
+                dailyActivity[dateString].review++;
+            } else {
+                dailyActivity[dateString].new++;
+                learnedWordsOnPreviousDays.add(completion.word);
+            }
+        }
+
+        const learningActivityData: LearningActivity[] = Object.entries(dailyActivity)
+            .map(([date, counts]) => ({ date, ...counts }))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        // --- Logic for Vocabulary Growth ---
         let cumulative = 0;
-        const vocabularyGrowthData = sortedDailyCounts.map(item => {
-            cumulative += item.count;
+        const vocabularyGrowthData = learningActivityData.map(item => {
+            cumulative += item.new;
             return { date: new Date(item.date).toLocaleDateString('vi-VN'), cumulative };
         });
 
         const masteryData = Object.entries(masteryByGame).map(([game, completed]) => ({ game, completed })).filter(item => item.completed > 0);
         
-        const recentCompletions = allCompletions
+        const recentCompletions = [...allCompletionsForActivity]
             .sort((a, b) => b.date.getTime() - a.date.getTime())
             .slice(0, 5)
             .map(c => ({
@@ -152,7 +170,7 @@ export default function AnalysisDashboard() {
                 date: c.date.toLocaleString('vi-VN')
             }));
         
-        const totalWordsLearned = new Set([...completedWordsSnapshot.docs.map(d => d.id), ...completedMultiWordSnapshot.docs.map(d => d.id)]).size;
+        const totalWordsLearned = learnedWordsOnPreviousDays.size;
         
         const wordMasteryData: WordMastery[] = Object.entries(wordMasteryMap).map(([word, data]) => ({
             word,
@@ -162,7 +180,7 @@ export default function AnalysisDashboard() {
         setAnalysisData({
           totalWordsLearned: totalWordsLearned,
           totalWordsAvailable: defaultVocabulary.length,
-          learningActivity: sortedDailyCounts.slice(-30).map(d => ({...d, date: new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })})),
+          learningActivity: learningActivityData.slice(-30).map(d => ({...d, date: new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })})),
           masteryByGame: masteryData,
           vocabularyGrowth: vocabularyGrowthData,
           recentCompletions: recentCompletions,
@@ -203,14 +221,21 @@ export default function AnalysisDashboard() {
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      const name = payload[0].name || 'Giá trị';
-      const value = payload[0].value;
       const finalLabel = payload[0].payload.game ? payload[0].payload.game : `Ngày: ${label}`;
+      const total = payload.reduce((sum, entry) => sum + entry.value, 0);
 
       return (
         <div className="p-2 bg-gray-800 text-white rounded-md shadow-lg text-sm border border-gray-700">
           <p className="font-bold">{finalLabel}</p>
-          <p>{`${name}: ${value}`}</p>
+          {payload.map((pld) => (
+            <p key={pld.dataKey} style={{ color: pld.fill }}>{`${pld.name}: ${pld.value}`}</p>
+          ))}
+          {payload.length > 1 && (
+            <>
+              <hr className="my-1 border-gray-600" />
+              <p className="font-semibold">{`Tổng: ${total}`}</p>
+            </>
+          )}
         </div>
       );
     }
@@ -270,7 +295,7 @@ export default function AnalysisDashboard() {
                 <ResponsiveContainer>
                     <AreaChart data={vocabularyGrowth} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                         <defs>
-                            <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                            <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
                                 <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
                             </linearGradient>
@@ -279,19 +304,21 @@ export default function AnalysisDashboard() {
                         <XAxis dataKey="date" fontSize={12} />
                         <YAxis allowDecimals={false} fontSize={12} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
+                        <Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" />
                     </AreaChart>
                 </ResponsiveContainer>
             </ChartCard>
 
-            <ChartCard title="Hoạt động 30 ngày qua">
+            <ChartCard title="Hoạt động học tập (30 ngày qua)">
                 <ResponsiveContainer>
                     <BarChart data={learningActivity} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                         <XAxis dataKey="date" fontSize={12} />
                         <YAxis allowDecimals={false} fontSize={12}/>
                         <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(136, 132, 216, 0.1)'}}/>
-                        <Bar dataKey="count" name="Từ đã học" fill="#82ca9d" radius={[4, 4, 0, 0]} />
+                        <Legend />
+                        <Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" />
+                        <Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
             </ChartCard>
