@@ -1,4 +1,4 @@
-// --- START OF FILE item-database.ts (REFACTORED) ---
+// --- START OF FILE item-database.ts (REFACTORED - FULL CODE) ---
 
 import { itemAssets } from '../game-assets.ts';
 
@@ -61,7 +61,8 @@ export const itemBlueprints: ItemBlueprint[] = [
     { baseId: 4000, name: 'Frostbite Spear', type: 'weapon', baseDescription: 'Ngọn giáo phủ băng, gây sát thương kèm hiệu ứng làm chậm.', icon: itemAssets.frostbiteSpear, baseStats: { damage: 12, durability: 40, coldDamage: 3 }, baseMaxLevel: 15 },
     { baseId: 5000, name: 'Giant\'s Hammer', type: 'weapon', baseDescription: 'Cây búa khổng lồ, gây sát thương vật lý cực lớn.', icon: itemAssets.giantsHammer, baseStats: { damage: 20, durability: 60, strength: 5 }, baseMaxLevel: 20 },
     { baseId: 6000, name: 'Forest Staff', type: 'weapon', baseDescription: 'Cây trượng làm từ gỗ rừng cổ thụ, tăng cường sức mạnh phép thuật tự nhiên.', icon: itemAssets.forestStaff, baseStats: { magicDamage: 10, manaRegen: 2 }, baseMaxLevel: 15 },
-    //... thêm các blueprint khác tại đây
+    { baseId: 7000, name: 'Hawkeye Bow', type: 'weapon', baseDescription: 'Cung của xạ thủ đại bàng, tầm bắn xa và độ chính xác cao.', icon: itemAssets.hawkeyeBow, baseStats: { damage: 10, range: 30 }, baseMaxLevel: 15 },
+    { baseId: 8000, name: 'Assassin\'s Dagger', type: 'weapon', baseDescription: 'Con dao găm của sát thủ, sắc bén và dễ dàng ẩn mình.', icon: itemAssets.assassinsDagger, baseStats: { damage: 9, attackSpeed: 10, critChance: 0.03 }, baseMaxLevel: 15 },
 ];
 
 // THAY ĐỔI: Tạo một map để tra cứu blueprint nhanh chóng bằng baseId hoặc name
@@ -114,7 +115,15 @@ export const itemDatabase = new Map<number, ItemDefinition>([
     [43, { id: 43, name: 'Sắt', type: 'material', rarity: 'E', description: 'Nguyên liệu cơ bản để rèn trang bị.', icon: itemAssets.sat }],
     [44, { id: 44, name: 'Gỗ', type: 'material', rarity: 'E', description: 'Nguyên liệu cơ bản để chế tạo vật phẩm.', icon: itemAssets.go }],
     [45, { id: 45, name: 'Da', type: 'material', rarity: 'E', description: 'Da động vật, nguyên liệu cơ bản để chế tạo giáp nhẹ.', icon: itemAssets.da }],
-    // ... thêm các vật phẩm tĩnh khác nếu cần
+    [46, { id: 46, name: 'Vải', type: 'material', rarity: 'E', description: 'Vải thô, dùng để chế tạo quần áo và túi.', icon: itemAssets.vai }],
+    [47, { id: 47, name: 'Mảnh ghép vũ khí', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một vũ khí ngẫu nhiên.', icon: itemAssets.manhGhepVuKhi }],
+    [48, { id: 48, name: 'Mảnh ghép áo giáp', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một áo giáp ngẫu nhiên.', icon: itemAssets.manhGhepAoGiap }],
+    [49, { id: 49, name: 'Thạch anh', type: 'material', rarity: 'E', description: 'Thạch anh, một loại nguyên liệu phổ biến.', icon: itemAssets.thachAnh }],
+    [50, { id: 50, name: 'Ngọc lục bảo', type: 'material', rarity: 'D', description: 'Ngọc lục bảo, nguyên liệu dùng trong chế tác.', icon: itemAssets.ngocLucBao }],
+    [51, { id: 51, name: 'Mảnh ghép helmet', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một chiếc mũ ngẫu nhiên.', icon: itemAssets.manhGhepHelmet }],
+    [52, { id: 52, name: 'Mảnh ghép găng tay', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một đôi găng tay ngẫu nhiên.', icon: itemAssets.manhGhepGangTay }],
+    [53, { id: 53, name: 'Mảnh ghép giày', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một đôi giày ngẫu nhiên.', icon: itemAssets.manhGhepGiay }],
+    [54, { id: 54, name: 'Mảnh ghép trang sức', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một món trang sức ngẫu nhiên.', icon: itemAssets.manhGhepTrangSuc }],
 ]);
 
 /**
@@ -130,8 +139,9 @@ export function getItemDefinition(id: number): ItemDefinition | undefined {
 
     // 2. Nếu không có, thử tạo từ blueprint
     // Tìm baseId bằng cách loại bỏ phần rank index (luôn nhỏ hơn 100)
-    const baseId = Math.floor(id / 100) * 100;
-    const rankIndex = id % 100;
+    // Giả sử baseId luôn là bội số của 1000 hoặc 100
+    const baseId = Math.floor(id / 1000) * 1000; // Điều chỉnh nếu baseId của bạn khác
+    const rankIndex = id - baseId;
     
     const blueprint = blueprintByBaseId.get(baseId);
     if (blueprint && rankIndex >= 0 && rankIndex < RARITY_ORDER.length) {
@@ -157,4 +167,4 @@ export function getBlueprintByName(name: string): ItemBlueprint | undefined {
     return blueprintByName.get(name);
 }
 
-// --- END OF FILE item-database.ts (REFACTORED) ---
+// --- END OF FILE item-database.ts (REFACTORED - FULL CODE) ---
