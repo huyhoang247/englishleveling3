@@ -146,7 +146,7 @@ const SkillDetailModal = memo(({ ownedSkill, onClose, onEquip, onUnequip, onDise
               <div className="flex flex-col items-center text-center gap-4">
                 <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)}`} /></div>
                 <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50">
-                    <p className="text-slate-300 text-base leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
+                    <p className="text-slate-300 text-sm leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
                 </div>
                 {skill.baseEffectValue !== undefined && ( <div className="w-full text-left text-sm p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
                 {isUpgradable && (
