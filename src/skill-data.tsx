@@ -4,10 +4,10 @@ import React from 'react';
 // Lưu ý: Các component Icon này được export để có thể truy cập từ bên ngoài nếu cần, 
 // nhưng chúng chủ yếu được sử dụng trực tiếp trong mảng ALL_SKILLS bên dưới.
 
-export const LifeStealIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2212_Gi%E1%BB%8Dt%20M%C3%A1u%20Ho%E1%BA%A1t%20H%C3%ACnh_remix_01k0m678x3ez18zw0gk2f1e0we.png" alt="Hút Máu" className={className} /> );
-export const ThornsIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2221_Icon%20Ph%E1%BA%A3n%20Damage_simple_compose_01k0m6s5jjfka88wjk06ef9v2d.png" alt="Phản Damage" className={className} /> );
-export const DamageBoostIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2231_Ki%E1%BA%BFm%20L%E1%BB%ADa%20v%C3%A0%20M%C5%A9i%20T%C3%AAn_remix_01k0m79rbbf2v806gsc8aqw0z4.png" alt="Tăng Sát Thương" className={className} /> );
-export const ArmorPenetrationIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2241_Icon%20Xuy%C3%AAn%20Gi%C3%A1p%20Anime_simple_compose_01k0m7x70ae8z851pvvjptrs7f.png" alt="Xuyên Giáp" className={className} /> );
+export const LifeStealIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2212_Gi%E1%BB%8Dt%20M%C3%A1u%20Ho%E1%BA%A1t%20H%C3%ACnh_remix_01k0m678x3ez18zw0gk2f1e0we.png" alt="Life Steal" className={className} /> );
+export const ThornsIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2221_Icon%20Ph%E1%BA%A3n%20Damage_simple_compose_01k0m6s5jjfka88wjk06ef9v2d.png" alt="Damage Reflection" className={className} /> );
+export const DamageBoostIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2231_Ki%E1%BA%BFm%20L%E1%BB%ADa%20v%C3%A0%20M%C5%A9i%20T%C3%AAn_remix_01k0m79rbbf2v806gsc8aqw0z4.png" alt="Damage Boost" className={className} /> );
+export const ArmorPenetrationIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2241_Icon%20Xuy%C3%AAn%20Gi%C3%A1p%20Anime_simple_compose_01k0m7x70ae8z851pvvjptrs7f.png" alt="Armor Penetration" className={className} /> );
 // --- END: CÁC ICON CHO KỸ NĂNG ---
 
 
@@ -86,7 +86,7 @@ export const CRAFTING_COST = 10;
 export const ALL_SKILLS: SkillBlueprint[] = [
   { 
     id: 'life_steal',    
-    name: 'Hút Máu',      
+    name: 'Life Steal',      
     description: (level) => `Hút ${5 + (level - 1) * 1}% Máu dựa trên Sát thương gây ra.`,
     icon: LifeStealIcon, 
     baseEffectValue: 5,
@@ -95,7 +95,7 @@ export const ALL_SKILLS: SkillBlueprint[] = [
   },
   {
     id: 'thorns',
-    name: 'Phản Damage',
+    name: 'Damage Reflection',
     description: (level) => `Phản lại ${5 + (level - 1) * 1}% Sát thương nhận được khi bị tấn công.`,
     icon: ThornsIcon,
     baseEffectValue: 5,
@@ -104,7 +104,7 @@ export const ALL_SKILLS: SkillBlueprint[] = [
   },
   {
     id: 'damage_boost',
-    name: 'Tăng Sát Thương',
+    name: 'Damage Boost',
     description: (level) => `Khi tấn công, có tỉ lệ kích hoạt, tăng ${5 + (level - 1) * 1}% Sát thương cho đòn đánh đó.`,
     icon: DamageBoostIcon,
     baseEffectValue: 5,
@@ -113,7 +113,7 @@ export const ALL_SKILLS: SkillBlueprint[] = [
   },
   {
     id: 'armor_penetration',
-    name: 'Xuyên Giáp',
+    name: 'Armor Penetration',
     description: (level) => `Khi tấn công, có tỉ lệ kích hoạt, bỏ qua ${5 + (level - 1) * 1}% giáp của đối phương.`,
     icon: ArmorPenetrationIcon,
     baseEffectValue: 5,
