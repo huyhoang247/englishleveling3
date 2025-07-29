@@ -1,13 +1,14 @@
+// --- START OF FILE skill-data.tsx ---
+
 import React from 'react';
+import { skillAssets } from './game-assets.ts'; // Import tài nguyên tập trung
 
 // --- START: CÁC ICON CHO KỸ NĂNG ---
-// Lưu ý: Các component Icon này được export để có thể truy cập từ bên ngoài nếu cần, 
-// nhưng chúng chủ yếu được sử dụng trực tiếp trong mảng ALL_SKILLS bên dưới.
-
-export const LifeStealIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2212_Gi%E1%BB%8Dt%20M%C3%A1u%20Ho%E1%BA%A1t%20H%C3%ACnh_remix_01k0m678x3ez18zw0gk2f1e0we.png" alt="Life Steal" className={className} /> );
-export const ThornsIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2221_Icon%20Ph%E1%BA%A3n%20Damage_simple_compose_01k0m6s5jjfka88wjk06ef9v2d.png" alt="Damage Reflection" className={className} /> );
-export const DamageBoostIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2231_Ki%E1%BA%BFm%20L%E1%BB%ADa%20v%C3%A0%20M%C5%A9i%20T%C3%AAn_remix_01k0m79rbbf2v806gsc8aqw0z4.png" alt="Damage Boost" className={className} /> );
-export const ArmorPenetrationIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2241_Icon%20Xuy%C3%AAn%20Gi%C3%A1p%20Anime_simple_compose_01k0m7x70ae8z851pvvjptrs7f.png" alt="Armor Penetration" className={className} /> );
+// Các component Icon này giờ sử dụng URL từ skillAssets
+export const LifeStealIcon = ({ className = '' }: { className?: string }) => ( <img src={skillAssets.lifeSteal} alt="Life Steal" className={className} /> );
+export const ThornsIcon = ({ className = '' }: { className?: string }) => ( <img src={skillAssets.thorns} alt="Damage Reflection" className={className} /> );
+export const DamageBoostIcon = ({ className = '' }: { className?: string }) => ( <img src={skillAssets.damageBoost} alt="Damage Boost" className={className} /> );
+export const ArmorPenetrationIcon = ({ className = '' }: { className?: string }) => ( <img src={skillAssets.armorPenetration} alt="Armor Penetration" className={className} /> );
 // --- END: CÁC ICON CHO KỸ NĂNG ---
 
 
@@ -122,3 +123,5 @@ export const ALL_SKILLS: SkillBlueprint[] = [
   },
 ];
 // --- END: DANH SÁCH TẤT CẢ KỸ NĂNG TRONG GAME ---
+
+// --- END OF FILE skill-data.tsx ---
