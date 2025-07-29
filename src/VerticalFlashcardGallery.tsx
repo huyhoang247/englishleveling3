@@ -1,3 +1,5 @@
+
+
 // --- START OF FILE VerticalFlashcardGallery.tsx ---
 
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
@@ -5,7 +7,8 @@ import FlashcardDetailModal from './story/flashcard.tsx';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
 import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
 import { auth, db } from './firebase.js';
-import { doc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+// <<< THAY ĐỔI 1: IMPORT THÊM `query` VÀ `orderBy` >>>
+import { doc, updateDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
 import detailedMeaningsText from './vocabulary-definitions.ts'; // <-- IMPORT DỮ LIỆU TỪ FILE MỚI
@@ -229,30 +232,66 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [playlists]);
 
   // --- Effects ---
+  // <<< THAY ĐỔI 2: CẬP NHẬT HOÀN TOÀN LOGIC LẤY DỮ LIỆU ĐỂ SẮP XẾP BẰNG FIRESTORE >>>
   useEffect(() => {
-    if (!currentUser) { setLoading(false); setOpenedImageIds([]); setPlaylists([]); return; }
+    // Nếu không có người dùng, reset state và thoát
+    if (!currentUser) {
+      setLoading(false);
+      setOpenedImageIds([]);
+      setPlaylists([]);
+      return;
+    }
+
     setLoading(true);
+    let unsubscribePlaylists: () => void;
+    let unsubscribeOpenedCards: () => void;
+
+    // --- Lắng nghe thay đổi của Playlists (Không đổi) ---
     const userDocRef = doc(db, 'users', currentUser.uid);
-    const unsubscribe = onSnapshot(userDocRef, async (docSnap) => {
+    unsubscribePlaylists = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         const userData = docSnap.data();
-        setOpenedImageIds(Array.isArray(userData.openedImageIds) ? userData.openedImageIds : []);
         setPlaylists(Array.isArray(userData.playlists) ? userData.playlists : []);
       } else {
-         const examplePlaylists: Playlist[] = [
-          {id: 'pl1', name: 'Voca 1', cardIds: [1,2,3,4], isPinned: true},
-          {id: 'pl2', name: 'Voca 2', cardIds: [5], isPinned: false},
-          {id: 'pl3', name: 'Test 3', cardIds: Array.from({length: 15}, (_, i) => i + 6), isPinned: false},
-          {id: 'pl4', name: 'IELTS Vocabulary for Reading Section - Unit 1', cardIds: [21, 22], isPinned: false},
-          {id: 'pl5', name: 'Từ vựng chuyên ngành CNTT', cardIds: [23, 24, 25], isPinned: false},
-        ];
-        setPlaylists(examplePlaylists);
-        setOpenedImageIds([]);
+        setPlaylists([]);
       }
+    }, (error) => {
+      console.error("Error fetching user playlists:", error);
+    });
+
+    // --- Lắng nghe thay đổi của bộ sưu tập thẻ VỚI SẮP XẾP ---
+    const openedVocabColRef = collection(db, 'users', currentUser.uid, 'openedVocab');
+    
+    // TẠO QUERY MỚI: Sắp xếp theo trường 'collectedAt' giảm dần (mới nhất trước)
+    const q = query(openedVocabColRef, orderBy('collectedAt', 'desc'));
+
+    // SỬ DỤNG QUERY `q` THAY VÌ `openedVocabColRef`
+    unsubscribeOpenedCards = onSnapshot(q, (querySnapshot) => {
+      const ids: number[] = [];
+      // Vì đã orderBy, querySnapshot.forEach sẽ duyệt qua các doc theo đúng thứ tự
+      querySnapshot.forEach(doc => {
+        const id = Number(doc.id);
+        if (!isNaN(id)) {
+          ids.push(id);
+        }
+      });
+      setOpenedImageIds(ids); // `ids` bây giờ đã được sắp xếp đúng thứ tự
+      setLoading(false); 
+    }, (error) => {
+      console.error("Error fetching ordered cards from subcollection:", error);
+      // QUAN TRỌNG: Nếu có lỗi này, rất có thể bạn chưa tạo Index trong Firestore.
+      // Firestore sẽ cung cấp một link trong console log lỗi để bạn click vào và tự động tạo index.
+      setOpenedImageIds([]); 
       setLoading(false);
-    }, (error) => { setLoading(false); console.error("Error fetching user data:", error) });
-    return () => unsubscribe();
+    });
+    
+    // Cleanup function để hủy cả hai listener khi component unmount
+    return () => {
+      if (unsubscribePlaylists) unsubscribePlaylists();
+      if (unsubscribeOpenedCards) unsubscribeOpenedCards();
+    };
   }, [currentUser]);
+
 
   const filteredFlashcardsByTab = useMemo((): DisplayCard[] => {
     const getDisplayCard = (id: number): DisplayCard | undefined => {
@@ -267,7 +306,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     let cardIdsToShow: number[] = [];
 
     if (activeTab === 'collection') {
-        cardIdsToShow = [...openedImageIds].reverse();
+        // <<< THAY ĐỔI 3: BỎ `.reverse()` VÌ DỮ LIỆU ĐÃ ĐƯỢC SẮP XẾP TỪ FIRESTORE >>>
+        cardIdsToShow = openedImageIds;
     } else if (activeTab === 'favorite') {
         if (selectedPlaylistId === 'all') {
             cardIdsToShow = Array.from(allFavoriteCardIds).sort((a,b) => b-a);
@@ -490,7 +530,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                   </button>
                   <div id="settings-button" className={`relative flex items-center justify-center p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border transition-all duration-300 cursor-pointer ${isSettingsHovered || showSettings ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-900 ring-2 ring-indigo-100 dark:ring-indigo-800' : 'border-gray-100 dark:border-gray-700'}`} onMouseEnter={() => setIsSettingsHovered(true)} onMouseLeave={() => setIsSettingsHovered(false)} onClick={() => setShowSettings(!showSettings)}>
                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isSettingsHovered || showSettings ? 'text-indigo-600 dark:text-indigo-400 rotate-45' : 'text-gray-600 dark:text-gray-400'} transition-all duration-300`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                      <circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l-.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
                   </div>
                 </div>
@@ -796,4 +836,3 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     </SidebarLayout>
   );
 }
-// --- END OF FILE VerticalFlashcardGallery.tsx ---

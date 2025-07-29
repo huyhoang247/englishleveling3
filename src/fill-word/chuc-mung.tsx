@@ -1,91 +1,136 @@
-import React, { useState, useEffect } from 'react';
+// --- START OF FILE chuc-mung.tsx (đã sửa lỗi) ---
 
-// Component Confetti để hiển thị hiệu ứng chúc mừng
+import React, { useRef, useEffect, useCallback } from 'react';
+
+// --- CÁC HẰNG SỐ CÓ THỂ TÙY CHỈNH CHO HIỆU ỨNG ---
+const PARTICLE_COUNT = 70; // Số lượng hạt confetti
+const COLORS = ['#FF5252', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0', '#FF9800'];
+const GRAVITY = 0.05; // Lực hút làm hạt rơi nhanh dần
+const DRAG = 0.98; // Lực cản không khí (số càng nhỏ cản càng mạnh)
+const INITIAL_VELOCITY = 4; // Vận tốc ban đầu khi "bắn" ra
+
+// --- ĐỊNH NGHĨA LỚP PARTICLE ĐỂ QUẢN LÝ TỪNG HẠT CONFETTI ---
+class Particle {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: string;
+  vx: number; // Vận tốc theo trục X
+  vy: number; // Vận tốc theo trục Y
+  alpha: number; // Độ trong suốt (để làm mờ dần)
+  rotation: number; // Góc xoay hiện tại
+  spin: number; // Tốc độ xoay
+
+  constructor(canvasWidth: number, canvasHeight: number) {
+    this.x = canvasWidth * 0.5;
+    this.y = canvasHeight * 0.2;
+    this.width = Math.random() * 8 + 4;
+    this.height = Math.random() * 8 + 4;
+    this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * INITIAL_VELOCITY;
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed - 2;
+
+    this.alpha = 1;
+    this.rotation = Math.random() * 360;
+    this.spin = (Math.random() - 0.5) * 10;
+  }
+
+  update() {
+    this.vy += GRAVITY;
+    this.vx *= DRAG;
+    this.vy *= DRAG;
+    this.x += this.vx;
+    this.y += this.vy;
+    this.rotation += this.spin;
+    // Đảm bảo alpha không đi xuống giá trị âm, giúp logic đơn giản hơn
+    this.alpha = Math.max(0, this.alpha - 0.005); 
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rotation * Math.PI / 180);
+    ctx.fillStyle = this.color;
+    ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+    ctx.restore();
+  }
+}
+
+// --- COMPONENT CONFETTI SỬ DỤNG CANVAS ---
 const Confetti: React.FC = () => {
-  // State để lưu trữ dữ liệu các hạt confetti
-  const [particles, setParticles] = useState<any[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const particlesRef = useRef<Particle[]>([]);
+  const animationFrameIdRef = useRef<number>();
 
-  // Hàm tạo các hạt confetti ngẫu nhiên
-  const createParticles = () => {
-    const newParticles = [];
-    for (let i = 0; i < 50; i++) { // Tạo 50 hạt confetti
-      newParticles.push({
-        id: i, // ID duy nhất cho mỗi hạt
-        // Vị trí ngang ngẫu nhiên (0% đến 100% chiều rộng container)
-        x: Math.random() * 100,
-        // Vị trí dọc ngẫu nhiên (0% đến 100% chiều cao container)
-        y: Math.random() * 100,
-        // Kích thước ngẫu nhiên cho hạt (từ 4px đến 12px)
-        size: Math.random() * 8 + 4,
-        // Màu ngẫu nhiên từ danh sách màu định sẵn
-        color: getRandomColor(),
-        // Tốc độ ngẫu nhiên cho chuyển động rơi (từ 1 đến 3 đơn vị mỗi chu kỳ)
-        speed: Math.random() * 2 + 1,
-        // Hướng ngẫu nhiên cho chuyển động ngang nhẹ (0 đến 360 độ)
-        direction: Math.random() * 360
-      });
+  const createParticles = useCallback((canvas: HTMLCanvasElement) => {
+    const newParticles: Particle[] = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      newParticles.push(new Particle(canvas.width, canvas.height));
     }
-    // Cập nhật state với các hạt mới, gây render lại
-    setParticles(newParticles);
-  };
+    particlesRef.current = newParticles;
+  }, []);
 
-  // Hàm lấy màu ngẫu nhiên từ danh sách các màu định sẵn
-  const getRandomColor = () => {
-    const colors = ['#FF5252', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0', '#FF9800']; // Danh sách màu
-    // Trả về một màu ngẫu nhiên từ mảng
-    return colors[Math.floor(Math.random() * colors.length)];
-  };
-
-  // Effect hook để xử lý animation của các hạt và thay đổi hiển thị
   useEffect(() => {
-    // Tạo các hạt confetti khi component được render
-    createParticles();
-
-    // Thiết lập interval để cập nhật vị trí hạt định kỳ
-    const interval = setInterval(() => {
-      setParticles(prevParticles =>
-        prevParticles.map(particle => ({
-          ...particle, // Giữ nguyên các thuộc tính hiện tại của hạt
-          // Cập nhật vị trí dọc dựa trên tốc độ (di chuyển xuống dưới)
-          y: particle.y + particle.speed,
-          // Cập nhật vị trí ngang dựa trên hướng (chuyển đổi độ sang radian cho Math.sin)
-          // Điều này tạo ra chuyển động ngang nhẹ dựa trên hướng ngẫu nhiên
-          x: particle.x + Math.sin(particle.direction * Math.PI / 180) * 0.5
-        }))
-        // Lọc bỏ các hạt đã di chuyển ra khỏi màn hình nếu cần thiết để cải thiện hiệu suất
-        .filter(particle => particle.y < 110) // Loại bỏ hạt khi chúng di chuyển xuống dưới 110% chiều cao màn hình
-      );
-    }, 50); // Cập nhật mỗi 50 mili giây (điều khiển độ mượt và tốc độ animation)
-
-    // Hàm cleanup: Chạy khi component bị unmount
-    return () => {
-      // Xóa interval để dừng cập nhật animation
-      clearInterval(interval);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const setCanvasSize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      createParticles(canvas);
     };
-  }, []); // Mảng dependencies rỗng: effect chỉ chạy một lần sau khi mount
+    
+    setCanvasSize();
 
-  // Render hiệu ứng chúc mừng
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const particlesToKeep = [];
+
+      for (const particle of particlesRef.current) {
+        particle.update();
+        particle.draw(ctx);
+
+        // --- SỬA LỖI LOGIC TẠI ĐÂY ---
+        // Chỉ giữ lại những hạt vẫn còn nhìn thấy được (alpha > 0).
+        // Điều này cho phép hạt rơi ra khỏi màn hình nhưng vẫn tiếp tục
+        // mờ dần một cách tự nhiên cho đến khi biến mất hoàn toàn.
+        if (particle.alpha > 0) {
+          particlesToKeep.push(particle);
+        }
+      }
+
+      particlesRef.current = particlesToKeep;
+      
+      animationFrameIdRef.current = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    window.addEventListener('resize', setCanvasSize);
+
+    return () => {
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+      }
+      window.removeEventListener('resize', setCanvasSize);
+    };
+  }, [createParticles]);
+
   return (
-    // Container cố định chiếm toàn màn hình, không nhận tương tác chuột, z-index cao để hiển thị trên cùng
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-50">
-      {/* Map qua mảng particles và render một div cho mỗi hạt */}
-      {particles.map(particle => (
-        <div
-          key={particle.id} // Key duy nhất cho mỗi hạt, cần thiết cho việc render danh sách trong React
-          className="absolute rounded-full" // Vị trí tuyệt đối và hình dạng tròn (class Tailwind)
-          style={{
-            left: `${particle.x}%`, // Đặt vị trí ngang sử dụng phần trăm
-            top: `${particle.y}%`, // Đặt vị trí dọc sử dụng phần trăm
-            width: `${particle.size}px`, // Đặt chiều rộng bằng giá trị pixel
-            height: `${particle.size}px`, // Đặt chiều cao bằng giá trị pixel
-            backgroundColor: particle.color, // Đặt màu nền sử dụng màu đã tạo
-            // Thêm transition nhỏ để cập nhật hình ảnh mượt hơn khi các hạt di chuyển
-            transition: 'all 0.05s linear',
-          }}
-        />
-      ))}
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 pointer-events-none z-50"
+      aria-hidden="true"
+    />
   );
 };
 
-export default Confetti; // Export component để sử dụng ở nơi khác
+export default Confetti;

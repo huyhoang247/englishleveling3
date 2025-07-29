@@ -1,4 +1,4 @@
-// --- START OF FILE game-assets.ts (UPDATED & CENTRALIZED) ---
+// --- START OF FILE game-assets.ts ---
 
 // ========================================================
 // TRUNG TÂM QUẢN LÝ TÀI NGUYÊN GAME
@@ -16,9 +16,25 @@ export const uiAssets = {
   shopIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/file_000000007f8461f98fd8bdaccb0b0f6b%20(3).png",
   inventoryIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png",
   missionIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/file_00000000842461f9822fc46798d5a372.png",
-  blacksmithIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2003_52_48%20PM.png",
+  blacksmithIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%2C%202025%2C%2003_52_48%20PM.png",
   closeIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/close.png",
   towerIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%2014%2C%202025%2C%2004_53_18%20PM.png",
+  gemIcon: require("./assets/images/gems.webp"),
+  statsIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/stats-icon.png", // Được chuyển từ đường dẫn local
+  vocabularyChestIcon: require("./assets/images/vocabulary-chest.webp"),
+  skillIcon: require("./assets/images/skill-icon.webp"),
+  // -- Thêm mới từ lat-the.tsx --
+  priceIcon: require("./assets/images/coin.webp"),
+  cardCapacityIcon: require("./assets/images/card-capacity.webp"),
+  // -- Thêm mới từ upgrade-stats.tsx --
+  statCoinIcon: require("./assets/images/coin.webp"),
+  statHpIcon: require("./assets/images/stats-hp.webp"),
+  statAtkIcon: require("./assets/images/stats-atk.webp"),
+  statDefIcon: require("./assets/images/stats-def.webp"),
+  statHeroStoneIcon: require("./assets/images/character-stone.webp"),
+  // -- Thêm mới từ skill.tsx & skill-data.tsx --
+  bookIcon: require("./assets/images/ancient-book.webp"),
+  goldIcon: require("./assets/images/coin.webp"),
 };
 
 /**
@@ -26,9 +42,6 @@ export const uiAssets = {
  */
 export const itemAssets = {
     // Weapons
-    kiemGo: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/kiem-go.png',
-    kiemSat: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_00000000a42c61f78b535b5ca4f2e8f2.png',
-    songKiem: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_00000000c5b061f8a19ee9d3e000e95b.png',
     nomadSword: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_000000004f0c62309cbdcc6fea779fc6.png',
     frostbiteSpear: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_0000000062ac62309ccc99e40040f892.png',
     warriorsBlade: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_0000000092d861f895a04893e27da729.png',
@@ -69,7 +82,17 @@ export const itemAssets = {
     manhGhepHelmet: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2003_00_18%20PM.png',
     manhGhepGangTay: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2003_02_27%20PM.png',
     manhGhepGiay: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2003_08_08%20PM.png',
-    manhGhepTrangSuc: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2003_10_49%20PM.png',
+    manhGhepTrangSuc: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2C%202025%2C%2003_10_49%20PM.png',
+};
+
+/**
+ * Tài nguyên cho các kỹ năng (Skills)
+ */
+export const skillAssets = {
+    lifeSteal: require("./assets/images/life-steal-skill.webp"),
+    thorns: require("./assets/images/thorns-skill.webp"),
+    damageBoost: require("./assets/images/damage-boost.webp"),
+    armorPenetration: require("./assets/images/armor-penetration.webp"),
 };
 
 /**
@@ -84,6 +107,12 @@ export const lottieAssets = {
  */
 export const treasureAssets = {
   chestClosed: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/treasure-chest%20(1).png",
+  // -- Thêm mới từ lat-the.tsx: Hình ảnh các loại rương từ vựng --
+  chestBasic: require("./assets/images/chest-basic.webp"),
+  chestElementary: require("./assets/images/chest-elementary.webp"),
+  chestIntermediate: require("./assets/images/chest-intermediate.webp"),
+  chestAdvanced: require("./assets/images/chest-advanced.webp"),
+  chestMaster: require("./assets/images/chest-master.webp"),
 };
 
 
@@ -94,6 +123,8 @@ export const treasureAssets = {
 export const allImageUrls = [
     ...Object.values(uiAssets),
     ...Object.values(itemAssets),
+    ...Object.values(skillAssets),
     ...Object.values(treasureAssets),
 ];
+
 // --- END OF FILE game-assets.ts ---
