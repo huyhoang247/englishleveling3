@@ -1,4 +1,4 @@
-// --- START OF FILE rate-limit-toast.tsx ---
+// --- START OF FILE thong-bao.tsx ---
 
 import React from 'react';
 
@@ -10,6 +10,8 @@ interface RateLimitToastProps {
   message?: string;
   /** Tùy chọn: các class CSS bổ sung để tùy chỉnh vị trí hoặc style */
   className?: string;
+  /** Tùy chọn: cờ để điều khiển việc hiển thị icon tia chớp. Mặc định là true */
+  showIcon?: boolean;
 }
 
 /**
@@ -19,7 +21,8 @@ interface RateLimitToastProps {
 const RateLimitToast: React.FC<RateLimitToastProps> = ({
   show,
   message = 'Bạn thao tác quá nhanh...',
-  className = 'absolute top-14 right-4 z-40', // Vị trí mặc định
+  className = 'absolute top-14 right-4 z-[101]', // Tăng z-index để nổi trên modal
+  showIcon = true, // Giá trị mặc định là true để không phá vỡ các lần sử dụng cũ
 }) => {
   return (
     <div
@@ -31,21 +34,23 @@ const RateLimitToast: React.FC<RateLimitToastProps> = ({
       aria-live="assertive" // Giúp trình đọc màn hình đọc thông báo khi nó xuất hiện
     >
       <div className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-sm text-amber-200 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg border border-amber-400/50">
-        {/* Biểu tượng tia chớp */}
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="flex-shrink-0"
-        >
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-        </svg>
+        {/* <<< THAY ĐỔI: Chỉ hiển thị icon nếu showIcon là true >>> */}
+        {showIcon && (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="flex-shrink-0"
+          >
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        )}
         <span>{message}</span>
       </div>
     </div>
@@ -54,4 +59,4 @@ const RateLimitToast: React.FC<RateLimitToastProps> = ({
 
 export default RateLimitToast;
 
-// --- END OF FILE rate-limit-toast.tsx ---
+// --- END OF FILE thong-bao.tsx ---
