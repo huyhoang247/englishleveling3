@@ -187,7 +187,7 @@ const SkillDetailModal = memo(({ ownedSkill, onClose, onEquip, onUnequip, onDise
                   {mainActionText}
                 </button>
                 <button onClick={() => onDisenchant(ownedSkill)} disabled={isEquipped || actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-100'}`}>
-                  Phân Rã
+                  Recycle
                 </button>
               </div>
             </div>
