@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, memo } from 'react';
-import { itemDatabase, type ItemDefinition, type ItemRank } from './item-database.ts';
+import { itemDatabase, type ItemDefinition, type ItemRank } from './inventory/item-database.ts';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
