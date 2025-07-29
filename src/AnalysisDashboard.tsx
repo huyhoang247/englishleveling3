@@ -1,7 +1,7 @@
 // --- START OF FILE: src/components/analysis/AnalysisDashboard.tsx ---
 
 import React, { useState, useEffect, useMemo, FC, ReactNode } from 'react';
-import { db, auth } from '../firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
+import { db, auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
 import { collection, getDocs, QuerySnapshot, DocumentData } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { 
