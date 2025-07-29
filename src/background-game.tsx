@@ -1,3 +1,5 @@
+// --- START OF FILE background-game.tsx (6).txt ---
+
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './coin-display.tsx';
@@ -23,6 +25,7 @@ import BaseBuildingScreen from './can-cu.tsx';
 import SkillScreen from './skill.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
+import RateLimitToast from './thong-bao.tsx'; // <<<<==== IMPORT COMPONENT MỚI
 
 
 // --- SVG Icon Components ---
@@ -908,14 +911,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 </div>
             </div>
 
-            <div className={`absolute top-14 right-4 z-40 transform transition-all duration-300 ${showRateLimitToast ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-5 pointer-events-none'}`}>
-                <div className="flex items-center gap-2 bg-slate-800/80 backdrop-blur-sm text-amber-200 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg border border-amber-400/50">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                    </svg>
-                    <span>Bạn thao tác quá nhanh...</span>
-                </div>
-            </div>
+            {/* <<<<==== THAY THẾ KHỐI JSX BẰNG COMPONENT MỚI ====>>>> */}
+            <RateLimitToast show={showRateLimitToast} />
 
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle },
@@ -1051,3 +1048,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
+// --- END OF FILE background-game.tsx (6).txt ---
