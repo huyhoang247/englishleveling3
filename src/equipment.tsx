@@ -1,12 +1,11 @@
-// --- START OF FILE equipment.tsx (FIXED - FULL CODE) ---
+// --- START OF FILE equipment.tsx (FIXED) ---
 
 import React, { useState, useMemo, useCallback, memo } from 'react';
-// THAY ĐỔI: Import thêm hàm generateRandomWeaponStats
+// THAY ĐỔI: Import các hàm và cấu trúc mới từ item-database
 import { 
     getItemDefinition, 
     itemBlueprints, 
     generateItemDefinition,
-    generateRandomWeaponStats, // <--- THÊM IMPORT NÀY
     getBlueprintByName,
     type ItemBlueprint,
     type ItemDefinition, 
@@ -16,12 +15,12 @@ import {
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
-// THAY ĐỔI: Thêm thuộc tính `stats` vào OwnedItem
+// THAY ĐỔI: Thêm thuộc tính `stats` để mỗi vật phẩm có chỉ số riêng
 export interface OwnedItem {
     id: string;
     itemId: number;
     level: number;
-    stats: { [key: string]: number }; // <--- THÊM DÒNG NÀY để lưu chỉ số ngẫu nhiên của riêng nó
+    stats: { [key: string]: any }; // <-- THAY ĐỔI QUAN TRỌNG
 }
 
 export type EquipmentSlotType = 'weapon' | 'armor' | 'accessory';
@@ -31,7 +30,7 @@ export type EquippedItems = {
     [key in EquipmentSlotType]: string | null;
 };
 
-// ... (Toàn bộ các hàm tiện ích như getRarityColor, getUpgradeCost, các Icon... giữ nguyên y hệt)
+// 5. Các hàm tiện ích cho Rarity (ItemRank)
 const getRarityColor = (rank: ItemRank): string => {
     switch (rank) {
         case 'SSR': return 'border-red-500';
@@ -87,6 +86,7 @@ const getRandomRank = (): ItemRank => {
     return 'E';
 };
 
+// 6. Logic chi phí
 const CRAFTING_COST = 50;
 const DISMANTLE_RETURN_BOOKS = 25;
 
@@ -104,11 +104,14 @@ const getTotalUpgradeCost = (itemDef: ItemDefinition, level: number): number => 
     return total;
 };
 
+// --- Các Icon Giao Diện ---
 const CloseIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/close.png" alt="Đóng" className={className} /> );
 const GoldIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className={className} /> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const ForgeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M21.707 13.293l-4-4a1 1 0 00-1.414 1.414L17.586 12H13V4a1 1 0 00-2 0v8H6.414l1.293-1.293a1 1 0 00-1.414-1.414l-4 4a1 1 0 000 1.414l4 4a1 1 0 001.414-1.414L6.414 14H11v8a1 1 0 002 0v-8h4.586l-1.293 1.293a1 1 0 001.414 1.414l4-4a1 1 0 000-1.414z"/> </svg>);
 const AncientBookIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/sach-co.png" alt="Sách Cổ" className={className} /> );
+
+// --- CoinDisplay Component ---
 const CoinDisplay = ({ displayedCoins }: { displayedCoins: number; }) => (
     <div className="flex items-center gap-2 px-4 py-2 bg-black/30 rounded-full border border-slate-700">
         <GoldIcon className="w-6 h-6" />
@@ -116,9 +119,7 @@ const CoinDisplay = ({ displayedCoins }: { displayedCoins: number; }) => (
     </div>
 );
 
-
 // --- CÁC COMPONENT CON ---
-// Component Header, EquipmentSlot, ItemCard giữ nguyên
 
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
     return (
@@ -196,18 +197,11 @@ const ItemCard = memo(({ ownedItem, onClick, isEquipped, isProcessing }: { owned
     );
 });
 
-
-// THAY ĐỔI: ItemDetailModal giờ sẽ ưu tiên hiển thị stats từ ownedItem
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     if (!itemDef) return null;
 
-    // THAY ĐỔI: Ưu tiên hiển thị chỉ số của instance (ownedItem.stats).
-    // Nếu không có, mới dùng chỉ số từ definition (itemDef.stats).
-    const displayStats = ownedItem.stats || itemDef.stats;
-    
-    // Logic nâng cấp vẫn dựa trên itemDef để đảm bảo tính nhất quán
-    const isUpgradable = !!itemDef.stats; 
+    const isUpgradable = !!itemDef.stats; // An item is upgradable if it has stats.
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(itemDef, ownedItem.level) : 0;
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
 
@@ -241,10 +235,10 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                         </div>
                         <p className="text-slate-300 text-base leading-relaxed">{itemDef.description}</p>
                         
-                        {/* THAY ĐỔI: Sử dụng displayStats để hiển thị */}
-                        {displayStats && (
+                        {/* THAY ĐỔI: Hiển thị chỉ số từ `ownedItem.stats` thay vì `itemDef.stats` */}
+                        {ownedItem.stats && Object.keys(ownedItem.stats).length > 0 && (
                             <div className="w-full text-left text-sm mt-2 p-3 bg-black/20 rounded-lg border border-slate-700/50 space-y-2">
-                                {Object.entries(displayStats).map(([key, value]) => (
+                                {Object.entries(ownedItem.stats).map(([key, value]) => (
                                     <div key={key} className="flex justify-between capitalize">
                                         <span className="text-slate-400">{key}:</span>
                                         <span className="font-semibold text-cyan-300">{typeof value === 'number' ? value.toLocaleString() : value}</span>
@@ -286,8 +280,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     );
 });
 
-
-// Các component CraftingSuccessModal, ForgeModal giữ nguyên
 const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedItem, onClose: () => void }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     if (!itemDef) return null;
@@ -299,6 +291,7 @@ const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedIte
     return ( <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div> <div className="relative w-full max-w-sm"> <div className="absolute inset-0.5 animate-spin-slow-360"> <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(itemDef.rarity)} opacity-50 rounded-full blur-2xl`}></div> </div> <div className={`relative bg-gradient-to-b ${getRarityGradient(itemDef.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(itemDef.rarity)} text-center flex flex-col items-center gap-4`} style={shadowStyle}> <h2 className="text-2xl font-black tracking-widest uppercase text-white title-glow">Chế Tạo Thành Công</h2> <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}> <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" /> </div> <div className="flex flex-col"> <span className={`text-2xl font-bold ${rarityTextColor}`}>{itemDef.name}</span> <span className="font-semibold text-slate-300">{itemDef.rarity}</span> </div> <p className="text-sm text-slate-400">{itemDef.description}</p> <button onClick={onClose} className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"> Tuyệt vời! </button> </div> </div> </div> );
 });
 
+// --- FORGE MODAL (Hợp nhất/Rèn) ---
 interface ForgeResult { level: number; refundGold: number; }
 interface ForgeGroup { 
     blueprint: ItemBlueprint;
@@ -312,7 +305,7 @@ const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinit
     if (itemsToForge.length < 3) return { level: 1, refundGold: 0 };
     const totalInvestedGold = itemsToForge.reduce((total, item) => total + getTotalUpgradeCost(definition, item.level), 0);
     let finalLevel = 1, remainingGold = totalInvestedGold;
-    while (true) { 
+    while (true) { // Loop indefinitely as there's no max level
         const costForNextLevel = getUpgradeCost(definition, finalLevel);
         if (remainingGold >= costForNextLevel) { remainingGold -= costForNextLevel; finalLevel++; } else { break; }
     }
@@ -327,7 +320,7 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
         const groups: Record<string, OwnedItem[]> = {};
         for (const item of unequippedItems) {
             const definition = getItemDefinition(item.itemId);
-            if (!definition || !definition.baseId) continue;
+            if (!definition || !definition.baseId) continue; // Bỏ qua vật phẩm không có blueprint
 
             const key = `${definition.baseId}-${definition.rarity}`;
             if (!groups[key]) groups[key] = [];
@@ -480,7 +473,6 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         } catch (error: any) { showMessage(`Lỗi: ${error.message || 'Không thể tháo'}`); } finally { setIsProcessing(false); }
     }, [isProcessing, equippedItems, ownedItems, onInventoryUpdate, showMessage]);
   
-    // THAY ĐỔI: handleCraftItem giờ tạo chỉ số ngẫu nhiên và lưu vào instance
     const handleCraftItem = useCallback(async () => {
         if (isProcessing) return;
         if (ancientBooks < CRAFTING_COST) { 
@@ -498,19 +490,15 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
             const targetRank = getRandomRank();
             
-            // Lấy definition TĨNH
-            const itemDef = generateItemDefinition(randomBlueprint, targetRank);
+            // Tạo một định nghĩa vật phẩm tạm thời để lấy chỉ số ngẫu nhiên
+            const finalItemDef = generateItemDefinition(randomBlueprint, targetRank, true);
             
-            // Tạo các chỉ số ngẫu nhiên RIÊNG BIỆT cho instance này
-            const randomStats = itemDef.type === 'weapon' 
-                ? generateRandomWeaponStats(randomBlueprint) 
-                : (itemDef.stats || {});
-
+            // THAY ĐỔI: Gán chỉ số vừa random vào vật phẩm mới
             const newOwnedItem: OwnedItem = { 
-                id: `owned-${Date.now()}-${itemDef.id}-${Math.random()}`, 
-                itemId: itemDef.id, 
+                id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, 
+                itemId: finalItemDef.id, 
                 level: 1,
-                stats: randomStats // <--- LƯU CHỈ SỐ NGẪU NHIÊN VÀO INSTANCE
+                stats: finalItemDef.stats || {} // Gán chỉ số riêng
             };
             const newOwnedList = [...ownedItems, newOwnedItem];
             
@@ -529,7 +517,6 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         if (Object.values(equippedItems).includes(itemToDismantle.id)) { showMessage("Không thể phân rã trang bị đang mặc."); return; }
         
         setIsProcessing(true);
-        // Lưu ý: Chi phí hoàn lại vẫn tính dựa trên definition và level, điều này là đúng.
         const itemDef = getItemDefinition(itemToDismantle.itemId)!;
         const goldToReturn = getTotalUpgradeCost(itemDef, itemToDismantle.level);
         const newOwnedList = ownedItems.filter(s => s.id !== itemToDismantle.id);
@@ -559,7 +546,6 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Nâng cấp thất bại'}`); } finally { setIsProcessing(false); }
     }, [isProcessing, gold, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
 
-    // THAY ĐỔI: handleForgeItems giờ tạo chỉ số ngẫu nhiên cho vật phẩm mới
     const handleForgeItems = useCallback(async (group: ForgeGroup) => {
         if (isProcessing || group.items.length < 3 || !group.nextRank) { showMessage("Không đủ điều kiện để rèn."); return; }
         
@@ -571,19 +557,15 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
             const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
             
-            // Lấy definition TĨNH cho vật phẩm được rèn
-            const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank);
+            // Tạo vật phẩm được rèn với chỉ số ngẫu nhiên nếu là vũ khí.
+            const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank, true);
 
-            // Tạo chỉ số ngẫu nhiên MỚI cho vật phẩm được rèn
-            const newRandomStats = upgradedItemDef.type === 'weapon'
-                ? generateRandomWeaponStats(group.blueprint)
-                : (upgradedItemDef.stats || {});
-
+            // THAY ĐỔI: Gán chỉ số mới cho vật phẩm vừa rèn
             const newForgedItem: OwnedItem = { 
                 id: `owned-${Date.now()}-${upgradedItemDef.id}`, 
                 itemId: upgradedItemDef.id, 
                 level: finalLevel,
-                stats: newRandomStats // <--- LƯU CHỈ SỐ VÀO INSTANCE
+                stats: upgradedItemDef.stats || {} // Gán chỉ số riêng
             };
             const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
             
@@ -656,4 +638,4 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         </div>
     );
 }
-// --- END OF FILE equipment.tsx (FIXED - FULL CODE) ---
+// --- END OF FILE equipment.tsx (FIXED) ---
