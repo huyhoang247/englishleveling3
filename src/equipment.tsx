@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, memo } from 'react';
-import { itemDatabase, type ItemDefinition, type ItemRank } from './inventory/item-database.ts';
+import { itemDatabase, type ItemDefinition, type ItemRank } from './item-database.ts';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
@@ -72,7 +72,7 @@ const getNextRank = (rank: ItemRank): ItemRank | null => {
 
 const RARITY_ORDER: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR', 'SSR'];
 
-// 6. Logic chi phí
+// 6. Logic chi phí (Vì ItemDefinition không có, chúng ta tự định nghĩa)
 const CRAFTING_COST = 50; // Chi phí Mảnh Ghép để chế tạo
 const DISMANTLE_RETURN_PIECES = 25; // Số Mảnh Ghép nhận lại
 
@@ -90,7 +90,7 @@ const getTotalUpgradeCost = (itemDef: ItemDefinition, level: number): number => 
     return total;
 };
 
-// --- Các Icon Giao Diện ---
+// --- Các Icon Giao Diện (giữ nguyên từ file cũ) ---
 const CloseIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/close.png" alt="Đóng" className={className} /> );
 const GoldIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className={className} /> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -157,9 +157,10 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
     );
 });
 
+
 const ItemCard = memo(({ ownedItem, onClick, isEquipped, isProcessing }: { ownedItem: OwnedItem, onClick: (item: OwnedItem) => void, isEquipped: boolean, isProcessing: boolean }) => {
     const itemDef = itemDatabase.get(ownedItem.itemId);
-    if (!itemDef) return null; // Fails gracefully if item definition is missing
+    if (!itemDef) return null;
 
     const baseClasses = "relative w-full p-3 rounded-lg border-2 flex items-center gap-4 transition-all duration-200";
     const interactivity = isEquipped ? 'opacity-50 cursor-not-allowed' : (isProcessing ? 'cursor-wait' : `cursor-pointer hover:border-slate-600 hover:bg-slate-800/50 hover:shadow-lg hover:shadow-cyan-500/10`);
@@ -183,9 +184,10 @@ const ItemCard = memo(({ ownedItem, onClick, isEquipped, isProcessing }: { owned
     );
 });
 
+
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const itemDef = itemDatabase.get(ownedItem.itemId);
-    if (!itemDef) return null; // Fails gracefully
+    if (!itemDef) return null;
 
     const isUpgradable = itemDef.maxLevel !== undefined && ownedItem.level < itemDef.maxLevel;
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(itemDef, ownedItem.level) : 0;
@@ -296,23 +298,17 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
         if (!isOpen) return [];
         const unequippedItems = ownedItems.filter(s => !equippedItemIds.includes(s.id));
         const groups: Record<string, OwnedItem[]> = {};
-
         for (const item of unequippedItems) {
-            // --- SỬA LỖI: Kiểm tra xem item definition có tồn tại không trước khi xử lý ---
-            const definition = itemDatabase.get(item.itemId);
-            if (!definition) {
-                continue; // Bỏ qua vật phẩm không hợp lệ
-            }
+            const definition = itemDatabase.get(item.itemId)!;
             const key = `${item.itemId}-${definition.rarity}`;
             if (!groups[key]) groups[key] = [];
             groups[key].push(item);
         }
-
         return Object.values(groups)
             .filter(group => group.length >= 3)
             .map(group => {
                 const firstItem = group[0];
-                const definition = itemDatabase.get(firstItem.itemId)!; // An toàn vì đã kiểm tra ở trên
+                const definition = itemDatabase.get(firstItem.itemId)!;
                 const nextRank = getNextRank(definition.rarity);
                 const sortedItems = [...group].sort((a, b) => b.level - a.level);
                 const top3Items = sortedItems.slice(0, 3);
@@ -345,12 +341,12 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
                             <div key={`${group.itemId}-${group.rarity}`} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 flex items-center justify-between gap-4">
                                 <div className="flex flex-1 items-center justify-center gap-4 sm:gap-6">
                                     <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.rarity)} bg-black/30`}>
-                                        <img src={group.definition.icon} alt={group.definition.name} className="w-12 h-12 object-contain" />
+                                        <img src={group.definition.icon} className="w-12 h-12 object-contain" />
                                         <span className="absolute -top-2 -right-2 bg-cyan-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">3/{group.items.length}</span>
                                     </div>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                                     <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.nextRank!)} bg-black/30`}>
-                                        <img src={group.definition.icon} alt={group.definition.name} className="w-12 h-12 object-contain" />
+                                        <img src={group.definition.icon} className="w-12 h-12 object-contain" />
                                         <span className="absolute -top-2 -right-2 bg-slate-800 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">Lv.{group.estimatedResult.level}</span>
                                     </div>
                                 </div>
@@ -400,22 +396,12 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
         return ownedItems
             .filter(item => !equippedIds.includes(item.id))
             .sort((a, b) => {
-                // --- SỬA LỖI: Kiểm tra an toàn trước khi sắp xếp để tránh crash ---
-                const itemDefA = itemDatabase.get(a.itemId);
-                const itemDefB = itemDatabase.get(b.itemId);
-
-                if (!itemDefA || !itemDefB) {
-                    if (itemDefA) return -1;
-                    if (itemDefB) return 1;
-                    return 0;
-                }
-                
+                const itemDefA = itemDatabase.get(a.itemId)!;
+                const itemDefB = itemDatabase.get(b.itemId)!;
                 const rarityIndexA = RARITY_ORDER.indexOf(itemDefA.rarity);
                 const rarityIndexB = RARITY_ORDER.indexOf(itemDefB.rarity);
                 if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
-                
                 if (a.level !== b.level) return b.level - a.level;
-                
                 return itemDefA.name.localeCompare(itemDefB.name);
             });
     }, [ownedItems, equippedItems]);
@@ -446,7 +432,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
     const handleUnequipItem = useCallback(async (itemToUnequip: OwnedItem) => {
         if (isProcessing) return;
         const itemDef = itemDatabase.get(itemToUnequip.itemId);
-        if (!itemDef) { showMessage("Lỗi: Không tìm thấy định nghĩa vật phẩm."); return; }
+        if (!itemDef) return;
 
         const slotType = itemDef.type as EquipmentSlotType;
         if (equippedItems[slotType] !== itemToUnequip.id) { showMessage("Lỗi: Không tìm thấy trang bị."); return; }
@@ -479,14 +465,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
         if (Object.values(equippedItems).includes(itemToDismantle.id)) { showMessage("Không thể phân rã trang bị đang mặc."); return; }
         
         setIsProcessing(true);
-        // --- SỬA LỖI: Thêm guard clause để tránh crash ---
-        const itemDef = itemDatabase.get(itemToDismantle.itemId);
-        if (!itemDef) {
-            showMessage("Lỗi: Vật phẩm không hợp lệ.");
-            setIsProcessing(false);
-            return;
-        }
-
+        const itemDef = itemDatabase.get(itemToDismantle.itemId)!;
         const goldToReturn = getTotalUpgradeCost(itemDef, itemToDismantle.level);
         const newOwnedList = ownedItems.filter(s => s.id !== itemToDismantle.id);
         
@@ -501,14 +480,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
 
     const handleUpgradeItem = useCallback(async (itemToUpgrade: OwnedItem) => {
         if (isProcessing) return;
-        
-        // --- SỬA LỖI: Thêm guard clause để tránh crash ---
-        const itemDef = itemDatabase.get(itemToUpgrade.itemId);
-        if (!itemDef) {
-            showMessage("Lỗi: Vật phẩm không hợp lệ.");
-            return;
-        }
-        
+        const itemDef = itemDatabase.get(itemToUpgrade.itemId)!;
         if (!itemDef.maxLevel || itemToUpgrade.level >= itemDef.maxLevel) { showMessage("Trang bị đã đạt cấp tối đa."); return; }
         
         const cost = getUpgradeCost(itemDef, itemToUpgrade.level);
