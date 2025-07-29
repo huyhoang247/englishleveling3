@@ -19,7 +19,7 @@ import {
 } from './skill-data.tsx';
 import { uiAssets } from './game-assets.ts'; // Import tài nguyên UI tập trung
 import CoinDisplay from './coin-display.tsx'; // Giả sử import
-
+import RateLimitToast from './thong-bao.tsx'; // <<< THÊM DÒNG IMPORT NÀY
 
 // --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -27,6 +27,7 @@ const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http:/
 
 
 // --- CÁC COMPONENT CON (ĐÃ BỌC TRONG React.memo) ---
+// (Các component Header, SkillSlot, SkillCard, SkillDetailModal, etc. giữ nguyên, không cần thay đổi)
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
@@ -192,8 +193,6 @@ const SkillDetailModal = memo(({ ownedSkill, onClose, onEquip, onUnequip, onDise
     );
 });
 
-// ... (Các component khác như CraftingSuccessModal, MergeModal giữ nguyên phần logic, chỉ thay đổi icon)
-
 const CraftingSuccessModal = memo(({ ownedSkill, onClose }: { ownedSkill: OwnedSkill, onClose: () => void }) => {
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
     if (!skill) return null;
@@ -286,7 +285,6 @@ const MergeModal = memo(({ isOpen, onClose, ownedSkills, onMerge, isProcessing, 
 });
 
 // --- COMPONENT CHÍNH ---
-// ... (Phần logic của component chính không thay đổi)
 interface SkillScreenProps {
   onClose: () => void;
   gold: number;
@@ -303,6 +301,8 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
   const [message, setMessage] = useState('');
   const [messageKey, setMessageKey] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  // <<< THÊM STATE ĐỂ ĐIỀU KHIỂN TOAST HỢP NHẤT
+  const [mergeToast, setMergeToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
   const MAX_SKILLS_IN_STORAGE = 20;
 
   // --- TỐI ƯU HÓA: GHI NHỚ CÁC GIÁ TRỊ TÍNH TOÁN ---
@@ -434,8 +434,10 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
           if(refundGold > 0) {
             successMsg += ` Hoàn lại ${refundGold.toLocaleString()} vàng.`
           }
-          showMessage(successMsg);
-          setIsMergeModalOpen(false); // Đóng modal sau khi hợp nhất thành công
+          // <<< CẬP NHẬT STATE CỦA TOAST
+          setMergeToast({ show: true, message: successMsg });
+          setTimeout(() => setMergeToast(prev => ({...prev, show: false})), 4000);
+          setIsMergeModalOpen(false);
       } catch (error: any) {
           showMessage(`Lỗi: ${error.message || 'Hợp nhất thất bại'}`);
       } finally {
@@ -454,6 +456,9 @@ export default function SkillScreen({ onClose, gold, ancientBooks, ownedSkills, 
     <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
        <style>{` .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
       
+      {/* <<< SỬ DỤNG COMPONENT ĐÃ IMPORT */}
+      <RateLimitToast show={mergeToast.show} message={mergeToast.message} />
+
       {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[101]">{message}</div>}
       {selectedSkill && <SkillDetailModal ownedSkill={selectedSkill} onClose={handleCloseDetailModal} onEquip={handleEquipSkill} onUnequip={handleUnequipSkill} onDisenchant={handleDisenchantSkill} onUpgrade={handleUpgradeSkill} isEquipped={equippedSkills.some(s => s?.id === selectedSkill.id)} gold={gold} isProcessing={isProcessing}/>}
       {newlyCraftedSkill && <CraftingSuccessModal ownedSkill={newlyCraftedSkill} onClose={handleCloseCraftSuccessModal} />}
