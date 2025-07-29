@@ -92,68 +92,80 @@ export default function AnalysisDashboard() {
 
         const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
         const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
-        const allCompletionsForActivity: { word: string; date: Date }[] = [];
-
-        const processSnapshot = (snapshot: QuerySnapshot<DocumentData>, type: 'single' | 'multi') => {
-          snapshot.forEach(doc => {
+        const dailyActivity: { [date: string]: { new: number; review: number } } = {};
+        const allCompletionsForRecent: { word: string; date: Date }[] = [];
+        
+        // --- CORRECTED LOGIC for Daily Activity (New vs Review) ---
+        completedWordsSnapshot.forEach(doc => {
             const data = doc.data();
             const lastCompletedAt = data.lastCompletedAt?.toDate();
+            if (!lastCompletedAt) return;
 
-            if (lastCompletedAt) {
-                allCompletionsForActivity.push({ word: doc.id, date: lastCompletedAt });
+            allCompletionsForRecent.push({word: doc.id, date: lastCompletedAt});
+
+            const dateString = lastCompletedAt.toISOString().split('T')[0];
+            if (!dailyActivity[dateString]) {
+                dailyActivity[dateString] = { new: 0, review: 0 };
             }
-            
-            const gameModes = type === 'single' ? data.gameModes : data.completedIn;
-            if (gameModes) {
-                let totalCorrectForWord = 0;
-                Object.keys(gameModes).forEach(mode => {
-                    const correctCount = (type === 'single' && gameModes[mode].correctCount) ? gameModes[mode].correctCount : 1;
+
+            let totalCompletions = 0;
+            let totalCorrectForWord = 0;
+            if (data.gameModes) {
+                Object.values(data.gameModes).forEach((modeData: any) => {
+                    totalCompletions += modeData.correctCount || 0;
+                });
+                Object.keys(data.gameModes).forEach(mode => {
+                    const correctCount = data.gameModes[mode].correctCount || 0;
                     totalCorrectForWord += correctCount;
-                    
-                    if (mode.startsWith('quiz-')) {
+                     if (mode.startsWith('quiz-')) {
                         masteryByGame['Trắc nghiệm'] += correctCount;
                     } else if (mode.startsWith('fill-word-')) {
                         masteryByGame['Điền từ'] += correctCount;
                     }
                 });
-                
-                if (type === 'single' && lastCompletedAt) {
-                    wordMasteryMap[doc.id] = {
-                        mastery: totalCorrectForWord,
-                        lastPracticed: lastCompletedAt
-                    };
-                }
             }
-          });
-        };
-        
-        processSnapshot(completedWordsSnapshot, 'single');
-        processSnapshot(completedMultiWordSnapshot, 'multi');
 
-        // --- NEW LOGIC for Learning Activity (New vs Review) ---
-        allCompletionsForActivity.sort((a, b) => a.date.getTime() - b.date.getTime());
-        const dailyActivity: { [key: string]: { new: number; review: number } } = {};
-        const learnedWordsOnPreviousDays = new Set<string>();
+            if (totalCompletions > 1) {
+                dailyActivity[dateString].review++;
+            } else if (totalCompletions === 1) {
+                dailyActivity[dateString].new++;
+            }
+
+            if (totalCorrectForWord > 0) {
+                 wordMasteryMap[doc.id] = {
+                    mastery: totalCorrectForWord,
+                    lastPracticed: lastCompletedAt
+                };
+            }
+        });
         
-        for (const completion of allCompletionsForActivity) {
-            const dateString = completion.date.toISOString().split('T')[0];
+        completedMultiWordSnapshot.forEach(doc => {
+            const data = doc.data();
+            const lastCompletedAt = data.lastCompletedAt?.toDate();
+            if (!lastCompletedAt) return;
+
+            allCompletionsForRecent.push({word: doc.id, date: lastCompletedAt});
+
+            const dateString = lastCompletedAt.toISOString().split('T')[0];
             if (!dailyActivity[dateString]) {
                 dailyActivity[dateString] = { new: 0, review: 0 };
             }
+            // Assume multi-word completions are reviews
+            dailyActivity[dateString].review++;
 
-            if (learnedWordsOnPreviousDays.has(completion.word)) {
-                dailyActivity[dateString].review++;
-            } else {
-                dailyActivity[dateString].new++;
-                learnedWordsOnPreviousDays.add(completion.word);
+            if (data.completedIn) {
+                Object.keys(data.completedIn).forEach(mode => {
+                    if (mode.startsWith('fill-word-')) {
+                         masteryByGame['Điền từ']++;
+                    }
+                });
             }
-        }
-
+        });
+        
         const learningActivityData: LearningActivity[] = Object.entries(dailyActivity)
             .map(([date, counts]) => ({ date, ...counts }))
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-        // --- Logic for Vocabulary Growth ---
         let cumulative = 0;
         const vocabularyGrowthData = learningActivityData.map(item => {
             cumulative += item.new;
@@ -162,7 +174,7 @@ export default function AnalysisDashboard() {
 
         const masteryData = Object.entries(masteryByGame).map(([game, completed]) => ({ game, completed })).filter(item => item.completed > 0);
         
-        const recentCompletions = [...allCompletionsForActivity]
+        const recentCompletions = [...allCompletionsForRecent]
             .sort((a, b) => b.date.getTime() - a.date.getTime())
             .slice(0, 5)
             .map(c => ({
@@ -170,7 +182,7 @@ export default function AnalysisDashboard() {
                 date: c.date.toLocaleString('vi-VN')
             }));
         
-        const totalWordsLearned = learnedWordsOnPreviousDays.size;
+        const totalWordsLearned = new Set([...completedWordsSnapshot.docs.map(d => d.id), ...completedMultiWordSnapshot.docs.map(d => d.id)]).size;
         
         const wordMasteryData: WordMastery[] = Object.entries(wordMasteryMap).map(([word, data]) => ({
             word,
@@ -230,7 +242,7 @@ export default function AnalysisDashboard() {
           {payload.map((pld) => (
             <p key={pld.dataKey} style={{ color: pld.fill }}>{`${pld.name}: ${pld.value}`}</p>
           ))}
-          {payload.length > 1 && (
+          {payload.length > 1 && total > 0 && (
             <>
               <hr className="my-1 border-gray-600" />
               <p className="font-semibold">{`Tổng: ${total}`}</p>
@@ -311,12 +323,12 @@ export default function AnalysisDashboard() {
 
             <ChartCard title="Hoạt động học tập (30 ngày qua)">
                 <ResponsiveContainer>
-                    <BarChart data={learningActivity} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                    <BarChart data={learningActivity} margin={{ top: 20, right: 20, left: -20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                         <XAxis dataKey="date" fontSize={12} />
                         <YAxis allowDecimals={false} fontSize={12}/>
                         <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(136, 132, 216, 0.1)'}}/>
-                        <Legend />
+                        <Legend verticalAlign="top" wrapperStyle={{top: 0, left: 25}}/>
                         <Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" />
                         <Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
                     </BarChart>
@@ -330,7 +342,6 @@ export default function AnalysisDashboard() {
                         <XAxis type="number" hide />
                         <YAxis dataKey="game" type="category" width={80} tick={{ fontSize: 14 }} />
                         <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255, 128, 66, 0.1)'}} />
-                        <Legend />
                         <Bar dataKey="completed" name="Tổng điểm" barSize={35}>
                             {masteryByGame.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={barColors[index % 2]} />
