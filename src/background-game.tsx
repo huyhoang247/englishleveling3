@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Component, useCallback } from 'react'; // Thêm useCallback
+import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './coin-display.tsx';
 import { getFirestore, doc, getDoc, setDoc, runTransaction, collection, getDocs } from 'firebase/firestore';
@@ -68,6 +68,12 @@ const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', cl
         src={uiAssets.gemIcon}
         alt="Tourmaline Gem Icon" // Alt text cho khả năng tiếp cận
         className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
+        // Xử lý lỗi tải ảnh cục bộ (tùy chọn, thường không cần thiết với asset được bundle)
+        // onError={(e) => {
+        //   const target = e as any;
+        //   target.onerror = null;
+        //   target.src = `https://placehold.co/${size}x${size}/8a2be2/ffffff?text=Gem`; // Placeholder
+        // }}
       />
     </div>
   );
@@ -77,22 +83,28 @@ const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', cl
 // Định nghĩa props cho StatsIcon
 interface StatsIconProps {
   onClick: () => void; // Hàm được gọi khi icon được click
+  // Thêm các props khác nếu cần cho styling hoặc state
 }
 
 // Component StatsIcon: Hiển thị icon mở màn hình chỉ số
 const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => {
   return (
+    // Container div cho icon
+    // Thêm relative và z-10 để đảm bảo nó nằm trên các lớp nền trong header
     <div className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-10"
          onClick={onClick} // Gọi hàm onClick khi được click
          title="Xem chỉ số nhân vật" // Tooltip cho khả năng tiếp cận
     >
+      {/* Thẻ img cho icon */}
       <img
         src={uiAssets.statsIcon} // Sử dụng biến từ tệp tài nguyên
         alt="Award Icon" // Alt text cho khả năng tiếp cận
         className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
+        // Xử lý lỗi tải ảnh
         onError={(e) => {
           const target = e.target as HTMLImageElement; // Ép kiểu sang HTMLImageElement
           target.onerror = null; // Ngăn chặn vòng lặp vô hạn nếu placeholder cũng lỗi
+          // Cập nhật placeholder hoặc xử lý lỗi tải ảnh từ đường dẫn local nếu cần
           target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon"; // Hiển thị ảnh placeholder khi lỗi
         }}
       />
@@ -187,6 +199,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
   const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, accessory: null });
 
+
+
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
@@ -234,7 +248,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   }, [showRateLimitToast]);
 
-  const fetchVocabularyData = useCallback(async (userId: string) => {
+  const fetchVocabularyData = async (userId: string) => {
     try {
         const completedWordsCol = collection(db, 'users', userId, 'completedWords');
         const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
@@ -261,9 +275,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         existingAchievements.forEach(item => { if (!processedWords.has(item.word)) { finalVocabularyData.push(item); } });
         console.log("Vocabulary achievements data synced and merged correctly."); setVocabularyData(finalVocabularyData);
     } catch (error) { console.error("Error fetching and syncing vocabulary achievements data:", error); setVocabularyData(initialVocabularyData); }
-  }, [db]);
+  };
 
-  const fetchUserData = useCallback(async (userId: string) => {
+  const fetchUserData = async (userId: string) => {
     setIsLoadingUserData(true);
     try {
       const userDocRef = doc(db, 'users', userId);
@@ -312,9 +326,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
     } catch (error) { console.error("Error fetching user data:", error); } 
     finally { setIsLoadingUserData(false); }
-  }, [db]);
+  };
 
-  const fetchJackpotPool = useCallback(async () => {
+  const fetchJackpotPool = async () => {
     try {
         const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
         const jackpotDocSnap = await getDoc(jackpotDocRef);
@@ -326,9 +340,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             await setDoc(jackpotDocRef, { poolAmount: 200, lastUpdated: new Date() }); setJackpotPool(200);
         }
     } catch (error) { console.error("Error fetching jackpot pool:", error); }
-  }, [db]);
+  };
     
-  const handleBossFloorUpdate = useCallback(async (newFloor: number) => {
+  const handleBossFloorUpdate = async (newFloor: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) {
       console.error("Cannot update boss floor: User not authenticated.");
@@ -346,16 +360,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     } catch (error) {
       console.error("Firestore update failed for boss floor: ", error);
     }
-  }, [db, bossBattleHighestFloor]);
+  };
 
 
-  const updateCoinsInFirestore = useCallback(async (userId: string, amount: number) => {
+  const updateCoinsInFirestore = async (userId: string, amount: number) => {
     if (!userId) { console.error("Cannot update coins: User not authenticated."); return; }
     const userDocRef = doc(db, 'users', userId);
     try {
       await runTransaction(db, async (transaction) => {
         const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) { transaction.set(userDocRef, { coins: amount, gems: 0, createdAt: new Date() }); } 
+        if (!userDoc.exists()) { transaction.set(userDocRef, { coins: coins, gems: gems, createdAt: new Date() }); } 
         else {
           const currentCoins = userDoc.data().coins || 0; const newCoins = currentCoins + amount;
           const finalCoins = Math.max(0, newCoins); transaction.update(userDocRef, { coins: finalCoins });
@@ -364,9 +378,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }
       });
     } catch (error) { console.error("Firestore Transaction failed for coins: ", error); }
-  }, [db]);
+  };
 
-  const updateGemsInFirestore = useCallback(async (userId: string, amount: number) => {
+  const updateGemsInFirestore = async (userId: string, amount: number) => {
     if (!userId) {
       console.error("Cannot update gems: User not authenticated.");
       return;
@@ -389,10 +403,26 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     } catch (error) {
       console.error("Firestore Transaction failed for gems: ", error);
     }
-  }, [db]);
+  };
 
+  const updateMasteryCardsInFirestore = async (userId: string, amount: number) => {
+    if (!userId) { console.error("Cannot update mastery cards: User not authenticated."); return; }
+    const userDocRef = doc(db, 'users', userId);
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) { transaction.set(userDocRef, { masteryCards: amount }); } 
+        else {
+          const currentCards = userDoc.data().masteryCards || 0;
+          const newCards = currentCards + amount; transaction.update(userDocRef, { masteryCards: newCards });
+          setMasteryCards(newCards);
+        }
+      });
+      console.log(`Mastery Cards updated in Firestore for user ${userId}.`);
+    } catch (error) { console.error("Firestore Transaction failed for mastery cards: ", error); }
+  };
     
-  const handleMinerChallengeEnd = useCallback(async (result: {
+  const handleMinerChallengeEnd = async (result: {
     finalPickaxes: number;
     coinsEarned: number;
     highestFloorCompleted: number;
@@ -450,9 +480,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     } finally {
       setIsSyncingData(false);
     }
-  }, [db, pickaxes, minerChallengeHighestFloor]);
+  };
 
-  const updatePickaxesInFirestore = useCallback(async (userId: string, newTotalAmount: number) => {
+  const updatePickaxesInFirestore = async (userId: string, newTotalAmount: number) => {
       if (!userId) { console.error("Cannot update pickaxes: User not authenticated."); return; }
       const userDocRef = doc(db, 'users', userId);
       try {
@@ -464,16 +494,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               setPickaxes(finalAmount);
           });
       } catch (error) { console.error("Firestore Transaction failed for pickaxes: ", error); }
-  }, [db]);
+  };
 
-  const handleUpdatePickaxes = useCallback(async (amountToAdd: number) => {
+  const handleUpdatePickaxes = async (amountToAdd: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) { console.error("Cannot update pickaxes: User not authenticated."); return; }
     const newTotal = pickaxes + amountToAdd;
     await updatePickaxesInFirestore(userId, newTotal);
-  }, [pickaxes, updatePickaxesInFirestore]);
+  };
   
-  const updateJackpotPoolInFirestore = useCallback(async (amount: number, resetToDefault: boolean = false) => {
+  const updateJackpotPoolInFirestore = async (amount: number, resetToDefault: boolean = false) => {
       const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
       try {
           await runTransaction(db, async (transaction) => {
@@ -489,15 +519,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               setJackpotPool(newJackpotPool);
           });
       } catch (error) { console.error("Firestore Transaction failed for jackpot pool: ", error); }
-  }, [db]);
+  };
 
-  const handleGemReward = useCallback(async (amount: number) => {
+  const handleGemReward = async (amount: number) => {
     if (auth.currentUser) {
       await updateGemsInFirestore(auth.currentUser.uid, amount);
     }
-  }, [updateGemsInFirestore]);
+  };
     
-  const handleConfirmStatUpgrade = useCallback(async (
+  const handleConfirmStatUpgrade = async (
     userId: string,
     upgradeCost: number,
     newStats: { hp: number; atk: number; def: number; }
@@ -533,9 +563,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     } finally {
       setIsSyncingData(false);
     }
-  }, [db]);
+  };
 
-  const handleSkillsUpdate = useCallback(async (updates: {
+  const handleSkillsUpdate = async (updates: {
       newOwned: OwnedSkill[];
       newEquippedIds: (string | null)[];
       goldChange: number;
@@ -571,6 +601,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               });
           });
 
+          // Update local state upon successful transaction
           setCoins(prev => prev + updates.goldChange);
           setAncientBooks(prev => prev + updates.booksChange);
           setOwnedSkills(updates.newOwned);
@@ -580,13 +611,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
       } catch (error) {
           console.error("Firestore transaction for skill update failed:", error);
+          // Re-throw the error so the calling component (SkillScreen) can handle it
           throw error;
       } finally {
           setIsSyncingData(false);
       }
-  }, [db]);
+  };
     
-  const handleInventoryUpdate = useCallback(async (updates: {
+  const handleInventoryUpdate = async (updates: {
       newOwned: OwnedItem[];
       newEquipped: EquippedItems;
       goldChange: number;
@@ -630,9 +662,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           console.error("Firestore transaction for equipment update failed:", error);
           throw error;
       } finally { setIsSyncingData(false); }
-  }, [db]);    
-
-  const handleShopPurchase = useCallback(async (item: any, quantity: number) => {
+  };    
+  // START: CẬP NHẬT LOGIC MUA HÀNG
+  const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) {
       console.error("Cannot purchase item: User not authenticated.");
@@ -657,6 +689,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
         const updates: { [key: string]: any } = { coins: currentCoins - totalCost, };
 
+        // Handle specific item logic
         if (item.id === 1009) { // Sách Cổ
           const currentBooks = userDoc.data().ancientBooks || 0;
           updates.ancientBooks = currentBooks + quantity;
@@ -670,6 +703,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         transaction.update(userDocRef, updates);
       });
 
+      // Update local state after successful transaction
       setCoins(prev => prev - totalCost);
       if (item.id === 1009) {
         setAncientBooks(prev => prev + quantity);
@@ -687,7 +721,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     } finally {
       setIsSyncingData(false);
     }
-  }, [db]);
+  };
+  // END: CẬP NHẬT LOGIC MUA HÀNG
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
@@ -712,7 +747,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
     });
     return () => unsubscribe();
-  }, [auth, db, fetchUserData, fetchVocabularyData, fetchJackpotPool]);
+  }, [auth, db]);
 
   useEffect(() => {
       const handleVisibilityChange = () => {
@@ -741,7 +776,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   };
 
-  const handleRewardClaim = useCallback(async (reward: { gold: number; masteryCards: number }, updatedVocabulary: VocabularyItem[]) => {
+  const handleRewardClaim = async (reward: { gold: number; masteryCards: number }, updatedVocabulary: VocabularyItem[]) => {
     const userId = auth.currentUser?.uid;
     if (!userId) { console.error("Cannot claim reward: User not authenticated."); throw new Error("User not authenticated"); }
     const userDocRef = doc(db, 'users', userId);
@@ -764,9 +799,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     } finally {
         setIsSyncingData(false);
     }
-  }, [db]);
+  };
 
-  const createToggleFunction = useCallback((setter: React.Dispatch<React.SetStateAction<boolean>>) => {
+  const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>, ...otherSetters: React.Dispatch<React.SetStateAction<boolean>>[]) => {
     return () => {
         if (isLoading) return;
         if (isSyncingData) {
@@ -775,18 +810,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }
         setter(prev => {
             const newState = !prev;
-            const allSetters = [ setIsRankOpen, setIsInventoryOpen, setIsLuckyGameOpen, 
-                setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen,
-                setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen
-              ];
             if (newState) {
                 hideNavBar();
-                allSetters.forEach(s => { if (s !== setter) s(false); });
+                [ setIsRankOpen, setIsInventoryOpen, setIsLuckyGameOpen, 
+                  setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen,
+                  setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen
+                ].forEach(s => { if (s !== setter) s(false); });
             } else { showNavBar(); }
             return newState;
         });
     };
-  }, [isLoading, isSyncingData, hideNavBar, showNavBar]);
+  };
 
   const toggleRank = createToggleFunction(setIsRankOpen);
   const toggleInventory = createToggleFunction(setIsInventoryOpen);
@@ -807,7 +841,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
-  const getPlayerBattleStats = useCallback(() => {
+  const getPlayerBattleStats = () => {
       const BASE_HP = 0; const BASE_ATK = 0; const BASE_DEF = 0;
       const bonusHp = calculateTotalStatValue(userStats.hp, statConfig.hp.baseUpgradeBonus);
       const bonusAtk = calculateTotalStatValue(userStats.atk, statConfig.atk.baseUpgradeBonus);
@@ -816,9 +850,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           maxHp: BASE_HP + bonusHp, hp: BASE_HP + bonusHp, atk: BASE_ATK + bonusAtk,
           def: BASE_DEF + bonusDef, maxEnergy: 50, energy: 50,
       };
-  }, [userStats]);
+  };
 
-  const getEquippedSkillsDetails = useCallback(() => {
+  const getEquippedSkillsDetails = () => {
       if (!ownedSkills || !equippedSkillIds) return [];
       
       const equippedDetails = equippedSkillIds
@@ -830,12 +864,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId);
               if (!blueprint) return null;
 
+              // Kết hợp thông tin từ owned skill và blueprint
               return { ...owned, ...blueprint };
           })
-          .filter(Boolean);
+          .filter(Boolean); // Lọc ra các giá trị null
 
+      // TypeScript sẽ không biết `Boolean` lọc null, nên ta cần ép kiểu
       return equippedDetails as (OwnedSkill & SkillBlueprint)[];
-  }, [ownedSkills, equippedSkillIds]);
+  };
 
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
@@ -856,6 +892,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                      <img src={uiAssets.menuIcon} alt="Menu Icon" className="w-5 h-5 object-contain" />
                 </button>
                 <div className="flex-1"></div>
+                {/* --- Main Game Header (Original) --- */}
                 <div className="flex items-center space-x-1 currency-display-container relative z-10">
                     <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
@@ -916,6 +953,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClose={toggleBossBattle}
                         playerInitialStats={getPlayerBattleStats()}
                         onBattleEnd={(result, rewards) => {
+                            console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`);
                             if (result === 'win' && auth.currentUser) {
                                 updateCoinsInFirestore(auth.currentUser.uid, rewards.coins);
                             }
