@@ -249,10 +249,10 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                         </div>
                         <p className="text-slate-300 text-base leading-relaxed">{itemDef.description}</p>
                         
-                        {/* === START: GIAO DIỆN CHỈ SỐ ĐÃ CẬP NHẬT === */}
+                        {/* === START: GIAO DIỆN CHỈ SỐ NHỎ GỌN === */}
                         {ownedItem.stats && Object.keys(ownedItem.stats).length > 0 && (
-                            <div className="w-full mt-4 p-3 bg-black/25 rounded-xl border border-slate-700/50">
-                                <div className="space-y-2">
+                            <div className="w-full mt-3 p-2.5 bg-black/25 rounded-xl border border-slate-700/50">
+                                <div className="space-y-1">
                                     {Object.entries(ownedItem.stats).map(([key, value]) => {
                                         const config = STAT_CONFIG[key.toLowerCase()];
                                         const name = config ? config.name : key.charAt(0).toUpperCase() + key.slice(1);
@@ -260,16 +260,15 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                         const color = config ? config.color : 'text-gray-300';
                                         
                                         return (
-                                            <div key={key} className="flex items-center gap-3 bg-slate-900/50 p-2 rounded-lg border border-transparent hover:border-slate-600 transition-colors cursor-default">
+                                            <div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg border border-transparent">
                                                 {Icon && (
-                                                    <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-black/30 ${color}`}>
-                                                        <Icon className="w-5 h-5" />
+                                                    <div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${color}`}>
+                                                        <Icon className="w-4 h-4" />
                                                     </div>
                                                 )}
                                                 <div className="flex flex-1 items-center justify-between">
-                                                    <span className="text-sm font-semibold text-slate-300 capitalize">{name}</span>
-                                                    {/* THAY ĐỔI: Cỡ chữ nhỏ hơn */}
-                                                    <span className="font-bold text-base text-white">
+                                                    <span className="text-xs font-semibold text-slate-300 capitalize">{name}</span>
+                                                    <span className="font-bold text-sm text-white">
                                                         {typeof value === 'number' ? value.toLocaleString() : value}
                                                     </span>
                                                 </div>
@@ -279,7 +278,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                 </div>
                             </div>
                         )}
-                        {/* === END: GIAO DIỆN CHỈ SỐ ĐÃ CẬP NHẬT === */}
+                        {/* === END: GIAO DIỆN CHỈ SỐ NHỎ GỌN === */}
                         
                         {isUpgradable && (
                             <div className="w-full mt-2 mb-4 space-y-2">
