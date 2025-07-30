@@ -1,4 +1,4 @@
-// --- START OF FILE equipment.tsx ---
+// --- START OF FILE equipment.tsx (FIXED) ---
 
 import React, { useState, useMemo, useCallback, memo } from 'react';
 // THAY ĐỔI: Import các hàm và cấu trúc mới từ item-database
@@ -215,9 +215,21 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     const itemDef = getItemDefinition(ownedItem.itemId);
     const [activeTab, setActiveTab] = useState<'stats' | 'upgrade'>('stats');
 
+    // === START: FIX BUG LOGIC ===
+    // Lấy thông tin của blueprint gốc để tạo ra một item definition "sạch", không có random stat.
+    // Điều này đảm bảo chúng ta luôn so sánh chỉ số hiện tại với chỉ số gốc thực sự.
+    const nonRandomBaseItemDef = useMemo(() => {
+        if (!itemDef || !itemDef.baseId) return null;
+        const blueprint = itemBlueprints.find(bp => bp.baseId === itemDef.baseId);
+        if (!blueprint) return null;
+        // Gọi generateItemDefinition với isRandomizedCraft = false để có chỉ số gốc, không ngẫu nhiên.
+        return generateItemDefinition(blueprint, itemDef.rarity, false);
+    }, [itemDef]);
+    // === END: FIX BUG LOGIC ===
+
     if (!itemDef) return null;
 
-    const isUpgradable = !!itemDef.stats;
+    const isUpgradable = !!nonRandomBaseItemDef?.stats;
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(itemDef, ownedItem.level) : 0;
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
     const hasStats = ownedItem.stats && Object.keys(ownedItem.stats).length > 0;
@@ -285,15 +297,19 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                 <div className="p-4">
                                     {activeTab === 'stats' && (
                                         <div className="space-y-1">
-                                            {hasStats ? Object.entries(ownedItem.stats).map(([key, value]) => {
+                                            {hasStats ? Object.entries(ownedItem.stats).map(([key, currentStatValue]) => {
                                                 const config = STAT_CONFIG[key.toLowerCase()];
-                                                const baseStatValue = itemDef.stats?.[key];
+                                                // Lấy chỉ số gốc từ item definition "sạch" đã tạo ở trên
+                                                const baseStatValue = nonRandomBaseItemDef?.stats?.[key];
                                                 let bonus = 0;
 
-                                                // Calculate bonus: current stat - base stat (Level 1)
-                                                if (typeof value === 'number' && typeof baseStatValue === 'number') {
-                                                    bonus = value - baseStatValue;
+                                                // Tính bonus = chỉ số hiện tại - chỉ số gốc
+                                                if (typeof currentStatValue === 'number' && typeof baseStatValue === 'number') {
+                                                    bonus = currentStatValue - baseStatValue;
                                                 }
+
+                                                // Chỉ số gốc để hiển thị bên trái (là chỉ số thực tế của vật phẩm trừ đi bonus)
+                                                const displayBase = typeof currentStatValue === 'number' ? currentStatValue - bonus : currentStatValue;
 
                                                 return (
                                                     <div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">
@@ -305,10 +321,8 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                         <div className="flex flex-1 items-center justify-between">
                                                             <span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span>
                                                             <span className="font-bold text-sm text-white">
-                                                                {/* Display Base Stat Value. Fallback to current value if base is not available. */}
-                                                                {typeof baseStatValue === 'number' ? baseStatValue.toLocaleString() : (typeof value === 'number' ? value.toLocaleString() : value) }
+                                                                {typeof displayBase === 'number' ? displayBase.toLocaleString() : displayBase}
                                                                 
-                                                                {/* Display Bonus from upgrades */}
                                                                 {bonus > 0 && (
                                                                     <span className="text-green-400 ml-2 font-normal text-xs">
                                                                         (+{bonus.toLocaleString()})
@@ -330,7 +344,8 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                 {Object.entries(ownedItem.stats).map(([key, value]) => {
                                                     if (typeof value !== 'number') return null;
                                                     const config = STAT_CONFIG[key.toLowerCase()];
-                                                    const increase = Math.max(1, Math.round(value * 0.01));
+                                                    // Tính toán mức tăng dựa trên chỉ số hiện tại
+                                                    const increase = Math.max(1, Math.round(value * 0.05) + Math.floor(ownedItem.level / 10)); // Ví dụ công thức nâng cấp phức tạp hơn
                                                     const nextValue = value + increase;
                                                     
                                                     return (
@@ -648,11 +663,10 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         if (gold < cost) { showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); return; }
         
         setIsProcessing(true);
-
         const newStats = { ...itemToUpgrade.stats };
         for (const key in newStats) {
             if (typeof newStats[key] === 'number') {
-                const increase = Math.max(1, Math.round(newStats[key] * 0.01));
+                const increase = Math.max(1, Math.round(newStats[key] * 0.05) + Math.floor(itemToUpgrade.level / 10));
                 newStats[key] = newStats[key] + increase;
             }
         }
@@ -760,4 +774,4 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
     );
 }
 
-// --- END OF FILE equipment.tsx ---
+// --- END OF FILE equipment.tsx (FIXED) ---
