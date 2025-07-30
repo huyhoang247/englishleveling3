@@ -1,5 +1,3 @@
-// --- START OF FILE equipment.tsx (FIXED & REDESIGNED STATS) ---
-
 import React, { useState, useMemo, useCallback, memo } from 'react';
 // THAY ĐỔI: Import các hàm và cấu trúc mới từ item-database
 import { 
@@ -111,12 +109,6 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const ForgeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M21.707 13.293l-4-4a1 1 0 00-1.414 1.414L17.586 12H13V4a1 1 0 00-2 0v8H6.414l1.293-1.293a1 1 0 00-1.414-1.414l-4 4a1 1 0 000 1.414l4 4a1 1 0 001.414-1.414L6.414 14H11v8a1 1 0 002 0v-8h4.586l-1.293 1.293a1 1 0 001.414 1.414l4-4a1 1 0 000-1.414z"/> </svg>);
 const AncientBookIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/sach-co.png" alt="Sách Cổ" className={className} /> );
 
-// *** BẮT ĐẦU: CÁC ICON CHỈ SỐ MỚI ***
-const HealthIcon = ({ className = '' }: { className?: string }) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" /></svg>);
-const AttackIcon = ({ className = '' }: { className?: string }) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path fillRule="evenodd" d="M11.3 2.24a.75.75 0 01.3.1l5.5 3.5a.75.75 0 01-.15 1.4l-3.32.553c.48.51.77 1.18.77 1.947v.966c0 .767-.29 1.437-.77 1.947l3.32.553a.75.75 0 01.15 1.4l-5.5 3.5a.75.75 0 01-1.05-.6V2.84a.75.75 0 01.75-.6zM8.7 2.24a.75.75 0 00-.75-.6v16.82a.75.75 0 001.05-.6l5.5-3.5a.75.75 0 00.15-1.4l-3.32-.553c-.48-.51-.77-1.18-.77-1.947v-.966c0-.767.29-1.437.77-1.947l-3.32-.553a.75.75 0 00-.15-1.4l-5.5-3.5a.75.75 0 00-.3-.1z" clipRule="evenodd" /></svg>);
-const DefenseIcon = ({ className = '' }: { className?: string }) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" /></svg>);
-// *** KẾT THÚC: CÁC ICON CHỈ SỐ MỚI ***
-
 // --- CoinDisplay Component ---
 const CoinDisplay = ({ displayedCoins }: { displayedCoins: number; }) => (
     <div className="flex items-center gap-2 px-4 py-2 bg-black/30 rounded-full border border-slate-700">
@@ -203,11 +195,27 @@ const ItemCard = memo(({ ownedItem, onClick, isEquipped, isProcessing }: { owned
     );
 });
 
+// --- START: Các thành phần mới cho hiển thị chỉ số ---
+
+// Icons cho các chỉ số
+const HpIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/> </svg> );
+const AtkIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M17.46,3.26a1.5,1.5,0,0,0-2.12,0L3.25,15.35a1.5,1.5,0,0,0,0,2.12l2.83,2.83a1.5,1.5,0,0,0,2.12,0L20.29,8.21a1.5,1.5,0,0,0,0-2.12Zm-11,14.31L4.6,15.71,15,5.34l1.83,1.83ZM18,7.5,16.5,6l1.41-1.41a.5.5,0,0,1,.71.71Z"/> </svg> );
+const DefIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12,1L3,5v6c0,5.55,3.84,10.74,9,12c5.16-1.26,9-6.45,9-12V5L12,1z"/> </svg> );
+
+// Cấu hình hiển thị cho từng loại chỉ số
+const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element; color: string; } } = {
+    hp: { name: 'Sức bền', Icon: HpIcon, color: 'text-red-400' },
+    atk: { name: 'Tấn công', Icon: AtkIcon, color: 'text-orange-400' },
+    def: { name: 'Phòng thủ', Icon: DefIcon, color: 'text-blue-400' },
+};
+
+// --- END: Các thành phần mới cho hiển thị chỉ số ---
+
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     if (!itemDef) return null;
 
-    const isUpgradable = !!itemDef.stats;
+    const isUpgradable = !!itemDef.stats; // An item is upgradable if it has stats.
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(itemDef, ownedItem.level) : 0;
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
 
@@ -218,18 +226,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
         ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-orange-500/25 active:scale-100'
         : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100';
     const mainActionDisabledStyle = 'bg-slate-700 text-slate-500 cursor-not-allowed';
-
-    // *** BẮT ĐẦU: LOGIC MỚI ĐỂ HIỂN THỊ CHỈ SỐ ***
-    const CORE_STATS_MAP: { [key: string]: { label: string; icon: React.FC<{ className?: string }> } } = {
-        'hp': { label: 'Máu', icon: HealthIcon },
-        'atk': { label: 'S.Thương', icon: AttackIcon },
-        'def': { label: 'Phòng Thủ', icon: DefenseIcon },
-    };
-
-    const allStats = ownedItem.stats ? Object.entries(ownedItem.stats) : [];
-    const coreStats = allStats.filter(([key]) => CORE_STATS_MAP[key]);
-    const otherStats = allStats.filter(([key]) => !CORE_STATS_MAP[key]);
-    // *** KẾT THÚC: LOGIC MỚI ĐỂ HIỂN THỊ CHỈ SỐ ***
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
@@ -251,47 +247,38 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                         <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
                             <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
                         </div>
-                        <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
+                        <p className="text-slate-300 text-base leading-relaxed">{itemDef.description}</p>
                         
-                        {/* *** BẮT ĐẦU: GIAO DIỆN CHỈ SỐ ĐƯỢC THIẾT KẾ LẠI *** */}
-                        <div className="w-full text-left mt-2 p-3 bg-black/20 rounded-lg border border-slate-700/50 space-y-3">
-                            {coreStats.length > 0 && (
-                                <div>
-                                    <h4 className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Chỉ số Cơ bản</h4>
-                                    <div className="grid grid-cols-3 gap-2 text-center">
-                                        {coreStats.map(([key, value]) => {
-                                            const StatIcon = CORE_STATS_MAP[key].icon;
-                                            const statLabel = CORE_STATS_MAP[key].label;
-                                            return (
-                                                <div key={key} className="bg-slate-900/60 p-2 rounded-md border border-slate-700 flex flex-col justify-center">
-                                                    <StatIcon className="w-5 h-5 mx-auto mb-1 text-slate-300" />
-                                                    <span className="text-base font-bold text-white">
-                                                        {typeof value === 'number' ? value.toLocaleString() : value}
+                        {/* THAY ĐỔI: Giao diện hiển thị chỉ số tinh tế hơn */}
+                        {ownedItem.stats && Object.keys(ownedItem.stats).length > 0 && (
+                            <div className="w-full text-left text-sm mt-4 p-4 bg-black/25 rounded-xl border border-slate-700/50">
+                                <h4 className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-3 px-1">Chỉ Số</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    {Object.entries(ownedItem.stats).map(([key, value]) => {
+                                        const config = STAT_CONFIG[key.toLowerCase()];
+                                        const name = config ? config.name : key.charAt(0).toUpperCase() + key.slice(1);
+                                        const Icon = config ? config.Icon : null;
+                                        const color = config ? config.color : 'text-gray-300';
+                                        
+                                        return (
+                                            <div key={key} className="flex items-center gap-3 bg-slate-900/50 p-2.5 rounded-lg border border-transparent hover:border-slate-600 transition-colors cursor-default">
+                                                {Icon && (
+                                                    <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-black/30 ${color}`}>
+                                                        <Icon className="w-5 h-5" />
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-col -space-y-1">
+                                                    <span className="text-xs text-slate-400 capitalize">{name}</span>
+                                                    <span className="font-bold text-lg text-white">
+                                                        {typeof value === 'number' ? `+${value.toLocaleString()}` : value}
                                                     </span>
-                                                    <span className="text-[10px] font-semibold uppercase text-slate-500">{statLabel}</span>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-
-                            {otherStats.length > 0 && (
-                                <div>
-                                    <h4 className="text-xs font-bold text-slate-400 mt-3 mb-2 uppercase tracking-wider">Thuộc tính Phụ</h4>
-                                    <div className="space-y-1 text-sm">
-                                        {otherStats.map(([key, value]) => (
-                                            <div key={key} className="flex justify-between capitalize px-2">
-                                                <span className="text-slate-400">{key}:</span>
-                                                <span className="font-semibold text-cyan-300">{typeof value === 'number' ? `+${value.toLocaleString()}` : value}</span>
                                             </div>
-                                        ))}
-                                    </div>
+                                        );
+                                    })}
                                 </div>
-                            )}
-                        </div>
-                        {/* *** KẾT THÚC: GIAO DIỆN CHỈ SỐ ĐƯỢC THIẾT KẾ LẠI *** */}
-
+                            </div>
+                        )}
                         
                         {isUpgradable && (
                             <div className="w-full mt-2 mb-4 space-y-2">
@@ -325,7 +312,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
         </div>
     );
 });
-
 
 const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedItem, onClose: () => void }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
@@ -537,13 +523,15 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
             const targetRank = getRandomRank();
             
+            // Tạo một định nghĩa vật phẩm tạm thời để lấy chỉ số ngẫu nhiên
             const finalItemDef = generateItemDefinition(randomBlueprint, targetRank, true);
             
+            // THAY ĐỔI: Gán chỉ số vừa random vào vật phẩm mới
             const newOwnedItem: OwnedItem = { 
                 id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, 
                 itemId: finalItemDef.id, 
                 level: 1,
-                stats: finalItemDef.stats || {}
+                stats: finalItemDef.stats || {} // Gán chỉ số riêng
             };
             const newOwnedList = [...ownedItems, newOwnedItem];
             
@@ -602,13 +590,15 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
             const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
             
+            // Tạo vật phẩm được rèn với chỉ số ngẫu nhiên nếu là vũ khí.
             const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank, true);
 
+            // THAY ĐỔI: Gán chỉ số mới cho vật phẩm vừa rèn
             const newForgedItem: OwnedItem = { 
                 id: `owned-${Date.now()}-${upgradedItemDef.id}`, 
                 itemId: upgradedItemDef.id, 
                 level: finalLevel,
-                stats: upgradedItemDef.stats || {}
+                stats: upgradedItemDef.stats || {} // Gán chỉ số riêng
             };
             const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
             
@@ -681,4 +671,3 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         </div>
     );
 }
-// --- END OF FILE equipment.tsx (FIXED & REDESIGNED STATS) ---
