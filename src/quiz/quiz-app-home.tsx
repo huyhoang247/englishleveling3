@@ -267,22 +267,6 @@ const CardCapacityIcon = ({ className }: { className: string }) => (
     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png" alt="Card Capacity Icon" className={className} />
 );
 
-// --- Icon mới cho tiêu đề phần thưởng ---
-const TargetIcon = ({ className }: { className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <circle cx="12" cy="12" r="6"></circle>
-        <circle cx="12" cy="12" r="2"></circle>
-    </svg>
-);
-
-const SparklesIcon = ({ className }: { className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="currentColor" viewBox="0 0 24 24">
-        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L15 16.75l-1.24 1.25-1.25-1.25L11.25 18l-1.25-1.25L8.75 18l-1.24-1.25L6.25 18l-1.49-1.49L6 15.25l-1.25-1.24L6 12.75l-1.25-1.25L6 10.25l-1.25-1.25L6.24 7.5l1.25 1.25L8.74 7.5l1.25 1.25L11.24 7.5l1.25 1.25L13.74 7.5l1.25 1.25L16.24 7.5l1.49 1.49L16.5 10.25l1.25 1.25L16.5 12.75l1.25 1.25L16.5 15.25l1.25 1.25L16.23 18z"/>
-        <path d="M12 8.25a.75.75 0 01.75.75v2a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zM12 13a.75.75 0 01.75.75v2a.75.75 0 01-1.5 0v-2a.75.75 0 01.75-.75z" fill="none"/>
-    </svg>
-);
-
 
 // --- START: MEMOIZED CHILD COMPONENTS ---
 
@@ -693,7 +677,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   );
 };
 
-// --- CẬP NHẬT RewardsPopup Component ---
+// --- NEW --- Rewards Popup Component
 const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }) => {
     const [isClaiming, setIsClaiming] = useState(null);
 
@@ -740,13 +724,13 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
 
                 const isCompleted = levelProgress.completed >= milestone;
                 const isLockedDueToNoProgress = levelProgress.completed === 0 && milestone > 0;
-                const rewardAmount = (i * BASE_REWARD_PER_100_Q * multiplier) / (MILESTONE_STEP / 100); // Điều chỉnh thưởng theo milestone
+                const rewardAmount = i * BASE_REWARD_PER_100_Q * multiplier;
                 const capacityRewardAmount = 10;
                 const progressPercentage = Math.min((levelProgress.completed / milestone) * 100, 100);
 
                 levelTiers.push(
-                    <div key={rewardId} className="relative bg-white p-4 rounded-lg shadow-sm overflow-hidden border border-gray-200/60">
-                         <div className="absolute top-0 left-0 bg-gray-800/80 text-white text-[11px] font-bold px-3 py-1 rounded-br-lg z-20">
+                    <div key={rewardId} className="relative bg-white p-4 rounded-lg shadow-sm overflow-hidden">
+                        <div className="absolute top-0 left-0 bg-gray-800/70 text-white text-xs font-bold px-3 py-1 rounded-br-lg z-20">
                             Stage {i}
                         </div>
                         <div className="pt-5 flex flex-col gap-3">
@@ -755,11 +739,11 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                                     <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%` }}></div>
                                 </div>
                                 <div className="flex-shrink-0 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full px-2.5 py-1 flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 ${isCompleted ? 'text-green-500' : 'text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                    {!isCompleted && <LockIcon className="w-3.5 h-3.5 text-gray-400"/>}
                                     <span>{`${levelProgress.completed}/${milestone}`}</span>
                                 </div>
                             </div>
-                            <div className="bg-gray-50/70 p-3 rounded-lg border border-gray-100">
+                            <div className="bg-gray-50 p-3 rounded-lg">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-3 flex-wrap">
                                         <div className={`${isLockedDueToNoProgress ? 'bg-gray-200' : 'bg-orange-100'} rounded-full px-3 py-1 inline-flex items-center gap-1.5 transition-colors`}>
@@ -789,24 +773,13 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
 
             if (levelTiers.length > 0) {
               return (
-                <div key={levelNumber} className="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm">
-                    <div className="flex justify-between items-center mb-4">
-                        <div className="flex items-center gap-2.5">
-                            {multiplier === 1 ? (
-                                <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center ring-4 ring-indigo-50">
-                                    <TargetIcon className="w-5 h-5 text-indigo-600" />
-                                </div>
-                            ) : (
-                                <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center ring-4 ring-amber-50">
-                                    <SparklesIcon className="w-5 h-5 text-amber-500" />
-                                </div>
-                            )}
-                            <h4 className="text-lg font-semibold text-slate-800">{levelTitle}</h4>
-                        </div>
+                <div key={levelNumber} className="bg-gray-100 p-4 rounded-lg">
+                    <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-bold text-gray-700">{levelTitle}</h4>
                         {multiplier > 1 && (
-                            <div className={`text-sm font-bold px-3 py-1 rounded-full shadow-inner transition-colors ${
+                            <div className={`text-sm font-bold px-2.5 py-1 rounded-full shadow transition-colors ${
                                 isInactivePreview
-                                ? 'bg-gray-200 text-gray-500'
+                                ? 'bg-gray-300 text-gray-500'
                                 : 'text-white bg-gradient-to-r from-amber-500 to-orange-600'
                             }`}>
                                 x{multiplier} Thưởng
@@ -819,7 +792,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             }
             return null;
         };
-        
+
         const mainProgress = progressData[practiceNumber];
         const mainTiers = generateTiersForLevel(mainProgress, practiceNumber, "Luyện tập chính", 1);
         if (mainTiers) tiers.push(mainTiers);
@@ -827,7 +800,6 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         for (let i = 1; i <= MAX_PREVIEWS; i++) {
             const previewNumber = (i * 100) + practiceNumber;
             const previewProgress = progressData[previewNumber];
-            if (!previewProgress || previewProgress.completed === 0) continue; // Bỏ qua nếu chưa có tiến độ
             const multiplier = Math.pow(2, i);
             const previewTiers = generateTiersForLevel(previewProgress, previewNumber, `Preview ${i}`, multiplier);
             if (previewTiers) tiers.push(previewTiers);
@@ -839,7 +811,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 <div className="text-center py-8 text-gray-500">
                     <GiftIcon className="w-12 h-12 mx-auto text-green-500 mb-4" />
                     <h4 className="font-bold text-lg text-gray-700">{hasQuestions ? "Hoàn thành!" : "Chưa có phần thưởng"}</h4>
-                    <p className="mt-1">{hasQuestions ? "Bạn đã nhận tất cả phần thưởng có sẵn." : "Phần luyện tập này chưa có câu hỏi hoặc bạn chưa bắt đầu."}</p>
+                    <p className="mt-1">{hasQuestions ? "Bạn đã nhận tất cả phần thưởng có sẵn." : "Phần luyện tập này chưa có câu hỏi."}</p>
                 </div>
              );
         }
@@ -852,15 +824,15 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
 
     return (
         <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
-            <div className="bg-slate-50 rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all animate-scale-up" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all animate-scale-up" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
                     <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                        <GiftIcon className="w-6 h-6 text-yellow-500"/>
                        Rewards: {practiceTitle}
                     </h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
                 </div>
-                <div className="p-3 sm:p-4 max-h-[70vh] overflow-y-auto space-y-4 hide-scrollbar">
+                <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50 hide-scrollbar">
                     {renderedTiers}
                 </div>
             </div>
@@ -880,6 +852,5 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         </div>
     );
 };
-
 
 // --- END OF FILE: quiz-app-home.tsx ---
