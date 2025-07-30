@@ -197,21 +197,15 @@ const ItemCard = memo(({ ownedItem, onClick, isEquipped, isProcessing }: { owned
     );
 });
 
-// --- START: Các thành phần mới cho hiển thị chỉ số ---
-
-// Icons cho các chỉ số
+// --- Icons và Cấu hình Chỉ số ---
 const HpIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/> </svg> );
 const AtkIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M17.46,3.26a1.5,1.5,0,0,0-2.12,0L3.25,15.35a1.5,1.5,0,0,0,0,2.12l2.83,2.83a1.5,1.5,0,0,0,2.12,0L20.29,8.21a1.5,1.5,0,0,0,0-2.12Zm-11,14.31L4.6,15.71,15,5.34l1.83,1.83ZM18,7.5,16.5,6l1.41-1.41a.5.5,0,0,1,.71.71Z"/> </svg> );
 const DefIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12,1L3,5v6c0,5.55,3.84,10.74,9,12c5.16-1.26,9-6.45,9-12V5L12,1z"/> </svg> );
-
-// Cấu hình hiển thị cho từng loại chỉ số với tên ngắn gọn
 const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element; color: string; } } = {
     hp: { name: 'HP', Icon: HpIcon, color: 'text-red-400' },
     atk: { name: 'ATK', Icon: AtkIcon, color: 'text-orange-400' },
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
-
-// --- END: Các thành phần mới cho hiển thị chỉ số ---
 
 // ==================================================================
 // ============ START OF UPDATED ItemDetailModal COMPONENT ==========
@@ -316,10 +310,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
 
                                     {activeTab === 'upgrade' && isUpgradable && (
                                         <div className="w-full">
-                                            <h4 className="text-base font-bold text-purple-300 uppercase tracking-wider mb-3 text-left">
-                                                Lv. {ownedItem.level} <span className="text-slate-400 mx-1">→</span> Lv. {ownedItem.level + 1}
-                                            </h4>
-                                            
                                             <div className="space-y-2 mb-4">
                                                 {Object.entries(ownedItem.stats).map(([key, value]) => {
                                                     if (typeof value !== 'number') return null;
@@ -342,18 +332,26 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                 })}
                                             </div>
 
-                                            <button 
-                                                onClick={() => onUpgrade(ownedItem)} 
-                                                disabled={!canAffordUpgrade || actionDisabled} 
-                                                className={`w-full flex items-center justify-center gap-3 py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-300 transform 
-                                                ${!canAffordUpgrade || actionDisabled 
-                                                    ? 'bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed' 
-                                                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/10 hover:scale-[1.02] active:scale-100 border border-purple-500'}`}
-                                            >
-                                                <GoldIcon className="w-5 h-5"/> 
-                                                <span>Nâng cấp với {currentUpgradeCost.toLocaleString()}</span>
-                                            </button>
-                                            {!canAffordUpgrade && !actionDisabled && <p className="text-center text-xs text-red-400 mt-2">Không đủ vàng</p>}
+                                            <div className="mt-4 flex items-center justify-between">
+                                                <div className="font-bold text-lg">
+                                                    <span className="text-slate-300">Lv. {ownedItem.level}</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400 inline mx-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                                    <span className="text-green-400">Lv. {ownedItem.level + 1}</span>
+                                                </div>
+
+                                                <button 
+                                                    onClick={() => onUpgrade(ownedItem)} 
+                                                    disabled={!canAffordUpgrade || actionDisabled} 
+                                                    className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 transform 
+                                                    ${!canAffordUpgrade || actionDisabled 
+                                                        ? 'bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed' 
+                                                        : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/10 hover:scale-[1.02] active:scale-100 border border-purple-500'}`}
+                                                >
+                                                    <GoldIcon className="w-5 h-5"/> 
+                                                    <span>{currentUpgradeCost.toLocaleString()}</span>
+                                                </button>
+                                            </div>
+                                            {!canAffordUpgrade && !actionDisabled && <p className="text-right text-xs text-red-400 mt-2">Không đủ vàng</p>}
                                         </div>
                                     )}
                                 </div>
@@ -377,7 +375,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
 // ================================================================
 // ============ END OF UPDATED ItemDetailModal COMPONENT ==========
 // ================================================================
-
 
 const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedItem, onClose: () => void }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
@@ -404,7 +401,7 @@ const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinit
     if (itemsToForge.length < 3) return { level: 1, refundGold: 0 };
     const totalInvestedGold = itemsToForge.reduce((total, item) => total + getTotalUpgradeCost(definition, item.level), 0);
     let finalLevel = 1, remainingGold = totalInvestedGold;
-    while (true) { // Loop indefinitely as there's no max level
+    while (true) {
         const costForNextLevel = getUpgradeCost(definition, finalLevel);
         if (remainingGold >= costForNextLevel) { remainingGold -= costForNextLevel; finalLevel++; } else { break; }
     }
@@ -419,7 +416,7 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
         const groups: Record<string, OwnedItem[]> = {};
         for (const item of unequippedItems) {
             const definition = getItemDefinition(item.itemId);
-            if (!definition || !definition.baseId) continue; // Bỏ qua vật phẩm không có blueprint
+            if (!definition || !definition.baseId) continue;
 
             const key = `${definition.baseId}-${definition.rarity}`;
             if (!groups[key]) groups[key] = [];
