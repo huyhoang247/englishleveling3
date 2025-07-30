@@ -288,12 +288,8 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                             {hasStats ? Object.entries(ownedItem.stats).map(([key, value]) => {
                                                 const config = STAT_CONFIG[key.toLowerCase()];
                                                 const baseStat = itemDef.stats?.[key];
-                                                let bonus = 0;
-                                                // THAY ĐỔI: Tính toán chỉ số cộng thêm bằng cách so sánh với chỉ số gốc.
-                                                // Điều kiện `itemDef.level === 1` được loại bỏ vì nó không đáng tin cậy.
-                                                if (typeof value === 'number' && typeof baseStat === 'number') {
-                                                    bonus = value - baseStat;
-                                                }
+                                                const isNumeric = typeof value === 'number' && typeof baseStat === 'number';
+                                                const bonus = isNumeric ? value - baseStat : 0;
 
                                                 return (
                                                     <div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">
@@ -304,14 +300,19 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                         )}
                                                         <div className="flex flex-1 items-center justify-between">
                                                             <span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span>
-                                                            <span className="font-bold text-sm text-white">
-                                                                {typeof value === 'number' ? value.toLocaleString() : value}
-                                                                {bonus > 0 && (
-                                                                    <span className="text-green-400 ml-2 font-normal text-xs">
-                                                                        (+{bonus.toLocaleString()})
+                                                            <div className="flex items-baseline justify-end gap-2 text-sm">
+                                                                {bonus > 0 && isNumeric ? (
+                                                                    <>
+                                                                        <span className="font-mono text-slate-400 text-xs">{baseStat.toLocaleString()} →</span>
+                                                                        <span className="font-bold font-mono text-white">{value.toLocaleString()}</span>
+                                                                        <span className="text-green-400 font-sans text-xs">(+{bonus.toLocaleString()})</span>
+                                                                    </>
+                                                                ) : (
+                                                                    <span className="font-bold font-mono text-white">
+                                                                        {typeof value === 'number' ? value.toLocaleString() : value}
                                                                     </span>
                                                                 )}
-                                                            </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 );
