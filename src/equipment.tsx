@@ -1,3 +1,5 @@
+// --- START OF FILE equipment.tsx ---
+
 import React, { useState, useMemo, useCallback, memo } from 'react';
 // THAY ĐỔI: Import các hàm và cấu trúc mới từ item-database
 import { 
@@ -211,11 +213,15 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps
 
 // --- END: Các thành phần mới cho hiển thị chỉ số ---
 
+// ==================================================================
+// ============ START OF UPDATED ItemDetailModal COMPONENT ==========
+// ==================================================================
+
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     if (!itemDef) return null;
 
-    const isUpgradable = !!itemDef.stats; // An item is upgradable if it has stats.
+    const isUpgradable = !!itemDef.stats;
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(itemDef, ownedItem.level) : 0;
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
 
@@ -231,27 +237,30 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
             <div className={`relative bg-gradient-to-br ${getRarityGradient(itemDef.rarity)} p-5 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
+                {/* Header */}
                 <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
                     <div className="flex justify-between items-start mb-2">
                         <h3 className={`text-2xl font-bold ${getRarityTextColor(itemDef.rarity)}`}>{itemDef.name}</h3>
                         <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(itemDef.rarity)} bg-gray-800/70 border ${getRarityColor(itemDef.rarity)}`}>{itemDef.rarity}</span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(itemDef.rarity)} bg-gray-800/70 border ${getRarityColor(itemDef.rarity)} capitalize`}>{itemDef.rarity}</span>
                         <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Level {ownedItem.level}</span>
                     </div>
                 </div>
 
+                {/* Content */}
                 <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2">
                     <div className="flex flex-col items-center text-center gap-4">
                         <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
-                            <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
+                             <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
                         </div>
-                        <p className="text-slate-300 text-base leading-relaxed">{itemDef.description}</p>
+                        <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50 text-left">
+                            <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
+                        </div>
                         
-                        {/* === START: GIAO DIỆN CHỈ SỐ NHỎ GỌN === */}
                         {ownedItem.stats && Object.keys(ownedItem.stats).length > 0 && (
-                            <div className="w-full mt-3 p-2.5 bg-black/25 rounded-xl border border-slate-700/50">
+                            <div className="w-full text-left p-3 bg-black/20 rounded-lg border border-slate-700/50">
                                 <div className="space-y-1">
                                     {Object.entries(ownedItem.stats).map(([key, value]) => {
                                         const config = STAT_CONFIG[key.toLowerCase()];
@@ -260,7 +269,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                         const color = config ? config.color : 'text-gray-300';
                                         
                                         return (
-                                            <div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg border border-transparent">
+                                            <div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">
                                                 {Icon && (
                                                     <div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${color}`}>
                                                         <Icon className="w-4 h-4" />
@@ -278,30 +287,34 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                 </div>
                             </div>
                         )}
-                        {/* === END: GIAO DIỆN CHỈ SỐ NHỎ GỌN === */}
                         
                         {isUpgradable && (
-                            <div className="w-full mt-2 mb-4 space-y-2">
-                                <button onClick={() => onUpgrade(ownedItem)} disabled={!canAffordUpgrade || actionDisabled} className="w-full relative p-3 rounded-lg transition-all duration-300 text-left flex items-center justify-between disabled:cursor-not-allowed group bg-black/20 border border-slate-700/80 hover:border-purple-500 disabled:hover:border-slate-700/80 hover:bg-purple-900/20">
+                            <div className="w-full mb-4 space-y-2">
+                                <div className="w-full relative p-3 rounded-lg transition-colors duration-300 text-left flex items-center justify-between bg-black/20 border border-slate-700/80">
                                     <div className="flex flex-col">
                                         <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
                                         <div className="flex items-center gap-2 font-bold text-lg mt-1">
                                             <span className="text-slate-300">Lv. {ownedItem.level}</span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                                             <span className="text-green-400">Lv. {ownedItem.level + 1}</span>
                                         </div>
                                     </div>
-                                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${!canAffordUpgrade ? 'bg-slate-700 border border-slate-600' : 'bg-slate-800 border border-slate-600 group-hover:bg-purple-600/50 group-hover:border-purple-500'}`}>
-                                        <GoldIcon className="w-5 h-5"/>
-                                        <span className={`font-bold text-sm transition-colors ${!canAffordUpgrade ? 'text-slate-500' : 'text-yellow-300'}`}>{currentUpgradeCost.toLocaleString()}</span>
-                                    </div>
-                                </button>
+                                    <button 
+                                        onClick={() => onUpgrade(ownedItem)} 
+                                        disabled={!canAffordUpgrade || actionDisabled} 
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-200 transform
+                                        ${!canAffordUpgrade || actionDisabled ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 active:scale-100'}`} >
+                                        <GoldIcon className="w-5 h-5"/> 
+                                        <span className={`font-bold text-sm`}>{currentUpgradeCost.toLocaleString()}</span>
+                                    </button>
+                                </div>
                                 {!canAffordUpgrade && <p className="text-center text-xs text-red-400 mt-1">Không đủ vàng</p>}
                             </div>
                         )}
                     </div>
                 </div>
                 
+                {/* Footer */}
                 <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
                     <div className="flex items-center gap-3">
                         <button onClick={mainActionHandler} disabled={actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${actionDisabled ? mainActionDisabledStyle : mainActionStyle}`}>{mainActionText}</button>
@@ -312,6 +325,11 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
         </div>
     );
 });
+
+// ================================================================
+// ============ END OF UPDATED ItemDetailModal COMPONENT ==========
+// ================================================================
+
 
 const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedItem, onClose: () => void }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
@@ -671,3 +689,5 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         </div>
     );
 }
+
+// --- END OF FILE equipment.tsx ---
