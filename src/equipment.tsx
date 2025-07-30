@@ -289,7 +289,9 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                 const config = STAT_CONFIG[key.toLowerCase()];
                                                 const baseStat = itemDef.stats?.[key];
                                                 let bonus = 0;
-                                                if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) {
+                                                // THAY ĐỔI: Tính toán chỉ số cộng thêm bằng cách so sánh với chỉ số gốc.
+                                                // Điều kiện `itemDef.level === 1` được loại bỏ vì nó không đáng tin cậy.
+                                                if (typeof value === 'number' && typeof baseStat === 'number') {
                                                     bonus = value - baseStat;
                                                 }
 
