@@ -276,13 +276,14 @@ const colorClasses = {
     teal:   { border: 'hover:border-teal-300',   bg: 'bg-teal-100',   text: 'text-teal-600',   hoverBg: 'group-hover:bg-teal-200',   arrow: 'group-hover:text-teal-500' },
     orange: { border: 'hover:border-orange-300', bg: 'bg-orange-100', text: 'text-orange-600', hoverBg: 'group-hover:bg-orange-200', arrow: 'group-hover:text-orange-500' },
     purple: { border: 'hover:border-purple-300', bg: 'bg-purple-100', text: 'text-purple-600', hoverBg: 'group-hover:bg-purple-200', arrow: 'group-hover:text-purple-500' },
+    red:    { border: 'hover:border-red-300',    bg: 'bg-red-100',    text: 'text-red-600',    hoverBg: 'group-hover:bg-red-200',    arrow: 'group-hover:text-red-500' },
     green:  { border: 'hover:border-green-300',  bg: 'bg-green-100',  text: 'text-green-600',  hoverBg: 'group-hover:bg-green-200',  arrow: 'group-hover:text-green-500' },
     yellow: { border: 'hover:border-yellow-300', bg: 'bg-yellow-100', text: 'text-yellow-600', hoverBg: 'group-hover:bg-yellow-200', arrow: 'group-hover:text-yellow-500' },
     gray:   { border: 'border-gray-300', bg: 'bg-gray-200', text: 'text-gray-500', hoverBg: 'group-hover:bg-gray-200', arrow: 'group-hover:text-gray-400' },
 };
 
 const PracticeCard = memo(({ practiceNumber, details, progress, onPracticeSelect, onRewardsClick, onReviewClick }) => {
-    const colors = colorClasses[details.color];
+    const colors = colorClasses[details.color] || colorClasses.gray;
     const isCompleted = progress && progress.total > 0 && progress.completed >= progress.total;
 
     return (
@@ -463,9 +464,9 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             });
 
         } else if (selectedType === 'dienTu') {
-            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-4', 'fill-word-5', 'fill-word-6'];
+            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-4', 'fill-word-5', 'fill-word-6', 'fill-word-7'];
             for(let i = 1; i <= MAX_PREVIEWS; i++) {
-                allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`, `fill-word-${i*100 + 4}`, `fill-word-${i*100 + 5}`, `fill-word-${i*100 + 6}`);
+                allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`, `fill-word-${i*100 + 4}`, `fill-word-${i*100 + 5}`, `fill-word-${i*100 + 6}`, `fill-word-${i*100 + 7}`);
             }
 
             allFillModes.forEach(mode => {
@@ -517,6 +518,15 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                      const gameModeId = `fill-word-${practiceNum}`;
                      const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
                      progress = { completed: completedSet.size, total: totalP6 };
+                } else if (practiceNum % 100 === 7) {
+                     let totalP7 = 0;
+                     exampleData.forEach(sentence => {
+                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                         if (wordsInSentence.length >= 1) totalP7++;
+                     });
+                     const gameModeId = `fill-word-${practiceNum}`;
+                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
+                     progress = { completed: completedSet.size, total: totalP7 };
                 }
                 newProgressData[practiceNum] = progress;
             });
@@ -543,6 +553,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       '4': { title: 'Practice 4', desc: 'Điền 3 từ vào câu (Rất Khó)', color: 'orange' },
       '5': { title: 'Practice 5', desc: 'Điền 4 từ vào câu (Siêu Khó)', color: 'purple' },
       '6': { title: 'Practice 6', desc: 'Điền 5 từ vào câu (Địa Ngục)', color: 'yellow' },
+      '7': { title: 'Practice 7', desc: 'Điền tất cả từ đã học trong câu (Cực Đại)', color: 'red' },
     },
   }), []);
   
