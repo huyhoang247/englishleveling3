@@ -64,7 +64,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   const [activeBlankIndex, setActiveBlankIndex] = useState<number | null>(null);
   const [shake, setShake] = useState(false);
 
-  const isMultiWordGame = useMemo(() => [3, 4, 5, 6].includes(selectedPractice % 100), [selectedPractice]);
+  const isMultiWordGame = useMemo(() => [3, 4, 5, 6, 7].includes(selectedPractice % 100), [selectedPractice]);
 
   useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
   
@@ -197,6 +197,27 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                     questionText = questionText.replace(new RegExp(`\\b${word4}\\b`, 'i'), '___');
                     questionText = questionText.replace(new RegExp(`\\b${word5}\\b`, 'i'), '___');
                     gameVocabulary.push({ word: `${word1} ${word2} ${word3} ${word4} ${word5}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 5 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
+                }
+            });
+        } else if (selectedPractice % 100 === 7) {
+             exampleData.forEach(sentence => {
+                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                
+                if (wordsInSentence.length >= 1) {
+                    const correctlyOrderedWords = wordsInSentence
+                        .sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()));
+
+                    // Create a robust regex to find and replace all target words at once
+                    const wordsToHideRegex = new RegExp(`\\b(${correctlyOrderedWords.map(w => w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`, 'gi');
+                    const questionText = sentence.english.replace(wordsToHideRegex, '___');
+                    const answerKey = correctlyOrderedWords.join(' ');
+                    
+                    gameVocabulary.push({ 
+                        word: answerKey, 
+                        question: questionText, 
+                        vietnameseHint: sentence.vietnamese, 
+                        hint: `Điền ${correctlyOrderedWords.length} từ còn thiếu. Gợi ý: ${sentence.vietnamese}` 
+                    });
                 }
             });
         }
@@ -398,8 +419,8 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   if (vocabularyList.length === 0 && !loading && !error) return (
     <div className="flex flex-col items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">
         Bạn không có đủ từ vựng cho bài tập này.
-        <br/>
-        {(selectedPractice === 6 || selectedPractice === 106) ? "Cần có câu chứa ít nhất 5 từ bạn đã học." : (selectedPractice === 5 || selectedPractice === 105) ? "Cần có câu chứa ít nhất 4 từ bạn đã học." : (selectedPractice === 4 || selectedPractice === 104) ? "Cần có câu chứa ít nhất 3 từ bạn đã học." : (selectedPractice === 3 || selectedPractice === 103) ? "Cần có câu chứa ít nhất 2 từ bạn đã học." : "Hãy vào màn hình 'Lật thẻ' để học thêm!"}
+        <br/> 
+        {(selectedPractice % 100 === 7) ? "Cần có câu chứa ít nhất 1 từ bạn đã học." : (selectedPractice % 100 === 6) ? "Cần có câu chứa ít nhất 5 từ bạn đã học." : (selectedPractice % 100 === 5) ? "Cần có câu chứa ít nhất 4 từ bạn đã học." : (selectedPractice % 100 === 4) ? "Cần có câu chứa ít nhất 3 từ bạn đã học." : (selectedPractice % 100 === 3) ? "Cần có câu chứa ít nhất 2 từ bạn đã học." : "Hãy vào màn hình 'Lật thẻ' để học thêm!"}
     </div>
   );
   
