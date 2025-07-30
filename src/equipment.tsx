@@ -215,12 +215,30 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     const itemDef = getItemDefinition(ownedItem.itemId);
     const [activeTab, setActiveTab] = useState<'stats' | 'upgrade'>('stats');
 
+    // Sắp xếp các chỉ số theo thứ tự HP, ATK, DEF
+    const sortedStats = useMemo(() => {
+        const order = ['hp', 'atk', 'def'];
+        const stats = ownedItem.stats || {};
+        const orderedEntries: [string, any][] = [];
+        const remainingEntries = { ...stats };
+
+        for (const key of order) {
+            if (stats.hasOwnProperty(key)) {
+                orderedEntries.push([key, stats[key]]);
+                delete remainingEntries[key];
+            }
+        }
+        orderedEntries.push(...Object.entries(remainingEntries));
+        return orderedEntries;
+    }, [ownedItem.stats]);
+
+
     if (!itemDef) return null;
 
     const isUpgradable = !!itemDef.stats;
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(itemDef, ownedItem.level) : 0;
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
-    const hasStats = ownedItem.stats && Object.keys(ownedItem.stats).length > 0;
+    const hasStats = sortedStats.length > 0;
 
     const actionDisabled = isProcessing;
     const mainActionText = isEquipped ? 'Tháo Ra' : 'Trang Bị';
@@ -285,7 +303,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                 <div className="p-4">
                                     {activeTab === 'stats' && (
                                         <div className="space-y-1">
-                                            {hasStats ? Object.entries(ownedItem.stats).map(([key, value]) => {
+                                            {hasStats ? sortedStats.map(([key, value]) => {
                                                 const config = STAT_CONFIG[key.toLowerCase()];
                                                 const baseStat = itemDef.stats?.[key];
                                                 let bonus = 0;
@@ -322,7 +340,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                     {activeTab === 'upgrade' && isUpgradable && (
                                         <div className="w-full">
                                             <div className="space-y-2 mb-4">
-                                                {Object.entries(ownedItem.stats).map(([key, value]) => {
+                                                {sortedStats.map(([key, value]) => {
                                                     if (typeof value !== 'number') return null;
                                                     const config = STAT_CONFIG[key.toLowerCase()];
                                                     const increase = Math.max(1, Math.round(value * 0.01));
