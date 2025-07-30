@@ -219,11 +219,15 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps
 
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
+    // THAY ĐỔI: Thêm state để quản lý tab
+    const [activeTab, setActiveTab] = useState<'stats' | 'upgrade'>('stats');
+
     if (!itemDef) return null;
 
     const isUpgradable = !!itemDef.stats;
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(itemDef, ownedItem.level) : 0;
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
+    const hasStats = ownedItem.stats && Object.keys(ownedItem.stats).length > 0;
 
     const actionDisabled = isProcessing;
     const mainActionText = isEquipped ? 'Tháo Ra' : 'Trang Bị';
@@ -259,78 +263,105 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                             <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
                         </div>
                         
-                        {ownedItem.stats && Object.keys(ownedItem.stats).length > 0 && (
-                            <div className="w-full text-left p-3 bg-black/20 rounded-lg border border-slate-700/50">
-                                <div className="space-y-1">
-                                    {Object.entries(ownedItem.stats).map(([key, value]) => {
-                                        const config = STAT_CONFIG[key.toLowerCase()];
-                                        const name = config ? config.name : key.charAt(0).toUpperCase() + key.slice(1);
-                                        const Icon = config ? config.Icon : null;
-                                        const color = config ? config.color : 'text-gray-300';
-                                        
-                                        return (
-                                            <div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">
-                                                {Icon && (
-                                                    <div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${color}`}>
-                                                        <Icon className="w-4 h-4" />
-                                                    </div>
-                                                )}
-                                                <div className="flex flex-1 items-center justify-between">
-                                                    <span className="text-xs font-semibold text-slate-300 capitalize">{name}</span>
-                                                    <span className="font-bold text-sm text-white">
-                                                        {typeof value === 'number' ? value.toLocaleString() : value}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-                        
-                        {/* THAY ĐỔI: Khu vực nâng cấp được thiết kế lại hoàn toàn */}
-                        {isUpgradable && (
-                            <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50">
-                                <div className="flex justify-between items-center mb-3">
-                                    <h4 className="text-base font-bold text-purple-300 uppercase tracking-wider">
-                                        Nâng Cấp (Lv. {ownedItem.level} <span className="text-slate-400 mx-1">→</span> Lv. {ownedItem.level + 1})
-                                    </h4>
+                        {/* THAY ĐỔI: Khu vực tab mới */}
+                        {(hasStats || isUpgradable) && (
+                            <div className="w-full">
+                                {/* Tab Buttons */}
+                                <div className="flex border-b-2 border-slate-700/50 mb-[-2px]">
+                                    <button 
+                                        onClick={() => setActiveTab('stats')}
+                                        className={`px-4 py-2 text-sm font-bold transition-colors ${
+                                            activeTab === 'stats' 
+                                            ? 'text-cyan-300 border-b-2 border-cyan-400' 
+                                            : 'text-slate-500 hover:text-slate-300'
+                                        }`}
+                                    >
+                                        Chỉ Số
+                                    </button>
+                                    {isUpgradable && (
+                                        <button 
+                                            onClick={() => setActiveTab('upgrade')}
+                                            className={`px-4 py-2 text-sm font-bold transition-colors ${
+                                                activeTab === 'upgrade' 
+                                                ? 'text-purple-300 border-b-2 border-purple-400' 
+                                                : 'text-slate-500 hover:text-slate-300'
+                                            }`}
+                                        >
+                                            Nâng Cấp
+                                        </button>
+                                    )}
                                 </div>
                                 
-                                <div className="space-y-2 mb-4">
-                                    {Object.entries(ownedItem.stats).map(([key, value]) => {
-                                        if (typeof value !== 'number') return null;
-                                        const config = STAT_CONFIG[key.toLowerCase()];
-                                        const increase = Math.max(1, Math.round(value * 0.01));
-                                        const nextValue = value + increase;
-                                        
-                                        return (
-                                            <div key={key} className="flex items-center gap-3 text-sm bg-slate-900/50 p-2 rounded-md">
-                                                {config?.Icon && <div className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-3.5 h-3.5" /></div>}
-                                                <span className="w-10 font-semibold text-slate-300">{config?.name || key}</span>
-                                                <div className="flex flex-1 items-center justify-end gap-2 font-mono">
-                                                    <span className="text-slate-400">{value.toLocaleString()}</span>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>
-                                                    <span className="font-bold text-green-400 w-12 text-left">{nextValue.toLocaleString()}</span>
-                                                    <span className="text-green-500 text-xs font-sans">(+{increase})</span>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                                {/* Tab Content Panel */}
+                                <div className="p-4 bg-black/20 rounded-b-lg border border-slate-700/50">
+                                    {activeTab === 'stats' && (
+                                        <div className="space-y-1">
+                                            {hasStats ? Object.entries(ownedItem.stats).map(([key, value]) => {
+                                                const config = STAT_CONFIG[key.toLowerCase()];
+                                                return (
+                                                    <div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">
+                                                        {config?.Icon && (
+                                                            <div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}>
+                                                                <config.Icon className="w-4 h-4" />
+                                                            </div>
+                                                        )}
+                                                        <div className="flex flex-1 items-center justify-between">
+                                                            <span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span>
+                                                            <span className="font-bold text-sm text-white">
+                                                                {typeof value === 'number' ? value.toLocaleString() : value}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }) : (
+                                                <p className="text-sm text-slate-500 text-center py-4">Vật phẩm này không có chỉ số.</p>
+                                            )}
+                                        </div>
+                                    )}
 
-                                <button 
-                                    onClick={() => onUpgrade(ownedItem)} 
-                                    disabled={!canAffordUpgrade || actionDisabled} 
-                                    className={`w-full flex items-center justify-center gap-3 py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-300 transform 
-                                    ${!canAffordUpgrade || actionDisabled 
-                                        ? 'bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed' 
-                                        : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/10 hover:scale-[1.02] active:scale-100 border border-purple-500'}`}
-                                >
-                                    <GoldIcon className="w-5 h-5"/> 
-                                    <span>Nâng cấp với {currentUpgradeCost.toLocaleString()}</span>
-                                </button>
-                                {!canAffordUpgrade && !actionDisabled && <p className="text-center text-xs text-red-400 mt-2">Không đủ vàng</p>}
+                                    {activeTab === 'upgrade' && isUpgradable && (
+                                        <div className="w-full">
+                                            <h4 className="text-base font-bold text-purple-300 uppercase tracking-wider mb-3 text-left">
+                                                Lv. {ownedItem.level} <span className="text-slate-400 mx-1">→</span> Lv. {ownedItem.level + 1}
+                                            </h4>
+                                            
+                                            <div className="space-y-2 mb-4">
+                                                {Object.entries(ownedItem.stats).map(([key, value]) => {
+                                                    if (typeof value !== 'number') return null;
+                                                    const config = STAT_CONFIG[key.toLowerCase()];
+                                                    const increase = Math.max(1, Math.round(value * 0.01));
+                                                    const nextValue = value + increase;
+                                                    
+                                                    return (
+                                                        <div key={key} className="flex items-center gap-3 text-sm bg-slate-900/50 p-2 rounded-md">
+                                                            {config?.Icon && <div className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-3.5 h-3.5" /></div>}
+                                                            <span className="w-10 font-semibold text-slate-300">{config?.name || key}</span>
+                                                            <div className="flex flex-1 items-center justify-end gap-2 font-mono">
+                                                                <span className="text-slate-400">{value.toLocaleString()}</span>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>
+                                                                <span className="font-bold text-green-400 w-12 text-left">{nextValue.toLocaleString()}</span>
+                                                                <span className="text-green-500 text-xs font-sans">(+{increase})</span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            <button 
+                                                onClick={() => onUpgrade(ownedItem)} 
+                                                disabled={!canAffordUpgrade || actionDisabled} 
+                                                className={`w-full flex items-center justify-center gap-3 py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-300 transform 
+                                                ${!canAffordUpgrade || actionDisabled 
+                                                    ? 'bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed' 
+                                                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/10 hover:scale-[1.02] active:scale-100 border border-purple-500'}`}
+                                            >
+                                                <GoldIcon className="w-5 h-5"/> 
+                                                <span>Nâng cấp với {currentUpgradeCost.toLocaleString()}</span>
+                                            </button>
+                                            {!canAffordUpgrade && !actionDisabled && <p className="text-center text-xs text-red-400 mt-2">Không đủ vàng</p>}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -727,3 +758,5 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         </div>
     );
 }
+
+// --- END OF FILE equipment.tsx ---
