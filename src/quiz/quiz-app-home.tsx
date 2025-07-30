@@ -438,9 +438,9 @@ function PracticeList({ selectedType, onPracticeSelect }) {
         let newProgressData = {};
         
         if (selectedType === 'tracNghiem') {
-            const allQuizModes = ['quiz-1', 'quiz-2'];
+            const allQuizModes = ['quiz-1', 'quiz-2', 'quiz-3'];
             for(let i = 1; i <= MAX_PREVIEWS; i++) {
-                allQuizModes.push(`quiz-${i*100 + 1}`, `quiz-${i*100 + 2}`);
+                allQuizModes.push(`quiz-${i*100 + 1}`, `quiz-${i*100 + 2}`, `quiz-${i*100 + 3}`);
             }
 
             allQuizModes.forEach(mode => {
@@ -456,7 +456,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                         return word && completedSet.has(word.toLowerCase());
                     }).length;
                     newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
-                } else if (practiceNum % 100 === 2) {
+                } else if (practiceNum % 100 === 2 || practiceNum % 100 === 3) {
                     const totalQs = userVocabulary.flatMap(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)) ? [{ word }] : []);
                     const completed = totalQs.filter(q => completedSet.has(q.word.toLowerCase())).length;
                     newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
@@ -545,6 +545,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     tracNghiem: {
       '1': { title: 'Practice 1', desc: 'Luyện tập từ vựng qua câu hỏi', color: 'indigo' },
       '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
+      '3': { title: 'Practice 3', desc: 'Điền 1 từ vào câu (không gợi ý nghĩa)', color: 'teal' },
     },
     dienTu: {
       '1': { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo' },
