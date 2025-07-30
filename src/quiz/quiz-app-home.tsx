@@ -741,7 +741,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                                 <div className="flex-shrink-0 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full px-2.5 py-1 flex items-center gap-1">
                                     {!isCompleted && (
                                         levelProgress.completed > 0
-                                            ? <CompletedIcon className="w-4 h-4 text-green-500" />
+                                            ? <CompletedIcon className="w-4 h-4 text-gray-400" />
                                             : <LockIcon className="w-3.5 h-3.5 text-gray-400"/>
                                     )}
                                     <span>{`${levelProgress.completed}/${milestone}`}</span>
