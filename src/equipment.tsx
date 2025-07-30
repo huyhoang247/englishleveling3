@@ -251,8 +251,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                         
                         {/* === START: GIAO DIỆN CHỈ SỐ ĐÃ CẬP NHẬT === */}
                         {ownedItem.stats && Object.keys(ownedItem.stats).length > 0 && (
-                            <div className="w-full text-left text-sm mt-4 p-3 bg-black/25 rounded-xl border border-slate-700/50">
-                                <h4 className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-3 px-1">Chỉ Số</h4>
+                            <div className="w-full mt-4 p-3 bg-black/25 rounded-xl border border-slate-700/50">
                                 <div className="space-y-2">
                                     {Object.entries(ownedItem.stats).map(([key, value]) => {
                                         const config = STAT_CONFIG[key.toLowerCase()];
@@ -267,10 +266,10 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                         <Icon className="w-5 h-5" />
                                                     </div>
                                                 )}
-                                                {/* THAY ĐỔI: Tên và giá trị trên cùng một hàng */}
                                                 <div className="flex flex-1 items-center justify-between">
                                                     <span className="text-sm font-semibold text-slate-300 capitalize">{name}</span>
-                                                    <span className="font-bold text-lg text-white">
+                                                    {/* THAY ĐỔI: Cỡ chữ nhỏ hơn */}
+                                                    <span className="font-bold text-base text-white">
                                                         {typeof value === 'number' ? value.toLocaleString() : value}
                                                     </span>
                                                 </div>
