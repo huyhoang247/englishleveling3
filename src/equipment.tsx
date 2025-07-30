@@ -206,9 +206,9 @@ const DefIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://w
 
 // Cấu hình hiển thị cho từng loại chỉ số
 const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element; color: string; } } = {
-    hp: { name: 'Sức bền', Icon: HpIcon, color: 'text-red-400' },
-    atk: { name: 'Tấn công', Icon: AtkIcon, color: 'text-orange-400' },
-    def: { name: 'Phòng thủ', Icon: DefIcon, color: 'text-blue-400' },
+    hp: { name: 'HP', Icon: HpIcon, color: 'text-red-400' },
+    atk: { name: 'ATK', Icon: AtkIcon, color: 'text-orange-400' },
+    def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
 // --- END: Các thành phần mới cho hiển thị chỉ số ---
@@ -220,6 +220,20 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     if (!itemDef) return null;
+
+    // THAY ĐỔI: Tính toán chỉ số của cấp độ tiếp theo để hiển thị
+    const nextLevelStats = useMemo(() => {
+        if (!ownedItem.stats || !Object.keys(ownedItem.stats).length) return {};
+        const newLevel = ownedItem.level + 1;
+        const nextStats: { [key: string]: number } = {};
+        for (const [key, currentValue] of Object.entries(ownedItem.stats)) {
+            // Công thức: baseStat = currentStat / (1 + (currentLevel - 1) * 0.01)
+            const baseStat = currentValue / (1 + (ownedItem.level - 1) * 0.01);
+            const newStatValue = baseStat * (1 + (newLevel - 1) * 0.01);
+            nextStats[key] = Math.round(newStatValue);
+        }
+        return nextStats;
+    }, [ownedItem]);
 
     const isUpgradable = !!itemDef.stats;
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(itemDef, ownedItem.level) : 0;
@@ -276,7 +290,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                     </div>
                                                 )}
                                                 <div className="flex flex-1 items-center justify-between">
-                                                    <span className="text-xs font-semibold text-slate-300 capitalize">{name}</span>
+                                                    <span className="text-xs font-semibold text-slate-300">{name}</span>
                                                     <span className="font-bold text-sm text-white">
                                                         {typeof value === 'number' ? value.toLocaleString() : value}
                                                     </span>
@@ -288,27 +302,49 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                             </div>
                         )}
                         
+                        {/* THAY ĐỔI: Thiết kế lại khu vực Nâng Cấp */}
                         {isUpgradable && (
                             <div className="w-full mb-4 space-y-2">
-                                <div className="w-full relative p-3 rounded-lg transition-colors duration-300 text-left flex items-center justify-between bg-black/20 border border-slate-700/80">
-                                    <div className="flex flex-col">
-                                        <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
-                                        <div className="flex items-center gap-2 font-bold text-lg mt-1">
+                                <div className="w-full relative p-4 rounded-lg bg-black/20 border border-slate-700/80">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <span className="text-sm text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp (+1% chỉ số/cấp)</span>
+                                        <div className="flex items-center gap-2 font-bold text-lg">
                                             <span className="text-slate-300">Lv. {ownedItem.level}</span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>
                                             <span className="text-green-400">Lv. {ownedItem.level + 1}</span>
                                         </div>
                                     </div>
+
+                                    <div className="space-y-2 mb-4">
+                                        {Object.keys(ownedItem.stats).map(key => {
+                                            const config = STAT_CONFIG[key.toLowerCase()];
+                                            const Icon = config ? config.Icon : null;
+                                            const color = config ? config.color : 'text-gray-300';
+                                            return (
+                                                <div key={key} className="flex items-center justify-between text-sm bg-slate-900/50 p-1.5 rounded-md">
+                                                    <div className="flex items-center gap-2">
+                                                        {Icon && <Icon className={`w-4 h-4 ${color}`} />}
+                                                        <span className="font-semibold text-slate-300">{config?.name || key}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 font-mono font-bold">
+                                                        <span className="text-slate-400">{ownedItem.stats[key]?.toLocaleString()}</span>
+                                                        <span className="text-purple-400 text-xs">→</span>
+                                                        <span className="text-green-400">{nextLevelStats[key]?.toLocaleString()}</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    
                                     <button 
                                         onClick={() => onUpgrade(ownedItem)} 
                                         disabled={!canAffordUpgrade || actionDisabled} 
-                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-200 transform
-                                        ${!canAffordUpgrade || actionDisabled ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 active:scale-100'}`} >
-                                        <GoldIcon className="w-5 h-5"/> 
-                                        <span className={`font-bold text-sm`}>{currentUpgradeCost.toLocaleString()}</span>
+                                        className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md transition-all duration-200 transform ${!canAffordUpgrade || actionDisabled ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold hover:scale-105 active:scale-100'}`}>
+                                        <span className="font-bold text-sm uppercase">Nâng Cấp</span>
+                                        <div className="flex items-center gap-1.5"><GoldIcon className="w-5 h-5"/> <span className="font-bold text-sm">{currentUpgradeCost.toLocaleString()}</span></div>
                                     </button>
                                 </div>
-                                {!canAffordUpgrade && <p className="text-center text-xs text-red-400 mt-1">Không đủ vàng</p>}
+                                {!canAffordUpgrade && <p className="text-center text-xs text-red-400 mt-1">Không đủ vàng.</p>}
                             </div>
                         )}
                     </div>
@@ -589,8 +625,19 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         if (gold < cost) { showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); return; }
         
         setIsProcessing(true);
-        const updatedItem = { ...itemToUpgrade, level: itemToUpgrade.level + 1 };
+        
+        // THAY ĐỔI: Tính toán lại chỉ số khi nâng cấp (tăng 1% mỗi cấp so với gốc)
+        const newLevel = itemToUpgrade.level + 1;
+        const newStats: { [key: string]: any } = {};
+        for (const [key, currentValue] of Object.entries(itemToUpgrade.stats)) {
+            const baseStat = currentValue / (1 + (itemToUpgrade.level - 1) * 0.01);
+            const newStatValue = baseStat * (1 + (newLevel - 1) * 0.01);
+            newStats[key] = Math.round(newStatValue);
+        }
+        
+        const updatedItem = { ...itemToUpgrade, level: newLevel, stats: newStats };
         const newOwnedList = ownedItems.map(s => s.id === itemToUpgrade.id ? updatedItem : s);
+
         try {
             await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: -cost, booksChange: 0 });
             setSelectedItem(updatedItem);
@@ -608,15 +655,22 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
             const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
             
-            // Tạo vật phẩm được rèn với chỉ số ngẫu nhiên nếu là vũ khí.
+            // Tạo vật phẩm được rèn với chỉ số ngẫu nhiên.
             const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank, true);
 
-            // THAY ĐỔI: Gán chỉ số mới cho vật phẩm vừa rèn
+            // THAY ĐỔI: Tính toán lại chỉ số cho vật phẩm được rèn, vì nó có thể bắt đầu ở cấp cao hơn 1
+            const initialStats = upgradedItemDef.stats || {};
+            const statsForFinalLevel: { [key: string]: any } = {};
+            for (const [key, baseValue] of Object.entries(initialStats)) {
+                const statForLevel = baseValue * (1 + (finalLevel - 1) * 0.01);
+                statsForFinalLevel[key] = Math.round(statForLevel);
+            }
+
             const newForgedItem: OwnedItem = { 
                 id: `owned-${Date.now()}-${upgradedItemDef.id}`, 
                 itemId: upgradedItemDef.id, 
                 level: finalLevel,
-                stats: upgradedItemDef.stats || {} // Gán chỉ số riêng
+                stats: statsForFinalLevel 
             };
             const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
             
