@@ -219,7 +219,6 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps
 
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
-    // THAY ĐỔI: Thêm state để quản lý tab
     const [activeTab, setActiveTab] = useState<'stats' | 'upgrade'>('stats');
 
     if (!itemDef) return null;
@@ -263,7 +262,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                             <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
                         </div>
                         
-                        {/* THAY ĐỔI: Khu vực tab mới */}
                         {(hasStats || isUpgradable) && (
                             <div className="w-full">
                                 {/* Tab Buttons */}
@@ -292,8 +290,8 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                     )}
                                 </div>
                                 
-                                {/* Tab Content Panel */}
-                                <div className="p-4 bg-black/20 rounded-b-lg border border-slate-700/50">
+                                {/* THAY ĐỔI: Bỏ viền xám (border và border-slate-700/50) */}
+                                <div className="p-4 bg-black/20 rounded-b-lg">
                                     {activeTab === 'stats' && (
                                         <div className="space-y-1">
                                             {hasStats ? Object.entries(ownedItem.stats).map(([key, value]) => {
@@ -333,10 +331,11 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                     const nextValue = value + increase;
                                                     
                                                     return (
-                                                        <div key={key} className="flex items-center gap-3 text-sm bg-slate-900/50 p-2 rounded-md">
+                                                        <div key={key} className="flex items-center gap-3 bg-slate-900/50 p-2 rounded-md">
                                                             {config?.Icon && <div className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-3.5 h-3.5" /></div>}
-                                                            <span className="w-10 font-semibold text-slate-300">{config?.name || key}</span>
-                                                            <div className="flex flex-1 items-center justify-end gap-2 font-mono">
+                                                            {/* THAY ĐỔI: Chỉnh kích thước chữ ở đây (thêm text-xs) */}
+                                                            <span className="w-10 font-semibold text-slate-300 text-xs">{config?.name || key}</span>
+                                                            <div className="flex flex-1 items-center justify-end gap-2 font-mono text-sm">
                                                                 <span className="text-slate-400">{value.toLocaleString()}</span>
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>
                                                                 <span className="font-bold text-green-400 w-12 text-left">{nextValue.toLocaleString()}</span>
