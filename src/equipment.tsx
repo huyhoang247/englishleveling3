@@ -287,14 +287,9 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                         <div className="space-y-1">
                                             {hasStats ? Object.entries(ownedItem.stats).map(([key, value]) => {
                                                 const config = STAT_CONFIG[key.toLowerCase()];
-
-                                                // Lấy chỉ số gốc (level 1) từ item definition.
-                                                // itemDef.stats đã chứa giá trị ngẫu nhiên từ Archetype nếu có.
                                                 const baseStat = itemDef.stats?.[key];
                                                 let bonus = 0;
-
-                                                // Tính toán bonus: là sự chênh lệch giữa chỉ số hiện tại và chỉ số gốc.
-                                                if (typeof value === 'number' && typeof baseStat === 'number') {
+                                                if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) {
                                                     bonus = value - baseStat;
                                                 }
 
@@ -307,17 +302,14 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                         )}
                                                         <div className="flex flex-1 items-center justify-between">
                                                             <span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span>
-                                                            <div className="font-bold text-sm text-right">
-                                                                {/* Hiển thị chỉ số hiện tại của vật phẩm */}
-                                                                <span className="text-white">{typeof value === 'number' ? value.toLocaleString() : value}</span>
-                                                                
-                                                                {/* Hiển thị bonus nếu có (chỉ số tăng thêm từ nâng cấp) */}
+                                                            <span className="font-bold text-sm text-white">
+                                                                {typeof value === 'number' ? value.toLocaleString() : value}
                                                                 {bonus > 0 && (
                                                                     <span className="text-green-400 ml-2 font-normal text-xs">
                                                                         (+{bonus.toLocaleString()})
                                                                     </span>
                                                                 )}
-                                                            </div>
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 );
@@ -363,8 +355,8 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                     disabled={!canAffordUpgrade || actionDisabled} 
                                                     className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 transform 
                                                     ${!canAffordUpgrade || actionDisabled 
-                                                        ? 'bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed' 
-                                                        : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/10 hover:scale-[1.02] active:scale-100 border border-purple-500'}`}
+                                                        ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' 
+                                                        : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 active:scale-100'}`}
                                                 >
                                                     <GoldIcon className="w-5 h-5"/> 
                                                     <span>{currentUpgradeCost.toLocaleString()}</span>
