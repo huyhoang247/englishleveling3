@@ -204,7 +204,7 @@ const HpIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://ww
 const AtkIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M17.46,3.26a1.5,1.5,0,0,0-2.12,0L3.25,15.35a1.5,1.5,0,0,0,0,2.12l2.83,2.83a1.5,1.5,0,0,0,2.12,0L20.29,8.21a1.5,1.5,0,0,0,0-2.12Zm-11,14.31L4.6,15.71,15,5.34l1.83,1.83ZM18,7.5,16.5,6l1.41-1.41a.5.5,0,0,1,.71.71Z"/> </svg> );
 const DefIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12,1L3,5v6c0,5.55,3.84,10.74,9,12c5.16-1.26,9-6.45,9-12V5L12,1z"/> </svg> );
 
-// THAY ĐỔI: Cấu hình hiển thị cho từng loại chỉ số với tên ngắn gọn
+// Cấu hình hiển thị cho từng loại chỉ số với tên ngắn gọn
 const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element; color: string; } } = {
     hp: { name: 'HP', Icon: HpIcon, color: 'text-red-400' },
     atk: { name: 'ATK', Icon: AtkIcon, color: 'text-orange-400' },
@@ -263,35 +263,32 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                         </div>
                         
                         {(hasStats || isUpgradable) && (
-                            <div className="w-full">
+                            <div className="w-full bg-black/20 rounded-lg">
                                 {/* Tab Buttons */}
-                                <div className="flex border-b-2 border-slate-700/50 mb-[-2px]">
+                                <div className="flex border-b border-slate-700/50">
                                     <button 
                                         onClick={() => setActiveTab('stats')}
-                                        className={`px-4 py-2 text-sm font-bold transition-colors ${
-                                            activeTab === 'stats' 
-                                            ? 'text-cyan-300 border-b-2 border-cyan-400' 
-                                            : 'text-slate-500 hover:text-slate-300'
+                                        className={`relative px-4 py-2 text-sm font-bold transition-colors ${
+                                            activeTab === 'stats' ? 'text-cyan-300' : 'text-slate-500 hover:text-slate-300'
                                         }`}
                                     >
                                         Chỉ Số
+                                        {activeTab === 'stats' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-cyan-400"></div>}
                                     </button>
                                     {isUpgradable && (
                                         <button 
                                             onClick={() => setActiveTab('upgrade')}
-                                            className={`px-4 py-2 text-sm font-bold transition-colors ${
-                                                activeTab === 'upgrade' 
-                                                ? 'text-purple-300 border-b-2 border-purple-400' 
-                                                : 'text-slate-500 hover:text-slate-300'
+                                            className={`relative px-4 py-2 text-sm font-bold transition-colors ${
+                                                activeTab === 'upgrade' ? 'text-purple-300' : 'text-slate-500 hover:text-slate-300'
                                             }`}
                                         >
                                             Nâng Cấp
+                                            {activeTab === 'upgrade' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-purple-400"></div>}
                                         </button>
                                     )}
                                 </div>
                                 
-                                {/* THAY ĐỔI: Bỏ viền xám (border và border-slate-700/50) */}
-                                <div className="p-4 bg-black/20 rounded-b-lg">
+                                <div className="p-4">
                                     {activeTab === 'stats' && (
                                         <div className="space-y-1">
                                             {hasStats ? Object.entries(ownedItem.stats).map(([key, value]) => {
@@ -333,7 +330,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                     return (
                                                         <div key={key} className="flex items-center gap-3 bg-slate-900/50 p-2 rounded-md">
                                                             {config?.Icon && <div className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-3.5 h-3.5" /></div>}
-                                                            {/* THAY ĐỔI: Chỉnh kích thước chữ ở đây (thêm text-xs) */}
                                                             <span className="w-10 font-semibold text-slate-300 text-xs">{config?.name || key}</span>
                                                             <div className="flex flex-1 items-center justify-end gap-2 font-mono text-sm">
                                                                 <span className="text-slate-400">{value.toLocaleString()}</span>
@@ -593,15 +589,13 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
             const targetRank = getRandomRank();
             
-            // Tạo một định nghĩa vật phẩm tạm thời để lấy chỉ số ngẫu nhiên
             const finalItemDef = generateItemDefinition(randomBlueprint, targetRank, true);
             
-            // THAY ĐỔI: Gán chỉ số vừa random vào vật phẩm mới
             const newOwnedItem: OwnedItem = { 
                 id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, 
                 itemId: finalItemDef.id, 
                 level: 1,
-                stats: finalItemDef.stats || {} // Gán chỉ số riêng
+                stats: finalItemDef.stats || {}
             };
             const newOwnedList = [...ownedItems, newOwnedItem];
             
@@ -642,11 +636,9 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         
         setIsProcessing(true);
 
-        // --- START: THAY ĐỔI LOGIC NÂNG CẤP ---
         const newStats = { ...itemToUpgrade.stats };
         for (const key in newStats) {
             if (typeof newStats[key] === 'number') {
-                // Tăng 1%, đảm bảo tăng ít nhất 1 điểm
                 const increase = Math.max(1, Math.round(newStats[key] * 0.01));
                 newStats[key] = newStats[key] + increase;
             }
@@ -654,9 +646,8 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         const updatedItem = { 
             ...itemToUpgrade, 
             level: itemToUpgrade.level + 1,
-            stats: newStats // Gán chỉ số đã được nâng cấp
+            stats: newStats
         };
-        // --- END: THAY ĐỔI LOGIC NÂNG CẤP ---
 
         const newOwnedList = ownedItems.map(s => s.id === itemToUpgrade.id ? updatedItem : s);
         try {
@@ -676,15 +667,13 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
             const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
             
-            // Tạo vật phẩm được rèn với chỉ số ngẫu nhiên nếu là vũ khí.
             const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank, true);
 
-            // THAY ĐỔI: Gán chỉ số mới cho vật phẩm vừa rèn
             const newForgedItem: OwnedItem = { 
                 id: `owned-${Date.now()}-${upgradedItemDef.id}`, 
                 itemId: upgradedItemDef.id, 
                 level: finalLevel,
-                stats: upgradedItemDef.stats || {} // Gán chỉ số riêng
+                stats: upgradedItemDef.stats || {}
             };
             const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
             
