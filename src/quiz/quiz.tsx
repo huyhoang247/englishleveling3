@@ -135,8 +135,9 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
 
   useEffect(() => {
       if (loading) return;
-      const isPracticeType2 = selectedPractice === 2 || selectedPractice === 102;
-      if (isPracticeType2) {
+      const practiceBaseId = selectedPractice % 100;
+      const isFillInTheBlankType = practiceBaseId === 2 || practiceBaseId === 3;
+      if (isFillInTheBlankType) {
           const allPossibleQuestions = userVocabulary.flatMap(word => {
               const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
               const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
@@ -173,8 +174,8 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
   useEffect(() => {
       if (playableQuestions.length > 0 && currentQuestion < playableQuestions.length) {
           const currentQuizItem = playableQuestions[currentQuestion];
-          const isPracticeType2 = selectedPractice === 2 || selectedPractice === 102;
-          if (isPracticeType2) {
+          const isFillInTheBlankType = [2, 3].includes(selectedPractice % 100);
+          if (isFillInTheBlankType) {
               setCurrentQuestionWord(currentQuizItem.word);
           } else {
               const matchedWord = userVocabulary.find(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question));
@@ -249,8 +250,8 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
 
   const resetQuiz = () => {
     let newPlayableQuestions = [];
-    const isPracticeType2 = selectedPractice === 2 || selectedPractice === 102;
-    if (isPracticeType2) {
+    const isFillInTheBlankType = [2, 3].includes(selectedPractice % 100);
+    if (isFillInTheBlankType) {
         const allPossibleQuestions = userVocabulary.flatMap(word => {
             const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
             const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
@@ -331,7 +332,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
                     </div>
                   </div>
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
-                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1"><h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>{playableQuestions[currentQuestion]?.vietnamese && (<p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>)}</div>
+                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1"><h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>{playableQuestions[currentQuestion]?.vietnamese && (selectedPractice % 100 !== 3) && (<p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>)}</div>
                 </div>
                 <div className="p-6">
                   <div className="space-y-3 mb-6">
@@ -376,4 +377,3 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     </div>
   );
 }
-// --- END OF FILE: quiz.tsx ---
