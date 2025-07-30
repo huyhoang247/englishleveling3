@@ -86,7 +86,7 @@ const getRandomRank = (): ItemRank => {
     return 'E';
 };
 
-// 6. Logic chi phí và tính toán chỉ số
+// 6. Logic chi phí
 const CRAFTING_COST = 50;
 const DISMANTLE_RETURN_BOOKS = 25;
 
@@ -103,24 +103,6 @@ const getTotalUpgradeCost = (itemDef: ItemDefinition, level: number): number => 
     }
     return total;
 };
-
-// **HÀM MỚI**: Tính toán chỉ số của vật phẩm dựa trên cấp độ
-const calculateStatsForLevel = (baseStats: { [key: string]: any } | undefined, level: number): { [key: string]: any } => {
-    if (!baseStats) return {};
-    const newStats: { [key: string]: any } = {};
-    for (const key in baseStats) {
-        if (typeof baseStats[key] === 'number') {
-            const baseValue = baseStats[key];
-            // Mỗi cấp tăng 1% chỉ số gốc. Cấp 1 = 100%, Cấp 2 = 101%, Cấp 3 = 102%...
-            const calculatedValue = baseValue * (1 + (level - 1) * 0.01);
-            newStats[key] = Math.floor(calculatedValue); // Làm tròn xuống để tránh số lẻ
-        } else {
-            newStats[key] = baseStats[key]; // Giữ nguyên các chỉ số không phải là số
-        }
-    }
-    return newStats;
-};
-
 
 // --- Các Icon Giao Diện ---
 const CloseIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/close.png" alt="Đóng" className={className} /> );
@@ -222,8 +204,7 @@ const HpIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://ww
 const AtkIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M17.46,3.26a1.5,1.5,0,0,0-2.12,0L3.25,15.35a1.5,1.5,0,0,0,0,2.12l2.83,2.83a1.5,1.5,0,0,0,2.12,0L20.29,8.21a1.5,1.5,0,0,0,0-2.12Zm-11,14.31L4.6,15.71,15,5.34l1.83,1.83ZM18,7.5,16.5,6l1.41-1.41a.5.5,0,0,1,.71.71Z"/> </svg> );
 const DefIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12,1L3,5v6c0,5.55,3.84,10.74,9,12c5.16-1.26,9-6.45,9-12V5L12,1z"/> </svg> );
 
-// **THAY ĐỔI TÊN CHỈ SỐ**
-// Cấu hình hiển thị cho từng loại chỉ số
+// THAY ĐỔI: Cấu hình hiển thị cho từng loại chỉ số với tên ngắn gọn
 const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element; color: string; } } = {
     hp: { name: 'HP', Icon: HpIcon, color: 'text-red-400' },
     atk: { name: 'ATK', Icon: AtkIcon, color: 'text-orange-400' },
@@ -240,10 +221,9 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     const itemDef = getItemDefinition(ownedItem.itemId);
     if (!itemDef) return null;
 
-    const isUpgradable = !!itemDef.stats && Object.keys(itemDef.stats).length > 0;
+    const isUpgradable = !!itemDef.stats;
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(itemDef, ownedItem.level) : 0;
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
-    const nextLevelStats = isUpgradable ? calculateStatsForLevel(itemDef.stats, ownedItem.level + 1) : {};
 
     const actionDisabled = isProcessing;
     const mainActionText = isEquipped ? 'Tháo Ra' : 'Trang Bị';
@@ -296,7 +276,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                     </div>
                                                 )}
                                                 <div className="flex flex-1 items-center justify-between">
-                                                    <span className="text-xs font-semibold text-slate-300 uppercase">{name}</span>
+                                                    <span className="text-xs font-semibold text-slate-300 capitalize">{name}</span>
                                                     <span className="font-bold text-sm text-white">
                                                         {typeof value === 'number' ? value.toLocaleString() : value}
                                                     </span>
@@ -308,47 +288,49 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                             </div>
                         )}
                         
+                        {/* THAY ĐỔI: Khu vực nâng cấp được thiết kế lại hoàn toàn */}
                         {isUpgradable && (
-                            <div className="w-full p-3 bg-black/20 rounded-lg border border-slate-700/50 text-left">
-                                <h4 className="text-sm font-bold text-purple-300 uppercase tracking-wider mb-2">Nâng Cấp</h4>
-                                <div className="p-3 bg-slate-900/50 rounded-md space-y-2">
-                                    <div className="flex justify-between items-center text-sm font-bold mb-2">
-                                        <span className="text-slate-300">Level {ownedItem.level}</span>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5-5 5M6 12h12" /></svg>
-                                        <span className="text-green-400">Level {ownedItem.level + 1}</span>
-                                    </div>
+                            <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h4 className="text-base font-bold text-purple-300 uppercase tracking-wider">
+                                        Nâng Cấp (Lv. {ownedItem.level} <span className="text-slate-400 mx-1">→</span> Lv. {ownedItem.level + 1})
+                                    </h4>
+                                </div>
+                                
+                                <div className="space-y-2 mb-4">
                                     {Object.entries(ownedItem.stats).map(([key, value]) => {
-                                        const nextValue = nextLevelStats[key];
-                                        if (value === undefined || nextValue === undefined) return null;
-                                        const diff = nextValue - value;
+                                        if (typeof value !== 'number') return null;
                                         const config = STAT_CONFIG[key.toLowerCase()];
+                                        const increase = Math.max(1, Math.round(value * 0.01));
+                                        const nextValue = value + increase;
+                                        
                                         return (
-                                            <div key={key} className="flex items-center justify-between text-xs">
-                                                <div className="flex items-center gap-1.5">
-                                                    {config && <config.Icon className={`w-3.5 h-3.5 ${config.color}`} />}
-                                                    <span className="font-semibold text-slate-400">{config?.name || key}</span>
-                                                </div>
-                                                <div className="flex items-center gap-1 font-mono">
-                                                    <span className="text-slate-300">{value}</span>
-                                                    <span className="text-purple-400">→</span>
-                                                    <span className="text-green-400 font-bold">{nextValue}</span>
-                                                    {diff > 0 && <span className="text-green-500/80 font-semibold">(+{diff})</span>}
+                                            <div key={key} className="flex items-center gap-3 text-sm bg-slate-900/50 p-2 rounded-md">
+                                                {config?.Icon && <div className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-3.5 h-3.5" /></div>}
+                                                <span className="w-10 font-semibold text-slate-300">{config?.name || key}</span>
+                                                <div className="flex flex-1 items-center justify-end gap-2 font-mono">
+                                                    <span className="text-slate-400">{value.toLocaleString()}</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>
+                                                    <span className="font-bold text-green-400 w-12 text-left">{nextValue.toLocaleString()}</span>
+                                                    <span className="text-green-500 text-xs font-sans">(+{increase})</span>
                                                 </div>
                                             </div>
                                         );
                                     })}
                                 </div>
-                                <button
-                                    onClick={() => onUpgrade(ownedItem)}
-                                    disabled={!canAffordUpgrade || actionDisabled}
-                                    className={`w-full flex items-center justify-center gap-2 mt-3 px-3 py-2.5 rounded-lg transition-all duration-200 transform text-sm font-bold
-                                        ${!canAffordUpgrade || actionDisabled ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border border-purple-400/50 hover:scale-[1.02] active:scale-100 shadow-lg shadow-purple-500/10'}`}
+
+                                <button 
+                                    onClick={() => onUpgrade(ownedItem)} 
+                                    disabled={!canAffordUpgrade || actionDisabled} 
+                                    className={`w-full flex items-center justify-center gap-3 py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-300 transform 
+                                    ${!canAffordUpgrade || actionDisabled 
+                                        ? 'bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed' 
+                                        : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/10 hover:scale-[1.02] active:scale-100 border border-purple-500'}`}
                                 >
-                                    <span>Nâng Cấp</span>
-                                    <GoldIcon className="w-5 h-5" />
-                                    <span>{currentUpgradeCost.toLocaleString()}</span>
-                                    {!canAffordUpgrade && <span className="text-red-400 text-xs ml-1">(Không đủ)</span>}
+                                    <GoldIcon className="w-5 h-5"/> 
+                                    <span>Nâng cấp với {currentUpgradeCost.toLocaleString()}</span>
                                 </button>
+                                {!canAffordUpgrade && !actionDisabled && <p className="text-center text-xs text-red-400 mt-2">Không đủ vàng</p>}
                             </div>
                         )}
                     </div>
@@ -581,14 +563,15 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
             const targetRank = getRandomRank();
             
-            // Tạo một định nghĩa vật phẩm tạm thời để lấy chỉ số gốc
+            // Tạo một định nghĩa vật phẩm tạm thời để lấy chỉ số ngẫu nhiên
             const finalItemDef = generateItemDefinition(randomBlueprint, targetRank, true);
             
+            // THAY ĐỔI: Gán chỉ số vừa random vào vật phẩm mới
             const newOwnedItem: OwnedItem = { 
                 id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, 
                 itemId: finalItemDef.id, 
                 level: 1,
-                stats: finalItemDef.stats || {} // Gán chỉ số gốc (level 1)
+                stats: finalItemDef.stats || {} // Gán chỉ số riêng
             };
             const newOwnedList = [...ownedItems, newOwnedItem];
             
@@ -629,10 +612,21 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         
         setIsProcessing(true);
 
-        const newLevel = itemToUpgrade.level + 1;
-        // **LOGIC MỚI**: Tính lại chỉ số cho cấp độ mới
-        const newStats = calculateStatsForLevel(itemDef.stats, newLevel);
-        const updatedItem = { ...itemToUpgrade, level: newLevel, stats: newStats };
+        // --- START: THAY ĐỔI LOGIC NÂNG CẤP ---
+        const newStats = { ...itemToUpgrade.stats };
+        for (const key in newStats) {
+            if (typeof newStats[key] === 'number') {
+                // Tăng 1%, đảm bảo tăng ít nhất 1 điểm
+                const increase = Math.max(1, Math.round(newStats[key] * 0.01));
+                newStats[key] = newStats[key] + increase;
+            }
+        }
+        const updatedItem = { 
+            ...itemToUpgrade, 
+            level: itemToUpgrade.level + 1,
+            stats: newStats // Gán chỉ số đã được nâng cấp
+        };
+        // --- END: THAY ĐỔI LOGIC NÂNG CẤP ---
 
         const newOwnedList = ownedItems.map(s => s.id === itemToUpgrade.id ? updatedItem : s);
         try {
@@ -652,17 +646,15 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
             const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
             
-            // Tạo vật phẩm được rèn với chỉ số gốc
+            // Tạo vật phẩm được rèn với chỉ số ngẫu nhiên nếu là vũ khí.
             const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank, true);
 
-            // **LOGIC MỚI**: Tính toán chỉ số cho vật phẩm mới dựa trên cấp độ đạt được
-            const finalStats = calculateStatsForLevel(upgradedItemDef.stats, finalLevel);
-
+            // THAY ĐỔI: Gán chỉ số mới cho vật phẩm vừa rèn
             const newForgedItem: OwnedItem = { 
                 id: `owned-${Date.now()}-${upgradedItemDef.id}`, 
                 itemId: upgradedItemDef.id, 
                 level: finalLevel,
-                stats: finalStats // Gán chỉ số đã được tính toán
+                stats: upgradedItemDef.stats || {} // Gán chỉ số riêng
             };
             const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
             
@@ -735,5 +727,3 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         </div>
     );
 }
-
-// --- END OF FILE equipment.tsx ---
