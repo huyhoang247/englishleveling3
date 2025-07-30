@@ -287,6 +287,12 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                         <div className="space-y-1">
                                             {hasStats ? Object.entries(ownedItem.stats).map(([key, value]) => {
                                                 const config = STAT_CONFIG[key.toLowerCase()];
+                                                const baseStat = itemDef.stats?.[key];
+                                                let bonus = 0;
+                                                if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) {
+                                                    bonus = value - baseStat;
+                                                }
+
                                                 return (
                                                     <div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">
                                                         {config?.Icon && (
@@ -298,6 +304,11 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                             <span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span>
                                                             <span className="font-bold text-sm text-white">
                                                                 {typeof value === 'number' ? value.toLocaleString() : value}
+                                                                {bonus > 0 && (
+                                                                    <span className="text-green-400 ml-2 font-normal text-xs">
+                                                                        (+{bonus.toLocaleString()})
+                                                                    </span>
+                                                                )}
                                                             </span>
                                                         </div>
                                                     </div>
