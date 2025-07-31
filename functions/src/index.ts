@@ -1,13 +1,13 @@
-// File: functions/src/index.ts (PHIÊN BẢN SỬA LỖI CUỐI CÙNG)
+// File: functions/src/index.ts (SỬA LỖI IMPORT VÀ FIREBASE FUNCTIONS V1)
 
-import * as functions from "firebase-functions";
+// --- SỬA LỖI 2: Dùng cú pháp v1 một cách rõ ràng ---
+import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
-// --- THÊM IMPORT ĐỂ SỬA LỖI CONTEXT ---
 import { CallableContext } from "firebase-functions/v1/https";
 
-// Import dữ liệu tĩnh của bạn từ thư mục src của functions
-import { quizData } from "./quiz-data";
-import { exampleData } from "./example-data";
+// --- SỬA LỖI 1: Thay đổi cách import ---
+import quizData from "./quiz-data";
+import exampleData from "./example-data";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -15,12 +15,10 @@ const db = admin.firestore();
 // --- ĐỊNH NGHĨA CÁC INTERFACE ---
 interface QuizItem {
   question: string;
-  // Thêm các thuộc tính khác của một item trong quizData nếu có
 }
 
 interface ExampleItem {
   english: string;
-  // Thêm các thuộc tính khác của một item trong exampleData nếu có
 }
 
 interface Progress {
@@ -36,8 +34,9 @@ const MAX_PREVIEWS = 5;
 
 // Hàm onCall, được gọi từ client
 export const calculatePracticeProgress = functions
-  .region("asia-southeast1") // Thay đổi region nếu cần
-  .https.onCall(async (data: any, context: CallableContext) => { // <-- ĐÃ THÊM KIỂU DỮ LIỆU
+  // Bây giờ cú pháp .region() sẽ hoạt động vì ta đang dùng v1
+  .region("asia-southeast1") 
+  .https.onCall(async (data: any, context: CallableContext) => {
     // 1. Xác thực người dùng
     if (!context.auth) {
       throw new functions.https.HttpsError(
@@ -69,14 +68,10 @@ export const calculatePracticeProgress = functions
         db.collection(`users/${uid}/completedWords`).get(),
         db.collection(`users/${uid}/completedMultiWord`).get(),
       ]);
+      
+      const userData = userDocSnap.exists() ? userDocSnap.data() : {};
 
-      // --- SỬA LỖI 'possibly undefined' ---
-      // Nếu userDoc không tồn tại, userData sẽ là một object rỗng {}, không phải undefined.
-      const userData = userDocSnap.exists ? userDocSnap.data() : {};
-
-      // Dòng này bây giờ sẽ an toàn, vì userData không bao giờ là undefined.
       const claimedRewards = userData?.claimedQuizRewards || {};
-      // ------------------------------------
 
       const userVocabulary: string[] = openedVocabSnapshot.docs
         .map((doc) => doc.data().word)
@@ -157,9 +152,9 @@ export const calculatePracticeProgress = functions
           } else { // Handles 3, 4, 5, 6, 7
             let requiredWordCount = 0;
             if (practiceNum % 100 >= 3 && practiceNum % 100 <= 6) {
-              requiredWordCount = (practiceNum % 100) - 1; // P3 -> 2 words, P4 -> 3 words...
+              requiredWordCount = (practiceNum % 100) - 1; 
             } else if (practiceNum % 100 === 7) {
-              requiredWordCount = 1; // At least 1 word
+              requiredWordCount = 1;
             }
 
             if (requiredWordCount > 0) {
