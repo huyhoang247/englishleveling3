@@ -5,7 +5,7 @@ import { db } from '../firebase.js';
 import { doc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
 
 // Import the new hook
-import { useOptimizedQuizData } from '../hooks/useOptimizedQuizData.ts';
+import { useOptimizedQuizData } from './useOptimizedQuizData.ts';
 
 import CoinDisplay from '../coin-display.tsx';
 import Confetti from '../fill-word/chuc-mung.tsx';
