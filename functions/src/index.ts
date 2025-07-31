@@ -1,5 +1,6 @@
 // --- START OF FILE: functions/src/index.ts ---
 
+// FIX: Import thêm `CallableContext` để định kiểu cho context
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
@@ -8,7 +9,6 @@ admin.initializeApp();
 const db = admin.firestore();
 
 // Import các file dữ liệu từ local.
-// Đảm bảo các file này đã được copy vào thư mục functions/src/
 import { quizData } from "./quiz-data";
 import { exampleData } from "./example-data";
 import { defaultVocabulary } from "./list-vocabulary";
@@ -37,7 +37,6 @@ interface ProgressData {
   [key: number]: Progress;
 }
 
-// FIX: Thêm interface cho một item trong quizData để định kiểu cho tham số `q`
 interface QuizItem {
   question: string;
   options: string[];
@@ -46,9 +45,11 @@ interface QuizItem {
 
 // --- CLOUD FUNCTION 1: Lấy tiến độ học tập ---
 
+// FIX: Cú pháp để chỉ định region đã thay đổi.
 export const getPracticeProgress = functions
   .region("asia-southeast1")
-  .https.onCall(async (data, context) => {
+  // FIX: Định kiểu rõ ràng cho `data` và `context`
+  .https.onCall(async (data: any, context: functions.https.CallableContext) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Yêu cầu xác thực người dùng.");
     }
@@ -123,7 +124,6 @@ export const getPracticeProgress = functions
           const completedSet = completedWordsByGameMode[mode] || new Set();
 
           if (practiceNum % 100 === 1) {
-            // FIX: Khai báo kiểu dữ liệu cho `q` là `QuizItem`
             const totalQs = quizData.filter((q: QuizItem) => userVocabulary.some((v) => createWordRegex(v).test(q.question)));
             const completed = totalQs.filter((q: QuizItem) => {
               const word = userVocabulary.find((v) => createWordRegex(v).test(q.question));
@@ -190,7 +190,7 @@ export const getPracticeProgress = functions
 
 export const getGameSessionData = functions
   .region("asia-southeast1")
-  .https.onCall(async (data, context) => {
+  .https.onCall(async (data: any, context: functions.https.CallableContext) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Yêu cầu xác thực người dùng.");
     }
@@ -225,7 +225,6 @@ export const getGameSessionData = functions
 
         const practiceBaseId = selectedPractice % 100;
         if (practiceBaseId === 1) {
-          // FIX: Khai báo kiểu dữ liệu cho `q`
           const allMatching = quizData.filter((q: QuizItem) => userVocabulary.some((v) => createWordRegex(v).test(q.question)));
           const remaining = allMatching.filter((q: QuizItem) => {
             const word = userVocabulary.find((v) => createWordRegex(v).test(q.question));
@@ -329,7 +328,6 @@ export const getGameSessionData = functions
         definitionsMap: gameType === "quiz" ? (() => {
           const definitions: { [key: string]: any } = {};
           const lines = detailedMeaningsText.trim().split("\n");
-          // FIX: Khai báo kiểu dữ liệu cho `line` là `string`
           lines.forEach((line: string) => {
             if (line.trim() === "") {
               return;
