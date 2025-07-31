@@ -7,7 +7,7 @@ import VocabularyGame from '../fill-word/fill-word-home.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 
 // Import the new hook
-import { useOptimizedQuizData } from '../hooks/useOptimizedQuizData.ts';
+import { useOptimizedQuizData } from './useOptimizedQuizData.ts';
 
 // Imports for rewards logic
 import { db } from '../firebase.js';
