@@ -1,18 +1,19 @@
-// File: functions/src/index.ts (SỬA LỖI IMPORT VÀ FIREBASE FUNCTIONS V1)
+// File: functions/src/index.ts (FINAL CORRECTED VERSION)
 
-// --- SỬA LỖI 2: Dùng cú pháp v1 một cách rõ ràng ---
 import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import { CallableContext } from "firebase-functions/v1/https";
 
-// --- SỬA LỖI 1: Thay đổi cách import ---
-import quizData from "./quiz-data";
-import exampleData from "./example-data";
+// --- CORRECTED IMPORTS ---
+// quizData is a default export
+import quizData from "./quiz-data"; 
+// exampleData is a named export
+import { exampleData } from "./example-data"; 
 
 admin.initializeApp();
 const db = admin.firestore();
 
-// --- ĐỊNH NGHĨA CÁC INTERFACE ---
+// --- INTERFACE DEFINITIONS ---
 interface QuizItem {
   question: string;
 }
@@ -32,31 +33,30 @@ interface ProgressData {
 
 const MAX_PREVIEWS = 5;
 
-// Hàm onCall, được gọi từ client
+// onCall function definition
 export const calculatePracticeProgress = functions
-  // Bây giờ cú pháp .region() sẽ hoạt động vì ta đang dùng v1
   .region("asia-southeast1") 
   .https.onCall(async (data: any, context: CallableContext) => {
-    // 1. Xác thực người dùng
+    // 1. Authenticate user
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "Chức năng này yêu cầu xác thực người dùng.",
+        "This function must be called while authenticated.",
       );
     }
     const { uid } = context.auth;
     const { selectedType } = data;
 
-    // 2. Kiểm tra dữ liệu đầu vào
+    // 2. Validate input
     if (!selectedType || !["tracNghiem", "dienTu"].includes(selectedType)) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Cần cung cấp 'selectedType' hợp lệ.",
+        "A valid 'selectedType' must be provided.",
       );
     }
 
     try {
-      // 3. Lấy tất cả dữ liệu người dùng cần thiết từ Firestore (thực hiện song song)
+      // 3. Fetch all necessary user data from Firestore in parallel
       const [
         userDocSnap,
         openedVocabSnapshot,
@@ -69,15 +69,18 @@ export const calculatePracticeProgress = functions
         db.collection(`users/${uid}/completedMultiWord`).get(),
       ]);
       
-      const userData = userDocSnap.exists() ? userDocSnap.data() : {};
+      // --- CORRECTED `exists` PROPERTY ACCESS ---
+      // `exists` is a boolean property, not a function, in the Admin SDK
+      const userData = userDocSnap.exists ? userDocSnap.data() : {};
 
+      // This is now safe because userData is always an object
       const claimedRewards = userData?.claimedQuizRewards || {};
 
       const userVocabulary: string[] = openedVocabSnapshot.docs
         .map((doc) => doc.data().word)
         .filter(Boolean);
 
-      // Xử lý dữ liệu đã hoàn thành để truy vấn nhanh hơn bằng Set
+      // Process completed data into Sets for faster lookups
       const completedWordsByGameMode: { [key: string]: Set<string> } = {};
       completedWordsSnapshot.forEach((doc) => {
         const gameModes = doc.data().gameModes;
@@ -102,7 +105,7 @@ export const calculatePracticeProgress = functions
         }
       });
 
-      // 4. Bắt đầu tính toán tiến trình (Logic được chuyển từ client lên đây)
+      // 4. Calculate progress based on the logic
       const newProgressData: ProgressData = {};
 
       if (selectedType === "tracNghiem") {
@@ -149,7 +152,7 @@ export const calculatePracticeProgress = functions
             const totalQs = userVocabulary.filter((word: string) => exampleData.some((ex: ExampleItem) => new RegExp(`\\b${word}\\b`, "i").test(ex.english)));
             const completed = totalQs.filter((word: string) => completedSet.has(word.toLowerCase())).length;
             progress = { completed: completed, total: totalQs.length };
-          } else { // Handles 3, 4, 5, 6, 7
+          } else { 
             let requiredWordCount = 0;
             if (practiceNum % 100 >= 3 && practiceNum % 100 <= 6) {
               requiredWordCount = (practiceNum % 100) - 1; 
@@ -174,16 +177,16 @@ export const calculatePracticeProgress = functions
         });
       }
 
-      // 5. Trả kết quả về cho client
+      // 5. Return the result to the client
       return {
         progress: newProgressData,
         claimedRewards: claimedRewards,
       };
     } catch (error) {
-      console.error("Lỗi khi tính toán tiến trình cho user:", uid, error);
+      console.error("Error calculating progress for user:", uid, error);
       throw new functions.https.HttpsError(
         "internal",
-        "Đã có lỗi xảy ra khi tính toán tiến trình.",
+        "An error occurred while calculating progress.",
       );
     }
   });
