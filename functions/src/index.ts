@@ -1,4 +1,4 @@
-// File: functions/src/index.ts
+// File: functions/src/index.ts (ĐÃ SỬA LỖI CUỐI CÙNG)
 
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
@@ -30,7 +30,7 @@ export const calculatePracticeProgress = functions
     if (!context.auth) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "Chức năng này yêu cầu xác thực người dùng."
+        "Chức năng này yêu cầu xác thực người dùng.",
       );
     }
     const { uid } = context.auth;
@@ -40,7 +40,7 @@ export const calculatePracticeProgress = functions
     if (!selectedType || !["tracNghiem", "dienTu"].includes(selectedType)) {
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Cần cung cấp 'selectedType' hợp lệ."
+        "Cần cung cấp 'selectedType' hợp lệ.",
       );
     }
 
@@ -58,7 +58,10 @@ export const calculatePracticeProgress = functions
         db.collection(`users/${uid}/completedMultiWord`).get(),
       ]);
 
-      const userData = userDocSnap.exists ? userDocSnap.data()! : {};
+      // --- DÒNG ĐÃ SỬA ---
+      const userData = userDocSnap.exists ? userDocSnap.data() : {};
+      // --------------------
+
       const claimedRewards = userData.claimedQuizRewards || {};
       const userVocabulary = openedVocabSnapshot.docs
         .map((doc) => doc.data().word)
@@ -88,7 +91,7 @@ export const calculatePracticeProgress = functions
           completedMultiWordByGameMode[mode].add(docSnap.id.toLowerCase());
         }
       });
-      
+
       // 4. Bắt đầu tính toán tiến trình (Logic được chuyển từ client lên đây)
       const newProgressData: ProgressData = {};
 
@@ -97,68 +100,67 @@ export const calculatePracticeProgress = functions
         for (let i = 1; i <= MAX_PREVIEWS; i++) {
           allQuizModes.push(`quiz-${i * 100 + 1}`, `quiz-${i * 100 + 2}`, `quiz-${i * 100 + 3}`);
         }
-        
-        allQuizModes.forEach(mode => {
-            const practiceNum = parseInt(mode.split('-')[1], 10);
-            if (!practiceNum) return;
 
-            const completedSet = completedWordsByGameMode[mode] || new Set();
+        allQuizModes.forEach((mode) => {
+          const practiceNum = parseInt(mode.split("-")[1], 10);
+          if (!practiceNum) return;
 
-            if (practiceNum % 100 === 1) {
-                const totalQs = quizData.filter(q => userVocabulary.some(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)));
-                const completed = totalQs.filter(q => {
-                    const word = userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question));
-                    return word && completedSet.has(word.toLowerCase());
-                }).length;
-                newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
-            } else if (practiceNum % 100 === 2 || practiceNum % 100 === 3) {
-                const totalQs = userVocabulary.flatMap(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)) ? [{ word }] : []);
-                const completed = totalQs.filter(q => completedSet.has(q.word.toLowerCase())).length;
-                newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
-            }
+          const completedSet = completedWordsByGameMode[mode] || new Set();
+
+          if (practiceNum % 100 === 1) {
+            const totalQs = quizData.filter((q) => userVocabulary.some((v) => new RegExp(`\\b${v}\\b`, "i").test(q.question)));
+            const completed = totalQs.filter((q) => {
+              const word = userVocabulary.find((v) => new RegExp(`\\b${v}\\b`, "i").test(q.question));
+              return word && completedSet.has(word.toLowerCase());
+            }).length;
+            newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
+          } else if (practiceNum % 100 === 2 || practiceNum % 100 === 3) {
+            const totalQs = userVocabulary.flatMap((word) => exampleData.some((ex) => new RegExp(`\\b${word}\\b`, "i").test(ex.english)) ? [{ word }] : []);
+            const completed = totalQs.filter((q) => completedSet.has(q.word.toLowerCase())).length;
+            newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
+          }
         });
-
       } else if (selectedType === "dienTu") {
-        const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-4', 'fill-word-5', 'fill-word-6', 'fill-word-7'];
-        for(let i = 1; i <= MAX_PREVIEWS; i++) {
-            allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`, `fill-word-${i*100 + 4}`, `fill-word-${i*100 + 5}`, `fill-word-${i*100 + 6}`, `fill-word-${i*100 + 7}`);
+        const allFillModes = ["fill-word-1", "fill-word-2", "fill-word-3", "fill-word-4", "fill-word-5", "fill-word-6", "fill-word-7"];
+        for (let i = 1; i <= MAX_PREVIEWS; i++) {
+          allFillModes.push(`fill-word-${i * 100 + 1}`, `fill-word-${i * 100 + 2}`, `fill-word-${i * 100 + 3}`, `fill-word-${i * 100 + 4}`, `fill-word-${i * 100 + 5}`, `fill-word-${i * 100 + 6}`, `fill-word-${i * 100 + 7}`);
         }
 
-        allFillModes.forEach(mode => {
-            const practiceNum = parseInt(mode.split('-')[2], 10);
-            if(!practiceNum) return;
+        allFillModes.forEach((mode) => {
+          const practiceNum = parseInt(mode.split("-")[2], 10);
+          if (!practiceNum) return;
 
-            const completedSet = completedWordsByGameMode[mode] || new Set();
-            let progress: Progress = { completed: 0, total: 0 };
+          const completedSet = completedWordsByGameMode[mode] || new Set();
+          let progress: Progress = { completed: 0, total: 0 };
 
-            if (practiceNum % 100 === 1) {
-                progress = { completed: completedSet.size, total: userVocabulary.length };
-            } else if (practiceNum % 100 === 2) {
-                const totalQs = userVocabulary.filter(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)));
-                const completed = totalQs.filter(word => completedSet.has(word.toLowerCase())).length;
-                progress = { completed: completed, total: totalQs.length };
-            } else { // Handles 3, 4, 5, 6, 7
-                let requiredWordCount = 0;
-                if (practiceNum % 100 >= 3 && practiceNum % 100 <= 6) {
-                    requiredWordCount = (practiceNum % 100) - 1; // P3 -> 2 words, P4 -> 3 words...
-                } else if (practiceNum % 100 === 7) {
-                    requiredWordCount = 1; // At least 1 word
-                }
-                
-                if(requiredWordCount > 0) {
-                     let total = 0;
-                     exampleData.forEach(sentence => {
-                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                         if (wordsInSentence.length >= requiredWordCount) {
-                             total++;
-                         }
-                     });
-                     const gameModeId = `fill-word-${practiceNum}`;
-                     const completedSetMulti = completedMultiWordByGameMode[gameModeId] || new Set();
-                     progress = { completed: completedSetMulti.size, total: total };
-                }
+          if (practiceNum % 100 === 1) {
+            progress = { completed: completedSet.size, total: userVocabulary.length };
+          } else if (practiceNum % 100 === 2) {
+            const totalQs = userVocabulary.filter((word) => exampleData.some((ex) => new RegExp(`\\b${word}\\b`, "i").test(ex.english)));
+            const completed = totalQs.filter((word) => completedSet.has(word.toLowerCase())).length;
+            progress = { completed: completed, total: totalQs.length };
+          } else { // Handles 3, 4, 5, 6, 7
+            let requiredWordCount = 0;
+            if (practiceNum % 100 >= 3 && practiceNum % 100 <= 6) {
+              requiredWordCount = (practiceNum % 100) - 1; // P3 -> 2 words, P4 -> 3 words...
+            } else if (practiceNum % 100 === 7) {
+              requiredWordCount = 1; // At least 1 word
             }
-            newProgressData[practiceNum] = progress;
+
+            if (requiredWordCount > 0) {
+              let total = 0;
+              exampleData.forEach((sentence) => {
+                const wordsInSentence = userVocabulary.filter((vocabWord) => new RegExp(`\\b${vocabWord}\\b`, "i").test(sentence.english));
+                if (wordsInSentence.length >= requiredWordCount) {
+                  total++;
+                }
+              });
+              const gameModeId = `fill-word-${practiceNum}`;
+              const completedSetMulti = completedMultiWordByGameMode[gameModeId] || new Set();
+              progress = { completed: completedSetMulti.size, total: total };
+            }
+          }
+          newProgressData[practiceNum] = progress;
         });
       }
 
@@ -171,7 +173,7 @@ export const calculatePracticeProgress = functions
       console.error("Lỗi khi tính toán tiến trình cho user:", uid, error);
       throw new functions.https.HttpsError(
         "internal",
-        "Đã có lỗi xảy ra khi tính toán tiến trình."
+        "Đã có lỗi xảy ra khi tính toán tiến trình.",
       );
     }
   });
