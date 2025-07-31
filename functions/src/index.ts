@@ -4,8 +4,8 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
 // Import dữ liệu tĩnh từ local
-import { quizData } from "./quiz-data.ts";
-import { exampleData } from "./example-data.ts";
+import {quizData} from "./quiz-data.ts";
+import {exampleData} from "./example-data.ts";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -65,7 +65,6 @@ async function getProgressCalculationData(userId: string) {
 
 async function performRecalculation(userId: string) {
   const {
-    userVocabularySet,
     userVocabularyArray,
     completedWordsByGameMode,
     completedMultiWordByGameMode,
@@ -114,7 +113,7 @@ async function performRecalculation(userId: string) {
   // --- Tính toán cho Điền Từ ---
   const allFillModes = ["fill-word-1", "fill-word-2", "fill-word-3", "fill-word-4", "fill-word-5", "fill-word-6", "fill-word-7"];
    for (let i = 1; i <= MAX_PREVIEWS; i++) {
-    allFillModes.push(...[1, 2, 3, 4, 5, 6, 7].map(p => `fill-word-${i * 100 + p}`));
+    allFillModes.push(...[1, 2, 3, 4, 5, 6, 7].map((p) => `fill-word-${i * 100 + p}`));
    }
   
   allFillModes.forEach((mode) => {
@@ -172,6 +171,7 @@ async function performRecalculation(userId: string) {
   // Ghi kết quả vào Firestore
   const summaryRef = db.doc(`users/${userId}/progress/summary`);
   await summaryRef.set(summary, {merge: true});
+  // Ghi log vào Cloud Functions logs, không phải console của trình duyệt
   functions.logger.info(`Progress summary updated for user ${userId}`);
 }
 
