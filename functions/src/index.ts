@@ -1,77 +1,70 @@
-// --- START OF FILE: functions/src/index.ts ---
+// File: functions/src/index.ts
 
-// FIX: Import thêm `CallableContext` để định kiểu cho context
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
-// Khởi tạo Firebase Admin SDK
+// Import dữ liệu tĩnh của bạn từ thư mục src của functions
+import { quizData } from "./quiz-data";
+import { exampleData } from "./example-data";
+
 admin.initializeApp();
 const db = admin.firestore();
 
-// Import các file dữ liệu từ local.
-import { quizData } from "./quiz-data";
-import { exampleData } from "./example-data";
-import { defaultVocabulary } from "./list-vocabulary";
-import { detailedMeaningsText } from "./vocabulary-definitions";
-
-// --- HELPER FUNCTIONS ---
-
-const shuffleArray = <T extends any[]>(array: T): T => {
-  const shuffledArray = [...array];
-  for (let i = shuffledArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
-  }
-  return shuffledArray as T;
-};
-
-const createWordRegex = (word: string) => new RegExp(`\\b${word}\\b`, "i");
-
-// --- INTERFACES ---
-
+// Định nghĩa kiểu dữ liệu để code rõ ràng hơn
 interface Progress {
   completed: number;
   total: number;
 }
+
 interface ProgressData {
   [key: number]: Progress;
 }
 
-interface QuizItem {
-  question: string;
-  options: string[];
-  correctAnswer: string;
-}
+const MAX_PREVIEWS = 5;
 
-// --- CLOUD FUNCTION 1: Lấy tiến độ học tập ---
-
-// FIX: Cú pháp để chỉ định region đã thay đổi.
-export const getPracticeProgress = functions
-  .region("asia-southeast1")
-  // FIX: Định kiểu rõ ràng cho `data` và `context`
-  .https.onCall(async (data: any, context: functions.https.CallableContext) => {
+// Hàm onCall, được gọi từ client
+export const calculatePracticeProgress = functions
+  .region("asia-southeast1") // Thay đổi region nếu cần
+  .https.onCall(async (data, context) => {
+    // 1. Xác thực người dùng
     if (!context.auth) {
-      throw new functions.https.HttpsError("unauthenticated", "Yêu cầu xác thực người dùng.");
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Chức năng này yêu cầu xác thực người dùng."
+      );
     }
-    const uid = context.auth.uid;
+    const { uid } = context.auth;
     const { selectedType } = data;
 
-    if (selectedType !== "tracNghiem" && selectedType !== "dienTu") {
-      throw new functions.https.HttpsError("invalid-argument", "selectedType không hợp lệ.");
+    // 2. Kiểm tra dữ liệu đầu vào
+    if (!selectedType || !["tracNghiem", "dienTu"].includes(selectedType)) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Cần cung cấp 'selectedType' hợp lệ."
+      );
     }
 
     try {
-      const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
+      // 3. Lấy tất cả dữ liệu người dùng cần thiết từ Firestore (thực hiện song song)
+      const [
+        userDocSnap,
+        openedVocabSnapshot,
+        completedWordsSnapshot,
+        completedMultiWordSnapshot,
+      ] = await Promise.all([
         db.doc(`users/${uid}`).get(),
         db.collection(`users/${uid}/openedVocab`).get(),
         db.collection(`users/${uid}/completedWords`).get(),
         db.collection(`users/${uid}/completedMultiWord`).get(),
       ]);
 
-      const userData = userDocSnap.data() || {};
+      const userData = userDocSnap.exists ? userDocSnap.data()! : {};
       const claimedRewards = userData.claimedQuizRewards || {};
-      const userVocabulary: string[] = openedVocabSnapshot.docs.map((doc) => doc.data().word).filter(Boolean);
+      const userVocabulary = openedVocabSnapshot.docs
+        .map((doc) => doc.data().word)
+        .filter(Boolean);
 
+      // Xử lý dữ liệu đã hoàn thành để truy vấn nhanh hơn bằng Set
       const completedWordsByGameMode: { [key: string]: Set<string> } = {};
       completedWordsSnapshot.forEach((doc) => {
         const gameModes = doc.data().gameModes;
@@ -95,257 +88,90 @@ export const getPracticeProgress = functions
           completedMultiWordByGameMode[mode].add(docSnap.id.toLowerCase());
         }
       });
-
+      
+      // 4. Bắt đầu tính toán tiến trình (Logic được chuyển từ client lên đây)
       const newProgressData: ProgressData = {};
-      const MAX_PREVIEWS = 5;
-
-      const sentenceWordMap = new Map<string, string[]>();
-      exampleData.forEach((sentence) => {
-        const wordsInSentence = userVocabulary.filter((vocabWord) => createWordRegex(vocabWord).test(sentence.english));
-        if (wordsInSentence.length > 0) {
-          sentenceWordMap.set(sentence.english, wordsInSentence);
-        }
-      });
-      const userWordsInExample = new Set(Array.from(sentenceWordMap.values()).flat());
 
       if (selectedType === "tracNghiem") {
-        const allQuizModes: string[] = [];
-        ["quiz-1", "quiz-2", "quiz-3"].forEach((m) => allQuizModes.push(m));
+        const allQuizModes = ["quiz-1", "quiz-2", "quiz-3"];
         for (let i = 1; i <= MAX_PREVIEWS; i++) {
           allQuizModes.push(`quiz-${i * 100 + 1}`, `quiz-${i * 100 + 2}`, `quiz-${i * 100 + 3}`);
         }
+        
+        allQuizModes.forEach(mode => {
+            const practiceNum = parseInt(mode.split('-')[1], 10);
+            if (!practiceNum) return;
 
-        allQuizModes.forEach((mode) => {
-          const practiceNum = parseInt(mode.split("-")[1]);
-          if (!practiceNum) {
-            return;
-          }
-
-          const completedSet = completedWordsByGameMode[mode] || new Set();
-
-          if (practiceNum % 100 === 1) {
-            const totalQs = quizData.filter((q: QuizItem) => userVocabulary.some((v) => createWordRegex(v).test(q.question)));
-            const completed = totalQs.filter((q: QuizItem) => {
-              const word = userVocabulary.find((v) => createWordRegex(v).test(q.question));
-              return word && completedSet.has(word.toLowerCase());
-            }).length;
-            newProgressData[practiceNum] = { completed, total: totalQs.length };
-          } else if (practiceNum % 100 === 2 || practiceNum % 100 === 3) {
-            const totalQs = userVocabulary.filter((word) => userWordsInExample.has(word));
-            const completed = totalQs.filter((qWord) => completedSet.has(qWord.toLowerCase())).length;
-            newProgressData[practiceNum] = { completed, total: totalQs.length };
-          }
-        });
-      } else if (selectedType === "dienTu") {
-        const allFillModes: string[] = [];
-        for (let i = 1; i <= 7; i++) {
-          allFillModes.push(`fill-word-${i}`);
-        }
-        for (let i = 1; i <= MAX_PREVIEWS; i++) {
-          for (let j = 1; j <= 7; j++) {
-            allFillModes.push(`fill-word-${i * 100 + j}`);
-          }
-        }
-
-        allFillModes.forEach((mode) => {
-          const practiceNum = parseInt(mode.split("-")[2]);
-          if (!practiceNum) {
-            return;
-          }
-
-          const practiceType = practiceNum % 100;
-          let progress: Progress = { completed: 0, total: 0 };
-
-          if (practiceType === 1 || practiceType === 2) {
             const completedSet = completedWordsByGameMode[mode] || new Set();
-            if (practiceType === 1) {
-              progress = { completed: completedSet.size, total: userVocabulary.length };
-            } else { // practiceType === 2
-              const totalP2 = userVocabulary.filter((word) => userWordsInExample.has(word));
-              const completedP2 = totalP2.filter((word) => completedSet.has(word.toLowerCase())).length;
-              progress = { completed: completedP2, total: totalP2.length };
+
+            if (practiceNum % 100 === 1) {
+                const totalQs = quizData.filter(q => userVocabulary.some(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)));
+                const completed = totalQs.filter(q => {
+                    const word = userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question));
+                    return word && completedSet.has(word.toLowerCase());
+                }).length;
+                newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
+            } else if (practiceNum % 100 === 2 || practiceNum % 100 === 3) {
+                const totalQs = userVocabulary.flatMap(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)) ? [{ word }] : []);
+                const completed = totalQs.filter(q => completedSet.has(q.word.toLowerCase())).length;
+                newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
             }
-          } else { // practiceType 3, 4, 5, 6, 7
-            const completedSet = completedMultiWordByGameMode[mode] || new Set();
-            const requiredWords = practiceType >= 3 && practiceType <= 6 ? practiceType - 1 : 1;
-            let total = 0;
-            sentenceWordMap.forEach((wordsInSentence) => {
-              if (wordsInSentence.length >= requiredWords) {
-                total++;
-              }
-            });
-            progress = { completed: completedSet.size, total };
-          }
-          newProgressData[practiceNum] = progress;
-        });
-      }
-      return { progressData: newProgressData, claimedRewards };
-    } catch (error) {
-      console.error("Lỗi trong getPracticeProgress function: ", error);
-      throw new functions.https.HttpsError("internal", "Lỗi server khi lấy tiến trình.", error);
-    }
-  });
-
-// --- CLOUD FUNCTION 2: Lấy dữ liệu phiên chơi game ---
-
-export const getGameSessionData = functions
-  .region("asia-southeast1")
-  .https.onCall(async (data: any, context: functions.https.CallableContext) => {
-    if (!context.auth) {
-      throw new functions.https.HttpsError("unauthenticated", "Yêu cầu xác thực người dùng.");
-    }
-    const uid = context.auth.uid;
-    const { selectedPractice, gameType } = data;
-
-    if (!selectedPractice || !gameType) {
-      throw new functions.https.HttpsError("invalid-argument", "selectedPractice và gameType là bắt buộc.");
-    }
-
-    try {
-      const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
-        db.doc(`users/${uid}`).get(),
-        db.collection(`users/${uid}/openedVocab`).get(),
-        db.collection(`users/${uid}/completedWords`).get(),
-        db.collection(`users/${uid}/completedMultiWord`).get(),
-      ]);
-
-      const userData = userDocSnap.data() || {};
-      const userVocabulary: string[] = openedVocabSnapshot.docs.map((doc) => doc.data().word).filter(Boolean);
-
-      let questions: any[] = [];
-      const completedItems = new Set<string>();
-      const gameModeId = `${gameType}-${selectedPractice}`;
-
-      if (gameType === "quiz") {
-        completedWordsSnapshot.forEach((doc) => {
-          if (doc.data().gameModes?.[gameModeId]) {
-            completedItems.add(doc.id.toLowerCase());
-          }
         });
 
-        const practiceBaseId = selectedPractice % 100;
-        if (practiceBaseId === 1) {
-          const allMatching = quizData.filter((q: QuizItem) => userVocabulary.some((v) => createWordRegex(v).test(q.question)));
-          const remaining = allMatching.filter((q: QuizItem) => {
-            const word = userVocabulary.find((v) => createWordRegex(v).test(q.question));
-            return word ? !completedItems.has(word.toLowerCase()) : true;
-          });
-          questions = shuffleArray(remaining);
-        } else { // Practice 2 & 3
-          const allPossible = userVocabulary.flatMap((word) => {
-            const wordRegex = createWordRegex(word);
-            const matchingSentences = exampleData.filter((ex) => wordRegex.test(ex.english));
-            if (matchingSentences.length > 0) {
-              const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
-              const questionText = randomSentence.english.replace(wordRegex, "___");
-              const incorrectOptions: string[] = [];
-              const lowerCaseCorrectWord = word.toLowerCase();
-              while (incorrectOptions.length < 3) {
-                const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)];
-                if (randomWord.toLowerCase() !== lowerCaseCorrectWord && !incorrectOptions.some((opt) => opt.toLowerCase() === randomWord.toLowerCase())) {
-                  incorrectOptions.push(randomWord);
+      } else if (selectedType === "dienTu") {
+        const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-4', 'fill-word-5', 'fill-word-6', 'fill-word-7'];
+        for(let i = 1; i <= MAX_PREVIEWS; i++) {
+            allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`, `fill-word-${i*100 + 4}`, `fill-word-${i*100 + 5}`, `fill-word-${i*100 + 6}`, `fill-word-${i*100 + 7}`);
+        }
+
+        allFillModes.forEach(mode => {
+            const practiceNum = parseInt(mode.split('-')[2], 10);
+            if(!practiceNum) return;
+
+            const completedSet = completedWordsByGameMode[mode] || new Set();
+            let progress: Progress = { completed: 0, total: 0 };
+
+            if (practiceNum % 100 === 1) {
+                progress = { completed: completedSet.size, total: userVocabulary.length };
+            } else if (practiceNum % 100 === 2) {
+                const totalQs = userVocabulary.filter(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)));
+                const completed = totalQs.filter(word => completedSet.has(word.toLowerCase())).length;
+                progress = { completed: completed, total: totalQs.length };
+            } else { // Handles 3, 4, 5, 6, 7
+                let requiredWordCount = 0;
+                if (practiceNum % 100 >= 3 && practiceNum % 100 <= 6) {
+                    requiredWordCount = (practiceNum % 100) - 1; // P3 -> 2 words, P4 -> 3 words...
+                } else if (practiceNum % 100 === 7) {
+                    requiredWordCount = 1; // At least 1 word
                 }
-              }
-              return [{
-                question: questionText,
-                vietnamese: randomSentence.vietnamese,
-                options: [word.toLowerCase(), ...incorrectOptions.map((opt) => opt.toLowerCase())],
-                correctAnswer: word.toLowerCase(),
-                word: word,
-              }];
+                
+                if(requiredWordCount > 0) {
+                     let total = 0;
+                     exampleData.forEach(sentence => {
+                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                         if (wordsInSentence.length >= requiredWordCount) {
+                             total++;
+                         }
+                     });
+                     const gameModeId = `fill-word-${practiceNum}`;
+                     const completedSetMulti = completedMultiWordByGameMode[gameModeId] || new Set();
+                     progress = { completed: completedSetMulti.size, total: total };
+                }
             }
-            return [];
-          });
-          const remaining = allPossible.filter((q) => !completedItems.has(q.word.toLowerCase()));
-          questions = shuffleArray(remaining);
-        }
-      } else if (gameType === "fill-word") {
-        const practiceBaseId = selectedPractice % 100;
-        const isMultiWordGame = [3, 4, 5, 6, 7].includes(practiceBaseId);
-
-        if (isMultiWordGame) {
-          completedMultiWordSnapshot.forEach((doc) => {
-            if (doc.data().completedIn?.[gameModeId]) {
-              completedItems.add(doc.id.toLowerCase());
-            }
-          });
-        } else {
-          completedWordsSnapshot.forEach((doc) => {
-            if (doc.data().gameModes?.[gameModeId]) {
-              completedItems.add(doc.id.toLowerCase());
-            }
-          });
-        }
-
-        const gameVocabulary: any[] = [];
-        if (practiceBaseId === 1) {
-          openedVocabSnapshot.forEach((vocabDoc) => {
-            const data = vocabDoc.data();
-            const imageIndex = Number(vocabDoc.id);
-            if (data.word && !isNaN(imageIndex)) {
-              gameVocabulary.push({ word: data.word, hint: `Nghĩa của từ "${data.word}"`, imageIndex: imageIndex });
-            }
-          });
-        } else if (practiceBaseId === 2) {
-          userVocabulary.forEach((word) => {
-            const wordRegex = createWordRegex(word);
-            const matchingSentences = exampleData.filter((ex) => wordRegex.test(ex.english));
-            if (matchingSentences.length > 0) {
-              const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
-              gameVocabulary.push({ word: word, question: randomSentence.english.replace(wordRegex, "___"), vietnameseHint: randomSentence.vietnamese, hint: `Điền từ còn thiếu. Gợi ý: ${randomSentence.vietnamese}` });
-            }
-          });
-        } else if (practiceBaseId >= 3 && practiceBaseId <= 7) {
-          const requiredWords = practiceBaseId >= 3 && practiceBaseId <= 6 ? practiceBaseId - 1 : 1;
-          exampleData.forEach((sentence) => {
-            const wordsInSentence = userVocabulary.filter((vocabWord) => createWordRegex(vocabWord).test(sentence.english));
-
-            if (practiceBaseId < 7 && wordsInSentence.length >= requiredWords) {
-              const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, requiredWords);
-              const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()));
-              let questionText = sentence.english;
-              correctlyOrderedWords.forEach((word) => {
-                questionText = questionText.replace(createWordRegex(word), "___");
-              });
-              gameVocabulary.push({ word: correctlyOrderedWords.join(" "), question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền ${requiredWords} từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
-            } else if (practiceBaseId === 7 && wordsInSentence.length >= 1) {
-              const correctlyOrderedWords = wordsInSentence.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()));
-              const wordsToHideRegex = new RegExp(`\\b(${correctlyOrderedWords.map((w) => w.replace(/[-^$*+?.()|[\]{}]/g, "\\$&")).join("|")})\\b`, "gi");
-              const questionText = sentence.english.replace(wordsToHideRegex, "___");
-              const answerKey = correctlyOrderedWords.join(" ");
-              gameVocabulary.push({ word: answerKey, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền ${correctlyOrderedWords.length} từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
-            }
-          });
-        }
-        const unusedWords = gameVocabulary.filter((item) => !completedItems.has(item.word.toLowerCase()));
-        questions = shuffleArray(unusedWords);
+            newProgressData[practiceNum] = progress;
+        });
       }
 
+      // 5. Trả kết quả về cho client
       return {
-        questions,
-        coins: userData.coins || 0,
-        masteryCount: userData.masteryCards || 0,
-        definitionsMap: gameType === "quiz" ? (() => {
-          const definitions: { [key: string]: any } = {};
-          const lines = detailedMeaningsText.trim().split("\n");
-          lines.forEach((line: string) => {
-            if (line.trim() === "") {
-              return;
-            }
-            const match = line.match(/^(.+?)\s+\((.+?)\)\s+là\s+(.*)/);
-            if (match) {
-              const vietnameseWord = match[1].trim();
-              const englishWord = match[2].trim();
-              const explanation = match[3].trim();
-              definitions[englishWord.toLowerCase()] = { vietnamese: vietnameseWord, english: englishWord, explanation: explanation };
-            }
-          });
-          return definitions;
-        })() : null,
+        progress: newProgressData,
+        claimedRewards: claimedRewards,
       };
     } catch (error) {
-      console.error("Lỗi trong getGameSessionData function: ", error);
-      throw new functions.https.HttpsError("internal", "Lỗi server khi lấy dữ liệu game.", error);
+      console.error("Lỗi khi tính toán tiến trình cho user:", uid, error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Đã có lỗi xảy ra khi tính toán tiến trình."
+      );
     }
   });
-// --- END OF FILE: functions/src/index.ts ---
