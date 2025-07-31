@@ -6,7 +6,7 @@ import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc, increm
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
 import { exampleData } from '../example-data.ts';
-import { phrases } from '../phrases.ts'; // --- ĐÃ THÊM
+import { phrases } from '../phrases.ts';
 
 import WordSquaresInput from './vocabulary-input.tsx';
 import Confetti from './chuc-mung.tsx';
@@ -14,13 +14,16 @@ import CoinDisplay from '../coin-display.tsx';
 import ImageCarousel3D from './image-carousel-3d.tsx';
 import VirtualKeyboard from './keyboard.tsx';
 
+// --- THAY ĐỔI THEO YÊU CẦU MỚI ---
 interface VocabularyItem {
-  word: string;
+  word: string; // The word to guess
   hint: string;
   imageIndex?: number;
   question?: string;
   vietnameseHint?: string;
+  phraseContext?: string; // The original phrase, e.g., "take care of"
 }
+
 interface VocabularyGameProps {
   onGoBack: () => void;
   selectedPractice: number;
@@ -94,7 +97,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
           getDocs(collection(db, 'users', user.uid, 'completedWords')),
-          getDocs(collection(db, 'users', user.uid, 'completedMultiWord')) // Fetch from the new subcollection
+          getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
         ]);
 
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
@@ -104,29 +107,24 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         const gameModeId = `fill-word-${selectedPractice}`;
         const fetchedCompletedWords = new Set<string>();
 
-        if (isMultiWordGame) {
-            // For multi-word practices, check the new subcollection for this specific game mode
+        if (isMultiWordGame && selectedPractice % 100 !== 8) { // Exclude P8 from this logic
             completedMultiWordSnapshot.forEach(docSnap => {
                 const data = docSnap.data();
                 if (data.completedIn && data.completedIn[gameModeId]) {
                     fetchedCompletedWords.add(docSnap.id.toLowerCase());
                 }
             });
-        } else {
-            // For single-word practices, the source of truth is the gameMode flag in the subcollection.
+        } else if (selectedPractice % 100 !== 8) { // Exclude P8 from this logic
             completedWordsSnapshot.forEach((completedDoc) => {
                 if (completedDoc.data()?.gameModes?.[gameModeId]) {
                   fetchedCompletedWords.add(completedDoc.id.toLowerCase());
                 }
             });
         }
+        // For P8, `usedWords` will be built dynamically from completed phrases later
 
         let gameVocabulary: VocabularyItem[] = [];
-        const userVocabularyWords: string[] = [];
-        openedVocabSnapshot.forEach((vocabDoc) => {
-            const data = vocabDoc.data();
-            if (data.word) userVocabularyWords.push(data.word);
-        });
+        const userVocabularyWords: string[] = openedVocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
 
         if (selectedPractice % 100 === 1) {
             openedVocabSnapshot.forEach((vocabDoc) => {
@@ -208,7 +206,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                     const correctlyOrderedWords = wordsInSentence
                         .sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()));
 
-                    // Create a robust regex to find and replace all target words at once
                     const wordsToHideRegex = new RegExp(`\\b(${correctlyOrderedWords.map(w => w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`, 'gi');
                     const questionText = sentence.english.replace(wordsToHideRegex, '___');
                     const answerKey = correctlyOrderedWords.join(' ');
@@ -221,32 +218,56 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                     });
                 }
             });
+        // --- THAY ĐỔI THEO YÊU CẦU MỚI ---
         } else if (selectedPractice % 100 === 8) {
+            const completedPhrasesStatus = new Map<string, any>();
+            completedMultiWordSnapshot.forEach(doc => {
+                completedPhrasesStatus.set(doc.id, doc.data().wordsCompleted || {});
+            });
+
             const uniqueQuestions = new Map<string, VocabularyItem>();
-            userVocabularyWords.forEach(word => {
-                const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
-                const matchingPhrases = phrases.filter(p => wordRegex.test(p));
 
-                matchingPhrases.forEach(phrase => {
-                    const phraseRegex = new RegExp(`\\b${phrase}\\b`, 'i');
-                    const matchingSentences = exampleData.filter(ex => phraseRegex.test(ex.english));
+            exampleData.forEach(sentence => {
+                const phrasesInSentence = phrases.filter(p => new RegExp(`\\b${p}\\b`, 'i').test(sentence.english));
 
-                    matchingSentences.forEach(sentence => {
-                        const phraseInSentence = sentence.english.match(phraseRegex)?.[0];
-                        if (!phraseInSentence) return;
+                phrasesInSentence.forEach(phraseStr => {
+                    const wordsInPhrase = phraseStr.split(' ');
+                    const learnedWordsInPhrase = wordsInPhrase.filter(word => 
+                        userVocabularyWords.some(vocab => vocab.toLowerCase() === word.toLowerCase())
+                    );
 
-                        const questionText = sentence.english.replace(phraseInSentence, () => 
-                            phraseInSentence.split(new RegExp(`(\\b${word}\\b)`, 'i'))
-                                .map(part => new RegExp(`^${word}$`, 'i').test(part) ? '___' : (part.trim() ? `##${part.trim()}##` : '') )
-                                .join(' ')
-                                .replace(/\s+/g, ' ')
-                        );
+                    if (learnedWordsInPhrase.length > 0) {
+                        const phraseId = phraseStr.toLowerCase().replace(/\s/g, '-');
+                        const phraseStatus = completedPhrasesStatus.get(phraseId) || {};
 
-                        const questionKey = `${sentence.english}|${word}`;
-                        if (!uniqueQuestions.has(questionKey)) {
-                             uniqueQuestions.set(questionKey, { word, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền từ còn thiếu trong cụm từ. Gợi ý: ${sentence.vietnamese}` });
-                        }
-                    });
+                        learnedWordsInPhrase.forEach(wordToGuess => {
+                            if (phraseStatus[wordToGuess.toLowerCase()]) {
+                                return; // Skip if this word is already completed for this phrase
+                            }
+                            
+                            const phraseInSentenceMatch = sentence.english.match(new RegExp(`\\b${phraseStr}\\b`, 'i'))?.[0];
+                            if (!phraseInSentenceMatch) return;
+                            
+                            const questionText = sentence.english.replace(phraseInSentenceMatch, () => 
+                                phraseInSentenceMatch.split(new RegExp(`(\\b${wordToGuess}\\b)`, 'i'))
+                                    .map(part => new RegExp(`^${wordToGuess}$`, 'i').test(part) ? '___' : (part.trim() ? `##${part.trim()}##` : '') )
+                                    .join(' ')
+                                    .replace(/\s+/g, ' ')
+                            );
+                            
+                            const questionKey = `${phraseStr}|${wordToGuess}|${sentence.english}`;
+
+                            if (!uniqueQuestions.has(questionKey)) {
+                                uniqueQuestions.set(questionKey, {
+                                    word: wordToGuess,
+                                    question: questionText,
+                                    vietnameseHint: sentence.vietnamese,
+                                    hint: `Điền từ còn thiếu trong cụm từ. Gợi ý: ${sentence.vietnamese}`,
+                                    phraseContext: phraseStr,
+                                });
+                            }
+                        });
+                    }
                 });
             });
             gameVocabulary = Array.from(uniqueQuestions.values());
@@ -271,8 +292,15 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
   useEffect(() => {
     if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
-      const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word.toLowerCase()));
-      if (unusedWords.length === 0) { setGameOver(true); setCurrentWord(null); } else {
+      // For P8, `usedWords` is not used for filtering, the question generation logic already handles it.
+      const unusedWords = (selectedPractice % 100 === 8) 
+        ? vocabularyList
+        : vocabularyList.filter(item => !usedWords.has(item.word.toLowerCase()));
+
+      if (unusedWords.length === 0) { 
+          setGameOver(true); 
+          setCurrentWord(null); 
+      } else {
         const shuffled = shuffleArray(unusedWords); 
         const firstWord = shuffled[0];
         setShuffledUnusedWords(shuffled); 
@@ -283,7 +311,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       }
       isInitialLoadComplete.current = true;
     }
-  }, [vocabularyList, loading, error, usedWords]);
+  }, [vocabularyList, loading, error, usedWords, selectedPractice]);
   
   useEffect(() => {
     if (!currentWord || gameOver || isCorrect) return;
@@ -319,7 +347,10 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     setTimeout(() => setStreakAnimation(false), 1500);
     setShowConfetti(true);
 
-    setUsedWords(prev => new Set(prev).add(currentWord.word.toLowerCase()));
+    // --- THAY ĐỔI THEO YÊU CẦU MỚI (P8 uses dynamic list, so no need to update usedWords here) ---
+    if (selectedPractice % 100 !== 8) {
+        setUsedWords(prev => new Set(prev).add(currentWord.word.toLowerCase()));
+    }
 
     const coinReward = (masteryCount * newStreak) * (isMultiWordGame ? 2 : 1);
     const updatedCoins = coins + coinReward;
@@ -331,28 +362,45 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       const batch = writeBatch(db);
       const gameModeId = `fill-word-${selectedPractice}`;
       
-      if (isMultiWordGame) {
-        // --- LOGIC FOR MULTI-WORD PRACTICES ---
-        // 1. Give EXP to individual words in `completedWords` collection
+      // --- THAY ĐỔI THEO YÊU CẦU MỚI ---
+      if (selectedPractice % 100 === 8 && currentWord.phraseContext) {
+        // --- OPERATION 1: Update the phrase completion status ---
+        const phraseId = currentWord.phraseContext.toLowerCase().replace(/\s/g, '-');
+        const wordToUpdate = currentWord.word.toLowerCase();
+        const completedPhraseRef = doc(db, 'users', user.uid, 'completedMultiWord', phraseId);
+        
+        // Use dot notation to update a field in a map
+        batch.set(completedPhraseRef, {
+            [`wordsCompleted.${wordToUpdate}`]: true,
+            lastActivityAt: new Date()
+        }, { merge: true });
+
+        // --- OPERATION 2: Grant EXP to the base word (still important!) ---
+        const wordIdForExp = currentWord.word.toLowerCase();
+        const completedWordRefForExp = doc(db, 'users', user.uid, 'completedWords', wordIdForExp);
+        batch.set(completedWordRefForExp, { 
+            lastCompletedAt: new Date(), 
+            gameModes: { [gameModeId]: { correctCount: increment(1) } } 
+        }, { merge: true });
+
+      } else if (isMultiWordGame) {
+        // --- LOGIC FOR MULTI-WORD PRACTICES (3-7) ---
         const individualWords = currentWord.word.split(' ');
         individualWords.forEach(word => {
           const individualWordRef = doc(db, 'users', user.uid, 'completedWords', word.toLowerCase());
           batch.set(individualWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
         });
 
-        // 2. Mark this multi-word question as complete in its own scalable subcollection
         const questionId = currentWord.word.toLowerCase();
         const completedMultiWordRef = doc(db, 'users', user.uid, 'completedMultiWord', questionId);
         
         batch.set(completedMultiWordRef, {
-            completedIn: {
-                [gameModeId]: true
-            },
+            completedIn: { [gameModeId]: true },
             lastCompletedAt: new Date()
         }, { merge: true });
 
       } else {
-        // --- LOGIC FOR OTHER PRACTICES ---
+        // --- LOGIC FOR OTHER PRACTICES (1, 2) ---
         const wordId = currentWord.word.toLowerCase();
         const completedWordRef = doc(db, 'users', user.uid, 'completedWords', wordId);
         batch.set(completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
@@ -414,19 +462,13 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
   const resetGame = useCallback(() => {
     setGameOver(false); setStreak(0); setFeedback(''); setIsCorrect(null);
-    const unused = vocabularyList.filter(item => !usedWords.has(item.word.toLowerCase()));
-    if (unused.length > 0) { 
-        const shuffled = shuffleArray(unused); 
-        const firstWord = shuffled[0];
-        setShuffledUnusedWords(shuffled); 
-        setCurrentWord(shuffled[0]); 
-        setCurrentWordIndex(0); 
-        resetMultiWordState(firstWord);
-    } else { 
-        setGameOver(true); 
-        setCurrentWord(null); 
-    }
-  }, [vocabularyList, usedWords]);
+    isInitialLoadComplete.current = false; // Force a reload of data and questions
+    // This will trigger the main useEffect to re-fetch and re-filter questions
+    setLoading(true); // Show loading indicator while re-fetching
+    const fetchUserData = async () => { /* The main useEffect will handle this */ };
+    fetchUserData();
+
+  }, []);
 
   const carouselImageUrls = useMemo(() => {
     if (!currentWord) return [`https://placehold.co/400x320/E0E7FF/4338CA?text=Loading...`];
@@ -454,10 +496,15 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     </div>
   );
   
+  // Progress calculation for P8 is complex and handled by question generation.
+  // For other practices, we use `usedWords`.
   const completedCount = usedWords.size;
   const totalCount = vocabularyList.length;
-  const displayCount = gameOver || !currentWord ? completedCount : Math.min(completedCount + 1, totalCount);
-  const progressPercentage = totalCount > 0 ? (displayCount / totalCount) * 100 : 0;
+  // This display might not be accurate for P8, but the game ends correctly.
+  // For simplicity, we can show the number of remaining questions.
+  const displayCount = gameOver || !currentWord ? shuffledUnusedWords.length : Math.max(0, shuffledUnusedWords.length - currentWordIndex);
+  const progressPercentage = shuffledUnusedWords.length > 0 ? ((shuffledUnusedWords.length - displayCount) / shuffledUnusedWords.length) * 100 : 0;
+
 
   return (
     <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
@@ -480,7 +527,12 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
             <>
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-xl">
                 <div className="flex justify-between items-center mb-4">
-                  <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{displayCount}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{totalCount}</span></div></div>
+                  {/* For P8, show remaining questions instead of completed/total */}
+                  { selectedPractice % 100 === 8 ? (
+                     <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{displayCount}</span><span className="text-xs text-white/50 ml-1">còn lại</span></div></div>
+                  ) : (
+                     <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{completedCount + 1}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{totalCount}</span></div></div>
+                  )}
                   <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
                 </div>
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${progressPercentage}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
@@ -488,10 +540,10 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
                     <p className="text-lg sm:text-xl font-semibold text-white leading-tight">
                       {currentWord.question?.split('##').map((part, i) => {
-                          if (i % 2 === 1) { // Phần được highlight
+                          if (i % 2 === 1) { // Highlighted part
                               return <span key={i} className="text-green-300 font-bold">{part}</span>;
                           }
-                          // Phần bình thường, có thể chứa '___'
+                          // Normal part, may contain '___'
                           return part.split('___').map((subPart, j, arr) => (
                               <React.Fragment key={`${i}-${j}`}>
                                   {subPart}
@@ -509,7 +561,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                 <div className="w-full mt-6 space-y-6">
                   {(selectedPractice % 100 === 1) && <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />}
                   
-                  {isMultiWordGame ? (
+                  {isMultiWordGame && selectedPractice % 100 !== 8 ? (
                     <div className="w-full flex flex-col items-center gap-4">
                       <div className={`p-4 bg-white rounded-lg shadow-md w-full transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
                         <div className="text-lg sm:text-xl font-medium text-gray-700 leading-relaxed">
@@ -565,5 +617,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     </div>
   );
 }
+
 
 // --- END OF FILE: fill-word-home.tsx ---
