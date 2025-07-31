@@ -6,11 +6,14 @@ import Breadcrumbs from '../bread-crumbs.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 
-// --- ĐÃ THÊM: Imports cho giải pháp 2 ---
+// Imports for progress calculation & Firebase
 import { db, auth } from '../firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, onSnapshot, increment, updateDoc } from 'firebase/firestore';
+// --- THAY ĐỔI: Thêm import cho Cloud Functions ---
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { collection, doc, updateDoc, increment } from 'firebase/firestore'; // Giữ lại cho RewardsPopup
+import quizData from './quiz-data.ts'; // Giữ lại cho logic khác (nếu có) hoặc có thể xóa nếu không cần
+import { exampleData } from '../example-data.ts'; // Giữ lại cho logic khác (nếu có) hoặc có thể xóa nếu không cần
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
@@ -63,6 +66,7 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   }, []);
 
+  // --- Logic hiển thị cho trang phân tích (không đổi) ---
   if (currentView === 'analysis') {
     return (
         <div className="fixed inset-0 z-[51] bg-white overflow-y-auto">
@@ -77,6 +81,7 @@ export default function QuizAppHome() {
     );
   }
 
+  // --- Logic hiển thị game/quiz (không đổi) ---
   if (currentView === 'vocabularyGame') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
@@ -93,6 +98,7 @@ export default function QuizAppHome() {
     );
   }
   
+  // --- renderContent (không đổi) ---
   const renderContent = () => {
     switch(currentView) {
       case 'main':
@@ -120,7 +126,6 @@ export default function QuizAppHome() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
-
               <button
                   onClick={() => setCurrentView('analysis')}
                   className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-teal-300 group"
@@ -136,7 +141,6 @@ export default function QuizAppHome() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
               </button>
-              
               <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
                 <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Sắp ra mắt</div>
                 <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm"><span className="text-4xl">📄</span></div>
@@ -179,6 +183,7 @@ export default function QuizAppHome() {
     }
   };
 
+  // --- JSX Layouts (không đổi) ---
   if (currentView === 'quizTypes' || currentView === 'practices') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
@@ -236,24 +241,143 @@ export default function QuizAppHome() {
   );
 }
 
-// --- Icons ---
-const CompletedIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"> <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /> </svg> );
-const LockIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"> <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" /> </svg> );
-const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"> <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.001 10a1 1 0 011-1h5a1 1 0 110 2H5a1 1 0 01-1-1zM15 13a1 1 0 011-1h.01a5.002 5.002 0 00-11.588-2.512 1 1 0 11-1.885-.666A7.002 7.002 0 0119 8.899V7a1 1 0 112 0v5a1 1 0 01-1 1h-5a1 1 0 01-1-1z" clipRule="evenodd" /> </svg> );
-const GiftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"> <path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" /> </svg> );
-const GoldCoinIcon = ({ className }: { className: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className={className} /> );
-const CardCapacityIcon = ({ className }: { className: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png" alt="Card Capacity Icon" className={className} /> );
+// --- Icons (không đổi) ---
+const CompletedIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+    </svg>
+);
+const LockIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+  </svg>
+);
+const RefreshIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.001 10a1 1 0 011-1h5a1 1 0 110 2H5a1 1 0 01-1-1zM15 13a1 1 0 011-1h.01a5.002 5.002 0 00-11.588-2.512 1 1 0 11-1.885-.666A7.002 7.002 0 0119 8.899V7a1 1 0 112 0v5a1 1 0 01-1 1h-5a1 1 0 01-1-1z" clipRule="evenodd" />
+  </svg>
+);
+const GiftIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+    </svg>
+);
+const GoldCoinIcon = ({ className }: { className: string }) => (
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className={className} />
+);
+const CardCapacityIcon = ({ className }: { className: string }) => (
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png" alt="Card Capacity Icon" className={className} />
+);
 
-// --- START: MEMOIZED CHILD COMPONENTS ---
-const colorClasses = { indigo: { border: 'hover:border-indigo-300', bg: 'bg-indigo-100', text: 'text-indigo-600', hoverBg: 'group-hover:bg-indigo-200', arrow: 'group-hover:text-indigo-500' }, pink:   { border: 'hover:border-pink-300',   bg: 'bg-pink-100',   text: 'text-pink-600',   hoverBg: 'group-hover:bg-pink-200',   arrow: 'group-hover:text-pink-500' }, teal:   { border: 'hover:border-teal-300',   bg: 'bg-teal-100',   text: 'text-teal-600',   hoverBg: 'group-hover:bg-teal-200',   arrow: 'group-hover:text-teal-500' }, orange: { border: 'hover:border-orange-300', bg: 'bg-orange-100', text: 'text-orange-600', hoverBg: 'group-hover:bg-orange-200', arrow: 'group-hover:text-orange-500' }, purple: { border: 'hover:border-purple-300', bg: 'bg-purple-100', text: 'text-purple-600', hoverBg: 'group-hover:bg-purple-200', arrow: 'group-hover:text-purple-500' }, red:    { border: 'hover:border-red-300',    bg: 'bg-red-100',    text: 'text-red-600',    hoverBg: 'group-hover:bg-red-200',    arrow: 'group-hover:text-red-500' }, green:  { border: 'hover:border-green-300',  bg: 'bg-green-100',  text: 'text-green-600',  hoverBg: 'group-hover:bg-green-200',  arrow: 'group-hover:text-green-500' }, yellow: { border: 'hover:border-yellow-300', bg: 'bg-yellow-100', text: 'text-yellow-600', hoverBg: 'group-hover:bg-yellow-200', arrow: 'group-hover:text-yellow-500' }, gray:   { border: 'border-gray-300', bg: 'bg-gray-200', text: 'text-gray-500', hoverBg: 'group-hover:bg-gray-200', arrow: 'group-hover:text-gray-400' },};
-const PracticeCard = memo(({ practiceNumber, details, progress, onPracticeSelect, onRewardsClick, onReviewClick }) => { /* ... giữ nguyên không đổi ... */ });
-const ReviewItem = memo(({ practiceNumber, previewLevel, isLocked, isCompleted, progress, colors, unlockText, onPracticeSelect }) => { /* ... giữ nguyên không đổi ... */ });
+
+// --- START: MEMOIZED CHILD COMPONENTS (không đổi) ---
+
+const colorClasses = {
+    indigo: { border: 'hover:border-indigo-300', bg: 'bg-indigo-100', text: 'text-indigo-600', hoverBg: 'group-hover:bg-indigo-200', arrow: 'group-hover:text-indigo-500' },
+    pink:   { border: 'hover:border-pink-300',   bg: 'bg-pink-100',   text: 'text-pink-600',   hoverBg: 'group-hover:bg-pink-200',   arrow: 'group-hover:text-pink-500' },
+    teal:   { border: 'hover:border-teal-300',   bg: 'bg-teal-100',   text: 'text-teal-600',   hoverBg: 'group-hover:bg-teal-200',   arrow: 'group-hover:text-teal-500' },
+    orange: { border: 'hover:border-orange-300', bg: 'bg-orange-100', text: 'text-orange-600', hoverBg: 'group-hover:bg-orange-200', arrow: 'group-hover:text-orange-500' },
+    purple: { border: 'hover:border-purple-300', bg: 'bg-purple-100', text: 'text-purple-600', hoverBg: 'group-hover:bg-purple-200', arrow: 'group-hover:text-purple-500' },
+    red:    { border: 'hover:border-red-300',    bg: 'bg-red-100',    text: 'text-red-600',    hoverBg: 'group-hover:bg-red-200',    arrow: 'group-hover:text-red-500' },
+    green:  { border: 'hover:border-green-300',  bg: 'bg-green-100',  text: 'text-green-600',  hoverBg: 'group-hover:bg-green-200',  arrow: 'group-hover:text-green-500' },
+    yellow: { border: 'hover:border-yellow-300', bg: 'bg-yellow-100', text: 'text-yellow-600', hoverBg: 'group-hover:bg-yellow-200', arrow: 'group-hover:text-yellow-500' },
+    gray:   { border: 'border-gray-300', bg: 'bg-gray-200', text: 'text-gray-500', hoverBg: 'group-hover:bg-gray-200', arrow: 'group-hover:text-gray-400' },
+};
+
+const PracticeCard = memo(({ practiceNumber, details, progress, onPracticeSelect, onRewardsClick, onReviewClick }) => {
+    const colors = colorClasses[details.color] || colorClasses.gray;
+    const isCompleted = progress && progress.total > 0 && progress.completed >= progress.total;
+
+    return (
+        <div
+            onClick={() => onPracticeSelect(practiceNumber)}
+            className={`w-full bg-white border border-gray-200 ${colors.border} p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col group cursor-pointer`}
+        >
+            <div className="flex justify-between items-center">
+                <div className="flex items-center flex-grow">
+                    <div className={`${colors.bg} ${colors.text} rounded-full w-10 h-10 flex items-center justify-center mr-4 ${colors.hoverBg} transition-colors`}>
+                       <span className="font-bold">{practiceNumber}</span>
+                    </div>
+                    <div className="text-left flex-grow">
+                        <h3 className="font-medium text-gray-800">{details.title}</h3>
+                        <p className="text-xs text-gray-500 mt-1">{details.desc}</p>
+                    </div>
+                </div>
+                 <div className="flex items-center gap-3 sm:gap-4 pl-2">
+                    {isCompleted ? (
+                        <CompletedIcon className="w-6 h-6 text-green-500" />
+                    ) : (
+                        progress && progress.total > 0 && (
+                            <div className="text-right text-sm font-medium bg-gray-100 rounded-md px-2 py-0.5">
+                                <span className="font-bold text-gray-800">{progress.completed}</span>
+                                <span className="text-gray-400">/{progress.total}</span>
+                            </div>
+                        )
+                    )}
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 ${colors.arrow} transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </div>
+            </div>
+            <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onRewardsClick(practiceNumber, details.title); }}
+                    className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                >
+                    <GiftIcon className="w-4 h-4" />
+                    <span>Rewards</span>
+                </button>
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onReviewClick(practiceNumber); }}
+                    disabled={!isCompleted}
+                    className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                >
+                    <RefreshIcon className="w-4 h-4" />
+                    <span>Ôn tập</span>
+                    {!isCompleted && <LockIcon className="w-4 h-4 ml-1 text-gray-400"/>}
+                </button>
+            </div>
+        </div>
+    );
+});
+
+const ReviewItem = memo(({ practiceNumber, previewLevel, isLocked, isCompleted, progress, colors, unlockText, onPracticeSelect }) => {
+    return (
+        <button
+            onClick={() => !isLocked && onPracticeSelect(practiceNumber)}
+            disabled={isLocked}
+            className={`w-full bg-white border ${isLocked ? colors.border : `border-gray-200 ${colors.border}`} py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group ${isLocked ? 'cursor-not-allowed opacity-70' : ''}`}
+        >
+            <div className="flex items-center">
+                <div className={`${colors.bg} ${colors.text} rounded-full w-10 h-10 flex items-center justify-center mr-4 ${!isLocked ? colors.hoverBg : ''} transition-colors`}>
+                    {isLocked ? <LockIcon className="w-5 h-5" /> : <span className="font-bold">P{previewLevel}</span>}
+                </div>
+                <div className="text-left">
+                    <h3 className="font-medium text-gray-800">Preview {previewLevel}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{unlockText}</p>
+                </div>
+            </div>
+            <div className="flex items-center gap-3 sm:gap-4">
+                {isCompleted ? (
+                    <CompletedIcon className="w-6 h-6 text-green-500" />
+                ) : (
+                    !isLocked && progress && progress.total > 0 && (
+                        <div className="text-right text-sm font-medium bg-gray-100 rounded-md px-2 py-0.5">
+                            <span className="font-bold text-gray-800">{progress.completed}</span>
+                            <span className="text-gray-400">/{progress.total}</span>
+                        </div>
+                    )
+                )}
+                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 ${!isLocked ? colors.arrow : ''} transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </div>
+        </button>
+    );
+});
+
 // --- END: MEMOIZED CHILD COMPONENTS ---
 
 
-// Component to display practice list with progress
+// --- THAY ĐỔI CHÍNH: Component PracticeList đã được cập nhật ---
 function PracticeList({ selectedType, onPracticeSelect }) {
-  const [summaryData, setSummaryData] = useState(null); 
+  const [progressData, setProgressData] = useState({});
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(auth.currentUser);
   const [view, setView] = useState<'main' | 'reviews'>('main');
@@ -265,70 +389,61 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   const MAX_PREVIEWS = 5;
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (!currentUser) {
-        setLoading(false);
-        setSummaryData(null);
-      }
     });
-    return () => unsubscribeAuth();
+    return () => unsubscribe();
   }, []);
 
+  // --- THAY ĐỔI: Logic tính toán phức tạp đã được thay thế bằng một lệnh gọi Cloud Function ---
   useEffect(() => {
-    if (!user) {
+    if (!user || !selectedType) {
       setLoading(false);
       return;
     }
-    setLoading(true);
 
-    const summaryRef = doc(db, 'users', user.uid, 'progress', 'summary');
-    const unsubscribeSnapshot = onSnapshot(summaryRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setSummaryData(data);
-      } else {
-        setSummaryData(null); 
-      }
-      setLoading(false);
-    }, (error) => {
-      console.error("Lỗi khi lắng nghe tiến độ:", error);
-      setLoading(false);
-    });
-    
-    const userDocRef = doc(db, 'users', user.uid);
-    const unsubscribeUserDoc = onSnapshot(userDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-            setClaimedRewards(docSnap.data().claimedQuizRewards || {});
-        }
-    });
-
-    return () => {
-      unsubscribeSnapshot();
-      unsubscribeUserDoc();
-    };
-  }, [user]);
-
-  const handleGenerateSummary = async () => {
-      if (!user) return;
-      alert("Đang yêu cầu máy chủ tính toán lại tiến độ. Vui lòng chờ một lát...");
-      const functions = getFunctions();
-      const generate = httpsCallable(functions, 'generateInitialSummary');
+    const fetchProgress = async () => {
+      setLoading(true);
       try {
-          const result = await generate();
-          console.log(result.data);
-          alert("Yêu cầu thành công! Tiến độ sẽ sớm được cập nhật.");
+        const functions = getFunctions();
+        const calculateUserProgress = httpsCallable(functions, 'calculateUserProgress');
+        
+        console.log(`Calling Cloud Function 'calculateUserProgress' for type: ${selectedType}`);
+        const result = await calculateUserProgress({ selectedType });
+        
+        const data = result.data as { progressData: any, claimedQuizRewards: any };
+        
+        setProgressData(data.progressData || {});
+        setClaimedRewards(data.claimedQuizRewards || {});
+
       } catch (error) {
-          console.error("Lỗi khi gọi hàm tạo tiến độ:", error);
-          alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
+        console.error("Lỗi khi gọi Cloud Function 'calculateUserProgress':", error);
+        // Hiển thị thông báo lỗi cho người dùng nếu cần
+      } finally {
+        setLoading(false);
       }
-  }
+    };
 
+    fetchProgress();
+  }, [user, selectedType]);
+  
   const practiceDetails = useMemo(() => ({
-    tracNghiem: { '1': { title: 'Practice 1', desc: 'Luyện tập từ vựng qua câu hỏi', color: 'indigo' }, '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' }, '3': { title: 'Practice 3', desc: 'Điền 1 từ vào câu (không gợi ý nghĩa)', color: 'teal' }, },
-    dienTu: { '1': { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo' }, '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' }, '3': { title: 'Practice 3', desc: 'Điền 2 từ vào câu (Khó)', color: 'teal' }, '4': { title: 'Practice 4', desc: 'Điền 3 từ vào câu (Rất Khó)', color: 'orange' }, '5': { title: 'Practice 5', desc: 'Điền 4 từ vào câu (Siêu Khó)', color: 'purple' }, '6': { title: 'Practice 6', desc: 'Điền 5 từ vào câu (Địa Ngục)', color: 'yellow' }, '7': { title: 'Practice 7', desc: 'Điền tất cả từ đã học trong câu (Cực Đại)', color: 'red' }, },
+    tracNghiem: {
+      '1': { title: 'Practice 1', desc: 'Luyện tập từ vựng qua câu hỏi', color: 'indigo' },
+      '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
+      '3': { title: 'Practice 3', desc: 'Điền 1 từ vào câu (không gợi ý nghĩa)', color: 'teal' },
+    },
+    dienTu: {
+      '1': { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo' },
+      '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
+      '3': { title: 'Practice 3', desc: 'Điền 2 từ vào câu (Khó)', color: 'teal' },
+      '4': { title: 'Practice 4', desc: 'Điền 3 từ vào câu (Rất Khó)', color: 'orange' },
+      '5': { title: 'Practice 5', desc: 'Điền 4 từ vào câu (Siêu Khó)', color: 'purple' },
+      '6': { title: 'Practice 6', desc: 'Điền 5 từ vào câu (Địa Ngục)', color: 'yellow' },
+      '7': { title: 'Practice 7', desc: 'Điền tất cả từ đã học trong câu (Cực Đại)', color: 'red' },
+    },
   }), []);
-
+  
   const handleReviewClick = useCallback((practiceNumber) => {
     setSelectedPracticeForReview(practiceNumber);
     setView('reviews');
@@ -339,32 +454,10 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     setIsRewardsPopupOpen(true);
   }, []);
 
-  const progressData = useMemo(() => {
-      if (!summaryData) return {};
-      return selectedType === 'tracNghiem' 
-          ? summaryData.tracNghiem 
-          : summaryData.dienTu;
-  }, [summaryData, selectedType]);
-
-
   if (loading) {
     return <div className="text-center text-gray-500">Đang tải tiến độ...</div>;
   }
   
-  if (!summaryData && !loading) {
-      return (
-          <div className="text-center text-gray-600 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="mb-4">Chưa có dữ liệu tiến độ. Điều này có thể xảy ra ở lần đầu tiên.</p>
-              <button
-                  onClick={handleGenerateSummary}
-                  className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                  Tính toán tiến độ ngay
-              </button>
-          </div>
-      )
-  }
-
   if (isRewardsPopupOpen) {
     return <RewardsPopup 
               isOpen={isRewardsPopupOpen}
@@ -461,7 +554,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
           {practicesToShow.map(pNumStr => {
             const practiceNumber = parseInt(pNumStr, 10);
             const details = practiceDetails[selectedType][practiceNumber];
-            const progress = progressData ? progressData[practiceNumber] : null;
+            const progress = progressData[practiceNumber];
 
             return (
               <PracticeCard
@@ -481,7 +574,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   );
 };
 
-// --- Rewards Popup Component ---
+// --- Rewards Popup Component (không đổi) ---
 const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }) => {
     const [isClaiming, setIsClaiming] = useState(null);
 
@@ -627,6 +720,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         return tiers;
     }, [progressData, practiceNumber, selectedType, claimedRewards, MAX_PREVIEWS, isClaiming, handleClaim]);
 
+
     if (!isOpen) return null;
 
     return (
@@ -648,8 +742,13 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
                 .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
                 .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
-                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-                .hide-scrollbar::-webkit-scrollbar { display: none; }
+                .hide-scrollbar {
+                  -ms-overflow-style: none; /* IE and Edge */
+                  scrollbar-width: none; /* Firefox */
+                }
+                .hide-scrollbar::-webkit-scrollbar {
+                  display: none; /* Safari and Chrome */
+                }
             `}</style>
         </div>
     );
