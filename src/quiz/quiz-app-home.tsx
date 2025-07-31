@@ -6,14 +6,15 @@ import Breadcrumbs from '../bread-crumbs.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 
-// Imports for progress calculation & Firebase
+// Imports for Firebase and Cloud Functions
 import { db, auth } from '../firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
-// --- THAY ĐỔI: Thêm import cho Cloud Functions ---
+import { doc, updateDoc, increment } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { collection, doc, updateDoc, increment } from 'firebase/firestore'; // Giữ lại cho RewardsPopup
-import quizData from './quiz-data.ts'; // Giữ lại cho logic khác (nếu có) hoặc có thể xóa nếu không cần
-import { exampleData } from '../example-data.ts'; // Giữ lại cho logic khác (nếu có) hoặc có thể xóa nếu không cần
+
+// LƯU Ý: Không cần import quizData và exampleData ở đây nữa
+// import quizData from './quiz-data.ts';
+// import { exampleData } from '../example-data.ts';
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
@@ -66,7 +67,7 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   }, []);
 
-  // --- Logic hiển thị cho trang phân tích (không đổi) ---
+  // --- Xử lý hiển thị cho trang phân tích ---
   if (currentView === 'analysis') {
     return (
         <div className="fixed inset-0 z-[51] bg-white overflow-y-auto">
@@ -81,7 +82,6 @@ export default function QuizAppHome() {
     );
   }
 
-  // --- Logic hiển thị game/quiz (không đổi) ---
   if (currentView === 'vocabularyGame') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
@@ -98,7 +98,6 @@ export default function QuizAppHome() {
     );
   }
   
-  // --- renderContent (không đổi) ---
   const renderContent = () => {
     switch(currentView) {
       case 'main':
@@ -126,6 +125,8 @@ export default function QuizAppHome() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
+
+              {/* --- Nút dẫn đến trang phân tích --- */}
               <button
                   onClick={() => setCurrentView('analysis')}
                   className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-teal-300 group"
@@ -141,6 +142,7 @@ export default function QuizAppHome() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
               </button>
+              
               <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
                 <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Sắp ra mắt</div>
                 <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm"><span className="text-4xl">📄</span></div>
@@ -183,7 +185,6 @@ export default function QuizAppHome() {
     }
   };
 
-  // --- JSX Layouts (không đổi) ---
   if (currentView === 'quizTypes' || currentView === 'practices') {
     return (
       <div className="fixed inset-0 z-[51] bg-white">
@@ -241,7 +242,7 @@ export default function QuizAppHome() {
   );
 }
 
-// --- Icons (không đổi) ---
+// --- Icons (moved outside to prevent re-creation) ---
 const CompletedIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -270,7 +271,7 @@ const CardCapacityIcon = ({ className }: { className: string }) => (
 );
 
 
-// --- START: MEMOIZED CHILD COMPONENTS (không đổi) ---
+// --- START: MEMOIZED CHILD COMPONENTS ---
 
 const colorClasses = {
     indigo: { border: 'hover:border-indigo-300', bg: 'bg-indigo-100', text: 'text-indigo-600', hoverBg: 'group-hover:bg-indigo-200', arrow: 'group-hover:text-indigo-500' },
@@ -375,16 +376,18 @@ const ReviewItem = memo(({ practiceNumber, previewLevel, isLocked, isCompleted, 
 // --- END: MEMOIZED CHILD COMPONENTS ---
 
 
-// --- THAY ĐỔI CHÍNH: Component PracticeList đã được cập nhật ---
+// --- Component PracticeList ĐÃ ĐƯỢC CẬP NHẬT HOÀN TOÀN ---
 function PracticeList({ selectedType, onPracticeSelect }) {
   const [progressData, setProgressData] = useState({});
+  const [claimedRewards, setClaimedRewards] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState(auth.currentUser);
+  
   const [view, setView] = useState<'main' | 'reviews'>('main');
   const [selectedPracticeForReview, setSelectedPracticeForReview] = useState<number | null>(null);
   const [isRewardsPopupOpen, setIsRewardsPopupOpen] = useState(false);
   const [selectedPracticeForRewards, setSelectedPracticeForRewards] = useState<{ number: number | null, title: string }>({ number: null, title: '' });
-  const [claimedRewards, setClaimedRewards] = useState({});
 
   const MAX_PREVIEWS = 5;
 
@@ -395,7 +398,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     return () => unsubscribe();
   }, []);
 
-  // --- THAY ĐỔI: Logic tính toán phức tạp đã được thay thế bằng một lệnh gọi Cloud Function ---
+  // --- LOGIC TÍNH TOÁN ĐÃ ĐƯỢC THAY THẾ BẰNG VIỆC GỌI CLOUD FUNCTION ---
   useEffect(() => {
     if (!user || !selectedType) {
       setLoading(false);
@@ -404,21 +407,23 @@ function PracticeList({ selectedType, onPracticeSelect }) {
 
     const fetchProgress = async () => {
       setLoading(true);
+      setError(null);
       try {
         const functions = getFunctions();
-        const calculateUserProgress = httpsCallable(functions, 'calculateUserProgress');
+        const calculatePracticeProgress = httpsCallable(functions, 'calculatePracticeProgress');
         
-        console.log(`Calling Cloud Function 'calculateUserProgress' for type: ${selectedType}`);
-        const result = await calculateUserProgress({ selectedType });
+        console.log(`Calling Cloud Function with type: ${selectedType}`);
+        const result = await calculatePracticeProgress({ selectedType });
         
-        const data = result.data as { progressData: any, claimedQuizRewards: any };
-        
-        setProgressData(data.progressData || {});
-        setClaimedRewards(data.claimedQuizRewards || {});
+        // Dữ liệu trả về có dạng { data: { progress: ..., claimedRewards: ... } }
+        const { progress, claimedRewards: rewards } = result.data as any;
 
-      } catch (error) {
-        console.error("Lỗi khi gọi Cloud Function 'calculateUserProgress':", error);
-        // Hiển thị thông báo lỗi cho người dùng nếu cần
+        setProgressData(progress || {});
+        setClaimedRewards(rewards || {});
+        
+      } catch (err: any) {
+        console.error("Lỗi khi gọi Cloud Function:", err);
+        setError(err.message || "Không thể tải tiến trình. Vui lòng thử lại.");
       } finally {
         setLoading(false);
       }
@@ -444,6 +449,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     },
   }), []);
   
+
   const handleReviewClick = useCallback((practiceNumber) => {
     setSelectedPracticeForReview(practiceNumber);
     setView('reviews');
@@ -455,9 +461,13 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   }, []);
 
   if (loading) {
-    return <div className="text-center text-gray-500">Đang tải tiến độ...</div>;
+    return <div className="text-center text-gray-500 p-8">Đang tải tiến độ...</div>;
   }
   
+  if (error) {
+    return <div className="text-center text-red-500 p-4 bg-red-50 rounded-lg border border-red-200">{error}</div>;
+  }
+
   if (isRewardsPopupOpen) {
     return <RewardsPopup 
               isOpen={isRewardsPopupOpen}
@@ -574,7 +584,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   );
 };
 
-// --- Rewards Popup Component (không đổi) ---
+// --- Rewards Popup Component ---
 const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }) => {
     const [isClaiming, setIsClaiming] = useState(null);
 
