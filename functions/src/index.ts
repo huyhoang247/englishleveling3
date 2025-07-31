@@ -1,4 +1,4 @@
-// File: functions/src/index.ts (ĐÃ SỬA LỖI CUỐI CÙNG)
+// File: functions/src/index.ts (ĐÃ SỬA LỖI KIỂU DỮ LIỆU)
 
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
@@ -10,7 +10,19 @@ import { exampleData } from "./example-data";
 admin.initializeApp();
 const db = admin.firestore();
 
-// Định nghĩa kiểu dữ liệu để code rõ ràng hơn
+// --- ĐỊNH NGHĨA CÁC INTERFACE ĐỂ SỬA LỖI TYPESCRIPT ---
+interface QuizItem {
+  question: string;
+  // Thêm các thuộc tính khác của một item trong quizData nếu có
+  // ví dụ: options: string[], answer: string
+}
+
+interface ExampleItem {
+  english: string;
+  // Thêm các thuộc tính khác của một item trong exampleData nếu có
+  // ví dụ: vietnamese: string
+}
+
 interface Progress {
   completed: number;
   total: number;
@@ -58,12 +70,10 @@ export const calculatePracticeProgress = functions
         db.collection(`users/${uid}/completedMultiWord`).get(),
       ]);
 
-      // --- DÒNG ĐÃ SỬA ---
       const userData = userDocSnap.exists ? userDocSnap.data() : {};
-      // --------------------
 
       const claimedRewards = userData.claimedQuizRewards || {};
-      const userVocabulary = openedVocabSnapshot.docs
+      const userVocabulary: string[] = openedVocabSnapshot.docs
         .map((doc) => doc.data().word)
         .filter(Boolean);
 
@@ -108,15 +118,15 @@ export const calculatePracticeProgress = functions
           const completedSet = completedWordsByGameMode[mode] || new Set();
 
           if (practiceNum % 100 === 1) {
-            const totalQs = quizData.filter((q) => userVocabulary.some((v) => new RegExp(`\\b${v}\\b`, "i").test(q.question)));
-            const completed = totalQs.filter((q) => {
-              const word = userVocabulary.find((v) => new RegExp(`\\b${v}\\b`, "i").test(q.question));
+            const totalQs = quizData.filter((q: QuizItem) => userVocabulary.some((v: string) => new RegExp(`\\b${v}\\b`, "i").test(q.question)));
+            const completed = totalQs.filter((q: QuizItem) => {
+              const word = userVocabulary.find((v: string) => new RegExp(`\\b${v}\\b`, "i").test(q.question));
               return word && completedSet.has(word.toLowerCase());
             }).length;
             newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
           } else if (practiceNum % 100 === 2 || practiceNum % 100 === 3) {
-            const totalQs = userVocabulary.flatMap((word) => exampleData.some((ex) => new RegExp(`\\b${word}\\b`, "i").test(ex.english)) ? [{ word }] : []);
-            const completed = totalQs.filter((q) => completedSet.has(q.word.toLowerCase())).length;
+            const totalQs = userVocabulary.flatMap((word: string) => exampleData.some((ex: ExampleItem) => new RegExp(`\\b${word}\\b`, "i").test(ex.english)) ? [{ word }] : []);
+            const completed = totalQs.filter((q: { word: string }) => completedSet.has(q.word.toLowerCase())).length;
             newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
           }
         });
@@ -136,8 +146,8 @@ export const calculatePracticeProgress = functions
           if (practiceNum % 100 === 1) {
             progress = { completed: completedSet.size, total: userVocabulary.length };
           } else if (practiceNum % 100 === 2) {
-            const totalQs = userVocabulary.filter((word) => exampleData.some((ex) => new RegExp(`\\b${word}\\b`, "i").test(ex.english)));
-            const completed = totalQs.filter((word) => completedSet.has(word.toLowerCase())).length;
+            const totalQs = userVocabulary.filter((word: string) => exampleData.some((ex: ExampleItem) => new RegExp(`\\b${word}\\b`, "i").test(ex.english)));
+            const completed = totalQs.filter((word: string) => completedSet.has(word.toLowerCase())).length;
             progress = { completed: completed, total: totalQs.length };
           } else { // Handles 3, 4, 5, 6, 7
             let requiredWordCount = 0;
@@ -149,8 +159,8 @@ export const calculatePracticeProgress = functions
 
             if (requiredWordCount > 0) {
               let total = 0;
-              exampleData.forEach((sentence) => {
-                const wordsInSentence = userVocabulary.filter((vocabWord) => new RegExp(`\\b${vocabWord}\\b`, "i").test(sentence.english));
+              exampleData.forEach((sentence: ExampleItem) => {
+                const wordsInSentence = userVocabulary.filter((vocabWord: string) => new RegExp(`\\b${vocabWord}\\b`, "i").test(sentence.english));
                 if (wordsInSentence.length >= requiredWordCount) {
                   total++;
                 }
