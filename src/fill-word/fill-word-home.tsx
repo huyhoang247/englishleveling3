@@ -93,11 +93,12 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       try {
         setLoading(true); setError(null);
 
-        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
+        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot, completedPhrasesSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
           getDocs(collection(db, 'users', user.uid, 'completedWords')),
-          getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
+          getDocs(collection(db, 'users', user.uid, 'completedMultiWord')),
+          getDocs(collection(db, 'users', user.uid, 'completedPhrases'))
         ]);
 
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
@@ -221,7 +222,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         // --- THAY ĐỔI THEO YÊU CẦU MỚI ---
         } else if (selectedPractice % 100 === 8) {
             const completedPhrasesStatus = new Map<string, any>();
-            completedMultiWordSnapshot.forEach(doc => {
+            completedPhrasesSnapshot.forEach(doc => {
                 completedPhrasesStatus.set(doc.id, doc.data().wordsCompleted || {});
             });
 
@@ -367,7 +368,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         // --- OPERATION 1: Update the phrase completion status ---
         const phraseId = currentWord.phraseContext.toLowerCase().replace(/\s/g, '-');
         const wordToUpdate = currentWord.word.toLowerCase();
-        const completedPhraseRef = doc(db, 'users', user.uid, 'completedMultiWord', phraseId);
+        const completedPhraseRef = doc(db, 'users', user.uid, 'completedPhrases', phraseId);
         
         // Use dot notation to update a field in a map
         batch.set(completedPhraseRef, {
