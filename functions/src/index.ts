@@ -7,8 +7,22 @@ import * as admin from "firebase-admin";
 import {quizData} from "./quiz-data";
 import {exampleData} from "./example-data";
 
+
 admin.initializeApp();
 const db = admin.firestore();
+=======
+// For cost control, you can set the maximum number of containers that can be
+// running at the same time. This helps mitigate the impact of unexpected
+// traffic spikes by instead downgrading performance. This limit is a
+// per-function limit. You can override the limit for each function using the
+// `maxInstances` option in the function's options, e.g.
+// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
+// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
+// functions should each use functions.runWith({ maxInstances: 10 }) instead.
+// In the v1 API, each function can only serve one request per container, so
+// this will be the maximum concurrent request count.
+setGlobalOptions({maxInstances: 10});
+cab8381 (Fix import errors in index.ts)
 
 // ========================================================================
 // ==                          CORE LOGIC                                ==
@@ -175,10 +189,7 @@ async function performRecalculation(userId: string) {
   functions.logger.info(`Progress summary updated for user ${userId}`);
 }
 
-
-// ========================================================================
-// ==                          TRIGGERS                                  ==
-// ========================================================================
+                                
 
 const triggerOptions = {
     region: "asia-southeast1", // Chọn region gần bạn nhất
@@ -214,11 +225,8 @@ export const onMultiWordCompleted = functions
   .onWrite(async (change, context) => {
     const {userId} = context.params;
     await performRecalculation(userId);
-  });
+  })                 CALLABLE FUNCTION (Thủ công)                    ==
 
-// ========================================================================
-// ==                    CALLABLE FUNCTION (Thủ công)                    ==
-// ========================================================================
 
 export const generateInitialSummary = functions
   .region(triggerOptions.region)
