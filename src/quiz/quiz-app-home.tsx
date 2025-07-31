@@ -464,9 +464,9 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             });
 
         } else if (selectedType === 'dienTu') {
-            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-4', 'fill-word-5', 'fill-word-6', 'fill-word-7'];
+            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-4', 'fill-word-5', 'fill-word-6', 'fill-word-7', 'fill-word-8'];
             for(let i = 1; i <= MAX_PREVIEWS; i++) {
-                allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`, `fill-word-${i*100 + 4}`, `fill-word-${i*100 + 5}`, `fill-word-${i*100 + 6}`, `fill-word-${i*100 + 7}`);
+                allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`, `fill-word-${i*100 + 4}`, `fill-word-${i*100 + 5}`, `fill-word-${i*100 + 6}`, `fill-word-${i*100 + 7}`, `fill-word-${i*100 + 8}`);
             }
 
             allFillModes.forEach(mode => {
@@ -527,6 +527,28 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                      const gameModeId = `fill-word-${practiceNum}`;
                      const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
                      progress = { completed: completedSet.size, total: totalP7 };
+                } else if (practiceNum % 100 === 8) {
+                    const phraseListForProgress = [
+                        'Primary source', 'Reliable source', 'Energy source', 'Source of information', 'Source code', 'Source material', 'Source of income', 'Source document', 'Source language', 'Source data',
+                        'Health insurance', 'Life insurance', 'Car insurance', 'Travel insurance', 'Insurance policy', 'Home insurance', 'Insurance premium', 'Insurance claim', 'Insurance coverage', 'Insurance company'
+                    ];
+                    const applicableWords = new Set<string>();
+                    userVocabulary.forEach(vocabWord => {
+                        const vocabWordRegex = new RegExp(`\\b${vocabWord}\\b`, 'i');
+                        const matchingPhrases = phraseListForProgress.filter(p => vocabWordRegex.test(p));
+
+                        if (matchingPhrases.length > 0) {
+                            const hasExampleSentence = matchingPhrases.some(phrase =>
+                                exampleData.some(ex => new RegExp(`\\b${phrase}\\b`, 'i').test(ex.english))
+                            );
+                            if (hasExampleSentence) {
+                                applicableWords.add(vocabWord);
+                            }
+                        }
+                    });
+                    const totalQs = applicableWords.size;
+                    const completed = [...applicableWords].filter(word => completedSet.has(word.toLowerCase())).length;
+                    progress = { completed, total: totalQs };
                 }
                 newProgressData[practiceNum] = progress;
             });
@@ -555,6 +577,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       '5': { title: 'Practice 5', desc: 'Điền 4 từ vào câu (Siêu Khó)', color: 'purple' },
       '6': { title: 'Practice 6', desc: 'Điền 5 từ vào câu (Địa Ngục)', color: 'yellow' },
       '7': { title: 'Practice 7', desc: 'Điền tất cả từ đã học trong câu (Cực Đại)', color: 'red' },
+      '8': { title: 'Practice 8', desc: 'Điền từ trong cụm từ', color: 'green' },
     },
   }), []);
   
