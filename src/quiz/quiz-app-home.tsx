@@ -401,12 +401,13 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     const calculateProgress = async () => {
       setLoading(true);
       try {
-        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
+        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot, completedPhrasesSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
           getDocs(collection(db, 'users', user.uid, 'completedWords')),
-          getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
-        ]);
+          getDocs(collection(db, 'users', user.uid, 'completedMultiWord')),
+          getDocs(collection(db, 'users', user.uid, 'completedPhrases'))
+        ]); 
         
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
         setClaimedRewards(userData.claimedQuizRewards || {});
@@ -514,7 +515,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
 
                     // Calculate Completed Slots
                     let completedSlots = 0;
-                    completedMultiWordSnapshot.forEach(docSnap => {
+                    completedPhrasesSnapshot.forEach(docSnap => {
                         const wordsCompletedMap = docSnap.data().wordsCompleted;
                         if (wordsCompletedMap) {
                             // Check if the doc ID (phrase) is relevant to the current user's vocab
