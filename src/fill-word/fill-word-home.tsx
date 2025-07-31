@@ -6,7 +6,7 @@ import { doc, getDocs, updateDoc, collection, writeBatch, setDoc, increment } fr
 import { User } from 'firebase/auth';
 
 // Import the new hook
-import { useOptimizedQuizData } from '../hooks/useOptimizedQuizData.ts';
+import { useOptimizedQuizData } from '../quiz/useOptimizedQuizData.ts';
 
 import { defaultImageUrls } from '../image-url.ts';
 import WordSquaresInput from './vocabulary-input.tsx';
