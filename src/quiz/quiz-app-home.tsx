@@ -12,6 +12,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, getDoc, getDocs, updateDoc, increment } from 'firebase/firestore';
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
+import { phrases } from '../phrases.ts'; // --- ĐÃ THÊM
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
@@ -528,27 +529,28 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                      const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
                      progress = { completed: completedSet.size, total: totalP7 };
                 } else if (practiceNum % 100 === 8) {
-                    const phraseListForProgress = [
-                        'Primary source', 'Reliable source', 'Energy source', 'Source of information', 'Source code', 'Source material', 'Source of income', 'Source document', 'Source language', 'Source data',
-                        'Health insurance', 'Life insurance', 'Car insurance', 'Travel insurance', 'Insurance policy', 'Home insurance', 'Insurance premium', 'Insurance claim', 'Insurance coverage', 'Insurance company'
-                    ];
-                    const applicableWords = new Set<string>();
-                    userVocabulary.forEach(vocabWord => {
-                        const vocabWordRegex = new RegExp(`\\b${vocabWord}\\b`, 'i');
-                        const matchingPhrases = phraseListForProgress.filter(p => vocabWordRegex.test(p));
+                    const generatedQuestions = new Set<string>(); // Stores unique 'sentence|word'
+                    userVocabulary.forEach(word => {
+                        const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
+                        const matchingPhrases = phrases.filter(p => wordRegex.test(p));
 
-                        if (matchingPhrases.length > 0) {
-                            const hasExampleSentence = matchingPhrases.some(phrase =>
-                                exampleData.some(ex => new RegExp(`\\b${phrase}\\b`, 'i').test(ex.english))
-                            );
-                            if (hasExampleSentence) {
-                                applicableWords.add(vocabWord);
-                            }
+                        matchingPhrases.forEach(phrase => {
+                            const phraseRegex = new RegExp(`\\b${phrase}\\b`, 'i');
+                            const matchingSentences = exampleData.filter(ex => phraseRegex.test(ex.english));
+                            matchingSentences.forEach(sentence => {
+                                generatedQuestions.add(`${sentence.english}|${word}`);
+                            });
+                        });
+                    });
+
+                    let completedCount = 0;
+                    generatedQuestions.forEach(questionId => {
+                        const wordToGuess = questionId.split('|')[1];
+                        if (completedSet.has(wordToGuess.toLowerCase())) {
+                            completedCount++;
                         }
                     });
-                    const totalQs = applicableWords.size;
-                    const completed = [...applicableWords].filter(word => completedSet.has(word.toLowerCase())).length;
-                    progress = { completed, total: totalQs };
+                    progress = { completed: completedCount, total: generatedQuestions.size };
                 }
                 newProgressData[practiceNum] = progress;
             });
@@ -577,7 +579,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       '5': { title: 'Practice 5', desc: 'Điền 4 từ vào câu (Siêu Khó)', color: 'purple' },
       '6': { title: 'Practice 6', desc: 'Điền 5 từ vào câu (Địa Ngục)', color: 'yellow' },
       '7': { title: 'Practice 7', desc: 'Điền tất cả từ đã học trong câu (Cực Đại)', color: 'red' },
-      '8': { title: 'Practice 8', desc: 'Điền từ trong cụm từ', color: 'green' },
+      '8': { title: 'Practice 8', desc: 'Điền từ vựng trong cụm từ', color: 'green' },
     },
   }), []);
   
@@ -891,3 +893,5 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         </div>
     );
 };
+
+// --- END OF FILE: quiz-app-home.tsx ---
