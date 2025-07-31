@@ -61,7 +61,8 @@ export const getPracticeProgress = functions
         db.collection(`users/${uid}/completedMultiWord`).get(),
       ]);
 
-      const userData = userDocSnap.exists ? userDocSnap.data()! : {};
+      // FIX 1: Thay thế non-null assertion `!` bằng `|| {}` để đảm bảo an toàn và tuân thủ linter.
+      const userData = userDocSnap.data() || {};
       const claimedRewards = userData.claimedQuizRewards || {};
       const userVocabulary: string[] = openedVocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
 
@@ -121,7 +122,8 @@ export const getPracticeProgress = functions
             newProgressData[practiceNum] = { completed, total: totalQs.length };
           } else if (practiceNum % 100 === 2 || practiceNum % 100 === 3) {
             const totalQs = userVocabulary.filter(word => userWordsInExample.has(word));
-            const completed = totalQs.filter(q_word => completedSet.has(q_word.toLowerCase())).length;
+            // FIX 2: Đổi tên biến `q_word` thành `qWord` để tuân thủ quy tắc camelCase.
+            const completed = totalQs.filter(qWord => completedSet.has(qWord.toLowerCase())).length;
             newProgressData[practiceNum] = { completed, total: totalQs.length };
           }
         });
@@ -191,7 +193,8 @@ export const getGameSessionData = functions
             db.collection(`users/${uid}/completedMultiWord`).get(),
         ]);
 
-        const userData = userDocSnap.exists ? userDocSnap.data()! : {};
+        // FIX 1: Thay thế non-null assertion `!` bằng `|| {}`
+        const userData = userDocSnap.data() || {};
         const userVocabulary: string[] = openedVocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
         
         let questions: any[] = [];
@@ -274,12 +277,14 @@ export const getGameSessionData = functions
                         const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
                         let questionText = sentence.english;
                         correctlyOrderedWords.forEach(word => {
+                            // Dùng regex để thay thế chính xác từ, tránh thay thế một phần của từ khác
                             questionText = questionText.replace(createWordRegex(word), '___');
                         });
                         gameVocabulary.push({ word: correctlyOrderedWords.join(' '), question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền ${requiredWords} từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
                     } else if (practiceBaseId === 7 && wordsInSentence.length >= 1) {
                         const correctlyOrderedWords = wordsInSentence.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()));
-                        const wordsToHideRegex = new RegExp(`\\b(${correctlyOrderedWords.map(w => w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`, 'gi');
+                        // FIX 3: Xóa escape character `\` không cần thiết trước `/`
+                        const wordsToHideRegex = new RegExp(`\\b(${correctlyOrderedWords.map(w => w.replace(/[-^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`, 'gi');
                         const questionText = sentence.english.replace(wordsToHideRegex, '___');
                         const answerKey = correctlyOrderedWords.join(' ');
                         gameVocabulary.push({ word: answerKey, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền ${correctlyOrderedWords.length} từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
