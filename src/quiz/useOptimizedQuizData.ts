@@ -27,6 +27,11 @@ export interface PlayableQuestion {
   imageIndex?: number;
 }
 
+interface UserVocabItem {
+  word: string;
+  id: string; // Document ID, which is the image index for P1
+}
+
 interface OptimizedData {
   loading: boolean;
   error: string | null;
@@ -52,7 +57,7 @@ export const useOptimizedQuizData = (): OptimizedData => {
   
   // State for RAW data from Firestore
   const [rawUserDoc, setRawUserDoc] = useState<any>(null);
-  const [rawUserVocab, setRawUserVocab] = useState<string[]>([]);
+  const [rawUserVocab, setRawUserVocab] = useState<UserVocabItem[]>([]);
   const [rawCompletedWords, setRawCompletedWords] = useState<Map<string, any>>(new Map());
   const [rawCompletedMultiWord, setRawCompletedMultiWord] = useState<Map<string, any>>(new Map());
 
@@ -80,7 +85,9 @@ export const useOptimizedQuizData = (): OptimizedData => {
         
         setRawUserDoc(userDocSnap.exists() ? userDocSnap.data() : { coins: 0, masteryCards: 0, claimedQuizRewards: {} });
         
-        const vocabList = openedVocabSnapshot.docs.map(d => ({ word: d.data().word, id: d.id })).filter(Boolean);
+        const vocabList: UserVocabItem[] = openedVocabSnapshot.docs
+            .map(d => ({ word: d.data().word, id: d.id }))
+            .filter(v => v.word);
         setRawUserVocab(vocabList);
 
         const completedMap = new Map<string, any>();
@@ -111,17 +118,13 @@ export const useOptimizedQuizData = (): OptimizedData => {
       };
     }
 
-    // --- Start Pre-computation ---
-    
-    // 1. Create fast lookup structures
     const userVocabList = rawUserVocab.map(v => v.word);
-    const userVocabSet = new Set(userVocabList.map(v => v.toLowerCase()));
 
     const newProgressData = new Map<number, Progress>();
     const newPlayableQuestions = new Map<number, PlayableQuestion[]>();
 
-    const allPracticeModes = ['tracNghiem', 'dienTu'];
-    allPracticeModes.forEach(type => {
+    const allPracticeTypes = ['tracNghiem', 'dienTu'];
+    allPracticeTypes.forEach(type => {
         const basePracticeIds = type === 'tracNghiem' ? [1, 2, 3] : [1, 2, 3, 4, 5, 6, 7];
         let allPossibleIds = [...basePracticeIds];
         for (let i = 1; i <= MAX_PREVIEWS; i++) {
@@ -131,14 +134,17 @@ export const useOptimizedQuizData = (): OptimizedData => {
         allPossibleIds.forEach(practiceId => {
             let allQuestions: PlayableQuestion[] = [];
             const gameModeId = `${type === 'tracNghiem' ? 'quiz' : 'fill-word'}-${practiceId}`;
+            const practiceBaseId = practiceId % 100;
 
             // --- 'tracNghiem' Question Generation ---
             if (type === 'tracNghiem') {
-                const practiceBaseId = practiceId % 100;
                 if (practiceBaseId === 1) {
                     allQuestions = quizData
                         .filter(q => userVocabList.some(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)))
-                        .map(q => ({ ...q, word: userVocabList.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)) || '' }));
+                        .map(q => {
+                           const foundWord = userVocabList.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question));
+                           return { ...q, question: q.question, word: foundWord || '' };
+                        });
                 } else if (practiceBaseId === 2 || practiceBaseId === 3) {
                     userVocabList.forEach(word => {
                         const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
@@ -166,11 +172,11 @@ export const useOptimizedQuizData = (): OptimizedData => {
 
             // --- 'dienTu' Question Generation ---
             if (type === 'dienTu') {
-                const practiceBaseId = practiceId % 100;
                 if (practiceBaseId === 1) {
                     allQuestions = rawUserVocab.map(v => ({
                         word: v.word,
                         question: `Đoán từ qua hình ảnh`,
+                        vietnamese: `Nghĩa của từ "${v.word}"`,
                         imageIndex: Number(v.id)
                     }));
                 } else if (practiceBaseId === 2) {
@@ -187,20 +193,19 @@ export const useOptimizedQuizData = (): OptimizedData => {
                         }
                     });
                 } else if (practiceBaseId >= 3 && practiceBaseId <= 7) {
-                    const requiredWords = practiceBaseId - (practiceBaseId === 7 ? 6 : 2); // P3=2, P4=3, P5=4, P6=5, P7=1
-                    exampleData.forEach(sentence => {
+                    const requiredWords = practiceBaseId === 7 ? 1 : practiceBaseId - 1; // P3=2, P4=3, P5=4, P6=5, P7=1
+                     exampleData.forEach(sentence => {
                         const wordsInSentence = userVocabList.filter(v => new RegExp(`\\b${v}\\b`, 'i').test(sentence.english));
                         if (wordsInSentence.length >= requiredWords) {
                             const wordsToHide = (practiceBaseId === 7)
                                 ? wordsInSentence
                                 : [...wordsInSentence].sort(() => 0.5 - Math.random()).slice(0, requiredWords);
                             
-                            const orderedWordsToHide = wordsToHide.sort((a,b) => sentence.english.indexOf(a) - sentence.english.indexOf(b));
+                            const orderedWordsToHide = wordsToHide.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()));
                             
                             let questionText = sentence.english;
-                            orderedWordsToHide.forEach(w => {
-                                questionText = questionText.replace(new RegExp(`\\b${w}\\b`, 'i'), '___');
-                            });
+                            const regexToHide = new RegExp(`\\b(${orderedWordsToHide.map(w => w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`, 'gi');
+                            questionText = questionText.replace(regexToHide, '___');
 
                             allQuestions.push({
                                 question: questionText,
@@ -222,16 +227,16 @@ export const useOptimizedQuizData = (): OptimizedData => {
                     const doc = rawCompletedMultiWord.get(docId);
                     if (doc?.completedIn?.[gameModeId]) {
                         completedCount++;
-                        return false; // Already completed
+                        return false;
                     }
                 } else {
                     const doc = rawCompletedWords.get(docId);
                     if (doc?.gameModes?.[gameModeId]) {
                         completedCount++;
-                        return false; // Already completed
+                        return false;
                     }
                 }
-                return true; // Not completed, so it's playable
+                return true;
             });
 
             newPlayableQuestions.set(practiceId, playable);
