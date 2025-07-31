@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import QuizApp from './quiz.tsx';
 import Breadcrumbs from '../bread-crumbs.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
-import AnalysisDashboard from '../AnalysisDashboard.tsx';
+import AnalysisDashboard from '../AnalysisDashboard.tsx'; // --- ĐÃ THÊM
 
 // Imports for progress calculation
 import { db, auth } from '../firebase.js';
@@ -12,7 +12,6 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, getDoc, getDocs, updateDoc, increment } from 'firebase/firestore';
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
-import { phrases } from '../phrases.ts';
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
@@ -65,6 +64,7 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   }, []);
 
+  // --- ĐÃ THÊM: Xử lý hiển thị cho trang phân tích ---
   if (currentView === 'analysis') {
     return (
         <div className="fixed inset-0 z-[51] bg-white overflow-y-auto">
@@ -123,6 +123,7 @@ export default function QuizAppHome() {
                 </svg>
               </button>
 
+              {/* --- ĐÃ THÊM: Nút dẫn đến trang phân tích --- */}
               <button
                   onClick={() => setCurrentView('analysis')}
                   className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-teal-300 group"
@@ -401,13 +402,12 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     const calculateProgress = async () => {
       setLoading(true);
       try {
-        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot, completedPhrasesSnapshot] = await Promise.all([
+        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
           getDocs(collection(db, 'users', user.uid, 'completedWords')),
-          getDocs(collection(db, 'users', user.uid, 'completedMultiWord')),
-          getDocs(collection(db, 'users', user.uid, 'completedPhrases'))
-        ]); 
+          getDocs(collection(db, 'users', user.uid, 'completedMultiWord')) // Fetch from the new subcollection
+        ]);
         
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
         setClaimedRewards(userData.claimedQuizRewards || {});
@@ -464,9 +464,9 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             });
 
         } else if (selectedType === 'dienTu') {
-            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-4', 'fill-word-5', 'fill-word-6', 'fill-word-7', 'fill-word-8'];
+            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-4', 'fill-word-5', 'fill-word-6', 'fill-word-7'];
             for(let i = 1; i <= MAX_PREVIEWS; i++) {
-                allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`, `fill-word-${i*100 + 4}`, `fill-word-${i*100 + 5}`, `fill-word-${i*100 + 6}`, `fill-word-${i*100 + 7}`, `fill-word-${i*100 + 8}`);
+                allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`, `fill-word-${i*100 + 4}`, `fill-word-${i*100 + 5}`, `fill-word-${i*100 + 6}`, `fill-word-${i*100 + 7}`);
             }
 
             allFillModes.forEach(mode => {
@@ -482,52 +482,51 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                     const totalQs = userVocabulary.filter(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)));
                     const completed = totalQs.filter(word => completedSet.has(word.toLowerCase())).length;
                     progress = { completed: completed, total: totalQs.length };
-                } else if (practiceNum % 100 >= 3 && practiceNum % 100 <= 7) {
-                    let minWordsRequired = (practiceNum % 100) - 1;
-                    if (practiceNum % 100 === 7) minWordsRequired = 1;
-                    
-                    let total = 0;
-                    exampleData.forEach(sentence => {
-                        const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                        if (wordsInSentence.length >= minWordsRequired) total++;
-                    });
-                    const gameModeId = `fill-word-${practiceNum}`;
-                    const completedMultiSet = completedMultiWordByGameMode[gameModeId] || new Set();
-                    progress = { completed: completedMultiSet.size, total: total };
-                // --- THAY ĐỔI THEO YÊU CẦU MỚI ---
-                } else if (practiceNum % 100 === 8) {
-                    // Calculate Total Slots
-                    let totalSlots = 0;
-                    const allPossiblePhrases = new Set<string>();
-                    
-                    exampleData.forEach(sentence => {
-                        const phrasesInSentence = phrases.filter(p => new RegExp(`\\b${p}\\b`, 'i').test(sentence.english));
-                        phrasesInSentence.forEach(p => allPossiblePhrases.add(p));
-                    });
-                    
-                    allPossiblePhrases.forEach(phraseStr => {
-                        const wordsInPhrase = phraseStr.split(' ');
-                        const learnedWordsCount = wordsInPhrase.filter(word => 
-                            userVocabulary.some(vocab => vocab.toLowerCase() === word.toLowerCase())
-                        ).length;
-                        totalSlots += learnedWordsCount;
-                    });
-
-                    // Calculate Completed Slots
-                    let completedSlots = 0;
-                    completedPhrasesSnapshot.forEach(docSnap => {
-                        const wordsCompletedMap = docSnap.data().wordsCompleted;
-                        if (wordsCompletedMap) {
-                            // Check if the doc ID (phrase) is relevant to the current user's vocab
-                            const phraseWords = docSnap.id.replace(/-/g, ' ').split(' ');
-                            const isRelevant = phraseWords.some(pw => userVocabulary.some(uv => uv.toLowerCase() === pw.toLowerCase()));
-                            if(isRelevant){
-                                completedSlots += Object.values(wordsCompletedMap).filter(v => v === true).length;
-                            }
-                        }
-                    });
-                    
-                    progress = { completed: completedSlots, total: totalSlots };
+                } else if (practiceNum % 100 === 3) {
+                     let totalP3 = 0;
+                     exampleData.forEach(sentence => {
+                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                         if (wordsInSentence.length >= 2) totalP3++;
+                     });
+                     const gameModeId = `fill-word-${practiceNum}`;
+                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
+                     progress = { completed: completedSet.size, total: totalP3 };
+                } else if (practiceNum % 100 === 4) {
+                     let totalP4 = 0;
+                     exampleData.forEach(sentence => {
+                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                         if (wordsInSentence.length >= 3) totalP4++;
+                     });
+                     const gameModeId = `fill-word-${practiceNum}`;
+                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
+                     progress = { completed: completedSet.size, total: totalP4 };
+                } else if (practiceNum % 100 === 5) {
+                     let totalP5 = 0;
+                     exampleData.forEach(sentence => {
+                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                         if (wordsInSentence.length >= 4) totalP5++;
+                     });
+                     const gameModeId = `fill-word-${practiceNum}`;
+                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
+                     progress = { completed: completedSet.size, total: totalP5 };
+                } else if (practiceNum % 100 === 6) {
+                     let totalP6 = 0;
+                     exampleData.forEach(sentence => {
+                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                         if (wordsInSentence.length >= 5) totalP6++;
+                     });
+                     const gameModeId = `fill-word-${practiceNum}`;
+                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
+                     progress = { completed: completedSet.size, total: totalP6 };
+                } else if (practiceNum % 100 === 7) {
+                     let totalP7 = 0;
+                     exampleData.forEach(sentence => {
+                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
+                         if (wordsInSentence.length >= 1) totalP7++;
+                     });
+                     const gameModeId = `fill-word-${practiceNum}`;
+                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
+                     progress = { completed: completedSet.size, total: totalP7 };
                 }
                 newProgressData[practiceNum] = progress;
             });
@@ -556,7 +555,6 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       '5': { title: 'Practice 5', desc: 'Điền 4 từ vào câu (Siêu Khó)', color: 'purple' },
       '6': { title: 'Practice 6', desc: 'Điền 5 từ vào câu (Địa Ngục)', color: 'yellow' },
       '7': { title: 'Practice 7', desc: 'Điền tất cả từ đã học trong câu (Cực Đại)', color: 'red' },
-      '8': { title: 'Practice 8', desc: 'Điền từ vựng trong cụm từ', color: 'green' },
     },
   }), []);
   
@@ -870,6 +868,3 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         </div>
     );
 };
-
-
-// --- END OF FILE: quiz-app-home.tsx ---
