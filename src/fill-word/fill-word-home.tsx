@@ -1,12 +1,14 @@
 // --- START OF FILE: fill-word-home.tsx ---
 
 import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
-import { db, auth } from '../firebase.js';
-import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc, increment } from 'firebase/firestore';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { defaultImageUrls } from '../image-url.ts';
-import { exampleData } from '../example-data.ts';
+import { db } from '../firebase.js';
+import { doc, getDocs, updateDoc, collection, writeBatch, setDoc, increment } from 'firebase/firestore';
+import { User } from 'firebase/auth';
 
+// Import the new hook
+import { useOptimizedQuizData } from '../hooks/useOptimizedQuizData.ts';
+
+import { defaultImageUrls } from '../image-url.ts';
 import WordSquaresInput from './vocabulary-input.tsx';
 import Confetti from './chuc-mung.tsx';
 import CoinDisplay from '../coin-display.tsx';
@@ -15,10 +17,9 @@ import VirtualKeyboard from './keyboard.tsx';
 
 interface VocabularyItem {
   word: string;
-  hint: string;
+  question: string;
   imageIndex?: number;
-  question?: string;
-  vietnameseHint?: string;
+  vietnamese?: string;
 }
 interface VocabularyGameProps {
   onGoBack: () => void;
@@ -37,17 +38,16 @@ const shuffleArray = <T extends any[]>(array: T): T => { const shuffledArray = [
 const generateImageUrl = (imageIndex?: number) => { if (imageIndex !== undefined && typeof imageIndex === 'number') { const adjustedIndex = imageIndex - 1; if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) { return defaultImageUrls[adjustedIndex]; } } return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; };
 
 export default function VocabularyGame({ onGoBack, selectedPractice }: VocabularyGameProps) {
-  const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  // GET ALL PRE-COMPUTED DATA FROM THE CENTRAL HOOK
+  const { loading, playableQuestions, userStats, user, error, progressData } = useOptimizedQuizData();
+
+  // Local state for gameplay logic
   const [shuffledUnusedWords, setShuffledUnusedWords] = useState<VocabularyItem[]>([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null);
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [usedWords, setUsedWords] = useState<Set<string>>(new Set());
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -58,16 +58,14 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   const [streakAnimation, setStreakAnimation] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const TOTAL_TIME = 60;
-  const isInitialLoadComplete = useRef(false);
 
+  // State for multi-word game
   const [filledWords, setFilledWords] = useState<string[]>([]);
   const [activeBlankIndex, setActiveBlankIndex] = useState<number | null>(null);
   const [shake, setShake] = useState(false);
 
   const isMultiWordGame = useMemo(() => [3, 4, 5, 6, 7].includes(selectedPractice % 100), [selectedPractice]);
 
-  useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser)); return () => unsubscribe(); }, []);
-  
   const resetMultiWordState = (wordItem: VocabularyItem | null) => {
     if (isMultiWordGame && wordItem) {
       const wordCount = wordItem.word.split(' ').length;
@@ -79,182 +77,34 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     }
     setUserInput('');
   };
-
+  
+  // Effect to setup the game session from the hook's data
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user) {
-        setLoading(false); setVocabularyList([]); setCoins(0); setUsedWords(new Set()); setCurrentWord(null); setMasteryCount(0); setError("Vui lòng đăng nhập để chơi.");
-        return;
-      }
-      try {
-        setLoading(true); setError(null);
+    if (!loading) {
+      const questionsForPractice = playableQuestions.get(selectedPractice) || [];
+      const shuffled = shuffleArray(questionsForPractice as VocabularyItem[]);
+      setShuffledUnusedWords(shuffled);
 
-        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
-          getDoc(doc(db, 'users', user.uid)),
-          getDocs(collection(db, 'users', user.uid, 'openedVocab')),
-          getDocs(collection(db, 'users', user.uid, 'completedWords')),
-          getDocs(collection(db, 'users', user.uid, 'completedMultiWord')) // Fetch from the new subcollection
-        ]);
-
-        const userData = userDocSnap.exists() ? userDocSnap.data() : {};
-        const fetchedCoins = userData.coins || 0;
-        const fetchedMasteryCount = userData.masteryCards || 0;
-        
-        const gameModeId = `fill-word-${selectedPractice}`;
-        const fetchedCompletedWords = new Set<string>();
-
-        if (isMultiWordGame) {
-            // For multi-word practices, check the new subcollection for this specific game mode
-            completedMultiWordSnapshot.forEach(docSnap => {
-                const data = docSnap.data();
-                if (data.completedIn && data.completedIn[gameModeId]) {
-                    fetchedCompletedWords.add(docSnap.id.toLowerCase());
-                }
-            });
-        } else {
-            // For single-word practices, the source of truth is the gameMode flag in the subcollection.
-            completedWordsSnapshot.forEach((completedDoc) => {
-                if (completedDoc.data()?.gameModes?.[gameModeId]) {
-                  fetchedCompletedWords.add(completedDoc.id.toLowerCase());
-                }
-            });
-        }
-
-        let gameVocabulary: VocabularyItem[] = [];
-        const userVocabularyWords: string[] = [];
-        openedVocabSnapshot.forEach((vocabDoc) => {
-            const data = vocabDoc.data();
-            if (data.word) userVocabularyWords.push(data.word);
-        });
-
-        if (selectedPractice === 1 || selectedPractice === 101) {
-            openedVocabSnapshot.forEach((vocabDoc) => {
-                const data = vocabDoc.data(); const imageIndex = Number(vocabDoc.id);
-                if (data.word && !isNaN(imageIndex)) { gameVocabulary.push({ word: data.word, hint: `Nghĩa của từ "${data.word}"`, imageIndex: imageIndex }); }
-            });
-        } else if (selectedPractice === 2 || selectedPractice === 102) {
-            userVocabularyWords.forEach(word => {
-                const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
-                const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
-                if (matchingSentences.length > 0) {
-                    const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
-                    gameVocabulary.push({ word: word, question: randomSentence.english.replace(wordRegex, '___'), vietnameseHint: randomSentence.vietnamese, hint: `Điền từ còn thiếu. Gợi ý: ${randomSentence.vietnamese}` });
-                }
-            });
-        } else if (selectedPractice === 3 || selectedPractice === 103) {
-            exampleData.forEach(sentence => {
-                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                if (wordsInSentence.length >= 2) {
-                    const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 2);
-                    const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
-                    const [word1, word2] = correctlyOrderedWords;
-                    let questionText = sentence.english;
-                    questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
-                    gameVocabulary.push({ word: `${word1} ${word2}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 2 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
-                }
-            });
-        } else if (selectedPractice === 4 || selectedPractice === 104) {
-             exampleData.forEach(sentence => {
-                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                if (wordsInSentence.length >= 3) {
-                    const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 3);
-                    const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
-                    const [word1, word2, word3] = correctlyOrderedWords;
-                    let questionText = sentence.english;
-                    questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word3}\\b`, 'i'), '___');
-                    gameVocabulary.push({ word: `${word1} ${word2} ${word3}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 3 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
-                }
-            });
-        } else if (selectedPractice === 5 || selectedPractice === 105) {
-             exampleData.forEach(sentence => {
-                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                if (wordsInSentence.length >= 4) {
-                    const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 4);
-                    const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
-                    const [word1, word2, word3, word4] = correctlyOrderedWords;
-                    let questionText = sentence.english;
-                    questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word3}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word4}\\b`, 'i'), '___');
-                    gameVocabulary.push({ word: `${word1} ${word2} ${word3} ${word4}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 4 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
-                }
-            });
-        } else if (selectedPractice === 6 || selectedPractice === 106) {
-             exampleData.forEach(sentence => {
-                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                if (wordsInSentence.length >= 5) {
-                    const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 5);
-                    const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
-                    const [word1, word2, word3, word4, word5] = correctlyOrderedWords;
-                    let questionText = sentence.english;
-                    questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word3}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word4}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word5}\\b`, 'i'), '___');
-                    gameVocabulary.push({ word: `${word1} ${word2} ${word3} ${word4} ${word5}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 5 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
-                }
-            });
-        } else if (selectedPractice % 100 === 7) {
-             exampleData.forEach(sentence => {
-                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                
-                if (wordsInSentence.length >= 1) {
-                    const correctlyOrderedWords = wordsInSentence
-                        .sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()));
-
-                    // Create a robust regex to find and replace all target words at once
-                    const wordsToHideRegex = new RegExp(`\\b(${correctlyOrderedWords.map(w => w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`, 'gi');
-                    const questionText = sentence.english.replace(wordsToHideRegex, '___');
-                    const answerKey = correctlyOrderedWords.join(' ');
-                    
-                    gameVocabulary.push({ 
-                        word: answerKey, 
-                        question: questionText, 
-                        vietnameseHint: sentence.vietnamese, 
-                        hint: `Điền ${correctlyOrderedWords.length} từ còn thiếu. Gợi ý: ${sentence.vietnamese}` 
-                    });
-                }
-            });
-        }
-
-        setVocabularyList(gameVocabulary);
-        setCoins(fetchedCoins);
-        setMasteryCount(fetchedMasteryCount);
-        setDisplayedCoins(fetchedCoins);
-        setUsedWords(fetchedCompletedWords);
-
-      } catch (err: any) {
-        setError(`Không thể tải dữ liệu người dùng: ${err.message}`);
-        setVocabularyList([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [user, selectedPractice, isMultiWordGame]);
-
-  useEffect(() => {
-    if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
-      const unusedWords = vocabularyList.filter(item => !usedWords.has(item.word.toLowerCase()));
-      if (unusedWords.length === 0) { setGameOver(true); setCurrentWord(null); } else {
-        const shuffled = shuffleArray(unusedWords); 
+      if (shuffled.length > 0) {
         const firstWord = shuffled[0];
-        setShuffledUnusedWords(shuffled); 
-        setCurrentWord(firstWord); 
-        setCurrentWordIndex(0); 
+        setCurrentWord(firstWord);
+        setCurrentWordIndex(0);
         setGameOver(false);
         resetMultiWordState(firstWord);
+      } else {
+        setGameOver(true);
+        setCurrentWord(null);
       }
-      isInitialLoadComplete.current = true;
     }
-  }, [vocabularyList, loading, error, usedWords]);
-  
+  }, [loading, playableQuestions, selectedPractice]);
+
+  // Effect to update local stats when they change from the hook
+  useEffect(() => {
+      setCoins(userStats.coins);
+      setDisplayedCoins(userStats.coins);
+      setMasteryCount(userStats.masteryCount);
+  }, [userStats]);
+
   useEffect(() => {
     if (!currentWord || gameOver || isCorrect) return;
     setTimeLeft(TOTAL_TIME);
@@ -289,8 +139,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     setTimeout(() => setStreakAnimation(false), 1500);
     setShowConfetti(true);
 
-    setUsedWords(prev => new Set(prev).add(currentWord.word.toLowerCase()));
-
     const coinReward = (masteryCount * newStreak) * (isMultiWordGame ? 2 : 1);
     const updatedCoins = coins + coinReward;
     setCoins(updatedCoins);
@@ -302,27 +150,15 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       const gameModeId = `fill-word-${selectedPractice}`;
       
       if (isMultiWordGame) {
-        // --- LOGIC FOR MULTI-WORD PRACTICES ---
-        // 1. Give EXP to individual words in `completedWords` collection
         const individualWords = currentWord.word.split(' ');
         individualWords.forEach(word => {
           const individualWordRef = doc(db, 'users', user.uid, 'completedWords', word.toLowerCase());
           batch.set(individualWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
         });
-
-        // 2. Mark this multi-word question as complete in its own scalable subcollection
         const questionId = currentWord.word.toLowerCase();
         const completedMultiWordRef = doc(db, 'users', user.uid, 'completedMultiWord', questionId);
-        
-        batch.set(completedMultiWordRef, {
-            completedIn: {
-                [gameModeId]: true
-            },
-            lastCompletedAt: new Date()
-        }, { merge: true });
-
+        batch.set(completedMultiWordRef, { completedIn: { [gameModeId]: true }, lastCompletedAt: new Date() }, { merge: true });
       } else {
-        // --- LOGIC FOR OTHER PRACTICES ---
         const wordId = currentWord.word.toLowerCase();
         const completedWordRef = doc(db, 'users', user.uid, 'completedWords', wordId);
         batch.set(completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
@@ -362,9 +198,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       newFilledWords[activeBlankIndex] = expectedWord;
       setFilledWords(newFilledWords);
       setUserInput('');
-
       const nextBlankIndex = filledWords.findIndex((word, index) => index > activeBlankIndex && word === '');
-
       if (nextBlankIndex !== -1) {
         setActiveBlankIndex(nextBlankIndex);
       } else {
@@ -384,19 +218,19 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
   const resetGame = useCallback(() => {
     setGameOver(false); setStreak(0); setFeedback(''); setIsCorrect(null);
-    const unused = vocabularyList.filter(item => !usedWords.has(item.word.toLowerCase()));
-    if (unused.length > 0) { 
-        const shuffled = shuffleArray(unused); 
+    const questionsForPractice = playableQuestions.get(selectedPractice) || [];
+    if (questionsForPractice.length > 0) { 
+        const shuffled = shuffleArray(questionsForPractice as VocabularyItem[]); 
         const firstWord = shuffled[0];
         setShuffledUnusedWords(shuffled); 
-        setCurrentWord(shuffled[0]); 
+        setCurrentWord(firstWord); 
         setCurrentWordIndex(0); 
         resetMultiWordState(firstWord);
     } else { 
         setGameOver(true); 
         setCurrentWord(null); 
     }
-  }, [vocabularyList, usedWords]);
+  }, [playableQuestions, selectedPractice]);
 
   const carouselImageUrls = useMemo(() => {
     if (!currentWord) return [`https://placehold.co/400x320/E0E7FF/4338CA?text=Loading...`];
@@ -416,7 +250,11 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
   if (loading) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">Đang tải dữ liệu...</div>;
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 text-center p-4">{error}</div>;
-  if (vocabularyList.length === 0 && !loading && !error) return (
+  
+  const progressInfo = progressData.get(selectedPractice);
+  const totalCount = progressInfo ? progressInfo.total : 0;
+  
+  if (totalCount === 0 && !loading) return (
     <div className="flex flex-col items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">
         Bạn không có đủ từ vựng cho bài tập này.
         <br/> 
@@ -424,8 +262,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     </div>
   );
   
-  const completedCount = usedWords.size;
-  const totalCount = vocabularyList.length;
+  const completedCount = progressInfo ? progressInfo.completed : 0;
   const displayCount = gameOver || !currentWord ? completedCount : Math.min(completedCount + 1, totalCount);
   const progressPercentage = totalCount > 0 ? (displayCount / totalCount) * 100 : 0;
 
@@ -457,7 +294,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                 { (selectedPractice % 100 !== 1) && currentWord && (
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
                     <p className="text-lg sm:text-xl font-semibold text-white leading-tight">{currentWord.question?.split('___').map((part, i, arr) => ( <React.Fragment key={i}> {part} {i < arr.length - 1 && <span className="font-bold text-indigo-300">___</span>} </React.Fragment> ))}</p>
-                    {currentWord.vietnameseHint && (<p className="text-white/80 text-sm mt-2 italic">{currentWord.vietnameseHint}</p>)}
+                    {currentWord.vietnamese && (<p className="text-white/80 text-sm mt-2 italic">{currentWord.vietnamese}</p>)}
                   </div>
                 )}
               </div>
@@ -514,7 +351,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
               <button onClick={() => setShowImagePopup(false)} className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-all"><span className="text-xl font-bold">✕</span></button>
               <h3 className="text-2xl font-bold text-center mb-6 text-indigo-800">{currentWord.word}</h3>
               <img src={generateImageUrl(currentWord.imageIndex)} alt={currentWord.word} className="rounded-lg shadow-md max-w-full max-h-full object-contain" />
-              <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100"><p className="font-medium text-gray-700 mb-1">Định nghĩa:</p><p className="text-gray-800">{currentWord.hint}</p></div>
+              <div className="mt-6 p-4 bg-indigo-50 rounded-xl border border-indigo-100"><p className="font-medium text-gray-700 mb-1">Định nghĩa:</p><p className="text-gray-800">{currentWord.vietnamese}</p></div>
             </div>
           </div>
         )}
@@ -522,5 +359,3 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     </div>
   );
 }
-
-// --- END OF FILE: fill-word-home.tsx ---
