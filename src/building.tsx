@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import CoinDisplay from './coin-display.tsx'; // Import CoinDisplay
 
 // --- TIỆN ÍCH ---
 // Hàm định dạng số, hiển thị dấu phẩy cho các số dưới 1 triệu
@@ -9,14 +10,13 @@ const formatNumber = (num) => {
 };
 
 
-// --- CÁC COMPONENT ICON SVG (Bao gồm Icon mới) ---
+// --- CÁC COMPONENT ICON SVG ---
 
-const CoinIcon = ({ size = 24, className = '' }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <circle cx="12" cy="12" r="8"></circle>
-    <line x1="12" y1="16" x2="12" y2="8"></line>
-    <path d="M15 13h-3a2 2 0 1 0 0-4h3"></path>
-  </svg>
+const XIcon = ({ size = 24, className = '' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
 );
 
 const GemIcon = ({ size = 24, className = '' }) => (
@@ -67,41 +67,29 @@ const WarehouseIcon = ({ size = 24, className = '' }) => (
 
 // --- THÀNH PHẦN GIAO DIỆN (UI Components) ---
 
-// *** HEADER MỚI TINH TẾ ***
-const GameHeader = ({ coins, gems }) => {
-    // Hàm xử lý khi nhấn nút Nạp, có thể mở modal hoặc chuyển trang
-    const handleTopUp = () => {
-        alert('Chức năng Nạp đang được phát triển!');
-    };
-
+// *** HEADER ĐÃ ĐƯỢC CẬP NHẬT ***
+const GameHeader = ({ coins, gems, onClose }) => {
     return (
-        <header className="fixed top-0 left-0 right-0 max-w-lg mx-auto bg-slate-900/70 backdrop-blur-sm z-10">
+        <header className="sticky top-0 left-0 right-0 max-w-lg mx-auto bg-slate-900/70 backdrop-blur-sm z-10">
             <div className="flex items-center justify-between p-3 border-b border-slate-700/50">
-                <div className="flex items-center gap-4">
-                    {/* Placeholder for a user avatar */}
-                    <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-violet-600 rounded-full flex items-center justify-center font-bold text-lg">
-                        H
-                    </div>
-                </div>
-                <div className="flex items-center gap-2">
-                    {/* Currency displays */}
-                    <div className="flex items-center gap-2 bg-slate-800/80 p-2 rounded-full border border-slate-700">
-                        <div className="flex items-center gap-1 text-amber-400">
-                            <CoinIcon size={20} />
-                            <span className="font-bold text-sm">{formatNumber(coins)}</span>
+                <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-700 transition-colors z-20" aria-label="Đóng">
+                    <XIcon size={24} className="text-slate-300" />
+                </button>
+                
+                <div className="flex items-center space-x-2">
+                    {/* Gem Display - Styled like in background-game.tsx */}
+                    <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+                        <div className="relative mr-0.5 flex items-center justify-center">
+                            <GemIcon size={16} className="text-purple-300" />
                         </div>
-                        <div className="w-px h-5 bg-slate-600"></div>
-                        <div className="flex items-center gap-1 text-red-400">
-                            <GemIcon size={18} />
-                            <span className="font-bold text-sm">{formatNumber(gems)}</span>
-                        </div>
+                        <div className="font-bold text-purple-200 text-xs tracking-wide">{gems.toLocaleString()}</div>
+                        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"><span className="text-white font-bold text-xs">+</span></div>
+                        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                     </div>
-                     <button 
-                        onClick={handleTopUp}
-                        className="bg-amber-500 text-slate-900 font-bold px-4 py-2 rounded-full text-sm transition-transform hover:scale-105 active:scale-100"
-                     >
-                        NẠP
-                    </button>
+                    {/* Coin Display - Imported Component */}
+                    <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
                 </div>
             </div>
         </header>
@@ -225,11 +213,12 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
 };
 
 
-// --- THÀNH PHẦN CHÍNH CỦA GAME ---
-const HamsterKombatClone = () => {
-  // --- STATE CỦA GAME (Cập nhật giá trị ban đầu để khớp với ảnh) ---
-  const [coins, setCoins] = useState(15280);
-  const [gems, setGems] = useState(3250); // Thêm state cho kim cương
+// --- THÀNH PHẦN CHÍNH CỦA GAME (ĐÃ ĐỔI TÊN) ---
+const BaseBuildingScreen = ({ onClose, coins, gems }) => {
+  // --- STATE CỦA GAME ---
+  // Dữ liệu coins và gems giờ được nhận từ props
+  const [localCoins, setLocalCoins] = useState(coins); // State cục bộ để quản lý coin trong màn hình này
+  
   const [offlineEarnings, setOfflineEarnings] = useState(0); 
   const [maxStorage, setMaxStorage] = useState(1000); 
   const [energy, setEnergy] = useState(500);
@@ -251,6 +240,11 @@ const HamsterKombatClone = () => {
     { id: 3, name: 'Shakespeare', level: 0, maxLevel: 25, earnings: 250, unlockCost: 1200, unlocked: false },
     { id: 4, name: 'Leonardo', level: 0, maxLevel: 25, earnings: 1000, unlockCost: 5000, unlocked: false },
   ]);
+  
+  // Cập nhật state cục bộ khi props thay đổi
+  useEffect(() => {
+    setLocalCoins(coins);
+  }, [coins]);
 
   // --- LOGIC GAME (Sử dụng hooks) ---
 
@@ -281,7 +275,7 @@ const HamsterKombatClone = () => {
   const handleTap = useCallback(() => {
     if (energy >= tapPower) {
       setEnergy(e => e - tapPower);
-      setCoins(c => c + tapPower);
+      setLocalCoins(c => c + tapPower); // Cập nhật localCoins
       setIsTapping(true);
       setTimeout(() => setIsTapping(false), 100);
     }
@@ -290,8 +284,8 @@ const HamsterKombatClone = () => {
   const upgradeHamster = useCallback((id) => {
     setHamsters(prevHamsters =>
       prevHamsters.map(h => {
-        if (h.id === id && h.unlocked && coins >= h.upgradeCost && h.level < h.maxLevel) {
-          setCoins(c => c - h.upgradeCost);
+        if (h.id === id && h.unlocked && localCoins >= h.upgradeCost && h.level < h.maxLevel) {
+          setLocalCoins(c => c - h.upgradeCost); // Sử dụng localCoins
           return {
             ...h,
             level: h.level + 1,
@@ -302,62 +296,61 @@ const HamsterKombatClone = () => {
         return h;
       })
     );
-  }, [coins]);
+  }, [localCoins]);
 
   const unlockHamster = useCallback((id) => {
     setHamsters(prevHamsters =>
       prevHamsters.map(h => {
         const hamsterToUnlock = prevHamsters.find(ham => ham.id === id);
-        if (h.id === id && !h.unlocked && coins >= hamsterToUnlock.unlockCost) {
-          setCoins(c => c - hamsterToUnlock.unlockCost);
+        if (h.id === id && !h.unlocked && localCoins >= hamsterToUnlock.unlockCost) {
+          setLocalCoins(c => c - hamsterToUnlock.unlockCost); // Sử dụng localCoins
           return { ...h, unlocked: true, level: 1 };
         }
         return h;
       })
     );
-  }, [coins]);
+  }, [localCoins]);
   
   const upgradeTapPower = useCallback(() => {
-    if (coins >= tapUpgradeCost) {
-      setCoins(c => c - tapUpgradeCost);
+    if (localCoins >= tapUpgradeCost) {
+      setLocalCoins(c => c - tapUpgradeCost); // Sử dụng localCoins
       setTapPower(p => p + 1);
       setTapUpgradeCost(cost => Math.floor(cost * 1.5));
     }
-  }, [coins, tapUpgradeCost]);
+  }, [localCoins, tapUpgradeCost]);
 
   const upgradeEnergyLimit = useCallback(() => {
-    if (coins >= energyUpgradeCost) {
-      setCoins(c => c - energyUpgradeCost);
+    if (localCoins >= energyUpgradeCost) {
+      setLocalCoins(c => c - energyUpgradeCost); // Sử dụng localCoins
       setMaxEnergy(e => e + 250);
       setEnergyUpgradeCost(cost => Math.floor(cost * 1.7));
     }
-  }, [coins, energyUpgradeCost]);
+  }, [localCoins, energyUpgradeCost]);
   
   const claimOfflineEarnings = useCallback(() => {
     if (offlineEarnings > 0) {
-      setCoins(prev => prev + offlineEarnings);
+      setLocalCoins(prev => prev + offlineEarnings); // Cập nhật localCoins
       setOfflineEarnings(0);
     }
   }, [offlineEarnings]);
 
   const upgradeMaxStorage = useCallback(() => {
-    if (coins >= storageUpgradeCost) {
-      setCoins(c => c - storageUpgradeCost);
+    if (localCoins >= storageUpgradeCost) {
+      setLocalCoins(c => c - storageUpgradeCost); // Sử dụng localCoins
       setMaxStorage(s => Math.floor(s * 1.5));
       setStorageUpgradeCost(cost => Math.floor(cost * 1.8));
     }
-  }, [coins, storageUpgradeCost]);
+  }, [localCoins, storageUpgradeCost]);
 
 
   // --- RENDER GIAO DIỆN ---
   return (
-    <div className="min-h-screen bg-slate-900 text-white font-sans">
+    <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-50 text-white font-sans overflow-y-auto">
       
       {/* *** SỬ DỤNG HEADER MỚI Ở ĐÂY *** */}
-      <GameHeader coins={coins} gems={gems} />
+      <GameHeader coins={localCoins} gems={gems} onClose={onClose} />
       
-      {/* Thêm padding-top để nội dung không bị header che mất */}
-      <div className="container mx-auto max-w-lg p-4 pt-20">
+      <div className="container mx-auto max-w-lg p-4">
 
         {/* Các thông tin phụ như lợi nhuận và năng lượng */}
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700 mb-6 space-y-4">
@@ -392,7 +385,7 @@ const HamsterKombatClone = () => {
         <section className="mb-6">
           <h2 className="text-xl font-bold mb-3 text-slate-300">Nâng Cấp</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <button onClick={upgradeTapPower} disabled={coins < tapUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button onClick={upgradeTapPower} disabled={localCoins < tapUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
               <div className="flex items-center gap-2 mb-1">
                 <ChevronsUpIcon className="text-pink-400" />
                 <h4 className="font-bold">Sức mạnh Tap</h4>
@@ -400,7 +393,7 @@ const HamsterKombatClone = () => {
               <p className="text-xs text-slate-400">Lv. {tapPower}</p>
               <p className="text-sm font-semibold text-white mt-1">{formatNumber(tapUpgradeCost)}💰</p>
             </button>
-            <button onClick={upgradeEnergyLimit} disabled={coins < energyUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button onClick={upgradeEnergyLimit} disabled={localCoins < energyUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
               <div className="flex items-center gap-2 mb-1">
                 <BatteryChargingIcon className="text-cyan-400" />
                 <h4 className="font-bold">Giới hạn Năng lượng</h4>
@@ -408,7 +401,7 @@ const HamsterKombatClone = () => {
               <p className="text-xs text-slate-400">Lv. {Math.floor(maxEnergy / 250 - 1)}</p>
               <p className="text-sm font-semibold text-white mt-1">{formatNumber(energyUpgradeCost)}💰</p>
             </button>
-            <button onClick={upgradeMaxStorage} disabled={coins < storageUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button onClick={upgradeMaxStorage} disabled={localCoins < storageUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
               <div className="flex items-center gap-2 mb-1">
                 <WarehouseIcon className="text-amber-400" />
                 <h4 className="font-bold">Sức chứa Kho</h4>
@@ -424,9 +417,9 @@ const HamsterKombatClone = () => {
           <div className="space-y-3">
             {hamsters.map(hamster =>
               hamster.unlocked ? (
-                <UnlockedHamsterCard key={hamster.id} hamster={hamster} onUpgrade={upgradeHamster} userCoins={coins} />
+                <UnlockedHamsterCard key={hamster.id} hamster={hamster} onUpgrade={upgradeHamster} userCoins={localCoins} />
               ) : (
-                <LockedHamsterCard key={hamster.id} hamster={hamster} onUnlock={unlockHamster} userCoins={coins} />
+                <LockedHamsterCard key={hamster.id} hamster={hamster} onUnlock={unlockHamster} userCoins={localCoins} />
               )
             )}
           </div>
@@ -436,4 +429,4 @@ const HamsterKombatClone = () => {
   );
 };
 
-export default HamsterKombatClone;
+export default BaseBuildingScreen;
