@@ -21,7 +21,7 @@ import MinerChallenge from './bomb.tsx';
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
 import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
-import BaseBuildingScreen from './base-building.tsx';
+import BaseBuildingScreen from './can-tu.tsx';
 import SkillScreen from './skill.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
