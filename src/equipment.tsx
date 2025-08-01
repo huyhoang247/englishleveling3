@@ -13,7 +13,7 @@ import {
     RARITY_ORDER 
 } from './inventory/item-database.ts';
 // THAY ĐỔI: Import tài nguyên hình ảnh tập trung
-import { uiAssets, equipmentUiAssets } from './game-assets';
+import { uiAssets, equipmentUiAssets } from './game-assets.ts';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
