@@ -65,21 +65,6 @@ const StarIcon = ({ size = 24, className = '' }) => (
   </svg>
 );
 
-const ChevronsUpIcon = ({ size = 24, className = '' }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <polyline points="17 11 12 6 7 11"></polyline>
-    <polyline points="17 18 12 13 7 18"></polyline>
-  </svg>
-);
-
-const BatteryChargingIcon = ({ size = 24, className = '' }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M5 18H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3.19M15 6h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-3.19"></path>
-    <line x1="23" y1="13" x2="23" y2="11"></line>
-    <polyline points="11 6 7 12 13 12 9 18"></polyline>
-  </svg>
-);
-
 const WarehouseIcon = ({ size = 24, className = '' }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.17 6.5l8-4.5a2 2 0 0 1 1.66 0l8 4.5A2 2 0 0 1 22 8.35Z"></path>
@@ -96,7 +81,6 @@ const WarehouseIcon = ({ size = 24, className = '' }) => (
 const GameHeader = ({ coins, gems, onClose }) => {
     return (
         <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-slate-900/80 backdrop-blur-sm z-50">
-            {/* CHANGED: p-3 to p-2 for a shorter header */}
             <div className="flex items-center justify-between p-2 border-b border-slate-700/50">
                 <button 
                     onClick={onClose} 
@@ -106,7 +90,6 @@ const GameHeader = ({ coins, gems, onClose }) => {
                     <XIcon size={24} className="text-slate-300" />
                 </button>
                 <div className="flex items-center gap-2">
-                    {/* CHANGED: Replaced with the exact code from background-game.tsx */}
                     <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                         <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={16} className="relative z-20" /></div>
@@ -120,25 +103,6 @@ const GameHeader = ({ coins, gems, onClose }) => {
             </div>
         </header>
     );
-};
-
-
-// Component hiển thị thanh năng lượng
-const EnergyBar = ({ energy, maxEnergy }) => {
-  const percentage = (energy / maxEnergy) * 100;
-  return (
-    <div className="w-full bg-slate-700 rounded-full h-4 border-2 border-slate-600 relative">
-      <div
-        className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full transition-all duration-500"
-        style={{ width: `${percentage}%` }}
-      />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-white text-xs font-bold drop-shadow-md">
-          {Math.floor(energy)} / {maxEnergy}
-        </span>
-      </div>
-    </div>
-  );
 };
 
 // Component thẻ Hamster đã được mở khóa
@@ -200,22 +164,16 @@ const LockedHamsterCard = ({ hamster, onUnlock, userCoins }) => {
 const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
   const percentage = max > 0 ? (current / max) * 100 : 0;
   const isFull = current >= max;
-  const timeToFill = profitPerHour > 0 ? max / profitPerHour : Infinity;
-  const formatTimeToFill = (hours) => {
-    if (hours === Infinity) return '...';
-    if (hours < 1) return `${Math.floor(hours * 60)} phút`;
-    if (hours < 24) return `${hours.toFixed(1)} giờ`;
-    return `${Math.floor(hours / 24)} ngày`;
-  };
 
   return (
     <section className={`bg-slate-800/60 p-4 rounded-2xl border ${isFull ? 'border-red-500/50' : 'border-slate-700'}`}>
-      {/* CHANGED: Removed icon, changed text to "Storage" and applied new styling */}
+      {/* CHANGED: Replaced "Time to fill" with profit per hour display */}
       <div className="flex justify-between items-center mb-2">
         <span className="text-slate-400 font-medium">Storage</span>
-        <span className="text-xs text-slate-400">
-          {isFull ? 'ĐÃ ĐẦY!' : `Đầy trong ~${formatTimeToFill(timeToFill)}`}
-        </span>
+        <div className="flex items-center gap-2 text-green-400">
+          <StarIcon size={16} />
+          <span className="font-bold text-sm">{formatNumber(profitPerHour)}/h</span>
+        </div>
       </div>
       
       <div className={`relative w-full bg-slate-900/50 rounded-full h-6 p-1 mb-3 shadow-inner ${isFull ? 'animate-pulse' : ''}`}>
@@ -250,16 +208,7 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
   // State quản lý dữ liệu riêng của màn hình này (sẽ được load từ Firestore trong tương lai)
   const [offlineEarnings, setOfflineEarnings] = useState(0); 
   const [maxStorage, setMaxStorage] = useState(1000); 
-  const [energy, setEnergy] = useState(500);
-  const [maxEnergy, setMaxEnergy] = useState(500);
-  const [tapPower, setTapPower] = useState(1);
-  const [energyRegenRate, setEnergyRegenRate] = useState(2); 
-
-  const [tapUpgradeCost, setTapUpgradeCost] = useState(100);
-  const [energyUpgradeCost, setEnergyUpgradeCost] = useState(150);
   const [storageUpgradeCost, setStorageUpgradeCost] = useState(500);
-
-  const [isTapping, setIsTapping] = useState(false);
 
   const [hamsters, setHamsters] = useState([
     { id: 1, name: 'Michelangelo', level: 1, maxLevel: 25, earnings: 10, upgradeCost: 50, unlocked: true },
@@ -286,10 +235,9 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
         }
         return prev;
       });
-      setEnergy(prev => Math.min(prev + energyRegenRate, maxEnergy));
     }, 1000);
     return () => clearInterval(gameTick);
-  }, [totalProfitPerHour, energyRegenRate, maxEnergy, maxStorage]);
+  }, [totalProfitPerHour, maxStorage]);
 
 
   // --- CÁC HÀNH ĐỘNG CỦA NGƯỜI CHƠI (Tích hợp với Firestore) ---
@@ -308,15 +256,6 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
       // Optional: Revert local state if needed
     }
   };
-
-  const handleTap = useCallback(async () => {
-    if (energy >= tapPower) {
-      setEnergy(e => e - tapPower);
-      await onUpdateCoins(tapPower); // Thêm coin
-      setIsTapping(true);
-      setTimeout(() => setIsTapping(false), 100);
-    }
-  }, [energy, tapPower, onUpdateCoins]);
 
   const upgradeHamster = (id: number) => {
     const hamster = hamsters.find(h => h.id === id);
@@ -338,20 +277,6 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
 
     handleUpdateAndSync(hamster.unlockCost, () => {
       setHamsters(prev => prev.map(h => h.id === id ? { ...h, unlocked: true, level: 1 } : h));
-    });
-  };
-  
-  const upgradeTapPower = () => {
-    handleUpdateAndSync(tapUpgradeCost, () => {
-      setTapPower(p => p + 1);
-      setTapUpgradeCost(cost => Math.floor(cost * 1.5));
-    });
-  };
-
-  const upgradeEnergyLimit = () => {
-    handleUpdateAndSync(energyUpgradeCost, () => {
-      setMaxEnergy(e => e + 250);
-      setEnergyUpgradeCost(cost => Math.floor(cost * 1.7));
     });
   };
   
@@ -380,17 +305,10 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
     <div className="absolute inset-0 bg-slate-900 text-white font-sans overflow-y-auto">
       <GameHeader coins={coins} gems={gems} onClose={onClose} />
       
-      <div className="container mx-auto max-w-lg p-4 pt-20 pb-10">
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700 mb-6 space-y-4">
-             <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-medium">Lợi nhuận mỗi giờ</span>
-                <div className="flex items-center gap-2 text-green-400">
-                    <StarIcon size={20} />
-                    <span className="font-bold text-lg">{formatNumber(totalProfitPerHour)}/h</span>
-                </div>
-             </div>
-          <EnergyBar energy={energy} maxEnergy={maxEnergy} />
-        </div>
+      {/* CHANGED: pt-20 to pt-16 to reduce space after header got shorter */}
+      <div className="container mx-auto max-w-lg p-4 pt-16 pb-10">
+        
+        {/* REMOVED: Profit per hour & Energy bar section */}
 
         <IncomeStorageBar 
           current={offlineEarnings} 
@@ -399,36 +317,13 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
           onClaim={claimOfflineEarnings} 
         />
 
-        <main className="text-center my-8">
-          <div
-            onClick={handleTap}
-            className={`relative inline-block cursor-pointer select-none transition-transform duration-100 ${isTapping ? 'scale-95' : 'scale-100'}`}
-          >
-            <div className="w-48 h-48 rounded-full bg-gradient-to-br from-orange-400 to-yellow-500 flex items-center justify-center shadow-[0_0_40px_rgba(251,191,36,0.6)]">
-               <span className="text-8xl animate-bounce" style={{animationDuration: '2s'}}>🐹</span>
-            </div>
-          </div>
-        </main>
+        {/* REMOVED: Tapping icon section */}
 
-        <section className="mb-6">
+        {/* CHANGED: margin changed from mb-6 to my-8 for better spacing */}
+        <section className="my-8">
           <h2 className="text-xl font-bold mb-3 text-slate-300">Nâng Cấp</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <button onClick={upgradeTapPower} disabled={coins < tapUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
-              <div className="flex items-center gap-2 mb-1">
-                <ChevronsUpIcon className="text-pink-400" />
-                <h4 className="font-bold">Sức mạnh Tap</h4>
-              </div>
-              <p className="text-xs text-slate-400">Lv. {tapPower}</p>
-              <p className="text-sm font-semibold text-white mt-1">{formatNumber(tapUpgradeCost)}💰</p>
-            </button>
-            <button onClick={upgradeEnergyLimit} disabled={coins < energyUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
-              <div className="flex items-center gap-2 mb-1">
-                <BatteryChargingIcon className="text-cyan-400" />
-                <h4 className="font-bold">Giới hạn Năng lượng</h4>
-              </div>
-              <p className="text-xs text-slate-400">Lv. {Math.floor(maxEnergy / 250 - 1)}</p>
-              <p className="text-sm font-semibold text-white mt-1">{formatNumber(energyUpgradeCost)}💰</p>
-            </button>
+          {/* CHANGED: Removed tap & energy upgrades, kept grid for future-proofing */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <button onClick={upgradeMaxStorage} disabled={coins < storageUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
               <div className="flex items-center gap-2 mb-1">
                 <WarehouseIcon className="text-amber-400" />
