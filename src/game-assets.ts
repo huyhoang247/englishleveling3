@@ -42,7 +42,7 @@ export const uiAssets = {
  */
 export const equipmentUiAssets = {
   goldIcon: require("./assets/images/coin.webp"),
-  equipmentPieceIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000b4d061f8b48718d2527bbce7.png",
+  equipmentPieceIcon: require("./assets/images/equipment-piece.webp"),
 };
 
 
@@ -51,9 +51,9 @@ export const equipmentUiAssets = {
  */
 export const itemAssets = {
     // Weapons
-    nomadSword: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_000000004f0c62309cbdcc6fea779fc6.png',
-    frostbiteSpear: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_0000000062ac62309ccc99e40040f892.png',
-    warriorsBlade: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_0000000092d861f895a04893e27da729.png',
+    nomadSword: require("./assets/images/nomad-sword‎.webp")',
+    frostbiteSpear: require("./assets/images/frost-bite-spear.webp"),
+    warriorsBlade: require("./assets/images/warriors-blade.webp"),
     giantsHammer: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2002_14_23%20PM.png',
     forestStaff: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2002_48_52%20PM.png',
     nomadStaff: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2002_37_31%20PM.png',
