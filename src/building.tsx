@@ -1,56 +1,30 @@
 // --- START OF FILE building.tsx ---
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx';
-import { uiAssets } from './game-assets.ts'; // ADDED: Import uiAssets
+import { uiAssets } from './game-assets.ts'; 
 
 // --- TIỆN ÍCH ---
-// Hàm định dạng số, hiển thị dấu phẩy cho các số dưới 1 triệu
-const formatNumber = (num) => {
+const formatNumber = (num: number) => {
   if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
   if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
   return Math.floor(num).toLocaleString('en-US');
 };
 
-
-// --- CÁC COMPONENT ICON SVG VÀ COMPONENT ICON TỪ ẢNH ---
+// --- CÁC COMPONENT ICON SVG ---
 
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={`lucide-icon ${className}`}
-    {...props}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}>
     <line x1="18" y1="6" x2="6" y2="18" />
     <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
 
-// ADDED: Copied the exact GemIcon component from background-game.tsx
-interface GemIconProps {
-  size?: number;
-  className?: string;
-  [key: string]: any;
-}
-const GemIcon: React.FC<GemIconProps> = ({ size = 24, className = '', ...props }) => {
-  return (
+interface GemIconProps { size?: number; className?: string; [key: string]: any; }
+const GemIcon: React.FC<GemIconProps> = ({ size = 24, className = '', ...props }) => (
     <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
-      <img
-        src={uiAssets.gemIcon}
-        alt="Tourmaline Gem Icon"
-        className="w-full h-full object-contain"
-      />
+        <img src={uiAssets.gemIcon} alt="Tourmaline Gem Icon" className="w-full h-full object-contain" />
     </div>
-  );
-};
-
+);
 
 const DollarSignIcon = ({ size = 24, className = '' }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -65,282 +39,246 @@ const StarIcon = ({ size = 24, className = '' }) => (
   </svg>
 );
 
+const WarehouseIcon = ({ size = 24, className = '' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.17 6.5l8-4.5a2 2 0 0 1 1.66 0l8 4.5A2 2 0 0 1 22 8.35Z"></path>
+      <path d="M6 18h12"></path><path d="M6 14h12"></path><rect width="12" height="12" x="6" y="10"></rect>
+    </svg>
+);
+
 // --- THÀNH PHẦN GIAO DIỆN (UI Components) ---
 
-// *** HEADER ĐÃ ĐƯỢC TÍCH HỢP ***
-const GameHeader = ({ coins, gems, onClose }) => {
-    return (
-        <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-slate-900/80 backdrop-blur-sm z-50">
-            <div className="flex items-center justify-between p-2 border-b border-slate-700/50">
-                <button 
-                    onClick={onClose} 
-                    className="p-2 rounded-full hover:bg-slate-700/70 transition-colors"
-                    aria-label="Đóng"
-                >
-                    <XIcon size={24} className="text-slate-300" />
-                </button>
-                <div className="flex items-center gap-2">
-                    <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                        <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={16} className="relative z-20" /></div>
-                        <div className="font-bold text-purple-200 text-xs tracking-wide">{formatNumber(gems)}</div>
-                        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"><span className="text-white font-bold text-xs">+</span></div>
-                        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
-                    </div>
-                    <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
+const GameHeader = ({ coins, gems, onClose }: { coins: number, gems: number, onClose: () => void }) => (
+    <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-slate-900/80 backdrop-blur-sm z-50">
+        <div className="flex items-center justify-between p-2 border-b border-slate-700/50">
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-700/70 transition-colors" aria-label="Đóng"><XIcon size={24} className="text-slate-300" /></button>
+            <div className="flex items-center gap-2">
+                <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+                    <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={16} className="relative z-20" /></div>
+                    <div className="font-bold text-purple-200 text-xs tracking-wide">{formatNumber(gems)}</div>
+                    <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"><span className="text-white font-bold text-xs">+</span></div>
+                    <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                    <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                 </div>
+                <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
             </div>
-        </header>
+        </div>
+    </header>
+);
+
+const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, onUpgrade: (id: number) => void, userCoins: number }) => {
+    const levelProgress = (hamster.level / hamster.maxLevel) * 100;
+    const canUpgrade = userCoins >= hamster.upgradeCost && hamster.level < hamster.maxLevel;
+    return (
+        <div className="bg-slate-800/80 backdrop-blur-sm p-4 rounded-xl border border-slate-700 flex items-center gap-4 transition-all hover:bg-slate-700/70">
+            <div className="text-5xl">🐹</div>
+            <div className="flex-grow">
+                <h3 className="font-bold text-white">{hamster.name}</h3>
+                <div className="flex items-center gap-2 text-sm text-slate-300 mb-1">
+                    <span>Lv. {hamster.level}</span>
+                    <div className="w-1/2 bg-slate-600 rounded-full h-2 my-1"><div className="bg-green-500 h-2 rounded-full" style={{ width: `${levelProgress}%` }}></div></div>
+                </div>
+                <p className="text-xs text-amber-400 flex items-center gap-1"><DollarSignIcon size={12} /> {formatNumber(hamster.earnings)}/h</p>
+            </div>
+            <button onClick={() => onUpgrade(hamster.id)} disabled={!canUpgrade} className="bg-pink-600 text-white font-bold py-2 px-4 rounded-lg transition-all hover:bg-pink-500 hover:scale-105 active:scale-100 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100">
+                <div className="text-sm">Nâng cấp</div>
+                <div className="text-xs font-normal">{formatNumber(hamster.upgradeCost)}💰</div>
+            </button>
+        </div>
     );
 };
 
-// Component thẻ Hamster đã được mở khóa
-const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }) => {
-  const levelProgress = (hamster.level / hamster.maxLevel) * 100;
-  const canUpgrade = userCoins >= hamster.upgradeCost && hamster.level < hamster.maxLevel;
-
-  return (
-    <div className="bg-slate-800/80 backdrop-blur-sm p-4 rounded-xl border border-slate-700 flex items-center gap-4 transition-all hover:bg-slate-700/70">
-      <div className="text-5xl">🐹</div>
-      <div className="flex-grow">
-        <h3 className="font-bold text-white">{hamster.name}</h3>
-        <div className="flex items-center gap-2 text-sm text-slate-300 mb-1">
-          <span>Lv. {hamster.level}</span>
-          <div className="w-1/2 bg-slate-600 rounded-full h-2 my-1">
-            <div className="bg-green-500 h-2 rounded-full" style={{ width: `${levelProgress}%` }}></div>
-          </div>
-        </div>
-        <p className="text-xs text-amber-400 flex items-center gap-1">
-          <DollarSignIcon size={12} /> {formatNumber(hamster.earnings)}/h
-        </p>
-      </div>
-      <button
-        onClick={() => onUpgrade(hamster.id)}
-        disabled={!canUpgrade}
-        className="bg-pink-600 text-white font-bold py-2 px-4 rounded-lg transition-all hover:bg-pink-500 hover:scale-105 active:scale-100 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100"
-      >
-        <div className="text-sm">Nâng cấp</div>
-        <div className="text-xs font-normal">{formatNumber(hamster.upgradeCost)}💰</div>
-      </button>
-    </div>
-  );
-};
-
-// Component thẻ Hamster bị khóa
-const LockedHamsterCard = ({ hamster, onUnlock, userCoins }) => {
-  const canUnlock = userCoins >= hamster.unlockCost;
-  return (
-    <div className="bg-slate-900/70 p-4 rounded-xl border border-slate-800 flex items-center gap-4 opacity-80">
-      <div className="text-5xl filter grayscale"><span>🔒</span></div>
-      <div className="flex-grow">
-        <h3 className="font-bold text-slate-400">{hamster.name}</h3>
-        <p className="text-xs text-amber-500 flex items-center gap-1">
-          <DollarSignIcon size={12} /> {formatNumber(hamster.earnings)}/h
-        </p>
-      </div>
-      <button
-        onClick={() => onUnlock(hamster.id)}
-        disabled={!canUnlock}
-        className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 px-5 rounded-lg transition-all hover:from-amber-400 hover:to-orange-400 hover:scale-105 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100"
-      >
-        Mở khóa {formatNumber(hamster.unlockCost)}💰
-      </button>
-    </div>
-  );
-};
-
-// Component Kho Thu Nhập (Storage)
-// CHANGED: Added new props for the upgrade button
-const IncomeStorageBar = ({ current, max, profitPerHour, onClaim, onUpgrade, upgradeCost, canUpgradeStorage }) => {
-  const percentage = max > 0 ? (current / max) * 100 : 0;
-  const isFull = current >= max;
-
-  return (
-    <section className={`bg-slate-800/60 p-4 rounded-2xl border ${isFull ? 'border-red-500/50' : 'border-slate-700'}`}>
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-slate-400 font-medium">Storage Lv. {Math.round(Math.log(max/1000) / Math.log(1.5)) + 1}</span>
-        <div className="flex items-center gap-2 text-green-400">
-          <StarIcon size={16} />
-          <span className="font-bold text-sm">{formatNumber(profitPerHour)}/h</span>
-        </div>
-      </div>
-      
-      <div className={`relative w-full bg-slate-900/50 rounded-full h-6 p-1 mb-3 shadow-inner ${isFull ? 'animate-pulse' : ''}`}>
-        <div className={`h-full rounded-full bg-gradient-to-r ${isFull ? 'from-red-500 to-orange-600' : 'from-amber-400 to-orange-500'} transition-all duration-1000 ease-linear`}
-          style={{ width: `${percentage}%`}} />
-        <div className="absolute inset-0 flex items-center justify-center">
-           <span className="text-sm font-bold text-white drop-shadow-md">
-             {formatNumber(current)} / {formatNumber(max)}
-          </span>
-        </div>
-      </div>
-      
-      {/* CHANGED: Replaced single button with a flex container for two buttons */}
-      <div className="flex items-center gap-3 mt-3">
-        <button
-          onClick={onUpgrade}
-          disabled={!canUpgradeStorage}
-          className="flex-1 bg-transparent border-2 border-indigo-500 text-indigo-300 font-bold py-2 rounded-lg text-base transition-all duration-200 hover:bg-indigo-500/20 hover:text-white disabled:border-slate-600 disabled:text-slate-500 disabled:bg-transparent disabled:cursor-not-allowed"
-        >
-            <div className="flex items-center justify-center gap-2">
-                <span>Upgrade</span>
-                <span className="font-normal text-sm text-white/80">{formatNumber(upgradeCost)}💰</span>
+const LockedHamsterCard = ({ hamster, onUnlock, userCoins }: { hamster: any, onUnlock: (id: number) => void, userCoins: number }) => {
+    const canUnlock = userCoins >= hamster.unlockCost;
+    return (
+        <div className="bg-slate-900/70 p-4 rounded-xl border border-slate-800 flex items-center gap-4 opacity-80">
+            <div className="text-5xl filter grayscale"><span>🔒</span></div>
+            <div className="flex-grow">
+                <h3 className="font-bold text-slate-400">{hamster.name}</h3>
+                <p className="text-xs text-amber-500 flex items-center gap-1"><DollarSignIcon size={12} /> {formatNumber(hamster.earnings)}/h</p>
             </div>
-        </button>
-        <button 
-          onClick={onClaim} 
-          disabled={current === 0}
-          className="flex-1 bg-gradient-to-r from-green-500 to-cyan-500 text-white font-bold py-2 rounded-lg text-base transition-all duration-300 hover:scale-105 active:scale-100 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100 shadow-lg hover:shadow-cyan-500/30"
-        >
-          Claim
-        </button>
-      </div>
-    </section>
-  );
+            <button onClick={() => onUnlock(hamster.id)} disabled={!canUnlock} className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 px-5 rounded-lg transition-all hover:from-amber-400 hover:to-orange-400 hover:scale-105 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100">Mở khóa {formatNumber(hamster.unlockCost)}💰</button>
+        </div>
+    );
+};
+
+// MODIFIED: Added onUpgradeClick prop and removed cost-related props
+const IncomeStorageBar = ({ current, max, profitPerHour, onClaim, onUpgradeClick }: { current: number, max: number, profitPerHour: number, onClaim: () => void, onUpgradeClick: () => void }) => {
+    const percentage = max > 0 ? (current / max) * 100 : 0;
+    const isFull = current >= max;
+    return (
+        <section className={`bg-slate-800/60 p-4 rounded-2xl border ${isFull ? 'border-red-500/50' : 'border-slate-700'}`}>
+            <div className="flex justify-between items-center mb-2">
+                <span className="text-slate-400 font-medium">Storage Lv. {Math.round(Math.log(max / 1000) / Math.log(1.5)) + 1}</span>
+                <div className="flex items-center gap-2 text-green-400"><StarIcon size={16} /><span className="font-bold text-sm">{formatNumber(profitPerHour)}/h</span></div>
+            </div>
+            <div className={`relative w-full bg-slate-900/50 rounded-full h-6 p-1 mb-3 shadow-inner ${isFull ? 'animate-pulse' : ''}`}>
+                <div className={`h-full rounded-full bg-gradient-to-r ${isFull ? 'from-red-500 to-orange-600' : 'from-amber-400 to-orange-500'} transition-all duration-1000 ease-linear`} style={{ width: `${percentage}%` }} />
+                <div className="absolute inset-0 flex items-center justify-center"><span className="text-sm font-bold text-white drop-shadow-md">{formatNumber(current)} / {formatNumber(max)}</span></div>
+            </div>
+            <div className="flex items-center gap-3 mt-3">
+                <button onClick={onUpgradeClick} className="flex-1 bg-transparent border-2 border-indigo-500 text-indigo-300 font-bold py-2 rounded-lg text-base transition-all duration-200 hover:bg-indigo-500/20 hover:text-white">Upgrade</button>
+                <button onClick={onClaim} disabled={current === 0} className="flex-1 bg-gradient-to-r from-green-500 to-cyan-500 text-white font-bold py-2 rounded-lg text-base transition-all duration-300 hover:scale-105 active:scale-100 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100 shadow-lg hover:shadow-cyan-500/30">Claim</button>
+            </div>
+        </section>
+    );
+};
+
+// NEW: Component for the Storage Upgrade Modal
+const StorageUpgradeModal = ({ isOpen, onClose, onUpgrade, currentMax, nextMax, upgradeCost, userCoins, isProcessing }: { isOpen: boolean, onClose: () => void, onUpgrade: () => void, currentMax: number, nextMax: number, upgradeCost: number, userCoins: number, isProcessing: boolean }) => {
+    if (!isOpen) return null;
+    const canAfford = userCoins >= upgradeCost;
+    return (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+            <div className="relative bg-gradient-to-br from-indigo-900 to-slate-900 p-5 rounded-xl border-2 border-indigo-600 shadow-2xl w-full max-w-sm z-50 flex flex-col">
+                <div className="flex-shrink-0 border-b border-indigo-700/50 pb-4 mb-4">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-xl font-bold text-indigo-300">Upgrade Storage</h3>
+                        <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors"><XIcon className="w-5 h-5" /></button>
+                    </div>
+                </div>
+                <div className="flex-grow my-4">
+                    <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg p-4 space-y-3">
+                        <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-black/30 text-amber-400"><WarehouseIcon className="w-7 h-7" /></div>
+                            <div className="flex-grow">
+                                <span className="text-sm font-semibold text-slate-300">Sức chứa</span>
+                                <div className="flex items-baseline justify-end gap-2 font-mono text-lg">
+                                    <span className="text-slate-400">{formatNumber(currentMax)}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>
+                                    <span className="font-bold text-green-400">{formatNumber(nextMax)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="text-right text-green-400 font-sans text-sm pr-1">(+{formatNumber(nextMax - currentMax)})</div>
+                    </div>
+                </div>
+                <div className="flex-shrink-0 mt-auto pt-4">
+                    <button onClick={onUpgrade} disabled={!canAfford || isProcessing} className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3 rounded-lg text-lg transition-all duration-300 hover:scale-105 active:scale-100 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100 shadow-lg hover:shadow-orange-500/30 flex items-center justify-center gap-2">
+                        {isProcessing ? 'Processing...' : `Upgrade for ${formatNumber(upgradeCost)}💰`}
+                    </button>
+                    {!canAfford && !isProcessing && <p className="text-center text-xs text-red-400 mt-2">Không đủ vàng</p>}
+                </div>
+            </div>
+        </div>
+    );
 };
 
 
 // --- THÀNH PHẦN CHÍNH CỦA GAME ---
 
-interface BaseBuildingScreenProps {
-  onClose: () => void;
-  coins: number;
-  gems: number;
-  onUpdateCoins: (amount: number) => Promise<void>;
-}
+interface BaseBuildingScreenProps { onClose: () => void; coins: number; gems: number; onUpdateCoins: (amount: number) => Promise<void>; }
 
 const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins, gems, onUpdateCoins }) => {
-  // State quản lý dữ liệu riêng của màn hình này (sẽ được load từ Firestore trong tương lai)
-  const [offlineEarnings, setOfflineEarnings] = useState(0); 
-  const [maxStorage, setMaxStorage] = useState(1000); 
-  const [storageUpgradeCost, setStorageUpgradeCost] = useState(500);
+    const [offlineEarnings, setOfflineEarnings] = useState(0);
+    const [maxStorage, setMaxStorage] = useState(1000);
+    const [storageUpgradeCost, setStorageUpgradeCost] = useState(500);
+    const [isProcessing, setIsProcessing] = useState(false);
+    // NEW: State for the upgrade modal
+    const [isStorageUpgradeModalOpen, setIsStorageUpgradeModalOpen] = useState(false);
 
-  const [hamsters, setHamsters] = useState([
-    { id: 1, name: 'Michelangelo', level: 1, maxLevel: 25, earnings: 10, upgradeCost: 50, unlocked: true },
-    { id: 2, name: 'Beethoven', level: 1, maxLevel: 25, earnings: 50, upgradeCost: 300, unlocked: true },
-    { id: 3, name: 'Shakespeare', level: 0, maxLevel: 25, earnings: 250, unlockCost: 1200, unlocked: false },
-    { id: 4, name: 'Leonardo', level: 0, maxLevel: 25, earnings: 1000, unlockCost: 5000, unlocked: false },
-  ]);
+    const [hamsters, setHamsters] = useState([
+        { id: 1, name: 'Michelangelo', level: 1, maxLevel: 25, earnings: 10, upgradeCost: 50, unlocked: true },
+        { id: 2, name: 'Beethoven', level: 1, maxLevel: 25, earnings: 50, upgradeCost: 300, unlocked: true },
+        { id: 3, name: 'Shakespeare', level: 0, maxLevel: 25, earnings: 250, unlockCost: 1200, unlocked: false },
+        { id: 4, name: 'Leonardo', level: 0, maxLevel: 25, earnings: 1000, unlockCost: 5000, unlocked: false },
+    ]);
 
-  // --- LOGIC GAME (Sử dụng hooks) ---
+    const totalProfitPerHour = useMemo(() => hamsters.reduce((total, hamster) => hamster.unlocked ? total + hamster.earnings : total, 0), [hamsters]);
 
-  const totalProfitPerHour = useMemo(() => {
-    return hamsters.reduce((total, hamster) => {
-      if (hamster.unlocked) return total + hamster.earnings;
-      return total;
-    }, 0);
-  }, [hamsters]);
+    useEffect(() => {
+        const gameTick = setInterval(() => {
+            setOfflineEarnings(prev => {
+                if (prev < maxStorage) {
+                    const profitPerSecond = totalProfitPerHour / 3600;
+                    return Math.min(prev + profitPerSecond, maxStorage);
+                }
+                return prev;
+            });
+        }, 1000);
+        return () => clearInterval(gameTick);
+    }, [totalProfitPerHour, maxStorage]);
 
-  useEffect(() => {
-    const gameTick = setInterval(() => {
-      setOfflineEarnings(prev => {
-        if (prev < maxStorage) {
-          const profitPerSecond = totalProfitPerHour / 3600;
-          return Math.min(prev + profitPerSecond, maxStorage);
+    const handleUpdateAndSync = async (cost: number, localUpdateFn: () => void) => {
+        if (coins < cost) { alert("Không đủ vàng!"); return; }
+        setIsProcessing(true);
+        try {
+            await onUpdateCoins(-cost);
+            localUpdateFn();
+        } catch (error) { console.error("Lỗi cập nhật dữ liệu:", error); alert("Có lỗi xảy ra, vui lòng thử lại."); }
+        finally { setIsProcessing(false); }
+    };
+
+    const upgradeHamster = (id: number) => {
+        const hamster = hamsters.find(h => h.id === id);
+        if (!hamster || !hamster.unlocked || hamster.level >= hamster.maxLevel) return;
+        handleUpdateAndSync(hamster.upgradeCost, () => {
+            setHamsters(prev => prev.map(h => h.id === id ? { ...h, level: h.level + 1, earnings: Math.floor(h.earnings * 1.15), upgradeCost: Math.floor(h.upgradeCost * 1.18), } : h));
+        });
+    };
+
+    const unlockHamster = (id: number) => {
+        const hamster = hamsters.find(h => h.id === id);
+        if (!hamster || hamster.unlocked) return;
+        handleUpdateAndSync(hamster.unlockCost, () => {
+            setHamsters(prev => prev.map(h => h.id === id ? { ...h, unlocked: true, level: 1 } : h));
+        });
+    };
+
+    const claimOfflineEarnings = useCallback(async () => {
+        const earningsToClaim = Math.floor(offlineEarnings);
+        if (earningsToClaim > 0) {
+            try { await onUpdateCoins(earningsToClaim); setOfflineEarnings(offlineEarnings - earningsToClaim); }
+            catch (error) { console.error("Lỗi thu hoạch vàng:", error); }
         }
-        return prev;
-      });
-    }, 1000);
-    return () => clearInterval(gameTick);
-  }, [totalProfitPerHour, maxStorage]);
+    }, [offlineEarnings, onUpdateCoins]);
 
+    const upgradeMaxStorage = () => {
+        handleUpdateAndSync(storageUpgradeCost, () => {
+            setMaxStorage(s => Math.floor(s * 1.5));
+            setStorageUpgradeCost(cost => Math.floor(cost * 1.8));
+            setIsStorageUpgradeModalOpen(false); // Close modal on success
+        });
+    };
 
-  // --- CÁC HÀNH ĐỘNG CỦA NGƯỜI CHƠI (Tích hợp với Firestore) ---
-
-  const handleUpdateAndSync = async (cost: number, localUpdateFn: () => void) => {
-    if (coins < cost) {
-      alert("Không đủ vàng!");
-      return;
-    }
-    try {
-      await onUpdateCoins(-cost);
-      localUpdateFn();
-    } catch (error) {
-      console.error("Lỗi cập nhật dữ liệu:", error);
-      alert("Có lỗi xảy ra, vui lòng thử lại.");
-    }
-  };
-
-  const upgradeHamster = (id: number) => {
-    const hamster = hamsters.find(h => h.id === id);
-    if (!hamster || !hamster.unlocked || hamster.level >= hamster.maxLevel) return;
-    
-    handleUpdateAndSync(hamster.upgradeCost, () => {
-      setHamsters(prev => prev.map(h => h.id === id ? {
-        ...h,
-        level: h.level + 1,
-        earnings: Math.floor(h.earnings * 1.15),
-        upgradeCost: Math.floor(h.upgradeCost * 1.18),
-      } : h));
-    });
-  };
-
-  const unlockHamster = (id: number) => {
-    const hamster = hamsters.find(h => h.id === id);
-    if (!hamster || hamster.unlocked) return;
-
-    handleUpdateAndSync(hamster.unlockCost, () => {
-      setHamsters(prev => prev.map(h => h.id === id ? { ...h, unlocked: true, level: 1 } : h));
-    });
-  };
-  
-  const claimOfflineEarnings = useCallback(async () => {
-    const earningsToClaim = Math.floor(offlineEarnings);
-    if (earningsToClaim > 0) {
-      try {
-        await onUpdateCoins(earningsToClaim);
-        setOfflineEarnings(offlineEarnings - earningsToClaim);
-      } catch (error) {
-        console.error("Lỗi thu hoạch vàng:", error);
-      }
-    }
-  }, [offlineEarnings, onUpdateCoins]);
-
-  const upgradeMaxStorage = () => {
-    handleUpdateAndSync(storageUpgradeCost, () => {
-      setMaxStorage(s => Math.floor(s * 1.5));
-      setStorageUpgradeCost(cost => Math.floor(cost * 1.8));
-    });
-  };
-
-
-  // --- RENDER GIAO DIỆN ---
-  return (
-    <div className="absolute inset-0 bg-slate-900 text-white font-sans overflow-y-auto">
-      <GameHeader coins={coins} gems={gems} onClose={onClose} />
-      
-      <div className="container mx-auto max-w-lg p-4 pt-20 pb-10">
-        
-        <IncomeStorageBar 
-          current={offlineEarnings} 
-          max={maxStorage} 
-          profitPerHour={totalProfitPerHour} 
-          onClaim={claimOfflineEarnings}
-          // Pass props for the new upgrade button
-          onUpgrade={upgradeMaxStorage}
-          upgradeCost={storageUpgradeCost}
-          canUpgradeStorage={coins >= storageUpgradeCost}
-        />
-
-        {/* REMOVED: The entire "Nâng Cấp" section is gone */}
-
-        {/* CHANGED: Added margin-top to create space */}
-        <section className="mt-8">
-          <h2 className="text-xl font-bold mb-3 text-slate-300">Hamsters Của Bạn</h2>
-          <div className="space-y-3">
-            {hamsters.map(hamster =>
-              hamster.unlocked ? (
-                <UnlockedHamsterCard key={hamster.id} hamster={hamster} onUpgrade={upgradeHamster} userCoins={coins} />
-              ) : (
-                <LockedHamsterCard key={hamster.id} hamster={hamster} onUnlock={unlockHamster} userCoins={coins} />
-              )
-            )}
-          </div>
-        </section>
-      </div>
-    </div>
-  );
+    return (
+        <div className="absolute inset-0 bg-slate-900 text-white font-sans overflow-y-auto">
+            <GameHeader coins={coins} gems={gems} onClose={onClose} />
+            <StorageUpgradeModal
+                isOpen={isStorageUpgradeModalOpen}
+                onClose={() => setIsStorageUpgradeModalOpen(false)}
+                onUpgrade={upgradeMaxStorage}
+                currentMax={maxStorage}
+                nextMax={Math.floor(maxStorage * 1.5)}
+                upgradeCost={storageUpgradeCost}
+                userCoins={coins}
+                isProcessing={isProcessing}
+            />
+            <div className="container mx-auto max-w-lg p-4 pt-20 pb-10">
+                <IncomeStorageBar
+                    current={offlineEarnings}
+                    max={maxStorage}
+                    profitPerHour={totalProfitPerHour}
+                    onClaim={claimOfflineEarnings}
+                    onUpgradeClick={() => setIsStorageUpgradeModalOpen(true)}
+                />
+                <section className="mt-8">
+                    <h2 className="text-xl font-bold mb-3 text-slate-300">Hamsters Của Bạn</h2>
+                    <div className="space-y-3">
+                        {hamsters.map(hamster =>
+                            hamster.unlocked ? (
+                                <UnlockedHamsterCard key={hamster.id} hamster={hamster} onUpgrade={upgradeHamster} userCoins={coins} />
+                            ) : (
+                                <LockedHamsterCard key={hamster.id} hamster={hamster} onUnlock={unlockHamster} userCoins={coins} />
+                            )
+                        )}
+                    </div>
+                </section>
+            </div>
+        </div>
+    );
 };
 
 export default BaseBuildingScreen;
