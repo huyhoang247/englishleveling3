@@ -124,10 +124,13 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim, onUpgradeClick
     );
 };
 
-// RESTORED: StorageUpgradeModal design with frame, icon, and text
+// CHANGED: StorageUpgradeModal fully redesigned to match equipment.tsx upgrade UI
 const StorageUpgradeModal = ({ isOpen, onClose, onUpgrade, currentMax, nextMax, upgradeCost, userCoins, isProcessing }: { isOpen: boolean, onClose: () => void, onUpgrade: () => void, currentMax: number, nextMax: number, upgradeCost: number, userCoins: number, isProcessing: boolean }) => {
     if (!isOpen) return null;
     const canAfford = userCoins >= upgradeCost;
+    const currentLevel = Math.round(Math.log(currentMax / 1000) / Math.log(1.5)) + 1;
+    const nextLevel = currentLevel + 1;
+
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
@@ -139,7 +142,9 @@ const StorageUpgradeModal = ({ isOpen, onClose, onUpgrade, currentMax, nextMax, 
                     </div>
                 </div>
 
-                <div className="flex-grow my-4">
+                {/* --- REDESIGNED SECTION --- */}
+                <div className="flex-grow my-4 space-y-4">
+                    {/* Stat Line */}
                     <div className="bg-slate-900/50 p-3 rounded-lg flex items-center gap-3 border border-slate-700/50">
                         <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-md bg-black/30 text-amber-400">
                             <WarehouseIcon className="w-6 h-6" />
@@ -152,14 +157,28 @@ const StorageUpgradeModal = ({ isOpen, onClose, onUpgrade, currentMax, nextMax, 
                             <span className="text-green-500 text-xs font-sans">(+{formatNumber(nextMax - currentMax)})</span>
                         </div>
                     </div>
+                    {/* Upgrade Action Line */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-1.5 font-bold text-sm">
+                            <span className="text-slate-300">Lv. {currentLevel}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                            <span className="text-green-400">Lv. {nextLevel}</span>
+                        </div>
+                        <button
+                            onClick={onUpgrade}
+                            disabled={!canAfford || isProcessing}
+                            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 transform 
+                            ${!canAfford || isProcessing 
+                                ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' 
+                                : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 hover:shadow-md hover:shadow-yellow-500/10 active:scale-100'}`}
+                        >
+                            <span>{formatNumber(upgradeCost)}</span>
+                            <span className="text-yellow-400">💰</span>
+                        </button>
+                    </div>
+                    {!canAfford && !isProcessing && <p className="text-right text-xs text-red-400 mt-2">Không đủ vàng</p>}
                 </div>
-
-                <div className="flex-shrink-0 mt-auto pt-4">
-                    <button onClick={onUpgrade} disabled={!canAfford || isProcessing} className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3 rounded-lg text-lg transition-all duration-300 hover:scale-105 active:scale-100 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100 shadow-lg hover:shadow-orange-500/30 flex items-center justify-center gap-2">
-                        {isProcessing ? 'Processing...' : `Upgrade for ${formatNumber(upgradeCost)}💰`}
-                    </button>
-                    {!canAfford && !isProcessing && <p className="text-center text-xs text-red-400 mt-2">Không đủ vàng</p>}
-                </div>
+                {/* --- END OF REDESIGNED SECTION --- */}
             </div>
         </div>
     );
