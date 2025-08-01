@@ -144,11 +144,10 @@ const LockedHamsterCard = ({ hamster, onUnlock, userCoins }) => {
   );
 };
 
-// COMPONENT MỚI: KHO THU NHẬP
+// COMPONENT KHO THU NHẬP (ĐÃ SỬA LỖI PADDING)
 const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
   const percentage = max > 0 ? (current / max) * 100 : 0;
   const isFull = current >= max;
-
   const timeToFill = profitPerHour > 0 ? max / profitPerHour : Infinity;
   const formatTimeToFill = (hours) => {
     if (hours === Infinity) return '...';
@@ -168,7 +167,8 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
           {isFull ? 'ĐÃ ĐẦY!' : `Đầy trong ~${formatTimeToFill(timeToFill)}`}
         </span>
       </div>
-      <div className={`relative w-full bg-slate-700 rounded-full h-5 mb-3 shadow-inner ${isFull ? 'animate-pulse' : ''}`}>
+      
+      <div className={`relative w-full bg-slate-900/50 rounded-full h-6 p-1 mb-3 shadow-inner ${isFull ? 'animate-pulse' : ''}`}>
         <div className={`h-full rounded-full bg-gradient-to-r ${isFull ? 'from-red-500 to-orange-600' : 'from-amber-400 to-orange-500'} transition-all duration-1000 ease-linear`}
           style={{ width: `${percentage}%`}} />
         <div className="absolute inset-0 flex items-center justify-center">
@@ -177,6 +177,7 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
           </span>
         </div>
       </div>
+      
       <button onClick={onClaim} disabled={current === 0}
         className="w-full bg-gradient-to-r from-green-500 to-cyan-500 text-white font-bold py-3 rounded-lg text-lg transition-all duration-300 hover:scale-105 active:scale-100 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100 shadow-lg hover:shadow-cyan-500/30">
         Thu Hoạch
@@ -187,7 +188,6 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
 
 
 // --- THÀNH PHẦN CHÍNH CỦA GAME ---
-
 const HamsterKombatClone = () => {
   // --- STATE CỦA GAME ---
   const [coins, setCoins] = useState(10000);
@@ -254,7 +254,6 @@ const HamsterKombatClone = () => {
       setEnergy(e => e - tapPower);
       setCoins(c => c + tapPower);
       
-      // Kích hoạt hiệu ứng
       setIsTapping(true);
       setTimeout(() => setIsTapping(false), 100);
     }
@@ -269,7 +268,6 @@ const HamsterKombatClone = () => {
           return {
             ...h,
             level: h.level + 1,
-            // Công thức nâng cấp: thu nhập tăng 15%, chi phí tăng 18%
             earnings: Math.floor(h.earnings * 1.15),
             upgradeCost: Math.floor(h.upgradeCost * 1.18),
           };
@@ -334,7 +332,6 @@ const HamsterKombatClone = () => {
     <div className="min-h-screen bg-slate-900 text-white font-sans">
       <div className="container mx-auto max-w-lg p-4">
 
-        {/* Phần Header: Hiển thị các chỉ số chính */}
         <header className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700 mb-6">
           <div className="flex justify-between items-center mb-4">
             <StatDisplay
@@ -358,15 +355,13 @@ const HamsterKombatClone = () => {
           <EnergyBar energy={energy} maxEnergy={maxEnergy} />
         </header>
 
-        {/* --- KHO THU NHẬP --- */}
         <IncomeStorageBar 
-          current={offlineEarnings}
-          max={maxStorage}
-          profitPerHour={totalProfitPerHour}
-          onClaim={claimOfflineEarnings}
+          current={offlineEarnings} 
+          max={maxStorage} 
+          profitPerHour={totalProfitPerHour} 
+          onClaim={claimOfflineEarnings} 
         />
 
-        {/* Phần trung tâm: Nơi người chơi nhấn để kiếm coin */}
         <main className="text-center mb-6">
           <div
             onClick={handleTap}
@@ -378,7 +373,6 @@ const HamsterKombatClone = () => {
           </div>
         </main>
 
-        {/* Phần Boosts: Nâng cấp Tap và Energy */}
         <section className="mb-6">
           <h2 className="text-xl font-bold mb-3 text-slate-300">Nâng Cấp</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -398,7 +392,6 @@ const HamsterKombatClone = () => {
               <p className="text-xs text-slate-400">Lv. {Math.floor(maxEnergy / 250 - 1)}</p>
               <p className="text-sm font-semibold text-white mt-1">{formatNumber(energyUpgradeCost)}💰</p>
             </button>
-            {/* Nút nâng cấp kho mới */}
             <button onClick={upgradeMaxStorage} disabled={coins < storageUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
               <div className="flex items-center gap-2 mb-1">
                 <WarehouseIcon className="text-amber-400" />
@@ -410,7 +403,6 @@ const HamsterKombatClone = () => {
           </div>
         </section>
 
-        {/* Phần danh sách Hamsters */}
         <section>
           <h2 className="text-xl font-bold mb-3 text-slate-300">Hamsters Của Bạn</h2>
           <div className="space-y-3">
@@ -423,7 +415,6 @@ const HamsterKombatClone = () => {
             )}
           </div>
         </section>
-
       </div>
     </div>
   );
