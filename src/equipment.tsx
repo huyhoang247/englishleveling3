@@ -15,6 +15,14 @@ import {
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
+// THAY ĐỔI: Cấu trúc dữ liệu tổng thể cho Player Equipment, phù hợp để lưu trên Firestore
+export interface PlayerEquipmentData {
+    gold: number;
+    equipmentPieces: number; // Tiền tệ dùng để chế tạo
+    ownedItems: OwnedItem[];
+    equippedItems: EquippedItems;
+}
+
 // THAY ĐỔI: Thêm thuộc tính `stats` để mỗi vật phẩm có chỉ số riêng
 export interface OwnedItem {
     id: string;
@@ -87,8 +95,8 @@ const getRandomRank = (): ItemRank => {
 };
 
 // 6. Logic chi phí
-const CRAFTING_COST = 50;
-const DISMANTLE_RETURN_BOOKS = 25;
+const CRAFTING_COST_PIECES = 50;
+const DISMANTLE_RETURN_PIECES = 25;
 
 const getUpgradeCost = (itemDef: ItemDefinition, level: number): number => {
     const rarityMultiplier = { E: 1, D: 1.5, B: 2.5, A: 4, S: 7, SR: 12, SSR: 20 };
@@ -109,7 +117,7 @@ const CloseIcon = ({ className = '' }: { className?: string }) => ( <img src="ht
 const GoldIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className={className} /> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const ForgeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M21.707 13.293l-4-4a1 1 0 00-1.414 1.414L17.586 12H13V4a1 1 0 00-2 0v8H6.414l1.293-1.293a1 1 0 00-1.414-1.414l-4 4a1 1 0 000 1.414l4 4a1 1 0 001.414-1.414L6.414 14H11v8a1 1 0 002 0v-8h4.586l-1.293 1.293a1 1 0 001.414 1.414l4-4a1 1 0 000-1.414z"/> </svg>);
-const AncientBookIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/sach-co.png" alt="Sách Cổ" className={className} /> );
+const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000b4d061f8b48718d2527bbce7.png" alt="Mảnh Trang Bị" className={className} /> );
 
 // --- CoinDisplay Component ---
 const CoinDisplay = ({ displayedCoins }: { displayedCoins: number; }) => (
@@ -515,13 +523,13 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 interface EquipmentScreenProps {
     onClose: () => void;
     gold: number;
-    ancientBooks: number;
+    equipmentPieces: number;
     ownedItems: OwnedItem[];
     equippedItems: EquippedItems;
-    onInventoryUpdate: (updates: { newOwned: OwnedItem[]; newEquipped: EquippedItems; goldChange: number; booksChange: number; }) => Promise<void>;
+    onInventoryUpdate: (updates: { newOwned: OwnedItem[]; newEquipped: EquippedItems; goldChange: number; piecesChange: number; }) => Promise<void>;
 }
 
-export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItems, equippedItems, onInventoryUpdate }: EquipmentScreenProps) {
+export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedItems, equippedItems, onInventoryUpdate }: EquipmentScreenProps) {
     const [selectedItem, setSelectedItem] = useState<OwnedItem | null>(null);
     const [newlyCraftedItem, setNewlyCraftedItem] = useState<OwnedItem | null>(null);
     const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
@@ -578,7 +586,7 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         setIsProcessing(true);
         const newEquipped = { ...equippedItems, [slotType]: itemToEquip.id };
         try {
-            await onInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, booksChange: 0 });
+            await onInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
             setSelectedItem(null);
         } catch (error: any) { showMessage(`Lỗi: ${error.message || 'Không thể trang bị'}`); } finally { setIsProcessing(false); }
     }, [isProcessing, equippedItems, ownedItems, onInventoryUpdate, showMessage]);
@@ -594,15 +602,15 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         setIsProcessing(true);
         const newEquipped = { ...equippedItems, [slotType]: null };
         try {
-            await onInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, booksChange: 0 });
+            await onInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
             setSelectedItem(null);
         } catch (error: any) { showMessage(`Lỗi: ${error.message || 'Không thể tháo'}`); } finally { setIsProcessing(false); }
     }, [isProcessing, equippedItems, ownedItems, onInventoryUpdate, showMessage]);
   
     const handleCraftItem = useCallback(async () => {
         if (isProcessing) return;
-        if (ancientBooks < CRAFTING_COST) { 
-            showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`); 
+        if (equipmentPieces < CRAFTING_COST_PIECES) { 
+            showMessage(`Không đủ Mảnh Trang Bị. Cần ${CRAFTING_COST_PIECES}.`); 
             return; 
         }
         if (ownedItems.length >= MAX_ITEMS_IN_STORAGE) { 
@@ -626,7 +634,7 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             };
             const newOwnedList = [...ownedItems, newOwnedItem];
             
-            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, booksChange: -CRAFTING_COST });
+            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: -CRAFTING_COST_PIECES });
             setNewlyCraftedItem(newOwnedItem);
 
         } catch(error: any) { 
@@ -634,7 +642,7 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         } finally { 
             setIsProcessing(false); 
         }
-    }, [isProcessing, ancientBooks, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
+    }, [isProcessing, equipmentPieces, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
 
     const handleDismantleItem = useCallback(async (itemToDismantle: OwnedItem) => {
         if (isProcessing) return;
@@ -646,9 +654,9 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         const newOwnedList = ownedItems.filter(s => s.id !== itemToDismantle.id);
         
         try {
-            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: goldToReturn, booksChange: DISMANTLE_RETURN_BOOKS });
+            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: goldToReturn, piecesChange: DISMANTLE_RETURN_PIECES });
             setSelectedItem(null);
-            let dismantleMsg = `Đã phân rã ${itemDef.name}, nhận lại ${DISMANTLE_RETURN_BOOKS} Sách Cổ.`;
+            let dismantleMsg = `Đã phân rã ${itemDef.name}, nhận lại ${DISMANTLE_RETURN_PIECES} Mảnh Trang Bị.`;
             if (goldToReturn > 0) dismantleMsg += ` Hoàn lại ${goldToReturn.toLocaleString()} vàng.`;
             showMessage(dismantleMsg);
         } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Phân rã thất bại'}`); } finally { setIsProcessing(false); }
@@ -678,7 +686,7 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
 
         const newOwnedList = ownedItems.map(s => s.id === itemToUpgrade.id ? updatedItem : s);
         try {
-            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: -cost, booksChange: 0 });
+            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: -cost, piecesChange: 0 });
             setSelectedItem(updatedItem);
         } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Nâng cấp thất bại'}`); } finally { setIsProcessing(false); }
     }, [isProcessing, gold, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
@@ -704,7 +712,7 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
             };
             const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
             
-            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: refundGold, booksChange: 0 });
+            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: refundGold, piecesChange: 0 });
             
             let successMsg = `Rèn thành công ${upgradedItemDef.name} [${group.nextRank}] - Đạt Lv. ${finalLevel}!`;
             if (refundGold > 0) successMsg += ` Hoàn lại ${refundGold.toLocaleString()} vàng.`;
@@ -747,10 +755,10 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
                     </section>
                     <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
                         <div className="flex items-center gap-3">
-                            <AncientBookIcon className="w-10 h-10" />
-                            <div className="flex items-baseline gap-1"><span className="text-xl font-bold text-white">{ancientBooks}</span><span className="text-base text-slate-400">/ {CRAFTING_COST}</span></div>
+                            <EquipmentPieceIcon className="w-10 h-10" />
+                            <div className="flex items-baseline gap-1"><span className="text-xl font-bold text-white">{equipmentPieces}</span><span className="text-base text-slate-400">/ {CRAFTING_COST_PIECES}</span></div>
                         </div>
-                        <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={ancientBooks < CRAFTING_COST || isProcessing}>Chế Tạo</button>
+                        <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST_PIECES || isProcessing}>Chế Tạo</button>
                     </section>
                     <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
@@ -773,5 +781,3 @@ export default function EquipmentScreen({ onClose, gold, ancientBooks, ownedItem
         </div>
     );
 }
-
-// --- END OF FILE equipment.tsx ---
