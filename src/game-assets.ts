@@ -41,7 +41,7 @@ export const uiAssets = {
  * Tài nguyên cho các icon trong màn hình trang bị (Equipment)
  */
 export const equipmentUiAssets = {
-  goldIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png",
+  goldIcon: require("./assets/images/coin.webp"),
   equipmentPieceIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000b4d061f8b48718d2527bbce7.png",
 };
 
@@ -77,21 +77,7 @@ export const itemAssets = {
     tunic: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_000000001ca461f5a50bac51456de65a.png',
     silverscalePlate: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2004_11_48%20PM.png',
     dragonsBreathArmor: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2006_42_28%20PM.png',
-    // Materials
-    daCuongHoa: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_000000002bd461f7946aae1d61399a56.png',
-    sat: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_00000000f5ac61f79336c38977abbfa5.png',
-    go: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_000000004f0461f793d26e238db690f7.png',
-    da: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_000000006f30623086e0c4e366dface0.png',
-    vai: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_00000000863c6230a96cb9487701c9c8.png',
-    thachAnh: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2002_51_03%20PM.png',
-    ngocLucBao: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2002_53_08%20PM.png',
-    // Pieces
-    manhGhepVuKhi: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%207%2C%202025%2C%2001_37_49%20PM.png',
-    manhGhepAoGiap: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2002_19_04%20PM.png',
-    manhGhepHelmet: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2003_00_18%20PM.png',
-    manhGhepGangTay: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2003_02_27%20PM.png',
-    manhGhepGiay: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%207%2C%202025%2C%2003_08_08%20PM.png',
-    manhGhepTrangSuc: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2C%202025%2C%2003_10_49%20PM.png',
+    
 };
 
 /**
