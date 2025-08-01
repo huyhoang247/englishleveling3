@@ -96,7 +96,8 @@ const WarehouseIcon = ({ size = 24, className = '' }) => (
 const GameHeader = ({ coins, gems, onClose }) => {
     return (
         <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-slate-900/80 backdrop-blur-sm z-50">
-            <div className="flex items-center justify-between p-3 border-b border-slate-700/50">
+            {/* CHANGED: p-3 to p-2 for a shorter header */}
+            <div className="flex items-center justify-between p-2 border-b border-slate-700/50">
                 <button 
                     onClick={onClose} 
                     className="p-2 rounded-full hover:bg-slate-700/70 transition-colors"
@@ -195,7 +196,7 @@ const LockedHamsterCard = ({ hamster, onUnlock, userCoins }) => {
   );
 };
 
-// Component Kho Thu Nhập
+// Component Kho Thu Nhập (Storage)
 const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
   const percentage = max > 0 ? (current / max) * 100 : 0;
   const isFull = current >= max;
@@ -209,11 +210,9 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
 
   return (
     <section className={`bg-slate-800/60 p-4 rounded-2xl border ${isFull ? 'border-red-500/50' : 'border-slate-700'}`}>
+      {/* CHANGED: Removed icon, changed text to "Storage" and applied new styling */}
       <div className="flex justify-between items-center mb-2">
-        <div className="flex items-center gap-2">
-          <span className={`text-2xl ${isFull ? 'animate-bounce' : ''}`}>📦</span>
-          <h3 className="font-bold text-white">Kho Thu Nhập</h3>
-        </div>
+        <span className="text-slate-400 font-medium">Storage</span>
         <span className="text-xs text-slate-400">
           {isFull ? 'ĐÃ ĐẦY!' : `Đầy trong ~${formatTimeToFill(timeToFill)}`}
         </span>
