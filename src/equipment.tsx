@@ -12,6 +12,8 @@ import {
     type ItemRank, 
     RARITY_ORDER 
 } from './inventory/item-database.ts';
+// THAY ĐỔI: Import tài nguyên hình ảnh tập trung
+import { uiAssets, equipmentUiAssets } from './game-assets';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
@@ -105,12 +107,13 @@ const getTotalUpgradeCost = (itemDef: ItemDefinition, level: number): number => 
 };
 
 // --- Các Icon Giao Diện ---
-const CloseIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/close.png" alt="Đóng" className={className} /> );
-const GoldIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className={className} /> );
+const CloseIcon = ({ className = '' }: { className?: string }) => ( <img src={uiAssets.closeIcon} alt="Đóng" className={className} /> );
+const GoldIcon = ({ className = '' }: { className?: string }) => ( <img src={equipmentUiAssets.goldIcon} alt="Vàng" className={className} /> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
-const ForgeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M21.707 13.293l-4-4a1 1 0 00-1.414 1.414L17.586 12H13V4a1 1 0 00-2 0v8H6.414l1.293-1.293a1 1 0 00-1.414-1.414l-4 4a1 1 0 000 1.414l4 4a1 1 0 001.414-1.414L6.414 14H11v8a1 1 0 002 0v-8h4.586l-1.293 1.293a1 1 0 001.414 1.414l4-4a1 1 0 000-1.414z"/> </svg>);
+// THAY ĐỔI: Icon Rèn được thay bằng MergeIcon mới
+const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4c-1.1 0-2 .9-2 2v4h1.5c1.93 0 3.5 1.57 3.5 3.5S5.43 20 3.5 20H2v-4c0-1.1.9-2 2-2h4v1.5a2.5 2.5 0 0 0 5 0V13h4c1.1 0 2-.9 2 2v4h-1.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5H22v-4c0-1.1-.9-2-2-2z"/> </svg>);
 // THAY ĐỔI: Icon mới cho Mảnh trang bị
-const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000b4d061f8b48718d2527bbce7.png" alt="Mảnh Trang Bị" className={className} /> );
+const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => ( <img src={equipmentUiAssets.equipmentPieceIcon} alt="Mảnh Trang Bị" className={className} /> );
 
 
 // --- CoinDisplay Component ---
@@ -480,8 +483,8 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
                 <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
                     <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center gap-3">
-                            <ForgeIcon className="w-7 h-7 text-purple-400" />
-                            <h3 className="text-xl font-black uppercase tracking-wider bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Rèn Trang Bị</h3>
+                            <MergeIcon className="w-7 h-7 text-purple-400" />
+                            <h3 className="text-xl font-black uppercase tracking-wider bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Hợp nhất trang bị</h3>
                         </div>
                         <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
                     </div>
@@ -502,10 +505,10 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
                                         <span className="absolute -top-2 -right-2 bg-slate-800 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">Lv.{group.estimatedResult.level}</span>
                                     </div>
                                 </div>
-                                <button onClick={() => onForge(group)} disabled={isProcessing} title="Rèn" className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold text-sm h-8 px-4 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait flex items-center justify-center">Rèn</button>
+                                <button onClick={() => onForge(group)} disabled={isProcessing} title="Merge" className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold text-sm h-8 px-4 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait flex items-center justify-center">Merge</button>
                             </div>
                         ))
-                    ) : ( <div className="flex items-center justify-center h-full text-slate-500 text-center py-10"><p>Không có trang bị nào có thể rèn.</p></div> )}
+                    ) : ( <div className="flex items-center justify-center h-full text-slate-500 text-center py-10"><p>Không có trang bị nào có thể hợp nhất.</p></div> )}
                 </div>
             </div>
         </div>
@@ -695,7 +698,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
     }, [isProcessing, gold, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
 
     const handleForgeItems = useCallback(async (group: ForgeGroup) => {
-        if (isProcessing || group.items.length < 3 || !group.nextRank) { showMessage("Không đủ điều kiện để rèn."); return; }
+        if (isProcessing || group.items.length < 3 || !group.nextRank) { showMessage("Không đủ điều kiện để hợp nhất."); return; }
         
         setIsProcessing(true);
         const itemsToConsume = group.items.slice(0, 3);
@@ -717,12 +720,12 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
             
             await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: refundGold, piecesChange: 0 });
             
-            let successMsg = `Rèn thành công ${upgradedItemDef.name} [${group.nextRank}] - Đạt Lv. ${finalLevel}!`;
+            let successMsg = `Hợp nhất thành công ${upgradedItemDef.name} [${group.nextRank}] - Đạt Lv. ${finalLevel}!`;
             if (refundGold > 0) successMsg += ` Hoàn lại ${refundGold.toLocaleString()} vàng.`;
             showMessage(successMsg);
             setIsForgeModalOpen(false);
         } catch (error: any) { 
-            showMessage(`Lỗi: ${error.message || 'Rèn thất bại'}`); 
+            showMessage(`Lỗi: ${error.message || 'Hợp nhất thất bại'}`); 
         } finally { 
             setIsProcessing(false); 
         }
@@ -765,15 +768,15 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
                                 <span className="text-base text-slate-400">/ {CRAFTING_COST}</span>
                             </div>
                         </div>
-                        <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing}>Chế Tạo</button>
+                        <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing}>Craft</button>
                     </section>
                     <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <div className="flex items-baseline gap-2">
-                                <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Kho Chứa</h2>
+                                <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
                                 <span className="text-sm font-semibold text-slate-300">{ownedItems.length}<span className="text-xs text-slate-500"> / {MAX_ITEMS_IN_STORAGE}</span></span>
                             </div>
-                            <button onClick={handleOpenForgeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><ForgeIcon className="w-4 h-4" />Rèn</button>
+                            <button onClick={handleOpenForgeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto hide-scrollbar">
                             {unequippedItemsSorted.length > 0 ? (
