@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 // --- TIỆN ÍCH ---
 // Hàm định dạng số lớn (vd: 1,000,000 -> 1.0M)
@@ -131,7 +131,7 @@ const LockedHamsterCard = ({ hamster, onUnlock, userCoins }) => {
   );
 };
 
-// COMPONENT KHO THU NHẬP (ĐÃ SỬA LỖI PADDING)
+// COMPONENT KHO THU NHẬP
 const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
   const percentage = max > 0 ? (current / max) * 100 : 0;
   const isFull = current >= max;
@@ -144,7 +144,7 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
   };
 
   return (
-    <section className={`bg-slate-800/60 p-4 rounded-2xl border ${isFull ? 'border-red-500/50' : 'border-slate-700'} mb-6`}>
+    <section className={`bg-slate-800/60 p-4 rounded-2xl border ${isFull ? 'border-red-500/50' : 'border-slate-700'}`}>
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2">
           <span className={`text-2xl ${isFull ? 'animate-bounce' : ''}`}>📦</span>
@@ -178,20 +178,24 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
 const HamsterKombatClone = () => {
   // --- STATE CỦA GAME ---
   const [coins, setCoins] = useState(10000);
-  const [offlineEarnings, setOfflineEarnings] = useState(0); // Coin tích trữ
-  const [maxStorage, setMaxStorage] = useState(1000);      // Giới hạn kho
+  const [offlineEarnings, setOfflineEarnings] = useState(0); 
+  const [maxStorage, setMaxStorage] = useState(1000);      
   const [energy, setEnergy] = useState(500);
   const [maxEnergy, setMaxEnergy] = useState(500);
   const [tapPower, setTapPower] = useState(1);
-  const [energyRegenRate, setEnergyRegenRate] = useState(2); // Năng lượng hồi mỗi giây
+  const [energyRegenRate, setEnergyRegenRate] = useState(2); 
 
   // State cho các nâng cấp
   const [tapUpgradeCost, setTapUpgradeCost] = useState(100);
   const [energyUpgradeCost, setEnergyUpgradeCost] = useState(150);
-  const [storageUpgradeCost, setStorageUpgradeCost] = useState(500); // Chi phí nâng cấp kho
+  const [storageUpgradeCost, setStorageUpgradeCost] = useState(500); 
 
   // State cho hiệu ứng khi nhấn
   const [isTapping, setIsTapping] = useState(false);
+  
+  // Bổ sung ref và state để đo chiều cao header
+  const headerRef = useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const [hamsters, setHamsters] = useState([
     { id: 1, name: 'Michelangelo', level: 1, maxLevel: 25, earnings: 10, upgradeCost: 50, unlocked: true },
@@ -204,7 +208,6 @@ const HamsterKombatClone = () => {
 
   // --- LOGIC GAME (Sử dụng hooks) ---
 
-  // Tính tổng thu nhập mỗi giờ (memoized để tối ưu)
   const totalProfitPerHour = useMemo(() => {
     return hamsters.reduce((total, hamster) => {
       if (hamster.unlocked) {
@@ -214,57 +217,46 @@ const HamsterKombatClone = () => {
     }, 0);
   }, [hamsters]);
 
-  // Vòng lặp chính của game: tích coin vào kho và hồi năng lượng
+  // Bổ sung useEffect để tính chiều cao header và cập nhật padding cho content
+  useEffect(() => {
+    if (headerRef.current) {
+      setHeaderHeight(headerRef.current.offsetHeight);
+    }
+  }, [coins, totalProfitPerHour, energy, maxEnergy]); // Re-calculate khi các giá trị trong header có thể thay đổi
+
+
   useEffect(() => {
     const gameTick = setInterval(() => {
-      // Tích coin vào kho
-      setOfflineEarnings(prev => {
-        if (prev < maxStorage) {
-          const profitPerSecond = totalProfitPerHour / 3600;
-          return Math.min(prev + profitPerSecond, maxStorage);
-        }
-        return prev;
-      });
-      
-      // Hồi năng lượng
+      setOfflineEarnings(prev => Math.min(prev + (totalProfitPerHour / 3600), maxStorage));
       setEnergy(prev => Math.min(prev + energyRegenRate, maxEnergy));
     }, 1000);
 
     return () => clearInterval(gameTick);
   }, [totalProfitPerHour, energyRegenRate, maxEnergy, maxStorage]);
 
-  // --- CÁC HÀNH ĐỘNG CỦA NGƯỜI CHƠI ---
 
-  // Xử lý khi nhấn vào hamster
+  // --- CÁC HÀNH ĐỘNG CỦA NGƯỜI CHƠI ---
   const handleTap = useCallback(() => {
     if (energy >= tapPower) {
       setEnergy(e => e - tapPower);
       setCoins(c => c + tapPower);
-      
       setIsTapping(true);
       setTimeout(() => setIsTapping(false), 100);
     }
   }, [energy, tapPower]);
 
-  // Nâng cấp hamster
   const upgradeHamster = useCallback((id) => {
     setHamsters(prevHamsters =>
       prevHamsters.map(h => {
         if (h.id === id && h.unlocked && coins >= h.upgradeCost && h.level < h.maxLevel) {
           setCoins(c => c - h.upgradeCost);
-          return {
-            ...h,
-            level: h.level + 1,
-            earnings: Math.floor(h.earnings * 1.15),
-            upgradeCost: Math.floor(h.upgradeCost * 1.18),
-          };
+          return { ...h, level: h.level + 1, earnings: Math.floor(h.earnings * 1.15), upgradeCost: Math.floor(h.upgradeCost * 1.18) };
         }
         return h;
       })
     );
   }, [coins]);
 
-  // Mở khóa hamster mới
   const unlockHamster = useCallback((id) => {
     setHamsters(prevHamsters =>
       prevHamsters.map(h => {
@@ -278,7 +270,6 @@ const HamsterKombatClone = () => {
     );
   }, [coins]);
   
-  // Nâng cấp sức mạnh Tap
   const upgradeTapPower = useCallback(() => {
     if (coins >= tapUpgradeCost) {
       setCoins(c => c - tapUpgradeCost);
@@ -287,7 +278,6 @@ const HamsterKombatClone = () => {
     }
   }, [coins, tapUpgradeCost]);
 
-  // Nâng cấp giới hạn năng lượng
   const upgradeEnergyLimit = useCallback(() => {
     if (coins >= energyUpgradeCost) {
       setCoins(c => c - energyUpgradeCost);
@@ -296,7 +286,6 @@ const HamsterKombatClone = () => {
     }
   }, [coins, energyUpgradeCost]);
   
-  // Thu hoạch coin từ kho
   const claimOfflineEarnings = useCallback(() => {
     if (offlineEarnings > 0) {
       setCoins(prev => prev + offlineEarnings);
@@ -304,11 +293,10 @@ const HamsterKombatClone = () => {
     }
   }, [offlineEarnings]);
 
-  // Nâng cấp sức chứa kho
   const upgradeMaxStorage = useCallback(() => {
     if (coins >= storageUpgradeCost) {
       setCoins(c => c - storageUpgradeCost);
-      setMaxStorage(s => Math.floor(s * 1.5)); // Tăng 50%
+      setMaxStorage(s => Math.floor(s * 1.5)); 
       setStorageUpgradeCost(cost => Math.floor(cost * 1.8));
     }
   }, [coins, storageUpgradeCost]);
@@ -316,11 +304,15 @@ const HamsterKombatClone = () => {
 
   // --- RENDER GIAO DIỆN ---
   return (
+    // Cấu trúc mới: Header cố định và Main có thể cuộn
     <div className="min-h-screen bg-slate-900 text-white font-sans">
-      <div className="container mx-auto max-w-lg p-4">
-
-        {/* ----- HEADER MỚI ĐÃ ĐƯỢC CẬP NHẬT ----- */}
-        <header className="bg-gradient-to-b from-slate-800/80 to-slate-900/70 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/50 mb-6 shadow-lg shadow-slate-950/50">
+      
+      {/* HEADER CỐ ĐỊNH */}
+      <header 
+        ref={headerRef} 
+        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-slate-800 to-slate-900/80 backdrop-blur-lg border-b border-slate-700/50 shadow-lg"
+      >
+        <div className="container mx-auto max-w-lg p-4">
           {/* Phần thông tin người chơi */}
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
@@ -365,69 +357,77 @@ const HamsterKombatClone = () => {
           <div className="mt-4">
             <EnergyBar energy={energy} maxEnergy={maxEnergy} />
           </div>
-        </header>
+        </div>
+      </header>
 
-        <IncomeStorageBar 
-          current={offlineEarnings} 
-          max={maxStorage} 
-          profitPerHour={totalProfitPerHour} 
-          onClaim={claimOfflineEarnings} 
-        />
+      {/* NỘI DUNG CHÍNH CÓ THỂ CUỘN */}
+      <main 
+        className="container mx-auto max-w-lg p-4" 
+        style={{ paddingTop: `${headerHeight}px` }} // Thêm padding-top động bằng chiều cao header
+      >
+        <div className="space-y-6 pt-6"> {/* Thêm pt-6 để tạo khoảng cách với header */}
+            <IncomeStorageBar 
+              current={offlineEarnings} 
+              max={maxStorage} 
+              profitPerHour={totalProfitPerHour} 
+              onClaim={claimOfflineEarnings} 
+            />
 
-        <main className="text-center mb-6">
-          <div
-            onClick={handleTap}
-            className={`relative inline-block cursor-pointer select-none transition-transform duration-100 ${isTapping ? 'scale-95' : 'scale-100'}`}
-          >
-            <div className="w-48 h-48 rounded-full bg-gradient-to-br from-orange-400 to-yellow-500 flex items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.5)]">
-               <span className="text-8xl animate-bounce" style={{animationDuration: '2s'}}>🐹</span>
+            <div className="text-center">
+              <div
+                onClick={handleTap}
+                className={`relative inline-block cursor-pointer select-none transition-transform duration-100 ${isTapping ? 'scale-95' : 'scale-100'}`}
+              >
+                <div className="w-48 h-48 rounded-full bg-gradient-to-br from-orange-400 to-yellow-500 flex items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.5)]">
+                  <span className="text-8xl animate-bounce" style={{animationDuration: '2s'}}>🐹</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </main>
 
-        <section className="mb-6">
-          <h2 className="text-xl font-bold mb-3 text-slate-300">Nâng Cấp</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <button onClick={upgradeTapPower} disabled={coins < tapUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
-              <div className="flex items-center gap-2 mb-1">
-                <ChevronsUpIcon className="text-pink-400" />
-                <h4 className="font-bold">Sức mạnh Tap</h4>
+            <section>
+              <h2 className="text-xl font-bold mb-3 text-slate-300">Nâng Cấp</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <button onClick={upgradeTapPower} disabled={coins < tapUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <div className="flex items-center gap-2 mb-1">
+                    <ChevronsUpIcon className="text-pink-400" />
+                    <h4 className="font-bold">Sức mạnh Tap</h4>
+                  </div>
+                  <p className="text-xs text-slate-400">Lv. {tapPower}</p>
+                  <p className="text-sm font-semibold text-white mt-1">{formatNumber(tapUpgradeCost)}💰</p>
+                </button>
+                <button onClick={upgradeEnergyLimit} disabled={coins < energyUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <div className="flex items-center gap-2 mb-1">
+                    <BatteryChargingIcon className="text-cyan-400" />
+                    <h4 className="font-bold">Giới hạn Năng lượng</h4>
+                  </div>
+                  <p className="text-xs text-slate-400">Lv. {Math.floor(maxEnergy / 250 - 1)}</p>
+                  <p className="text-sm font-semibold text-white mt-1">{formatNumber(energyUpgradeCost)}💰</p>
+                </button>
+                <button onClick={upgradeMaxStorage} disabled={coins < storageUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <div className="flex items-center gap-2 mb-1">
+                    <WarehouseIcon className="text-amber-400" />
+                    <h4 className="font-bold">Sức chứa Kho</h4>
+                  </div>
+                  <p className="text-xs text-slate-400">Lv. {Math.round(Math.log(maxStorage/1000) / Math.log(1.5)) + 1}</p>
+                  <p className="text-sm font-semibold text-white mt-1">{formatNumber(storageUpgradeCost)}💰</p>
+                </button>
               </div>
-              <p className="text-xs text-slate-400">Lv. {tapPower}</p>
-              <p className="text-sm font-semibold text-white mt-1">{formatNumber(tapUpgradeCost)}💰</p>
-            </button>
-            <button onClick={upgradeEnergyLimit} disabled={coins < energyUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
-              <div className="flex items-center gap-2 mb-1">
-                <BatteryChargingIcon className="text-cyan-400" />
-                <h4 className="font-bold">Giới hạn Năng lượng</h4>
-              </div>
-              <p className="text-xs text-slate-400">Lv. {Math.floor(maxEnergy / 250 - 1)}</p>
-              <p className="text-sm font-semibold text-white mt-1">{formatNumber(energyUpgradeCost)}💰</p>
-            </button>
-            <button onClick={upgradeMaxStorage} disabled={coins < storageUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
-              <div className="flex items-center gap-2 mb-1">
-                <WarehouseIcon className="text-amber-400" />
-                <h4 className="font-bold">Sức chứa Kho</h4>
-              </div>
-              <p className="text-xs text-slate-400">Lv. {Math.round(Math.log(maxStorage/1000) / Math.log(1.5)) + 1}</p>
-              <p className="text-sm font-semibold text-white mt-1">{formatNumber(storageUpgradeCost)}💰</p>
-            </button>
-          </div>
-        </section>
+            </section>
 
-        <section>
-          <h2 className="text-xl font-bold mb-3 text-slate-300">Hamsters Của Bạn</h2>
-          <div className="space-y-3">
-            {hamsters.map(hamster =>
-              hamster.unlocked ? (
-                <UnlockedHamsterCard key={hamster.id} hamster={hamster} onUpgrade={upgradeHamster} userCoins={coins} />
-              ) : (
-                <LockedHamsterCard key={hamster.id} hamster={hamster} onUnlock={unlockHamster} userCoins={coins} />
-              )
-            )}
-          </div>
-        </section>
-      </div>
+            <section>
+              <h2 className="text-xl font-bold mb-3 text-slate-300">Hamsters Của Bạn</h2>
+              <div className="space-y-3">
+                {hamsters.map(hamster =>
+                  hamster.unlocked ? (
+                    <UnlockedHamsterCard key={hamster.id} hamster={hamster} onUpgrade={upgradeHamster} userCoins={coins} />
+                  ) : (
+                    <LockedHamsterCard key={hamster.id} hamster={hamster} onUnlock={unlockHamster} userCoins={coins} />
+                  )
+                )}
+              </div>
+            </section>
+        </div>
+      </main>
     </div>
   );
 };
