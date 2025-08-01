@@ -167,7 +167,6 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
 
   return (
     <section className={`bg-slate-800/60 p-4 rounded-2xl border ${isFull ? 'border-red-500/50' : 'border-slate-700'}`}>
-      {/* CHANGED: Replaced "Time to fill" with profit per hour display */}
       <div className="flex justify-between items-center mb-2">
         <span className="text-slate-400 font-medium">Storage</span>
         <div className="flex items-center gap-2 text-green-400">
@@ -305,11 +304,9 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
     <div className="absolute inset-0 bg-slate-900 text-white font-sans overflow-y-auto">
       <GameHeader coins={coins} gems={gems} onClose={onClose} />
       
-      {/* CHANGED: pt-20 to pt-16 to reduce space after header got shorter */}
-      <div className="container mx-auto max-w-lg p-4 pt-16 pb-10">
+      {/* CHANGED: pt-16 to pt-20 to add more space between header and storage */}
+      <div className="container mx-auto max-w-lg p-4 pt-20 pb-10">
         
-        {/* REMOVED: Profit per hour & Energy bar section */}
-
         <IncomeStorageBar 
           current={offlineEarnings} 
           max={maxStorage} 
@@ -317,12 +314,8 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
           onClaim={claimOfflineEarnings} 
         />
 
-        {/* REMOVED: Tapping icon section */}
-
-        {/* CHANGED: margin changed from mb-6 to my-8 for better spacing */}
         <section className="my-8">
           <h2 className="text-xl font-bold mb-3 text-slate-300">Nâng Cấp</h2>
-          {/* CHANGED: Removed tap & energy upgrades, kept grid for future-proofing */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <button onClick={upgradeMaxStorage} disabled={coins < storageUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
               <div className="flex items-center gap-2 mb-1">
