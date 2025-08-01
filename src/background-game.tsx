@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx (6).txt ---
+// --- START OF FILE background-game.tsx ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -25,7 +25,7 @@ import BaseBuildingScreen from './can-cu.tsx';
 import SkillScreen from './skill.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
-import RateLimitToast from './thong-bao.tsx'; // <<<<==== IMPORT COMPONENT MỚI
+import RateLimitToast from './thong-bao.tsx';
 
 
 // --- SVG Icon Components ---
@@ -619,56 +619,55 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       newOwned: OwnedItem[];
       newEquipped: EquippedItems;
       goldChange: number;
-      booksChange: number;
+      piecesChange: number; 
   }) => {
       const userId = auth.currentUser?.uid;
       if (!userId) { throw new Error("User not authenticated for inventory update."); }
-
+  
       const userDocRef = doc(db, 'users', userId);
       setIsSyncingData(true);
-
+  
       try {
           await runTransaction(db, async (transaction) => {
               const userDoc = await transaction.get(userDocRef);
               if (!userDoc.exists()) { throw new Error("User document does not exist!"); }
-
+  
               const currentCoins = userDoc.data().coins || 0;
-              const currentBooks = userDoc.data().ancientBooks || 0;
               const currentEquipment = userDoc.data().equipment || { pieces: 0, owned: [], equipped: { weapon: null, armor: null, accessory: null } };
-
+              const currentPieces = currentEquipment.pieces || 0;
+  
               const newCoins = currentCoins + updates.goldChange;
-              const newBooks = currentBooks + updates.booksChange;
-
+              const newPieces = currentPieces + updates.piecesChange;
+  
               if (newCoins < 0) { throw new Error("Không đủ vàng."); }
-              if (newBooks < 0) { throw new Error("Không đủ Sách Cổ."); }
-
+              if (newPieces < 0) { throw new Error("Không đủ Mảnh trang bị."); }
+  
               transaction.update(userDocRef, {
                   coins: newCoins,
-                  ancientBooks: newBooks,
                   equipment: { 
-                      ...currentEquipment, // Giữ lại các thuộc tính khác của equipment
+                      ...currentEquipment,
+                      pieces: newPieces, 
                       owned: updates.newOwned, 
                       equipped: updates.newEquipped 
                   }
               });
           });
-
-          // Cập nhật state cục bộ sau khi giao dịch thành công
+  
           setCoins(prev => prev + updates.goldChange);
-          setAncientBooks(prev => prev + updates.booksChange);
+          setEquipmentPieces(prev => prev + updates.piecesChange);
           setOwnedItems(updates.newOwned);
           setEquippedItems(updates.newEquipped);
           
           console.log("Equipment data and resources updated successfully in Firestore.");
-
+  
       } catch (error) {
           console.error("Firestore transaction for equipment update failed:", error);
-          // Ném lỗi ra để component con (EquipmentScreen) có thể xử lý
           throw error;
-      } finally { setIsSyncingData(false); }
+      } finally {
+          setIsSyncingData(false);
+      }
   };    
 
-  // START: CẬP NHẬT LOGIC MUA HÀNG
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) {
@@ -694,7 +693,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
         const updates: { [key: string]: any } = { coins: currentCoins - totalCost, };
 
-        // Handle specific item logic
         if (item.id === 1009) { // Sách Cổ
           const currentBooks = userDoc.data().ancientBooks || 0;
           updates.ancientBooks = currentBooks + quantity;
@@ -727,7 +725,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setIsSyncingData(false);
     }
   };
-  // END: CẬP NHẬT LOGIC MUA HÀNG
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
@@ -869,12 +866,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId);
               if (!blueprint) return null;
 
-              // Kết hợp thông tin từ owned skill và blueprint
               return { ...owned, ...blueprint };
           })
-          .filter(Boolean); // Lọc ra các giá trị null
+          .filter(Boolean);
 
-      // TypeScript sẽ không biết `Boolean` lọc null, nên ta cần ép kiểu
       return equippedDetails as (OwnedSkill & SkillBlueprint)[];
   };
 
@@ -897,7 +892,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                      <img src={uiAssets.menuIcon} alt="Menu Icon" className="w-5 h-5 object-contain" />
                 </button>
                 <div className="flex-1"></div>
-                {/* --- Main Game Header (Original) --- */}
                 <div className="flex items-center space-x-1 currency-display-container relative z-10">
                     <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
@@ -911,7 +905,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 </div>
             </div>
 
-            {/* <<<<==== THAY THẾ KHỐI JSX BẰNG COMPONENT MỚI ====>>>> */}
             <RateLimitToast show={showRateLimitToast} />
 
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
@@ -1032,7 +1025,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <EquipmentScreen 
                         onClose={toggleEquipmentScreen} 
                         gold={coins}
-                        ancientBooks={ancientBooks}
+                        equipmentPieces={equipmentPieces}
                         ownedItems={ownedItems}
                         equippedItems={equippedItems}
                         onInventoryUpdate={handleInventoryUpdate}
@@ -1048,4 +1041,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
-// --- END OF FILE background-game.tsx (6).txt ---
+// --- END OF FILE background-game.tsx ---
