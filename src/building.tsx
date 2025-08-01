@@ -39,6 +39,13 @@ const StarIcon = ({ size = 24, className = '' }) => (
   </svg>
 );
 
+const WarehouseIcon = ({ size = 24, className = '' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.17 6.5l8-4.5a2 2 0 0 1 1.66 0l8 4.5A2 2 0 0 1 22 8.35Z"></path>
+      <path d="M6 18h12"></path><path d="M6 14h12"></path><rect width="12" height="12" x="6" y="10"></rect>
+    </svg>
+);
+
 // --- THÀNH PHẦN GIAO DIỆN (UI Components) ---
 
 const GameHeader = ({ coins, gems, onClose }: { coins: number, gems: number, onClose: () => void }) => (
@@ -117,7 +124,7 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim, onUpgradeClick
     );
 };
 
-// CHANGED: StorageUpgradeModal is now fully minimalist
+// RESTORED: StorageUpgradeModal design with frame, icon, and text
 const StorageUpgradeModal = ({ isOpen, onClose, onUpgrade, currentMax, nextMax, upgradeCost, userCoins, isProcessing }: { isOpen: boolean, onClose: () => void, onUpgrade: () => void, currentMax: number, nextMax: number, upgradeCost: number, userCoins: number, isProcessing: boolean }) => {
     if (!isOpen) return null;
     const canAfford = userCoins >= upgradeCost;
@@ -132,20 +139,20 @@ const StorageUpgradeModal = ({ isOpen, onClose, onUpgrade, currentMax, nextMax, 
                     </div>
                 </div>
 
-                {/* --- REDESIGNED SECTION --- */}
-                <div className="flex-grow my-4 flex flex-col items-center justify-center text-center">
-                    <div className="flex items-center justify-center gap-3">
-                        <span className="font-mono text-3xl text-slate-400">{formatNumber(currentMax)}</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
-                        <span className="font-mono text-3xl font-bold text-green-400">{formatNumber(nextMax)}</span>
-                    </div>
-                    <div className="mt-2 text-base text-green-500 font-sans">
-                        (+{formatNumber(nextMax - currentMax)})
+                <div className="flex-grow my-4">
+                    <div className="bg-slate-900/50 p-3 rounded-lg flex items-center gap-3 border border-slate-700/50">
+                        <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-md bg-black/30 text-amber-400">
+                            <WarehouseIcon className="w-6 h-6" />
+                        </div>
+                        <span className="font-semibold text-slate-300 text-sm">Sức chứa</span>
+                        <div className="flex flex-1 items-baseline justify-end gap-2 font-mono text-sm">
+                            <span className="text-slate-400">{formatNumber(currentMax)}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>
+                            <span className="font-bold text-green-400">{formatNumber(nextMax)}</span>
+                            <span className="text-green-500 text-xs font-sans">(+{formatNumber(nextMax - currentMax)})</span>
+                        </div>
                     </div>
                 </div>
-                {/* --- END OF REDESIGNED SECTION --- */}
 
                 <div className="flex-shrink-0 mt-auto pt-4">
                     <button onClick={onUpgrade} disabled={!canAfford || isProcessing} className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3 rounded-lg text-lg transition-all duration-300 hover:scale-105 active:scale-100 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100 shadow-lg hover:shadow-orange-500/30 flex items-center justify-center gap-2">
