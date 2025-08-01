@@ -15,6 +15,9 @@ import {
 // THAY ĐỔI: Import tài nguyên hình ảnh tập trung
 import { uiAssets, equipmentUiAssets } from './game-assets.ts';
 
+// *** THAY ĐỔI QUAN TRỌNG: Import trực tiếp CoinDisplay từ file của nó ***
+import CoinDisplay from './coin-display'; 
+
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
 // THAY ĐỔI: Thêm thuộc tính `stats` để mỗi vật phẩm có chỉ số riêng
@@ -115,15 +118,6 @@ const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http:/
 // THAY ĐỔI: Icon mới cho Mảnh trang bị
 const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => ( <img src={equipmentUiAssets.equipmentPieceIcon} alt="Mảnh Trang Bị" className={className} /> );
 
-
-// --- CoinDisplay Component ---
-const CoinDisplay = ({ displayedCoins }: { displayedCoins: number; }) => (
-    <div className="flex items-center gap-2 px-4 py-2 bg-black/30 rounded-full border border-slate-700">
-        <GoldIcon className="w-6 h-6" />
-        <span className="text-base font-bold text-yellow-300 tracking-wider">{displayedCoins.toLocaleString()}</span>
-    </div>
-);
-
 // --- CÁC COMPONENT CON ---
 
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
@@ -135,7 +129,8 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
                     <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
                 </button>
                 <div className="flex items-center gap-4 sm:gap-6">
-                    <CoinDisplay displayedCoins={gold} />
+                    {/* *** THAY ĐỔI: Sử dụng CoinDisplay đã import *** */}
+                    <CoinDisplay displayedCoins={gold} isStatsFullscreen={false} />
                 </div>
             </div>
         </header>
