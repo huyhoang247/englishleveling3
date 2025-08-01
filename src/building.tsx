@@ -1,6 +1,7 @@
 // --- START OF FILE building.tsx ---
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx';
+import { uiAssets } from './game-assets.ts'; // ADDED: Import uiAssets
 
 // --- TIỆN ÍCH ---
 // Hàm định dạng số, hiển thị dấu phẩy cho các số dưới 1 triệu
@@ -11,7 +12,7 @@ const formatNumber = (num) => {
 };
 
 
-// --- CÁC COMPONENT ICON SVG (Bao gồm Icon mới) ---
+// --- CÁC COMPONENT ICON SVG VÀ COMPONENT ICON TỪ ẢNH ---
 
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg
@@ -32,13 +33,24 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
   </svg>
 );
 
-const GemIcon = ({ size = 24, className = '' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <path d="M6 3h12l4 6-10 12L2 9Z"></path>
-        <path d="m12 22 4-13-3-6"></path>
-        <path d="M12 22 8 9l3-6"></path>
-    </svg>
-);
+// ADDED: Copied the exact GemIcon component from background-game.tsx
+interface GemIconProps {
+  size?: number;
+  className?: string;
+  [key: string]: any;
+}
+const GemIcon: React.FC<GemIconProps> = ({ size = 24, className = '', ...props }) => {
+  return (
+    <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
+      <img
+        src={uiAssets.gemIcon}
+        alt="Tourmaline Gem Icon"
+        className="w-full h-full object-contain"
+      />
+    </div>
+  );
+};
+
 
 const DollarSignIcon = ({ size = 24, className = '' }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -93,10 +105,14 @@ const GameHeader = ({ coins, gems, onClose }) => {
                     <XIcon size={24} className="text-slate-300" />
                 </button>
                 <div className="flex items-center gap-2">
+                    {/* CHANGED: Replaced with the exact code from background-game.tsx */}
                     <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                        <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={20} className="text-violet-300"/></div>
-                        <div className="font-bold text-purple-200 text-sm tracking-wide px-2">{formatNumber(gems)}</div>
+                        <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={16} className="relative z-20" /></div>
+                        <div className="font-bold text-purple-200 text-xs tracking-wide">{formatNumber(gems)}</div>
+                        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"><span className="text-white font-bold text-xs">+</span></div>
+                        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+                        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                     </div>
                     <CoinDisplay displayedCoins={coins} isStatsFullscreen={false} />
                 </div>
