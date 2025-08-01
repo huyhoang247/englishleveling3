@@ -26,7 +26,6 @@ const GemIcon: React.FC<GemIconProps> = ({ size = 24, className = '', ...props }
     </div>
 );
 
-// RESTORED: DollarSignIcon was accidentally removed
 const DollarSignIcon = ({ size = 24, className = '' }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <line x1="12" y1="2" x2="12" y2="22"></line>
@@ -68,7 +67,6 @@ const GameHeader = ({ coins, gems, onClose }: { coins: number, gems: number, onC
     </header>
 );
 
-// RESTORED: UnlockedHamsterCard was accidentally removed
 const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, onUpgrade: (id: number) => void, userCoins: number }) => {
     const levelProgress = (hamster.level / hamster.maxLevel) * 100;
     const canUpgrade = userCoins >= hamster.upgradeCost && hamster.level < hamster.maxLevel;
@@ -91,7 +89,6 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
     );
 };
 
-// RESTORED: LockedHamsterCard was accidentally removed
 const LockedHamsterCard = ({ hamster, onUnlock, userCoins }: { hamster: any, onUnlock: (id: number) => void, userCoins: number }) => {
     const canUnlock = userCoins >= hamster.unlockCost;
     return (
@@ -127,6 +124,7 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim, onUpgradeClick
     );
 };
 
+// CHANGED: StorageUpgradeModal simplified
 const StorageUpgradeModal = ({ isOpen, onClose, onUpgrade, currentMax, nextMax, upgradeCost, userCoins, isProcessing }: { isOpen: boolean, onClose: () => void, onUpgrade: () => void, currentMax: number, nextMax: number, upgradeCost: number, userCoins: number, isProcessing: boolean }) => {
     if (!isOpen) return null;
     const canAfford = userCoins >= upgradeCost;
@@ -140,22 +138,22 @@ const StorageUpgradeModal = ({ isOpen, onClose, onUpgrade, currentMax, nextMax, 
                         <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors"><XIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
-                <div className="flex-grow my-4">
-                    <div className="bg-slate-900/50 border border-slate-700/50 rounded-lg p-4 space-y-3">
-                        <div className="flex items-center gap-4">
-                            <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-black/30 text-amber-400"><WarehouseIcon className="w-7 h-7" /></div>
-                            <div className="flex-grow">
-                                <span className="text-sm font-semibold text-slate-300">Sức chứa</span>
-                                <div className="flex items-baseline justify-end gap-2 font-mono text-lg">
-                                    <span className="text-slate-400">{formatNumber(currentMax)}</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>
-                                    <span className="font-bold text-green-400">{formatNumber(nextMax)}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="text-right text-green-400 font-sans text-sm pr-1">(+{formatNumber(nextMax - currentMax)})</div>
+
+                {/* --- MODIFIED SECTION --- */}
+                <div className="flex-grow my-4 flex flex-col items-center justify-center text-center">
+                    <div className="flex items-baseline justify-center gap-3 font-mono text-4xl">
+                        <span className="text-slate-400">{formatNumber(currentMax)}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="font-bold text-green-400">{formatNumber(nextMax)}</span>
+                    </div>
+                    <div className="mt-2 text-green-500 font-sans text-base">
+                        (+{formatNumber(nextMax - currentMax)})
                     </div>
                 </div>
+                {/* --- END OF MODIFIED SECTION --- */}
+
                 <div className="flex-shrink-0 mt-auto pt-4">
                     <button onClick={onUpgrade} disabled={!canAfford || isProcessing} className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold py-3 rounded-lg text-lg transition-all duration-300 hover:scale-105 active:scale-100 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100 shadow-lg hover:shadow-orange-500/30 flex items-center justify-center gap-2">
                         {isProcessing ? 'Processing...' : `Upgrade for ${formatNumber(upgradeCost)}💰`}
