@@ -1,15 +1,31 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 // --- TIỆN ÍCH ---
-// Hàm định dạng số lớn (vd: 1,000,000 -> 1.0M)
+// Hàm định dạng số, hiển thị dấu phẩy cho các số dưới 1 triệu
 const formatNumber = (num) => {
   if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
   if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-  if (num >= 1e3) return (num / 1e3).toFixed(1) + 'k';
-  return Math.floor(num).toLocaleString();
+  return Math.floor(num).toLocaleString('en-US');
 };
 
-// --- CÁC COMPONENT ICON SVG (Thay thế cho Lucide-React) ---
+
+// --- CÁC COMPONENT ICON SVG (Bao gồm Icon mới) ---
+
+const CoinIcon = ({ size = 24, className = '' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="12" r="8"></circle>
+    <line x1="12" y1="16" x2="12" y2="8"></line>
+    <path d="M15 13h-3a2 2 0 1 0 0-4h3"></path>
+  </svg>
+);
+
+const GemIcon = ({ size = 24, className = '' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M6 3h12l4 6-10 12L2 9Z"></path>
+        <path d="m12 22 4-13-3-6"></path>
+        <path d="M12 22 8 9l3-6"></path>
+    </svg>
+);
 
 const DollarSignIcon = ({ size = 24, className = '' }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -21,13 +37,6 @@ const DollarSignIcon = ({ size = 24, className = '' }) => (
 const StarIcon = ({ size = 24, className = '' }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-  </svg>
-);
-
-const SettingsIcon = ({ size = 24, className = '' }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2.82l-.15.1a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1 0-2.82l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-    <circle cx="12" cy="12" r="3"></circle>
   </svg>
 );
 
@@ -57,6 +66,48 @@ const WarehouseIcon = ({ size = 24, className = '' }) => (
 
 
 // --- THÀNH PHẦN GIAO DIỆN (UI Components) ---
+
+// *** HEADER MỚI TINH TẾ ***
+const GameHeader = ({ coins, gems }) => {
+    // Hàm xử lý khi nhấn nút Nạp, có thể mở modal hoặc chuyển trang
+    const handleTopUp = () => {
+        alert('Chức năng Nạp đang được phát triển!');
+    };
+
+    return (
+        <header className="fixed top-0 left-0 right-0 max-w-lg mx-auto bg-slate-900/70 backdrop-blur-sm z-10">
+            <div className="flex items-center justify-between p-3 border-b border-slate-700/50">
+                <div className="flex items-center gap-4">
+                    {/* Placeholder for a user avatar */}
+                    <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-violet-600 rounded-full flex items-center justify-center font-bold text-lg">
+                        H
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    {/* Currency displays */}
+                    <div className="flex items-center gap-2 bg-slate-800/80 p-2 rounded-full border border-slate-700">
+                        <div className="flex items-center gap-1 text-amber-400">
+                            <CoinIcon size={20} />
+                            <span className="font-bold text-sm">{formatNumber(coins)}</span>
+                        </div>
+                        <div className="w-px h-5 bg-slate-600"></div>
+                        <div className="flex items-center gap-1 text-red-400">
+                            <GemIcon size={18} />
+                            <span className="font-bold text-sm">{formatNumber(gems)}</span>
+                        </div>
+                    </div>
+                     <button 
+                        onClick={handleTopUp}
+                        className="bg-amber-500 text-slate-900 font-bold px-4 py-2 rounded-full text-sm transition-transform hover:scale-105 active:scale-100"
+                     >
+                        NẠP
+                    </button>
+                </div>
+            </div>
+        </header>
+    );
+};
+
 
 // Component hiển thị thanh năng lượng
 const EnergyBar = ({ energy, maxEnergy }) => {
@@ -131,7 +182,7 @@ const LockedHamsterCard = ({ hamster, onUnlock, userCoins }) => {
   );
 };
 
-// COMPONENT KHO THU NHẬP
+// Component Kho Thu Nhập
 const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
   const percentage = max > 0 ? (current / max) * 100 : 0;
   const isFull = current >= max;
@@ -144,7 +195,7 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
   };
 
   return (
-    <section className={`bg-slate-800/60 p-4 rounded-2xl border ${isFull ? 'border-red-500/50' : 'border-slate-700'} mb-6`}>
+    <section className={`bg-slate-800/60 p-4 rounded-2xl border ${isFull ? 'border-red-500/50' : 'border-slate-700'}`}>
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2">
           <span className={`text-2xl ${isFull ? 'animate-bounce' : ''}`}>📦</span>
@@ -173,65 +224,23 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
   );
 };
 
-// --- COMPONENT HEADER MỚI TINH TẾ ---
-const SophisticatedHeader = React.memo(({ playerName, coins, totalProfitPerHour, energy, maxEnergy }) => {
-  return (
-    <header className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/80 mb-6 shadow-lg shadow-black/20">
-      {/* Phần trên: Tên người chơi & Cài đặt */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-yellow-500 flex items-center justify-center">
-            <span className="text-2xl">🐹</span>
-          </div>
-          <div>
-            <p className="text-sm font-bold text-white">{playerName}</p>
-            <p className="text-xs text-slate-400">Hamster CEO</p>
-          </div>
-        </div>
-        <button className="p-2 text-slate-400 hover:text-white transition-colors duration-300 rounded-full hover:bg-slate-700/50">
-          <SettingsIcon size={24} />
-        </button>
-      </div>
-
-      {/* Đường kẻ phân cách */}
-      <hr className="my-3 border-slate-700/60" />
-
-      {/* Phần giữa: Các chỉ số chính */}
-      <div className="text-center">
-        <p className="text-xs text-slate-400 uppercase tracking-wider">Lợi nhuận mỗi giờ</p>
-        <h2 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-300 via-teal-300 to-cyan-400 my-1">
-          {formatNumber(totalProfitPerHour)}
-        </h2>
-        <div className="mt-1 flex justify-center items-center gap-2 text-amber-400">
-           <DollarSignIcon size={16} />
-           <span className="font-semibold text-lg">{formatNumber(coins)}</span>
-        </div>
-      </div>
-      
-      {/* Phần dưới: Thanh năng lượng */}
-      <div className="mt-4">
-        <EnergyBar energy={energy} maxEnergy={maxEnergy} />
-      </div>
-    </header>
-  );
-});
-
 
 // --- THÀNH PHẦN CHÍNH CỦA GAME ---
 const HamsterKombatClone = () => {
-  // --- STATE CỦA GAME ---
-  const [coins, setCoins] = useState(10000);
-  const [offlineEarnings, setOfflineEarnings] = useState(0); // Coin tích trữ
-  const [maxStorage, setMaxStorage] = useState(1000);      // Giới hạn kho
+  // --- STATE CỦA GAME (Cập nhật giá trị ban đầu để khớp với ảnh) ---
+  const [coins, setCoins] = useState(15280);
+  const [gems, setGems] = useState(3250); // Thêm state cho kim cương
+  const [offlineEarnings, setOfflineEarnings] = useState(0); 
+  const [maxStorage, setMaxStorage] = useState(1000); 
   const [energy, setEnergy] = useState(500);
   const [maxEnergy, setMaxEnergy] = useState(500);
   const [tapPower, setTapPower] = useState(1);
-  const [energyRegenRate, setEnergyRegenRate] = useState(2); // Năng lượng hồi mỗi giây
+  const [energyRegenRate, setEnergyRegenRate] = useState(2); 
 
   // State cho các nâng cấp
   const [tapUpgradeCost, setTapUpgradeCost] = useState(100);
   const [energyUpgradeCost, setEnergyUpgradeCost] = useState(150);
-  const [storageUpgradeCost, setStorageUpgradeCost] = useState(500); // Chi phí nâng cấp kho
+  const [storageUpgradeCost, setStorageUpgradeCost] = useState(500);
 
   // State cho hiệu ứng khi nhấn
   const [isTapping, setIsTapping] = useState(false);
@@ -241,26 +250,19 @@ const HamsterKombatClone = () => {
     { id: 2, name: 'Beethoven', level: 1, maxLevel: 25, earnings: 50, upgradeCost: 300, unlocked: true },
     { id: 3, name: 'Shakespeare', level: 0, maxLevel: 25, earnings: 250, unlockCost: 1200, unlocked: false },
     { id: 4, name: 'Leonardo', level: 0, maxLevel: 25, earnings: 1000, unlockCost: 5000, unlocked: false },
-    { id: 5, name: 'Einstein', level: 0, maxLevel: 30, earnings: 8000, unlockCost: 25000, unlocked: false },
-    { id: 6, name: 'Tesla', level: 0, maxLevel: 30, earnings: 50000, unlockCost: 150000, unlocked: false },
   ]);
 
   // --- LOGIC GAME (Sử dụng hooks) ---
 
-  // Tính tổng thu nhập mỗi giờ (memoized để tối ưu)
   const totalProfitPerHour = useMemo(() => {
     return hamsters.reduce((total, hamster) => {
-      if (hamster.unlocked) {
-        return total + hamster.earnings;
-      }
+      if (hamster.unlocked) return total + hamster.earnings;
       return total;
     }, 0);
   }, [hamsters]);
 
-  // Vòng lặp chính của game: tích coin vào kho và hồi năng lượng
   useEffect(() => {
     const gameTick = setInterval(() => {
-      // Tích coin vào kho
       setOfflineEarnings(prev => {
         if (prev < maxStorage) {
           const profitPerSecond = totalProfitPerHour / 3600;
@@ -268,28 +270,23 @@ const HamsterKombatClone = () => {
         }
         return prev;
       });
-      
-      // Hồi năng lượng
       setEnergy(prev => Math.min(prev + energyRegenRate, maxEnergy));
     }, 1000);
-
     return () => clearInterval(gameTick);
   }, [totalProfitPerHour, energyRegenRate, maxEnergy, maxStorage]);
 
+
   // --- CÁC HÀNH ĐỘNG CỦA NGƯỜI CHƠI ---
 
-  // Xử lý khi nhấn vào hamster
   const handleTap = useCallback(() => {
     if (energy >= tapPower) {
       setEnergy(e => e - tapPower);
       setCoins(c => c + tapPower);
-      
       setIsTapping(true);
       setTimeout(() => setIsTapping(false), 100);
     }
   }, [energy, tapPower]);
 
-  // Nâng cấp hamster
   const upgradeHamster = useCallback((id) => {
     setHamsters(prevHamsters =>
       prevHamsters.map(h => {
@@ -307,7 +304,6 @@ const HamsterKombatClone = () => {
     );
   }, [coins]);
 
-  // Mở khóa hamster mới
   const unlockHamster = useCallback((id) => {
     setHamsters(prevHamsters =>
       prevHamsters.map(h => {
@@ -321,7 +317,6 @@ const HamsterKombatClone = () => {
     );
   }, [coins]);
   
-  // Nâng cấp sức mạnh Tap
   const upgradeTapPower = useCallback(() => {
     if (coins >= tapUpgradeCost) {
       setCoins(c => c - tapUpgradeCost);
@@ -330,7 +325,6 @@ const HamsterKombatClone = () => {
     }
   }, [coins, tapUpgradeCost]);
 
-  // Nâng cấp giới hạn năng lượng
   const upgradeEnergyLimit = useCallback(() => {
     if (coins >= energyUpgradeCost) {
       setCoins(c => c - energyUpgradeCost);
@@ -339,7 +333,6 @@ const HamsterKombatClone = () => {
     }
   }, [coins, energyUpgradeCost]);
   
-  // Thu hoạch coin từ kho
   const claimOfflineEarnings = useCallback(() => {
     if (offlineEarnings > 0) {
       setCoins(prev => prev + offlineEarnings);
@@ -347,11 +340,10 @@ const HamsterKombatClone = () => {
     }
   }, [offlineEarnings]);
 
-  // Nâng cấp sức chứa kho
   const upgradeMaxStorage = useCallback(() => {
     if (coins >= storageUpgradeCost) {
       setCoins(c => c - storageUpgradeCost);
-      setMaxStorage(s => Math.floor(s * 1.5)); // Tăng 50%
+      setMaxStorage(s => Math.floor(s * 1.5));
       setStorageUpgradeCost(cost => Math.floor(cost * 1.8));
     }
   }, [coins, storageUpgradeCost]);
@@ -360,16 +352,24 @@ const HamsterKombatClone = () => {
   // --- RENDER GIAO DIỆN ---
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans">
-      <div className="container mx-auto max-w-lg p-4">
+      
+      {/* *** SỬ DỤNG HEADER MỚI Ở ĐÂY *** */}
+      <GameHeader coins={coins} gems={gems} />
+      
+      {/* Thêm padding-top để nội dung không bị header che mất */}
+      <div className="container mx-auto max-w-lg p-4 pt-20">
 
-        {/* === HEADER MỚI ĐÃ ĐƯỢC TÍCH HỢP === */}
-        <SophisticatedHeader
-          playerName="Hamster" // Bạn có thể thay đổi tên ở đây
-          coins={coins}
-          totalProfitPerHour={totalProfitPerHour}
-          energy={energy}
-          maxEnergy={maxEnergy}
-        />
+        {/* Các thông tin phụ như lợi nhuận và năng lượng */}
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700 mb-6 space-y-4">
+             <div className="flex justify-between items-center">
+                <span className="text-slate-400 font-medium">Lợi nhuận mỗi giờ</span>
+                <div className="flex items-center gap-2 text-green-400">
+                    <StarIcon size={20} />
+                    <span className="font-bold text-lg">{formatNumber(totalProfitPerHour)}/h</span>
+                </div>
+             </div>
+          <EnergyBar energy={energy} maxEnergy={maxEnergy} />
+        </div>
 
         <IncomeStorageBar 
           current={offlineEarnings} 
@@ -378,12 +378,12 @@ const HamsterKombatClone = () => {
           onClaim={claimOfflineEarnings} 
         />
 
-        <main className="text-center mb-6">
+        <main className="text-center my-8">
           <div
             onClick={handleTap}
             className={`relative inline-block cursor-pointer select-none transition-transform duration-100 ${isTapping ? 'scale-95' : 'scale-100'}`}
           >
-            <div className="w-48 h-48 rounded-full bg-gradient-to-br from-orange-400 to-yellow-500 flex items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.5)]">
+            <div className="w-48 h-48 rounded-full bg-gradient-to-br from-orange-400 to-yellow-500 flex items-center justify-center shadow-[0_0_40px_rgba(251,191,36,0.6)]">
                <span className="text-8xl animate-bounce" style={{animationDuration: '2s'}}>🐹</span>
             </div>
           </div>
