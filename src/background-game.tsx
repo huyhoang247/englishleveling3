@@ -996,9 +996,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBaseBuildingOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
-                {isBaseBuildingOpen && (
+                {isBaseBuildingOpen && auth.currentUser && (
                     <BaseBuildingScreen
                         onClose={toggleBaseBuilding}
+                        coins={coins}
+                        gems={gems}
+                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
                     />
                 )}
             </ErrorBoundary>
