@@ -38,6 +38,15 @@ export const uiAssets = {
 };
 
 /**
+ * Tài nguyên cho các icon trong màn hình trang bị (Equipment)
+ */
+export const equipmentUiAssets = {
+  goldIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png",
+  equipmentPieceIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000b4d061f8b48718d2527bbce7.png",
+};
+
+
+/**
  * Tài nguyên cho các vật phẩm trong túi đồ
  */
 export const itemAssets = {
@@ -121,10 +130,11 @@ export const treasureAssets = {
  * khi game bắt đầu.
  */
 export const allImageUrls = [
-    ...Object.values(uiAssets),
+    ...Object.values(uiAssets).filter(url => typeof url === 'string'),
+    ...Object.values(equipmentUiAssets),
     ...Object.values(itemAssets),
-    ...Object.values(skillAssets),
-    ...Object.values(treasureAssets),
+    ...Object.values(skillAssets).filter(url => typeof url === 'string'),
+    ...Object.values(treasureAssets).filter(url => typeof url === 'string'),
 ];
 
 // --- END OF FILE game-assets.ts ---
