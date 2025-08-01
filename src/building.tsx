@@ -26,6 +26,7 @@ const GemIcon: React.FC<GemIconProps> = ({ size = 24, className = '', ...props }
     </div>
 );
 
+// RESTORED: DollarSignIcon was accidentally removed
 const DollarSignIcon = ({ size = 24, className = '' }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <line x1="12" y1="2" x2="12" y2="22"></line>
@@ -67,6 +68,7 @@ const GameHeader = ({ coins, gems, onClose }: { coins: number, gems: number, onC
     </header>
 );
 
+// RESTORED: UnlockedHamsterCard was accidentally removed
 const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, onUpgrade: (id: number) => void, userCoins: number }) => {
     const levelProgress = (hamster.level / hamster.maxLevel) * 100;
     const canUpgrade = userCoins >= hamster.upgradeCost && hamster.level < hamster.maxLevel;
@@ -89,6 +91,7 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
     );
 };
 
+// RESTORED: LockedHamsterCard was accidentally removed
 const LockedHamsterCard = ({ hamster, onUnlock, userCoins }: { hamster: any, onUnlock: (id: number) => void, userCoins: number }) => {
     const canUnlock = userCoins >= hamster.unlockCost;
     return (
@@ -103,7 +106,6 @@ const LockedHamsterCard = ({ hamster, onUnlock, userCoins }: { hamster: any, onU
     );
 };
 
-// MODIFIED: Added onUpgradeClick prop and removed cost-related props
 const IncomeStorageBar = ({ current, max, profitPerHour, onClaim, onUpgradeClick }: { current: number, max: number, profitPerHour: number, onClaim: () => void, onUpgradeClick: () => void }) => {
     const percentage = max > 0 ? (current / max) * 100 : 0;
     const isFull = current >= max;
@@ -125,7 +127,6 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim, onUpgradeClick
     );
 };
 
-// NEW: Component for the Storage Upgrade Modal
 const StorageUpgradeModal = ({ isOpen, onClose, onUpgrade, currentMax, nextMax, upgradeCost, userCoins, isProcessing }: { isOpen: boolean, onClose: () => void, onUpgrade: () => void, currentMax: number, nextMax: number, upgradeCost: number, userCoins: number, isProcessing: boolean }) => {
     if (!isOpen) return null;
     const canAfford = userCoins >= upgradeCost;
@@ -176,7 +177,6 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
     const [maxStorage, setMaxStorage] = useState(1000);
     const [storageUpgradeCost, setStorageUpgradeCost] = useState(500);
     const [isProcessing, setIsProcessing] = useState(false);
-    // NEW: State for the upgrade modal
     const [isStorageUpgradeModalOpen, setIsStorageUpgradeModalOpen] = useState(false);
 
     const [hamsters, setHamsters] = useState([
