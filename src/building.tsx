@@ -65,16 +65,6 @@ const StarIcon = ({ size = 24, className = '' }) => (
   </svg>
 );
 
-const WarehouseIcon = ({ size = 24, className = '' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.17 6.5l8-4.5a2 2 0 0 1 1.66 0l8 4.5A2 2 0 0 1 22 8.35Z"></path>
-      <path d="M6 18h12"></path>
-      <path d="M6 14h12"></path>
-      <rect width="12" height="12" x="6" y="10"></rect>
-    </svg>
-);
-
-
 // --- THÀNH PHẦN GIAO DIỆN (UI Components) ---
 
 // *** HEADER ĐÃ ĐƯỢC TÍCH HỢP ***
@@ -161,14 +151,15 @@ const LockedHamsterCard = ({ hamster, onUnlock, userCoins }) => {
 };
 
 // Component Kho Thu Nhập (Storage)
-const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
+// CHANGED: Added new props for the upgrade button
+const IncomeStorageBar = ({ current, max, profitPerHour, onClaim, onUpgrade, upgradeCost, canUpgradeStorage }) => {
   const percentage = max > 0 ? (current / max) * 100 : 0;
   const isFull = current >= max;
 
   return (
     <section className={`bg-slate-800/60 p-4 rounded-2xl border ${isFull ? 'border-red-500/50' : 'border-slate-700'}`}>
       <div className="flex justify-between items-center mb-2">
-        <span className="text-slate-400 font-medium">Storage</span>
+        <span className="text-slate-400 font-medium">Storage Lv. {Math.round(Math.log(max/1000) / Math.log(1.5)) + 1}</span>
         <div className="flex items-center gap-2 text-green-400">
           <StarIcon size={16} />
           <span className="font-bold text-sm">{formatNumber(profitPerHour)}/h</span>
@@ -185,10 +176,26 @@ const IncomeStorageBar = ({ current, max, profitPerHour, onClaim }) => {
         </div>
       </div>
       
-      <button onClick={onClaim} disabled={current === 0}
-        className="w-full bg-gradient-to-r from-green-500 to-cyan-500 text-white font-bold py-3 rounded-lg text-lg transition-all duration-300 hover:scale-105 active:scale-100 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100 shadow-lg hover:shadow-cyan-500/30">
-        Thu Hoạch
-      </button>
+      {/* CHANGED: Replaced single button with a flex container for two buttons */}
+      <div className="flex items-center gap-3 mt-3">
+        <button
+          onClick={onUpgrade}
+          disabled={!canUpgradeStorage}
+          className="flex-1 bg-transparent border-2 border-indigo-500 text-indigo-300 font-bold py-2 rounded-lg text-base transition-all duration-200 hover:bg-indigo-500/20 hover:text-white disabled:border-slate-600 disabled:text-slate-500 disabled:bg-transparent disabled:cursor-not-allowed"
+        >
+            <div className="flex items-center justify-center gap-2">
+                <span>Upgrade</span>
+                <span className="font-normal text-sm text-white/80">{formatNumber(upgradeCost)}💰</span>
+            </div>
+        </button>
+        <button 
+          onClick={onClaim} 
+          disabled={current === 0}
+          className="flex-1 bg-gradient-to-r from-green-500 to-cyan-500 text-white font-bold py-2 rounded-lg text-base transition-all duration-300 hover:scale-105 active:scale-100 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100 shadow-lg hover:shadow-cyan-500/30"
+        >
+          Claim
+        </button>
+      </div>
     </section>
   );
 };
@@ -252,7 +259,6 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
     } catch (error) {
       console.error("Lỗi cập nhật dữ liệu:", error);
       alert("Có lỗi xảy ra, vui lòng thử lại.");
-      // Optional: Revert local state if needed
     }
   };
 
@@ -304,31 +310,23 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
     <div className="absolute inset-0 bg-slate-900 text-white font-sans overflow-y-auto">
       <GameHeader coins={coins} gems={gems} onClose={onClose} />
       
-      {/* CHANGED: pt-16 to pt-20 to add more space between header and storage */}
       <div className="container mx-auto max-w-lg p-4 pt-20 pb-10">
         
         <IncomeStorageBar 
           current={offlineEarnings} 
           max={maxStorage} 
           profitPerHour={totalProfitPerHour} 
-          onClaim={claimOfflineEarnings} 
+          onClaim={claimOfflineEarnings}
+          // Pass props for the new upgrade button
+          onUpgrade={upgradeMaxStorage}
+          upgradeCost={storageUpgradeCost}
+          canUpgradeStorage={coins >= storageUpgradeCost}
         />
 
-        <section className="my-8">
-          <h2 className="text-xl font-bold mb-3 text-slate-300">Nâng Cấp</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            <button onClick={upgradeMaxStorage} disabled={coins < storageUpgradeCost} className="bg-slate-800 p-3 rounded-lg border border-slate-700 text-left hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">
-              <div className="flex items-center gap-2 mb-1">
-                <WarehouseIcon className="text-amber-400" />
-                <h4 className="font-bold">Sức chứa Kho</h4>
-              </div>
-              <p className="text-xs text-slate-400">Lv. {Math.round(Math.log(maxStorage/1000) / Math.log(1.5)) + 1}</p>
-              <p className="text-sm font-semibold text-white mt-1">{formatNumber(storageUpgradeCost)}💰</p>
-            </button>
-          </div>
-        </section>
+        {/* REMOVED: The entire "Nâng Cấp" section is gone */}
 
-        <section>
+        {/* CHANGED: Added margin-top to create space */}
+        <section className="mt-8">
           <h2 className="text-xl font-bold mb-3 text-slate-300">Hamsters Của Bạn</h2>
           <div className="space-y-3">
             {hamsters.map(hamster =>
