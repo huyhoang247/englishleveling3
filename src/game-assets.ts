@@ -57,7 +57,7 @@ export const itemAssets = {
     giantsHammer: require("./assets/equipment/giants-hammer.webp"),
     forestStaff: require("./assets/equipment/forest-staff.webp"),
     nomadStaff: require("./assets/equipment/nomad-staff.webp"),
-    mysticStaff: require("./assets/equipment/mystic-staff.webp),
+    mysticStaff: require("./assets/equipment/mystic-staff.webp"),
     hawkeyeBow: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2006_00_39%20PM.png',
     nomadBow: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2006_10_10%20PM.png',
     warriorsSword: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2006_19_37%20PM.png',
