@@ -58,19 +58,6 @@ const WarehouseIcon = ({ size = 24, className = '' }) => (
 
 // --- THÀNH PHẦN GIAO DIỆN (UI Components) ---
 
-// Component hiển thị chỉ số (Coins, Profit,...)
-const StatDisplay = ({ icon, value, label, iconBgColor, valueColor }) => (
-  <div className="flex items-center gap-2">
-    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${iconBgColor}`}>
-      {icon}
-    </div>
-    <div>
-      <span className={`font-bold text-lg ${valueColor}`}>{value}</span>
-      <p className="text-xs text-slate-400">{label}</p>
-    </div>
-  </div>
-);
-
 // Component hiển thị thanh năng lượng
 const EnergyBar = ({ energy, maxEnergy }) => {
   const percentage = (energy / maxEnergy) * 100;
@@ -332,27 +319,52 @@ const HamsterKombatClone = () => {
     <div className="min-h-screen bg-slate-900 text-white font-sans">
       <div className="container mx-auto max-w-lg p-4">
 
-        <header className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700 mb-6">
+        {/* ----- HEADER MỚI ĐÃ ĐƯỢC CẬP NHẬT ----- */}
+        <header className="bg-gradient-to-b from-slate-800/80 to-slate-900/70 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/50 mb-6 shadow-lg shadow-slate-950/50">
+          {/* Phần thông tin người chơi */}
           <div className="flex justify-between items-center mb-4">
-            <StatDisplay
-              icon={<DollarSignIcon size={20} className="text-amber-300" />}
-              value={formatNumber(coins)}
-              label="Coins"
-              iconBgColor="bg-amber-500/20"
-              valueColor="text-amber-400"
-            />
-             <StatDisplay
-              icon={<StarIcon size={20} className="text-green-300" />}
-              value={formatNumber(totalProfitPerHour) + '/h'}
-              label="Profit"
-              iconBgColor="bg-green-500/20"
-              valueColor="text-green-400"
-            />
-            <button className="p-2 text-slate-400 hover:text-white transition">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center border-2 border-slate-600">
+                <span className="text-3xl">🐹</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-lg text-white">Player One</h3>
+                <p className="text-xs text-purple-400 flex items-center gap-1">
+                  <StarIcon size={12} className="fill-purple-400" />
+                  <span>Grandmaster League</span>
+                </p>
+              </div>
+            </div>
+            <button className="p-2 text-slate-400 hover:text-white transition hover:bg-slate-700/50 rounded-full">
               <SettingsIcon size={24} />
             </button>
           </div>
-          <EnergyBar energy={energy} maxEnergy={maxEnergy} />
+
+          {/* Đường kẻ phân cách */}
+          <hr className="border-t-slate-700 my-3" />
+
+          {/* Phần chỉ số chính */}
+          <div className="flex justify-around items-end text-center mb-4">
+            <div>
+              <p className="text-xs text-slate-400 mb-1">Lợi nhuận mỗi giờ</p>
+              <div className="flex items-center justify-center gap-2">
+                <StarIcon size={22} className="text-green-400" />
+                <span className="font-bold text-2xl text-green-400">{formatNumber(totalProfitPerHour)}</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 mb-1">Số dư của bạn</p>
+              <div className="flex items-center justify-center gap-2">
+                <DollarSignIcon size={22} className="text-amber-400" />
+                <span className="font-bold text-2xl text-amber-400">{formatNumber(coins)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Thanh năng lượng */}
+          <div className="mt-4">
+            <EnergyBar energy={energy} maxEnergy={maxEnergy} />
+          </div>
         </header>
 
         <IncomeStorageBar 
