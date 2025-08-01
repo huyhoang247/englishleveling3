@@ -51,9 +51,9 @@ export const equipmentUiAssets = {
  */
 export const itemAssets = {
     // Weapons
-    nomadSword: require("./assets/images/nomad-sword‎.webp")',
-    frostbiteSpear: require("./assets/images/frost-bite-spear.webp"),
-    warriorsBlade: require("./assets/images/warriors-blade.webp"),
+    nomadSword: require("./assets/equipment/nomad-sword‎.webp")',
+    frostbiteSpear: require("./assets/equipment/frost-bite-spear.webp"),
+    warriorsBlade: require("./assets/equipment/warriors-blade.webp"),
     giantsHammer: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2002_14_23%20PM.png',
     forestStaff: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2002_48_52%20PM.png',
     nomadStaff: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2002_37_31%20PM.png',
