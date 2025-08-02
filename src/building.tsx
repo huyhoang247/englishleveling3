@@ -38,6 +38,14 @@ const CoinIcon = ({ size = 24, className = '' }) => (
     <img src={uiAssets.goldIcon} alt="Coin Icon" className={className} style={{ width: size, height: size, objectFit: 'contain' }} />
 );
 
+// THÊM MỚI: Icon Khóa được thiết kế riêng
+const LockIcon = ({ size = 24, className = '', ...props }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+);
+
 const StarIcon = ({ size = 24, className = '' }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -65,9 +73,6 @@ const GameHeader = ({ coins, gems, onClose }: { coins: number, gems: number, onC
     </header>
 );
 
-// ==================================================================
-// ============ START OF UPDATED UnlockedHamsterCard COMPONENT ==========
-// ==================================================================
 const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, onUpgrade: (id: number) => void, userCoins: number }) => {
     const canUpgrade = userCoins >= hamster.upgradeCost && hamster.level < hamster.maxLevel;
 
@@ -92,7 +97,6 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
             </div>
 
             {/* Actions (Progress and Upgrade Button) */}
-            {/* === CHANGE START: Removed star icon from progress display === */}
             <div className="flex-shrink-0 flex flex-col justify-end items-end gap-2">
                 {/* Simplified Progress Display */}
                 <div className="flex items-center gap-1 text-xs text-slate-400">
@@ -114,31 +118,52 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
                     <CoinIcon size={16} />
                 </button>
             </div>
-            {/* === CHANGE END === */}
         </div>
     );
 };
-// ================================================================
-// ============ END OF UPDATED UnlockedHamsterCard COMPONENT ==========
-// ================================================================
 
-
+// ==================================================================
+// =========== START OF REDESIGNED LockedHamsterCard COMPONENT ======
+// ==================================================================
 const LockedHamsterCard = ({ hamster, onUnlock, userCoins }: { hamster: any, onUnlock: (id: number) => void, userCoins: number }) => {
     const canUnlock = userCoins >= hamster.unlockCost;
     return (
-        <div className="bg-slate-900/70 p-4 rounded-xl border border-slate-800 flex items-center gap-4 opacity-80">
-            <div className="text-5xl filter grayscale"><span>🔒</span></div>
-            <div className="flex-grow">
-                <h3 className="font-bold text-slate-400">{hamster.name}</h3>
-                <p className="text-xs text-amber-500 flex items-center gap-1"><CoinIcon size={12} /> {formatNumber(hamster.earnings)}/h</p>
+        <div className="bg-slate-900/70 backdrop-blur-sm p-3 rounded-xl border border-slate-800 flex gap-3 transition-all opacity-90">
+            {/* THAY ĐỔI: Icon container được thiết kế lại, thay thế emoji khóa */}
+            <div className="w-16 h-16 rounded-lg bg-black/40 flex items-center justify-center flex-shrink-0 self-center border border-slate-700 shadow-inner">
+                <LockIcon size={32} className="text-slate-500" />
             </div>
-            <button onClick={() => onUnlock(hamster.id)} disabled={!canUnlock} className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 px-5 rounded-lg transition-all hover:from-amber-400 hover:to-orange-400 hover:scale-105 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100">
-                <span>Mở khóa {formatNumber(hamster.unlockCost)}</span>
-                <CoinIcon size={20} />
-            </button>
+            
+            {/* THAY ĐỔI: Sắp xếp lại thông tin cho nhất quán */}
+            <div className="flex-grow min-w-0 self-center space-y-1.5">
+                <h3 className="font-bold text-slate-500 truncate">{hamster.name}</h3>
+                <div className="text-xs text-amber-500 flex items-center gap-1.5">
+                    <CoinIcon size={14} />
+                    <span>{formatNumber(hamster.earnings)}/h (khi mở khóa)</span>
+                </div>
+            </div>
+
+            {/* THAY ĐỔI: Nút Mở khóa được thiết kế lại cho nhỏ gọn và hiện đại hơn */}
+            <div className="flex-shrink-0 flex flex-col justify-center items-end">
+                <button 
+                    onClick={() => onUnlock(hamster.id)} 
+                    disabled={!canUnlock} 
+                    className={`flex items-center justify-center gap-2 h-9 px-4 rounded-lg text-sm font-bold transition-all duration-300 transform 
+                    ${!canUnlock
+                        ? 'bg-slate-800 border border-slate-700 text-slate-600 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:scale-105 active:scale-100 shadow-lg hover:shadow-amber-500/20'}`}
+                >
+                    <span>{formatNumber(hamster.unlockCost)}</span>
+                    <CoinIcon size={18} />
+                </button>
+            </div>
         </div>
     );
 };
+// ==================================================================
+// ============ END OF REDESIGNED LockedHamsterCard COMPONENT =======
+// ==================================================================
+
 
 const IncomeStorageBar = ({ current, max, profitPerHour, onClaim, onUpgradeClick }: { current: number, max: number, profitPerHour: number, onClaim: () => void, onUpgradeClick: () => void }) => {
     const percentage = max > 0 ? (current / max) * 100 : 0;
@@ -358,4 +383,3 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
 };
 
 export default BaseBuildingScreen;
-// --- END OF FILE building.tsx ---
