@@ -68,7 +68,6 @@ const GameHeader = ({ coins, gems, onClose }: { coins: number, gems: number, onC
 // ==================================================================
 const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, onUpgrade: (id: number) => void, userCoins: number }) => {
     const canUpgrade = userCoins >= hamster.upgradeCost && hamster.level < hamster.maxLevel;
-    const progressPercentage = (hamster.progress / hamster.progressToLevelUp) * 100;
 
     return (
         <div className="bg-slate-800/80 backdrop-blur-sm p-3 rounded-xl border border-slate-700 flex gap-3 transition-all hover:bg-slate-700/70">
@@ -79,17 +78,10 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
             <div className="flex-grow min-w-0 space-y-1.5 self-center">
                 <h3 className="font-bold text-white truncate">{hamster.name}</h3>
                 
-                {/* Progress Bar */}
-                <div className="relative w-full bg-slate-900/50 rounded-full h-4 shadow-inner">
-                    <div 
-                        className="h-full rounded-full bg-gradient-to-r from-green-500 to-cyan-500 transition-all duration-500 ease-out" 
-                        style={{ width: `${progressPercentage}%` }} 
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-bold text-white drop-shadow-md">
-                            {hamster.progress} / {hamster.progressToLevelUp}
-                        </span>
-                    </div>
+                {/* Progress Display */}
+                <div className="text-sm font-medium bg-slate-900/50 rounded-lg w-full text-center py-1">
+                    <span className="font-bold text-white">{hamster.progress}</span>
+                    <span className="text-slate-400"> / {hamster.progressToLevelUp}</span>
                 </div>
 
                 <p className="text-xs text-amber-400 flex items-center gap-1">
