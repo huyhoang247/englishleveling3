@@ -158,21 +158,15 @@ export default function Auth({ appVersion }) {
           </div>
         ) : (
           <>
-            {/* === LOGO ĐƯỢC DI CHUYỂN RA NGOÀI VÀ ĐẶT Ở ĐÂY === */}
             <img
               src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets/images/logo.webp"
               alt="App Logo"
-              className="w-32 h-32 mx-auto mb-8" // Bỏ hiệu ứng, chỉnh kích thước và thêm khoảng cách dưới
+              className="w-32 h-32 mx-auto mb-6" // <-- GIẢM KHOẢNG CÁCH DƯỚI
             />
 
-            {/* === Form Đăng nhập / Đăng ký === */}
-            <div className="bg-gray-800 p-8 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up border border-gray-700">
-              <h2 className="text-2xl font-bold text-center text-white mb-1">
-                {isRegistering ? 'Tạo Tài Khoản' : 'Chào Mừng Trở Lại'}
-              </h2>
-              <p className="text-center text-sm text-gray-400 mb-6">
-                {isRegistering ? 'Bắt đầu hành trình của bạn' : 'Đăng nhập để tiếp tục'}
-              </p>
+            <div className="bg-gray-800 p-8 pt-10 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up border border-gray-700">
+              
+              {/* === CÁC DÒNG CHỮ TIÊU ĐỀ ĐÃ BỊ XÓA Ở ĐÂY === */}
               
               {error && (
                 <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 mb-5 rounded-lg text-center" role="alert">
