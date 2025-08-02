@@ -1,4 +1,8 @@
-// --- START OF FILE building.tsx ---
+// --- START OF FILE building.tsx (5).txt ---
+
+// --- START OF FILE building.tsx (7).txt ---
+
+// --- START OF FILE building.tsx (6).txt ---
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx';
 import { uiAssets } from './game-assets.ts'; 
@@ -98,7 +102,7 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
             </div>
 
             {/* Actions (Level and Upgrade Button) */}
-            <div className="flex-shrink-0 flex flex-col items-end gap-2">
+            <div className="flex-shrink-0 flex flex-col items-end gap-2.5">
                 <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">
                     Level {hamster.level}
                 </span>
