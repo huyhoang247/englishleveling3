@@ -7,7 +7,7 @@ import Story from './VerticalFlashcardGallery.tsx';
 import Profile from './building.tsx';
 import Quiz from './quiz/quiz-app-home.tsx';
 import GameBrowser from './game.tsx';
-import AuthComponent from './auth.js';
+import AuthComponent from './auth.tsx'; // <-- THAY ĐỔI: Trỏ đến file auth.tsx mới
 import { auth, db } from './firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
