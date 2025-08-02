@@ -7,7 +7,7 @@ import Story from './VerticalFlashcardGallery.tsx';
 import Profile from './building.tsx';
 import Quiz from './quiz/quiz-app-home.tsx';
 import GameBrowser from './game.tsx';
-import AuthComponent from './auth.tsx'; // <-- THAY ĐỔI: Trỏ đến file auth.tsx mới
+import AuthComponent from './auth.js';
 import { auth, db } from './firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -173,12 +173,9 @@ const App: React.FC = () => {
             style={{ textShadow: '0 0 8px rgba(0, 255, 255, 0.3)' }}>
             Đang Tải
         </h1>
-        <p className="mt-1 mb-5 text-sm text-cyan-400/70 tracking-wide">
-            Xác thực người dùng...
-        </p>
 
         {/* --- Progress Bar --- */}
-        <div className="w-80 lg:w-96 relative">
+        <div className="w-80 lg:w-96 relative mt-5">
           <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
                style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 20px rgba(0, 255, 255, 0.1)' }}>
             <div
