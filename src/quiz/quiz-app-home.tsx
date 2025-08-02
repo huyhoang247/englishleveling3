@@ -399,145 +399,162 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       return;
     }
 
+    // ===================================================================================
+    // START: TỐI ƯU HÀM TÍNH TOÁN TIẾN ĐỘ
+    // ===================================================================================
     const calculateProgress = async () => {
+      console.time("calculateProgress"); // Bắt đầu đo thời gian
       setLoading(true);
       try {
+        // --- GIAI ĐOẠN 1: LẤY DỮ LIỆU THÔ TỪ FIRESTORE ---
         const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
           getDocs(collection(db, 'users', user.uid, 'completedWords')),
-          getDocs(collection(db, 'users', user.uid, 'completedMultiWord')) // Fetch from the new subcollection
+          getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
         ]);
         
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
         setClaimedRewards(userData.claimedQuizRewards || {});
-        const userVocabulary = openedVocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
 
-        const completedWordsByGameMode = {};
+        // --- GIAI ĐOẠN 2: TÁI CẤU TRÚC DỮ LIỆU ĐỂ TRA CỨU NHANH ---
+        // Thay vì lặp đi lặp lại các mảng lớn, chúng ta sẽ tạo các Set và Map
+        // để tra cứu với tốc độ O(1), giúp giảm độ phức tạp tính toán đáng kể.
+
+        // 2.1. Tạo Set các từ đã học (để tra cứu nhanh)
+        const userVocabSet = new Set(openedVocabSnapshot.docs.map(d => d.data().word?.toLowerCase()).filter(Boolean));
+
+        // 2.2. Tạo Map các từ/câu đã hoàn thành theo từng game mode
+        const completedWordsByMode = new Map<string, Set<string>>();
         completedWordsSnapshot.forEach(doc => {
           const gameModes = doc.data().gameModes;
           if (gameModes) {
             for (const mode in gameModes) {
-              if (!completedWordsByGameMode[mode]) completedWordsByGameMode[mode] = new Set();
-              completedWordsByGameMode[mode].add(doc.id.toLowerCase());
+              if (!completedWordsByMode.has(mode)) completedWordsByMode.set(mode, new Set());
+              completedWordsByMode.get(mode)!.add(doc.id.toLowerCase());
             }
           }
         });
 
-        const completedMultiWordByGameMode = {};
+        const completedMultiWordByMode = new Map<string, Set<string>>();
         completedMultiWordSnapshot.forEach(docSnap => {
             const completedIn = docSnap.data().completedIn || {};
             for (const mode in completedIn) {
-                if (!completedMultiWordByGameMode[mode]) {
-                    completedMultiWordByGameMode[mode] = new Set();
-                }
-                completedMultiWordByGameMode[mode].add(docSnap.id.toLowerCase());
+                if (!completedMultiWordByMode.has(mode)) completedMultiWordByMode.set(mode, new Set());
+                completedMultiWordByMode.get(mode)!.add(docSnap.id.toLowerCase());
             }
         });
 
+        // 2.3. CHUẨN BỊ TRƯỚC: Xử lý dữ liệu tĩnh một lần duy nhất
+        // Đây là bước tối ưu quan trọng nhất. Chúng ta sẽ lặp qua `exampleData` và `quizData`
+        // chỉ MỘT LẦN để tính toán sẵn các giá trị "total".
+        
+        // Dùng để tính tổng số câu hỏi cho các bài "điền X từ"
+        let totalExampleQuestionsWithLearnedWords = {
+            1: new Set(), 2: new Set(), 3: new Set(), 4: new Set(), 5: new Set(), 7: new Set()
+        };
+        // Dùng để tính tổng số câu hỏi cho trắc nghiệm (Practice 2, 3)
+        let learnedWordsInExamples = new Set();
+        
+        exampleData.forEach(sentence => {
+            const uniqueWordsInSentence = new Set((sentence.english.toLowerCase().match(/\b(\w+)\b/g) || []));
+            let learnedWordsCount = 0;
+            
+            uniqueWordsInSentence.forEach(word => {
+                if(userVocabSet.has(word)) {
+                    learnedWordsCount++;
+                    learnedWordsInExamples.add(word);
+                }
+            });
+
+            if (learnedWordsCount >= 1) totalExampleQuestionsWithLearnedWords[7].add(sentence.id);
+            if (learnedWordsCount >= 2) totalExampleQuestionsWithLearnedWords[2].add(sentence.id); // P2, P3, P4... tính dựa trên số câu, không phải số từ
+            if (learnedWordsCount >= 3) totalExampleQuestionsWithLearnedWords[3].add(sentence.id);
+            if (learnedWordsCount >= 4) totalExampleQuestionsWithLearnedWords[4].add(sentence.id);
+            if (learnedWordsCount >= 5) totalExampleQuestionsWithLearnedWords[5].add(sentence.id);
+        });
+
+        // Dùng để tính tổng số câu hỏi cho trắc nghiệm (Practice 1)
+        let totalQuizQuestions = 0;
+        quizData.forEach(q => {
+            const wordsInQuestion = new Set((q.question.toLowerCase().match(/\b(\w+)\b/g) || []));
+            for(const word of wordsInQuestion) {
+                if(userVocabSet.has(word)) {
+                    totalQuizQuestions++;
+                    break; // Chỉ đếm câu hỏi một lần
+                }
+            }
+        });
+
+
+        // --- GIAI ĐOẠN 3: TÍNH TOÁN TIẾN ĐỘ DỰA TRÊN DỮ LIỆU ĐÃ TỐI ƯU ---
         let newProgressData = {};
         
-        if (selectedType === 'tracNghiem') {
-            const allQuizModes = ['quiz-1', 'quiz-2', 'quiz-3'];
-            for(let i = 1; i <= MAX_PREVIEWS; i++) {
-                allQuizModes.push(`quiz-${i*100 + 1}`, `quiz-${i*100 + 2}`, `quiz-${i*100 + 3}`);
-            }
-
-            allQuizModes.forEach(mode => {
-                const practiceNum = parseInt(mode.split('-')[1]);
-                if (!practiceNum) return;
-
-                const completedSet = completedWordsByGameMode[mode] || new Set();
-
-                if (practiceNum % 100 === 1) {
-                    const totalQs = quizData.filter(q => userVocabulary.some(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)));
-                    const completed = totalQs.filter(q => {
-                        const word = userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question));
-                        return word && completedSet.has(word.toLowerCase());
-                    }).length;
-                    newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
-                } else if (practiceNum % 100 === 2 || practiceNum % 100 === 3) {
-                    const totalQs = userVocabulary.flatMap(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)) ? [{ word }] : []);
-                    const completed = totalQs.filter(q => completedSet.has(q.word.toLowerCase())).length;
-                    newProgressData[practiceNum] = { completed: completed, total: totalQs.length };
-                }
-            });
-
-        } else if (selectedType === 'dienTu') {
-            const allFillModes = ['fill-word-1', 'fill-word-2', 'fill-word-3', 'fill-word-4', 'fill-word-5', 'fill-word-6', 'fill-word-7'];
-            for(let i = 1; i <= MAX_PREVIEWS; i++) {
-                allFillModes.push(`fill-word-${i*100 + 1}`, `fill-word-${i*100 + 2}`, `fill-word-${i*100 + 3}`, `fill-word-${i*100 + 4}`, `fill-word-${i*100 + 5}`, `fill-word-${i*100 + 6}`, `fill-word-${i*100 + 7}`);
-            }
-
-            allFillModes.forEach(mode => {
-                const practiceNum = parseInt(mode.split('-')[2]);
-                if(!practiceNum) return;
-
-                const completedSet = completedWordsByGameMode[mode] || new Set();
-                let progress = {};
-
-                if (practiceNum % 100 === 1) {
-                    progress = { completed: completedSet.size, total: userVocabulary.length };
-                } else if (practiceNum % 100 === 2) {
-                    const totalQs = userVocabulary.filter(word => exampleData.some(ex => new RegExp(`\\b${word}\\b`, 'i').test(ex.english)));
-                    const completed = totalQs.filter(word => completedSet.has(word.toLowerCase())).length;
-                    progress = { completed: completed, total: totalQs.length };
-                } else if (practiceNum % 100 === 3) {
-                     let totalP3 = 0;
-                     exampleData.forEach(sentence => {
-                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                         if (wordsInSentence.length >= 2) totalP3++;
-                     });
-                     const gameModeId = `fill-word-${practiceNum}`;
-                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
-                     progress = { completed: completedSet.size, total: totalP3 };
-                } else if (practiceNum % 100 === 4) {
-                     let totalP4 = 0;
-                     exampleData.forEach(sentence => {
-                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                         if (wordsInSentence.length >= 3) totalP4++;
-                     });
-                     const gameModeId = `fill-word-${practiceNum}`;
-                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
-                     progress = { completed: completedSet.size, total: totalP4 };
-                } else if (practiceNum % 100 === 5) {
-                     let totalP5 = 0;
-                     exampleData.forEach(sentence => {
-                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                         if (wordsInSentence.length >= 4) totalP5++;
-                     });
-                     const gameModeId = `fill-word-${practiceNum}`;
-                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
-                     progress = { completed: completedSet.size, total: totalP5 };
-                } else if (practiceNum % 100 === 6) {
-                     let totalP6 = 0;
-                     exampleData.forEach(sentence => {
-                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                         if (wordsInSentence.length >= 5) totalP6++;
-                     });
-                     const gameModeId = `fill-word-${practiceNum}`;
-                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
-                     progress = { completed: completedSet.size, total: totalP6 };
-                } else if (practiceNum % 100 === 7) {
-                     let totalP7 = 0;
-                     exampleData.forEach(sentence => {
-                         const wordsInSentence = userVocabulary.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                         if (wordsInSentence.length >= 1) totalP7++;
-                     });
-                     const gameModeId = `fill-word-${practiceNum}`;
-                     const completedSet = completedMultiWordByGameMode[gameModeId] || new Set();
-                     progress = { completed: completedSet.size, total: totalP7 };
-                }
-                newProgressData[practiceNum] = progress;
-            });
+        const allPracticeNumbers = [1, 2, 3, 4, 5, 6, 7];
+        for (let i = 1; i <= MAX_PREVIEWS; i++) {
+          allPracticeNumbers.push(...[1,2,3,4,5,6,7].map(p => i * 100 + p));
         }
+
+        if (selectedType === 'tracNghiem') {
+            for(const pNum of allPracticeNumbers) {
+                if (pNum > 100 && pNum % 100 > 3) continue; // Trắc nghiệm chỉ có 3 bài
+                if (pNum < 100 && pNum > 3) continue;
+
+                const modeId = `quiz-${pNum}`;
+                const completedSet = completedWordsByMode.get(modeId) || new Set();
+                let progress = { completed: 0, total: 0 };
+
+                if (pNum % 100 === 1) { // Practice 1
+                    progress = { completed: completedSet.size, total: totalQuizQuestions };
+                } else if (pNum % 100 === 2 || pNum % 100 === 3) { // Practice 2 & 3
+                    const completed = Array.from(completedSet).filter(word => learnedWordsInExamples.has(word)).length;
+                    progress = { completed: completed, total: learnedWordsInExamples.size };
+                }
+                newProgressData[pNum] = progress;
+            }
+        } else if (selectedType === 'dienTu') {
+            for (const pNum of allPracticeNumbers) {
+                 const basePNum = pNum % 100;
+                 const modeId = `fill-word-${pNum}`;
+                 let progress = { completed: 0, total: 0 };
+                 
+                 switch (basePNum) {
+                    case 1: // Đoán từ qua hình ảnh
+                        progress = { completed: (completedWordsByMode.get(modeId) || new Set()).size, total: userVocabSet.size };
+                        break;
+                    case 2: // Điền 1 từ vào câu
+                        const completedP2 = Array.from(completedWordsByMode.get(modeId) || new Set()).filter(word => learnedWordsInExamples.has(word)).length;
+                        progress = { completed: completedP2, total: learnedWordsInExamples.size };
+                        break;
+                    case 3: // Điền 2 từ
+                    case 4: // Điền 3 từ
+                    case 5: // Điền 4 từ
+                    case 6: // Điền 5 từ
+                        // Lấy tổng số câu tương ứng (đã tính ở trên)
+                        const totalKey = basePNum === 3 ? 2 : basePNum === 4 ? 3 : basePNum === 5 ? 4 : 5;
+                        progress = { completed: (completedMultiWordByMode.get(modeId) || new Set()).size, total: totalExampleQuestionsWithLearnedWords[totalKey].size };
+                        break;
+                    case 7: // Điền tất cả từ
+                        progress = { completed: (completedMultiWordByMode.get(modeId) || new Set()).size, total: totalExampleQuestionsWithLearnedWords[7].size };
+                        break;
+                 }
+                 newProgressData[pNum] = progress;
+            }
+        }
+        
         setProgressData(newProgressData);
+
       } catch (error) {
         console.error("Lỗi khi tính toán tiến trình:", error);
       } finally {
         setLoading(false);
+        console.timeEnd("calculateProgress"); // Kết thúc đo thời gian và in ra console
       }
     };
+    // ===================================================================================
+    // END: TỐI ƯU HÀM TÍNH TOÁN TIẾN ĐỘ
+    // ===================================================================================
+
     calculateProgress();
   }, [user, selectedType]);
   
