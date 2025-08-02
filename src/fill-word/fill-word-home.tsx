@@ -80,6 +80,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     setUserInput('');
   };
 
+  // --- REFACTORED AND OPTIMIZED `useEffect` for data fetching and processing ---
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) {
@@ -89,139 +90,100 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       try {
         setLoading(true); setError(null);
 
+        // 1. DATA FETCHING: Get all user-specific data concurrently.
         const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
           getDocs(collection(db, 'users', user.uid, 'completedWords')),
-          getDocs(collection(db, 'users', user.uid, 'completedMultiWord')) // Fetch from the new subcollection
+          getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
         ]);
-
+        
+        // 2. PREPARE FAST LOOKUP STRUCTURES for user data.
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
         const fetchedCoins = userData.coins || 0;
         const fetchedMasteryCount = userData.masteryCards || 0;
-        
         const gameModeId = `fill-word-${selectedPractice}`;
+        
         const fetchedCompletedWords = new Set<string>();
+        const completedSource = isMultiWordGame ? completedMultiWordSnapshot : completedWordsSnapshot;
+        completedSource.forEach(docSnap => {
+            const data = docSnap.data();
+            if (isMultiWordGame) {
+                if (data.completedIn?.[gameModeId]) fetchedCompletedWords.add(docSnap.id.toLowerCase());
+            } else {
+                if (data.gameModes?.[gameModeId]) fetchedCompletedWords.add(docSnap.id.toLowerCase());
+            }
+        });
+        
+        const userVocabSet = new Set<string>();
+        const userVocabList: {word: string, id: string}[] = [];
+        openedVocabSnapshot.forEach((vocabDoc) => {
+            const word = vocabDoc.data().word;
+            if (word) {
+                userVocabSet.add(word.toLowerCase());
+                userVocabList.push({word: word, id: vocabDoc.id});
+            }
+        });
 
-        if (isMultiWordGame) {
-            // For multi-word practices, check the new subcollection for this specific game mode
-            completedMultiWordSnapshot.forEach(docSnap => {
-                const data = docSnap.data();
-                if (data.completedIn && data.completedIn[gameModeId]) {
-                    fetchedCompletedWords.add(docSnap.id.toLowerCase());
-                }
-            });
-        } else {
-            // For single-word practices, the source of truth is the gameMode flag in the subcollection.
-            completedWordsSnapshot.forEach((completedDoc) => {
-                if (completedDoc.data()?.gameModes?.[gameModeId]) {
-                  fetchedCompletedWords.add(completedDoc.id.toLowerCase());
+        // 3. EFFICIENT PRE-COMPUTATION (Core Optimization)
+        // Iterate over large data sources only ONCE to build a fast lookup map.
+        const sentenceToUserVocabMap = new Map<any, string[]>();
+        if (userVocabSet.size > 0 && selectedPractice % 100 !== 1) {
+            // Use a single, powerful regex for a massive performance boost.
+            const vocabRegex = new RegExp(`\\b(${Array.from(userVocabSet).join('|')})\\b`, 'ig');
+            exampleData.forEach(sentence => {
+                const matches = sentence.english.match(vocabRegex);
+                if (matches) {
+                    // Store the found words, in order, for this sentence.
+                    const uniqueOrderedWords = [...new Set(matches.map(w => w.toLowerCase()))];
+                    sentenceToUserVocabMap.set(sentence, uniqueOrderedWords);
                 }
             });
         }
-
+        
+        // 4. BUILD GAME VOCABULARY using the fast, pre-computed structures.
         let gameVocabulary: VocabularyItem[] = [];
-        const userVocabularyWords: string[] = [];
-        openedVocabSnapshot.forEach((vocabDoc) => {
-            const data = vocabDoc.data();
-            if (data.word) userVocabularyWords.push(data.word);
-        });
+        const practiceType = selectedPractice % 100;
 
-        if (selectedPractice === 1 || selectedPractice === 101) {
-            openedVocabSnapshot.forEach((vocabDoc) => {
-                const data = vocabDoc.data(); const imageIndex = Number(vocabDoc.id);
-                if (data.word && !isNaN(imageIndex)) { gameVocabulary.push({ word: data.word, hint: `Nghĩa của từ "${data.word}"`, imageIndex: imageIndex }); }
-            });
-        } else if (selectedPractice === 2 || selectedPractice === 102) {
-            userVocabularyWords.forEach(word => {
-                const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
-                const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
-                if (matchingSentences.length > 0) {
-                    const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
-                    gameVocabulary.push({ word: word, question: randomSentence.english.replace(wordRegex, '___'), vietnameseHint: randomSentence.vietnamese, hint: `Điền từ còn thiếu. Gợi ý: ${randomSentence.vietnamese}` });
+        if (practiceType === 1) {
+            userVocabList.forEach(({word, id}) => {
+                const imageIndex = Number(id);
+                if (!isNaN(imageIndex)) {
+                    gameVocabulary.push({ word, hint: `Nghĩa của từ "${word}"`, imageIndex });
                 }
             });
-        } else if (selectedPractice === 3 || selectedPractice === 103) {
-            exampleData.forEach(sentence => {
-                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                if (wordsInSentence.length >= 2) {
-                    const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 2);
-                    const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
-                    const [word1, word2] = correctlyOrderedWords;
-                    let questionText = sentence.english;
-                    questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
-                    gameVocabulary.push({ word: `${word1} ${word2}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 2 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
+        } else {
+            // All other practices (2-7) use the pre-computed map.
+            sentenceToUserVocabMap.forEach((userWordsInSentence, sentence) => {
+                let wordsToHide: string[] = [];
+                let requiredWordCount = 0;
+
+                switch (practiceType) {
+                    case 2: if (userWordsInSentence.length >= 1) { requiredWordCount = 1; wordsToHide = [userWordsInSentence[0]]; } break;
+                    case 3: if (userWordsInSentence.length >= 2) { requiredWordCount = 2; wordsToHide = userWordsInSentence.slice(0, 2); } break;
+                    case 4: if (userWordsInSentence.length >= 3) { requiredWordCount = 3; wordsToHide = userWordsInSentence.slice(0, 3); } break;
+                    case 5: if (userWordsInSentence.length >= 4) { requiredWordCount = 4; wordsToHide = userWordsInSentence.slice(0, 4); } break;
+                    case 6: if (userWordsInSentence.length >= 5) { requiredWordCount = 5; wordsToHide = userWordsInSentence.slice(0, 5); } break;
+                    case 7: if (userWordsInSentence.length >= 1) { requiredWordCount = userWordsInSentence.length; wordsToHide = userWordsInSentence; } break;
                 }
-            });
-        } else if (selectedPractice === 4 || selectedPractice === 104) {
-             exampleData.forEach(sentence => {
-                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                if (wordsInSentence.length >= 3) {
-                    const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 3);
-                    const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
-                    const [word1, word2, word3] = correctlyOrderedWords;
-                    let questionText = sentence.english;
-                    questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word3}\\b`, 'i'), '___');
-                    gameVocabulary.push({ word: `${word1} ${word2} ${word3}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 3 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
-                }
-            });
-        } else if (selectedPractice === 5 || selectedPractice === 105) {
-             exampleData.forEach(sentence => {
-                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                if (wordsInSentence.length >= 4) {
-                    const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 4);
-                    const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
-                    const [word1, word2, word3, word4] = correctlyOrderedWords;
-                    let questionText = sentence.english;
-                    questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word3}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word4}\\b`, 'i'), '___');
-                    gameVocabulary.push({ word: `${word1} ${word2} ${word3} ${word4}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 4 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
-                }
-            });
-        } else if (selectedPractice === 6 || selectedPractice === 106) {
-             exampleData.forEach(sentence => {
-                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
-                if (wordsInSentence.length >= 5) {
-                    const wordsToHideShuffled = shuffleArray(wordsInSentence).slice(0, 5);
-                    const correctlyOrderedWords = wordsToHideShuffled.sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()) );
-                    const [word1, word2, word3, word4, word5] = correctlyOrderedWords;
-                    let questionText = sentence.english;
-                    questionText = questionText.replace(new RegExp(`\\b${word1}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word2}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word3}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word4}\\b`, 'i'), '___');
-                    questionText = questionText.replace(new RegExp(`\\b${word5}\\b`, 'i'), '___');
-                    gameVocabulary.push({ word: `${word1} ${word2} ${word3} ${word4} ${word5}`, question: questionText, vietnameseHint: sentence.vietnamese, hint: `Điền 5 từ còn thiếu. Gợi ý: ${sentence.vietnamese}` });
-                }
-            });
-        } else if (selectedPractice % 100 === 7) {
-             exampleData.forEach(sentence => {
-                const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                 
-                if (wordsInSentence.length >= 1) {
-                    const correctlyOrderedWords = wordsInSentence
-                        .sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()));
-
-                    // Create a robust regex to find and replace all target words at once
-                    const wordsToHideRegex = new RegExp(`\\b(${correctlyOrderedWords.map(w => w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`, 'gi');
+                if (wordsToHide.length > 0) {
+                    const answerKey = wordsToHide.join(' ');
+                    // Robustly create the question by replacing all target words at once.
+                    const wordsToHideRegex = new RegExp(`\\b(${wordsToHide.map(w => w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`, 'gi');
                     const questionText = sentence.english.replace(wordsToHideRegex, '___');
-                    const answerKey = correctlyOrderedWords.join(' ');
                     
-                    gameVocabulary.push({ 
-                        word: answerKey, 
-                        question: questionText, 
-                        vietnameseHint: sentence.vietnamese, 
-                        hint: `Điền ${correctlyOrderedWords.length} từ còn thiếu. Gợi ý: ${sentence.vietnamese}` 
+                    gameVocabulary.push({
+                        word: answerKey,
+                        question: questionText,
+                        vietnameseHint: sentence.vietnamese,
+                        hint: `Điền ${requiredWordCount} từ còn thiếu. Gợi ý: ${sentence.vietnamese}`
                     });
                 }
             });
         }
-
+        
+        // 5. SET STATE
         setVocabularyList(gameVocabulary);
         setCoins(fetchedCoins);
         setMasteryCount(fetchedMasteryCount);
@@ -238,6 +200,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
     fetchUserData();
   }, [user, selectedPractice, isMultiWordGame]);
+
 
   useEffect(() => {
     if (!loading && !error && vocabularyList.length > 0 && !isInitialLoadComplete.current) {
@@ -522,5 +485,3 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     </div>
   );
 }
-
-// --- END OF FILE: fill-word-home.tsx ---
