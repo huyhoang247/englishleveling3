@@ -91,12 +91,11 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
                 </div>
             </div>
 
-            {/* Actions (Progress and Upgrade Button) - Spaced vertically to bottom */}
-            {/* === CHANGE START: Updated layout and progress display === */}
+            {/* Actions (Progress and Upgrade Button) */}
+            {/* === CHANGE START: Removed star icon from progress display === */}
             <div className="flex-shrink-0 flex flex-col justify-end items-end gap-2">
-                {/* Refined Progress Display */}
-                <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <StarIcon size={14} className="text-yellow-400/80" />
+                {/* Simplified Progress Display */}
+                <div className="flex items-center gap-1 text-xs text-slate-400">
                     <span className="font-bold text-white">{hamster.progress}</span>
                     <span>/</span>
                     <span>{hamster.progressToLevelUp}</span>
@@ -114,8 +113,8 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
                     <span>{formatNumber(hamster.upgradeCost)}</span>
                     <CoinIcon size={16} />
                 </button>
-                {/* === CHANGE END === */}
             </div>
+            {/* === CHANGE END === */}
         </div>
     );
 };
