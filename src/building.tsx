@@ -70,11 +70,18 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
             <div className="text-5xl">🐹</div>
             <div className="flex-grow">
                 <h3 className="font-bold text-white">{hamster.name}</h3>
-                <div className="flex items-center gap-2 text-sm text-slate-300 mb-1">
-                    <span>Lv. {hamster.level}</span>
-                    <div className="w-1/2 bg-slate-600 rounded-full h-2 my-1"><div className="bg-green-500 h-2 rounded-full" style={{ width: `${levelProgress}%` }}></div></div>
+                {/* THAY ĐỔI: Giao diện Level và Progress Bar được thiết kế lại */}
+                <div className="mt-1.5 mb-2">
+                    <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">
+                        Level {hamster.level}
+                    </span>
                 </div>
-                <p className="text-xs text-amber-400 flex items-center gap-1"><DollarSignIcon size={12} /> {formatNumber(hamster.earnings)}/h</p>
+                <div className="flex items-center gap-3">
+                    <div className="flex-grow bg-slate-600 rounded-full h-2">
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: `${levelProgress}%` }}></div>
+                    </div>
+                    <p className="text-xs text-amber-400 flex items-center gap-1 flex-shrink-0"><DollarSignIcon size={12} /> {formatNumber(hamster.earnings)}/h</p>
+                </div>
             </div>
             <button onClick={() => onUpgrade(hamster.id)} disabled={!canUpgrade} className="bg-pink-600 text-white font-bold py-2 px-4 rounded-lg transition-all hover:bg-pink-500 hover:scale-105 active:scale-100 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100">
                 <div className="text-sm">Nâng cấp</div>
@@ -274,11 +281,9 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
                 <section className="mt-8">
                     <div className="flex justify-between items-center mb-3">
                         <div className="text-slate-400 font-medium">Stage 1</div>
-                        <button className="flex items-center gap-1.5 text-xs font-semibold text-indigo-400 border border-indigo-500/50 rounded-md px-3 py-1 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors">
+                        {/* THAY ĐỔI: Bỏ icon mũi tên khỏi nút View Stage */}
+                        <button className="flex items-center text-xs font-semibold text-indigo-400 border border-indigo-500/50 rounded-md px-3 py-1 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors">
                             <span>View Stage</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
                         </button>
                     </div>
                     <div className="space-y-3">
