@@ -75,7 +75,7 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
             <div className="text-5xl flex-shrink-0 self-center">🐹</div>
             
             {/* Info (Name, Level, Earnings) - Centered vertically */}
-            <div className="flex-grow min-w-0 space-y-2 self-center">
+            <div className="flex-grow min-w-0 space-y-2.5 self-center">
                 <h3 className="font-bold text-white truncate">{hamster.name}</h3>
                 
                 <div className="flex items-center gap-3">
