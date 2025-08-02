@@ -31,11 +31,9 @@ const GemIcon: React.FC<GemIconProps> = ({ size = 24, className = '', ...props }
     </div>
 );
 
-const DollarSignIcon = ({ size = 24, className = '' }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <line x1="12" y1="2" x2="12" y2="22"></line>
-    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-  </svg>
+// THÊM MỚI: Component CoinIcon sử dụng tài nguyên từ game-assets
+const CoinIcon = ({ size = 24, className = '' }) => (
+    <img src={uiAssets.goldIcon} alt="Coin Icon" className={className} style={{ width: size, height: size, objectFit: 'contain' }} />
 );
 
 const StarIcon = ({ size = 24, className = '' }) => (
@@ -95,7 +93,7 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
                 </div>
 
                 <p className="text-xs text-amber-400 flex items-center gap-1">
-                    <DollarSignIcon size={12} /> {formatNumber(hamster.earnings)}/h
+                    <CoinIcon size={12} /> {formatNumber(hamster.earnings)}/h
                 </p>
             </div>
 
@@ -114,7 +112,7 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
                         : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 active:scale-100'}`}
                 >
                     <span>{formatNumber(hamster.upgradeCost)}</span>
-                    <span className="text-yellow-400 text-sm">💰</span>
+                    <CoinIcon size={16} />
                 </button>
             </div>
         </div>
@@ -132,9 +130,12 @@ const LockedHamsterCard = ({ hamster, onUnlock, userCoins }: { hamster: any, onU
             <div className="text-5xl filter grayscale"><span>🔒</span></div>
             <div className="flex-grow">
                 <h3 className="font-bold text-slate-400">{hamster.name}</h3>
-                <p className="text-xs text-amber-500 flex items-center gap-1"><DollarSignIcon size={12} /> {formatNumber(hamster.earnings)}/h</p>
+                <p className="text-xs text-amber-500 flex items-center gap-1"><CoinIcon size={12} /> {formatNumber(hamster.earnings)}/h</p>
             </div>
-            <button onClick={() => onUnlock(hamster.id)} disabled={!canUnlock} className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 px-5 rounded-lg transition-all hover:from-amber-400 hover:to-orange-400 hover:scale-105 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100">Mở khóa {formatNumber(hamster.unlockCost)}💰</button>
+            <button onClick={() => onUnlock(hamster.id)} disabled={!canUnlock} className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 px-5 rounded-lg transition-all hover:from-amber-400 hover:to-orange-400 hover:scale-105 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100">
+                <span>Mở khóa {formatNumber(hamster.unlockCost)}</span>
+                <CoinIcon size={20} />
+            </button>
         </div>
     );
 };
@@ -202,7 +203,7 @@ const StorageUpgradeModal = ({ isOpen, onClose, onUpgrade, currentMax, nextMax, 
                                 : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 hover:shadow-md hover:shadow-yellow-500/10 active:scale-100'}`}
                         >
                             <span>{formatNumber(upgradeCost)}</span>
-                            <span className="text-yellow-400">💰</span>
+                            <CoinIcon size={16} />
                         </button>
                     </div>
                     {!canAfford && !isProcessing && <p className="text-right text-xs text-red-400 mt-2">Không đủ vàng</p>}
