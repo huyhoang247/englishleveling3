@@ -135,7 +135,8 @@ export default function Auth({ appVersion }) {
   }
 
   return (
-    <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4 font-sans relative">
+    // <-- THAY ĐỔI Ở ĐÂY: Bỏ `justify-center` và thêm `justify-start pt-20`
+    <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-start pt-20 p-4 font-sans relative">
       <div className="w-full max-w-md">
         {user ? (
           // Giao diện khi đã đăng nhập (Không thay đổi)
@@ -161,12 +162,10 @@ export default function Auth({ appVersion }) {
             <img
               src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets/images/logo.webp"
               alt="App Logo"
-              className="w-32 h-32 mx-auto mb-6" // <-- GIẢM KHOẢNG CÁCH DƯỚI
+              className="w-32 h-32 mx-auto mb-6"
             />
 
             <div className="bg-gray-800 p-8 pt-10 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up border border-gray-700">
-              
-              {/* === CÁC DÒNG CHỮ TIÊU ĐỀ ĐÃ BỊ XÓA Ở ĐÂY === */}
               
               {error && (
                 <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 mb-5 rounded-lg text-center" role="alert">
@@ -175,7 +174,6 @@ export default function Auth({ appVersion }) {
               )}
 
               <form onSubmit={isRegistering ? handleRegister : handleLogin} className="space-y-6">
-                {/* Ô nhập Email */}
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3"><MailIcon /></span>
                   <input
@@ -186,7 +184,6 @@ export default function Auth({ appVersion }) {
                   />
                 </div>
 
-                {/* Ô nhập Username (chỉ khi đăng ký) */}
                 {isRegistering && (
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3"><UserIcon /></span>
@@ -199,7 +196,6 @@ export default function Auth({ appVersion }) {
                   </div>
                 )}
                 
-                {/* Ô nhập Mật khẩu */}
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3"><LockIcon /></span>
                   <input
@@ -210,7 +206,6 @@ export default function Auth({ appVersion }) {
                   />
                 </div>
 
-                {/* Nút Submit chính */}
                 <button type="submit" disabled={loading} className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center">
                   {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : (isRegistering ? 'Đăng ký' : 'Đăng nhập')}
                 </button>
