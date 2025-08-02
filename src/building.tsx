@@ -74,26 +74,26 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
             {/* Icon - Centered vertically */}
             <div className="text-5xl flex-shrink-0 self-center">🐹</div>
             
-            {/* Info (Name, Progress, Earnings) - Centered vertically */}
+            {/* Info (Name, Level, Earnings) - Centered vertically */}
             <div className="flex-grow min-w-0 space-y-1.5 self-center">
                 <h3 className="font-bold text-white truncate">{hamster.name}</h3>
                 
-                {/* Progress Display */}
-                <div className="text-sm font-medium bg-slate-900/50 rounded-lg w-full text-center py-1">
-                    <span className="font-bold text-white">{hamster.progress}</span>
-                    <span className="text-slate-400"> / {hamster.progressToLevelUp}</span>
-                </div>
+                <span className="text-xs font-bold text-slate-300 bg-slate-700/60 px-2 py-0.5 rounded-full border border-slate-600 inline-block">
+                    Level {hamster.level}
+                </span>
 
                 <p className="text-xs text-amber-400 flex items-center gap-1">
                     <CoinIcon size={12} /> {formatNumber(hamster.earnings)}/h
                 </p>
             </div>
 
-            {/* Actions (Level and Upgrade Button) - Spaced vertically to top and bottom */}
+            {/* Actions (Progress and Upgrade Button) - Spaced vertically to top and bottom */}
             <div className="flex-shrink-0 flex flex-col justify-between items-end">
-                <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">
-                    Level {hamster.level}
-                </span>
+                <div className="text-sm font-medium bg-slate-700/80 rounded-lg px-2.5 py-1 text-center">
+                    <span className="font-bold text-white">{hamster.progress}</span>
+                    <span className="text-slate-400"> / {hamster.progressToLevelUp}</span>
+                </div>
+
                 <button 
                     onClick={() => onUpgrade(hamster.id)}
                     disabled={!canUpgrade}
