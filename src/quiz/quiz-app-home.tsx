@@ -8,16 +8,62 @@ import AnalysisDashboard from '../AnalysisDashboard.tsx'; // --- ĐÃ THÊM
 
 // Imports for progress calculation
 import { db, auth } from '../firebase.js';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { collection, doc, getDoc, getDocs, updateDoc, increment } from 'firebase/firestore';
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
+
+// TÁI CẤU TRÚC: TẠO CÁC MAP TRA CỨU ĐỂ TỐI ƯU HIỆU NĂNG
+// Các Map này được tạo một lần duy nhất nhờ useMemo, giúp tra cứu nhanh hơn nhiều
+// so với việc lặp qua các mảng lớn (quizData, exampleData) mỗi khi tính toán.
+const useOptimizedData = () => {
+  // Map từ một từ vựng (lowercase) tới các câu hỏi trắc nghiệm chứa từ đó.
+  const wordToQuizQuestionMap = useMemo(() => {
+    const map = new Map<string, any[]>();
+    quizData.forEach(q => {
+      // Giả định mỗi câu hỏi được liên kết với một từ vựng chính thông qua một pattern nào đó.
+      // Ở đây, ta tìm từ trong userVocabulary khớp với câu hỏi. Để tối ưu, ta sẽ tạo map
+      // cho tất cả các từ có thể có trong câu hỏi.
+      const words = q.question.toLowerCase().match(/\b\w+\b/g) || [];
+      const uniqueWords = new Set(words);
+      uniqueWords.forEach(word => {
+        if (!map.has(word)) {
+          map.set(word, []);
+        }
+        map.get(word)!.push(q);
+      });
+    });
+    return map;
+  }, []);
+
+  // Map từ một từ vựng (lowercase) tới index của các câu ví dụ chứa từ đó.
+  const wordToExampleSentenceMap = useMemo(() => {
+    const map = new Map<string, number[]>();
+    exampleData.forEach((ex, index) => {
+      const words = ex.english.toLowerCase().match(/\b\w+\b/g) || [];
+      const uniqueWords = new Set(words);
+      uniqueWords.forEach(word => {
+        if (!map.has(word)) {
+          map.set(word, []);
+        }
+        map.get(word)!.push(index);
+      });
+    });
+    return map;
+  }, []);
+
+  return { wordToQuizQuestionMap, wordToExampleSentenceMap };
+};
+
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
   const [selectedPractice, setSelectedPractice] = useState(null);
+
+  // TÁI CẤU TRÚC: Gọi hook để lấy dữ liệu đã được tối ưu hóa.
+  const optimizedData = useOptimizedData();
 
   const handleQuizSelect = useCallback((quiz) => {
     setSelectedQuiz(quiz);
@@ -176,7 +222,8 @@ export default function QuizAppHome() {
           </div>
         );
       case 'practices':
-        return <PracticeList selectedType={selectedType} onPracticeSelect={handlePracticeSelect} />;
+        // TÁI CẤU TRÚC: Truyền dữ liệu đã tối ưu hóa vào component con
+        return <PracticeList selectedType={selectedType} onPracticeSelect={handlePracticeSelect} optimizedData={optimizedData} />;
       default:
         return <div>Nội dung không tồn tại</div>;
     }
@@ -374,10 +421,11 @@ const ReviewItem = memo(({ practiceNumber, previewLevel, isLocked, isCompleted, 
 
 
 // Component to display practice list with progress
-function PracticeList({ selectedType, onPracticeSelect }) {
+function PracticeList({ selectedType, onPracticeSelect, optimizedData }) {
+  const { wordToQuizQuestionMap, wordToExampleSentenceMap } = optimizedData;
   const [progressData, setProgressData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(auth.currentUser);
+  const [user, setUser] = useState(auth.currentUser);
   const [view, setView] = useState<'main' | 'reviews'>('main');
   const [selectedPracticeForReview, setSelectedPracticeForReview] = useState<number | null>(null);
   const [isRewardsPopupOpen, setIsRewardsPopupOpen] = useState(false);
@@ -399,14 +447,10 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       return;
     }
 
-    // ===================================================================================
-    // START: TỐI ƯU HÀM TÍNH TOÁN TIẾN ĐỘ - PHIÊN BẢN SỬA LỖI
-    // ===================================================================================
+    // TÁI CẤU TRÚC: Thuật toán tính toán tiến trình được viết lại hoàn toàn để tối ưu hiệu năng.
     const calculateProgress = async () => {
-      console.time("calculateProgress_v2");
       setLoading(true);
       try {
-        // --- GIAI ĐOẠN 1: LẤY DỮ LIỆU THÔ TỪ FIRESTORE ---
         const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
@@ -416,137 +460,136 @@ function PracticeList({ selectedType, onPracticeSelect }) {
         
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
         setClaimedRewards(userData.claimedQuizRewards || {});
+        
+        const userVocabulary = openedVocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
+        const userVocabSet = new Set(userVocabulary.map(v => v.toLowerCase()));
 
-        // --- GIAI ĐOẠN 2: TÁI CẤU TRÚC DỮ LIỆU ĐỂ TRA CỨU NHANH ---
-        const userVocabSet = new Set(openedVocabSnapshot.docs.map(d => d.data().word?.toLowerCase()).filter(Boolean));
-
-        const completedWordsByMode = new Map<string, Set<string>>();
+        const completedWordsByGameMode = {};
         completedWordsSnapshot.forEach(doc => {
           const gameModes = doc.data().gameModes;
           if (gameModes) {
             for (const mode in gameModes) {
-              if (!completedWordsByMode.has(mode)) completedWordsByMode.set(mode, new Set());
-              completedWordsByMode.get(mode)!.add(doc.id.toLowerCase());
+              if (!completedWordsByGameMode[mode]) completedWordsByGameMode[mode] = new Set();
+              completedWordsByGameMode[mode].add(doc.id.toLowerCase());
             }
           }
         });
 
-        const completedMultiWordByMode = new Map<string, Set<string>>();
+        const completedMultiWordByGameMode = {};
         completedMultiWordSnapshot.forEach(docSnap => {
             const completedIn = docSnap.data().completedIn || {};
             for (const mode in completedIn) {
-                if (!completedMultiWordByMode.has(mode)) completedMultiWordByMode.set(mode, new Set());
-                completedMultiWordByMode.get(mode)!.add(docSnap.id.toLowerCase());
-            }
-        });
-
-        // --- GIAI ĐOẠN 3: XỬ LÝ DỮ LIỆU TĨNH MỘT LẦN ĐỂ TÍNH "TOTAL" ---
-        
-        // 3.1. Tính tổng cho các bài tập liên quan đến exampleData
-        const totalCounters = {
-            sentencesWithAtLeast1Word: new Set<string>(),
-            sentencesWithAtLeast2Words: new Set<string>(),
-            sentencesWithAtLeast3Words: new Set<string>(),
-            sentencesWithAtLeast4Words: new Set<string>(),
-            sentencesWithAtLeast5Words: new Set<string>(),
-            allLearnedWordsInExamples: new Set<string>(),
-        };
-        
-        exampleData.forEach(sentence => {
-            const uniqueWordsInSentence = new Set((sentence.english.toLowerCase().match(/\b(\w+)\b/g) || []));
-            let learnedWordsCount = 0;
-            
-            uniqueWordsInSentence.forEach(word => {
-                if(userVocabSet.has(word)) {
-                    learnedWordsCount++;
-                    totalCounters.allLearnedWordsInExamples.add(word);
+                if (!completedMultiWordByGameMode[mode]) {
+                    completedMultiWordByGameMode[mode] = new Set();
                 }
-            });
-            
-            if (learnedWordsCount >= 1) totalCounters.sentencesWithAtLeast1Word.add(sentence.id);
-            if (learnedWordsCount >= 2) totalCounters.sentencesWithAtLeast2Words.add(sentence.id);
-            if (learnedWordsCount >= 3) totalCounters.sentencesWithAtLeast3Words.add(sentence.id);
-            if (learnedWordsCount >= 4) totalCounters.sentencesWithAtLeast4Words.add(sentence.id);
-            if (learnedWordsCount >= 5) totalCounters.sentencesWithAtLeast5Words.add(sentence.id);
-        });
-
-        // 3.2. Tính tổng cho bài Trắc nghiệm Practice 1 (dựa trên quizData)
-        let totalQuizDataQuestions = 0;
-        quizData.forEach(q => {
-            const wordsInQuestion = q.question.toLowerCase().match(/\b(\w+)\b/g) || [];
-            if (wordsInQuestion.some(word => userVocabSet.has(word))) {
-                totalQuizDataQuestions++;
+                completedMultiWordByGameMode[mode].add(docSnap.id.toLowerCase());
             }
         });
 
-        // --- GIAI ĐOẠN 4: TÍNH TOÁN TIẾN ĐỘ ---
         let newProgressData = {};
         
-        const allPracticeNumbers: number[] = [];
-        const basePracticeNums = [1, 2, 3, 4, 5, 6, 7];
-        allPracticeNumbers.push(...basePracticeNums);
-        for (let i = 1; i <= MAX_PREVIEWS; i++) {
-          allPracticeNumbers.push(...basePracticeNums.map(p => i * 100 + p));
+        if (selectedType === 'tracNghiem') {
+            const allModes = ['1', '2', '3'];
+            for(let i = 1; i <= MAX_PREVIEWS; i++) allModes.push(`${i*100+1}`, `${i*100+2}`, `${i*100+3}`);
+
+            const relevantQuestions = new Set();
+            const relevantExamples = new Set();
+            let completedP1 = 0, completedP23 = 0;
+            
+            userVocabulary.forEach(word => {
+                const lowerWord = word.toLowerCase();
+                const questions = wordToQuizQuestionMap.get(lowerWord);
+                if (questions) questions.forEach(q => relevantQuestions.add(q));
+
+                const examples = wordToExampleSentenceMap.get(lowerWord);
+                if (examples) examples.forEach(exIdx => relevantExamples.add(exIdx));
+                
+                if (completedWordsByGameMode['quiz-1']?.has(lowerWord)) completedP1++;
+                if (completedWordsByGameMode['quiz-2']?.has(lowerWord) || completedWordsByGameMode['quiz-3']?.has(lowerWord)) completedP23++;
+            });
+
+            allModes.forEach(modeStr => {
+                const practiceNum = parseInt(modeStr, 10);
+                const gameMode = `quiz-${practiceNum}`;
+                const completedSet = completedWordsByGameMode[gameMode] || new Set();
+
+                let completedCount = 0;
+                userVocabulary.forEach(word => {
+                  if (completedSet.has(word.toLowerCase())) completedCount++;
+                });
+
+                if (practiceNum % 100 === 1) {
+                    newProgressData[practiceNum] = { completed: completedCount, total: relevantQuestions.size };
+                } else if (practiceNum % 100 === 2 || practiceNum % 100 === 3) {
+                    newProgressData[practiceNum] = { completed: completedCount, total: relevantExamples.size };
+                }
+            });
+
+        } else if (selectedType === 'dienTu') {
+            const allModes = [1, 2, 3, 4, 5, 6, 7];
+            for(let i = 1; i <= MAX_PREVIEWS; i++) allModes.push(...[1,2,3,4,5,6,7].map(p => i*100+p));
+
+            // Logic cho P1 và P2
+            const relevantExamples = new Set();
+            userVocabulary.forEach(word => {
+                const lowerWord = word.toLowerCase();
+                const examples = wordToExampleSentenceMap.get(lowerWord);
+                if (examples) examples.forEach(exIdx => relevantExamples.add(exIdx));
+            });
+
+            // Logic cho P3-P7 (tính số lượng từ vựng trong mỗi câu)
+            const sentenceIndexToUserWords = new Map<number, string[]>();
+            userVocabulary.forEach(word => {
+                const lowerWord = word.toLowerCase();
+                const indices = wordToExampleSentenceMap.get(lowerWord);
+                if (indices) {
+                    indices.forEach(index => {
+                        if (!sentenceIndexToUserWords.has(index)) sentenceIndexToUserWords.set(index, []);
+                        sentenceIndexToUserWords.get(index)!.push(lowerWord);
+                    });
+                }
+            });
+
+            const totals = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
+            const completed = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
+            
+            totals[1] = userVocabulary.length;
+            totals[2] = relevantExamples.size;
+            
+            sentenceIndexToUserWords.forEach((_, index) => {
+                const count = sentenceIndexToUserWords.get(index)?.length || 0;
+                const sentenceId = exampleData[index].english.toLowerCase();
+                
+                if (count >= 1) { totals[7]++; if(completedMultiWordByGameMode['fill-word-7']?.has(sentenceId)) completed[7]++; }
+                if (count >= 2) { totals[3]++; if(completedMultiWordByGameMode['fill-word-3']?.has(sentenceId)) completed[3]++; }
+                if (count >= 3) { totals[4]++; if(completedMultiWordByGameMode['fill-word-4']?.has(sentenceId)) completed[4]++; }
+                if (count >= 4) { totals[5]++; if(completedMultiWordByGameMode['fill-word-5']?.has(sentenceId)) completed[5]++; }
+                if (count >= 5) { totals[6]++; if(completedMultiWordByGameMode['fill-word-6']?.has(sentenceId)) completed[6]++; }
+            });
+            
+            allModes.forEach(practiceNum => {
+                const basePractice = practiceNum % 100;
+                const gameMode = `fill-word-${practiceNum}`;
+                const completedSet = completedWordsByGameMode[gameMode] || new Set();
+
+                if (basePractice === 1) {
+                    newProgressData[practiceNum] = { completed: completedSet.size, total: totals[1] };
+                } else if (basePractice === 2) {
+                    newProgressData[practiceNum] = { completed: completedSet.size, total: totals[2] };
+                } else if (basePractice >= 3 && basePractice <= 7) {
+                    newProgressData[practiceNum] = { completed: completed[basePractice], total: totals[basePractice] };
+                }
+            });
         }
-
-        for(const pNum of allPracticeNumbers) {
-          const modeId = selectedType === 'tracNghiem' ? `quiz-${pNum}` : `fill-word-${pNum}`;
-          const basePNum = pNum % 100;
-          let progress = { completed: 0, total: 0 };
-
-          if (selectedType === 'tracNghiem') {
-            if (basePNum > 3) continue;
-            const completedSet = completedWordsByMode.get(modeId) || new Set();
-
-            if (basePNum === 1) {
-              progress = { completed: completedSet.size, total: totalQuizDataQuestions };
-            } else {
-              const completedCount = Array.from(completedSet).filter(word => totalCounters.allLearnedWordsInExamples.has(word)).length;
-              progress = { completed: completedCount, total: totalCounters.sentencesWithAtLeast1Word.size };
-            }
-
-          } else if (selectedType === 'dienTu') {
-            if (basePNum > 7) continue;
-            switch (basePNum) {
-              case 1:
-                progress = { completed: (completedWordsByMode.get(modeId) || new Set()).size, total: userVocabSet.size };
-                break;
-              case 2:
-                const completedP2 = Array.from(completedWordsByMode.get(modeId) || new Set()).filter(word => totalCounters.allLearnedWordsInExamples.has(word)).length;
-                progress = { completed: completedP2, total: totalCounters.sentencesWithAtLeast1Word.size };
-                break;
-              case 3:
-                progress = { completed: (completedMultiWordByMode.get(modeId) || new Set()).size, total: totalCounters.sentencesWithAtLeast2Words.size };
-                break;
-              case 4:
-                progress = { completed: (completedMultiWordByMode.get(modeId) || new Set()).size, total: totalCounters.sentencesWithAtLeast3Words.size };
-                break;
-              case 5:
-                progress = { completed: (completedMultiWordByMode.get(modeId) || new Set()).size, total: totalCounters.sentencesWithAtLeast4Words.size };
-                break;
-              case 6:
-                progress = { completed: (completedMultiWordByMode.get(modeId) || new Set()).size, total: totalCounters.sentencesWithAtLeast5Words.size };
-                break;
-              case 7:
-                progress = { completed: (completedMultiWordByMode.get(modeId) || new Set()).size, total: totalCounters.sentencesWithAtLeast1Word.size };
-                break;
-            }
-          }
-          newProgressData[pNum] = progress;
-        }
-        
         setProgressData(newProgressData);
-
       } catch (error) {
         console.error("Lỗi khi tính toán tiến trình:", error);
       } finally {
         setLoading(false);
-        console.timeEnd("calculateProgress_v2");
       }
     };
-    
     calculateProgress();
-  }, [user, selectedType]);
+  }, [user, selectedType, wordToQuizQuestionMap, wordToExampleSentenceMap]);
   
   const practiceDetails = useMemo(() => ({
     tracNghiem: {
@@ -566,12 +609,12 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   }), []);
   
 
-  const handleReviewClick = useCallback((practiceNumber: number) => {
+  const handleReviewClick = useCallback((practiceNumber) => {
     setSelectedPracticeForReview(practiceNumber);
     setView('reviews');
   }, []);
   
-  const handleRewardsClick = useCallback((practiceNumber: number, practiceTitle: string) => {
+  const handleRewardsClick = useCallback((practiceNumber, practiceTitle) => {
     setSelectedPracticeForRewards({ number: practiceNumber, title: practiceTitle });
     setIsRewardsPopupOpen(true);
   }, []);
@@ -698,9 +741,9 @@ function PracticeList({ selectedType, onPracticeSelect }) {
 
 // --- NEW --- Rewards Popup Component
 const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }) => {
-    const [isClaiming, setIsClaiming] = useState<string | null>(null);
+    const [isClaiming, setIsClaiming] = useState(null);
 
-    const handleClaim = useCallback(async (rewardId: string, coinAmount: number, capacityAmount: number) => {
+    const handleClaim = useCallback(async (rewardId, coinAmount, capacityAmount) => {
         if (isClaiming || !user) return;
         setIsClaiming(rewardId);
 
@@ -712,7 +755,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 [`claimedQuizRewards.${rewardId}`]: true
             });
             
-            setClaimedRewards((prev: any) => ({ ...prev, [rewardId]: true }));
+            setClaimedRewards(prev => ({ ...prev, [rewardId]: true }));
         } catch (error) {
             console.error("Error claiming reward:", error);
             alert("Đã có lỗi xảy ra khi nhận thưởng.");
@@ -727,7 +770,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         const MILESTONE_STEP = 100;
         const MAX_MILESTONES_TO_DISPLAY = 5;
 
-        const generateTiersForLevel = (levelProgress: any, levelNumber: number, levelTitle: string, multiplier: number) => {
+        const generateTiersForLevel = (levelProgress, levelNumber, levelTitle, multiplier) => {
             if (!levelProgress || levelProgress.total === 0) return null;
 
             const isInactivePreview = levelProgress.completed === 0;
@@ -736,7 +779,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
 
             for (let i = 1; i <= MAX_MILESTONES_TO_DISPLAY; i++) {
                 const milestone = i * MILESTONE_STEP;
-                if (milestone > maxPossibleMilestone + MILESTONE_STEP && milestone > levelProgress.total) break;
+                if (milestone > maxPossibleMilestone + MILESTONE_STEP) break;
 
                 const rewardId = `${selectedType}-${levelNumber}-${milestone}`;
                 if (claimedRewards[rewardId]) continue;
@@ -816,12 +859,12 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             return null;
         };
 
-        const mainProgress = progressData[practiceNumber!];
-        const mainTiers = generateTiersForLevel(mainProgress, practiceNumber!, "Luyện tập chính", 1);
+        const mainProgress = progressData[practiceNumber];
+        const mainTiers = generateTiersForLevel(mainProgress, practiceNumber, "Luyện tập chính", 1);
         if (mainTiers) tiers.push(mainTiers);
 
         for (let i = 1; i <= MAX_PREVIEWS; i++) {
-            const previewNumber = (i * 100) + practiceNumber!;
+            const previewNumber = (i * 100) + practiceNumber;
             const previewProgress = progressData[previewNumber];
             const multiplier = Math.pow(2, i);
             const previewTiers = generateTiersForLevel(previewProgress, previewNumber, `Preview ${i}`, multiplier);
