@@ -1,4 +1,4 @@
-// src/Auth.js - Dark Mode Version
+// src/Auth.js - Dark Mode Version (Redesigned Layout)
 import React, { useState, useEffect } from 'react';
 import { auth, googleProvider } from './firebase.js';
 import {
@@ -135,8 +135,9 @@ export default function Auth({ appVersion }) {
   }
 
   return (
-    // <<<<< THAY ĐỔI Ở ĐÂY: bỏ "justify-center" và thêm "pt-16" >>>>>
-    <div className="bg-gray-900 min-h-screen flex flex-col items-center pt-16 p-4 font-sans relative">
+    // --- THAY ĐỔI 1: Căn chỉnh container chính lên trên ---
+    // Đổi 'justify-center' thành 'justify-start' và thêm 'pt-16' để đẩy nội dung lên cao.
+    <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-start p-4 pt-16 font-sans relative">
       <div className="w-full max-w-md">
         {user ? (
           // Giao diện khi đã đăng nhập (Không thay đổi)
@@ -159,13 +160,18 @@ export default function Auth({ appVersion }) {
           </div>
         ) : (
           <>
+            {/* --- THAY ĐỔI 2: Logo được định vị để nằm trên box --- */}
+            {/* Bỏ 'mb-6', thêm 'relative' và 'z-10' để logo nổi lên trên. */}
             <img
               src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets/images/logo.webp"
               alt="App Logo"
-              className="w-32 h-32 mx-auto mb-6" // <-- GIẢM KHOẢNG CÁCH DƯỚI
+              className="w-32 h-32 mx-auto relative z-10"
             />
-
-            <div className="bg-gray-800 p-8 pt-10 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up border border-gray-700">
+            
+            {/* --- THAY ĐỔI 3: Box đăng nhập được kéo lên và có padding cho logo --- */}
+            {/* Thêm 'mt-[-4rem]' để kéo box lên. */}
+            {/* Thay đổi padding thành 'pt-20 px-8 pb-8' để tạo không gian cho logo. */}
+            <div className="bg-gray-800 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up border border-gray-700 relative mt-[-4rem] pt-20 px-8 pb-8">
               
               {/* === CÁC DÒNG CHỮ TIÊU ĐỀ ĐÃ BỊ XÓA Ở ĐÂY === */}
               
