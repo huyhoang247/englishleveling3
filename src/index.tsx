@@ -81,6 +81,15 @@ const App: React.FC = () => {
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0); // <-- STATE MỚI: Theo dõi tiến trình tải
+  const [logoFloating, setLogoFloating] = useState(true);
+
+  // Effect để tạo animation "float" cho logo trên màn hình loading
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLogoFloating(prev => !prev);
+    }, 2500); // Thời gian của một nửa chu kỳ animation
+    return () => clearInterval(interval);
+  }, []);
 
   // Effect để tải trước tất cả tài nguyên game, CHỈ KHI ĐÃ ĐĂNG NHẬP
   useEffect(() => {
@@ -145,13 +154,13 @@ const App: React.FC = () => {
     const progress = 10; // Giả lập một chút tiến trình cho việc xác thực
     return (
       <div className="flex flex-col items-center justify-start pt-40 w-full h-screen bg-slate-950 text-white font-sans
-                      bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
+                      bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
 
         {/* --- Logo --- */}
         <img
           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp"
           alt="Loading Logo"
-          className="w-48 h-48 object-contain mb-8"
+          className={`w-48 h-48 object-contain mb-8 transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`}
           style={{
               filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))',
           }}
@@ -194,13 +203,13 @@ const App: React.FC = () => {
     // <-- KHÔNG còn gán cứng `const progress = 50` nữa
     return (
       <div className="flex flex-col items-center justify-start pt-40 w-full h-screen bg-slate-950 text-white font-sans
-                      bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
+                      bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
 
         {/* --- Logo --- */}
         <img
           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp"
           alt="Loading Logo"
-          className="w-48 h-48 object-contain mb-8"
+          className={`w-48 h-48 object-contain mb-8 transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`}
           style={{
               filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))',
           }}
