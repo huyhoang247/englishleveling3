@@ -193,7 +193,7 @@ const App: React.FC = () => {
         </div>
 
         {/* --- Version --- */}
-        <p className="absolute bottom-4 right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60">
+        <p className="absolute right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
           Version {appVersion}
         </p>
       </div>
@@ -202,7 +202,7 @@ const App: React.FC = () => {
 
   // Giai đoạn 2: Nếu chưa đăng nhập, hiển thị màn hình đăng nhập
   if (!currentUser) {
-    return <AuthComponent appVersion={appVersion} />;
+    return <AuthComponent appVersion={appVersion} />; // Đảm bảo AuthComponent cũng nhận version
   }
 
   // Giai đoạn 3: Đã đăng nhập, nhưng đang chờ tải tài nguyên game
@@ -253,7 +253,7 @@ const App: React.FC = () => {
         </div>
 
         {/* --- Version --- */}
-        <p className="absolute bottom-4 right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60">
+        <p className="absolute right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
           Version {appVersion}
         </p>
       </div>
