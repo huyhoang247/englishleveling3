@@ -75,16 +75,18 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
             <div className="text-5xl flex-shrink-0 self-center">🐹</div>
             
             {/* Info (Name, Level, Earnings) - Centered vertically */}
-            <div className="flex-grow min-w-0 space-y-1.5 self-center">
+            <div className="flex-grow min-w-0 space-y-2 self-center">
                 <h3 className="font-bold text-white truncate">{hamster.name}</h3>
                 
-                <span className="text-xs font-bold text-slate-300 bg-slate-700/60 px-2 py-0.5 rounded-full border border-slate-600 inline-block">
-                    Level {hamster.level}
-                </span>
-
-                <p className="text-xs text-amber-400 flex items-center gap-1">
-                    <CoinIcon size={12} /> {formatNumber(hamster.earnings)}/h
-                </p>
+                <div className="flex items-center gap-3">
+                     <span className="text-xs font-bold text-slate-300 bg-slate-700/60 px-2 py-0.5 rounded-full border border-slate-600">
+                        Level {hamster.level}
+                    </span>
+                    <div className="text-xs font-bold text-green-400 flex items-center gap-1">
+                        <CoinIcon size={14} />
+                        <span>{formatNumber(hamster.earnings)}/h</span>
+                    </div>
+                </div>
             </div>
 
             {/* Actions (Progress and Upgrade Button) - Spaced vertically to top and bottom */}
