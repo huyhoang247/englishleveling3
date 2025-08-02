@@ -14,6 +14,7 @@ import { defaultVocabulary } from './list-vocabulary.ts'; // Điều chỉnh đ�
 const BookOpenIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
 const ChartBarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
 const CheckCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+const CalendarCheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>;
 const SortIcon = ({ direction }: { direction?: 'asc' | 'desc' }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block ml-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         {direction === 'asc' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />}
@@ -50,6 +51,7 @@ interface AnalysisData {
   recentCompletions: { word: string; date: string }[];
   wordMastery: WordMastery[];
 }
+type DailyActivityMap = { [date: string]: { new: number; review: number } };
 
 // --- Component Card tái sử dụng cho mỗi biểu đồ ---
 const ChartCard: FC<{ title: string; children: ReactNode }> = ({ title, children }) => (
@@ -59,12 +61,105 @@ const ChartCard: FC<{ title: string; children: ReactNode }> = ({ title, children
     </div>
 );
 
+// --- [MỚI] Component Lịch hoạt động (Activity Calendar) ---
+const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = ({ activityData }) => {
+    const calendarData = useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Bắt đầu từ thứ Hai của tuần hiện tại
+        const dayOfWeek = today.getDay(); // 0=CN, 1=T2,...
+        const startOfWeek = new Date(today);
+        // Điều chỉnh về thứ Hai (nếu là CN, lùi 6 ngày, ngược lại lùi dayOfWeek-1 ngày)
+        startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+        // Lùi lại 4 tuần từ đầu tuần này để lấy ngày đầu tiên của lưới 5x7
+        const startDate = new Date(startOfWeek);
+        startDate.setDate(startOfWeek.getDate() - (4 * 7));
+
+        const days = [];
+        const activityDates = new Set(Object.keys(activityData));
+
+        for (let i = 0; i < 35; i++) {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + i);
+            const dateString = date.toISOString().split('T')[0];
+
+            const hasActivity = activityDates.has(dateString);
+            const activityDetail = activityData[dateString] || { new: 0, review: 0 };
+            
+            days.push({
+                date,
+                dateString,
+                dayOfMonth: date.getDate(),
+                hasActivity,
+                isToday: date.getTime() === today.getTime(),
+                isFuture: date.getTime() > today.getTime(),
+                tooltip: hasActivity 
+                    ? `${date.toLocaleDateString('vi-VN')}: Học ${activityDetail.new} từ mới, ôn ${activityDetail.review} từ.`
+                    : date.toLocaleDateString('vi-VN'),
+            });
+        }
+        return days;
+    }, [activityData]);
+
+    const weekDayHeaders = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+    return (
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Chuỗi hoạt động</h3>
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
+                {weekDayHeaders.map(day => (
+                    <div key={day} className="text-xs font-semibold text-gray-500 mb-2">{day}</div>
+                ))}
+                {calendarData.map((day, index) => {
+                    const baseClass = "w-full aspect-square rounded-lg flex items-center justify-center text-xs font-semibold transition-transform duration-150 ease-in-out hover:scale-110";
+                    let dayClass = "";
+                    
+                    if (day.isFuture) {
+                        dayClass = "bg-gray-100 text-gray-300 cursor-not-allowed";
+                    } else if (day.hasActivity) {
+                        dayClass = "bg-green-500 text-white";
+                    } else {
+                        dayClass = "bg-gray-200 text-gray-400";
+                    }
+
+                    if (day.isToday) {
+                        dayClass += " ring-2 ring-offset-2 ring-indigo-500";
+                    }
+                    
+                    return (
+                        <div key={index} title={day.tooltip} className={`${baseClass} ${dayClass}`}>
+                            {day.hasActivity ? <CalendarCheckIcon /> : <span>{day.dayOfMonth}</span>}
+                        </div>
+                    );
+                })}
+            </div>
+            <div className="flex items-center justify-center sm:justify-end gap-4 mt-4 text-xs text-gray-600">
+                <div className="flex items-center gap-2">
+                    <div className="w-3.5 h-3.5 rounded-lg bg-gray-200"></div>
+                    <span>Chưa học</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-3.5 h-3.5 rounded-lg bg-green-500"></div>
+                    <span>Đã học</span>
+                </div>
+                 <div className="flex items-center gap-2">
+                    <div className="w-3.5 h-3.5 rounded-lg ring-2 ring-offset-1 ring-indigo-500"></div>
+                    <span>Hôm nay</span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- Component chính ---
 export default function AnalysisDashboard() {
   const [user, setUser] = useState<User | null>(auth.currentUser);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+  const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({}); // [MỚI] State cho lịch hoạt động
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
 
@@ -92,7 +187,7 @@ export default function AnalysisDashboard() {
 
         const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
         const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
-        const dailyActivity: { [date: string]: { new: number; review: number } } = {};
+        const dailyActivity: DailyActivityMap = {};
         const allCompletionsForRecent: { word: string; date: Date }[] = [];
         
         // --- CORRECTED LOGIC for Daily Activity (New vs Review) ---
@@ -162,6 +257,8 @@ export default function AnalysisDashboard() {
             }
         });
         
+        setDailyActivityData(dailyActivity); // [MỚI] Lưu dữ liệu hoạt động hàng ngày
+
         const learningActivityData: LearningActivity[] = Object.entries(dailyActivity)
             .map(([date, counts]) => ({ date, ...counts }))
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -302,6 +399,11 @@ export default function AnalysisDashboard() {
             </div>
         </div>
 
+        {/* --- [MỚI] Vị trí của Lịch hoạt động --- */}
+        <div className="mb-6">
+            <ActivityCalendar activityData={dailyActivityData} />
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             <ChartCard title="Tăng trưởng từ vựng">
                 <ResponsiveContainer>
@@ -424,5 +526,3 @@ export default function AnalysisDashboard() {
     </div>
   );
 }
-
-// --- END OF FILE: src/components/analysis/AnalysisDashboard.tsx ---
