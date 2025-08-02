@@ -16,7 +16,6 @@ export const uiAssets = {
   shopIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/file_000000007f8461f98fd8bdaccb0b0f6b%20(3).png",
   inventoryIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%202%2C%202025%2C%2002_56_36%20PM.png",
   missionIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/file_00000000842461f9822fc46798d5a372.png",
-  blacksmithIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%2C%202025%2C%2003_52_48%20PM.png",
   closeIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/close.png",
   towerIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%2014%2C%202025%2C%2004_53_18%20PM.png",
   gemIcon: require("./assets/images/gems.webp"),
