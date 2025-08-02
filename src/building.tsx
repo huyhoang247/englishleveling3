@@ -1,3 +1,5 @@
+// --- START OF FILE building.tsx (6).txt ---
+
 // --- START OF FILE building.tsx (7).txt ---
 
 // --- START OF FILE building.tsx (6).txt ---
@@ -89,11 +91,15 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
                 </div>
             </div>
 
-            {/* Actions (Progress and Upgrade Button) - Spaced vertically to top and bottom */}
-            <div className="flex-shrink-0 flex flex-col justify-between items-end">
-                <div className="text-sm font-medium bg-slate-700/80 rounded-lg px-2.5 py-1 text-center">
+            {/* Actions (Progress and Upgrade Button) - Spaced vertically to bottom */}
+            {/* === CHANGE START: Updated layout and progress display === */}
+            <div className="flex-shrink-0 flex flex-col justify-end items-end gap-2">
+                {/* Refined Progress Display */}
+                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <StarIcon size={14} className="text-yellow-400/80" />
                     <span className="font-bold text-white">{hamster.progress}</span>
-                    <span className="text-slate-400"> / {hamster.progressToLevelUp}</span>
+                    <span>/</span>
+                    <span>{hamster.progressToLevelUp}</span>
                 </div>
 
                 <button 
@@ -108,6 +114,7 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
                     <span>{formatNumber(hamster.upgradeCost)}</span>
                     <CoinIcon size={16} />
                 </button>
+                {/* === CHANGE END === */}
             </div>
         </div>
     );
