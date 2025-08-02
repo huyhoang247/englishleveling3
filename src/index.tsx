@@ -144,8 +144,8 @@ const App: React.FC = () => {
   if (loadingAuth) {
     const progress = 10; // Giả lập một chút tiến trình cho việc xác thực
     return (
-      <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white font-sans
-                      bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
+      <div className="flex flex-col items-center justify-start pt-40 w-full h-screen bg-slate-950 text-white font-sans
+                      bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
 
         {/* --- Logo --- */}
         <img
@@ -193,8 +193,8 @@ const App: React.FC = () => {
   if (!assetsLoaded) {
     // <-- KHÔNG còn gán cứng `const progress = 50` nữa
     return (
-      <div className="flex flex-col items-center justify-center w-full h-screen bg-slate-950 text-white font-sans
-                      bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
+      <div className="flex flex-col items-center justify-start pt-40 w-full h-screen bg-slate-950 text-white font-sans
+                      bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-800 via-slate-950 to-black">
 
         {/* --- Logo --- */}
         <img
