@@ -1,8 +1,4 @@
-// --- START OF FILE building.tsx (4).txt ---
-
-// --- START OF FILE building.tsx (3).txt ---
-
-// --- START OF FILE building.tsx ---
+// --- START OF FILE building.tsx (6).txt ---
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx';
 import { uiAssets } from './game-assets.ts'; 
@@ -64,29 +60,50 @@ const GameHeader = ({ coins, gems, onClose }: { coins: number, gems: number, onC
     </header>
 );
 
+// ==================================================================
+// ============ START OF UPDATED UnlockedHamsterCard COMPONENT ==========
+// ==================================================================
 const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, onUpgrade: (id: number) => void, userCoins: number }) => {
     const canUpgrade = userCoins >= hamster.upgradeCost && hamster.level < hamster.maxLevel;
+    const progressPercentage = (hamster.progress / hamster.progressToLevelUp) * 100;
+
     return (
         <div className="bg-slate-800/80 backdrop-blur-sm p-4 rounded-xl border border-slate-700 flex items-center gap-4 transition-all hover:bg-slate-700/70">
             <div className="text-5xl flex-shrink-0">🐹</div>
             <div className="flex-grow min-w-0">
-                <div className="flex justify-between items-baseline mb-1">
+                {/* Dòng 1: Tên và Cấp độ chính */}
+                <div className="flex justify-between items-center mb-2">
                     <h3 className="font-bold text-white truncate">{hamster.name}</h3>
-                    <span className="text-sm font-semibold text-slate-300 flex-shrink-0 ml-2">
-                        <span className="text-white">{hamster.level}</span>
-                        <span className="text-slate-500">/{hamster.maxLevel}</span>
+                    <span className="text-xs font-bold text-white bg-slate-700/80 px-2.5 py-1 rounded-full border border-slate-600 flex-shrink-0">
+                        Level {hamster.level}
                     </span>
                 </div>
-                <div>
-                    <p className="text-xs text-amber-400 flex items-center gap-1">
-                        <DollarSignIcon size={12} /> {formatNumber(hamster.earnings)}/h
-                    </p>
+                
+                {/* Dòng 2: Thanh tiến trình */}
+                <div className="relative w-full bg-slate-900/50 rounded-full h-4 mb-2 shadow-inner">
+                    <div 
+                        className="h-full rounded-full bg-gradient-to-r from-green-500 to-cyan-500 transition-all duration-500 ease-out" 
+                        style={{ width: `${progressPercentage}%` }} 
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs font-bold text-white drop-shadow-md">
+                            {hamster.progress} / {hamster.progressToLevelUp}
+                        </span>
+                    </div>
                 </div>
+
+                {/* Dòng 3: Thu nhập */}
+                <p className="text-xs text-amber-400 flex items-center gap-1">
+                    <DollarSignIcon size={12} /> {formatNumber(hamster.earnings)}/h
+                </p>
             </div>
+            
+            {/* Nút nâng cấp */}
             <button
                 onClick={() => onUpgrade(hamster.id)}
                 disabled={!canUpgrade}
-                className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 transform 
+                title="Nâng cấp"
+                className={`flex-shrink-0 flex items-center justify-center gap-2 w-28 h-10 rounded-lg text-sm font-bold transition-all duration-300 transform 
                 ${!canUpgrade
                     ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed'
                     : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 hover:shadow-md hover:shadow-yellow-500/10 active:scale-100'}`}
@@ -97,6 +114,10 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
         </div>
     );
 };
+// ================================================================
+// ============ END OF UPDATED UnlockedHamsterCard COMPONENT ==========
+// ================================================================
+
 
 const LockedHamsterCard = ({ hamster, onUnlock, userCoins }: { hamster: any, onUnlock: (id: number) => void, userCoins: number }) => {
     const canUnlock = userCoins >= hamster.unlockCost;
@@ -153,7 +174,6 @@ const StorageUpgradeModal = ({ isOpen, onClose, onUpgrade, currentMax, nextMax, 
                 <div className="flex-grow my-4 space-y-4">
                     {/* Stat Line */}
                     <div className="bg-slate-900/50 p-3 rounded-lg flex items-center gap-3 border border-slate-700/50">
-                        {/* CHANGED: Text "Sức chứa" to "Capacity" and removed icon */}
                         <span className="font-semibold text-slate-300 text-sm">Capacity</span>
                         <div className="flex flex-1 items-center justify-end gap-2 font-mono text-sm">
                             <span className="text-slate-400">{formatNumber(currentMax)}</span>
@@ -200,11 +220,12 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
     const [isProcessing, setIsProcessing] = useState(false);
     const [isStorageUpgradeModalOpen, setIsStorageUpgradeModalOpen] = useState(false);
 
+    // THAY ĐỔI: Cập nhật state của hamsters với progress
     const [hamsters, setHamsters] = useState([
-        { id: 1, name: 'Michelangelo', level: 1, maxLevel: 25, earnings: 10, upgradeCost: 50, unlocked: true },
-        { id: 2, name: 'Beethoven', level: 1, maxLevel: 25, earnings: 50, upgradeCost: 300, unlocked: true },
-        { id: 3, name: 'Shakespeare', level: 0, maxLevel: 25, earnings: 250, unlockCost: 1200, unlocked: false },
-        { id: 4, name: 'Leonardo', level: 0, maxLevel: 25, earnings: 1000, unlockCost: 5000, unlocked: false },
+        { id: 1, name: 'Michelangelo', level: 1, maxLevel: 25, earnings: 10, upgradeCost: 50, unlocked: true, progress: 0, progressToLevelUp: 10 },
+        { id: 2, name: 'Beethoven', level: 1, maxLevel: 25, earnings: 50, upgradeCost: 300, unlocked: true, progress: 5, progressToLevelUp: 15 },
+        { id: 3, name: 'Shakespeare', level: 0, maxLevel: 25, earnings: 250, unlockCost: 1200, unlocked: false, progress: 0, progressToLevelUp: 20 },
+        { id: 4, name: 'Leonardo', level: 0, maxLevel: 25, earnings: 1000, unlockCost: 5000, unlocked: false, progress: 0, progressToLevelUp: 25 },
     ]);
 
     const totalProfitPerHour = useMemo(() => hamsters.reduce((total, hamster) => hamster.unlocked ? total + hamster.earnings : total, 0), [hamsters]);
@@ -231,12 +252,40 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
         } catch (error) { console.error("Lỗi cập nhật dữ liệu:", error); alert("Có lỗi xảy ra, vui lòng thử lại."); }
         finally { setIsProcessing(false); }
     };
-
+    
+    // THAY ĐỔI: Cập nhật toàn bộ logic nâng cấp
     const upgradeHamster = (id: number) => {
         const hamster = hamsters.find(h => h.id === id);
         if (!hamster || !hamster.unlocked || hamster.level >= hamster.maxLevel) return;
+        
         handleUpdateAndSync(hamster.upgradeCost, () => {
-            setHamsters(prev => prev.map(h => h.id === id ? { ...h, level: h.level + 1, earnings: Math.floor(h.earnings * 1.15), upgradeCost: Math.floor(h.upgradeCost * 1.18), } : h));
+            setHamsters(prev => prev.map(h => {
+                if (h.id !== id) return h;
+
+                const newProgress = h.progress + 1;
+                // Mỗi lần nhấn nút, tăng nhẹ thu nhập và chi phí
+                let newEarnings = Math.floor(h.earnings * 1.05) + h.level;
+                let newUpgradeCost = Math.floor(h.upgradeCost * 1.08);
+                
+                // Kiểm tra xem có thăng cấp không
+                if (newProgress >= h.progressToLevelUp) {
+                    return {
+                        ...h,
+                        level: h.level + 1,
+                        progress: 0, // Reset tiến trình
+                        progressToLevelUp: Math.floor(h.progressToLevelUp * 1.5), // Tăng độ khó cho cấp tiếp theo
+                        earnings: newEarnings + (h.level * 50), // Thưởng lớn khi lên cấp!
+                        upgradeCost: Math.floor(newUpgradeCost * 1.2), // Tăng chi phí sau khi lên cấp
+                    };
+                } else {
+                    return {
+                        ...h,
+                        progress: newProgress,
+                        earnings: newEarnings,
+                        upgradeCost: newUpgradeCost,
+                    };
+                }
+            }));
         });
     };
 
@@ -260,7 +309,7 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
         handleUpdateAndSync(storageUpgradeCost, () => {
             setMaxStorage(s => Math.floor(s * 1.5));
             setStorageUpgradeCost(cost => Math.floor(cost * 1.8));
-            setIsStorageUpgradeModalOpen(false); // Close modal on success
+            setIsStorageUpgradeModalOpen(false);
         });
     };
 
@@ -288,7 +337,6 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
                 <section className="mt-8">
                     <div className="flex justify-between items-center mb-3">
                         <div className="text-slate-400 font-medium">Stage 1</div>
-                        {/* THAY ĐỔI: Bỏ icon mũi tên khỏi nút View Stage */}
                         <button className="flex items-center text-xs font-semibold text-indigo-400 border border-indigo-500/50 rounded-md px-3 py-1 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors">
                             <span>View Stage</span>
                         </button>
