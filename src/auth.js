@@ -12,26 +12,21 @@ import { db } from './firebase.js';
 import { doc, setDoc } from 'firebase/firestore';
 
 // --- Các biểu tượng (SVG Icons) ---
-// Không cần thay đổi các SVG, chúng ta sẽ đổi màu bằng className
-
 const MailIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
   </svg>
 );
-
 const LockIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
   </svg>
 );
-
 const UserIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
   </svg>
 );
-
 const GoogleIcon = () => (
   <svg className="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
     <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039L38.802 8.32C34.553 4.475 29.626 2 24 2C11.822 2 2 11.822 2 24s9.822 22 22 22s22-9.822 22-22c0-1.341-.138-2.65-.389-3.917z" />
@@ -42,7 +37,7 @@ const GoogleIcon = () => (
 );
 
 
-export default function Auth() {
+export default function Auth({ appVersion }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -59,7 +54,6 @@ export default function Auth() {
     return () => unsubscribe();
   }, []);
 
-  // --- Logic xử lý giữ nguyên ---
   const handleRegister = async (e) => {
     e.preventDefault();
     if (password.length < 6) {
@@ -131,8 +125,6 @@ export default function Auth() {
     setUsername('');
   };
   
-  // --- Giao diện nền tối (Dark Mode) ---
-
   if (loading && !user) {
     return (
       <div className="bg-gray-900 min-h-screen flex items-center justify-center p-4">
@@ -143,10 +135,10 @@ export default function Auth() {
   }
 
   return (
-    <div className="bg-gray-900 min-h-screen flex items-center justify-center p-4 font-sans">
+    <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4 font-sans relative">
       <div className="w-full max-w-md">
         {user ? (
-          // Giao diện khi đã đăng nhập
+          // Giao diện khi đã đăng nhập (Không thay đổi)
           <div className="bg-gray-800 p-8 rounded-xl shadow-lg shadow-blue-500/10 text-center animate-fade-in border border-gray-700">
             <img 
                 src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}&background=0D8ABC&color=fff&size=128`} 
@@ -161,119 +153,102 @@ export default function Auth() {
               disabled={loading}
               className="w-full px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-red-500 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center"
             >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                'Đăng xuất'
-              )}
+              {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : 'Đăng xuất'}
             </button>
           </div>
         ) : (
-          // Giao diện Đăng nhập / Đăng ký
-          <div className="bg-gray-800 p-8 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up border border-gray-700">
-            
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 mb-6 rounded-lg" role="alert">
-                <p className="font-medium">{error}</p>
-              </div>
-            )}
+          <>
+            {/* === LOGO ĐƯỢC DI CHUYỂN RA NGOÀI VÀ ĐẶT Ở ĐÂY === */}
+            <img
+              src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets/images/logo.webp"
+              alt="App Logo"
+              className="w-32 h-32 mx-auto mb-8" // Bỏ hiệu ứng, chỉnh kích thước và thêm khoảng cách dưới
+            />
 
-            <form onSubmit={isRegistering ? handleRegister : handleLogin} className="space-y-6">
-              {/* Ô nhập Email */}
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <MailIcon />
-                </span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="Email của bạn"
-                  required
-                  className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 text-gray-200 placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  disabled={loading}
-                />
-              </div>
+            {/* === Form Đăng nhập / Đăng ký === */}
+            <div className="bg-gray-800 p-8 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up border border-gray-700">
+              <h2 className="text-2xl font-bold text-center text-white mb-1">
+                {isRegistering ? 'Tạo Tài Khoản' : 'Chào Mừng Trở Lại'}
+              </h2>
+              <p className="text-center text-sm text-gray-400 mb-6">
+                {isRegistering ? 'Bắt đầu hành trình của bạn' : 'Đăng nhập để tiếp tục'}
+              </p>
+              
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 mb-5 rounded-lg text-center" role="alert">
+                  <p className="font-medium text-sm">{error}</p>
+                </div>
+              )}
 
-              {/* Ô nhập Username (chỉ khi đăng ký) */}
-              {isRegistering && (
+              <form onSubmit={isRegistering ? handleRegister : handleLogin} className="space-y-6">
+                {/* Ô nhập Email */}
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                    <UserIcon />
-                  </span>
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3"><MailIcon /></span>
                   <input
-                    type="text"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
-                    placeholder="Tên người dùng (username)"
-                    required
+                    type="email" value={email} onChange={e => setEmail(e.target.value)}
+                    placeholder="Email của bạn" required
                     className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 text-gray-200 placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     disabled={loading}
                   />
                 </div>
-              )}
+
+                {/* Ô nhập Username (chỉ khi đăng ký) */}
+                {isRegistering && (
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3"><UserIcon /></span>
+                    <input
+                      type="text" value={username} onChange={e => setUsername(e.target.value)}
+                      placeholder="Tên người dùng (username)" required
+                      className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 text-gray-200 placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      disabled={loading}
+                    />
+                  </div>
+                )}
+                
+                {/* Ô nhập Mật khẩu */}
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3"><LockIcon /></span>
+                  <input
+                    type="password" value={password} onChange={e => setPassword(e.target.value)}
+                    placeholder="Mật khẩu" required
+                    className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 text-gray-200 placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    disabled={loading}
+                  />
+                </div>
+
+                {/* Nút Submit chính */}
+                <button type="submit" disabled={loading} className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center">
+                  {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : (isRegistering ? 'Đăng ký' : 'Đăng nhập')}
+                </button>
+              </form>
               
-              {/* Ô nhập Mật khẩu */}
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <LockIcon />
-                </span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Mật khẩu"
-                  required
-                  className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 text-gray-200 placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  disabled={loading}
-                />
+              <div className="my-6 flex items-center">
+                  <div className="flex-grow border-t border-gray-700"></div>
+                  <span className="flex-shrink mx-4 text-gray-500 text-sm">hoặc tiếp tục với</span>
+                  <div className="flex-grow border-t border-gray-700"></div>
               </div>
 
-              {/* Nút Submit chính */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center"
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  isRegistering ? 'Đăng ký' : 'Đăng nhập'
-                )}
+              <button onClick={handleGoogle} disabled={loading} className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-gray-200 rounded-lg font-semibold hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-gray-500 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center">
+                  <GoogleIcon />
+                  Đăng nhập với Google
               </button>
-            </form>
-            
-            {/* Dải phân cách "hoặc" */}
-            <div className="my-6 flex items-center">
-                <div className="flex-grow border-t border-gray-700"></div>
-                <span className="flex-shrink mx-4 text-gray-500 text-sm">hoặc tiếp tục với</span>
-                <div className="flex-grow border-t border-gray-700"></div>
+              
+              <p className="text-center text-sm text-gray-400 mt-8">
+                {isRegistering ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}
+                <button onClick={toggleForm} disabled={loading} className="font-semibold text-blue-500 hover:text-blue-400 ml-1 focus:outline-none">
+                  {isRegistering ? 'Đăng nhập' : 'Đăng ký ngay'}
+                </button>
+              </p>
             </div>
-
-            {/* Nút đăng nhập Google */}
-            <button
-                onClick={handleGoogle}
-                disabled={loading}
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-gray-200 rounded-lg font-semibold hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-gray-500 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center"
-            >
-                <GoogleIcon />
-                Đăng nhập với Google
-            </button>
-            
-            {/* Link chuyển đổi form */}
-            <p className="text-center text-sm text-gray-400 mt-8">
-              {isRegistering ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}
-              <button
-                onClick={toggleForm}
-                disabled={loading}
-                className="font-semibold text-blue-500 hover:text-blue-400 ml-1 focus:outline-none"
-              >
-                {isRegistering ? 'Đăng nhập' : 'Đăng ký ngay'}
-              </button>
-            </p>
-          </div>
+          </>
         )}
       </div>
+       {/* --- Version --- */}
+      {!user && (
+         <p className="absolute right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
+          Version {appVersion}
+        </p>
+      )}
     </div>
   );
 }
