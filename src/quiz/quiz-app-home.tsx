@@ -13,57 +13,11 @@ import { collection, doc, getDoc, getDocs, updateDoc, increment } from 'firebase
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
-// TÁI CẤU TRÚC: TẠO CÁC MAP TRA CỨU ĐỂ TỐI ƯU HIỆU NĂNG
-// Các Map này được tạo một lần duy nhất nhờ useMemo, giúp tra cứu nhanh hơn nhiều
-// so với việc lặp qua các mảng lớn (quizData, exampleData) mỗi khi tính toán.
-const useOptimizedData = () => {
-  // Map từ một từ vựng (lowercase) tới các câu hỏi trắc nghiệm chứa từ đó.
-  const wordToQuizQuestionMap = useMemo(() => {
-    const map = new Map<string, any[]>();
-    quizData.forEach(q => {
-      // Giả định mỗi câu hỏi được liên kết với một từ vựng chính thông qua một pattern nào đó.
-      // Ở đây, ta tìm từ trong userVocabulary khớp với câu hỏi. Để tối ưu, ta sẽ tạo map
-      // cho tất cả các từ có thể có trong câu hỏi.
-      const words = q.question.toLowerCase().match(/\b\w+\b/g) || [];
-      const uniqueWords = new Set(words);
-      uniqueWords.forEach(word => {
-        if (!map.has(word)) {
-          map.set(word, []);
-        }
-        map.get(word)!.push(q);
-      });
-    });
-    return map;
-  }, []);
-
-  // Map từ một từ vựng (lowercase) tới index của các câu ví dụ chứa từ đó.
-  const wordToExampleSentenceMap = useMemo(() => {
-    const map = new Map<string, number[]>();
-    exampleData.forEach((ex, index) => {
-      const words = ex.english.toLowerCase().match(/\b\w+\b/g) || [];
-      const uniqueWords = new Set(words);
-      uniqueWords.forEach(word => {
-        if (!map.has(word)) {
-          map.set(word, []);
-        }
-        map.get(word)!.push(index);
-      });
-    });
-    return map;
-  }, []);
-
-  return { wordToQuizQuestionMap, wordToExampleSentenceMap };
-};
-
-
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
   const [selectedPractice, setSelectedPractice] = useState(null);
-
-  // TÁI CẤU TRÚC: Gọi hook để lấy dữ liệu đã được tối ưu hóa.
-  const optimizedData = useOptimizedData();
 
   const handleQuizSelect = useCallback((quiz) => {
     setSelectedQuiz(quiz);
@@ -222,8 +176,7 @@ export default function QuizAppHome() {
           </div>
         );
       case 'practices':
-        // TÁI CẤU TRÚC: Truyền dữ liệu đã tối ưu hóa vào component con
-        return <PracticeList selectedType={selectedType} onPracticeSelect={handlePracticeSelect} optimizedData={optimizedData} />;
+        return <PracticeList selectedType={selectedType} onPracticeSelect={handlePracticeSelect} />;
       default:
         return <div>Nội dung không tồn tại</div>;
     }
@@ -421,8 +374,7 @@ const ReviewItem = memo(({ practiceNumber, previewLevel, isLocked, isCompleted, 
 
 
 // Component to display practice list with progress
-function PracticeList({ selectedType, onPracticeSelect, optimizedData }) {
-  const { wordToQuizQuestionMap, wordToExampleSentenceMap } = optimizedData;
+function PracticeList({ selectedType, onPracticeSelect }) {
   const [progressData, setProgressData] = useState({});
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(auth.currentUser);
@@ -441,28 +393,29 @@ function PracticeList({ selectedType, onPracticeSelect, optimizedData }) {
     return () => unsubscribe();
   }, []);
 
+  // --- REFACTORED AND OPTIMIZED `useEffect` ---
   useEffect(() => {
     if (!user || !selectedType) {
       setLoading(false);
       return;
     }
 
-    // TÁI CẤU TRÚC: Thuật toán tính toán tiến trình được viết lại hoàn toàn để tối ưu hiệu năng.
     const calculateProgress = async () => {
       setLoading(true);
       try {
+        // 1. DATA FETCHING: Get user-specific data from Firestore
         const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
           getDocs(collection(db, 'users', user.uid, 'completedWords')),
           getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
         ]);
-        
+
+        // 2. PREPARE FAST LOOKUP STRUCTURES for user data
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
         setClaimedRewards(userData.claimedQuizRewards || {});
         
-        const userVocabulary = openedVocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
-        const userVocabSet = new Set(userVocabulary.map(v => v.toLowerCase()));
+        const userVocabSet = new Set(openedVocabSnapshot.docs.map(doc => doc.data().word?.toLowerCase()).filter(Boolean));
 
         const completedWordsByGameMode = {};
         completedWordsSnapshot.forEach(doc => {
@@ -479,117 +432,127 @@ function PracticeList({ selectedType, onPracticeSelect, optimizedData }) {
         completedMultiWordSnapshot.forEach(docSnap => {
             const completedIn = docSnap.data().completedIn || {};
             for (const mode in completedIn) {
-                if (!completedMultiWordByGameMode[mode]) {
-                    completedMultiWordByGameMode[mode] = new Set();
-                }
+                if (!completedMultiWordByGameMode[mode]) completedMultiWordByGameMode[mode] = new Set();
                 completedMultiWordByGameMode[mode].add(docSnap.id.toLowerCase());
             }
         });
 
-        let newProgressData = {};
-        
-        if (selectedType === 'tracNghiem') {
-            const allModes = ['1', '2', '3'];
-            for(let i = 1; i <= MAX_PREVIEWS; i++) allModes.push(`${i*100+1}`, `${i*100+2}`, `${i*100+3}`);
+        // 3. EFFICIENT PRE-COMPUTATION for global data (quizData, exampleData)
+        // This is the core optimization: iterate over large data sources only ONCE.
+        const sentenceToUserVocab = new Map(); // Map<Sentence, string[]>
+        const wordToRelevantExampleSentences = new Map(); // Map<string, Sentence[]>
+        const questionToUserVocab = new Map(); // Map<Question, string[]>
 
-            const relevantQuestions = new Set();
-            const relevantExamples = new Set();
-            let completedP1 = 0, completedP23 = 0;
-            
-            userVocabulary.forEach(word => {
-                const lowerWord = word.toLowerCase();
-                const questions = wordToQuizQuestionMap.get(lowerWord);
-                if (questions) questions.forEach(q => relevantQuestions.add(q));
+        if (userVocabSet.size > 0) {
+            // Use a single regex for a massive performance boost over nested loops
+            const vocabRegex = new RegExp(`\\b(${Array.from(userVocabSet).join('|')})\\b`, 'ig');
 
-                const examples = wordToExampleSentenceMap.get(lowerWord);
-                if (examples) examples.forEach(exIdx => relevantExamples.add(exIdx));
-                
-                if (completedWordsByGameMode['quiz-1']?.has(lowerWord)) completedP1++;
-                if (completedWordsByGameMode['quiz-2']?.has(lowerWord) || completedWordsByGameMode['quiz-3']?.has(lowerWord)) completedP23++;
-            });
-
-            allModes.forEach(modeStr => {
-                const practiceNum = parseInt(modeStr, 10);
-                const gameMode = `quiz-${practiceNum}`;
-                const completedSet = completedWordsByGameMode[gameMode] || new Set();
-
-                let completedCount = 0;
-                userVocabulary.forEach(word => {
-                  if (completedSet.has(word.toLowerCase())) completedCount++;
-                });
-
-                if (practiceNum % 100 === 1) {
-                    newProgressData[practiceNum] = { completed: completedCount, total: relevantQuestions.size };
-                } else if (practiceNum % 100 === 2 || practiceNum % 100 === 3) {
-                    newProgressData[practiceNum] = { completed: completedCount, total: relevantExamples.size };
-                }
-            });
-
-        } else if (selectedType === 'dienTu') {
-            const allModes = [1, 2, 3, 4, 5, 6, 7];
-            for(let i = 1; i <= MAX_PREVIEWS; i++) allModes.push(...[1,2,3,4,5,6,7].map(p => i*100+p));
-
-            // Logic cho P1 và P2
-            const relevantExamples = new Set();
-            userVocabulary.forEach(word => {
-                const lowerWord = word.toLowerCase();
-                const examples = wordToExampleSentenceMap.get(lowerWord);
-                if (examples) examples.forEach(exIdx => relevantExamples.add(exIdx));
-            });
-
-            // Logic cho P3-P7 (tính số lượng từ vựng trong mỗi câu)
-            const sentenceIndexToUserWords = new Map<number, string[]>();
-            userVocabulary.forEach(word => {
-                const lowerWord = word.toLowerCase();
-                const indices = wordToExampleSentenceMap.get(lowerWord);
-                if (indices) {
-                    indices.forEach(index => {
-                        if (!sentenceIndexToUserWords.has(index)) sentenceIndexToUserWords.set(index, []);
-                        sentenceIndexToUserWords.get(index)!.push(lowerWord);
+            // Process exampleData once
+            exampleData.forEach(sentence => {
+                const matches = sentence.english.match(vocabRegex);
+                if (matches) {
+                    const uniqueWords = [...new Set(matches.map(w => w.toLowerCase()))];
+                    sentenceToUserVocab.set(sentence, uniqueWords);
+                    uniqueWords.forEach(word => {
+                        if (!wordToRelevantExampleSentences.has(word)) {
+                            wordToRelevantExampleSentences.set(word, []);
+                        }
+                        wordToRelevantExampleSentences.get(word).push(sentence);
                     });
                 }
             });
 
-            const totals = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
-            const completed = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0 };
+            // Process quizData once (if needed)
+            if (selectedType === 'tracNghiem') {
+                quizData.forEach(question => {
+                    const matches = question.question.match(vocabRegex);
+                    if (matches) {
+                         const uniqueWords = [...new Set(matches.map(w => w.toLowerCase()))];
+                         questionToUserVocab.set(question, uniqueWords);
+                    }
+                });
+            }
+        }
+        
+        // 4. CALCULATE PROGRESS using the fast, pre-computed structures
+        const newProgressData = {};
+        
+        if (selectedType === 'tracNghiem') {
+            const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1, 2, 3] : [i*100+1, i*100+2, i*100+3]).flat();
             
-            totals[1] = userVocabulary.length;
-            totals[2] = relevantExamples.size;
-            
-            sentenceIndexToUserWords.forEach((_, index) => {
-                const count = sentenceIndexToUserWords.get(index)?.length || 0;
-                const sentenceId = exampleData[index].english.toLowerCase();
-                
-                if (count >= 1) { totals[7]++; if(completedMultiWordByGameMode['fill-word-7']?.has(sentenceId)) completed[7]++; }
-                if (count >= 2) { totals[3]++; if(completedMultiWordByGameMode['fill-word-3']?.has(sentenceId)) completed[3]++; }
-                if (count >= 3) { totals[4]++; if(completedMultiWordByGameMode['fill-word-4']?.has(sentenceId)) completed[4]++; }
-                if (count >= 4) { totals[5]++; if(completedMultiWordByGameMode['fill-word-5']?.has(sentenceId)) completed[5]++; }
-                if (count >= 5) { totals[6]++; if(completedMultiWordByGameMode['fill-word-6']?.has(sentenceId)) completed[6]++; }
-            });
-            
-            allModes.forEach(practiceNum => {
-                const basePractice = practiceNum % 100;
-                const gameMode = `fill-word-${practiceNum}`;
-                const completedSet = completedWordsByGameMode[gameMode] || new Set();
+            // Pre-calculate totals
+            const totalP1 = questionToUserVocab.size;
+            const totalP2_P3 = wordToRelevantExampleSentences.size;
 
-                if (basePractice === 1) {
-                    newProgressData[practiceNum] = { completed: completedSet.size, total: totals[1] };
-                } else if (basePractice === 2) {
-                    newProgressData[practiceNum] = { completed: completedSet.size, total: totals[2] };
-                } else if (basePractice >= 3 && basePractice <= 7) {
-                    newProgressData[practiceNum] = { completed: completed[basePractice], total: totals[basePractice] };
+            allModes.forEach(num => {
+                const modeId = `quiz-${num}`;
+                const baseNum = num % 100;
+                const completedSet = completedWordsByGameMode[modeId] || new Set();
+
+                if (baseNum === 1) {
+                    let completedCount = 0;
+                    questionToUserVocab.forEach(words => {
+                        if (words.some(w => completedSet.has(w))) completedCount++;
+                    });
+                    newProgressData[num] = { completed: completedCount, total: totalP1 };
+                } else if (baseNum === 2 || baseNum === 3) {
+                    let completedCount = 0;
+                    for (const word of wordToRelevantExampleSentences.keys()) {
+                        if (completedSet.has(word)) completedCount++;
+                    }
+                    newProgressData[num] = { completed: completedCount, total: totalP2_P3 };
+                }
+            });
+
+        } else if (selectedType === 'dienTu') {
+            const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1,2,3,4,5,6,7] : [1,2,3,4,5,6,7].map(n => i*100+n)).flat();
+            
+            // Pre-calculate totals
+            const totals = {
+                p1: userVocabSet.size,
+                p2: wordToRelevantExampleSentences.size,
+                p3: 0, p4: 0, p5: 0, p6: 0,
+                p7: sentenceToUserVocab.size
+            };
+            sentenceToUserVocab.forEach(words => {
+                if (words.length >= 2) totals.p3++;
+                if (words.length >= 3) totals.p4++;
+                if (words.length >= 4) totals.p5++;
+                if (words.length >= 5) totals.p6++;
+            });
+
+            allModes.forEach(num => {
+                const modeId = `fill-word-${num}`;
+                const baseNum = num % 100;
+
+                if (baseNum === 1) {
+                    const completedSet = completedWordsByGameMode[modeId] || new Set();
+                    newProgressData[num] = { completed: completedSet.size, total: totals.p1 };
+                } else if (baseNum === 2) {
+                    const completedSet = completedWordsByGameMode[modeId] || new Set();
+                    let completedCount = 0;
+                    for (const word of wordToRelevantExampleSentences.keys()) {
+                        if (completedSet.has(word)) completedCount++;
+                    }
+                    newProgressData[num] = { completed: completedCount, total: totals.p2 };
+                } else if (baseNum >= 3 && baseNum <= 7) {
+                    const completedSet = completedMultiWordByGameMode[modeId] || new Set();
+                    newProgressData[num] = { completed: completedSet.size, total: totals[`p${baseNum}`] };
                 }
             });
         }
+        
         setProgressData(newProgressData);
+
       } catch (error) {
         console.error("Lỗi khi tính toán tiến trình:", error);
       } finally {
         setLoading(false);
       }
     };
+
     calculateProgress();
-  }, [user, selectedType, wordToQuizQuestionMap, wordToExampleSentenceMap]);
+  }, [user, selectedType]);
   
   const practiceDetails = useMemo(() => ({
     tracNghiem: {
