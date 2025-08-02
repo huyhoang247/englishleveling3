@@ -171,12 +171,6 @@ export default function Auth() {
         ) : (
           // Giao diện Đăng nhập / Đăng ký
           <div className="bg-gray-800 p-8 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up border border-gray-700">
-            <h2 className="text-3xl font-bold text-center text-white mb-2">
-              {isRegistering ? 'Tạo tài khoản' : 'Chào mừng bạn'}
-            </h2>
-            <p className="text-center text-gray-400 mb-8">
-              {isRegistering ? 'Bắt đầu hành trình của bạn với chúng tôi!' : 'Đăng nhập để tiếp tục'}
-            </p>
             
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 mb-6 rounded-lg" role="alert">
