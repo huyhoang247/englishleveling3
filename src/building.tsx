@@ -1,3 +1,5 @@
+// --- START OF FILE building.tsx (4).txt ---
+
 // --- START OF FILE building.tsx (3).txt ---
 
 // --- START OF FILE building.tsx ---
@@ -63,29 +65,34 @@ const GameHeader = ({ coins, gems, onClose }: { coins: number, gems: number, onC
 );
 
 const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, onUpgrade: (id: number) => void, userCoins: number }) => {
-    const levelProgress = (hamster.level / hamster.maxLevel) * 100;
     const canUpgrade = userCoins >= hamster.upgradeCost && hamster.level < hamster.maxLevel;
     return (
         <div className="bg-slate-800/80 backdrop-blur-sm p-4 rounded-xl border border-slate-700 flex items-center gap-4 transition-all hover:bg-slate-700/70">
-            <div className="text-5xl">🐹</div>
-            <div className="flex-grow">
-                <h3 className="font-bold text-white">{hamster.name}</h3>
-                {/* THAY ĐỔI: Giao diện Level và Progress Bar được thiết kế lại */}
-                <div className="mt-1.5 mb-2">
-                    <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">
-                        Level {hamster.level}
+            <div className="text-5xl flex-shrink-0">🐹</div>
+            <div className="flex-grow min-w-0">
+                <div className="flex justify-between items-baseline mb-1">
+                    <h3 className="font-bold text-white truncate">{hamster.name}</h3>
+                    <span className="text-sm font-semibold text-slate-300 flex-shrink-0 ml-2">
+                        <span className="text-white">{hamster.level}</span>
+                        <span className="text-slate-500">/{hamster.maxLevel}</span>
                     </span>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex-grow bg-slate-600 rounded-full h-2">
-                        <div className="bg-green-500 h-2 rounded-full" style={{ width: `${levelProgress}%` }}></div>
-                    </div>
-                    <p className="text-xs text-amber-400 flex items-center gap-1 flex-shrink-0"><DollarSignIcon size={12} /> {formatNumber(hamster.earnings)}/h</p>
+                <div>
+                    <p className="text-xs text-amber-400 flex items-center gap-1">
+                        <DollarSignIcon size={12} /> {formatNumber(hamster.earnings)}/h
+                    </p>
                 </div>
             </div>
-            <button onClick={() => onUpgrade(hamster.id)} disabled={!canUpgrade} className="bg-pink-600 text-white font-bold py-2 px-4 rounded-lg transition-all hover:bg-pink-500 hover:scale-105 active:scale-100 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed disabled:scale-100">
-                <div className="text-sm">Nâng cấp</div>
-                <div className="text-xs font-normal">{formatNumber(hamster.upgradeCost)}💰</div>
+            <button
+                onClick={() => onUpgrade(hamster.id)}
+                disabled={!canUpgrade}
+                className={`flex-shrink-0 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 transform 
+                ${!canUpgrade
+                    ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed'
+                    : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 hover:shadow-md hover:shadow-yellow-500/10 active:scale-100'}`}
+            >
+                <span>{formatNumber(hamster.upgradeCost)}</span>
+                <span className="text-yellow-400">💰</span>
             </button>
         </div>
     );
