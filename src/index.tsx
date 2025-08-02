@@ -74,6 +74,8 @@ const ensureUserDocumentExists = async (user: User) => {
 };
 
 
+const appVersion = "1.0.1"; // <-- VERSION CỦA ỨNG DỤNG
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isNavBarVisible, setIsNavBarVisible] = useState(true);
@@ -153,7 +155,7 @@ const App: React.FC = () => {
   if (loadingAuth) {
     const progress = 10; // Giả lập một chút tiến trình cho việc xác thực
     return (
-      <div className="flex flex-col items-center justify-start pt-40 w-full h-screen bg-slate-950 text-white font-sans
+      <div className="relative flex flex-col items-center justify-start pt-40 w-full h-screen bg-slate-950 text-white font-sans
                       bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
 
         {/* --- Logo --- */}
@@ -189,20 +191,25 @@ const App: React.FC = () => {
              {Math.round(progress)}%
           </div>
         </div>
+
+        {/* --- Version --- */}
+        <p className="absolute bottom-4 right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60">
+          Version {appVersion}
+        </p>
       </div>
     );
   }
 
   // Giai đoạn 2: Nếu chưa đăng nhập, hiển thị màn hình đăng nhập
   if (!currentUser) {
-    return <AuthComponent />;
+    return <AuthComponent appVersion={appVersion} />;
   }
 
   // Giai đoạn 3: Đã đăng nhập, nhưng đang chờ tải tài nguyên game
   if (!assetsLoaded) {
     // <-- KHÔNG còn gán cứng `const progress = 50` nữa
     return (
-      <div className="flex flex-col items-center justify-start pt-40 w-full h-screen bg-slate-950 text-white font-sans
+      <div className="relative flex flex-col items-center justify-start pt-40 w-full h-screen bg-slate-950 text-white font-sans
                       bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
 
         {/* --- Logo --- */}
@@ -244,6 +251,11 @@ const App: React.FC = () => {
              {Math.round(loadingProgress)}%  {/* <-- VÀ Ở ĐÂY */}
           </div>
         </div>
+
+        {/* --- Version --- */}
+        <p className="absolute bottom-4 right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60">
+          Version {appVersion}
+        </p>
       </div>
     );
   }
