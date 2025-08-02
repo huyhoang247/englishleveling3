@@ -272,8 +272,8 @@ const BaseBuildingScreen: React.FC<BaseBuildingScreenProps> = ({ onClose, coins,
                     onUpgradeClick={() => setIsStorageUpgradeModalOpen(true)}
                 />
                 <section className="mt-8">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-semibold text-slate-200 tracking-wider uppercase">Stage 1</h2>
+                    <div className="flex justify-between items-center mb-3">
+                        <div className="text-slate-400 font-medium">Stage 1</div>
                         <button className="flex items-center gap-1.5 text-xs font-semibold text-indigo-400 border border-indigo-500/50 rounded-md px-3 py-1 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors">
                             <span>View Stage</span>
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
