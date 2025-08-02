@@ -189,8 +189,8 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* --- Version --- */}
-        <p className="absolute right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
+        {/* --- Version --- (ĐÃ SỬA) */}
+        <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
           Version {appVersion}
         </p>
       </div>
@@ -249,8 +249,8 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* --- Version --- */}
-        <p className="absolute right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
+        {/* --- Version --- (ĐÃ SỬA) */}
+        <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
           Version {appVersion}
         </p>
       </div>
