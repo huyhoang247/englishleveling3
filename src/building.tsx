@@ -1,4 +1,6 @@
-// --- START OF FILE building.tsx ---
+// --- START OF FILE building.tsx (7).txt ---
+
+// --- START OF FILE building.tsx (6).txt ---
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx';
 import { uiAssets } from './game-assets.ts'; 
@@ -71,12 +73,12 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
     const progressPercentage = (hamster.progress / hamster.progressToLevelUp) * 100;
 
     return (
-        <div className="bg-slate-800/80 backdrop-blur-sm p-3 rounded-xl border border-slate-700 flex items-center gap-3 transition-all hover:bg-slate-700/70">
-            {/* Icon */}
-            <div className="text-5xl flex-shrink-0">🐹</div>
+        <div className="bg-slate-800/80 backdrop-blur-sm p-3 rounded-xl border border-slate-700 flex gap-3 transition-all hover:bg-slate-700/70">
+            {/* Icon - Centered vertically */}
+            <div className="text-5xl flex-shrink-0 self-center">🐹</div>
             
-            {/* Info (Name, Progress, Earnings) */}
-            <div className="flex-grow min-w-0 space-y-1.5">
+            {/* Info (Name, Progress, Earnings) - Centered vertically */}
+            <div className="flex-grow min-w-0 space-y-1.5 self-center">
                 <h3 className="font-bold text-white truncate">{hamster.name}</h3>
                 
                 {/* Progress Bar */}
@@ -97,8 +99,11 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
                 </p>
             </div>
 
-            {/* Actions (Level and Upgrade Button) - NOTE: Swapped element order to fix display bug */}
-            <div className="flex-shrink-0 flex flex-col items-end justify-between">
+            {/* Actions (Level and Upgrade Button) - Spaced vertically to top and bottom */}
+            <div className="flex-shrink-0 flex flex-col justify-between items-end">
+                <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">
+                    Level {hamster.level}
+                </span>
                 <button 
                     onClick={() => onUpgrade(hamster.id)}
                     disabled={!canUpgrade}
@@ -111,9 +116,6 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
                     <span>{formatNumber(hamster.upgradeCost)}</span>
                     <span className="text-yellow-400 text-sm">💰</span>
                 </button>
-                <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">
-                    Level {hamster.level}
-                </span>
             </div>
         </div>
     );
