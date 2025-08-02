@@ -135,7 +135,8 @@ export default function Auth({ appVersion }) {
   }
 
   return (
-    <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4 font-sans relative">
+    // <<<<< THAY ĐỔI Ở ĐÂY: bỏ "justify-center" và thêm "pt-16" >>>>>
+    <div className="bg-gray-900 min-h-screen flex flex-col items-center pt-16 p-4 font-sans relative">
       <div className="w-full max-w-md">
         {user ? (
           // Giao diện khi đã đăng nhập (Không thay đổi)
