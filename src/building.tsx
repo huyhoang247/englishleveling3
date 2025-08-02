@@ -101,8 +101,8 @@ const UnlockedHamsterCard = ({ hamster, onUpgrade, userCoins }: { hamster: any, 
                 </p>
             </div>
 
-            {/* Actions (Level and Upgrade Button) */}
-            <div className="flex-shrink-0 flex flex-col items-end gap-2.5">
+            {/* Actions (Level and Upgrade Button) - INCREASED GAP HERE */}
+            <div className="flex-shrink-0 flex flex-col items-end gap-3">
                 <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">
                     Level {hamster.level}
                 </span>
