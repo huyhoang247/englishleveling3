@@ -1,6 +1,4 @@
-// --- START OF FILE building.tsx (7).txt ---
-
-// --- START OF FILE building.tsx (6).txt ---
+// --- START OF FILE building.tsx ---
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx';
 import { uiAssets } from './game-assets.ts'; 
