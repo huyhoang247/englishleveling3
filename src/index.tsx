@@ -12,6 +12,8 @@ import { auth, db } from './firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { allImageUrls } from './game-assets.ts';
+// IMPORT CÁC HÀM VÀ INTERFACE MỚI
+import { fetchUserData, fetchVocabularyData, UserCoreData, VocabularyItem } from './data-loader.ts';
 
 // Định nghĩa các loại tab có thể có
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
@@ -85,6 +87,10 @@ const App: React.FC = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [logoFloating, setLogoFloating] = useState(true);
 
+  // STATE MỚI ĐỂ LƯU DỮ LIỆU GAME
+  const [userGameData, setUserGameData] = useState<UserCoreData | null>(null);
+  const [vocabularyData, setVocabularyData] = useState<VocabularyItem[] | null>(null);
+
   // Effect để tạo animation "float" cho logo trên màn hình loading
   useEffect(() => {
     const interval = setInterval(() => {
@@ -93,11 +99,11 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Effect để tải trước tất cả tài nguyên game, CHỈ KHI ĐÃ ĐĂNG NHẬP
+  // Effect để tải trước tài nguyên hình ảnh game
   useEffect(() => {
     let isCancelled = false;
     async function preloadAssets() {
-      console.log("Preloading ALL game assets from index.tsx (triggered by login)...");
+      console.log("Preloading ALL game assets from index.tsx...");
       const totalAssets = allImageUrls.length;
 
       for (let i = 0; i < totalAssets; i++) {
@@ -108,24 +114,46 @@ const App: React.FC = () => {
       }
       
       if (!isCancelled) {
-        console.log("All game assets preloaded and cached.");
+        console.log("All game assets preloaded.");
         setTimeout(() => {
             if (!isCancelled) setAssetsLoaded(true);
         }, 300);
       }
     }
+    // Tải assets ngay khi có người dùng, song song với tải dữ liệu
     if (currentUser && !assetsLoaded) {
-        preloadAssets();
+      preloadAssets();
     }
     return () => { isCancelled = true; };
   }, [currentUser, assetsLoaded]);
 
-  // Effect để lắng nghe trạng thái đăng nhập
+  // Effect để lắng nghe trạng thái đăng nhập và TẢI DỮ LIỆU NGƯỜI DÙNG
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
         await ensureUserDocumentExists(user);
+        
+        // TẢI DỮ LIỆU GAME VÀ TỪ VỰNG SONG SONG
+        console.log("User logged in. Fetching user game data and vocabulary data...");
+        try {
+          const [userData, vocabData] = await Promise.all([
+            fetchUserData(user.uid),
+            fetchVocabularyData(user.uid)
+          ]);
+          setUserGameData(userData);
+          setVocabularyData(vocabData);
+          console.log("All user data fetched and set in state.");
+        } catch (error) {
+          console.error("Failed to fetch critical user data:", error);
+          // Tại đây có thể xử lý lỗi, ví dụ: hiển thị một thông báo cho người dùng
+        }
+      } else {
+        // Reset tất cả state khi logout
+        setUserGameData(null);
+        setVocabularyData(null);
+        setAssetsLoaded(false); // Cần tải lại assets cho người dùng tiếp theo
+        setLoadingProgress(0);
       }
       setLoadingAuth(false);
     });
@@ -184,8 +212,9 @@ const App: React.FC = () => {
     return <AuthComponent appVersion={appVersion} />;
   }
 
-  // Giai đoạn 3: Đã đăng nhập, nhưng đang chờ tải tài nguyên game
-  if (!assetsLoaded) {
+  // Giai đoạn 3: Màn hình loading hợp nhất, chờ cả assets VÀ dữ liệu game
+  if (!assetsLoaded || !userGameData || !vocabularyData) {
+    const progressText = !assetsLoaded ? "Chuẩn bị tài nguyên..." : "Đang tải dữ liệu...";
     return (
       <div className="relative flex flex-col items-center justify-start pt-40 w-full h-screen bg-slate-950 text-white font-sans
                       bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
@@ -202,7 +231,7 @@ const App: React.FC = () => {
             ĐANG TẢI
         </h1>
         <p className="mt-1 mb-5 text-sm text-cyan-400/70 tracking-wide">
-            Chuẩn bị tài nguyên...
+            {progressText}
         </p>
         <div className="w-80 lg:w-96 relative">
           <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
@@ -229,7 +258,7 @@ const App: React.FC = () => {
     );
   }
 
-  // Giai đoạn 4: Mọi thứ đã sẵn sàng, hiển thị ứng dụng
+  // Giai đoạn 4: Mọi thứ đã sẵn sàng, hiển thị ứng dụng và truyền dữ liệu xuống
   return (
     <div className="app-container">
       {activeTab === 'home' && (
@@ -237,7 +266,9 @@ const App: React.FC = () => {
           hideNavBar={hideNavBar}
           showNavBar={showNavBar}
           currentUser={currentUser}
-          assetsLoaded={assetsLoaded}
+          // TRUYỀN DỮ LIỆU BAN ĐẦU XUỐNG COMPONENT CON
+          initialUserGameData={userGameData}
+          initialVocabularyData={vocabularyData}
         />
       )}
       {activeTab === 'profile' && <Profile />}
@@ -245,7 +276,6 @@ const App: React.FC = () => {
         <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />
       )}
       
-      {/* TRUYỀN PROPS hide/showNavBar VÀO ĐÂY */}
       {activeTab === 'quiz' && (
         <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />
       )}
