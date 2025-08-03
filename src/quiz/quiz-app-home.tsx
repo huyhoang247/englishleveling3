@@ -19,8 +19,6 @@ import { exampleData } from '../example-data.ts';
 // Props Interface for AppHeader
 interface AppHeaderProps {
   currentView: string;
-  selectedType: string | null;
-  goBack: () => void;
   goHome: () => void;
   setCurrentView: (view: string) => void;
 }
@@ -48,66 +46,40 @@ const AnalysisIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
 // The Header Component Function
 function AppHeader({
   currentView,
-  selectedType,
-  goBack,
   goHome,
   setCurrentView,
 }: AppHeaderProps) {
-  
-  const headerTitle = useMemo(() => {
-    switch (currentView) {
-      case 'quizTypes':
-        return 'Luyện tập';
-      case 'practices':
-        return selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ';
-      default:
-        return null; // No title for main screen
-    }
-  }, [currentView, selectedType]);
 
-  // This header is not rendered for fullscreen views, as they have their own.
-  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis'].includes(currentView)) {
+  // This header is now ONLY rendered for the 'main' view.
+  // Other views (quiz, games, analysis, practice lists) manage their own headers or are fullscreen.
+  if (currentView !== 'main') {
       return null;
   }
 
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-14 items-center justify-between">
           
           <div className="flex-1">
-            {currentView === 'main' ? (
               <a className="flex items-center gap-2 text-gray-800" href="#" onClick={(e) => { e.preventDefault(); goHome(); }}>
                  <span className="text-2xl">📚</span>
                  <span className="font-extrabold text-xl text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Quiz App</span>
               </a>
-            ) : (
-              <button onClick={goBack} className="p-2 -ml-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Quay lại">
-                <BackIcon />
-              </button>
-            )}
           </div>
 
           <div className="flex-1 flex justify-center">
-            {headerTitle && (
-              <h2 className="text-lg font-bold text-gray-800">{headerTitle}</h2>
-            )}
+            {/* Title is removed as this header is only for the main page which has no title */}
           </div>
           
           <div className="flex-1 flex items-center justify-end gap-4">
-              {currentView === 'main' ? (
-                <button 
-                  onClick={() => setCurrentView('analysis')}
-                  className="p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors"
-                  aria-label="Xem phân tích"
-                >
-                    <AnalysisIcon />
-                </button>
-              ) : (
-                 <button onClick={goHome} className="p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Về trang chủ">
-                    <HomeIcon />
-                 </button>
-              )}
+              <button 
+                onClick={() => setCurrentView('analysis')}
+                className="p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                aria-label="Xem phân tích"
+              >
+                  <AnalysisIcon />
+              </button>
           </div>
         </div>
       </div>
@@ -190,14 +162,7 @@ export default function QuizAppHome() {
               ViewComponent = <AnalysisDashboard />;
               break;
       }
-
-      // QuizApp and VocabularyGame might have their own headers. 
-      // For a 100% consistent UI, you would refactor them to use a common header component.
-      // Here, we provide a unified structure for all.
-      // If the inner component (e.g., QuizApp) has its own header, you might see two.
-      // It's recommended to remove the header from the child components and let this parent manage it.
       
-      // Let's assume for now that child components like QuizApp DO NOT have their own header.
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
             <header className="flex-shrink-0 sticky top-0 bg-white/80 backdrop-blur-sm z-10 p-4 border-b flex items-center justify-between">
@@ -207,7 +172,6 @@ export default function QuizAppHome() {
                 </button>
                 <h2 className="text-lg font-bold text-gray-800 truncate px-2">{title}</h2>
                 <div className="w-28 text-right">
-                   {/* Optional: Add a Home button here for quick exit */}
                    <button onClick={goHome} className="p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Về trang chủ">
                       <HomeIcon className="h-5 w-5"/>
                    </button>
@@ -274,7 +238,15 @@ export default function QuizAppHome() {
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
-            <div className="text-center"><h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Chọn hình thức</h2><p className="mt-2 text-md text-gray-500">Bạn muốn luyện tập theo cách nào?</p></div>
+             <div className="relative w-full text-center mb-2">
+                <button onClick={goBack} className="absolute left-0 top-1/2 -translate-y-1/2 p-2 -ml-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Quay lại">
+                   <BackIcon />
+                </button>
+                <div className="text-center">
+                    <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Chọn hình thức</h2>
+                    <p className="mt-2 text-md text-gray-500">Bạn muốn luyện tập theo cách nào?</p>
+                </div>
+            </div>
             <div className="space-y-5 w-full">
               <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
@@ -294,7 +266,7 @@ export default function QuizAppHome() {
           </div>
         );
       case 'practices':
-        return <PracticeList selectedType={selectedType} onPracticeSelect={handlePracticeSelect} />;
+        return <PracticeList selectedType={selectedType} onPracticeSelect={handlePracticeSelect} goBack={goBack} />;
       default:
         return <div>Nội dung không tồn tại</div>;
     }
@@ -305,8 +277,6 @@ export default function QuizAppHome() {
       <div className="w-full h-full bg-white flex flex-col">
         <AppHeader 
           currentView={currentView}
-          selectedType={selectedType}
-          goBack={goBack}
           goHome={goHome}
           setCurrentView={setCurrentView}
         />
@@ -464,7 +434,7 @@ const ReviewItem = memo(({ practiceNumber, previewLevel, isLocked, isCompleted, 
 
 
 // Component to display practice list with progress
-function PracticeList({ selectedType, onPracticeSelect }) {
+function PracticeList({ selectedType, onPracticeSelect, goBack }) {
   const [progressData, setProgressData] = useState({});
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(auth.currentUser);
@@ -717,7 +687,15 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   const practicesToShow = selectedType ? Object.keys(practiceDetails[selectedType]) : [];
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="space-y-4 w-full pt-2">
+      <div className="relative flex items-center justify-center py-2 mb-4">
+        <button onClick={goBack} className="absolute left-0 p-2 -ml-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Quay lại">
+          <BackIcon />
+        </button>
+        <h2 className="text-xl font-bold text-gray-800">
+          {selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ'}
+        </h2>
+      </div>
+      <div className="space-y-4 w-full">
           {practicesToShow.map(pNumStr => {
             const practiceNumber = parseInt(pNumStr, 10);
             const details = practiceDetails[selectedType][practiceNumber];
