@@ -1,6 +1,6 @@
 // --- START OF FILE: quiz.tsx ---
 
-import { useState, useEffect, memo, useCallback, useMemo } from 'react';
+import { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
 import { db, auth } from '../firebase.js';
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
 
@@ -26,9 +26,12 @@ const BackIcon = ({ className }: { className: string }) => ( <svg xmlns="http://
 const TrophyIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V22h4v-7.34"/><path d="M12 14.66L15.45 8.3A3 3 0 0 0 12.95 4h-1.9a3 3 0 0 0-2.5 4.3Z"/></svg> );
 const BookmarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" /></svg> );
 const ArrowRightIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg> );
+const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg> );
+const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
 const shuffleArray = (array) => { const shuffledArray = [...array]; for (let i = shuffledArray.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; } return shuffledArray; };
 interface Definition { vietnamese: string; english: string; explanation: string; }
 const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> = ({ data, onClose }) => { if (!data) return null; return ( <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose} > <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl w-full max-w-md p-6 relative shadow-lg transform transition-all duration-300 scale-95 opacity-0 animate-scale-up" onClick={(e) => e.stopPropagation()} > <div className="inline-flex items-center bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-sm font-semibold px-3 py-1 rounded-full mb-4"> <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor"> <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /> </svg> <span>{data.english}</span> </div> <p className="text-gray-700 dark:text-gray-400 text-base leading-relaxed italic"> {`${data.vietnamese} (${data.english}) là ${data.explanation}`} </p> </div> <style jsx>{` @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; } `}</style> </div> ); };
+const AudioQuestionDisplay: React.FC<{ audioUrl: string; }> = memo(({ audioUrl }) => { const audioRef = useRef<HTMLAudioElement>(null); const [isPlaying, setIsPlaying] = useState(false); const togglePlay = useCallback(() => { const audio = audioRef.current; if (!audio) return; if (audio.paused) { audio.play().catch(e => console.error("Error playing audio:", e)); } else { audio.pause(); } }, []); useEffect(() => { const audio = audioRef.current; if (!audio) return; const handlePlay = () => setIsPlaying(true); const handlePause = () => setIsPlaying(false); const handleEnded = () => setIsPlaying(false); audio.addEventListener('play', handlePlay); audio.addEventListener('pause', handlePause); audio.addEventListener('ended', handleEnded); audio.play().catch(e => console.error("Autoplay prevented:", e)); return () => { audio.removeEventListener('play', handlePlay); audio.removeEventListener('pause', handlePause); audio.removeEventListener('ended', handleEnded); audio.pause(); }; }, [audioUrl]); return ( <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex flex-col items-center justify-center min-h-[140px]"> <audio ref={audioRef} src={audioUrl} key={audioUrl} preload="auto" className="hidden" /> <button onClick={togglePlay} className="w-20 h-20 flex items-center justify-center bg-white/20 rounded-full text-white hover:bg-white/30 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/50" aria-label={isPlaying ? 'Pause audio' : 'Play audio'} > {isPlaying ? <PauseIcon className="w-10 h-10" /> : <VolumeUpIcon className="w-10 h-10" />} </button> <p className="text-white/80 text-sm mt-3 font-medium">Nghe và chọn đáp án đúng</p> </div> ); });
 
 export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () => void; selectedPractice: number; }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -136,9 +139,12 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
   useEffect(() => {
       if (loading) return;
       const practiceBaseId = selectedPractice % 100;
-      const isFillInTheBlankType = practiceBaseId === 2 || practiceBaseId === 3;
-      if (isFillInTheBlankType) {
-          const allPossibleQuestions = userVocabulary.flatMap(word => {
+      
+      let allPossibleQuestions = [];
+      let remainingQuestions = [];
+
+      if (practiceBaseId === 2 || practiceBaseId === 3) {
+          allPossibleQuestions = userVocabulary.flatMap(word => {
               const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
               const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
               if (matchingSentences.length > 0) {
@@ -155,15 +161,46 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
               }
               return [];
           });
-          const remainingQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
-          setFilteredQuizData(allPossibleQuestions);
-          setPlayableQuestions(shuffleArray(remainingQuestions));
+          remainingQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
+      } else if (practiceBaseId === 4) {
+          const userVocabSet = new Set(userVocabulary.map(w => w.toLowerCase()));
+          const potentialQuestions = defaultVocabulary
+            .map((word, index) => ({ word, index }))
+            .filter(item => userVocabSet.has(item.word.toLowerCase()));
+
+          allPossibleQuestions = potentialQuestions.map(item => {
+              const audioNumber = (item.index + 1).toString().padStart(3, '0');
+              const audioUrl = `https://raw.githubusercontent.com/englishleveling46/Flashcard/main/audio1/${audioNumber}.mp3`;
+              const correctWord = item.word.toLowerCase();
+              
+              const incorrectOptions = [];
+              while (incorrectOptions.length < 3) {
+                  const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)].toLowerCase();
+                  if (randomWord !== correctWord && !incorrectOptions.includes(randomWord)) {
+                      incorrectOptions.push(randomWord);
+                  }
+              }
+              return {
+                  question: "Nghe và chọn từ đúng:", 
+                  audioUrl: audioUrl,
+                  options: [correctWord, ...incorrectOptions],
+                  correctAnswer: correctWord,
+                  word: item.word,
+                  vietnamese: null
+              };
+          });
+          remainingQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
       } else {
-          const { allMatchingQuestions, remainingQuestions } = generatePractice1Questions();
-          setFilteredQuizData(allMatchingQuestions);
-          setPlayableQuestions(shuffleArray(remainingQuestions));
+          const { allMatchingQuestions, remainingQuestions: p1Remaining } = generatePractice1Questions();
+          allPossibleQuestions = allMatchingQuestions;
+          remainingQuestions = p1Remaining;
       }
+
+      setFilteredQuizData(allPossibleQuestions);
+      setPlayableQuestions(shuffleArray(remainingQuestions));
+
   }, [selectedPractice, loading, userVocabulary, completedQuizWords, generatePractice1Questions]);
+
 
   useEffect(() => {
     if (playableQuestions[currentQuestion]?.options) {
@@ -174,8 +211,8 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
   useEffect(() => {
       if (playableQuestions.length > 0 && currentQuestion < playableQuestions.length) {
           const currentQuizItem = playableQuestions[currentQuestion];
-          const isFillInTheBlankType = [2, 3].includes(selectedPractice % 100);
-          if (isFillInTheBlankType) {
+          const isSpecialType = [2, 3, 4].includes(selectedPractice % 100);
+          if (isSpecialType) {
               setCurrentQuestionWord(currentQuizItem.word);
           } else {
               const matchedWord = userVocabulary.find(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question));
@@ -250,9 +287,9 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
 
   const resetQuiz = () => {
     let newPlayableQuestions = [];
-    const isFillInTheBlankType = [2, 3].includes(selectedPractice % 100);
-    if (isFillInTheBlankType) {
-        const allPossibleQuestions = userVocabulary.flatMap(word => {
+    const practiceBaseId = selectedPractice % 100;
+    if ([2, 3].includes(practiceBaseId)) {
+        newPlayableQuestions = userVocabulary.flatMap(word => {
             const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
             const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
             if (matchingSentences.length > 0) {
@@ -268,7 +305,25 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
                 return [{ question: questionText, vietnamese: randomSentence.vietnamese, options: [word.toLowerCase(), ...incorrectOptions.map(opt => opt.toLowerCase())], correctAnswer: word.toLowerCase(), word: word }];
             }
             return [];
-        });
+        }).filter(q => !completedQuizWords.has(q.word.toLowerCase()));
+    } else if (practiceBaseId === 4) {
+        const userVocabSet = new Set(userVocabulary.map(w => w.toLowerCase()));
+        const allPossibleQuestions = defaultVocabulary
+            .map((word, index) => ({ word, index }))
+            .filter(item => userVocabSet.has(item.word.toLowerCase()))
+            .map(item => {
+                const audioNumber = (item.index + 1).toString().padStart(3, '0');
+                const audioUrl = `https://raw.githubusercontent.com/englishleveling46/Flashcard/main/audio1/${audioNumber}.mp3`;
+                const correctWord = item.word.toLowerCase();
+                const incorrectOptions = [];
+                while (incorrectOptions.length < 3) {
+                    const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)].toLowerCase();
+                    if (randomWord !== correctWord && !incorrectOptions.includes(randomWord)) {
+                        incorrectOptions.push(randomWord);
+                    }
+                }
+                return { question: "Nghe và chọn từ đúng:", audioUrl, options: [correctWord, ...incorrectOptions], correctAnswer: correctWord, word: item.word, vietnamese: null };
+            });
         newPlayableQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
     } else {
         const { remainingQuestions } = generatePractice1Questions();
@@ -332,7 +387,13 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
                     </div>
                   </div>
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
-                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1"><h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>{playableQuestions[currentQuestion]?.vietnamese && (selectedPractice % 100 !== 3) && (<p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>)}</div>
+                  
+                  { (selectedPractice % 100 === 4 && playableQuestions[currentQuestion]?.audioUrl) ? (
+                      <AudioQuestionDisplay audioUrl={playableQuestions[currentQuestion].audioUrl} />
+                  ) : (
+                      <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1"><h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>{playableQuestions[currentQuestion]?.vietnamese && (selectedPractice % 100 !== 3) && (<p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>)}</div>
+                  )}
+
                 </div>
                 <div className="p-6">
                   <div className="space-y-3 mb-6">
