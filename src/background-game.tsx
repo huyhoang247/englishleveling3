@@ -19,7 +19,7 @@ import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
-import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
+import AchievementsScreen, { initialVocabularyData as fallbackVocabData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './skill.tsx';
@@ -27,6 +27,8 @@ import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
 import RateLimitToast from './thong-bao.tsx';
 
+// IMPORT INTERFACES TỪ DATA-LOADER
+import { UserCoreData, VocabularyItem } from './data-loader.ts';
 
 // --- SVG Icon Components ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -50,65 +52,45 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
 
 
 // --- START of content from icon.tsx ---
-
-// --- Component Icon Gem ---
-// Định nghĩa props cho GemIcon
 interface GemIconProps {
-  size?: number; // Kích thước icon (mặc định 24)
-  color?: string; // Màu sắc icon (mặc định 'currentColor') - Lưu ý: SVG này dùng ảnh, màu sắc có thể không áp dụng trực tiếp
-  className?: string; // Các class CSS bổ sung
-  [key: string]: any; // Cho phép các props khác như onClick, style, v.v.
+  size?: number;
+  color?: string;
+  className?: string;
+  [key: string]: any;
 }
-
-// Component GemIcon: Hiển thị icon viên ngọc
 const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => {
-  // Lưu ý: Icon này sử dụng ảnh, nên thuộc tính 'color' sẽ không thay đổi màu của ảnh.
-  // Bạn có thể cần thay đổi ảnh hoặc sử dụng SVG gốc nếu muốn thay đổi màu sắc động.
   return (
     <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
       <img
-        // Sử dụng ảnh từ tệp tài nguyên tập trung
         src={uiAssets.gemIcon}
-        alt="Tourmaline Gem Icon" // Alt text cho khả năng tiếp cận
-        className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
+        alt="Tourmaline Gem Icon"
+        className="w-full h-full object-contain"
       />
     </div>
   );
 };
-
-// --- Component Stats Icon ---
-// Định nghĩa props cho StatsIcon
 interface StatsIconProps {
-  onClick: () => void; // Hàm được gọi khi icon được click
-  // Thêm các props khác nếu cần cho styling hoặc state
+  onClick: () => void;
 }
-
-// Component StatsIcon: Hiển thị icon mở màn hình chỉ số
 const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => {
   return (
-    // Container div cho icon
-    // Thêm relative và z-10 để đảm bảo nó nằm trên các lớp nền trong header
     <div className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-10"
-         onClick={onClick} // Gọi hàm onClick khi được click
-         title="Xem chỉ số nhân vật" // Tooltip cho khả năng tiếp cận
+         onClick={onClick}
+         title="Xem chỉ số nhân vật"
     >
-      {/* Thẻ img cho icon */}
       <img
-        src={uiAssets.statsIcon} // Sử dụng biến từ tệp tài nguyên
-        alt="Award Icon" // Alt text cho khả năng tiếp cận
-        className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
-        // Xử lý lỗi tải ảnh
+        src={uiAssets.statsIcon}
+        alt="Award Icon"
+        className="w-full h-full object-contain"
         onError={(e) => {
-          const target = e.target as HTMLImageElement; // Ép kiểu sang HTMLImageElement
-          target.onerror = null; // Ngăn chặn vòng lặp vô hạn nếu placeholder cũng lỗi
-          // Cập nhật placeholder hoặc xử lý lỗi tải ảnh từ đường dẫn local nếu cần
-          target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon"; // Hiển thị ảnh placeholder khi lỗi
+          const target = e.target as HTMLImageElement;
+          target.onerror = null;
+          target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon";
         }}
       />
     </div>
   );
 };
-
 // --- END of content from icon.tsx ---
 
 
@@ -117,26 +99,21 @@ interface ErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }
-
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
 }
-
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
-
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error: error };
   }
-
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("Uncaught error in component:", error, errorInfo);
   }
-
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
@@ -147,56 +124,48 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         </div>
       );
     }
-
     return this.props.children;
   }
 }
 
-const LoadingSpinner = () => (
-  <div className="flex flex-col items-center justify-center text-center">
-    <div
-        className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-purple-400"
-    ></div>
-    <p className="mt-5 text-lg font-medium text-gray-300">
-      Loading...
-    </p>
-  </div>
-);
-
+// CẬP NHẬT PROPS INTERFACE
 interface ObstacleRunnerGameProps {
   className?: string;
   hideNavBar: () => void;
   showNavBar: () => void;
   currentUser: User | null;
-  assetsLoaded: boolean;
+  initialUserGameData: UserCoreData;
+  initialVocabularyData: VocabularyItem[];
 }
 
-export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser, assetsLoaded }: ObstacleRunnerGameProps) {
+export default function ObstacleRunnerGame({
+  className,
+  hideNavBar,
+  showNavBar,
+  currentUser,
+  initialUserGameData,
+  initialVocabularyData,
+}: ObstacleRunnerGameProps) {
 
-  const [isLoadingUserData, setIsLoadingUserData] = useState(true);
-  const [vocabularyData, setVocabularyData] = useState<VocabularyItem[] | null>(null);
-
-  // States for UI and User Data
-  const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
-  const [coins, setCoins] = useState(0);
-  const [displayedCoins, setDisplayedCoins] = useState(0);
-  const [gems, setGems] = useState(0);
-  const [masteryCards, setMasteryCards] = useState(0);
-  const [pickaxes, setPickaxes] = useState(0);
-  const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
-  const [userStats, setUserStats] = useState({ hp: 0, atk: 0, def: 0 });
-  const [jackpotPool, setJackpotPool] = useState(0);
-  const [bossBattleHighestFloor, setBossBattleHighestFloor] = useState(0);
-  const [ancientBooks, setAncientBooks] = useState(0);
-  const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([]);
-  const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([null, null, null]);
-  const [totalVocabCollected, setTotalVocabCollected] = useState(0);
-  const [cardCapacity, setCardCapacity] = useState(100);
-  const [equipmentPieces, setEquipmentPieces] = useState(0);
-  const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
-  const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, accessory: null });
-
-
+  // KHỞI TẠO STATE TRỰC TIẾP TỪ PROPS
+  const [vocabularyData, setVocabularyData] = useState<VocabularyItem[] | null>(initialVocabularyData);
+  const [coins, setCoins] = useState(initialUserGameData.coins);
+  const [displayedCoins, setDisplayedCoins] = useState(initialUserGameData.coins);
+  const [gems, setGems] = useState(initialUserGameData.gems);
+  const [masteryCards, setMasteryCards] = useState(initialUserGameData.masteryCards);
+  const [pickaxes, setPickaxes] = useState(initialUserGameData.pickaxes);
+  const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(initialUserGameData.minerChallengeHighestFloor);
+  const [userStats, setUserStats] = useState(initialUserGameData.stats);
+  const [jackpotPool, setJackpotPool] = useState(0); // Jackpot vẫn fetch riêng vì là dữ liệu toàn cục
+  const [bossBattleHighestFloor, setBossBattleHighestFloor] = useState(initialUserGameData.bossBattleHighestFloor);
+  const [ancientBooks, setAncientBooks] = useState(initialUserGameData.ancientBooks);
+  const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>(initialUserGameData.skills.owned);
+  const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>(initialUserGameData.skills.equipped);
+  const [totalVocabCollected, setTotalVocabCollected] = useState(initialUserGameData.totalVocabCollected);
+  const [cardCapacity, setCardCapacity] = useState(initialUserGameData.cardCapacity);
+  const [equipmentPieces, setEquipmentPieces] = useState(initialUserGameData.equipment.pieces);
+  const [ownedItems, setOwnedItems] = useState<OwnedItem[]>(initialUserGameData.equipment.owned);
+  const [equippedItems, setEquippedItems] = useState<EquippedItems>(initialUserGameData.equipment.equipped);
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
@@ -216,6 +185,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
   const [showRateLimitToast, setShowRateLimitToast] = useState(false);
+  const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
   const db = getFirestore();
@@ -245,86 +215,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   }, [showRateLimitToast]);
 
-  const fetchVocabularyData = async (userId: string) => {
-    try {
-        const completedWordsCol = collection(db, 'users', userId, 'completedWords');
-        const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-        const [completedWordsSnap, achievementDocSnap] = await Promise.all([ getDocs(completedWordsCol), getDoc(achievementDocRef), ]);
-        const wordToExpMap = new Map<string, number>();
-        completedWordsSnap.forEach(wordDoc => {
-            const word = wordDoc.id; const gameModes = wordDoc.data().gameModes || {}; let totalCorrectCount = 0;
-            Object.values(gameModes).forEach((mode: any) => { totalCorrectCount += mode.correctCount || 0; });
-            wordToExpMap.set(word, totalCorrectCount * 100);
-        });
-        const existingAchievements: VocabularyItem[] = achievementDocSnap.exists() ? achievementDocSnap.data().vocabulary || [] : [];
-        const finalVocabularyData: VocabularyItem[] = []; const processedWords = new Set<string>();
-        let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map((i: VocabularyItem) => i.id)) : 0) + 1;
-        wordToExpMap.forEach((totalExp, word) => {
-            const existingItem = existingAchievements.find(item => item.word === word);
-            if (existingItem) {
-                let expSpentToReachCurrentLevel = 0;
-                for (let i = 1; i < existingItem.level; i++) { expSpentToReachCurrentLevel += i * 100; }
-                const currentProgressExp = totalExp - expSpentToReachCurrentLevel;
-                finalVocabularyData.push({ ...existingItem, exp: currentProgressExp, maxExp: existingItem.level * 100, });
-            } else { finalVocabularyData.push({ id: idCounter++, word: word, exp: totalExp, level: 1, maxExp: 100, }); }
-            processedWords.add(word);
-        });
-        existingAchievements.forEach(item => { if (!processedWords.has(item.word)) { finalVocabularyData.push(item); } });
-        console.log("Vocabulary achievements data synced and merged correctly."); setVocabularyData(finalVocabularyData);
-    } catch (error) { console.error("Error fetching and syncing vocabulary achievements data:", error); setVocabularyData(initialVocabularyData); }
-  };
-
-  const fetchUserData = async (userId: string) => {
-    setIsLoadingUserData(true);
-    try {
-      const userDocRef = doc(db, 'users', userId);
-      const userDocSnap = await getDoc(userDocRef);
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data(); console.log("User data fetched:", userData);
-        setCoins(userData.coins || 0); setDisplayedCoins(userData.coins || 0); setGems(userData.gems || 0);
-        setMasteryCards(userData.masteryCards || 0); setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50);
-        setMinerChallengeHighestFloor(userData.minerChallengeHighestFloor || 0);
-        setUserStats(userData.stats || { hp: 0, atk: 0, def: 0 });
-        setBossBattleHighestFloor(userData.bossBattleHighestFloor || 0);
-        setAncientBooks(userData.ancientBooks || 0);
-        const skillsData = userData.skills || { owned: [], equipped: [null, null, null] };
-        setOwnedSkills(skillsData.owned);
-        setEquippedSkillIds(skillsData.equipped);
-        setTotalVocabCollected(userData.totalVocabCollected || 0);
-        setCardCapacity(userData.cardCapacity || 100);
-        const equipmentData = userData.equipment || { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } };
-        setEquipmentPieces(equipmentData.pieces);
-        setOwnedItems(equipmentData.owned);
-        setEquippedItems(equipmentData.equipped);
-      } else {
-        console.log("No user document found, creating default.");
-        await setDoc(userDocRef, {
-          coins: 0, gems: 0, masteryCards: 0, stats: { hp: 0, atk: 0, def: 0 },
-          pickaxes: 50, minerChallengeHighestFloor: 0, 
-          bossBattleHighestFloor: 0,
-          ancientBooks: 0,
-          skills: { owned: [], equipped: [null, null, null] },
-          totalVocabCollected: 0,
-          equipment: { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } },
-          cardCapacity: 100,
-          createdAt: new Date(),
-        });
-        setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0); setPickaxes(50);
-        setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
-        setBossBattleHighestFloor(0);
-        setAncientBooks(0);
-        setOwnedSkills([]);
-        setEquippedSkillIds([null, null, null]);
-        setTotalVocabCollected(0);
-        setEquipmentPieces(100);
-        setOwnedItems([]);
-        setEquippedItems({ weapon: null, armor: null, accessory: null });
-        setCardCapacity(100);
-      }
-    } catch (error) { console.error("Error fetching user data:", error); } 
-    finally { setIsLoadingUserData(false); }
-  };
-
   const fetchJackpotPool = async () => {
     try {
         const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
@@ -338,6 +228,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }
     } catch (error) { console.error("Error fetching jackpot pool:", error); }
   };
+    
+  useEffect(() => {
+      fetchJackpotPool();
+  }, [])
     
   const handleBossFloorUpdate = async (newFloor: number) => {
     const userId = auth.currentUser?.uid;
@@ -727,31 +621,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if (user) {
-        fetchUserData(user.uid); fetchVocabularyData(user.uid); fetchJackpotPool();
-      } else {
-        setIsRankOpen(false); setIsInventoryOpen(false); setIsLuckyGameOpen(false);
-        setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false);
-        setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
-        setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
-        setBossBattleHighestFloor(0);
-        setAncientBooks(0);
-        setOwnedSkills([]);
-        setEquippedSkillIds([null, null, null]);
-        setTotalVocabCollected(0);
-        setEquipmentPieces(0);
-        setOwnedItems([]);
-        setEquippedItems({ weapon: null, armor: null, accessory: null });
-        setCardCapacity(100);
-        setJackpotPool(0); setIsLoadingUserData(true); setVocabularyData(null);
-      }
-    });
-    return () => unsubscribe();
-  }, [auth, db]);
-
-  useEffect(() => {
       const handleVisibilityChange = () => {
           if (document.hidden) { setIsBackgroundPaused(true); } 
           else { setIsBackgroundPaused(false); }
@@ -761,7 +630,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   }, []);
 
   const handleTap = () => { };
-  const isLoading = isLoadingUserData || !assetsLoaded || vocabularyData === null;
+  
   useEffect(() => {
     if (displayedCoins === coins) return;
     const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100);
@@ -770,7 +639,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   const renderCharacter = () => {
     const isAnyOverlayOpen = isRankOpen || isInventoryOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
-    const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
+    const isPaused = isAnyOverlayOpen || isBackgroundPaused;
     return (
       <div className="character-container absolute w-28 h-28 left-1/2 -translate-x-1/2 bottom-40 z-20">
         <DotLottieReact src={lottieAssets.characterRun} loop autoplay={!isPaused} className="w-full h-full" />
@@ -803,9 +672,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
   };
 
-  const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>, ...otherSetters: React.Dispatch<React.SetStateAction<boolean>>[]) => {
+  const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
     return () => {
-        if (isLoading) return;
         if (isSyncingData) {
             setShowRateLimitToast(true);
             return;
@@ -840,7 +708,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const handleSetToggleSidebar = (toggleFn: () => void) => { sidebarToggleRef.current = toggleFn; };
 
   const isAnyOverlayOpen = isRankOpen || isInventoryOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen;
-  const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
+  const isGamePaused = isAnyOverlayOpen || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
   const getPlayerBattleStats = () => {
@@ -881,7 +749,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           onShowBaseBuilding={toggleBaseBuilding} onShowAdmin={isAdmin ? toggleAdminPanel : undefined}
       >
         <DungeonCanvasBackground isPaused={isGamePaused} />
-        <div style={{ display: isAnyOverlayOpen ? 'none' : 'block', visibility: isLoading ? 'hidden' : 'visible' }} className="w-full h-full">
+        <div style={{ display: isAnyOverlayOpen ? 'none' : 'block' }} className="w-full h-full">
           <div className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-transparent`} onClick={handleTap}>
             {renderCharacter()}
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
@@ -1039,8 +907,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
         <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}> <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary> </div>
       </SidebarLayout>
-
-      {isLoading && ( <div className="absolute inset-0 z-[100] flex items-center justify-center bg-gray-950/80 backdrop-blur-sm"> <LoadingSpinner /> </div> )}
     </div>
   );
 }
