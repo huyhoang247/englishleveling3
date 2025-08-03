@@ -1,7 +1,7 @@
 // --- START OF FILE: src/word-chain/word-chain-game.tsx ---
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { db, auth } from '../firebase';
+import { db, auth } from './firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 
