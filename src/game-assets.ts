@@ -99,8 +99,6 @@ export const lottieAssets = {
  * Tài nguyên cho rương báu (Treasure Chest)
  */
 export const treasureAssets = {
-  chestClosed: require("./assets/images/treasure-chest.webp"),
-  // -- Thêm mới từ lat-the.tsx: Hình ảnh các loại rương từ vựng --
   chestBasic: require("./assets/images/chest-basic.webp"),
   chestElementary: require("./assets/images/chest-elementary.webp"),
   chestIntermediate: require("./assets/images/chest-intermediate.webp"),
