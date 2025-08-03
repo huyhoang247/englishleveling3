@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import QuizApp from './quiz.tsx';
-// Breadcrumbs component sẽ được định nghĩa bên dưới, không cần import riêng nữa
-// import Breadcrumbs from '../bread-crumbs.tsx'; 
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 import WordChainGame from '../word-chain-game.tsx';
@@ -16,143 +14,58 @@ import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
 
-// --- START: INLINED AND REFINED BREADCRUMBS COMPONENT ---
-
-interface BreadcrumbsProps {
-  currentView: string;
-  selectedType: string | null;
-  selectedPractice: number | null;
-  goHome: () => void;
-  setCurrentView: (view: string) => void;
-}
-
-const ChevronRightIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-  </svg>
-);
-
-const RefinedBreadcrumbs: React.FC<BreadcrumbsProps> = memo(({ currentView, selectedType, selectedPractice, goHome, setCurrentView }) => {
-    
-    const breadcrumbParts = useMemo(() => {
-        const parts = [];
-
-        // 1. Home
-        parts.push({
-            key: 'home',
-            label: <HomeIcon />,
-            onClick: goHome,
-            isButton: true,
-        });
-
-        // 2. Luyện tập (Chỉ hiển thị khi đã chọn)
-        if (currentView === 'quizTypes' || currentView === 'practices' || currentView === 'quiz' || currentView === 'vocabularyGame') {
-            parts.push({
-                key: 'quizTypes',
-                label: 'Luyện tập',
-                onClick: () => setCurrentView('quizTypes'),
-                isActive: currentView === 'quizTypes',
-                isButton: currentView !== 'quizTypes',
-            });
-        }
-        
-        // 3. Loại hình (Trắc nghiệm / Điền từ)
-        if (selectedType && (currentView === 'practices' || currentView === 'quiz' || currentView === 'vocabularyGame')) {
-            parts.push({
-                key: 'practices',
-                label: selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ',
-                onClick: () => setCurrentView('practices'),
-                isActive: currentView === 'practices',
-                isButton: currentView !== 'practices',
-            });
-        }
-
-        // 4. Bài luyện tập cụ thể
-        if (selectedPractice && (currentView === 'quiz' || currentView === 'vocabularyGame')) {
-             parts.push({
-                key: 'practiceDetail',
-                label: `Practice ${selectedPractice % 100}`,
-                isActive: true, // Luôn active khi đã ở màn hình này
-                isButton: false, // Không cần click được nữa
-            });
-        }
-        
-        return parts;
-
-    }, [currentView, selectedType, selectedPractice, goHome, setCurrentView]);
-
-    const renderPart = (part) => {
-        const commonClasses = "transition-colors duration-200 rounded-md px-2 py-1";
-        const activeClasses = "bg-gray-200 font-semibold text-gray-800";
-        const inactiveClasses = "text-gray-500 hover:bg-gray-200 hover:text-gray-800";
-        const textClasses = "text-gray-800 font-semibold";
-
-        if (part.isButton) {
-            return (
-                <button onClick={part.onClick} className={`${commonClasses} ${part.isActive ? activeClasses : inactiveClasses}`}>
-                    {part.label}
-                </button>
-            );
-        }
-        return <span className={`${commonClasses} ${part.isActive ? textClasses : 'text-gray-500'}`}>{part.label}</span>;
-    };
-
-    return (
-        <div className="flex items-center gap-1 text-sm">
-            {breadcrumbParts.map((part, index) => (
-                <React.Fragment key={part.key}>
-                    {renderPart(part)}
-                    {index < breadcrumbParts.length - 1 && <ChevronRightIcon />}
-                </React.Fragment>
-            ))}
-        </div>
-    );
-});
-
-// --- END: REFINED BREADCRUMBS COMPONENT ---
-
-
-// --- START: INLINED AppHeader COMPONENT ---
+// --- START: UNIFIED HEADER COMPONENT (NO BREADCRUMBS) ---
 
 // Props Interface for AppHeader
 interface AppHeaderProps {
   currentView: string;
   selectedType: string | null;
-  selectedPractice: number | null;
   goBack: () => void;
   goHome: () => void;
   setCurrentView: (view: string) => void;
 }
 
 // Icon Components for Header
-const HomeIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
     </svg>
 );
 
-const BackIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+const BackIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
     </svg>
 );
 
-const AnalysisIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+const AnalysisIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
     </svg>
 );
 
+// The Header Component Function
 function AppHeader({
   currentView,
   selectedType,
-  selectedPractice,
   goBack,
   goHome,
   setCurrentView,
 }: AppHeaderProps) {
   
+  const headerTitle = useMemo(() => {
+    switch (currentView) {
+      case 'quizTypes':
+        return 'Luyện tập';
+      case 'practices':
+        return selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ';
+      default:
+        return null; // No title for main screen
+    }
+  }, [currentView, selectedType]);
+
+  // This header is not rendered for fullscreen views, as they have their own.
   if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis'].includes(currentView)) {
       return null;
   }
@@ -162,7 +75,7 @@ function AppHeader({
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           
-          <div className="flex-1 md:flex md:items-center md:gap-12">
+          <div className="flex-1">
             {currentView === 'main' ? (
               <a className="flex items-center gap-2 text-gray-800" href="#" onClick={(e) => { e.preventDefault(); goHome(); }}>
                  <span className="text-2xl">📚</span>
@@ -176,14 +89,8 @@ function AppHeader({
           </div>
 
           <div className="flex-1 flex justify-center">
-            {currentView !== 'main' && (
-              <RefinedBreadcrumbs
-                currentView={currentView}
-                selectedType={selectedType}
-                selectedPractice={selectedPractice}
-                goHome={goHome}
-                setCurrentView={setCurrentView}
-              />
+            {headerTitle && (
+              <h2 className="text-lg font-bold text-gray-800">{headerTitle}</h2>
             )}
           </div>
           
@@ -208,17 +115,17 @@ function AppHeader({
     </header>
   );
 }
-// --- END: INLINED AppHeader COMPONENT ---
+// --- END: UNIFIED HEADER COMPONENT ---
 
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
-  const [selectedQuiz, setSelectedQuiz] = useState(null); // Giữ lại để không gây lỗi, nhưng breadcrumb mới không dùng
+  const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPractice, setSelectedPractice] = useState<number | null>(null);
 
   const handleQuizSelect = useCallback((quiz) => {
-    setSelectedQuiz(quiz); // Vẫn set state này
+    setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
     setSelectedType(null);
     setSelectedPractice(null);
@@ -245,18 +152,11 @@ export default function QuizAppHome() {
        setSelectedPractice(null);
     } else if (currentView === 'wordChainGame' || currentView === 'analysis') {
        setCurrentView('main');
-       setSelectedQuiz(null);
-       setSelectedType(null);
-       setSelectedPractice(null);
     } else if (currentView === 'practices') {
       setCurrentView('quizTypes');
       setSelectedType(null);
-      setSelectedPractice(null);
     } else if (currentView === 'quizTypes') {
       setCurrentView('main');
-      setSelectedQuiz(null);
-      setSelectedType(null);
-      setSelectedPractice(null);
     }
   }, [currentView]);
 
@@ -267,43 +167,57 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   }, []);
 
-  // --- Fullscreen Views Handling ---
+  // --- Fullscreen Views Logic ---
+  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis'].includes(currentView)) {
+      let title = '';
+      let ViewComponent = null;
 
-  if (currentView === 'wordChainGame' || currentView === 'analysis') {
-      const title = currentView === 'wordChainGame' ? "Nối Từ" : "Phân Tích Tiến Trình";
-      const GameComponent = currentView === 'wordChainGame' ? WordChainGame : AnalysisDashboard;
+      switch(currentView) {
+          case 'quiz':
+              title = `Trắc nghiệm - Practice ${selectedPractice % 100}`;
+              ViewComponent = <QuizApp onGoBack={goBack} selectedPractice={selectedPractice} />;
+              break;
+          case 'vocabularyGame':
+              title = `Điền từ - Practice ${selectedPractice % 100}`;
+              ViewComponent = <VocabularyGame onGoBack={goBack} selectedPractice={selectedPractice} />;
+              break;
+          case 'wordChainGame':
+              title = 'Nối Từ';
+              ViewComponent = <WordChainGame onGoBack={goBack} />;
+              break;
+          case 'analysis':
+              title = 'Phân Tích Tiến Trình';
+              ViewComponent = <AnalysisDashboard />;
+              break;
+      }
 
+      // QuizApp and VocabularyGame might have their own headers. 
+      // For a 100% consistent UI, you would refactor them to use a common header component.
+      // Here, we provide a unified structure for all.
+      // If the inner component (e.g., QuizApp) has its own header, you might see two.
+      // It's recommended to remove the header from the child components and let this parent manage it.
+      
+      // Let's assume for now that child components like QuizApp DO NOT have their own header.
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
-            <header className="flex-shrink-0 bg-white/80 backdrop-blur-sm z-10 p-4 border-b flex items-center justify-between">
+            <header className="flex-shrink-0 sticky top-0 bg-white/80 backdrop-blur-sm z-10 p-4 border-b flex items-center justify-between">
                 <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900">
-                    <BackIcon />
+                    <BackIcon className="h-5 w-5"/>
                     <span>Quay lại</span>
                 </button>
-                <h2 className="text-lg font-bold text-gray-800">{title}</h2>
-                <div className="w-24"></div>
+                <h2 className="text-lg font-bold text-gray-800 truncate px-2">{title}</h2>
+                <div className="w-28 text-right">
+                   {/* Optional: Add a Home button here for quick exit */}
+                   <button onClick={goHome} className="p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Về trang chủ">
+                      <HomeIcon className="h-5 w-5"/>
+                   </button>
+                </div>
             </header>
             <div className="flex-grow overflow-y-auto">
-                 <GameComponent onGoBack={goBack} />
+                {ViewComponent}
             </div>
         </div>
-    );
-  }
-  
-  if (currentView === 'vocabularyGame') {
-    return (
-      <div className="fixed inset-0 z-[51] bg-white">
-        <VocabularyGame onGoBack={goBack} selectedPractice={selectedPractice} />
-      </div>
-    );
-  }
-
-  if (currentView === 'quiz') {
-    return (
-      <div className="fixed inset-0 z-[51] bg-white">
-        <QuizApp onGoBack={goBack} selectedPractice={selectedPractice} />
-      </div>
-    );
+      );
   }
   
   const renderContent = () => {
@@ -392,7 +306,6 @@ export default function QuizAppHome() {
         <AppHeader 
           currentView={currentView}
           selectedType={selectedType}
-          selectedPractice={selectedPractice}
           goBack={goBack}
           goHome={goHome}
           setCurrentView={setCurrentView}
