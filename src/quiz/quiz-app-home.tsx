@@ -14,7 +14,7 @@ import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
 
-// --- START: UNIFIED HEADER COMPONENT (GAME-THEME) ---
+// --- START: UNIFIED HEADER COMPONENT (NO BREADCRUMBS) ---
 
 // Props Interface for AppHeader
 interface AppHeaderProps {
@@ -61,7 +61,7 @@ function AppHeader({
       case 'practices':
         return selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ';
       default:
-        return 'Quiz App'; // Title area used for App Name on main screen
+        return null; // No title for main screen
     }
   }, [currentView, selectedType]);
 
@@ -71,48 +71,46 @@ function AppHeader({
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-gradient-to-r from-blue-700 via-purple-600 to-indigo-800 text-white shadow-lg">
+    <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-4">
+        <div className="flex h-14 items-center justify-between">
           
-          {/* Left Button */}
-          <div className="flex-shrink-0" style={{width: '60px'}}>
-             {currentView !== 'main' && (
-              <button 
-                onClick={goBack} 
-                className="flex items-center justify-center h-11 w-11 bg-white/20 hover:bg-white/30 active:translate-y-px rounded-xl transition-all shadow-sm border border-white/30" 
-                aria-label="Quay lại"
-              >
-                <BackIcon className="h-6 w-6"/>
+          <div className="flex-1">
+            {currentView === 'main' ? (
+              <a className="flex items-center gap-2 text-white" href="#" onClick={(e) => { e.preventDefault(); goHome(); }}>
+                 <span className="text-2xl">📚</span>
+                 <span className="font-extrabold text-xl text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">Quiz App</span>
+              </a>
+            ) : (
+              <button onClick={goBack} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Quay lại">
+                <BackIcon />
               </button>
             )}
           </div>
 
-          {/* Center Title / Logo */}
-          <div className="flex-1 flex justify-center text-center">
-            {currentView === 'main' ? (
-                 <a className="flex items-center gap-3 text-white" href="#" onClick={(e) => { e.preventDefault(); goHome(); }}>
-                    <span className="text-3xl">🎮</span>
-                    <span className="font-black text-2xl tracking-tighter [text-shadow:2px_2px_4px_rgba(0,0,0,0.4)]">Quiz App</span>
-                 </a>
-            ) : (
-              <h2 className="text-2xl font-bold tracking-wide [text-shadow:2px_2px_4px_rgba(0,0,0,0.4)]">{headerTitle}</h2>
+          <div className="flex-1 flex justify-center">
+            {headerTitle && (
+              <h2 className="text-lg font-bold text-slate-200">{headerTitle}</h2>
             )}
           </div>
           
-          {/* Right Button */}
-          <div className="flex-shrink-0 flex items-center justify-end" style={{width: '60px'}}>
-              <button 
-                onClick={currentView === 'main' ? () => setCurrentView('analysis') : goHome}
-                className="flex items-center justify-center h-11 w-11 bg-white/20 hover:bg-white/30 active:translate-y-px rounded-xl transition-all shadow-sm border border-white/30"
-                aria-label={currentView === 'main' ? "Xem phân tích" : "Về trang chủ"}
-              >
-                {currentView === 'main' ? <AnalysisIcon className="h-6 w-6"/> : <HomeIcon className="h-6 w-6"/>}
-              </button>
+          <div className="flex-1 flex items-center justify-end gap-4">
+              {currentView === 'main' ? (
+                <button 
+                  onClick={() => setCurrentView('analysis')}
+                  className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  aria-label="Xem phân tích"
+                >
+                    <AnalysisIcon />
+                </button>
+              ) : (
+                 <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
+                    <HomeIcon />
+                 </button>
+              )}
           </div>
         </div>
       </div>
-       <div className="h-1 bg-black/20"></div>
     </header>
   );
 }
@@ -197,24 +195,17 @@ export default function QuizAppHome() {
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
             {showParentHeader && (
-              <header className="flex-shrink-0 sticky top-0 bg-gradient-to-r from-blue-700 via-purple-600 to-indigo-800 text-white shadow-lg z-10">
-                  <div className="flex items-center justify-between h-16 px-4">
-                      <div className="flex-1">
-                          <button onClick={goBack} className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 active:translate-y-px rounded-full text-sm font-semibold transition-all shadow-sm border border-white/30">
-                              <BackIcon className="h-5 w-5"/>
-                              <span>Quay lại</span>
-                          </button>
-                      </div>
-                      <div className="flex-1 text-center">
-                        <h2 className="text-xl font-bold truncate px-2 [text-shadow:2px_2px_4px_rgba(0,0,0,0.4)]">{title}</h2>
-                      </div>
-                      <div className="flex-1 flex justify-end">
-                         <button onClick={goHome} className="flex items-center justify-center h-11 w-11 bg-white/20 hover:bg-white/30 active:translate-y-px rounded-xl transition-all shadow-sm border border-white/30" aria-label="Về trang chủ">
-                            <HomeIcon className="h-6 w-6"/>
-                         </button>
-                      </div>
+              <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 p-4 shadow-md flex items-center justify-between">
+                  <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
+                      <BackIcon className="h-5 w-5"/>
+                      <span>Quay lại</span>
+                  </button>
+                  <h2 className="text-lg font-bold text-slate-200 truncate px-2">{title}</h2>
+                  <div className="w-28 text-right">
+                     <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
+                        <HomeIcon className="h-5 w-5"/>
+                     </button>
                   </div>
-                  <div className="h-1 bg-black/20"></div>
               </header>
             )}
             <div className={`flex-grow ${showParentHeader ? 'overflow-y-auto' : ''}`}>
