@@ -12,7 +12,6 @@ import { auth, db } from './firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { allImageUrls } from './game-assets.ts';
-import { GameDataProvider } from './GameDataProvider.tsx'; // IMPORT PROVIDER
 
 // Định nghĩa các loại tab có thể có
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
@@ -33,7 +32,6 @@ function preloadImage(src: string): Promise<void> {
 }
 
 // Hàm kiểm tra và tạo tài liệu người dùng trong Firestore nếu chưa có
-// Đã cập nhật để bao gồm tất cả các trường dữ liệu game mặc định
 const ensureUserDocumentExists = async (user: User) => {
   if (!user || !user.uid) {
     console.error("User object or UID is missing.");
@@ -44,33 +42,19 @@ const ensureUserDocumentExists = async (user: User) => {
     const userDocSnap = await getDoc(userDocRef);
     if (!userDocSnap.exists()) {
       console.log(`User document for ${user.uid} does not exist. Creating...`);
-      // Dữ liệu khởi tạo này phải khớp với cấu trúc trong GameDataProvider
       await setDoc(userDocRef, {
         email: user.email,
         username: user.displayName || null,
         createdAt: new Date(),
-        // Game data fields
         coins: 0,
         gems: 0,
-        masteryCards: 0, 
-        stats: { hp: 0, atk: 0, def: 0 },
-        pickaxes: 50, 
-        minerChallengeHighestFloor: 0, 
-        bossBattleHighestFloor: 0,
-        ancientBooks: 0,
-        skills: { owned: [], equipped: [null, null, null] },
-        totalVocabCollected: 0,
-        equipment: { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } },
-        cardCapacity: 100,
-        // Old fields (if needed for other parts of the app)
         keys: 0,
         openedImageIds: []
-      }, { merge: true }); // Dùng merge để thêm mới mà không ghi đè nếu có dữ liệu khác
+      });
       console.log(`User document for ${user.uid} created successfully.`);
     } else {
       console.log(`User document for ${user.uid} already exists.`);
       const userData = userDocSnap.data();
-      // Các logic cập nhật thông tin user vẫn giữ nguyên
       if (userData?.email !== user.email) {
           console.log(`Updating email for user ${user.uid} in Firestore.`);
           await setDoc(userDocRef, { email: user.email }, { merge: true });
@@ -79,9 +63,9 @@ const ensureUserDocumentExists = async (user: User) => {
            console.log(`Adding openedImageIds field for user ${user.uid}.`);
            await setDoc(userDocRef, { openedImageIds: [] }, { merge: true });
        }
-       if (!userData?.username && user.displayName) {
+       if (!userData?.username) {
            console.log(`Adding username field for user ${user.uid}.`);
-           await setDoc(userDocRef, { username: user.displayName }, { merge: true });
+           await setDoc(userDocRef, { username: null }, { merge: true });
        }
     }
   } catch (error) {
@@ -139,10 +123,10 @@ const App: React.FC = () => {
   // Effect để lắng nghe trạng thái đăng nhập
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
       if (user) {
         await ensureUserDocumentExists(user);
       }
-      setCurrentUser(user);
       setLoadingAuth(false);
     });
     return () => unsubscribe();
@@ -247,40 +231,36 @@ const App: React.FC = () => {
 
   // Giai đoạn 4: Mọi thứ đã sẵn sàng, hiển thị ứng dụng
   return (
-    // Bọc toàn bộ ứng dụng bằng GameDataProvider ở đây
-    <GameDataProvider>
-        <div className="app-container">
-          {activeTab === 'home' && (
-            <Home
-              hideNavBar={hideNavBar}
-              showNavBar={showNavBar}
-              assetsLoaded={assetsLoaded}
-            />
-          )}
-          {activeTab === 'profile' && <Profile />}
-          {activeTab === 'story' && (
-            <Story 
-                hideNavBar={hideNavBar} 
-                showNavBar={showNavBar} 
-            />
-          )}
-          
-          {activeTab === 'quiz' && (
-            <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />
-          )}
-          
-          {activeTab === 'game' && (
-            <GameBrowser hideNavBar={hideNavBar} showNavBar={showNavBar} />
-          )}
+    <div className="app-container">
+      {activeTab === 'home' && (
+        <Home
+          hideNavBar={hideNavBar}
+          showNavBar={showNavBar}
+          currentUser={currentUser}
+          assetsLoaded={assetsLoaded}
+        />
+      )}
+      {activeTab === 'profile' && <Profile />}
+      {activeTab === 'story' && (
+        <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />
+      )}
+      
+      {/* TRUYỀN PROPS hide/showNavBar VÀO ĐÂY */}
+      {activeTab === 'quiz' && (
+        <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />
+      )}
+      
+      {activeTab === 'game' && (
+        <GameBrowser hideNavBar={hideNavBar} showNavBar={showNavBar} />
+      )}
 
-          {isNavBarVisible && (
-            <NavigationBarBottom
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-            />
-          )}
-        </div>
-    </GameDataProvider>
+      {isNavBarVisible && (
+        <NavigationBarBottom
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
+      )}
+    </div>
   );
 };
 
