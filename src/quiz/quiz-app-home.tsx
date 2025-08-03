@@ -73,12 +73,12 @@ function AppHeader({
   return (
     <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-14 items-center justify-between">
+        <div className="flex h-14 items-center">
           
-          <div className="flex-1">
+          <div className="w-24">
             {currentView === 'main' ? (
               <a className="flex items-center" href="#" onClick={(e) => { e.preventDefault(); goHome(); }}>
-                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo-large.webp" alt="Quiz App Logo" className="h-12 w-auto" />
+                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo-large.webp" alt="Quiz App Logo" className="h-10 w-auto" />
               </a>
             ) : (
               <button onClick={goBack} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Quay lại">
@@ -87,13 +87,13 @@ function AppHeader({
             )}
           </div>
 
-          <div className="flex-1 flex justify-center">
+          <div className="flex-1 flex justify-center px-4">
             {headerTitle && (
-              <h2 className="text-lg font-bold text-slate-200">{headerTitle}</h2>
+              <h2 className="text-lg font-bold text-slate-200 truncate">{headerTitle}</h2>
             )}
           </div>
           
-          <div className="flex-1 flex items-center justify-end gap-4">
+          <div className="w-24 flex items-center justify-end gap-4">
               {currentView === 'main' ? (
                 <button 
                   onClick={() => setCurrentView('analysis')}
