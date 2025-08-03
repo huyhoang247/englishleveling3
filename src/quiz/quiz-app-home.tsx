@@ -78,7 +78,7 @@ function AppHeader({
           <div className="flex-1">
             {currentView === 'main' ? (
               <a className="flex items-center" href="#" onClick={(e) => { e.preventDefault(); goHome(); }}>
-                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo-large.webp" alt="Quiz App Logo" className="h-12 w-12" />
+                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo-large.webp" alt="Quiz App Logo" className="h-12 w-auto" />
               </a>
             ) : (
               <button onClick={goBack} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Quay lại">
