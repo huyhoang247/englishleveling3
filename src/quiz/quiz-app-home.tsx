@@ -58,9 +58,9 @@ function AppHeader({
   const headerTitle = useMemo(() => {
     switch (currentView) {
       case 'quizTypes':
-        return 'Luyện tập';
+        return 'Quiz';
       case 'practices':
-        return selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ';
+        return selectedType === 'tracNghiem' ? 'Multiple choice' : 'Fill in the blank';
       default:
         return null;
     }
@@ -188,11 +188,11 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
 
       switch(currentView) {
           case 'quiz':
-              title = `Trắc nghiệm - Practice ${selectedPractice % 100}`;
+              title = `Multiple choice - Practice ${selectedPractice % 100}`;
               ViewComponent = <QuizApp onGoBack={goBack} selectedPractice={selectedPractice} />;
               break;
           case 'vocabularyGame':
-              title = `Điền từ - Practice ${selectedPractice % 100}`;
+              title = `Fill in the blank - Practice ${selectedPractice % 100}`;
               ViewComponent = <VocabularyGame onGoBack={goBack} selectedPractice={selectedPractice} />;
               break;
           case 'wordChainGame':
@@ -244,8 +244,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   <span className="text-4xl">💪</span>
                 </div>
                 <div className="ml-5 text-left flex-grow">
-                  <h3 className="text-xl font-bold text-gray-800">Luyện tập</h3>
-                  <p className="text-gray-500 text-sm mt-1">Luyện tập các câu hỏi trắc nghiệm & điền từ</p>
+                  <h3 className="text-xl font-bold text-gray-800">Quiz</h3>
+                  <p className="text-gray-500 text-sm mt-1">Quiz các câu hỏi multiple choice & fill in the blank</p>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -288,15 +288,15 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
             <div className="space-y-5 w-full">
               <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
-                  <div className="p-3 bg-white/20 rounded-xl"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2354_Checklist%20Question%20Mark_remix_01k0mc0y2efdmb3gsgzgd6y81s.png" alt="Trắc nghiệm icon" className="h-8 w-8" /></div>
-                  <div className="ml-5"><h3 className="text-xl font-bold">Trắc Nghiệm</h3><p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p></div>
+                  <div className="p-3 bg-white/20 rounded-xl"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2354_Checklist%20Question%20Mark_remix_01k0mc0y2efdmb3gsgzgd6y81s.png" alt="Multiple choice icon" className="h-8 w-8" /></div>
+                  <div className="ml-5"><h3 className="text-xl font-bold">Multiple choice</h3><p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p></div>
                   <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg></div>
                 </div>
               </button>
               <button onClick={() => handleTypeSelect('dienTu')} className="w-full text-left p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
                   <div className="p-3 bg-white/20 rounded-xl"><svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" /></svg></div>
-                  <div className="ml-5"><h3 className="text-xl font-bold">Điền Từ</h3><p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p></div>
+                  <div className="ml-5"><h3 className="text-xl font-bold">Fill in the blank</h3><p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p></div>
                   <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg></div>
                 </div>
               </button>
@@ -697,7 +697,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                     const isCompleted = !isLocked && progress && progress.total > 0 && progress.completed >= progress.total;
                     const colors = isLocked ? colorClasses.gray : colorClasses[previewColors[(previewLevel - 1) % previewColors.length]];
                     const prerequisiteName = previewLevel === 1 ? `Practice ${selectedPracticeForReview}` : `Preview ${previewLevel - 1}`;
-                    const unlockText = isLocked ? `Hoàn thành tất cả câu ở ${prerequisiteName} để mở` : `Luyện tập lại các câu hỏi`;
+                    const unlockText = isLocked ? `Hoàn thành tất cả câu ở ${prerequisiteName} để mở` : `Quiz lại các câu hỏi`;
                     if (previewLevel > 1) {
                          const oneLevelBeforeId = ((previewLevel - 2) === 0) ? selectedPracticeForReview : ((previewLevel - 2) * 100) + selectedPracticeForReview;
                          const oneLevelBeforeProgress = progressData[oneLevelBeforeId];
@@ -840,7 +840,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             return null;
         };
         const mainProgress = progressData[practiceNumber];
-        const mainTiers = generateTiersForLevel(mainProgress, practiceNumber, "Luyện tập chính", 1);
+        const mainTiers = generateTiersForLevel(mainProgress, practiceNumber, "Main Quiz", 1);
         if (mainTiers) tiers.push(mainTiers);
         for (let i = 1; i <= MAX_PREVIEWS; i++) {
             const previewNumber = (i * 100) + practiceNumber;
