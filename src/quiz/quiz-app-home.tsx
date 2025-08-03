@@ -190,30 +190,26 @@ export default function QuizAppHome() {
               ViewComponent = <AnalysisDashboard />;
               break;
       }
-
-      // QuizApp and VocabularyGame might have their own headers. 
-      // For a 100% consistent UI, you would refactor them to use a common header component.
-      // Here, we provide a unified structure for all.
-      // If the inner component (e.g., QuizApp) has its own header, you might see two.
-      // It's recommended to remove the header from the child components and let this parent manage it.
       
-      // Let's assume for now that child components like QuizApp DO NOT have their own header.
+      const showParentHeader = !['quiz', 'vocabularyGame'].includes(currentView);
+
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
-            <header className="flex-shrink-0 sticky top-0 bg-white/80 backdrop-blur-sm z-10 p-4 border-b flex items-center justify-between">
-                <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900">
-                    <BackIcon className="h-5 w-5"/>
-                    <span>Quay lại</span>
-                </button>
-                <h2 className="text-lg font-bold text-gray-800 truncate px-2">{title}</h2>
-                <div className="w-28 text-right">
-                   {/* Optional: Add a Home button here for quick exit */}
-                   <button onClick={goHome} className="p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Về trang chủ">
-                      <HomeIcon className="h-5 w-5"/>
-                   </button>
-                </div>
-            </header>
-            <div className="flex-grow overflow-y-auto">
+            {showParentHeader && (
+              <header className="flex-shrink-0 sticky top-0 bg-white/80 backdrop-blur-sm z-10 p-4 border-b flex items-center justify-between">
+                  <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900">
+                      <BackIcon className="h-5 w-5"/>
+                      <span>Quay lại</span>
+                  </button>
+                  <h2 className="text-lg font-bold text-gray-800 truncate px-2">{title}</h2>
+                  <div className="w-28 text-right">
+                     <button onClick={goHome} className="p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Về trang chủ">
+                        <HomeIcon className="h-5 w-5"/>
+                     </button>
+                  </div>
+              </header>
+            )}
+            <div className={`flex-grow ${showParentHeader ? 'overflow-y-auto' : ''}`}>
                 {ViewComponent}
             </div>
         </div>
