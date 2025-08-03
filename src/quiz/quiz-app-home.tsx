@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import QuizApp from './quiz.tsx';
 import Breadcrumbs from '../bread-crumbs.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
-import AnalysisDashboard from '../AnalysisDashboard.tsx'; // --- ĐÃ THÊM
+import AnalysisDashboard from '../AnalysisDashboard.tsx';
+import WordChainGame from '../word-chain-game.tsx'; // --- ĐÃ THÊM: Import game mới
 
 // Imports for progress calculation
 import { db, auth } from '../firebase.js';
@@ -42,9 +43,16 @@ export default function QuizAppHome() {
   }, [selectedType]);
 
   const goBack = useCallback(() => {
-    if (currentView === 'vocabularyGame' || currentView === 'quiz') {
-      setCurrentView('practices');
-      setSelectedPractice(null);
+    if (currentView === 'vocabularyGame' || currentView === 'quiz' || currentView === 'wordChainGame') {
+      if (selectedType) { // Nếu đi từ mục Luyện tập
+         setCurrentView('practices');
+         setSelectedPractice(null);
+      } else { // Nếu đi từ màn hình chính
+         setCurrentView('main');
+         setSelectedQuiz(null);
+         setSelectedType(null);
+         setSelectedPractice(null);
+      }
     } else if (currentView === 'quizTypes') {
       setCurrentView('main');
       setSelectedQuiz(null);
@@ -55,7 +63,7 @@ export default function QuizAppHome() {
       setSelectedType(null);
       setSelectedPractice(null);
     }
-  }, [currentView]);
+  }, [currentView, selectedType]);
 
   const goHome = useCallback(() => {
     setCurrentView('main');
@@ -64,7 +72,12 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   }, []);
 
-  // --- ĐÃ THÊM: Xử lý hiển thị cho trang phân tích ---
+  // --- ĐÃ THÊM: Xử lý hiển thị cho game nối từ ---
+  if (currentView === 'wordChainGame') {
+    return <WordChainGame onGoBack={goHome} />;
+  }
+
+  // --- Xử lý hiển thị cho trang phân tích ---
   if (currentView === 'analysis') {
     return (
         <div className="fixed inset-0 z-[51] bg-white overflow-y-auto">
@@ -115,15 +128,31 @@ export default function QuizAppHome() {
                   <span className="text-4xl">📚</span>
                 </div>
                 <div className="ml-5 text-left flex-grow">
-                  <h3 className="text-xl font-bold text-gray-800">Quiz</h3>
-                  <p className="text-gray-500 text-sm mt-1">Luyện tập các câu hỏi trắc nghiệm</p>
+                  <h3 className="text-xl font-bold text-gray-800">Luyện tập</h3>
+                  <p className="text-gray-500 text-sm mt-1">Luyện tập các câu hỏi trắc nghiệm & điền từ</p>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
+              
+              {/* --- ĐÃ THÊM: Nút dẫn đến game Nối từ --- */}
+              <button
+                  onClick={() => setCurrentView('wordChainGame')}
+                  className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-purple-300 group"
+              >
+                  <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-md">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-9 w-9" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" /></svg>
+                  </div>
+                  <div className="ml-5 text-left flex-grow">
+                      <h3 className="text-xl font-bold text-gray-800">Nối Từ</h3>
+                      <p className="text-gray-500 text-sm mt-1">Thử thách nối từ với kho từ vựng của bạn</p>
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-purple-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+              </button>
 
-              {/* --- ĐÃ THÊM: Nút dẫn đến trang phân tích --- */}
               <button
                   onClick={() => setCurrentView('analysis')}
                   className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-teal-300 group"
@@ -156,7 +185,7 @@ export default function QuizAppHome() {
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
-            <div className="text-center"><h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Quiz {selectedQuiz}</h2><p className="mt-2 text-md text-gray-500">Chọn hình thức luyện tập bạn muốn.</p></div>
+            <div className="text-center"><h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Luyện tập</h2><p className="mt-2 text-md text-gray-500">Chọn hình thức luyện tập bạn muốn.</p></div>
             <div className="space-y-5 w-full">
               <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
