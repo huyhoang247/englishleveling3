@@ -115,6 +115,32 @@ function AppHeader({
 }
 // --- END: UNIFIED HEADER COMPONENT ---
 
+// --- START: BOTTOM NAVIGATION BAR ---
+const BottomNavBar = () => {
+    // This is a visual placeholder for a bottom navigation bar.
+    // In a real app, these buttons would trigger navigation.
+    return (
+        <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-gray-200">
+            <div className="flex justify-around items-center h-16 max-w-screen-xl mx-auto px-4">
+                <button className="flex flex-col items-center justify-center text-indigo-600" aria-current="page">
+                    <HomeIcon className="h-6 w-6 mb-1" />
+                    <span className="text-xs font-bold">Trang chủ</span>
+                </button>
+                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-indigo-600">
+                    <AnalysisIcon className="h-6 w-6 mb-1" />
+                    <span className="text-xs font-medium">Phân tích</span>
+                </button>
+                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-indigo-600">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className="text-xs font-medium">Tài khoản</span>
+                </button>
+            </div>
+        </footer>
+    );
+};
+// --- END: BOTTOM NAVIGATION BAR ---
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
@@ -305,10 +331,11 @@ export default function QuizAppHome() {
           setCurrentView={setCurrentView}
         />
         <main className="flex-grow overflow-y-auto">
-          <div className="p-6 pb-32 max-w-screen-xl mx-auto">
+          <div className="p-6 pb-24 max-w-screen-xl mx-auto">
             {renderContent()}
           </div>
         </main>
+        {currentView === 'main' && <BottomNavBar />}
       </div>
       <style jsx>{`
         .hide-scrollbar {
