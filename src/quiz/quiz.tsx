@@ -10,6 +10,7 @@ import Confetti from '../fill-word/chuc-mung.tsx';
 import detailedMeaningsText from '../vocabulary-definitions.ts';
 import { exampleData } from '../example-data.ts';
 import { defaultVocabulary } from '../list-vocabulary.ts';
+import { generateAudioQuizQuestions } from '../audio-quiz-generator.ts';
 
 const optionLabels = ['A', 'B', 'C', 'D'];
 const streakIconUrls = { default: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png', streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(2).png', streak5: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(1).png', streak10: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(3).png', streak20: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(4).png', };
@@ -163,32 +164,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
           });
           remainingQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
       } else if (practiceBaseId === 4) {
-          const userVocabSet = new Set(userVocabulary.map(w => w.toLowerCase()));
-          const potentialQuestions = defaultVocabulary
-            .map((word, index) => ({ word, index }))
-            .filter(item => userVocabSet.has(item.word.toLowerCase()));
-
-          allPossibleQuestions = potentialQuestions.map(item => {
-              const audioNumber = (item.index + 1).toString().padStart(3, '0');
-              const audioUrl = `https://raw.githubusercontent.com/englishleveling46/Flashcard/main/audio1/${audioNumber}.mp3`;
-              const correctWord = item.word.toLowerCase();
-              
-              const incorrectOptions = [];
-              while (incorrectOptions.length < 3) {
-                  const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)].toLowerCase();
-                  if (randomWord !== correctWord && !incorrectOptions.includes(randomWord)) {
-                      incorrectOptions.push(randomWord);
-                  }
-              }
-              return {
-                  question: "Nghe và chọn từ đúng:", 
-                  audioUrl: audioUrl,
-                  options: [correctWord, ...incorrectOptions],
-                  correctAnswer: correctWord,
-                  word: item.word,
-                  vietnamese: null
-              };
-          });
+          allPossibleQuestions = generateAudioQuizQuestions(userVocabulary);
           remainingQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
       } else {
           const { allMatchingQuestions, remainingQuestions: p1Remaining } = generatePractice1Questions();
@@ -307,23 +283,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
             return [];
         }).filter(q => !completedQuizWords.has(q.word.toLowerCase()));
     } else if (practiceBaseId === 4) {
-        const userVocabSet = new Set(userVocabulary.map(w => w.toLowerCase()));
-        const allPossibleQuestions = defaultVocabulary
-            .map((word, index) => ({ word, index }))
-            .filter(item => userVocabSet.has(item.word.toLowerCase()))
-            .map(item => {
-                const audioNumber = (item.index + 1).toString().padStart(3, '0');
-                const audioUrl = `https://raw.githubusercontent.com/englishleveling46/Flashcard/main/audio1/${audioNumber}.mp3`;
-                const correctWord = item.word.toLowerCase();
-                const incorrectOptions = [];
-                while (incorrectOptions.length < 3) {
-                    const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)].toLowerCase();
-                    if (randomWord !== correctWord && !incorrectOptions.includes(randomWord)) {
-                        incorrectOptions.push(randomWord);
-                    }
-                }
-                return { question: "Nghe và chọn từ đúng:", audioUrl, options: [correctWord, ...incorrectOptions], correctAnswer: correctWord, word: item.word, vietnamese: null };
-            });
+        const allPossibleQuestions = generateAudioQuizQuestions(userVocabulary);
         newPlayableQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
     } else {
         const { remainingQuestions } = generatePractice1Questions();
