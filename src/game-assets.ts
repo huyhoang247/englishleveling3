@@ -16,10 +16,9 @@ export const uiAssets = {
   shopIcon: require("./assets/images/shop-icon.webp"),
   inventoryIcon: require("./assets/images/inventory-icon.webp"),
   missionIcon: require("./assets/images/mission-icon.webp"),
-  closeIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/close.png",
-  towerIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/ChatGPT%20Image%20Jun%2014%2C%202025%2C%2004_53_18%20PM.png",
+  closeIcon: require("./assets/images/close-icon.webp"),
+  towerIcon: require("./assets/images/tower-icon.webp"),
   gemIcon: require("./assets/images/gems.webp"),
-  statsIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/stats-icon.png", // Được chuyển từ đường dẫn local
   vocabularyChestIcon: require("./assets/images/vocabulary-chest.webp"),
   skillIcon: require("./assets/images/skill-icon.webp"),
   // -- Thêm mới từ lat-the.tsx --
@@ -100,7 +99,7 @@ export const lottieAssets = {
  * Tài nguyên cho rương báu (Treasure Chest)
  */
 export const treasureAssets = {
-  chestClosed: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/treasure-chest%20(1).png",
+  chestClosed: require("./assets/images/treasure-chest.webp"),
   // -- Thêm mới từ lat-the.tsx: Hình ảnh các loại rương từ vựng --
   chestBasic: require("./assets/images/chest-basic.webp"),
   chestElementary: require("./assets/images/chest-elementary.webp"),
