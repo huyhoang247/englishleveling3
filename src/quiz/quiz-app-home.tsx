@@ -1,5 +1,4 @@
-// --- START OF FILE: quiz-app-home.tsx ---
-
+// quiz-app-home.tsx
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import QuizApp from './quiz.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
@@ -13,10 +12,14 @@ import { collection, doc, getDoc, getDocs, updateDoc, increment } from 'firebase
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
+// --- THÊM INTERFACE CHO PROPS MỚI ---
+interface QuizAppHomeProps {
+  hideNavBar?: () => void;
+  showNavBar?: () => void;
+}
 
 // --- START: UNIFIED HEADER COMPONENT (NO BREADCRUMBS) ---
 
-// Props Interface for AppHeader
 interface AppHeaderProps {
   currentView: string;
   selectedType: string | null;
@@ -25,7 +28,6 @@ interface AppHeaderProps {
   setCurrentView: (view: string) => void;
 }
 
-// Icon Components for Header
 const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -45,7 +47,6 @@ const AnalysisIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
     </svg>
 );
 
-// The Header Component Function
 function AppHeader({
   currentView,
   selectedType,
@@ -61,11 +62,10 @@ function AppHeader({
       case 'practices':
         return selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ';
       default:
-        return null; // No title for main screen
+        return null;
     }
   }, [currentView, selectedType]);
 
-  // This header is not rendered for fullscreen views, as they have their own.
   if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis'].includes(currentView)) {
       return null;
   }
@@ -74,7 +74,6 @@ function AppHeader({
     <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center">
-          
           <div className="w-24">
             {currentView === 'main' ? (
               <a className="flex items-center" href="#" onClick={(e) => { e.preventDefault(); goHome(); }}>
@@ -86,13 +85,11 @@ function AppHeader({
               </button>
             )}
           </div>
-
           <div className="flex-1 flex justify-center px-4">
             {headerTitle && (
               <h2 className="text-lg font-bold text-slate-200 truncate">{headerTitle}</h2>
             )}
           </div>
-          
           <div className="w-24 flex items-center justify-end gap-4">
               {currentView === 'main' ? (
                 <button 
@@ -115,38 +112,31 @@ function AppHeader({
 }
 // --- END: UNIFIED HEADER COMPONENT ---
 
-// --- START: BOTTOM NAVIGATION BAR ---
-const BottomNavBar = () => {
-    // This is a visual placeholder for a bottom navigation bar.
-    // In a real app, these buttons would trigger navigation.
-    return (
-        <footer className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-gray-200">
-            <div className="flex justify-around items-center h-16 max-w-screen-xl mx-auto px-4">
-                <button className="flex flex-col items-center justify-center text-indigo-600" aria-current="page">
-                    <HomeIcon className="h-6 w-6 mb-1" />
-                    <span className="text-xs font-bold">Trang chủ</span>
-                </button>
-                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-indigo-600">
-                    <AnalysisIcon className="h-6 w-6 mb-1" />
-                    <span className="text-xs font-medium">Phân tích</span>
-                </button>
-                <button className="flex flex-col items-center justify-center text-gray-500 hover:text-indigo-600">
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span className="text-xs font-medium">Tài khoản</span>
-                </button>
-            </div>
-        </footer>
-    );
-};
-// --- END: BOTTOM NAVIGATION BAR ---
 
-export default function QuizAppHome() {
+// --- CẬP NHẬT CHỮ KÝ CỦA COMPONENT ---
+export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps) {
   const [currentView, setCurrentView] = useState('main');
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPractice, setSelectedPractice] = useState<number | null>(null);
+
+  // --- THÊM USEEFFECT ĐỂ ĐIỀU KHIỂN NAV BAR CHA ---
+  useEffect(() => {
+    // Nếu view hiện tại không phải là màn hình chính của tab quiz, ẩn nav bar đi
+    if (currentView !== 'main') {
+      hideNavBar?.(); // ?. để tránh lỗi nếu prop không được truyền
+    } else {
+      // Nếu là màn hình chính, hiện nav bar ra
+      showNavBar?.();
+    }
+    
+    // Hàm cleanup: Khi component QuizAppHome bị unmount (người dùng chuyển sang tab khác),
+    // đảm bảo nav bar sẽ hiện lại cho tab mới.
+    return () => {
+      showNavBar?.();
+    };
+  }, [currentView, hideNavBar, showNavBar]);
+
 
   const handleQuizSelect = useCallback((quiz) => {
     setSelectedQuiz(quiz);
@@ -331,11 +321,11 @@ export default function QuizAppHome() {
           setCurrentView={setCurrentView}
         />
         <main className="flex-grow overflow-y-auto">
-          <div className="p-6 pb-24 max-w-screen-xl mx-auto">
+          {/* Giảm padding bottom khi nav bar bị ẩn để tránh khoảng trống thừa */}
+          <div className={`p-6 max-w-screen-xl mx-auto ${currentView === 'main' ? 'pb-24' : 'pb-6'}`}>
             {renderContent()}
           </div>
         </main>
-        {currentView === 'main' && <BottomNavBar />}
       </div>
       <style jsx>{`
         .hide-scrollbar {
@@ -349,6 +339,8 @@ export default function QuizAppHome() {
     </div>
   );
 }
+
+// ... Các component con còn lại (PracticeList, RewardsPopup, etc.) giữ nguyên ...
 
 // --- Icons (moved outside to prevent re-creation) ---
 const CompletedIcon = ({ className }: { className: string }) => (
@@ -514,15 +506,12 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     const calculateProgress = async () => {
       setLoading(true);
       try {
-        // 1. DATA FETCHING
         const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
           getDocs(collection(db, 'users', user.uid, 'completedWords')),
           getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
         ]);
-
-        // 2. PREPARE FAST LOOKUP STRUCTURES
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
         setClaimedRewards(userData.claimedQuizRewards || {});
         const userVocabSet = new Set(openedVocabSnapshot.docs.map(doc => doc.data().word?.toLowerCase()).filter(Boolean));
@@ -545,7 +534,6 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             }
         });
 
-        // 3. EFFICIENT PRE-COMPUTATION
         const sentenceToUserVocab = new Map(); 
         const wordToRelevantExampleSentences = new Map();
         const questionToUserVocab = new Map();
@@ -576,7 +564,6 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             }
         }
         
-        // 4. CALCULATE PROGRESS
         const newProgressData = {};
         if (selectedType === 'tracNghiem') {
             const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1, 2, 3, 4] : [i*100+1, i*100+2, i*100+3, i*100+4]).flat();
