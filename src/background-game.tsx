@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './coin-display.tsx';
-import { useGameData } from './contexts/GameDataProvider.tsx'; // <- IMPORT QUAN TRỌNG
+import { useGameData } from './GameDataProvider.tsx'; // <- IMPORT QUAN TRỌNG
 import HeaderBackground from './header-background.tsx';
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
