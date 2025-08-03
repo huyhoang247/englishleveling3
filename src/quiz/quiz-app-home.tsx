@@ -14,7 +14,7 @@ import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
 
-// --- START: UNIFIED HEADER COMPONENT (GAME-THEME) ---
+// --- START: UNIFIED HEADER COMPONENT (GAME-THEME V2) ---
 
 // Props Interface for AppHeader
 interface AppHeaderProps {
@@ -31,13 +31,11 @@ const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
     </svg>
 );
-
 const BackIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
     </svg>
 );
-
 const AnalysisIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
@@ -71,7 +69,9 @@ function AppHeader({
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-gradient-to-r from-blue-700 via-purple-600 to-indigo-800 text-white shadow-lg">
+    <header className="sticky top-0 z-50 bg-gradient-to-br from-indigo-700 via-purple-800 to-blue-800 text-white 
+                       border-t border-white/25 border-b border-black/40
+                       [box-shadow:inset_0_1px_0_rgba(255,255,255,0.15),_0_4px_10px_rgba(0,0,0,0.4)]">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
           
@@ -93,10 +93,10 @@ function AppHeader({
             {currentView === 'main' ? (
                  <a className="flex items-center gap-3 text-white" href="#" onClick={(e) => { e.preventDefault(); goHome(); }}>
                     <span className="text-3xl">🎮</span>
-                    <span className="font-black text-2xl tracking-tighter [text-shadow:2px_2px_4px_rgba(0,0,0,0.4)]">Quiz App</span>
+                    <span className="font-black text-2xl tracking-tighter [text-shadow:1px_1px_3px_rgba(0,0,0,0.5)]">Quiz App</span>
                  </a>
             ) : (
-              <h2 className="text-2xl font-bold tracking-wide [text-shadow:2px_2px_4px_rgba(0,0,0,0.4)]">{headerTitle}</h2>
+              <h2 className="text-2xl font-bold tracking-wide [text-shadow:1px_1px_3px_rgba(0,0,0,0.5)]">{headerTitle}</h2>
             )}
           </div>
           
@@ -112,11 +112,10 @@ function AppHeader({
           </div>
         </div>
       </div>
-       <div className="h-1 bg-black/20"></div>
     </header>
   );
 }
-// --- END: UNIFIED HEADER COMPONENT ---
+// --- END: UNIFIED HEADER COMPONENT (GAME-THEME V2) ---
 
 
 export default function QuizAppHome() {
@@ -197,7 +196,9 @@ export default function QuizAppHome() {
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
             {showParentHeader && (
-              <header className="flex-shrink-0 sticky top-0 bg-gradient-to-r from-blue-700 via-purple-600 to-indigo-800 text-white shadow-lg z-10">
+              <header className="flex-shrink-0 sticky top-0 z-10 bg-gradient-to-br from-indigo-700 via-purple-800 to-blue-800 text-white 
+                                 border-t border-white/25 border-b border-black/40
+                                 [box-shadow:inset_0_1px_0_rgba(255,255,255,0.15),_0_4px_10px_rgba(0,0,0,0.4)]">
                   <div className="flex items-center justify-between h-16 px-4">
                       <div className="flex-1">
                           <button onClick={goBack} className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 active:translate-y-px rounded-full text-sm font-semibold transition-all shadow-sm border border-white/30">
@@ -206,7 +207,7 @@ export default function QuizAppHome() {
                           </button>
                       </div>
                       <div className="flex-1 text-center">
-                        <h2 className="text-xl font-bold truncate px-2 [text-shadow:2px_2px_4px_rgba(0,0,0,0.4)]">{title}</h2>
+                        <h2 className="text-xl font-bold truncate px-2 [text-shadow:1px_1px_3px_rgba(0,0,0,0.5)]">{title}</h2>
                       </div>
                       <div className="flex-1 flex justify-end">
                          <button onClick={goHome} className="flex items-center justify-center h-11 w-11 bg-white/20 hover:bg-white/30 active:translate-y-px rounded-xl transition-all shadow-sm border border-white/30" aria-label="Về trang chủ">
@@ -214,7 +215,6 @@ export default function QuizAppHome() {
                          </button>
                       </div>
                   </div>
-                  <div className="h-1 bg-black/20"></div>
               </header>
             )}
             <div className={`flex-grow ${showParentHeader ? 'overflow-y-auto' : ''}`}>
