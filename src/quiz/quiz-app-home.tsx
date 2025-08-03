@@ -1,8 +1,9 @@
 // --- START OF FILE: quiz-app-home.tsx ---
 
-import { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import QuizApp from './quiz.tsx';
-import Breadcrumbs from '../bread-crumbs.tsx';
+// Breadcrumbs component sẽ được định nghĩa bên dưới, không cần import riêng nữa
+// import Breadcrumbs from '../bread-crumbs.tsx'; 
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 import WordChainGame from '../word-chain-game.tsx';
@@ -15,14 +16,109 @@ import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
 
+// --- START: INLINED AND REFINED BREADCRUMBS COMPONENT ---
+
+interface BreadcrumbsProps {
+  currentView: string;
+  selectedType: string | null;
+  selectedPractice: number | null;
+  goHome: () => void;
+  setCurrentView: (view: string) => void;
+}
+
+const ChevronRightIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+  </svg>
+);
+
+const RefinedBreadcrumbs: React.FC<BreadcrumbsProps> = memo(({ currentView, selectedType, selectedPractice, goHome, setCurrentView }) => {
+    
+    const breadcrumbParts = useMemo(() => {
+        const parts = [];
+
+        // 1. Home
+        parts.push({
+            key: 'home',
+            label: <HomeIcon />,
+            onClick: goHome,
+            isButton: true,
+        });
+
+        // 2. Luyện tập (Chỉ hiển thị khi đã chọn)
+        if (currentView === 'quizTypes' || currentView === 'practices' || currentView === 'quiz' || currentView === 'vocabularyGame') {
+            parts.push({
+                key: 'quizTypes',
+                label: 'Luyện tập',
+                onClick: () => setCurrentView('quizTypes'),
+                isActive: currentView === 'quizTypes',
+                isButton: currentView !== 'quizTypes',
+            });
+        }
+        
+        // 3. Loại hình (Trắc nghiệm / Điền từ)
+        if (selectedType && (currentView === 'practices' || currentView === 'quiz' || currentView === 'vocabularyGame')) {
+            parts.push({
+                key: 'practices',
+                label: selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ',
+                onClick: () => setCurrentView('practices'),
+                isActive: currentView === 'practices',
+                isButton: currentView !== 'practices',
+            });
+        }
+
+        // 4. Bài luyện tập cụ thể
+        if (selectedPractice && (currentView === 'quiz' || currentView === 'vocabularyGame')) {
+             parts.push({
+                key: 'practiceDetail',
+                label: `Practice ${selectedPractice % 100}`,
+                isActive: true, // Luôn active khi đã ở màn hình này
+                isButton: false, // Không cần click được nữa
+            });
+        }
+        
+        return parts;
+
+    }, [currentView, selectedType, selectedPractice, goHome, setCurrentView]);
+
+    const renderPart = (part) => {
+        const commonClasses = "transition-colors duration-200 rounded-md px-2 py-1";
+        const activeClasses = "bg-gray-200 font-semibold text-gray-800";
+        const inactiveClasses = "text-gray-500 hover:bg-gray-200 hover:text-gray-800";
+        const textClasses = "text-gray-800 font-semibold";
+
+        if (part.isButton) {
+            return (
+                <button onClick={part.onClick} className={`${commonClasses} ${part.isActive ? activeClasses : inactiveClasses}`}>
+                    {part.label}
+                </button>
+            );
+        }
+        return <span className={`${commonClasses} ${part.isActive ? textClasses : 'text-gray-500'}`}>{part.label}</span>;
+    };
+
+    return (
+        <div className="flex items-center gap-1 text-sm">
+            {breadcrumbParts.map((part, index) => (
+                <React.Fragment key={part.key}>
+                    {renderPart(part)}
+                    {index < breadcrumbParts.length - 1 && <ChevronRightIcon />}
+                </React.Fragment>
+            ))}
+        </div>
+    );
+});
+
+// --- END: REFINED BREADCRUMBS COMPONENT ---
+
+
 // --- START: INLINED AppHeader COMPONENT ---
 
 // Props Interface for AppHeader
 interface AppHeaderProps {
   currentView: string;
-  selectedQuiz: any;
   selectedType: string | null;
-  selectedPractice: any;
+  selectedPractice: number | null;
   goBack: () => void;
   goHome: () => void;
   setCurrentView: (view: string) => void;
@@ -30,7 +126,7 @@ interface AppHeaderProps {
 
 // Icon Components for Header
 const HomeIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
     </svg>
 );
@@ -48,10 +144,8 @@ const AnalysisIcon = () => (
     </svg>
 );
 
-// The Header Component Function
 function AppHeader({
   currentView,
-  selectedQuiz,
   selectedType,
   selectedPractice,
   goBack,
@@ -59,7 +153,6 @@ function AppHeader({
   setCurrentView,
 }: AppHeaderProps) {
   
-  // Hide this global header for full-screen views that have their own navigation
   if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis'].includes(currentView)) {
       return null;
   }
@@ -84,9 +177,8 @@ function AppHeader({
 
           <div className="flex-1 flex justify-center">
             {currentView !== 'main' && (
-              <Breadcrumbs
+              <RefinedBreadcrumbs
                 currentView={currentView}
-                selectedQuiz={selectedQuiz}
                 selectedType={selectedType}
                 selectedPractice={selectedPractice}
                 goHome={goHome}
@@ -121,24 +213,24 @@ function AppHeader({
 
 export default function QuizAppHome() {
   const [currentView, setCurrentView] = useState('main');
-  const [selectedQuiz, setSelectedQuiz] = useState(null);
-  const [selectedType, setSelectedType] = useState(null);
-  const [selectedPractice, setSelectedPractice] = useState(null);
+  const [selectedQuiz, setSelectedQuiz] = useState(null); // Giữ lại để không gây lỗi, nhưng breadcrumb mới không dùng
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedPractice, setSelectedPractice] = useState<number | null>(null);
 
   const handleQuizSelect = useCallback((quiz) => {
-    setSelectedQuiz(quiz);
+    setSelectedQuiz(quiz); // Vẫn set state này
     setCurrentView('quizTypes');
     setSelectedType(null);
     setSelectedPractice(null);
   }, []);
 
-  const handleTypeSelect = useCallback((type) => {
+  const handleTypeSelect = useCallback((type: string) => {
     setSelectedType(type);
     setCurrentView('practices');
     setSelectedPractice(null);
   }, []);
 
-  const handlePracticeSelect = useCallback((practice) => {
+  const handlePracticeSelect = useCallback((practice: number) => {
     setSelectedPractice(practice);
     if (selectedType === 'tracNghiem') {
       setCurrentView('quiz');
@@ -156,13 +248,13 @@ export default function QuizAppHome() {
        setSelectedQuiz(null);
        setSelectedType(null);
        setSelectedPractice(null);
+    } else if (currentView === 'practices') {
+      setCurrentView('quizTypes');
+      setSelectedType(null);
+      setSelectedPractice(null);
     } else if (currentView === 'quizTypes') {
       setCurrentView('main');
       setSelectedQuiz(null);
-      setSelectedType(null);
-      setSelectedPractice(null);
-    } else if (currentView === 'practices') {
-      setCurrentView('quizTypes');
       setSelectedType(null);
       setSelectedPractice(null);
     }
@@ -177,37 +269,22 @@ export default function QuizAppHome() {
 
   // --- Fullscreen Views Handling ---
 
-  if (currentView === 'wordChainGame') {
-    return (
+  if (currentView === 'wordChainGame' || currentView === 'analysis') {
+      const title = currentView === 'wordChainGame' ? "Nối Từ" : "Phân Tích Tiến Trình";
+      const GameComponent = currentView === 'wordChainGame' ? WordChainGame : AnalysisDashboard;
+
+      return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
             <header className="flex-shrink-0 bg-white/80 backdrop-blur-sm z-10 p-4 border-b flex items-center justify-between">
                 <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900">
                     <BackIcon />
                     <span>Quay lại</span>
                 </button>
-                <h2 className="text-lg font-bold text-gray-800">Nối Từ</h2>
+                <h2 className="text-lg font-bold text-gray-800">{title}</h2>
                 <div className="w-24"></div>
             </header>
             <div className="flex-grow overflow-y-auto">
-                 <WordChainGame onGoBack={goBack} />
-            </div>
-        </div>
-    );
-  }
-
-  if (currentView === 'analysis') {
-    return (
-        <div className="fixed inset-0 z-[51] bg-white flex flex-col">
-            <header className="flex-shrink-0 sticky top-0 bg-white/80 backdrop-blur-sm z-10 p-4 border-b flex items-center justify-between">
-                <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900">
-                    <BackIcon />
-                    Quay lại
-                </button>
-                 <h2 className="text-lg font-bold text-gray-800">Phân Tích Tiến Trình</h2>
-                 <div className="w-24"></div>
-            </header>
-            <div className="flex-grow overflow-y-auto">
-                <AnalysisDashboard />
+                 <GameComponent onGoBack={goBack} />
             </div>
         </div>
     );
@@ -234,7 +311,6 @@ export default function QuizAppHome() {
       case 'main':
         return (
           <div className="flex flex-col items-center gap-8 w-full pt-8">
-            {/* The main screen title is now in the header, so this can be simplified or removed */}
             <div className="w-full max-w-md space-y-5">
               <button
                 onClick={() => handleQuizSelect(1)}
@@ -284,7 +360,7 @@ export default function QuizAppHome() {
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
-            <div className="text-center"><h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Luyện tập</h2><p className="mt-2 text-md text-gray-500">Chọn hình thức luyện tập bạn muốn.</p></div>
+            <div className="text-center"><h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Chọn hình thức</h2><p className="mt-2 text-md text-gray-500">Bạn muốn luyện tập theo cách nào?</p></div>
             <div className="space-y-5 w-full">
               <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
@@ -315,7 +391,6 @@ export default function QuizAppHome() {
       <div className="w-full h-full bg-white flex flex-col">
         <AppHeader 
           currentView={currentView}
-          selectedQuiz={selectedQuiz}
           selectedType={selectedType}
           selectedPractice={selectedPractice}
           goBack={goBack}
@@ -505,7 +580,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     const calculateProgress = async () => {
       setLoading(true);
       try {
-        // 1. DATA FETCHING: Get user-specific data from Firestore
+        // 1. DATA FETCHING
         const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
@@ -513,12 +588,10 @@ function PracticeList({ selectedType, onPracticeSelect }) {
           getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
         ]);
 
-        // 2. PREPARE FAST LOOKUP STRUCTURES for user data
+        // 2. PREPARE FAST LOOKUP STRUCTURES
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
         setClaimedRewards(userData.claimedQuizRewards || {});
-        
         const userVocabSet = new Set(openedVocabSnapshot.docs.map(doc => doc.data().word?.toLowerCase()).filter(Boolean));
-
         const completedWordsByGameMode = {};
         completedWordsSnapshot.forEach(doc => {
           const gameModes = doc.data().gameModes;
@@ -529,7 +602,6 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             }
           }
         });
-
         const completedMultiWordByGameMode = {};
         completedMultiWordSnapshot.forEach(docSnap => {
             const completedIn = docSnap.data().completedIn || {};
@@ -539,17 +611,13 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             }
         });
 
-        // 3. EFFICIENT PRE-COMPUTATION for global data (quizData, exampleData)
-        // This is the core optimization: iterate over large data sources only ONCE.
-        const sentenceToUserVocab = new Map(); // Map<Sentence, string[]>
-        const wordToRelevantExampleSentences = new Map(); // Map<string, Sentence[]>
-        const questionToUserVocab = new Map(); // Map<Question, string[]>
+        // 3. EFFICIENT PRE-COMPUTATION
+        const sentenceToUserVocab = new Map(); 
+        const wordToRelevantExampleSentences = new Map();
+        const questionToUserVocab = new Map();
 
         if (userVocabSet.size > 0) {
-            // Use a single regex for a massive performance boost over nested loops
             const vocabRegex = new RegExp(`\\b(${Array.from(userVocabSet).join('|')})\\b`, 'ig');
-
-            // Process exampleData once
             exampleData.forEach(sentence => {
                 const matches = sentence.english.match(vocabRegex);
                 if (matches) {
@@ -563,8 +631,6 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                     });
                 }
             });
-
-            // Process quizData once (if needed)
             if (selectedType === 'tracNghiem') {
                 quizData.forEach(question => {
                     const matches = question.question.match(vocabRegex);
@@ -576,22 +642,17 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             }
         }
         
-        // 4. CALCULATE PROGRESS using the fast, pre-computed structures
+        // 4. CALCULATE PROGRESS
         const newProgressData = {};
-        
         if (selectedType === 'tracNghiem') {
             const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1, 2, 3, 4] : [i*100+1, i*100+2, i*100+3, i*100+4]).flat();
-            
-            // Pre-calculate totals
             const totalP1 = questionToUserVocab.size;
             const totalP2_P3 = wordToRelevantExampleSentences.size;
             const totalP4 = userVocabSet.size;
-
             allModes.forEach(num => {
                 const modeId = `quiz-${num}`;
                 const baseNum = num % 100;
                 const completedSet = completedWordsByGameMode[modeId] || new Set();
-
                 if (baseNum === 1) {
                     let completedCount = 0;
                     questionToUserVocab.forEach(words => {
@@ -608,54 +669,39 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                     newProgressData[num] = { completed: completedSet.size, total: totalP4 };
                 }
             });
-
         } else if (selectedType === 'dienTu') {
             const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1,2,3,4,5,6,7] : [1,2,3,4,5,6,7].map(n => i*100+n)).flat();
-            
-            // Pre-calculate totals
-            const totals = {
-                p1: userVocabSet.size,
-                p2: wordToRelevantExampleSentences.size,
-                p3: 0, p4: 0, p5: 0, p6: 0,
-                p7: sentenceToUserVocab.size
-            };
+            const totals = { p1: userVocabSet.size, p2: wordToRelevantExampleSentences.size, p3: 0, p4: 0, p5: 0, p6: 0, p7: sentenceToUserVocab.size };
             sentenceToUserVocab.forEach(words => {
                 if (words.length >= 2) totals.p3++;
                 if (words.length >= 3) totals.p4++;
                 if (words.length >= 4) totals.p5++;
                 if (words.length >= 5) totals.p6++;
             });
-
             allModes.forEach(num => {
                 const modeId = `fill-word-${num}`;
                 const baseNum = num % 100;
-
                 if (baseNum === 1) {
-                    const completedSet = completedWordsByGameMode[modeId] || new Set();
-                    newProgressData[num] = { completed: completedSet.size, total: totals.p1 };
+                    newProgressData[num] = { completed: (completedWordsByGameMode[modeId] || new Set()).size, total: totals.p1 };
                 } else if (baseNum === 2) {
-                    const completedSet = completedWordsByGameMode[modeId] || new Set();
                     let completedCount = 0;
+                    const completedSet = completedWordsByGameMode[modeId] || new Set();
                     for (const word of wordToRelevantExampleSentences.keys()) {
                         if (completedSet.has(word)) completedCount++;
                     }
                     newProgressData[num] = { completed: completedCount, total: totals.p2 };
                 } else if (baseNum >= 3 && baseNum <= 7) {
-                    const completedSet = completedMultiWordByGameMode[modeId] || new Set();
-                    newProgressData[num] = { completed: completedSet.size, total: totals[`p${baseNum}`] };
+                    newProgressData[num] = { completed: (completedMultiWordByGameMode[modeId] || new Set()).size, total: totals[`p${baseNum}`] };
                 }
             });
         }
-        
         setProgressData(newProgressData);
-
       } catch (error) {
         console.error("Lỗi khi tính toán tiến trình:", error);
       } finally {
         setLoading(false);
       }
     };
-
     calculateProgress();
   }, [user, selectedType]);
   
@@ -677,7 +723,6 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     },
   }), []);
   
-
   const handleReviewClick = useCallback((practiceNumber) => {
     setSelectedPracticeForReview(practiceNumber);
     setView('reviews');
@@ -709,18 +754,10 @@ function PracticeList({ selectedType, onPracticeSelect }) {
 
   if (view === 'reviews' && selectedPracticeForReview) {
       const basePracticeDetails = practiceDetails[selectedType]?.[String(selectedPracticeForReview)];
-
       if (!basePracticeDetails) {
-          return (
-              <div className="text-center text-red-500">
-                  <p>Lỗi: Không tìm thấy chi tiết bài tập.</p>
-                  <button onClick={() => setView('main')} className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded">Quay lại</button>
-              </div>
-          );
+          return ( <div className="text-center text-red-500"><p>Lỗi: Không tìm thấy chi tiết bài tập.</p><button onClick={() => setView('main')} className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded">Quay lại</button></div> );
       }
-
       const previewColors = ['purple', 'green', 'yellow', 'orange', 'pink'];
-
       return (
          <div className="w-full max-w-md mx-auto">
             <div className="sticky top-[-1.5rem] bg-white w-full text-center relative py-4 z-10">
@@ -731,37 +768,20 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             </div>
              <div className="space-y-4 w-full pt-2">
                 {Array.from({ length: MAX_PREVIEWS }, (_, i) => i + 1).map(previewLevel => {
-                    const prerequisiteId = previewLevel === 1
-                        ? selectedPracticeForReview
-                        : ((previewLevel - 1) * 100) + selectedPracticeForReview; 
-                    
+                    const prerequisiteId = previewLevel === 1 ? selectedPracticeForReview : ((previewLevel - 1) * 100) + selectedPracticeForReview; 
                     const practiceNumber = (previewLevel * 100) + selectedPracticeForReview;
                     const prerequisiteProgress = progressData[prerequisiteId];
-                    
                     const isLocked = !prerequisiteProgress || prerequisiteProgress.total === 0 || prerequisiteProgress.completed < prerequisiteProgress.total;
-                    
                     const progress = progressData[practiceNumber];
                     const isCompleted = !isLocked && progress && progress.total > 0 && progress.completed >= progress.total;
                     const colors = isLocked ? colorClasses.gray : colorClasses[previewColors[(previewLevel - 1) % previewColors.length]];
-
-                    const prerequisiteName = previewLevel === 1 
-                        ? `Practice ${selectedPracticeForReview}` 
-                        : `Preview ${previewLevel - 1}`;
-
-                    const unlockText = isLocked 
-                        ? `Hoàn thành tất cả câu ở ${prerequisiteName} để mở` 
-                        : `Luyện tập lại các câu hỏi`;
-                        
+                    const prerequisiteName = previewLevel === 1 ? `Practice ${selectedPracticeForReview}` : `Preview ${previewLevel - 1}`;
+                    const unlockText = isLocked ? `Hoàn thành tất cả câu ở ${prerequisiteName} để mở` : `Luyện tập lại các câu hỏi`;
                     if (previewLevel > 1) {
-                         const oneLevelBeforeId = ((previewLevel - 2) === 0)
-                            ? selectedPracticeForReview
-                            : ((previewLevel - 2) * 100) + selectedPracticeForReview;
+                         const oneLevelBeforeId = ((previewLevel - 2) === 0) ? selectedPracticeForReview : ((previewLevel - 2) * 100) + selectedPracticeForReview;
                          const oneLevelBeforeProgress = progressData[oneLevelBeforeId];
-                         if (!oneLevelBeforeProgress || oneLevelBeforeProgress.total === 0 || oneLevelBeforeProgress.completed < oneLevelBeforeProgress.total) {
-                             return null;
-                         }
+                         if (!oneLevelBeforeProgress || oneLevelBeforeProgress.total === 0 || oneLevelBeforeProgress.completed < oneLevelBeforeProgress.total) { return null; }
                     }
-
                     return (
                         <ReviewItem
                             key={practiceNumber}
@@ -789,7 +809,6 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             const practiceNumber = parseInt(pNumStr, 10);
             const details = practiceDetails[selectedType][practiceNumber];
             const progress = progressData[practiceNumber];
-
             return (
               <PracticeCard
                 key={practiceNumber}
@@ -808,14 +827,13 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   );
 };
 
-// --- NEW --- Rewards Popup Component
+// --- Rewards Popup Component ---
 const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }) => {
     const [isClaiming, setIsClaiming] = useState(null);
 
     const handleClaim = useCallback(async (rewardId, coinAmount, capacityAmount) => {
         if (isClaiming || !user) return;
         setIsClaiming(rewardId);
-
         try {
             const userDocRef = doc(db, 'users', user.uid);
             await updateDoc(userDocRef, {
@@ -823,7 +841,6 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                 cardCapacity: increment(capacityAmount),
                 [`claimedQuizRewards.${rewardId}`]: true
             });
-            
             setClaimedRewards(prev => ({ ...prev, [rewardId]: true }));
         } catch (error) {
             console.error("Error claiming reward:", error);
@@ -841,40 +858,27 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
 
         const generateTiersForLevel = (levelProgress, levelNumber, levelTitle, multiplier) => {
             if (!levelProgress || levelProgress.total === 0) return null;
-
             const isInactivePreview = levelProgress.completed === 0;
             const levelTiers = [];
             const maxPossibleMilestone = Math.floor(levelProgress.total / MILESTONE_STEP) * MILESTONE_STEP;
-
             for (let i = 1; i <= MAX_MILESTONES_TO_DISPLAY; i++) {
                 const milestone = i * MILESTONE_STEP;
                 if (milestone > maxPossibleMilestone + MILESTONE_STEP) break;
-
                 const rewardId = `${selectedType}-${levelNumber}-${milestone}`;
                 if (claimedRewards[rewardId]) continue;
-
                 const isCompleted = levelProgress.completed >= milestone;
                 const isLockedDueToNoProgress = levelProgress.completed === 0 && milestone > 0;
                 const rewardAmount = i * BASE_REWARD_PER_100_Q * multiplier;
                 const capacityRewardAmount = 10;
                 const progressPercentage = Math.min((levelProgress.completed / milestone) * 100, 100);
-
                 levelTiers.push(
                     <div key={rewardId} className="relative bg-white p-4 rounded-lg shadow-sm overflow-hidden">
-                        <div className="absolute top-0 left-0 bg-gray-800/70 text-white text-xs font-bold px-3 py-1 rounded-br-lg z-20">
-                            Stage {i}
-                        </div>
+                        <div className="absolute top-0 left-0 bg-gray-800/70 text-white text-xs font-bold px-3 py-1 rounded-br-lg z-20">Stage {i}</div>
                         <div className="pt-5 flex flex-col gap-3">
                             <div className="flex items-center gap-2">
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%` }}></div>
-                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-500" style={{ width: `${progressPercentage}%` }}></div></div>
                                 <div className="flex-shrink-0 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full px-2.5 py-1 flex items-center gap-1">
-                                    {!isCompleted && (
-                                        levelProgress.completed > 0
-                                            ? <CompletedIcon className="w-4 h-4 text-gray-400" />
-                                            : <LockIcon className="w-3.5 h-3.5 text-gray-400"/>
-                                    )}
+                                    {!isCompleted && (levelProgress.completed > 0 ? <CompletedIcon className="w-4 h-4 text-gray-400" /> : <LockIcon className="w-3.5 h-3.5 text-gray-400"/>)}
                                     <span>{`${levelProgress.completed}/${milestone}`}</span>
                                 </div>
                             </div>
@@ -891,11 +895,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                                         </div>
                                     </div>
                                     <div className="flex-shrink-0 ml-2">
-                                        <button
-                                            onClick={() => handleClaim(rewardId, rewardAmount, capacityRewardAmount)}
-                                            disabled={!isCompleted || isClaiming === rewardId}
-                                            className={`px-3 py-1.5 text-xs font-bold rounded-full transition w-[60px] text-center ${isCompleted ? 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-400' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-                                        >
+                                        <button onClick={() => handleClaim(rewardId, rewardAmount, capacityRewardAmount)} disabled={!isCompleted || isClaiming === rewardId} className={`px-3 py-1.5 text-xs font-bold rounded-full transition w-[60px] text-center ${isCompleted ? 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-400' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>
                                             {isClaiming === rewardId ? '...' : 'Nhận'}
                                         </button>
                                     </div>
@@ -905,21 +905,12 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                     </div>
                 );
             }
-
             if (levelTiers.length > 0) {
               return (
                 <div key={levelNumber} className="bg-gray-100 p-4 rounded-lg">
                     <div className="flex justify-between items-center mb-3">
                         <h4 className="font-bold text-gray-700">{levelTitle}</h4>
-                        {multiplier > 1 && (
-                            <div className={`text-sm font-bold px-2.5 py-1 rounded-full shadow transition-colors ${
-                                isInactivePreview
-                                ? 'bg-gray-300 text-gray-500'
-                                : 'text-white bg-gradient-to-r from-amber-500 to-orange-600'
-                            }`}>
-                                x{multiplier} Thưởng
-                            </div>
-                        )}
+                        {multiplier > 1 && (<div className={`text-sm font-bold px-2.5 py-1 rounded-full shadow transition-colors ${isInactivePreview ? 'bg-gray-300 text-gray-500' : 'text-white bg-gradient-to-r from-amber-500 to-orange-600'}`}>x{multiplier} Thưởng</div>)}
                     </div>
                     <div className="space-y-3">{levelTiers}</div>
                 </div>
@@ -927,11 +918,9 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             }
             return null;
         };
-
         const mainProgress = progressData[practiceNumber];
         const mainTiers = generateTiersForLevel(mainProgress, practiceNumber, "Luyện tập chính", 1);
         if (mainTiers) tiers.push(mainTiers);
-
         for (let i = 1; i <= MAX_PREVIEWS; i++) {
             const previewNumber = (i * 100) + practiceNumber;
             const previewProgress = progressData[previewNumber];
@@ -939,50 +928,30 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             const previewTiers = generateTiersForLevel(previewProgress, previewNumber, `Preview ${i}`, multiplier);
             if (previewTiers) tiers.push(previewTiers);
         }
-        
         if (tiers.length === 0) {
              const hasQuestions = mainProgress && mainProgress.total > 0;
-             return (
-                <div className="text-center py-8 text-gray-500">
-                    <GiftIcon className="w-12 h-12 mx-auto text-green-500 mb-4" />
-                    <h4 className="font-bold text-lg text-gray-700">{hasQuestions ? "Hoàn thành!" : "Chưa có phần thưởng"}</h4>
-                    <p className="mt-1">{hasQuestions ? "Bạn đã nhận tất cả phần thưởng có sẵn." : "Phần luyện tập này chưa có câu hỏi."}</p>
-                </div>
-             );
+             return (<div className="text-center py-8 text-gray-500"><GiftIcon className="w-12 h-12 mx-auto text-green-500 mb-4" /><h4 className="font-bold text-lg text-gray-700">{hasQuestions ? "Hoàn thành!" : "Chưa có phần thưởng"}</h4><p className="mt-1">{hasQuestions ? "Bạn đã nhận tất cả phần thưởng có sẵn." : "Phần luyện tập này chưa có câu hỏi."}</p></div>);
         }
-
         return tiers;
     }, [progressData, practiceNumber, selectedType, claimedRewards, MAX_PREVIEWS, isClaiming, handleClaim]);
 
-
     if (!isOpen) return null;
-
     return (
         <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
             <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all animate-scale-up" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                       <GiftIcon className="w-6 h-6 text-yellow-500"/>
-                       Rewards: {practiceTitle}
-                    </h3>
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><GiftIcon className="w-6 h-6 text-yellow-500"/>Rewards: {practiceTitle}</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
                 </div>
-                <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50 hide-scrollbar">
-                    {renderedTiers}
-                </div>
+                <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50 hide-scrollbar">{renderedTiers}</div>
             </div>
             <style jsx>{`
                 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
                 .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
                 .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
-                .hide-scrollbar {
-                  -ms-overflow-style: none; /* IE and Edge */
-                  scrollbar-width: none; /* Firefox */
-                }
-                .hide-scrollbar::-webkit-scrollbar {
-                  display: none; /* Safari and Chrome */
-                }
+                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                .hide-scrollbar::-webkit-scrollbar { display: none; }
             `}</style>
         </div>
     );
