@@ -78,7 +78,7 @@ function AppHeader({
           <div className="flex-1">
             {currentView === 'main' ? (
               <a className="flex items-center gap-2 text-white" href="#" onClick={(e) => { e.preventDefault(); goHome(); }}>
-                 <span className="text-2xl">📚</span>
+                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Quiz App Logo" className="h-8 w-8" />
                  <span className="font-extrabold text-xl text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">Quiz App</span>
               </a>
             ) : (
