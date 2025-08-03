@@ -12,7 +12,7 @@ import { auth, db } from './firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { allImageUrls } from './game-assets.ts';
-import { GameDataProvider } from './contexts/GameDataProvider.tsx'; // IMPORT PROVIDER
+import { GameDataProvider } from './GameDataProvider.tsx'; // IMPORT PROVIDER
 
 // Định nghĩa các loại tab có thể có
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
