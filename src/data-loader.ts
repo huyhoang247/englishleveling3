@@ -1,5 +1,5 @@
 // src/data-loader.ts
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from './firebase.js';
 
 // Định nghĩa một interface cho dữ liệu cốt lõi của người dùng để dễ quản lý
@@ -79,7 +79,7 @@ export const fetchVocabularyData = async (userId: string): Promise<VocabularyIte
             wordToExpMap.set(word, totalCorrectCount * 100);
         });
 
-        const existingAchievements: VocabularyItem[] = achievementDocSnap.exists() ? achievementDocSnap.data().vocabulary || [] : [];
+        const existingAchievements: VocabularyItem[] = achievementDocSnap.exists() ? (achievementDocSnap.data().vocabulary || []) : [];
         const finalVocabularyData: VocabularyItem[] = [];
         const processedWords = new Set<string>();
         let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map((i: VocabularyItem) => i.id)) : 0) + 1;
@@ -112,3 +112,10 @@ export const fetchVocabularyData = async (userId: string): Promise<VocabularyIte
         return []; // Trả về mảng rỗng nếu có lỗi
     }
 };
+
+// Dữ liệu từ vựng khởi tạo (nếu cần)
+export const initialVocabularyData: VocabularyItem[] = [
+    { id: 1, word: 'apple', exp: 50, level: 1, maxExp: 100 },
+    { id: 2, word: 'book', exp: 120, level: 2, maxExp: 200 },
+    { id: 3, word: 'car', exp: 0, level: 1, maxExp: 100 },
+];
