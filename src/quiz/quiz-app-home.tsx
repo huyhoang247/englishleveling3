@@ -478,11 +478,12 @@ function PracticeList({ selectedType, onPracticeSelect }) {
         const newProgressData = {};
         
         if (selectedType === 'tracNghiem') {
-            const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1, 2, 3] : [i*100+1, i*100+2, i*100+3]).flat();
+            const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1, 2, 3, 4] : [i*100+1, i*100+2, i*100+3, i*100+4]).flat();
             
             // Pre-calculate totals
             const totalP1 = questionToUserVocab.size;
             const totalP2_P3 = wordToRelevantExampleSentences.size;
+            const totalP4 = userVocabSet.size;
 
             allModes.forEach(num => {
                 const modeId = `quiz-${num}`;
@@ -501,6 +502,8 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                         if (completedSet.has(word)) completedCount++;
                     }
                     newProgressData[num] = { completed: completedCount, total: totalP2_P3 };
+                } else if (baseNum === 4) {
+                    newProgressData[num] = { completed: completedSet.size, total: totalP4 };
                 }
             });
 
@@ -559,6 +562,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       '1': { title: 'Practice 1', desc: 'Luyện tập từ vựng qua câu hỏi', color: 'indigo' },
       '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
       '3': { title: 'Practice 3', desc: 'Điền 1 từ vào câu (không gợi ý nghĩa)', color: 'teal' },
+      '4': { title: 'Practice 4', desc: 'Nghe audio và chọn từ đúng', color: 'orange' },
     },
     dienTu: {
       '1': { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo' },
