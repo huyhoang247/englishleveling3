@@ -14,9 +14,19 @@ import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
 
-// --- START: ICON COMPONENTS ---
+// --- START: UNIFIED HEADER COMPONENT (NO BREADCRUMBS) ---
 
-const HomeIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+// Props Interface for AppHeader
+interface AppHeaderProps {
+  currentView: string;
+  selectedType: string | null;
+  goBack: () => void;
+  goHome: () => void;
+  setCurrentView: (view: string) => void;
+}
+
+// Icon Components for Header
+const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
     </svg>
@@ -35,148 +45,27 @@ const AnalysisIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
     </svg>
 );
 
-const MenuIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-);
-
-const ChevronRightIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-  </svg>
-);
-
-const CompletedIcon = ({ className }: { className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-    </svg>
-);
-const LockIcon = ({ className }: { className: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
-  </svg>
-);
-const RefreshIcon = ({ className }: { className: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.001 10a1 1 0 011-1h5a1 1 0 110 2H5a1 1 0 01-1-1zM15 13a1 1 0 011-1h.01a5.002 5.002 0 00-11.588-2.512 1 1 0 11-1.885-.666A7.002 7.002 0 0119 8.899V7a1 1 0 112 0v5a1 1 0 01-1 1h-5a1 1 0 01-1-1z" clipRule="evenodd" />
-  </svg>
-);
-const GiftIcon = ({ className }: { className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
-    </svg>
-);
-const GoldCoinIcon = ({ className }: { className: string }) => (
-    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className={className} />
-);
-const CardCapacityIcon = ({ className }: { className: string }) => (
-    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png" alt="Card Capacity Icon" className={className} />
-);
-
-// --- END: ICON COMPONENTS ---
-
-
-// --- START: NAVIGATION SIDEBAR COMPONENT ---
-
-interface NavigationSidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  currentView: string;
-  selectedType: string | null;
-  goHome: () => void;
-  setCurrentView: (view: string) => void;
-}
-
-const NavigationSidebar: React.FC<NavigationSidebarProps> = memo(({ isOpen, onClose, currentView, selectedType, goHome, setCurrentView }) => {
-  const navItems = useMemo(() => {
-    const items = [];
-    const createNavItem = (key: string, label: string, level: number, action: () => void, isActive: boolean, isButton = true) => ({ key, label, level, action, isActive, isButton });
-
-    items.push(createNavItem('home', 'Trang chủ', 0, goHome, currentView === 'main'));
-
-    const inPracticeFlow = ['quizTypes', 'practices', 'quiz', 'vocabularyGame'].includes(currentView);
-    items.push(createNavItem('quizTypes', 'Luyện tập', 0, () => setCurrentView('quizTypes'), inPracticeFlow));
-
-    if (inPracticeFlow) {
-      items.push(createNavItem('tracNghiem', 'Trắc nghiệm', 1, () => { setCurrentView('practices'); setSelectedType('tracNghiem'); }, currentView === 'practices' && selectedType === 'tracNghiem'));
-      items.push(createNavItem('dienTu', 'Điền từ', 1, () => { setCurrentView('practices'); setSelectedType('dienTu'); }, currentView === 'practices' && selectedType === 'dienTu'));
-    }
-
-    return items;
-  }, [currentView, selectedType, goHome, setCurrentView]);
+// The Header Component Function
+function AppHeader({
+  currentView,
+  selectedType,
+  goBack,
+  goHome,
+  setCurrentView,
+}: AppHeaderProps) {
   
-  const handleItemClick = (action: () => void) => {
-    action();
-    onClose();
-  };
-
-  return (
-    <div
-      className={`fixed inset-0 z-[100] transition-opacity duration-300 ${isOpen ? 'bg-black/60 pointer-events-auto' : 'bg-transparent pointer-events-none'}`}
-      onClick={onClose}
-    >
-      <aside
-        className={`absolute top-0 left-0 h-full w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="p-4 border-b flex items-center justify-between">
-          <h2 className="font-bold text-lg text-gray-800">Điều hướng</h2>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 text-2xl leading-none">×</button>
-        </div>
-        <nav className="p-4">
-          <ul>
-            {navItems.map(item => (
-              <li key={item.key}>
-                <button
-                  onClick={() => handleItemClick(item.action)}
-                  disabled={!item.isButton}
-                  className={`w-full flex items-center text-left p-2.5 my-1 rounded-lg transition-colors duration-200 text-gray-700
-                    ${'pl-' + (item.level * 4 + 3)}
-                    ${item.isActive ? 'bg-blue-100 text-blue-700 font-semibold' : 'hover:bg-gray-100'}
-                    ${!item.isButton ? 'cursor-default' : ''}
-                  `}
-                >
-                  {item.key === 'home' && <HomeIcon className="mr-3 flex-shrink-0" />}
-                  <span className="flex-grow">{item.label}</span>
-                  {!item.isActive && item.isButton && <ChevronRightIcon className="text-gray-400" />}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </aside>
-    </div>
-  );
-});
-
-// --- END: NAVIGATION SIDEBAR COMPONENT ---
-
-
-// --- START: UNIFIED HEADER COMPONENT ---
-
-interface AppHeaderProps {
-  onMenuClick: () => void;
-  currentView: string;
-  selectedType: string | null;
-  goHome: () => void;
-  setCurrentView: (view: string) => void;
-}
-
-function AppHeader({ onMenuClick, currentView, selectedType, goHome, setCurrentView }: AppHeaderProps) {
   const headerTitle = useMemo(() => {
     switch (currentView) {
-      case 'main':
-        return 'Quiz App';
       case 'quizTypes':
         return 'Luyện tập';
       case 'practices':
         return selectedType === 'tracNghiem' ? 'Trắc nghiệm' : 'Điền từ';
       default:
-        return 'Quiz App';
+        return null; // No title for main screen
     }
   }, [currentView, selectedType]);
-  
+
+  // This header is not rendered for fullscreen views, as they have their own.
   if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis'].includes(currentView)) {
       return null;
   }
@@ -185,20 +74,40 @@ function AppHeader({ onMenuClick, currentView, selectedType, goHome, setCurrentV
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
+          
           <div className="flex-1">
-            <button onClick={onMenuClick} className="p-2 -ml-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Mở menu">
-              <MenuIcon />
-            </button>
+            {currentView === 'main' ? (
+              <a className="flex items-center gap-2 text-gray-800" href="#" onClick={(e) => { e.preventDefault(); goHome(); }}>
+                 <span className="text-2xl">📚</span>
+                 <span className="font-extrabold text-xl text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Quiz App</span>
+              </a>
+            ) : (
+              <button onClick={goBack} className="p-2 -ml-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Quay lại">
+                <BackIcon />
+              </button>
+            )}
           </div>
+
           <div className="flex-1 flex justify-center">
-            <h1 className={`font-bold text-lg text-gray-800 ${currentView === 'main' ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 text-xl' : ''}`}>
-              {headerTitle}
-            </h1>
+            {headerTitle && (
+              <h2 className="text-lg font-bold text-gray-800">{headerTitle}</h2>
+            )}
           </div>
+          
           <div className="flex-1 flex items-center justify-end gap-4">
-            <button onClick={() => setCurrentView('analysis')} className="p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Xem phân tích">
-              <AnalysisIcon />
-            </button>
+              {currentView === 'main' ? (
+                <button 
+                  onClick={() => setCurrentView('analysis')}
+                  className="p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                  aria-label="Xem phân tích"
+                >
+                    <AnalysisIcon />
+                </button>
+              ) : (
+                 <button onClick={goHome} className="p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Về trang chủ">
+                    <HomeIcon />
+                 </button>
+              )}
           </div>
         </div>
       </div>
@@ -214,16 +123,18 @@ export default function QuizAppHome() {
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPractice, setSelectedPractice] = useState<number | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleQuizSelect = useCallback((quiz) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
+    setSelectedType(null);
+    setSelectedPractice(null);
   }, []);
 
   const handleTypeSelect = useCallback((type: string) => {
     setSelectedType(type);
     setCurrentView('practices');
+    setSelectedPractice(null);
   }, []);
 
   const handlePracticeSelect = useCallback((practice: number) => {
@@ -243,6 +154,7 @@ export default function QuizAppHome() {
        setCurrentView('main');
     } else if (currentView === 'practices') {
       setCurrentView('quizTypes');
+      setSelectedType(null);
     } else if (currentView === 'quizTypes') {
       setCurrentView('main');
     }
@@ -255,18 +167,18 @@ export default function QuizAppHome() {
     setSelectedPractice(null);
   }, []);
 
-  // Fullscreen Views Logic
+  // --- Fullscreen Views Logic ---
   if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis'].includes(currentView)) {
       let title = '';
       let ViewComponent = null;
 
       switch(currentView) {
           case 'quiz':
-              title = `Practice ${selectedPractice % 100}`;
+              title = `Trắc nghiệm - Practice ${selectedPractice % 100}`;
               ViewComponent = <QuizApp onGoBack={goBack} selectedPractice={selectedPractice} />;
               break;
           case 'vocabularyGame':
-              title = `Practice ${selectedPractice % 100}`;
+              title = `Điền từ - Practice ${selectedPractice % 100}`;
               ViewComponent = <VocabularyGame onGoBack={goBack} selectedPractice={selectedPractice} />;
               break;
           case 'wordChainGame':
@@ -278,7 +190,14 @@ export default function QuizAppHome() {
               ViewComponent = <AnalysisDashboard />;
               break;
       }
+
+      // QuizApp and VocabularyGame might have their own headers. 
+      // For a 100% consistent UI, you would refactor them to use a common header component.
+      // Here, we provide a unified structure for all.
+      // If the inner component (e.g., QuizApp) has its own header, you might see two.
+      // It's recommended to remove the header from the child components and let this parent manage it.
       
+      // Let's assume for now that child components like QuizApp DO NOT have their own header.
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
             <header className="flex-shrink-0 sticky top-0 bg-white/80 backdrop-blur-sm z-10 p-4 border-b flex items-center justify-between">
@@ -288,6 +207,7 @@ export default function QuizAppHome() {
                 </button>
                 <h2 className="text-lg font-bold text-gray-800 truncate px-2">{title}</h2>
                 <div className="w-28 text-right">
+                   {/* Optional: Add a Home button here for quick exit */}
                    <button onClick={goHome} className="p-2 rounded-full text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors" aria-label="Về trang chủ">
                       <HomeIcon className="h-5 w-5"/>
                    </button>
@@ -337,13 +257,25 @@ export default function QuizAppHome() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
               </button>
+
+              <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
+                <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Sắp ra mắt</div>
+                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm"><span className="text-4xl">📄</span></div>
+                <div className="ml-5 text-left flex-grow"><h3 className="text-xl font-bold text-gray-500">Đề Thi</h3><p className="text-gray-400 text-sm mt-1">Kiểm tra kiến thức với các đề thi thử</p></div>
+              </div>
+              <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
+                <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Sắp ra mắt</div>
+                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm"><span className="text-4xl">📖</span></div>
+                <div className="ml-5 text-left flex-grow"><h3 className="text-xl font-bold text-gray-500">Ngữ Pháp</h3><p className="text-gray-400 text-sm mt-1">Luyện tập các chủ điểm ngữ pháp</p></div>
+              </div>
             </div>
           </div>
         );
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
-            <div className="space-y-5 w-full pt-8">
+            <div className="text-center"><h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Chọn hình thức</h2><p className="mt-2 text-md text-gray-500">Bạn muốn luyện tập theo cách nào?</p></div>
+            <div className="space-y-5 w-full">
               <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
                   <div className="p-3 bg-white/20 rounded-xl"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_2354_Checklist%20Question%20Mark_remix_01k0mc0y2efdmb3gsgzgd6y81s.png" alt="Trắc nghiệm icon" className="h-8 w-8" /></div>
@@ -370,26 +302,11 @@ export default function QuizAppHome() {
 
   return (
     <div className="h-svh overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <NavigationSidebar 
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-        currentView={currentView}
-        selectedType={selectedType}
-        goHome={goHome}
-        setCurrentView={(view) => {
-          // A small enhancement: if navigating from sidebar, reset deeper state
-          if (view === 'quizTypes') {
-            setSelectedType(null);
-            setSelectedPractice(null);
-          }
-          setCurrentView(view);
-        }}
-      />
       <div className="w-full h-full bg-white flex flex-col">
         <AppHeader 
-          onMenuClick={() => setIsSidebarOpen(true)}
           currentView={currentView}
           selectedType={selectedType}
+          goBack={goBack}
           goHome={goHome}
           setCurrentView={setCurrentView}
         />
@@ -399,9 +316,46 @@ export default function QuizAppHome() {
           </div>
         </main>
       </div>
+      <style jsx>{`
+        .hide-scrollbar {
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none; /* Safari and Chrome */
+        }
+      `}</style>
     </div>
   );
 }
+
+// --- Icons (moved outside to prevent re-creation) ---
+const CompletedIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+    </svg>
+);
+const LockIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+  </svg>
+);
+const RefreshIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.001 10a1 1 0 011-1h5a1 1 0 110 2H5a1 1 0 01-1-1zM15 13a1 1 0 011-1h.01a5.002 5.002 0 00-11.588-2.512 1 1 0 11-1.885-.666A7.002 7.002 0 0119 8.899V7a1 1 0 112 0v5a1 1 0 01-1 1h-5a1 1 0 01-1-1z" clipRule="evenodd" />
+  </svg>
+);
+const GiftIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+    </svg>
+);
+const GoldCoinIcon = ({ className }: { className: string }) => (
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className={className} />
+);
+const CardCapacityIcon = ({ className }: { className: string }) => (
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png" alt="Card Capacity Icon" className={className} />
+);
 
 
 // --- START: MEMOIZED CHILD COMPONENTS ---
@@ -509,7 +463,7 @@ const ReviewItem = memo(({ practiceNumber, previewLevel, isLocked, isCompleted, 
 // --- END: MEMOIZED CHILD COMPONENTS ---
 
 
-// --- START: PRACTICE LIST COMPONENT ---
+// Component to display practice list with progress
 function PracticeList({ selectedType, onPracticeSelect }) {
   const [progressData, setProgressData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -520,7 +474,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   const [selectedPracticeForRewards, setSelectedPracticeForRewards] = useState<{ number: number | null, title: string }>({ number: null, title: '' });
   const [claimedRewards, setClaimedRewards] = useState({});
 
-  const MAX_PREVIEWS = 5;
+  const MAX_PREVIEWS = 5; // Define max number of preview levels
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -529,6 +483,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     return () => unsubscribe();
   }, []);
 
+  // --- REFACTORED AND OPTIMIZED `useEffect` ---
   useEffect(() => {
     if (!user || !selectedType) {
       setLoading(false);
@@ -538,12 +493,15 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     const calculateProgress = async () => {
       setLoading(true);
       try {
+        // 1. DATA FETCHING
         const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
           getDocs(collection(db, 'users', user.uid, 'completedWords')),
           getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
         ]);
+
+        // 2. PREPARE FAST LOOKUP STRUCTURES
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
         setClaimedRewards(userData.claimedQuizRewards || {});
         const userVocabSet = new Set(openedVocabSnapshot.docs.map(doc => doc.data().word?.toLowerCase()).filter(Boolean));
@@ -566,9 +524,11 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             }
         });
 
+        // 3. EFFICIENT PRE-COMPUTATION
         const sentenceToUserVocab = new Map(); 
         const wordToRelevantExampleSentences = new Map();
         const questionToUserVocab = new Map();
+
         if (userVocabSet.size > 0) {
             const vocabRegex = new RegExp(`\\b(${Array.from(userVocabSet).join('|')})\\b`, 'ig');
             exampleData.forEach(sentence => {
@@ -595,6 +555,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
             }
         }
         
+        // 4. CALCULATE PROGRESS
         const newProgressData = {};
         if (selectedType === 'tracNghiem') {
             const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1, 2, 3, 4] : [i*100+1, i*100+2, i*100+3, i*100+4]).flat();
@@ -607,11 +568,15 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                 const completedSet = completedWordsByGameMode[modeId] || new Set();
                 if (baseNum === 1) {
                     let completedCount = 0;
-                    questionToUserVocab.forEach(words => { if (words.some(w => completedSet.has(w))) completedCount++; });
+                    questionToUserVocab.forEach(words => {
+                        if (words.some(w => completedSet.has(w))) completedCount++;
+                    });
                     newProgressData[num] = { completed: completedCount, total: totalP1 };
                 } else if (baseNum === 2 || baseNum === 3) {
                     let completedCount = 0;
-                    for (const word of wordToRelevantExampleSentences.keys()) { if (completedSet.has(word)) completedCount++; }
+                    for (const word of wordToRelevantExampleSentences.keys()) {
+                        if (completedSet.has(word)) completedCount++;
+                    }
                     newProgressData[num] = { completed: completedCount, total: totalP2_P3 };
                 } else if (baseNum === 4) {
                     newProgressData[num] = { completed: completedSet.size, total: totalP4 };
@@ -634,7 +599,9 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                 } else if (baseNum === 2) {
                     let completedCount = 0;
                     const completedSet = completedWordsByGameMode[modeId] || new Set();
-                    for (const word of wordToRelevantExampleSentences.keys()) { if (completedSet.has(word)) completedCount++; }
+                    for (const word of wordToRelevantExampleSentences.keys()) {
+                        if (completedSet.has(word)) completedCount++;
+                    }
                     newProgressData[num] = { completed: completedCount, total: totals.p2 };
                 } else if (baseNum >= 3 && baseNum <= 7) {
                     newProgressData[num] = { completed: (completedMultiWordByGameMode[modeId] || new Set()).size, total: totals[`p${baseNum}`] };
@@ -680,11 +647,22 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   }, []);
 
   if (loading) {
-    return <div className="text-center text-gray-500 pt-10">Đang tải tiến độ...</div>;
+    return <div className="text-center text-gray-500">Đang tải tiến độ...</div>;
   }
   
   if (isRewardsPopupOpen) {
-    return <RewardsPopup isOpen={isRewardsPopupOpen} onClose={() => setIsRewardsPopupOpen(false)} practiceNumber={selectedPracticeForRewards.number} practiceTitle={selectedPracticeForRewards.title} progressData={progressData} claimedRewards={claimedRewards} setClaimedRewards={setClaimedRewards} user={user} selectedType={selectedType} MAX_PREVIEWS={MAX_PREVIEWS}/>;
+    return <RewardsPopup 
+              isOpen={isRewardsPopupOpen}
+              onClose={() => setIsRewardsPopupOpen(false)}
+              practiceNumber={selectedPracticeForRewards.number}
+              practiceTitle={selectedPracticeForRewards.title}
+              progressData={progressData}
+              claimedRewards={claimedRewards}
+              setClaimedRewards={setClaimedRewards}
+              user={user}
+              selectedType={selectedType}
+              MAX_PREVIEWS={MAX_PREVIEWS}
+            />;
   }
 
   if (view === 'reviews' && selectedPracticeForReview) {
@@ -696,7 +674,9 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       return (
          <div className="w-full max-w-md mx-auto">
             <div className="sticky top-[-1.5rem] bg-white w-full text-center relative py-4 z-10">
-                <button onClick={() => setView('main')} className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 p-2"><BackIcon /></button>
+                <button onClick={() => setView('main')} className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                </button>
                 <h1 className="text-2xl font-bold text-gray-800">Ôn tập: {basePracticeDetails.title}</h1>
             </div>
              <div className="space-y-4 w-full pt-2">
@@ -709,13 +689,25 @@ function PracticeList({ selectedType, onPracticeSelect }) {
                     const isCompleted = !isLocked && progress && progress.total > 0 && progress.completed >= progress.total;
                     const colors = isLocked ? colorClasses.gray : colorClasses[previewColors[(previewLevel - 1) % previewColors.length]];
                     const prerequisiteName = previewLevel === 1 ? `Practice ${selectedPracticeForReview}` : `Preview ${previewLevel - 1}`;
-                    const unlockText = isLocked ? `Hoàn thành ${prerequisiteName} để mở` : `Luyện tập lại các câu hỏi`;
+                    const unlockText = isLocked ? `Hoàn thành tất cả câu ở ${prerequisiteName} để mở` : `Luyện tập lại các câu hỏi`;
                     if (previewLevel > 1) {
                          const oneLevelBeforeId = ((previewLevel - 2) === 0) ? selectedPracticeForReview : ((previewLevel - 2) * 100) + selectedPracticeForReview;
                          const oneLevelBeforeProgress = progressData[oneLevelBeforeId];
                          if (!oneLevelBeforeProgress || oneLevelBeforeProgress.total === 0 || oneLevelBeforeProgress.completed < oneLevelBeforeProgress.total) { return null; }
                     }
-                    return ( <ReviewItem key={practiceNumber} practiceNumber={practiceNumber} previewLevel={previewLevel} isLocked={isLocked} isCompleted={isCompleted} progress={progress} colors={colors} unlockText={unlockText} onPracticeSelect={onPracticeSelect} /> );
+                    return (
+                        <ReviewItem
+                            key={practiceNumber}
+                            practiceNumber={practiceNumber}
+                            previewLevel={previewLevel}
+                            isLocked={isLocked}
+                            isCompleted={isCompleted}
+                            progress={progress}
+                            colors={colors}
+                            unlockText={unlockText}
+                            onPracticeSelect={onPracticeSelect}
+                        />
+                    );
                 })}
              </div>
          </div>
@@ -725,22 +717,30 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   const practicesToShow = selectedType ? Object.keys(practiceDetails[selectedType]) : [];
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="space-y-4 w-full pt-8">
+      <div className="space-y-4 w-full pt-2">
           {practicesToShow.map(pNumStr => {
             const practiceNumber = parseInt(pNumStr, 10);
             const details = practiceDetails[selectedType][practiceNumber];
             const progress = progressData[practiceNumber];
-            return ( <PracticeCard key={practiceNumber} practiceNumber={practiceNumber} details={details} progress={progress} onPracticeSelect={onPracticeSelect} onReviewClick={handleReviewClick} onRewardsClick={handleRewardsClick} /> );
+            return (
+              <PracticeCard
+                key={practiceNumber}
+                practiceNumber={practiceNumber}
+                details={details}
+                progress={progress}
+                onPracticeSelect={onPracticeSelect}
+                onReviewClick={handleReviewClick}
+                onRewardsClick={handleRewardsClick}
+              />
+            );
           })
         }
       </div>
     </div>
   );
 };
-// --- END: PRACTICE LIST COMPONENT ---
 
-
-// --- START: REWARDS POPUP COMPONENT ---
+// --- Rewards Popup Component ---
 const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }) => {
     const [isClaiming, setIsClaiming] = useState(null);
 
@@ -850,17 +850,22 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
 
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+            <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all animate-scale-up" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
                     <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><GiftIcon className="w-6 h-6 text-yellow-500"/>Rewards: {practiceTitle}</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
                 </div>
-                <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50">
-                    {renderedTiers}
-                </div>
+                <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50 hide-scrollbar">{renderedTiers}</div>
             </div>
+            <style jsx>{`
+                @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+                .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
+                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                .hide-scrollbar::-webkit-scrollbar { display: none; }
+            `}</style>
         </div>
     );
 };
-// --- END: REWARDS POPUP COMPONENT ---
