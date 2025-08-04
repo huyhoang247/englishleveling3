@@ -210,29 +210,31 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
             {showParentHeader && (
-                <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 p-4 shadow-md flex items-center justify-between">
-                {currentView === 'analysis' ? (
-                    <>
-                        <div className="w-28">
-                          <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
-                              <HomeIcon className="h-5 w-5"/>
-                          </button>
-                        </div>
-                        <h2 className="text-lg font-bold text-slate-200 truncate px-2">{title}</h2>
-                        <div className="w-28"></div>
-                    </>
-                ) : (
-                    <>
-                        <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
-                            <BackIcon className="h-5 w-5"/>
-                            <span>Quay lại</span>
-                        </button>
-                        <h2 className="text-lg font-bold text-slate-200 truncate px-2">{title}</h2>
-                        <div className="w-28 text-right">
-                            <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ"><HomeIcon className="h-5 w-5"/></button>
-                        </div>
-                    </>
-                )}
+                <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
+                  <div className="flex h-14 items-center justify-between px-4">
+                    {currentView === 'analysis' ? (
+                        <>
+                            <div className="w-24">
+                              <button onClick={goHome} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
+                                  <HomeIcon />
+                              </button>
+                            </div>
+                            <h2 className="flex-1 text-lg font-bold text-slate-200 truncate text-center px-4">{title}</h2>
+                            <div className="w-24"></div>
+                        </>
+                    ) : (
+                        <>
+                            <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
+                                <BackIcon className="h-5 w-5"/>
+                                <span>Quay lại</span>
+                            </button>
+                            <h2 className="text-lg font-bold text-slate-200 truncate px-2">{title}</h2>
+                            <div className="w-28 text-right">
+                                <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ"><HomeIcon className="h-5 w-5"/></button>
+                            </div>
+                        </>
+                    )}
+                  </div>
                 </header>
             )}
             <div className={`flex-grow ${showParentHeader ? 'overflow-y-auto' : ''}`}>
