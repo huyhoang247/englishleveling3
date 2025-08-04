@@ -6,7 +6,7 @@ import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc, increm
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
 import { exampleData } from '../example-data.ts';
-import { phraseData } from '../phrase-data.ts'; // IMPORT NEW PHRASE DATA
+import { phraseData } from './phrase-data.ts'; // IMPORT NEW PHRASE DATA
 
 import WordSquaresInput from './vocabulary-input.tsx';
 import Confetti from './chuc-mung.tsx';
@@ -21,6 +21,11 @@ interface VocabularyItem {
   question?: string;
   vietnameseHint?: string;
 }
+// --- DEFINED INTERFACE FOR PHRASEPART ---
+interface PhrasePart {
+  english: string;
+  vietnamese: string;
+}
 interface VocabularyGameProps {
   onGoBack: () => void;
   selectedPractice: number;
@@ -34,12 +39,11 @@ const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount
 const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo(({ timeLeft, totalTime }) => { const radius = 20; const circumference = 2 * Math.PI * radius; const progress = Math.max(0, timeLeft / totalTime); const strokeDashoffset = circumference * (1 - progress); const getTimeColor = () => { if (timeLeft <= 0) return 'text-gray-400'; if (timeLeft <= 10) return 'text-red-500'; if (timeLeft <= 20) return 'text-yellow-500'; return 'text-indigo-400'; }; const ringColorClass = getTimeColor(); return ( <div className="relative flex items-center justify-center w-8 h-8"> <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 44 44"> <circle className="text-gray-200" stroke="currentColor" strokeWidth="3" fill="transparent" r={radius} cx="22" cy="22" /> <circle className={`${ringColorClass} transition-all duration-500`} stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="transparent" r={radius} cx="22" cy="22" style={{ strokeDasharray: circumference, strokeDashoffset }} /> </svg> <span className={`font-bold text-xs ${ringColorClass}`}>{Math.max(0, timeLeft)}</span> </div> ); });
 const BackIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}> <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /> </svg> );
 const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path><path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path></svg>);
-// --- NEW PHRASE ICON ---
 const PhraseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /> </svg> );
 const shuffleArray = <T extends any[]>(array: T): T => { const shuffledArray = [...array]; for (let i = shuffledArray.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; } return shuffledArray as T; };
 const generateImageUrl = (imageIndex?: number) => { if (imageIndex !== undefined && typeof imageIndex === 'number') { const adjustedIndex = imageIndex - 1; if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) { return defaultImageUrls[adjustedIndex]; } } return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; };
 
-// --- NEW PHRASE POPUP COMPONENT ---
+// --- UPDATED PHRASE POPUP COMPONENT ---
 const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({
   isOpen,
   onClose,
@@ -49,16 +53,20 @@ const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord:
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
-    setActiveTab(0); // Reset tab when the word changes
+    setActiveTab(0);
   }, [currentWord]);
 
   const searchWord = wordsToSearch[activeTab];
-  
+
   const searchResults = useMemo(() => {
     if (!searchWord) return [];
-    // Regex to find the whole word, case-insensitive
     const searchRegex = new RegExp(`\\b${searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
-    return phraseData.filter(sentence => searchRegex.test(sentence.fullEnglish));
+
+    // NEW LOGIC: Search for individual phrase parts instead of full sentences.
+    return phraseData.reduce<PhrasePart[]>((accumulator, sentence) => {
+      const matchingParts = sentence.parts.filter(part => searchRegex.test(part.english));
+      return [...accumulator, ...matchingParts];
+    }, []);
   }, [searchWord]);
 
   const highlightText = (text: string, highlight: string) => {
@@ -86,7 +94,7 @@ const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord:
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={onClose}>
         <div className="relative bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
             <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors z-10"><span className="font-bold text-xl leading-none">×</span></button>
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Cụm từ liên quan</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Các cụm từ chứa "{searchWord}"</h3>
 
             {wordsToSearch.length > 1 && (
                 <div className="border-b border-gray-200 mb-4 flex-shrink-0">
@@ -110,13 +118,13 @@ const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord:
             
             <div className="flex-grow overflow-y-auto pr-2">
                 {searchResults.length > 0 ? (
-                    <ul className="space-y-4">
+                    <ul className="space-y-3">
                         {searchResults.map((result, index) => (
                             <li key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                <p className="text-gray-800 font-medium leading-relaxed">
-                                    {highlightText(result.fullEnglish, searchWord)}
+                                <p className="text-gray-900 font-semibold text-lg leading-relaxed">
+                                    {highlightText(result.english, searchWord)}
                                 </p>
-                                <p className="text-sm text-gray-500 italic mt-1">({result.fullVietnamese})</p>
+                                <p className="text-base text-gray-600 mt-1">({result.vietnamese})</p>
                             </li>
                         ))}
                     </ul>
@@ -130,6 +138,7 @@ const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord:
     </div>
   );
 };
+
 
 export default function VocabularyGame({ onGoBack, selectedPractice }: VocabularyGameProps) {
   const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
@@ -145,7 +154,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   const [usedWords, setUsedWords] = useState<Set<string>>(new Set());
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
-  // --- ADDED STATE FOR PHRASE POPUP ---
   const [showPhrasePopup, setShowPhrasePopup] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [coins, setCoins] = useState(0);
@@ -190,7 +198,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
           getDoc(doc(db, 'users', user.uid)),
           getDocs(collection(db, 'users', user.uid, 'openedVocab')),
           getDocs(collection(db, 'users', user.uid, 'completedWords')),
-          getDocs(collection(db, 'users', user.uid, 'completedMultiWord')) // Fetch from the new subcollection
+          getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
         ]);
 
         const userData = userDocSnap.exists() ? userDocSnap.data() : {};
@@ -201,7 +209,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         const fetchedCompletedWords = new Set<string>();
 
         if (isMultiWordGame) {
-            // For multi-word practices, check the new subcollection for this specific game mode
             completedMultiWordSnapshot.forEach(docSnap => {
                 const data = docSnap.data();
                 if (data.completedIn && data.completedIn[gameModeId]) {
@@ -209,7 +216,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                 }
             });
         } else {
-            // For single-word practices, the source of truth is the gameMode flag in the subcollection.
             completedWordsSnapshot.forEach((completedDoc) => {
                 if (completedDoc.data()?.gameModes?.[gameModeId]) {
                   fetchedCompletedWords.add(completedDoc.id.toLowerCase());
@@ -303,8 +309,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                 if (wordsInSentence.length >= 1) {
                     const correctlyOrderedWords = wordsInSentence
                         .sort((a, b) => sentence.english.toLowerCase().indexOf(a.toLowerCase()) - sentence.english.toLowerCase().indexOf(b.toLowerCase()));
-
-                    // Create a robust regex to find and replace all target words at once
                     const wordsToHideRegex = new RegExp(`\\b(${correctlyOrderedWords.map(w => w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`, 'gi');
                     const questionText = sentence.english.replace(wordsToHideRegex, '___');
                     const answerKey = correctlyOrderedWords.join(' ');
@@ -399,27 +403,21 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
       const gameModeId = `fill-word-${selectedPractice}`;
       
       if (isMultiWordGame) {
-        // --- LOGIC FOR MULTI-WORD PRACTICES ---
-        // 1. Give EXP to individual words in `completedWords` collection
         const individualWords = currentWord.word.split(' ');
         individualWords.forEach(word => {
           const individualWordRef = doc(db, 'users', user.uid, 'completedWords', word.toLowerCase());
           batch.set(individualWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
         });
 
-        // 2. Mark this multi-word question as complete in its own scalable subcollection
         const questionId = currentWord.word.toLowerCase();
         const completedMultiWordRef = doc(db, 'users', user.uid, 'completedMultiWord', questionId);
         
         batch.set(completedMultiWordRef, {
-            completedIn: {
-                [gameModeId]: true
-            },
+            completedIn: { [gameModeId]: true },
             lastCompletedAt: new Date()
         }, { merge: true });
 
       } else {
-        // --- LOGIC FOR OTHER PRACTICES ---
         const wordId = currentWord.word.toLowerCase();
         const completedWordRef = doc(db, 'users', user.uid, 'completedWords', wordId);
         batch.set(completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
@@ -548,7 +546,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-xl">
                 <div className="flex justify-between items-center mb-4">
                   <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{displayCount}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{totalCount}</span></div></div>
-                  {/* --- MODIFIED SECTION: ADDED PHRASE BUTTON --- */}
                   <div className="flex items-center gap-2">
                     {currentWord && (
                       <button
@@ -561,7 +558,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
                     )}
                     <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
                   </div>
-                  {/* --- END OF MODIFIED SECTION --- */}
                 </div>
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${progressPercentage}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                 { (selectedPractice % 100 !== 1) && currentWord && (
@@ -628,7 +624,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
             </div>
           </div>
         )}
-        {/* --- ADDED PHRASE POPUP RENDER --- */}
         {showPhrasePopup && currentWord && (
             <PhrasePopup
                 isOpen={showPhrasePopup}
