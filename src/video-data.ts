@@ -6,6 +6,7 @@ export interface Video {
   author: string;
   thumbnailUrl: string;
   category: string;
+  srtUrl?: string; // <<-- THÊM DÒNG NÀY (đường dẫn đến file .srt)
 }
 
 export const sampleVideos: Video[] = [
@@ -14,7 +15,10 @@ export const sampleVideos: Video[] = [
     title: 'A Simple Way to Break a Bad Habit',
     author: 'TED',
     thumbnailUrl: 'https://i.ytimg.com/vi/L_Guz73e6fw/hqdefault.jpg',
-    category: 'Khoa học & Tâm lý'
+    category: 'Khoa học & Tâm lý',
+    // Giả sử bạn có file srt cho video này
+    // Đường dẫn này trỏ đến thư mục `public` của dự án
+    srtUrl: '/subtitles/a-simple-way.srt' 
   },
   {
     id: '6af6b_wygQA',
@@ -22,6 +26,7 @@ export const sampleVideos: Video[] = [
     author: 'Stanford',
     thumbnailUrl: 'https://i.ytimg.com/vi/6af6b_wygQA/hqdefault.jpg',
     category: 'Truyền cảm hứng'
+    // Video này không có srtUrl, sẽ dùng API cũ
   },
   {
     id: 'k0GQSJrpVhM',
