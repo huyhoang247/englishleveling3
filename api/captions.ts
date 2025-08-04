@@ -1,4 +1,4 @@
-// --- START OF FILE api/captions.ts (dùng youtube-sr) ---
+// --- START OF FILE api/captions.ts (FIXED - dùng youtube-sr đúng cách) ---
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import YouTube from 'youtube-sr';
 
@@ -9,8 +9,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Tham số videoID là bắt buộc.' });
   }
 
-  // CORS Headers để cho phép frontend gọi API
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Cho phép mọi domain, có thể đổi thành domain của bạn sau
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') {
@@ -18,22 +18,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Thử lấy phụ đề tiếng Anh trước
-    let captions = await YouTube.getVideoCaptions(videoID, { language: 'en' });
+    // BƯỚC 1: Lấy đối tượng video từ ID
+    const video = await YouTube.getVideo(`https://www.youtube.com/watch?v=${videoID}`);
     
-    // Nếu không có, thử lấy phụ đề tự động
-    if (!captions || captions.length === 0) {
-      captions = await YouTube.getVideoCaptions(videoID, { language: 'a.en' });
+    if (!video) {
+        return res.status(404).json({ error: 'Không tìm thấy thông tin video.' });
     }
 
+    // BƯỚC 2: Từ đối tượng video, thử lấy phụ đề 'en'
+    let captions = await video.fetchCaptions({ language: 'en' });
+    
+    // Nếu không có 'en', thử lấy phụ đề tự động 'a.en'
     if (!captions || captions.length === 0) {
-      // Nếu vẫn không có, trả về lỗi 404
+      captions = await video.fetchCaptions({ language: 'a.en' });
+    }
+
+    // Nếu vẫn không có, trả về lỗi
+    if (!captions || captions.length === 0) {
       return res.status(404).json({ error: 'Không tìm thấy phụ đề cho video này.' });
     }
 
-    // Định dạng lại dữ liệu cho giống với thư viện cũ để frontend không bị ảnh hưởng
+    // Định dạng lại dữ liệu cho giống với code frontend đang mong đợi
     const formattedCaptions = captions.map(cap => ({
-        start: (cap.start / 1000).toFixed(3), // Chuyển từ mili-giây sang giây
+        start: (cap.start / 1000).toFixed(3),
         dur: (cap.duration / 1000).toFixed(3),
         text: cap.text
     }));
@@ -43,7 +50,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } catch (error) {
     console.error(`Lỗi nghiêm trọng khi lấy phụ đề cho ${videoID}:`, error);
-    return res.status(500).json({ error: 'Đã xảy ra lỗi phía server khi xử lý yêu cầu.' });
+    // Trả về thông báo lỗi chi tiết hơn khi debug
+    return res.status(500).json({ error: 'Đã xảy ra lỗi phía server.', details: error.message });
   }
 }
-// --- END OF FILE api/captions.ts (dùng youtube-sr) ---
+// --- END OF FILE api/captions.ts (FIXED - dùng youtube-sr đúng cách) ---
