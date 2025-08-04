@@ -6,7 +6,7 @@ import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc, increm
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
 import { exampleData } from '../example-data.ts';
-import { phraseData } from './phrase-data.ts'; // IMPORT NEW PHRASE DATA
+import { phraseData } from '../phrase-data.ts'; // IMPORT NEW PHRASE DATA
 
 import WordSquaresInput from './vocabulary-input.tsx';
 import Confetti from './chuc-mung.tsx';
