@@ -1,0 +1,92 @@
+// --- START OF FILE scripts/generate-data.js (CHỈ LẤY PHỤ ĐỀ TIẾNG ANH CHUẨN) ---
+const YouTube = require('youtube-sr').default;
+const { getSubtitles } = require('youtube-captions-scraper');
+const fs = require('fs');
+const { sampleChannels } = require('../src/channel-data.js');
+
+// ======================= CÀI ĐẶT =======================
+const MAX_VIDEOS_PER_CHANNEL = 15; // Giới hạn số video mới nhất lấy từ mỗi kênh. Đặt là 0 để lấy hết.
+const OUTPUT_VIDEO_DATA_FILE = './public/video-data.json';
+const OUTPUT_CAPTIONS_DIR = './public/captions';
+// =======================================================
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function generateAllData() {
+  console.log('Bắt đầu quá trình tạo dữ liệu...');
+  const allVideos = [];
+  let successCount = 0;
+  let skippedCount = 0;
+
+  if (!fs.existsSync(OUTPUT_CAPTIONS_DIR)) {
+    fs.mkdirSync(OUTPUT_CAPTIONS_DIR, { recursive: true });
+  }
+
+  for (const channelInfo of sampleChannels) {
+    console.log(`\n===== Đang xử lý kênh: ${channelInfo.id} =====`);
+    try {
+      const channel = await YouTube.getChannel(channelInfo.id);
+      const playlist = await channel.videos.fetch(MAX_VIDEOS_PER_CHANNEL, { fetchAll: MAX_VIDEOS_PER_CHANNEL === 0 });
+      console.log(`=> Tìm thấy ${playlist.length} video.`);
+
+      for (const [index, video] of playlist.entries()) {
+        if (!video || !video.id) {
+            console.log(`  [${index + 1}/${playlist.length}] Video không hợp lệ, bỏ qua.`);
+            skippedCount++;
+            continue;
+        }
+        console.log(`  [${index + 1}/${playlist.length}] Đang xử lý video: ${video.title}`);
+        
+        // *** LOGIC THAY ĐỔI NẰM Ở ĐÂY ***
+        try {
+          // 1. Chỉ thử lấy phụ đề 'en' (do người dùng tạo)
+          const captions = await getSubtitles({ videoID: video.id, lang: 'en' });
+          console.log(`    -> OK: Tìm thấy phụ đề tiếng Anh chuẩn.`);
+
+          // 2. Nếu thành công, mới lưu file và thêm vào danh sách
+          fs.writeFileSync(`${OUTPUT_CAPTIONS_DIR}/${video.id}.json`, JSON.stringify(captions));
+          
+          allVideos.push({
+            id: video.id,
+            title: video.title || 'Không có tiêu đề',
+            author: video.channel ? video.channel.name : 'Không rõ tác giả',
+            thumbnailUrl: video.thumbnail ? video.thumbnail.url : '',
+            category: channelInfo.category,
+          });
+          successCount++;
+
+        } catch (error) {
+          // 3. Nếu thất bại, ghi log và bỏ qua video này
+          console.log(`    -> BỎ QUA: Không có phụ đề tiếng Anh chuẩn.`);
+          skippedCount++;
+        }
+        
+        await sleep(500); // Dừng một chút giữa các lần gọi
+      }
+    } catch (channelError) {
+      console.error(`!!! Lỗi nghiêm trọng với kênh ${channelInfo.id}, bỏ qua kênh này.`, channelError.message);
+    }
+  }
+
+  // Xóa các file phụ đề cũ không còn trong danh sách video mới
+  const existingCaptionFiles = fs.readdirSync(OUTPUT_CAPTIONS_DIR);
+  const newVideoIds = new Set(allVideos.map(v => `${v.id}.json`));
+  for (const file of existingCaptionFiles) {
+    if (!newVideoIds.has(file)) {
+      fs.unlinkSync(`${OUTPUT_CAPTIONS_DIR}/${file}`);
+      console.log(`Đã xóa file phụ đề cũ: ${file}`);
+    }
+  }
+
+
+  fs.writeFileSync(OUTPUT_VIDEO_DATA_FILE, JSON.stringify(allVideos, null, 2));
+  console.log(`\n=====================================`);
+  console.log(`Hoàn tất!`);
+  console.log(`- Đã thêm vào danh sách: ${successCount} video.`);
+  console.log(`- Đã bỏ qua: ${skippedCount} video.`);
+  console.log(`=> Đã tạo file ${OUTPUT_VIDEO_DATA_FILE}`);
+  console.log('=====================================');
+}
+
+generateAllData();
+// --- END OF FILE scripts/generate-data.js (CHỈ LẤY PHỤ ĐỀ TIẾNG ANH CHUẨN) ---
