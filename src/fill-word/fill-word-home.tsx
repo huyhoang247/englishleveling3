@@ -14,6 +14,7 @@ import CoinDisplay from '../coin-display.tsx';
 import ImageCarousel3D from './image-carousel-3d.tsx';
 import VirtualKeyboard from './keyboard.tsx';
 
+// --- INTERFACES ---
 interface VocabularyItem {
   word: string;
   hint: string;
@@ -25,15 +26,12 @@ interface PhrasePart {
   english: string;
   vietnamese: string;
 }
-interface Example {
-  english: string;
-  vietnamese: string;
-}
 interface VocabularyGameProps {
   onGoBack: () => void;
   selectedPractice: number;
 }
 
+// --- ICONS & STATIC COMPONENTS ---
 const streakIconUrls = { default: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png', streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(2).png', streak5: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(1).png', streak10: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(3).png', streak20: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(4).png',};
 const getStreakIconUrl = (streak: number) => { if (streak >= 20) return streakIconUrls.streak20; if (streak >= 10) return streakIconUrls.streak10; if (streak >= 5) return streakIconUrls.streak5; if (streak >= 1) return streakIconUrls.streak1; return streakIconUrls.default; };
 const StreakDisplay: React.FC<{ displayedStreak: number; isAnimating: boolean; }> = memo(({ displayedStreak, isAnimating }) => ( <div className={`bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-orange-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${isAnimating ? 'scale-110' : 'scale-100'}`}> <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style> <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-gray-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div> <div className="relative flex items-center justify-center"><img src={getStreakIconUrl(displayedStreak)} alt="Streak Icon" className="w-4 h-4" /></div> <div className="font-bold text-gray-800 text-xs tracking-wide streak-counter ml-1">{displayedStreak}</div> <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div> <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div> </div> ));
@@ -43,111 +41,109 @@ const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo((
 const BackIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}> <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /> </svg> );
 const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path><path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path></svg>);
 const PhraseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /> </svg> );
-// --- NEW EXAM ICON ---
 const ExamIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"> <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /> </svg> );
+
+// --- HELPER FUNCTIONS ---
 const shuffleArray = <T extends any[]>(array: T): T => { const shuffledArray = [...array]; for (let i = shuffledArray.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; } return shuffledArray as T; };
 const generateImageUrl = (imageIndex?: number) => { if (imageIndex !== undefined && typeof imageIndex === 'number') { const adjustedIndex = imageIndex - 1; if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) { return defaultImageUrls[adjustedIndex]; } } return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; };
 const capitalizeFirstLetter = (str: string) => { if (!str) return ''; return str.charAt(0).toUpperCase() + str.slice(1); };
-
-// --- HELPER FUNCTION FOR HIGHLIGHTING ---
 const highlightText = (text: string, highlight: string) => {
   if (!highlight.trim() || !text) return <span>{text}</span>;
   const regex = new RegExp(`(\\b${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b)`, 'ig');
   const parts = text.split(regex);
+  return (<span>{parts.map((part, i) => regex.test(part) ? (<strong key={i} className="text-blue-500 font-semibold">{part}</strong>) : (part))}</span>);
+};
+
+// --- REUSABLE POPUP COMPONENTS ---
+const HeaderTag: React.FC<{ word: string }> = ({ word }) => (
+  <div className="flex items-center gap-2 mb-6">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+    <span className="font-sans text-base font-bold uppercase tracking-widest text-blue-600">{word}</span>
+  </div>
+);
+
+const BasePopup: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  currentWord: string;
+  titlePrefix: string;
+  searchResults: { english: string; vietnamese: string }[];
+  noResultsMessage: string;
+  highlightStyle?: string;
+}> = ({ isOpen, onClose, currentWord, titlePrefix, searchResults, noResultsMessage }) => {
+  const wordsToSearch = useMemo(() => currentWord.split(' '), [currentWord]);
+  const [activeTab, setActiveTab] = useState(0);
+  useEffect(() => { setActiveTab(0); }, [currentWord]);
+  const searchWord = wordsToSearch[activeTab];
+
+  if (!isOpen) return null;
   return (
-    <span>
-      {parts.map((part, i) =>
-        regex.test(part) ? (
-          <strong key={i} className="bg-green-200 text-green-800 px-1 rounded">
-            {part}
-          </strong>
-        ) : (
-          part
-        )
-      )}
-    </span>
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="p-6 border-b border-gray-200 flex-shrink-0">
+          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors z-10"><span className="font-bold text-xl leading-none">×</span></button>
+          <h3 className="text-xl font-bold text-gray-800">{`${titlePrefix} chứa "${searchWord}"`}</h3>
+          {wordsToSearch.length > 1 && (
+            <nav className="mt-4 -mb-6 -mx-6 px-6 border-t border-gray-200">
+              <div className="flex space-x-4">
+                {wordsToSearch.map((word, index) => (<button key={index} onClick={() => setActiveTab(index)} className={`${activeTab === index ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-all`}>{word}</button>))}
+              </div>
+            </nav>
+          )}
+        </div>
+        <div className="flex-grow overflow-y-auto bg-white p-6">
+          <div className="max-w-4xl mx-auto">
+            <HeaderTag word={searchWord} />
+            {searchResults.length > 0 ? (
+              <div className="space-y-4">
+                {searchResults.map((result, index) => (
+                  <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <p className="text-gray-800 text-base leading-relaxed font-medium">{highlightText(result.english, searchWord)}</p>
+                    <p className="mt-2 text-gray-500 text-sm italic">{result.vietnamese}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 px-6 bg-gray-50 rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                <h4 className="mt-4 text-lg font-semibold text-gray-700">{noResultsMessage}</h4>
+                <p className="mt-1 text-sm text-gray-500">Chưa có dữ liệu cho từ này.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-// --- PHRASE POPUP COMPONENT ---
 const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => {
-  const wordsToSearch = useMemo(() => currentWord.split(' '), [currentWord]);
-  const [activeTab, setActiveTab] = useState(0);
-  useEffect(() => { setActiveTab(0); }, [currentWord]);
-  const searchWord = wordsToSearch[activeTab];
-
+  const searchWord = currentWord.split(' ')[0]; // Simplified for this component
   const searchResults = useMemo(() => {
     if (!searchWord) return [];
     const searchRegex = new RegExp(`\\b${searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
-    return phraseData.reduce<PhrasePart[]>((accumulator, sentence) => {
-      const matchingParts = sentence.parts.filter(part => searchRegex.test(part.english));
-      return [...accumulator, ...matchingParts];
-    }, []);
+    return phraseData.reduce<PhrasePart[]>((acc, sentence) => {
+      const matching = sentence.parts.filter(part => searchRegex.test(part.english));
+      return [...acc, ...matching];
+    }, []).map(p => ({
+      english: capitalizeFirstLetter(p.english),
+      vietnamese: capitalizeFirstLetter(p.vietnamese),
+    }));
   }, [searchWord]);
 
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors z-10"><span className="font-bold text-xl leading-none">×</span></button>
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Các cụm từ chứa "{searchWord}"</h3>
-        {wordsToSearch.length > 1 && (
-          <div className="border-b border-gray-200 mb-4 flex-shrink-0">
-            <nav className="-mb-px flex space-x-4" aria-label="Tabs">
-              {wordsToSearch.map((word, index) => (<button key={index} onClick={() => setActiveTab(index)} className={`${activeTab === index ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-all`}>{word}</button>))}
-            </nav>
-          </div>
-        )}
-        <div className="flex-grow overflow-y-auto pr-2">
-          {searchResults.length > 0 ? (
-            <ul className="space-y-4">
-              {searchResults.map((result, index) => (<li key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200"><p className="text-gray-900 font-semibold text-lg leading-relaxed">{highlightText(capitalizeFirstLetter(result.english), searchWord)}</p><p className="text-base text-gray-600 mt-1 italic">{capitalizeFirstLetter(result.vietnamese)}</p></li>))}
-            </ul>
-          ) : (<div className="text-center py-10 text-gray-500"><p>Không tìm thấy cụm từ nào chứa "{searchWord}".</p></div>)}
-        </div>
-      </div>
-    </div>
-  );
+  return <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} titlePrefix="Các cụm từ" noResultsMessage="Không tìm thấy cụm từ" searchResults={searchResults} />;
 };
 
-// --- NEW EXAM POPUP COMPONENT ---
 const ExamPopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => {
-  const wordsToSearch = useMemo(() => currentWord.split(' '), [currentWord]);
-  const [activeTab, setActiveTab] = useState(0);
-  useEffect(() => { setActiveTab(0); }, [currentWord]);
-  const searchWord = wordsToSearch[activeTab];
-
+  const searchWord = currentWord.split(' ')[0]; // Simplified for this component
   const searchResults = useMemo(() => {
     if (!searchWord) return [];
     const searchRegex = new RegExp(`\\b${searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
-    return exampleData.filter(example => searchRegex.test(example.english));
+    return exampleData.filter(ex => searchRegex.test(ex.english));
   }, [searchWord]);
 
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors z-10"><span className="font-bold text-xl leading-none">×</span></button>
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Câu ví dụ chứa "{searchWord}"</h3>
-        {wordsToSearch.length > 1 && (
-          <div className="border-b border-gray-200 mb-4 flex-shrink-0">
-            <nav className="-mb-px flex space-x-4" aria-label="Tabs">
-              {wordsToSearch.map((word, index) => (<button key={index} onClick={() => setActiveTab(index)} className={`${activeTab === index ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-all`}>{word}</button>))}
-            </nav>
-          </div>
-        )}
-        <div className="flex-grow overflow-y-auto pr-2">
-          {searchResults.length > 0 ? (
-            <ul className="space-y-4">
-              {searchResults.map((result, index) => (<li key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-200"><p className="text-blue-900 font-medium leading-relaxed">{highlightText(result.english, searchWord)}</p><p className="text-sm text-blue-700 mt-1 italic">({result.vietnamese})</p></li>))}
-            </ul>
-          ) : (<div className="text-center py-10 text-gray-500"><p>Không tìm thấy ví dụ nào chứa "{searchWord}".</p></div>)}
-        </div>
-      </div>
-    </div>
-  );
+  return <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} titlePrefix="Câu ví dụ" noResultsMessage="Không tìm thấy ví dụ" searchResults={searchResults} />;
 };
-
 
 export default function VocabularyGame({ onGoBack, selectedPractice }: VocabularyGameProps) {
   const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
@@ -164,7 +160,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
   const [gameOver, setGameOver] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [showPhrasePopup, setShowPhrasePopup] = useState(false);
-  // --- ADDED STATE FOR EXAM POPUP ---
   const [showExamPopup, setShowExamPopup] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [coins, setCoins] = useState(0);
@@ -557,7 +552,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-xl">
                 <div className="flex justify-between items-center mb-4">
                   <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{displayCount}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{totalCount}</span></div></div>
-                  {/* --- UPDATED BUTTONS SECTION --- */}
                   <div className="flex items-center gap-2">
                     {currentWord && (
                       <>
@@ -634,7 +628,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
           </div>
         )}
         {showPhrasePopup && currentWord && ( <PhrasePopup isOpen={showPhrasePopup} onClose={() => setShowPhrasePopup(false)} currentWord={currentWord.word} /> )}
-        {/* --- ADDED EXAM POPUP RENDER --- */}
         {showExamPopup && currentWord && ( <ExamPopup isOpen={showExamPopup} onClose={() => setShowExamPopup(false)} currentWord={currentWord.word} /> )}
       </main>
     </div>
