@@ -6,7 +6,7 @@ import { doc, getDoc, getDocs, updateDoc, collection, writeBatch, setDoc, increm
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { defaultImageUrls } from '../image-url.ts';
 import { exampleData } from '../example-data.ts';
-import { phraseData } from '../phrase-data.ts'; // IMPORT NEW PHRASE DATA
+import { phraseData } from './phrase-data.ts';
 
 import WordSquaresInput from './vocabulary-input.tsx';
 import Confetti from './chuc-mung.tsx';
@@ -21,7 +21,6 @@ interface VocabularyItem {
   question?: string;
   vietnameseHint?: string;
 }
-// --- DEFINED INTERFACE FOR PHRASEPART ---
 interface PhrasePart {
   english: string;
   vietnamese: string;
@@ -43,7 +42,13 @@ const PhraseIcon = ({ className }: { className: string }) => ( <svg xmlns="http:
 const shuffleArray = <T extends any[]>(array: T): T => { const shuffledArray = [...array]; for (let i = shuffledArray.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; } return shuffledArray as T; };
 const generateImageUrl = (imageIndex?: number) => { if (imageIndex !== undefined && typeof imageIndex === 'number') { const adjustedIndex = imageIndex - 1; if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) { return defaultImageUrls[adjustedIndex]; } } return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; };
 
-// --- UPDATED PHRASE POPUP COMPONENT ---
+const capitalizeFirstLetter = (str: string) => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+
+// --- PHRASE POPUP COMPONENT (UPDATED) ---
 const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({
   isOpen,
   onClose,
@@ -61,8 +66,6 @@ const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord:
   const searchResults = useMemo(() => {
     if (!searchWord) return [];
     const searchRegex = new RegExp(`\\b${searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
-
-    // NEW LOGIC: Search for individual phrase parts instead of full sentences.
     return phraseData.reduce<PhrasePart[]>((accumulator, sentence) => {
       const matchingParts = sentence.parts.filter(part => searchRegex.test(part.english));
       return [...accumulator, ...matchingParts];
@@ -118,13 +121,15 @@ const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord:
             
             <div className="flex-grow overflow-y-auto pr-2">
                 {searchResults.length > 0 ? (
-                    <ul className="space-y-3">
+                    <ul className="space-y-4">
                         {searchResults.map((result, index) => (
                             <li key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                                 <p className="text-gray-900 font-semibold text-lg leading-relaxed">
-                                    {highlightText(result.english, searchWord)}
+                                    {highlightText(capitalizeFirstLetter(result.english), searchWord)}
                                 </p>
-                                <p className="text-base text-gray-600 mt-1">({result.vietnamese})</p>
+                                <p className="text-base text-gray-600 mt-1 italic">
+                                    {capitalizeFirstLetter(result.vietnamese)}
+                                </p>
                             </li>
                         ))}
                     </ul>
