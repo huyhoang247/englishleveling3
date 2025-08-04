@@ -3012,10 +3012,10 @@ We need to move closer to the stage to see better. (Chúng ta cần di chuyển 
 /**
  * Phân tích chuỗi dữ liệu ví dụ thành một mảng các đối tượng có cấu trúc.
  * @param text - Chuỗi văn bản thô chứa các ví dụ.
- * @returns Một mảng các đối tượng ExampleSentence.
+ * @return Một mảng các đối tượng ExampleSentence.
  */
 export const parseExampleSentences = (text: string): ExampleSentence[] => {
-  const lines = text.trim().split('\n');
+  const lines = text.trim().split("\n");
   const examples: ExampleSentence[] = [];
 
   for (const line of lines) {
@@ -3025,13 +3025,13 @@ export const parseExampleSentences = (text: string): ExampleSentence[] => {
     if (match && match[1] && match[2]) {
       examples.push({
         english: match[1].trim(),
-        vietnamese: match[2].trim().replace(/\.$/, ''), // Bỏ dấu chấm ở cuối nếu có
+        vietnamese: match[2].trim().replace(/\.$/, ""), // Bỏ dấu chấm ở cuối nếu có
       });
     } else {
       // Fallback nếu dòng không đúng định dạng
       examples.push({
         english: line.trim(),
-        vietnamese: 'Bản dịch không có sẵn',
+        vietnamese: "Bản dịch không có sẵn",
       });
     }
   }

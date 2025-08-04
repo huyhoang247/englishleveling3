@@ -6,9 +6,15 @@ import { CallableContext } from "firebase-functions/v1/https";
 
 // --- CORRECTED IMPORTS ---
 // quizData is a default export
+<<<<<<< HEAD
 import quizData from "./quiz-data"; 
 // exampleData is a named export
 import { exampleData } from "./example-data"; 
+=======
+import quizData from "./quiz-data";
+// exampleData is a named export
+import { exampleData } from "./example-data";
+ff6b2a1 (feat(functions): lưu tạm các thay đổi trước pull)
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -35,7 +41,11 @@ const MAX_PREVIEWS = 5;
 
 // onCall function definition
 export const calculatePracticeProgress = functions
+HEAD
   .region("asia-southeast1") 
+
+  .region("asia-southeast1")
+ff6b2a1 (feat(functions): lưu tạm các thay đổi trước pull)
   .https.onCall(async (data: any, context: CallableContext) => {
     // 1. Authenticate user
     if (!context.auth) {
@@ -68,7 +78,11 @@ export const calculatePracticeProgress = functions
         db.collection(`users/${uid}/completedWords`).get(),
         db.collection(`users/${uid}/completedMultiWord`).get(),
       ]);
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> ff6b2a1 (feat(functions): lưu tạm các thay đổi trước pull)
       // --- CORRECTED `exists` PROPERTY ACCESS ---
       // `exists` is a boolean property, not a function, in the Admin SDK
       const userData = userDocSnap.exists ? userDocSnap.data() : {};
@@ -152,10 +166,17 @@ export const calculatePracticeProgress = functions
             const totalQs = userVocabulary.filter((word: string) => exampleData.some((ex: ExampleItem) => new RegExp(`\\b${word}\\b`, "i").test(ex.english)));
             const completed = totalQs.filter((word: string) => completedSet.has(word.toLowerCase())).length;
             progress = { completed: completed, total: totalQs.length };
+<<<<<<< HEAD
           } else { 
             let requiredWordCount = 0;
             if (practiceNum % 100 >= 3 && practiceNum % 100 <= 6) {
               requiredWordCount = (practiceNum % 100) - 1; 
+=======
+          } else {
+            let requiredWordCount = 0;
+            if (practiceNum % 100 >= 3 && practiceNum % 100 <= 6) {
+              requiredWordCount = (practiceNum % 100) - 1;
+>>>>>>> ff6b2a1 (feat(functions): lưu tạm các thay đổi trước pull)
             } else if (practiceNum % 100 === 7) {
               requiredWordCount = 1;
             }
