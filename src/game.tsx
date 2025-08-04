@@ -1,4 +1,4 @@
-// --- START OF FILE game.tsx (SRT-ONLY VERSION) ---
+// --- START OF FILE game.tsx (FINAL FIX FOR WHITESPACE) ---
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import YouTube from 'react-youtube';
@@ -69,6 +69,7 @@ function cleanupSubtitleText(text: string): string {
   }
 }
 
+// *** MODIFIED parseSrt FUNCTION TO USE cleanupSubtitleText ***
 function parseSrt(srtContent: string): Subtitle[] {
   const parseSrtTime = (time: string): number => {
     const parts = time.split(/[:,]/);
@@ -81,17 +82,24 @@ function parseSrt(srtContent: string): Subtitle[] {
   const blocks = srtContent.trim().split(/\n\s*\n/);
   return blocks.map(block => {
     const lines = block.split('\n');
-    if (lines.length < 3) return null;
+    if (lines.length < 2) return null; // Can be 2 lines if there's no text
     const timeLine = lines[1];
     const timeMatch = timeLine.match(/(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/);
     if (!timeMatch) return null;
     const start = parseSrtTime(timeMatch[1]);
     const end = parseSrtTime(timeMatch[2]);
     const dur = end - start;
-    const text = lines.slice(2).join(' ').trim();
+    
+    // Join all text lines together, then clean them up robustly.
+    const rawText = lines.slice(2).join(' ');
+    const text = cleanupSubtitleText(rawText);
+
+    if (!text) return null; // Don't include subtitles with no text
+
     return { start, dur, text };
   }).filter((sub): sub is Subtitle => sub !== null);
 }
+
 
 function groupBooksByCategory(books: Book[]): Record<string, Book[]> {
   return books.reduce((acc, book) => {
@@ -239,7 +247,6 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
     }
   }, [selectedBookId, viewMode, playbackSpeed, currentBook]);
   
-  // *** LOGIC TẢI PHỤ ĐỀ ĐÃ ĐƯỢC ĐƠN GIẢN HÓA (CHỈ TỪ FILE .SRT) ***
   useEffect(() => {
     if (viewMode !== 'videos' || !selectedVideoId) return;
 
@@ -250,7 +257,6 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
 
       const currentVideo = videosData.find(v => v.id === selectedVideoId);
 
-      // Nếu không tìm thấy video hoặc video không có srtUrl, dừng lại.
       if (!currentVideo?.srtUrl) {
           console.error("Video không có srtUrl được định nghĩa.");
           setIsLoadingSubtitles(false);
