@@ -89,8 +89,8 @@ const BasePopup: React.FC<{
 
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" onClick={onClose}>
-        {/* --- FIX: Giảm độ phức tạp của shadow từ 2xl -> xl để cải thiện hiệu năng --- */}
+    // --- FIX: Tăng độ tối của overlay từ 60 -> 75 để làm nổi bật popup ---
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={onClose}>
         <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="p-6 border-b border-gray-200 flex-shrink-0">
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors z-10"><span className="font-bold text-xl leading-none">×</span></button>
@@ -618,7 +618,6 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
           )}
         </div>
         {showImagePopup && currentWord && (selectedPractice % 100 === 1) && (
-          // --- FIX: Loại bỏ backdrop-blur và giảm shadow để nhất quán tối ưu hiệu năng ---
           <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
             <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-xl">
               <button onClick={() => setShowImagePopup(false)} className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-all"><span className="text-xl font-bold">✕</span></button>
