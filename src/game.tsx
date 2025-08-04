@@ -1,4 +1,4 @@
-// --- START OF FILE game.tsx (MODIFIED VERSION) ---
+// --- START OF FILE game.tsx (FULL, UNABBREVIATED, FINAL VERSION) ---
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import YouTube from 'react-youtube';
@@ -6,7 +6,7 @@ import FlashcardDetailModal from './story/flashcard.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
 import { defaultImageUrls as gameImageUrls } from './image-url.ts';
 import { Book, sampleBooks as initialSampleBooks } from './books-data.ts';
-import { Video, sampleVideos } from './video-data.ts'; // Đảm bảo import từ file đã sửa
+import { Video, sampleVideos } from './video-data.ts';
 import { auth, db } from './firebase.js'; 
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -58,8 +58,10 @@ interface BookStats { totalWords: number; uniqueWordsCount: number; vocabMatchCo
 interface Subtitle { start: number; dur: number; text: string; }
 
 // --- Utility Functions ---
+function cleanupSubtitleText(text: string): string {
+    return text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
 
-// *** NEW FUNCTION TO PARSE SRT FILES ***
 function parseSrt(srtContent: string): Subtitle[] {
   const parseSrtTime = (time: string): number => {
     const parts = time.split(/[:,]/);
@@ -69,22 +71,17 @@ function parseSrt(srtContent: string): Subtitle[] {
     const ms = parseInt(parts[3], 10) || 0;
     return h * 3600 + m * 60 + s + ms / 1000;
   };
-
   const blocks = srtContent.trim().split(/\n\s*\n/);
-
   return blocks.map(block => {
     const lines = block.split('\n');
     if (lines.length < 3) return null;
-
     const timeLine = lines[1];
     const timeMatch = timeLine.match(/(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/);
     if (!timeMatch) return null;
-
     const start = parseSrtTime(timeMatch[1]);
     const end = parseSrtTime(timeMatch[2]);
     const dur = end - start;
     const text = lines.slice(2).join(' ').trim();
-
     return { start, dur, text };
   }).filter((sub): sub is Subtitle => sub !== null);
 }
@@ -99,6 +96,7 @@ function groupBooksByCategory(books: Book[]): Record<string, Book[]> {
     return acc;
   }, {} as Record<string, Book[]>);
 }
+
 function groupVideosByCategory(videos: Video[]): Record<string, Video[]> {
   return videos.reduce((acc, video) => {
     const category = video.category || 'Uncategorized';
@@ -215,7 +213,8 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
   const [currentSubtitle, setCurrentSubtitle] = useState<Subtitle | null>(null);
   const [isLoadingSubtitles, setIsLoadingSubtitles] = useState(false);
   const playerRef = useRef<any>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isPlayerPlaying, setIsPlayerPlaying] = useState(false);
+
 
   // --- useEffects ---
   useEffect(() => { const unsubscribeAuth = auth.onAuthStateChanged(user => setCurrentUser(user)); return unsubscribeAuth; }, []);
@@ -225,7 +224,7 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
   useEffect(() => {
     const isReadingOrWatching = selectedBookId || selectedVideoId;
     if (isReadingOrWatching) { hideNavBar(); } else { showNavBar(); }
-    return () => { if (audioPlayerRef.current) audioPlayerRef.current.pause(); if (intervalRef.current) clearInterval(intervalRef.current); };
+    return () => { if (audioPlayerRef.current) audioPlayerRef.current.pause(); };
   }, [selectedBookId, selectedVideoId, hideNavBar, showNavBar]);
   
   const currentBook = useMemo(() => booksData.find(book => book.id === selectedBookId), [booksData, selectedBookId]);
@@ -237,47 +236,55 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
     }
   }, [selectedBookId, viewMode, playbackSpeed, currentBook]);
   
-  // *** MODIFIED SUBTITLE FETCHING LOGIC ***
   useEffect(() => {
     if (viewMode !== 'videos' || !selectedVideoId) return;
-
     const fetchSubtitles = async () => {
-      setIsLoadingSubtitles(true);
-      setSubtitles([]);
-      setCurrentSubtitle(null);
-
+      setIsLoadingSubtitles(true); setSubtitles([]); setCurrentSubtitle(null);
       const currentVideo = videosData.find(v => v.id === selectedVideoId);
-
       try {
         let formattedSubtitles: Subtitle[] = [];
-
         if (currentVideo?.srtUrl) {
-          // Case 1: Load from local SRT file
           const response = await fetch(currentVideo.srtUrl);
           if (!response.ok) throw new Error(`Không thể tải file SRT: ${currentVideo.srtUrl}`);
           const srtText = await response.text();
           formattedSubtitles = parseSrt(srtText);
         } else {
-          // Case 2: Fallback to API
           const response = await fetch(`/api/captions?videoID=${selectedVideoId}`);
           if (!response.ok) throw new Error('Không thể tải phụ đề từ API.');
           const data = await response.json();
-          formattedSubtitles = data.map((sub: any) => ({
-            start: parseFloat(sub.start),
-            dur: parseFloat(sub.dur),
-            text: sub.text,
-          }));
+          formattedSubtitles = data.map((sub: any) => ({ start: parseFloat(sub.start), dur: parseFloat(sub.dur), text: cleanupSubtitleText(sub.text) }));
         }
         setSubtitles(formattedSubtitles);
-      } catch (error) {
-        console.error("Lỗi tải phụ đề:", error);
-      } finally {
-        setIsLoadingSubtitles(false);
-      }
+      } catch (error) { console.error("Lỗi tải phụ đề:", error); } 
+      finally { setIsLoadingSubtitles(false); }
     };
-
     fetchSubtitles();
   }, [selectedVideoId, viewMode, videosData]);
+
+  useEffect(() => {
+    if (!isPlayerPlaying) {
+      return;
+    }
+    
+    const interval = setInterval(() => {
+      if (!playerRef.current || subtitles.length === 0) return;
+      const currentTime = playerRef.current.getCurrentTime();
+      const activeSubtitle = subtitles.find(sub =>
+        currentTime >= sub.start && currentTime < (sub.start + sub.dur)
+      );
+      setCurrentSubtitle(prevSubtitle => {
+        if (activeSubtitle?.text !== prevSubtitle?.text) {
+          return activeSubtitle || null;
+        }
+        return prevSubtitle;
+      });
+    }, 200);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isPlayerPlaying, subtitles]);
+
 
   // --- MEMOIZED VALUES ---
   const bookVocabularyCardIds = useMemo(() => { if (!currentBook || vocabMap.size === 0) return []; const wordsInBook = new Set<string>(); (currentBook.content.match(/\b\w+\b/g) || []).forEach(word => { const normalizedWord = word.toLowerCase(); if (vocabMap.has(normalizedWord)) wordsInBook.add(normalizedWord); }); const cardIdMap = new Map(defaultVocabulary.map((word, index) => [word.toLowerCase(), index + 1])); return Array.from(wordsInBook).map(word => cardIdMap.get(word)).filter((id): id is number => id !== undefined); }, [currentBook, vocabMap]);
@@ -286,7 +293,7 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
   // --- HANDLERS ---
   const handleWordClick = (word: string) => { const normalizedWord = word.toLowerCase(); const foundVocab = vocabMap.get(normalizedWord); if (foundVocab) { let cardImageUrl = `https://placehold.co/1024x1536/E0E0E0/333333?text=${encodeURIComponent(foundVocab.word)}`; const vocabIndex = defaultVocabulary.findIndex(v => v.toLowerCase() === normalizedWord); if (vocabIndex !== -1 && vocabIndex < gameImageUrls.length) cardImageUrl = gameImageUrls[vocabIndex]; const tempFlashcard: Flashcard = { id: vocabIndex !== -1 ? vocabIndex + 1 : Date.now(), imageUrl: { default: cardImageUrl }, isFavorite: false, vocabulary: foundVocab }; setSelectedVocabCard(tempFlashcard); setShowVocabDetail(true); } };
   const closeVocabDetail = () => { setShowVocabDetail(false); setSelectedVocabCard(null); };
-  const handleBackToLibrary = () => { setSelectedBookId(null); setSelectedVideoId(null); setIsAudioPlaying(false); };
+  const handleBackToLibrary = () => { setSelectedBookId(null); setSelectedVideoId(null); setIsAudioPlaying(false); setIsPlayerPlaying(false); };
   const handleSelectBook = (bookId: string) => setSelectedBookId(bookId);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const togglePlayPause = () => { if (audioPlayerRef.current) { if(isAudioPlaying) audioPlayerRef.current.pause(); else audioPlayerRef.current.play().catch(console.error); } };
@@ -297,19 +304,13 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
   const formatTime = (time: number) => { if(isNaN(time) || time === Infinity) return "00:00"; const mins = Math.floor(time / 60); const secs = Math.floor(time % 60); return `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`; };
   const handleSelectVideo = (videoId: string) => setSelectedVideoId(videoId);
   const onPlayerReady = (event: { target: any }) => { playerRef.current = event.target; };
+
   const onPlayerStateChange = (event: { data: number }) => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (event.data === 1) { // Playing
-      intervalRef.current = setInterval(() => {
-        if (!playerRef.current || subtitles.length === 0) return;
-        const currentTime = playerRef.current.getCurrentTime();
-        const activeSubtitle = subtitles.find(sub => currentTime >= sub.start && currentTime < (sub.start + sub.dur));
-        // *** Small fix to prevent decoding issues with text from SRT ***
-        const decodedText = activeSubtitle ? new DOMParser().parseFromString(activeSubtitle.text, "text/html").documentElement.textContent || "" : null;
-        if (activeSubtitle && decodedText !== currentSubtitle?.text) {
-          setCurrentSubtitle({ ...activeSubtitle, text: decodedText! });
-        } else if (!activeSubtitle && currentSubtitle !== null) { setCurrentSubtitle(null); }
-      }, 200);
+    // YouTube Player States: 1=playing, 2=paused, 0=ended
+    if (event.data === 1) {
+      setIsPlayerPlaying(true);
+    } else {
+      setIsPlayerPlaying(false);
     }
   };
 
