@@ -130,7 +130,9 @@ const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = ({ activityData
                     
                     return (
                         <div key={index} title={day.tooltip} className={`${baseClass} ${dayClass}`}>
-                            {day.hasActivity ? <CalendarCheckIcon /> : <span>{day.dayOfMonth}</span>}
+                            {/* SỬA LỖI: Chỉ hiển thị checkmark nếu ngày đó có hoạt động VÀ không phải là ngày trong tương lai. 
+                                Điều này ngăn việc tick mờ xuất hiện ở các ngày sau ngày hôm nay. */}
+                            {(day.hasActivity && !day.isFuture) ? <CalendarCheckIcon /> : <span>{day.dayOfMonth}</span>}
                         </div>
                     );
                 })}
