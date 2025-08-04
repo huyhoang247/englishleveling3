@@ -62,7 +62,6 @@ const HeaderTag: React.FC<{ word: string }> = ({ word }) => (
   </div>
 );
 
-// --- *** LOGIC FIX HERE: BASEPOPUP NOW HANDLES FILTERING *** ---
 const BasePopup: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -81,50 +80,50 @@ const BasePopup: React.FC<{
     if (!searchWord) return [];
     const searchRegex = new RegExp(`\\b${searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
     return dataSource.filter(item => searchRegex.test(item.english));
-  }, [searchWord, dataSource]); // Search logic now depends on the correct searchWord from the active tab
+  }, [searchWord, dataSource]);
 
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-        <div className="p-6 border-b border-gray-200 flex-shrink-0">
-          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors z-10"><span className="font-bold text-xl leading-none">×</span></button>
-          <h3 className="text-xl font-bold text-gray-800">{`${titlePrefix} chứa "${capitalizeFirstLetter(searchWord)}"`}</h3>
-          {wordsToSearch.length > 1 && (
-            <nav className="mt-4 -mb-6 -mx-6 px-6 border-t border-gray-200">
-              <div className="flex space-x-4">
-                {wordsToSearch.map((word, index) => (<button key={index} onClick={() => setActiveTab(index)} className={`${activeTab === index ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-all`}>{capitalizeFirstLetter(word)}</button>))}
-              </div>
-            </nav>
-          )}
+        {/* --- FIX: Added overflow-hidden to clip content to rounded corners --- */}
+        <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-200 flex-shrink-0">
+                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors z-10"><span className="font-bold text-xl leading-none">×</span></button>
+                <h3 className="text-xl font-bold text-gray-800">{`${titlePrefix} chứa "${capitalizeFirstLetter(searchWord)}"`}</h3>
+                {wordsToSearch.length > 1 && (
+                    <nav className="mt-4 -mb-6 -mx-6 px-6 border-t border-gray-200">
+                        <div className="flex space-x-4">
+                            {wordsToSearch.map((word, index) => (<button key={index} onClick={() => setActiveTab(index)} className={`${activeTab === index ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-all`}>{capitalizeFirstLetter(word)}</button>))}
+                        </div>
+                    </nav>
+                )}
+            </div>
+            <div className="flex-grow overflow-y-auto bg-white p-6">
+                <div className="max-w-4xl mx-auto">
+                    <HeaderTag word={searchWord.toUpperCase()} />
+                    {searchResults.length > 0 ? (
+                        <div className="space-y-4">
+                            {searchResults.map((result, index) => (
+                                <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                    <p className={`text-gray-800 text-base leading-relaxed ${isPhrase ? 'font-semibold' : 'font-medium'}`}>{highlightText(result.english, searchWord)}</p>
+                                    <p className="mt-2 text-gray-500 text-sm italic">{result.vietnamese}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 px-6 bg-gray-50 rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                            <h4 className="mt-4 text-lg font-semibold text-gray-700">{noResultsMessage}</h4>
+                            <p className="mt-1 text-sm text-gray-500">Chưa có dữ liệu cho từ này.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
-        <div className="flex-grow overflow-y-auto bg-white p-6">
-          <div className="max-w-4xl mx-auto">
-            <HeaderTag word={searchWord.toUpperCase()} />
-            {searchResults.length > 0 ? (
-              <div className="space-y-4">
-                {searchResults.map((result, index) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <p className={`text-gray-800 text-base leading-relaxed ${isPhrase ? 'font-semibold' : 'font-medium'}`}>{highlightText(result.english, searchWord)}</p>
-                    <p className="mt-2 text-gray-500 text-sm italic">{result.vietnamese}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 px-6 bg-gray-50 rounded-xl">
-                <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
-                <h4 className="mt-4 text-lg font-semibold text-gray-700">{noResultsMessage}</h4>
-                <p className="mt-1 text-sm text-gray-500">Chưa có dữ liệu cho từ này.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
 
-// Flatten phrase data once for performance
 const allPhraseParts = phraseData.flatMap(sentence => sentence.parts).map(p => ({
     english: capitalizeFirstLetter(p.english),
     vietnamese: capitalizeFirstLetter(p.vietnamese),
