@@ -62,19 +62,26 @@ const HeaderTag: React.FC<{ word: string }> = ({ word }) => (
   </div>
 );
 
+// --- *** LOGIC FIX HERE: BASEPOPUP NOW HANDLES FILTERING *** ---
 const BasePopup: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   currentWord: string;
   titlePrefix: string;
-  searchResults: { english: string; vietnamese: string }[];
+  dataSource: { english: string; vietnamese: string }[];
   noResultsMessage: string;
-  highlightStyle?: string;
-}> = ({ isOpen, onClose, currentWord, titlePrefix, searchResults, noResultsMessage }) => {
+  isPhrase?: boolean;
+}> = ({ isOpen, onClose, currentWord, titlePrefix, dataSource, noResultsMessage, isPhrase = false }) => {
   const wordsToSearch = useMemo(() => currentWord.split(' '), [currentWord]);
   const [activeTab, setActiveTab] = useState(0);
   useEffect(() => { setActiveTab(0); }, [currentWord]);
   const searchWord = wordsToSearch[activeTab];
+
+  const searchResults = useMemo(() => {
+    if (!searchWord) return [];
+    const searchRegex = new RegExp(`\\b${searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
+    return dataSource.filter(item => searchRegex.test(item.english));
+  }, [searchWord, dataSource]); // Search logic now depends on the correct searchWord from the active tab
 
   if (!isOpen) return null;
   return (
@@ -82,23 +89,23 @@ const BasePopup: React.FC<{
       <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-gray-200 flex-shrink-0">
           <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors z-10"><span className="font-bold text-xl leading-none">×</span></button>
-          <h3 className="text-xl font-bold text-gray-800">{`${titlePrefix} chứa "${searchWord}"`}</h3>
+          <h3 className="text-xl font-bold text-gray-800">{`${titlePrefix} chứa "${capitalizeFirstLetter(searchWord)}"`}</h3>
           {wordsToSearch.length > 1 && (
             <nav className="mt-4 -mb-6 -mx-6 px-6 border-t border-gray-200">
               <div className="flex space-x-4">
-                {wordsToSearch.map((word, index) => (<button key={index} onClick={() => setActiveTab(index)} className={`${activeTab === index ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-all`}>{word}</button>))}
+                {wordsToSearch.map((word, index) => (<button key={index} onClick={() => setActiveTab(index)} className={`${activeTab === index ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-all`}>{capitalizeFirstLetter(word)}</button>))}
               </div>
             </nav>
           )}
         </div>
         <div className="flex-grow overflow-y-auto bg-white p-6">
           <div className="max-w-4xl mx-auto">
-            <HeaderTag word={searchWord} />
+            <HeaderTag word={searchWord.toUpperCase()} />
             {searchResults.length > 0 ? (
               <div className="space-y-4">
                 {searchResults.map((result, index) => (
                   <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <p className="text-gray-800 text-base leading-relaxed font-medium">{highlightText(result.english, searchWord)}</p>
+                    <p className={`text-gray-800 text-base leading-relaxed ${isPhrase ? 'font-semibold' : 'font-medium'}`}>{highlightText(result.english, searchWord)}</p>
                     <p className="mt-2 text-gray-500 text-sm italic">{result.vietnamese}</p>
                   </div>
                 ))}
@@ -117,33 +124,20 @@ const BasePopup: React.FC<{
   );
 };
 
-const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => {
-  const searchWord = currentWord.split(' ')[0]; // Simplified for this component
-  const searchResults = useMemo(() => {
-    if (!searchWord) return [];
-    const searchRegex = new RegExp(`\\b${searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
-    return phraseData.reduce<PhrasePart[]>((acc, sentence) => {
-      const matching = sentence.parts.filter(part => searchRegex.test(part.english));
-      return [...acc, ...matching];
-    }, []).map(p => ({
-      english: capitalizeFirstLetter(p.english),
-      vietnamese: capitalizeFirstLetter(p.vietnamese),
-    }));
-  }, [searchWord]);
+// Flatten phrase data once for performance
+const allPhraseParts = phraseData.flatMap(sentence => sentence.parts).map(p => ({
+    english: capitalizeFirstLetter(p.english),
+    vietnamese: capitalizeFirstLetter(p.vietnamese),
+}));
 
-  return <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} titlePrefix="Các cụm từ" noResultsMessage="Không tìm thấy cụm từ" searchResults={searchResults} />;
-};
+const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => (
+  <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} titlePrefix="Các cụm từ" dataSource={allPhraseParts} noResultsMessage="Không tìm thấy cụm từ" isPhrase={true} />
+);
 
-const ExamPopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => {
-  const searchWord = currentWord.split(' ')[0]; // Simplified for this component
-  const searchResults = useMemo(() => {
-    if (!searchWord) return [];
-    const searchRegex = new RegExp(`\\b${searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
-    return exampleData.filter(ex => searchRegex.test(ex.english));
-  }, [searchWord]);
+const ExamPopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => (
+  <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} titlePrefix="Câu ví dụ" dataSource={exampleData} noResultsMessage="Không tìm thấy ví dụ" />
+);
 
-  return <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} titlePrefix="Câu ví dụ" noResultsMessage="Không tìm thấy ví dụ" searchResults={searchResults} />;
-};
 
 export default function VocabularyGame({ onGoBack, selectedPractice }: VocabularyGameProps) {
   const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
