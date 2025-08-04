@@ -47,9 +47,9 @@ const ExamIcon = ({ className }: { className: string }) => ( <svg xmlns="http://
 const shuffleArray = <T extends any[]>(array: T): T => { const shuffledArray = [...array]; for (let i = shuffledArray.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; } return shuffledArray as T; };
 const generateImageUrl = (imageIndex?: number) => { if (imageIndex !== undefined && typeof imageIndex === 'number') { const adjustedIndex = imageIndex - 1; if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) { return defaultImageUrls[adjustedIndex]; } } return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; };
 const capitalizeFirstLetter = (str: string) => { if (!str) return ''; return str.charAt(0).toUpperCase() + str.slice(1); };
-const highlightText = (text: string, highlight: string) => {
-  if (!highlight.trim() || !text) return <span>{text}</span>;
-  const regex = new RegExp(`(\\b${highlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b)`, 'ig');
+// --- FIX: Sửa lại hàm highlightText để nhận regex đã được tạo sẵn, giúp tối ưu hiệu năng.
+const highlightText = (text: string, regex: RegExp) => {
+  if (!text) return <span>{text}</span>;
   const parts = text.split(regex);
   return (<span>{parts.map((part, i) => regex.test(part) ? (<strong key={i} className="text-blue-500 font-semibold">{part}</strong>) : (part))}</span>);
 };
@@ -76,6 +76,13 @@ const BasePopup: React.FC<{
   useEffect(() => { setActiveTab(0); }, [currentWord]);
   const searchWord = wordsToSearch[activeTab];
 
+  // --- FIX: Tối ưu hóa: Tạo regex một lần bằng useMemo thay vì tạo trong mỗi lần lặp.
+  const searchRegexForHighlight = useMemo(() => {
+    if (!searchWord || !searchWord.trim()) return null;
+    const escapedWord = searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    return new RegExp(`(\\b${escapedWord}\\b)`, 'ig');
+  }, [searchWord]);
+  
   const searchResults = useMemo(() => {
     if (!searchWord) return [];
     const searchRegex = new RegExp(`\\b${searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
@@ -85,7 +92,6 @@ const BasePopup: React.FC<{
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" onClick={onClose}>
-        {/* --- FIX: Removed backdrop-blur-sm to improve scroll performance --- */}
         <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="p-6 border-b border-gray-200 flex-shrink-0">
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors z-10"><span className="font-bold text-xl leading-none">×</span></button>
@@ -101,11 +107,14 @@ const BasePopup: React.FC<{
             <div className="flex-grow overflow-y-auto bg-white p-6">
                 <div className="max-w-4xl mx-auto">
                     <HeaderTag word={searchWord.toUpperCase()} />
-                    {searchResults.length > 0 ? (
+                    {searchResults.length > 0 && searchRegexForHighlight ? (
                         <div className="space-y-4">
                             {searchResults.map((result, index) => (
                                 <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                    <p className={`text-gray-800 text-base leading-relaxed ${isPhrase ? 'font-semibold' : 'font-medium'}`}>{highlightText(result.english, searchWord)}</p>
+                                    <p className={`text-gray-800 text-base leading-relaxed ${isPhrase ? 'font-semibold' : 'font-medium'}`}>
+                                        {/* Truyền regex đã được tạo sẵn vào */}
+                                        {highlightText(result.english, searchRegexForHighlight)}
+                                    </p>
                                     <p className="mt-2 text-gray-500 text-sm italic">{result.vietnamese}</p>
                                 </div>
                             ))}
