@@ -1,4 +1,4 @@
-// --- START OF FILE game.tsx (FULL, UNABBREVIATED, FINAL VERSION) ---
+// --- START OF FILE game.tsx (SRT-ONLY VERSION) ---
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import YouTube from 'react-youtube';
@@ -59,7 +59,14 @@ interface Subtitle { start: number; dur: number; text: string; }
 
 // --- Utility Functions ---
 function cleanupSubtitleText(text: string): string {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'text/html');
+    const decodedText = doc.body.textContent || "";
+    return decodedText.replace(/\s+/g, ' ').trim();
+  } catch (e) {
     return text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
 }
 
 function parseSrt(srtContent: string): Subtitle[] {
@@ -89,9 +96,7 @@ function parseSrt(srtContent: string): Subtitle[] {
 function groupBooksByCategory(books: Book[]): Record<string, Book[]> {
   return books.reduce((acc, book) => {
     const category = book.category || 'Uncategorized';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
+    if (!acc[category]) { acc[category] = []; }
     acc[category].push(book);
     return acc;
   }, {} as Record<string, Book[]>);
@@ -100,9 +105,7 @@ function groupBooksByCategory(books: Book[]): Record<string, Book[]> {
 function groupVideosByCategory(videos: Video[]): Record<string, Video[]> {
   return videos.reduce((acc, video) => {
     const category = video.category || 'Uncategorized';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
+    if (!acc[category]) { acc[category] = []; }
     acc[category].push(video);
     return acc;
   }, {} as Record<string, Video[]>);
@@ -236,28 +239,39 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
     }
   }, [selectedBookId, viewMode, playbackSpeed, currentBook]);
   
+  // *** LOGIC TẢI PHỤ ĐỀ ĐÃ ĐƯỢC ĐƠN GIẢN HÓA (CHỈ TỪ FILE .SRT) ***
   useEffect(() => {
     if (viewMode !== 'videos' || !selectedVideoId) return;
+
     const fetchSubtitles = async () => {
-      setIsLoadingSubtitles(true); setSubtitles([]); setCurrentSubtitle(null);
+      setIsLoadingSubtitles(true);
+      setSubtitles([]);
+      setCurrentSubtitle(null);
+
       const currentVideo = videosData.find(v => v.id === selectedVideoId);
+
+      // Nếu không tìm thấy video hoặc video không có srtUrl, dừng lại.
+      if (!currentVideo?.srtUrl) {
+          console.error("Video không có srtUrl được định nghĩa.");
+          setIsLoadingSubtitles(false);
+          return;
+      }
+
       try {
-        let formattedSubtitles: Subtitle[] = [];
-        if (currentVideo?.srtUrl) {
           const response = await fetch(currentVideo.srtUrl);
-          if (!response.ok) throw new Error(`Không thể tải file SRT: ${currentVideo.srtUrl}`);
+          if (!response.ok) {
+            throw new Error(`Không thể tải file SRT: ${currentVideo.srtUrl}`);
+          }
           const srtText = await response.text();
-          formattedSubtitles = parseSrt(srtText);
-        } else {
-          const response = await fetch(`/api/captions?videoID=${selectedVideoId}`);
-          if (!response.ok) throw new Error('Không thể tải phụ đề từ API.');
-          const data = await response.json();
-          formattedSubtitles = data.map((sub: any) => ({ start: parseFloat(sub.start), dur: parseFloat(sub.dur), text: cleanupSubtitleText(sub.text) }));
-        }
-        setSubtitles(formattedSubtitles);
-      } catch (error) { console.error("Lỗi tải phụ đề:", error); } 
-      finally { setIsLoadingSubtitles(false); }
+          const formattedSubtitles = parseSrt(srtText);
+          setSubtitles(formattedSubtitles);
+      } catch (error) {
+          console.error("Lỗi khi tải và xử lý file SRT:", error);
+      } finally {
+          setIsLoadingSubtitles(false);
+      }
     };
+
     fetchSubtitles();
   }, [selectedVideoId, viewMode, videosData]);
 
@@ -319,7 +333,7 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
   function renderBookContent() { if (isLoadingVocab) return <div className="text-center p-10 text-gray-500 dark:text-gray-400 animate-pulse">Đang tải...</div>; if (!currentBook) return <div className="text-center p-10">Không tìm thấy sách.</div>; const contentLines = currentBook.content.trim().split(/\n+/); return ( <div className="font-['Inter',_sans-serif] text-gray-800 dark:text-gray-200 px-2 sm:px-4 pb-24"> {contentLines.map((line, index) => { if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>; const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g); const renderableParts = parts.map((part, partIndex) => { if (!part) return null; const isWord = /^\w+$/.test(part); const normalizedPart = part.toLowerCase(); const isVocabWord = isWord && vocabMap.has(normalizedPart); if (isVocabWord) { return ( <span key={`${index}-${partIndex}`} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer" onClick={() => handleWordClick(part)} > {part} </span> ); } return <span key={`${index}-${partIndex}`}>{part}</span>; }).filter(Boolean); const isLikelyChapterTitle = index === 0 && line.length < 60; if (isLikelyChapterTitle) return <h2 key={`line-${index}`} className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-6 text-center">{renderableParts}</h2>; return <p key={`line-${index}`} className="text-base sm:text-lg text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>; })} </div> ); }
   function renderBookReader() { return ( <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-900 py-6 sm:py-8"> <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8 md:p-10 relative"> {currentBook && (<div className="mb-6 sm:mb-8 pb-4 border-b border-gray-200 dark:border-gray-700"> <h1 className="text-2xl sm:text-3xl font-bold text-center mb-2">{currentBook.title}</h1> {currentBook.author && <p className="text-sm text-center text-gray-500 dark:text-gray-400">Tác giả: {currentBook.author}</p>} <div className="mt-6 flex flex-wrap justify-center items-center gap-4"> {currentUser && bookVocabularyCardIds.length > 0 && (<button onClick={() => setIsBatchPlaylistModalOpen(true)} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>Lưu {bookVocabularyCardIds.length} từ vựng</button>)}<button onClick={() => setIsStatsModalOpen(true)} className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white dark:text-gray-200 dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"><StatsIcon /> Thống kê Sách</button> </div> </div>)} {renderBookContent()} </div> </main> ); }
   function renderLibrary(type: 'books' | 'videos') { if (type === 'books') { const groupedBooks = groupBooksByCategory(booksData); return ( <div className="p-4 md:p-6 lg:p-8 space-y-8">{Object.entries(groupedBooks).map(([category, booksInCategory]) => (<section key={category}><h2 className="text-2xl font-bold mb-4">{category}</h2><div className="flex overflow-x-auto space-x-4 pb-4 -mx-4 px-4">{booksInCategory.map(book => (<div key={book.id} className="flex-shrink-0 w-40 cursor-pointer group" onClick={() => handleSelectBook(book.id)}><div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg shadow-lg mb-2 group-hover:shadow-xl"><img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover rounded-lg" /></div><h3 className="font-semibold truncate">{book.title}</h3><p className="text-sm text-gray-500 truncate">{book.author}</p></div>))}</div></section>))}</div> ); } else { const groupedVideos = groupVideosByCategory(videosData); return ( <div className="p-4 md:p-6 lg:p-8 space-y-8">{Object.entries(groupedVideos).map(([category, videosInCategory]) => (<section key={category}><h2 className="text-2xl font-bold mb-4">{category}</h2><div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">{videosInCategory.map(video => (<div key={video.id} className="cursor-pointer group" onClick={() => handleSelectVideo(video.id)}><div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg shadow-lg mb-2 group-hover:shadow-xl"><img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover rounded-lg" /></div><h3 className="font-semibold truncate">{video.title}</h3><p className="text-sm text-gray-500 truncate">{video.author}</p></div>))}</div></section>))}</div> ); } }
-  function renderVideoPlayer() { const currentVideo = videosData.find(v => v.id === selectedVideoId); return ( <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-900 py-6 sm:py-8"><div className="max-w-4xl mx-auto flex flex-col h-full px-4">{currentVideo && <h1 className="text-2xl font-bold text-center mb-4">{currentVideo.title}</h1>}<div className="w-full aspect-video bg-black rounded-lg overflow-hidden shadow-2xl flex-shrink-0"><YouTube videoId={selectedVideoId!} opts={{ width: '100%', height: '100%' }} onReady={onPlayerReady} onStateChange={onPlayerStateChange} className="w-full h-full"/></div><div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg text-center text-xl md:text-2xl font-semibold min-h-[8rem] flex items-center justify-center shadow-inner flex-grow">{renderInteractiveSubtitle()}</div></div></main> ); }
+  function renderVideoPlayer() { const currentVideo = videosData.find(v => v.id === selectedVideoId); return ( <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-900 py-6 sm:py-8"><div className="max-w-4xl mx-auto flex flex-col h-full px-4">{currentVideo && <h1 className="text-2xl font-bold text-center mb-4">{currentVideo.title}</h1>}<div className="w-full aspect-video bg-black rounded-lg overflow-hidden shadow-2xl flex-shrink-0"><YouTube videoId={selectedVideoId!} opts={{ width: '100%', height: '100%' }} onReady={onPlayerReady} onStateChange={onPlayerStateChange} className="w-full h-full"/></div><div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg text-center text-xl md:text-2xl font-semibold min-h-[8rem] flex flex-wrap items-center justify-center shadow-inner flex-grow">{renderInteractiveSubtitle()}</div></div></main> ); }
 
   const isReadingOrWatching = selectedBookId || selectedVideoId;
 
