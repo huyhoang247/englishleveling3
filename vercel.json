@@ -1,0 +1,10 @@
+// --- START OF FILE vercel.json ---
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ]
+}
+// --- END OF FILE vercel.json ---
