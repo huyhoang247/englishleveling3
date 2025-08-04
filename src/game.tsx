@@ -1,4 +1,4 @@
-// --- START OF FILE game.tsx (FIXED VERSION) ---
+// --- START OF FILE game.tsx (MODIFIED VERSION) ---
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import YouTube from 'react-youtube';
@@ -6,7 +6,7 @@ import FlashcardDetailModal from './story/flashcard.tsx';
 import { defaultVocabulary } from './list-vocabulary.ts';
 import { defaultImageUrls as gameImageUrls } from './image-url.ts';
 import { Book, sampleBooks as initialSampleBooks } from './books-data.ts';
-import { Video, sampleVideos } from './video-data.ts';
+import { Video, sampleVideos } from './video-data.ts'; // Đảm bảo import từ file đã sửa
 import { auth, db } from './firebase.js'; 
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -58,6 +58,37 @@ interface BookStats { totalWords: number; uniqueWordsCount: number; vocabMatchCo
 interface Subtitle { start: number; dur: number; text: string; }
 
 // --- Utility Functions ---
+
+// *** NEW FUNCTION TO PARSE SRT FILES ***
+function parseSrt(srtContent: string): Subtitle[] {
+  const parseSrtTime = (time: string): number => {
+    const parts = time.split(/[:,]/);
+    const h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    const s = parseInt(parts[2], 10) || 0;
+    const ms = parseInt(parts[3], 10) || 0;
+    return h * 3600 + m * 60 + s + ms / 1000;
+  };
+
+  const blocks = srtContent.trim().split(/\n\s*\n/);
+
+  return blocks.map(block => {
+    const lines = block.split('\n');
+    if (lines.length < 3) return null;
+
+    const timeLine = lines[1];
+    const timeMatch = timeLine.match(/(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/);
+    if (!timeMatch) return null;
+
+    const start = parseSrtTime(timeMatch[1]);
+    const end = parseSrtTime(timeMatch[2]);
+    const dur = end - start;
+    const text = lines.slice(2).join(' ').trim();
+
+    return { start, dur, text };
+  }).filter((sub): sub is Subtitle => sub !== null);
+}
+
 function groupBooksByCategory(books: Book[]): Record<string, Book[]> {
   return books.reduce((acc, book) => {
     const category = book.category || 'Uncategorized';
@@ -206,21 +237,47 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
     }
   }, [selectedBookId, viewMode, playbackSpeed, currentBook]);
   
+  // *** MODIFIED SUBTITLE FETCHING LOGIC ***
   useEffect(() => {
     if (viewMode !== 'videos' || !selectedVideoId) return;
+
     const fetchSubtitles = async () => {
-      setIsLoadingSubtitles(true); setSubtitles([]); setCurrentSubtitle(null);
+      setIsLoadingSubtitles(true);
+      setSubtitles([]);
+      setCurrentSubtitle(null);
+
+      const currentVideo = videosData.find(v => v.id === selectedVideoId);
+
       try {
-        const response = await fetch(`/api/captions?videoID=${selectedVideoId}`);
-        if (!response.ok) throw new Error('Không thể tải phụ đề.');
-        const data = await response.json();
-        const formattedSubtitles = data.map((sub: any) => ({ start: parseFloat(sub.start), dur: parseFloat(sub.dur), text: sub.text }));
+        let formattedSubtitles: Subtitle[] = [];
+
+        if (currentVideo?.srtUrl) {
+          // Case 1: Load from local SRT file
+          const response = await fetch(currentVideo.srtUrl);
+          if (!response.ok) throw new Error(`Không thể tải file SRT: ${currentVideo.srtUrl}`);
+          const srtText = await response.text();
+          formattedSubtitles = parseSrt(srtText);
+        } else {
+          // Case 2: Fallback to API
+          const response = await fetch(`/api/captions?videoID=${selectedVideoId}`);
+          if (!response.ok) throw new Error('Không thể tải phụ đề từ API.');
+          const data = await response.json();
+          formattedSubtitles = data.map((sub: any) => ({
+            start: parseFloat(sub.start),
+            dur: parseFloat(sub.dur),
+            text: sub.text,
+          }));
+        }
         setSubtitles(formattedSubtitles);
-      } catch (error) { console.error("Lỗi tải phụ đề:", error); } 
-      finally { setIsLoadingSubtitles(false); }
+      } catch (error) {
+        console.error("Lỗi tải phụ đề:", error);
+      } finally {
+        setIsLoadingSubtitles(false);
+      }
     };
+
     fetchSubtitles();
-  }, [selectedVideoId, viewMode]);
+  }, [selectedVideoId, viewMode, videosData]);
 
   // --- MEMOIZED VALUES ---
   const bookVocabularyCardIds = useMemo(() => { if (!currentBook || vocabMap.size === 0) return []; const wordsInBook = new Set<string>(); (currentBook.content.match(/\b\w+\b/g) || []).forEach(word => { const normalizedWord = word.toLowerCase(); if (vocabMap.has(normalizedWord)) wordsInBook.add(normalizedWord); }); const cardIdMap = new Map(defaultVocabulary.map((word, index) => [word.toLowerCase(), index + 1])); return Array.from(wordsInBook).map(word => cardIdMap.get(word)).filter((id): id is number => id !== undefined); }, [currentBook, vocabMap]);
@@ -247,9 +304,10 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
         if (!playerRef.current || subtitles.length === 0) return;
         const currentTime = playerRef.current.getCurrentTime();
         const activeSubtitle = subtitles.find(sub => currentTime >= sub.start && currentTime < (sub.start + sub.dur));
-        if (activeSubtitle?.text !== currentSubtitle?.text) {
-          const decodedText = new DOMParser().parseFromString(activeSubtitle.text, "text/html").documentElement.textContent || "";
-          setCurrentSubtitle({ ...activeSubtitle, text: decodedText });
+        // *** Small fix to prevent decoding issues with text from SRT ***
+        const decodedText = activeSubtitle ? new DOMParser().parseFromString(activeSubtitle.text, "text/html").documentElement.textContent || "" : null;
+        if (activeSubtitle && decodedText !== currentSubtitle?.text) {
+          setCurrentSubtitle({ ...activeSubtitle, text: decodedText! });
         } else if (!activeSubtitle && currentSubtitle !== null) { setCurrentSubtitle(null); }
       }, 200);
     }
@@ -305,4 +363,3 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
     </div>
   );
 }
-// --- END OF FILE game.tsx (FIXED VERSION) ---
