@@ -47,7 +47,6 @@ const ExamIcon = ({ className }: { className: string }) => ( <svg xmlns="http://
 const shuffleArray = <T extends any[]>(array: T): T => { const shuffledArray = [...array]; for (let i = shuffledArray.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; } return shuffledArray as T; };
 const generateImageUrl = (imageIndex?: number) => { if (imageIndex !== undefined && typeof imageIndex === 'number') { const adjustedIndex = imageIndex - 1; if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) { return defaultImageUrls[adjustedIndex]; } } return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; };
 const capitalizeFirstLetter = (str: string) => { if (!str) return ''; return str.charAt(0).toUpperCase() + str.slice(1); };
-// --- FIX: Sửa lại hàm highlightText để nhận regex đã được tạo sẵn, giúp tối ưu hiệu năng.
 const highlightText = (text: string, regex: RegExp) => {
   if (!text) return <span>{text}</span>;
   const parts = text.split(regex);
@@ -76,7 +75,6 @@ const BasePopup: React.FC<{
   useEffect(() => { setActiveTab(0); }, [currentWord]);
   const searchWord = wordsToSearch[activeTab];
 
-  // --- FIX: Tối ưu hóa: Tạo regex một lần bằng useMemo thay vì tạo trong mỗi lần lặp.
   const searchRegexForHighlight = useMemo(() => {
     if (!searchWord || !searchWord.trim()) return null;
     const escapedWord = searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -92,7 +90,8 @@ const BasePopup: React.FC<{
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" onClick={onClose}>
-        <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        {/* --- FIX: Giảm độ phức tạp của shadow từ 2xl -> xl để cải thiện hiệu năng --- */}
+        <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="p-6 border-b border-gray-200 flex-shrink-0">
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors z-10"><span className="font-bold text-xl leading-none">×</span></button>
                 <h3 className="text-xl font-bold text-gray-800">{`${titlePrefix} chứa "${capitalizeFirstLetter(searchWord)}"`}</h3>
@@ -112,7 +111,6 @@ const BasePopup: React.FC<{
                             {searchResults.map((result, index) => (
                                 <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                                     <p className={`text-gray-800 text-base leading-relaxed ${isPhrase ? 'font-semibold' : 'font-medium'}`}>
-                                        {/* Truyền regex đã được tạo sẵn vào */}
                                         {highlightText(result.english, searchRegexForHighlight)}
                                     </p>
                                     <p className="mt-2 text-gray-500 text-sm italic">{result.vietnamese}</p>
@@ -620,8 +618,9 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
           )}
         </div>
         {showImagePopup && currentWord && (selectedPractice % 100 === 1) && (
-          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-2xl">
+          // --- FIX: Loại bỏ backdrop-blur và giảm shadow để nhất quán tối ưu hiệu năng ---
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
+            <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-xl">
               <button onClick={() => setShowImagePopup(false)} className="absolute top-4 right-4 text-gray-700 hover:text-gray-900 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-all"><span className="text-xl font-bold">✕</span></button>
               <h3 className="text-2xl font-bold text-center mb-6 text-indigo-800">{currentWord.word}</h3>
               <img src={generateImageUrl(currentWord.imageIndex)} alt={currentWord.word} className="rounded-lg shadow-md max-w-full max-h-full object-contain" />
