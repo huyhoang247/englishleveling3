@@ -1,20 +1,19 @@
-// --- START OF FILE scripts/generate-data.js (FINAL, FIXED PATH FOR SCRIPTS FOLDER) ---
+// --- START OF FILE scripts/generate-data.js (FINAL, COMBINED FIX) ---
 
-// === DÒNG CODE MỚI ĐỂ SỬA LỖI FETCH ===
+// === SỬA LỖI 1: Cung cấp hàm fetch ổn định ===
 global.fetch = require('node-fetch');
-// ======================================
+// ===========================================
 
 const YouTube = require('youtube-sr').default;
 const { getSubtitles } = require('youtube-captions-scraper');
 const fs = require('fs');
 
-// *** DÒNG NÀY ĐÃ ĐƯỢC SỬA ***
-// Đi ra khỏi thư mục 'scripts' rồi mới vào 'src'
+// === SỬA LỖI 2: Đường dẫn require đúng ===
 const { sampleChannels } = require('../src/channel-data.js'); 
+// ========================================
 
 // ======================= CÀI ĐẶT =======================
 const MAX_VIDEOS_PER_CHANNEL = 15;
-// Sửa lại đường dẫn output để nó cũng bắt đầu từ thư mục gốc
 const OUTPUT_VIDEO_DATA_FILE = './public/video-data.json';
 const OUTPUT_CAPTIONS_DIR = './public/captions';
 // =======================================================
@@ -110,4 +109,4 @@ async function generateAllData() {
 }
 
 generateAllData();
-// --- END OF FILE scripts/generate-data.js (FINAL, FIXED PATH FOR SCRIPTS FOLDER) ---
+// --- END OF FILE scripts/generate-data.js (FINAL, COMBINED FIX) ---
