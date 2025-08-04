@@ -1,6 +1,6 @@
-// --- START OF FILE api/captions.ts (FIXED - dùng youtube-sr đúng cách) ---
+// --- START OF FILE api/captions.ts (FINAL, CORRECTED VERSION) ---
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import YouTube from 'youtube-sr';
+import { getSubtitles } from 'youtube-captions-scraper';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { videoID } = req.query;
@@ -17,41 +17,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
+  // Đọc cookie từ biến môi trường của Vercel (nếu có)
+  const cookie = process.env.YOUTUBE_COOKIE;
+
   try {
-    // BƯỚC 1: Lấy đối tượng video từ ID
-    const video = await YouTube.getVideo(`https://www.youtube.com/watch?v=${videoID}`);
-    
-    if (!video) {
-        return res.status(404).json({ error: 'Không tìm thấy thông tin video.' });
-    }
-
-    // BƯỚC 2: Từ đối tượng video, thử lấy phụ đề 'en'
-    let captions = await video.fetchCaptions({ language: 'en' });
-    
-    // Nếu không có 'en', thử lấy phụ đề tự động 'a.en'
-    if (!captions || captions.length === 0) {
-      captions = await video.fetchCaptions({ language: 'a.en' });
-    }
-
-    // Nếu vẫn không có, trả về lỗi
-    if (!captions || captions.length === 0) {
-      return res.status(404).json({ error: 'Không tìm thấy phụ đề cho video này.' });
-    }
-
-    // Định dạng lại dữ liệu cho giống với code frontend đang mong đợi
-    const formattedCaptions = captions.map(cap => ({
-        start: (cap.start / 1000).toFixed(3),
-        dur: (cap.duration / 1000).toFixed(3),
-        text: cap.text
-    }));
-
-    // Trả về dữ liệu thành công
-    return res.status(200).json(formattedCaptions);
+    // Thử lấy phụ đề 'en' (do người dùng tạo)
+    const subtitles = await getSubtitles({ videoID, lang: 'en', cookie });
+    return res.status(200).json(subtitles);
 
   } catch (error) {
-    console.error(`Lỗi nghiêm trọng khi lấy phụ đề cho ${videoID}:`, error);
-    // Trả về thông báo lỗi chi tiết hơn khi debug
-    return res.status(500).json({ error: 'Đã xảy ra lỗi phía server.', details: error.message });
+    // Nếu thất bại, thử lấy phụ đề 'a.en' (tự động)
+    try {
+      const autoGenSubtitles = await getSubtitles({ videoID, lang: 'a.en', cookie });
+      return res.status(200).json(autoGenSubtitles);
+    } catch (finalError) {
+      // Nếu cả hai đều thất bại, trả về lỗi
+      console.error(`Không thể lấy bất kỳ phụ đề nào cho video ${videoID}:`, finalError);
+      return res.status(404).json({ error: 'Không tìm thấy phụ đề cho video này.' });
+    }
   }
 }
-// --- END OF FILE api/captions.ts (FIXED - dùng youtube-sr đúng cách) ---
+// --- END OF FILE api/captions.ts (FINAL, CORRECTED VERSION) ---
