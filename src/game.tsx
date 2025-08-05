@@ -1,5 +1,3 @@
-// --- START OF FILE game.tsx (FIXED) ---
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import YouTube from 'react-youtube';
 import FlashcardDetailModal from './story/flashcard.tsx';
@@ -58,19 +56,27 @@ interface BookStats { totalWords: number; uniqueWordsCount: number; vocabMatchCo
 interface Subtitle { start: number; dur: number; text: string; }
 
 // --- Utility Functions ---
-function cleanupSubtitleText(text: string): string {
-  // 1. Loại bỏ tag HTML, thay bằng space để không mất rìa chữ
-  const withoutTags = text.replace(/<[^>]+>/g, ' ');
 
-  // 2. Chuẩn hóa newline thành space, rồi collapse nhiều space thành 1
-  return withoutTags
-    .split(/\r?\n/)           // tách theo dòng
-    .map(line => line.trim()) // bỏ space đầu-cuối mỗi dòng
-    .join(' ')                // nối các dòng bằng 1 space
-    .replace(/\s+/g, ' ')     // collapse multi-space
-    .trim();
+// *** BƯỚC 1: SỬA LỖI - HÀM LÀM SẠCH VĂN BẢN PHỤ ĐỀ ***
+// Hàm này sử dụng DOMParser của trình duyệt để loại bỏ thẻ HTML một cách thông minh,
+// nó sẽ tự động giữ lại khoảng trắng giữa các thẻ (ví dụ: <i>text1</i> <i>text2</i> -> "text1 text2")
+// Sau đó, nó chuẩn hóa tất cả khoảng trắng thừa thành một khoảng trắng duy nhất.
+function cleanupSubtitleText(text: string): string {
+    try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        // 'textContent' là chìa khóa: nó lấy văn bản và bỏ thẻ, giữ lại khoảng trắng đúng.
+        const decodedText = doc.body.textContent || "";
+        // Chuẩn hóa khoảng trắng: \s+ (một hoặc nhiều khoảng trắng) thành " "
+        return decodedText.replace(/\s+/g, ' ').trim();
+    } catch (e) {
+        // Phương pháp dự phòng, kém chính xác hơn
+        return text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    }
 }
 
+// *** BƯỚC 2: SỬA LỖI - HÀM XỬ LÝ FILE SRT ***
+// Hàm này được cập nhật để sử dụng hàm `cleanupSubtitleText` đã sửa ở trên.
 function parseSrt(srtContent: string): Subtitle[] {
   const parseSrtTime = (time: string): number => {
     const parts = time.split(/[:,]/);
@@ -83,7 +89,7 @@ function parseSrt(srtContent: string): Subtitle[] {
   const blocks = srtContent.trim().split(/\n\s*\n/);
   return blocks.map(block => {
     const lines = block.split('\n');
-    if (lines.length < 2) return null; // Can be 2 lines if there's no text
+    if (lines.length < 2) return null;
     const timeLine = lines[1];
     const timeMatch = timeLine.match(/(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/);
     if (!timeMatch) return null;
@@ -91,16 +97,15 @@ function parseSrt(srtContent: string): Subtitle[] {
     const end = parseSrtTime(timeMatch[2]);
     const dur = end - start;
     
-    // Join all text lines together, then clean them up robustly.
+    // Nối tất cả các dòng text lại với nhau BẰNG KHOẢNG TRẮNG, rồi mới làm sạch
     const rawText = lines.slice(2).join(' ');
     const text = cleanupSubtitleText(rawText);
 
-    if (!text) return null; // Don't include subtitles with no text
+    if (!text) return null; // Bỏ qua phụ đề rỗng
 
     return { start, dur, text };
   }).filter((sub): sub is Subtitle => sub !== null);
 }
-
 
 function groupBooksByCategory(books: Book[]): Record<string, Book[]> {
   return books.reduce((acc, book) => {
@@ -294,6 +299,7 @@ export default function EbookReaderAndYoutubePlayer({ hideNavBar, showNavBar }: 
         currentTime >= sub.start && currentTime < (sub.start + sub.dur)
       );
       setCurrentSubtitle(prevSubtitle => {
+        // Chỉ cập nhật state nếu subtitle thực sự thay đổi để tối ưu hiệu năng
         if (activeSubtitle?.text !== prevSubtitle?.text) {
           return activeSubtitle || null;
         }
