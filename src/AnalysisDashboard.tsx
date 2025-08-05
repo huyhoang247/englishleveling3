@@ -1,5 +1,3 @@
-// --- START OF FILE: src/components/analysis/AnalysisDashboard.tsx ---
-
 import React, { useState, useEffect, useMemo, FC, ReactNode } from 'react';
 import { db, auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
 import { collection, getDocs, QuerySnapshot, DocumentData } from 'firebase/firestore';
@@ -22,6 +20,15 @@ const SortIcon = ({ direction }: { direction?: 'asc' | 'desc' }) => (
         {!direction && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />}
     </svg>
 );
+
+// [SỬA LỖI MÚI GIỜ] Hàm trợ giúp để định dạng ngày theo giờ địa phương (YYYY-MM-DD)
+const formatDateToLocalYYYYMMDD = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 
 // --- Định nghĩa kiểu dữ liệu cho phân tích ---
 interface LearningActivity {
@@ -61,19 +68,16 @@ const ChartCard: FC<{ title: string; children: ReactNode }> = ({ title, children
     </div>
 );
 
-// --- [MỚI] Component Lịch hoạt động (Activity Calendar) ---
+// --- Component Lịch hoạt động (Activity Calendar) ---
 const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = ({ activityData }) => {
     const calendarData = useMemo(() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Bắt đầu từ thứ Hai của tuần hiện tại
-        const dayOfWeek = today.getDay(); // 0=CN, 1=T2,...
+        const dayOfWeek = today.getDay(); 
         const startOfWeek = new Date(today);
-        // Điều chỉnh về thứ Hai (nếu là CN, lùi 6 ngày, ngược lại lùi dayOfWeek-1 ngày)
         startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
 
-        // Lùi lại 4 tuần từ đầu tuần này để lấy ngày đầu tiên của lưới 5x7
         const startDate = new Date(startOfWeek);
         startDate.setDate(startOfWeek.getDate() - (4 * 7));
 
@@ -83,7 +87,9 @@ const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = ({ activityData
         for (let i = 0; i < 35; i++) {
             const date = new Date(startDate);
             date.setDate(startDate.getDate() + i);
-            const dateString = date.toISOString().split('T')[0];
+            
+            // [SỬA LỖI MÚI GIỜ] Sử dụng hàm trợ giúp để đảm bảo key của lịch khớp với key của dữ liệu
+            const dateString = formatDateToLocalYYYYMMDD(date);
 
             const hasActivity = activityDates.has(dateString);
             const activityDetail = activityData[dateString] || { new: 0, review: 0 };
@@ -130,8 +136,6 @@ const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = ({ activityData
                     
                     return (
                         <div key={index} title={day.tooltip} className={`${baseClass} ${dayClass}`}>
-                            {/* SỬA LỖI: Chỉ hiển thị checkmark nếu ngày đó có hoạt động VÀ không phải là ngày trong tương lai. 
-                                Điều này ngăn việc tick mờ xuất hiện ở các ngày sau ngày hôm nay. */}
                             {(day.hasActivity && !day.isFuture) ? <CalendarCheckIcon /> : <span>{day.dayOfMonth}</span>}
                         </div>
                     );
@@ -161,7 +165,7 @@ export default function AnalysisDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
-  const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({}); // [MỚI] State cho lịch hoạt động
+  const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
 
@@ -192,7 +196,6 @@ export default function AnalysisDashboard() {
         const dailyActivity: DailyActivityMap = {};
         const allCompletionsForRecent: { word: string; date: Date }[] = [];
         
-        // --- CORRECTED LOGIC for Daily Activity (New vs Review) ---
         completedWordsSnapshot.forEach(doc => {
             const data = doc.data();
             const lastCompletedAt = data.lastCompletedAt?.toDate();
@@ -200,7 +203,9 @@ export default function AnalysisDashboard() {
 
             allCompletionsForRecent.push({word: doc.id, date: lastCompletedAt});
 
-            const dateString = lastCompletedAt.toISOString().split('T')[0];
+            // [SỬA LỖI MÚI GIỜ] Sử dụng hàm trợ giúp để lấy ngày tháng theo giờ địa phương
+            const dateString = formatDateToLocalYYYYMMDD(lastCompletedAt);
+
             if (!dailyActivity[dateString]) {
                 dailyActivity[dateString] = { new: 0, review: 0 };
             }
@@ -243,11 +248,12 @@ export default function AnalysisDashboard() {
 
             allCompletionsForRecent.push({word: doc.id, date: lastCompletedAt});
 
-            const dateString = lastCompletedAt.toISOString().split('T')[0];
+            // [SỬA LỖI MÚI GIỜ] Sử dụng hàm trợ giúp để lấy ngày tháng theo giờ địa phương
+            const dateString = formatDateToLocalYYYYMMDD(lastCompletedAt);
+            
             if (!dailyActivity[dateString]) {
                 dailyActivity[dateString] = { new: 0, review: 0 };
             }
-            // Assume multi-word completions are reviews
             dailyActivity[dateString].review++;
 
             if (data.completedIn) {
@@ -259,7 +265,7 @@ export default function AnalysisDashboard() {
             }
         });
         
-        setDailyActivityData(dailyActivity); // [MỚI] Lưu dữ liệu hoạt động hàng ngày
+        setDailyActivityData(dailyActivity);
 
         const learningActivityData: LearningActivity[] = Object.entries(dailyActivity)
             .map(([date, counts]) => ({ date, ...counts }))
@@ -401,7 +407,6 @@ export default function AnalysisDashboard() {
             </div>
         </div>
 
-        {/* --- [MỚI] Vị trí của Lịch hoạt động --- */}
         <div className="mb-6">
             <ActivityCalendar activityData={dailyActivityData} />
         </div>
