@@ -59,20 +59,21 @@ interface Subtitle { start: number; dur: number; text: string; }
 
 // --- Utility Functions ---
 function cleanupSubtitleText(text: string): string {
-  // This function cleans subtitle text. The main issue is that SRT files can contain
-  // HTML tags for formatting (e.g., <i>, <b>, <c>). When these tags are simply
-  // removed, words from adjacent tags can merge, like "<i>Hello</i><i>World</i>" -> "HelloWorld".
-  
-  // The solution is to replace every HTML tag with a space. This ensures that
-  // words remain separated. After that, we collapse any resulting multiple
-  // spaces into a single space and trim whitespace from the ends.
-  
-  // This approach prioritizes readability over decoding complex HTML entities,
-  // which is the correct trade-off for subtitles.
-  return text
-    .replace(/<[^>]*>/g, ' ') // Replace all tags with a space
-    .replace(/\s+/g, ' ')      // Collapse multiple spaces into one
-    .trim();                   // Remove leading/trailing space
+  try {
+    // Auto-generated subtitles often have tags like "<i>Hello</i><i>World</i>".
+    // A simple parse would result in "HelloWorld".
+    // The fix is to surgically insert a space between adjacent tags before parsing.
+    const spacedText = text.replace(/></g, '> <');
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(spacedText, 'text/html');
+    const decodedText = doc.body.textContent || "";
+    // Finally, normalize all whitespace to single spaces.
+    return decodedText.replace(/\s+/g, ' ').trim();
+  } catch (e) {
+    // Fallback in case DOMParser is not available or fails.
+    return text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
 }
 
 
