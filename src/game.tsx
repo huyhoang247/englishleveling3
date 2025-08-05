@@ -1,4 +1,4 @@
-// --- START OF FILE game.tsx (FINAL FIX FOR WHITESPACE) ---
+// --- START OF FILE game.tsx (FIXED) ---
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import YouTube from 'react-youtube';
@@ -59,25 +59,18 @@ interface Subtitle { start: number; dur: number; text: string; }
 
 // --- Utility Functions ---
 function cleanupSubtitleText(text: string): string {
-  try {
-    // Auto-generated subtitles often have tags like "<i>Hello</i><i>World</i>".
-    // A simple parse would result in "HelloWorld".
-    // The fix is to surgically insert a space between adjacent tags before parsing.
-    const spacedText = text.replace(/></g, '> <');
+  // 1. Loại bỏ tag HTML, thay bằng space để không mất rìa chữ
+  const withoutTags = text.replace(/<[^>]+>/g, ' ');
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(spacedText, 'text/html');
-    const decodedText = doc.body.textContent || "";
-    // Finally, normalize all whitespace to single spaces.
-    return decodedText.replace(/\s+/g, ' ').trim();
-  } catch (e) {
-    // Fallback in case DOMParser is not available or fails.
-    return text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-  }
+  // 2. Chuẩn hóa newline thành space, rồi collapse nhiều space thành 1
+  return withoutTags
+    .split(/\r?\n/)           // tách theo dòng
+    .map(line => line.trim()) // bỏ space đầu-cuối mỗi dòng
+    .join(' ')                // nối các dòng bằng 1 space
+    .replace(/\s+/g, ' ')     // collapse multi-space
+    .trim();
 }
 
-
-// *** MODIFIED parseSrt FUNCTION TO USE cleanupSubtitleText ***
 function parseSrt(srtContent: string): Subtitle[] {
   const parseSrtTime = (time: string): number => {
     const parts = time.split(/[:,]/);
