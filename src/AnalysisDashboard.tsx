@@ -55,81 +55,117 @@ const ChartCard: FC<{ title: string; children: ReactNode }> = ({ title, children
 );
 
 
-// --- COMPONENT MỤC TIÊU HÀNG NGÀY (BỂ CHỨA) ---
+// --- COMPONENT CỘT MỐC MỤC TIÊU HÀNG NGÀY (THIẾT KẾ MỚI) ---
 const TrophyIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.25 2.25a.75.75 0 00-1.5 0v1.165a.75.75 0 001.5 0V2.25zM11.25 18.75a.75.75 0 00-1.5 0v-1.165a.75.75 0 001.5 0v1.165zM5.25 10.5a.75.75 0 01.75-.75h1.165a.75.75 0 010 1.5H6a.75.75 0 01-.75-.75zM18.75 10.5a.75.75 0 01-.75.75h-1.165a.75.75 0 010-1.5h1.165a.75.75 0 01.75.75zM6.31 6.31a.75.75 0 00-1.06-1.06L3.93 6.57A.75.75 0 005 7.63l1.31-1.32zM14.75 14.75a.75.75 0 00-1.06-1.06L12.37 15a.75.75 0 001.06 1.06l1.32-1.31zM6.31 14.75a.75.75 0 001.06-1.06L6.05 12.37A.75.75 0 005 13.43l1.31 1.32zM14.75 6.31a.75.75 0 00-1.06 1.06L15 8.69A.75.75 0 1016.06 7.63l-1.31-1.32zM10 5.25a4.75 4.75 0 100 9.5 4.75 4.75 0 000-9.5zM8.25 10a1.75 1.75 0 113.5 0 1.75 1.75 0 01-3.5 0z" clipRule="evenodd" /></svg>;
-const GiftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a3 3 0 015.252-2.121l.738.64.738-.64A3 3 0 0115 5v2.212a3 3 0 01-.679 1.943l-4.261 4.26a1.5 1.5 0 01-2.121 0l-4.26-4.26A3 3 0 015 7.212V5zm10 0a1 1 0 10-2 0v.788a1 1 0 01-.321.707l-4.26 4.26a.5.5 0 01-.707 0l-4.26-4.26A1 1 0 014 5.788V5a1 1 0 10-2 0v2.212a5 5 0 001.127 3.238l4.26 4.26a3.5 3.5 0 004.95 0l4.26-4.26A5 5 0 0015 7.212V5z" clipRule="evenodd" /></svg>;
+const GiftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a2 2 0 00-2 2v1a2 2 0 00-2 2v1a2 2 0 00-2 2v2h16v-2a2 2 0 00-2-2V7a2 2 0 00-2-2V4a2 2 0 00-2-2h-4zM5 14v1a1 1 0 001 1h8a1 1 0 001-1v-1H5z" /></svg>;
+const CheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>;
 
-interface DailyGoalTrackerProps {
+const GOAL_MILESTONES = [5, 10, 20, 50, 100, 200];
+
+interface DailyGoalMilestonesProps {
   wordsLearnedToday: number;
-  onClaimReward: () => void;
-  isRewardAlreadyClaimed: boolean;
+  onClaimReward: (goalValue: number) => void;
+  claimedGoals: number[];
 }
-const GOAL_OPTIONS = [5, 10, 20, 50, 100, 200];
 
-const DailyGoalTracker: FC<DailyGoalTrackerProps> = ({ wordsLearnedToday, onClaimReward, isRewardAlreadyClaimed }) => {
-  const [dailyGoal, setDailyGoal] = useState<number>(GOAL_OPTIONS[2]); // Mặc định là 20
-  const [isClaimed, setIsClaimed] = useState<boolean>(isRewardAlreadyClaimed);
+const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, onClaimReward, claimedGoals }) => {
+  const progressInfo = useMemo(() => {
+    // Tìm mốc có thể nhận thưởng (đã đạt nhưng chưa nhận)
+    const claimableGoal = GOAL_MILESTONES.find(g => wordsLearnedToday >= g && !claimedGoals.includes(g));
 
-  const progressPercentage = useMemo(() => Math.min((wordsLearnedToday / dailyGoal) * 100, 100), [wordsLearnedToday, dailyGoal]);
-  const isGoalMet = useMemo(() => wordsLearnedToday >= dailyGoal, [wordsLearnedToday, dailyGoal]);
+    // Tìm mục tiêu kế tiếp (mốc đầu tiên chưa đạt)
+    const nextTargetGoal = GOAL_MILESTONES.find(g => wordsLearnedToday < g) || GOAL_MILESTONES[GOAL_MILESTONES.length - 1];
+    
+    // Tìm mốc trước đó để tính % cho đoạn hiện tại
+    const previousMilestone = [...GOAL_MILESTONES].reverse().find(g => g < nextTargetGoal) || 0;
 
-  useEffect(() => {
-    setIsClaimed(isRewardAlreadyClaimed);
-  }, [isRewardAlreadyClaimed]);
-  
+    const wordsInCurrentSegment = Math.max(0, wordsLearnedToday - previousMilestone);
+    const totalWordsForSegment = nextTargetGoal - previousMilestone;
+    const progressPercentage = totalWordsForSegment > 0 ? (wordsInCurrentSegment / totalWordsForSegment) * 100 : 0;
+
+    return {
+      claimableGoal,
+      nextTargetGoal,
+      progressPercentage,
+      wordsInCurrentSegment,
+      totalWordsForSegment,
+      previousMilestone,
+    };
+  }, [wordsLearnedToday, claimedGoals]);
+
   const handleClaim = () => {
-    onClaimReward();
-    setIsClaimed(true);
+    if (progressInfo.claimableGoal) {
+      onClaimReward(progressInfo.claimableGoal);
+    }
   };
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-3 sm:gap-0">
+      <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-3">
-            <div className="bg-yellow-100 text-yellow-600 p-2 rounded-lg"><TrophyIcon /></div>
+          <div className="bg-yellow-100 text-yellow-600 p-2 rounded-lg"><TrophyIcon /></div>
+          <div>
             <h3 className="text-lg font-bold text-gray-800">Mục tiêu hôm nay</h3>
+            <p className="text-sm text-gray-500">Hoàn thành các cột mốc để nhận thưởng!</p>
+          </div>
         </div>
-        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg flex-wrap">
-          {GOAL_OPTIONS.map(option => (
-            <button key={option} onClick={() => setDailyGoal(option)}
-              className={`px-3 py-1 text-xs sm:text-sm font-semibold rounded-md transition-colors duration-200 ${
-                dailyGoal === option ? 'bg-indigo-600 text-white shadow' : 'text-gray-700 hover:bg-gray-200'
-              }`}
-            >{option}</button>
-          ))}
+        <div className="text-right">
+            <p className="text-2xl font-bold text-indigo-600">{wordsLearnedToday}</p>
+            <p className="text-xs text-gray-500">từ đã học</p>
         </div>
       </div>
-      <div className="flex flex-col md:flex-row items-center gap-6">
-        <div className="w-full md:w-2/3 h-40 relative bg-gray-200 rounded-xl overflow-hidden border-4 border-gray-300">
-          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-blue-500 to-cyan-400 transition-all duration-1000 ease-out" style={{ height: `${progressPercentage}%` }}>
-            <div className="wave"></div><div className="wave wave-2"></div>
-          </div>
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="text-4xl font-extrabold text-white" style={{textShadow: '1px 1px 3px rgba(0,0,0,0.3)'}}>{wordsLearnedToday} / {dailyGoal}</span>
-            <span className="text-lg font-medium text-white" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.3)'}}>Từ đã học</span>
-          </div>
-        </div>
-        <div className="w-full md:w-1/3 flex items-center justify-center h-40">
-          {isGoalMet ? (isClaimed ? (
-              <div className="text-center p-4 bg-green-100 text-green-700 rounded-lg"><p className="font-bold">Đã hoàn thành!</p><p className="text-sm">Bạn thật tuyệt vời!</p></div>
-            ) : (
-              <button onClick={handleClaim} className="flex items-center justify-center px-6 py-4 font-bold text-white bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg shadow-lg hover:scale-105 transform transition-transform duration-200 animate-pulse">
-                <GiftIcon />Nhận thưởng
-              </button>
-            )) : (
-            <div className="text-center text-gray-500">
-              <p className="font-semibold">Cố gắng lên!</p>
-              <p className="text-sm">Chỉ còn {Math.max(0, dailyGoal - wordsLearnedToday)} từ nữa thôi.</p>
+      
+      {/* Thanh tiến trình cột mốc */}
+      <div className="mt-6 mb-8">
+        <div className="relative w-full h-8 flex items-center">
+            {/* Thanh nền */}
+            <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-1.5 bg-gray-200 rounded-full"></div>
+            {/* Thanh tiến độ */}
+            <div className="absolute top-1/2 -translate-y-1/2 left-0 h-1.5 bg-gradient-to-r from-green-400 to-blue-500 rounded-full transition-all duration-500 ease-out" 
+                 style={{ width: `${Math.min(100, (wordsLearnedToday / GOAL_MILESTONES[GOAL_MILESTONES.length - 1]) * 100)}%` }}>
             </div>
-          )}
+
+            {/* Các cột mốc */}
+            <div className="relative w-full flex justify-between items-center">
+                {GOAL_MILESTONES.map(goal => {
+                    const isCompleted = wordsLearnedToday >= goal;
+                    const isClaimed = claimedGoals.includes(goal);
+                    const isClaimable = isCompleted && !isClaimed;
+
+                    let circleClass = 'bg-gray-300 border-gray-400';
+                    if (isCompleted) circleClass = 'bg-green-500 border-green-600';
+                    if (isClaimable) circleClass = 'bg-yellow-400 border-yellow-500 animate-pulse';
+                    
+                    return (
+                        <div key={goal} className="flex flex-col items-center z-10">
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 shadow transition-all duration-300 ${circleClass}`}>
+                                {(isCompleted || isClaimed) && <CheckIcon />}
+                            </div>
+                            <span className={`mt-2 text-xs font-bold ${isCompleted ? 'text-gray-700' : 'text-gray-400'}`}>{goal}</span>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
       </div>
-      <style jsx>{`
-        .wave { background: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M0 20 C 150 40 250 0 400 20 L 400 100 L 0 100 Z' fill='rgba(255,255,255,0.2)'%3e%3c/path%3e%3c/svg%3e") repeat-x; position: absolute; top: -19px; width: 200%; height: 20px; animation: wave 7s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite; transform: translate3d(0, 0, 0); }
-        .wave.wave-2 { top: -15px; animation: wave 7s cubic-bezier(0.36, 0.45, 0.63, 0.53) -.125s infinite, swell 7s ease -1.25s infinite; opacity: 0.8; }
-        @keyframes wave { 0% { margin-left: 0; } 100% { margin-left: -100%; } }
-        @keyframes swell { 0%, 100% { transform: translate3d(0, -5px, 0); } 50% { transform: translate3d(0, 2px, 0); } }
-      `}</style>
+
+      {/* Nút nhận thưởng và thông báo */}
+      <div className="mt-4 h-12 flex items-center justify-center">
+        {progressInfo.claimableGoal ? (
+            <button onClick={handleClaim} className="flex items-center justify-center px-8 py-3 w-full sm:w-auto font-bold text-white bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg shadow-lg hover:scale-105 transform transition-transform duration-200">
+              <GiftIcon /> Nhận thưởng mốc {progressInfo.claimableGoal} từ
+            </button>
+        ) : wordsLearnedToday >= GOAL_MILESTONES[GOAL_MILESTONES.length - 1] && claimedGoals.length === GOAL_MILESTONES.length ? (
+            <div className="text-center p-3 bg-green-100 text-green-700 rounded-lg w-full">
+                <p className="font-bold">Tuyệt vời! Bạn đã hoàn thành tất cả mục tiêu hôm nay!</p>
+            </div>
+        ) : (
+            <div className="text-center text-gray-500 w-full">
+              <p className="font-semibold">Cố gắng đạt mốc tiếp theo: {progressInfo.nextTargetGoal} từ!</p>
+              <p className="text-sm">Bạn cần học thêm {Math.max(0, progressInfo.nextTargetGoal - wordsLearnedToday)} từ nữa.</p>
+            </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -198,8 +234,8 @@ export default function AnalysisDashboard() {
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
   
-  // State cho component mục tiêu hàng ngày
-  const [rewardClaimedForToday, setRewardClaimedForToday] = useState(false); // Trong thực tế, giá trị này nên được lấy từ DB
+  // State cho component mục tiêu hàng ngày (thiết kế mới)
+  const [claimedGoalsToday, setClaimedGoalsToday] = useState<number[]>([]); // Trong thực tế, giá trị này nên lấy từ DB theo ngày
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
@@ -279,11 +315,11 @@ export default function AnalysisDashboard() {
     return todayActivity ? todayActivity.new + todayActivity.review : 0;
   }, [dailyActivityData]);
 
-  const handleClaimReward = () => {
-      console.log("Phần thưởng đã được nhận!");
+  const handleClaimReward = (goalValue: number) => {
+      console.log(`Phần thưởng cho mốc ${goalValue} từ đã được nhận!`);
       // Logic thực tế: cập nhật điểm thưởng cho user trong Firestore, hiển thị pháo hoa, v.v.
-      alert("Chúc mừng bạn đã hoàn thành mục tiêu và nhận được phần thưởng!");
-      setRewardClaimedForToday(true);
+      alert(`Chúc mừng bạn đã hoàn thành mục tiêu ${goalValue} từ và nhận được phần thưởng!`);
+      setClaimedGoalsToday(prev => [...prev, goalValue]);
   };
 
   const sortedWordMastery = useMemo(() => {
@@ -341,12 +377,12 @@ export default function AnalysisDashboard() {
             <div className="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-6 border border-gray-100"><div className="bg-purple-100 text-purple-600 p-3 rounded-full"><ChartBarIcon /></div><div><p className="text-sm text-gray-500">Từ vựng còn lại</p><p className="text-3xl font-bold text-gray-900">{totalWordsAvailable - totalWordsLearned}</p></div></div>
         </div>
 
-        {/* --- TÍCH HỢP BỂ CHỨA MỤC TIÊU TẠI ĐÂY --- */}
+        {/* --- TÍCH HỢP CỘT MỐC MỤC TIÊU (THIẾT KẾ MỚI) --- */}
         <div className="mb-6">
-            <DailyGoalTracker 
+            <DailyGoalMilestones 
                 wordsLearnedToday={wordsLearnedToday}
                 onClaimReward={handleClaimReward}
-                isRewardAlreadyClaimed={rewardClaimedForToday}
+                claimedGoals={claimedGoalsToday}
             />
         </div>
 
