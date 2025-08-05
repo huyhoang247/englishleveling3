@@ -113,7 +113,7 @@ const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = ({ activityData
 
     return (
         <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Chuỗi hoạt động</h3>
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Activity</h3>
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
                 {weekDayHeaders.map(day => (
                     <div key={day} className="text-xs font-semibold text-gray-500 mb-2">{day}</div>
@@ -381,7 +381,7 @@ export default function AnalysisDashboard() {
   return (
     <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6">Bảng phân tích học tập</h1>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6">Bảng phân tích</h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             <div className="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-6 border border-gray-100">
