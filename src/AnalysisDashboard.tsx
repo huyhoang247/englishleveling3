@@ -67,22 +67,17 @@ interface DailyGoalMilestonesProps {
 }
 
 const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday }) => {
-  // Trong ứng dụng thực tế, trạng thái này nên được lấy từ database cho ngày hiện tại và được cập nhật khi nhận thưởng.
-  // Để demo, trạng thái này sẽ reset khi component được tải lại.
   const [claimedGoals, setClaimedGoals] = useState<number[]>([]);
 
   const {
     currentGoal,
-    previousGoal,
     progressPercentage,
     isGoalMet,
     areAllGoalsMet,
   } = useMemo(() => {
-    // Tìm mục tiêu tiếp theo chưa được nhận
     const nextGoalIndex = GOAL_MILESTONES.findIndex(g => !claimedGoals.includes(g));
 
     if (nextGoalIndex === -1) {
-      // Đã hoàn thành tất cả các mục tiêu trong ngày
       return { 
         areAllGoalsMet: true, progressPercentage: 100, isGoalMet: true, 
         currentGoal: GOAL_MILESTONES[GOAL_MILESTONES.length - 1], 
@@ -102,7 +97,6 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday }
 
   const handleClaim = () => {
     if (!isGoalMet || areAllGoalsMet) return;
-    // Logic thực tế: gọi hàm cập nhật database (ví dụ: onClaimReward(currentGoal);)
     console.log(`Đã nhận thưởng cho mục tiêu ${currentGoal}!`);
     alert(`Chúc mừng! Bạn đã đạt mục tiêu ${currentGoal} từ và nhận được phần thưởng!`);
     setClaimedGoals(prev => [...prev, currentGoal]);
@@ -116,7 +110,9 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday }
           <div className="bg-yellow-100 text-yellow-600 p-2.5 rounded-lg"><TrophyIcon /></div>
           <div>
             <h3 className="text-base sm:text-lg font-bold text-gray-800">Mục tiêu hôm nay</h3>
-            {!areAllGoalsMet && (
+            {areAllGoalsMet ? (
+              <p className="text-xs sm:text-sm text-green-600 font-semibold">Đã hoàn thành tất cả!</p>
+            ) : (
               <p className="text-xs sm:text-sm text-gray-500">
                 Cột mốc tiếp theo: <span className="font-bold text-indigo-600">{currentGoal}</span> từ
               </p>
@@ -129,7 +125,7 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday }
           {areAllGoalsMet ? (
             <div className="text-center p-2 bg-green-100 text-green-700 rounded-lg flex items-center gap-2">
               <CheckCircleIconSmall />
-              <span className="font-bold">Tuyệt vời!</span>
+              <span className="font-bold text-sm">Tuyệt vời!</span>
             </div>
           ) : isGoalMet ? (
             <button
@@ -139,8 +135,12 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday }
               <span className="ml-1.5 text-sm">Nhận thưởng</span>
             </button>
           ) : (
-            <div className="text-center text-gray-600 font-semibold text-sm sm:text-base">
-              {wordsLearnedToday} / {currentGoal}
+            <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed">
+              <GiftIcon />
+              <span className="flex items-baseline">
+                <span className="text-base font-extrabold text-gray-700">{wordsLearnedToday}</span>
+                <span className="text-sm font-medium text-gray-500">/{currentGoal}</span>
+              </span>
             </div>
           )}
         </div>
@@ -148,7 +148,7 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday }
         {/* Bottom: Progress Bar */}
         <div className="w-full mt-3">
           {areAllGoalsMet ? (
-            <div className="h-2.5 w-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full" title="Đã hoàn thành mọi mục tiêu!"></div>
+            <div className="h-2.5 w-full bg-gradient-to-r from-green-400 to-teal-500 rounded-full" title="Đã hoàn thành mọi mục tiêu!"></div>
           ) : (
             <div className="w-full bg-gray-200 rounded-full h-2.5">
               <div
