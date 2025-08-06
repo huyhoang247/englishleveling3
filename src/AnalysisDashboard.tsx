@@ -9,9 +9,10 @@ import {
 import { defaultVocabulary } from './list-vocabulary.ts'; // Điều chỉnh đường dẫn
 
 // --- Icons (Sử dụng các icon SVG đơn giản để không phụ thuộc vào file ngoài) ---
-const BookOpenIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
-const ChartBarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
-const CheckCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+// [ĐÃ SỬA] Giảm kích thước icon để phù hợp với thiết kế mới
+const BookOpenIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
+const ChartBarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
+const CheckCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
 const CalendarCheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>;
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const SortIcon = ({ direction }: { direction?: 'asc' | 'desc' }) => (
@@ -354,10 +355,45 @@ export default function AnalysisDashboard() {
     <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6">Bảng phân tích</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            <div className="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-6 border border-gray-100"><div className="bg-blue-100 text-blue-600 p-3 rounded-full"><BookOpenIcon /></div><div><p className="text-sm text-gray-500">Tổng từ đã học</p><p className="text-3xl font-bold text-gray-900">{totalWordsLearned}</p></div></div>
-            <div className="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-6 border border-gray-100"><div className="bg-green-100 text-green-600 p-3 rounded-full"><CheckCircleIcon /></div><div><p className="text-sm text-gray-500">Tỷ lệ hoàn thành</p><p className="text-3xl font-bold text-gray-900">{completionPercentage}%</p></div></div>
-            <div className="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-6 border border-gray-100"><div className="bg-purple-100 text-purple-600 p-3 rounded-full"><ChartBarIcon /></div><div><p className="text-sm text-gray-500">Từ vựng còn lại</p><p className="text-3xl font-bold text-gray-900">{totalWordsAvailable - totalWordsLearned}</p></div></div>
+        
+        {/* [THIẾT KẾ MỚI] Khối thống kê tổng quan nhỏ gọn và tinh tế */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+                
+                {/* Stat: Tổng từ đã học */}
+                <div className="p-5 flex items-center justify-center md:justify-start gap-4">
+                    <div className="bg-blue-100 text-blue-600 p-3 rounded-xl flex-shrink-0">
+                        <BookOpenIcon />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">Tổng từ đã học</p>
+                        <p className="text-2xl font-bold text-gray-900">{totalWordsLearned}</p>
+                    </div>
+                </div>
+                
+                {/* Stat: Tỷ lệ hoàn thành */}
+                <div className="p-5 flex items-center justify-center md:justify-start gap-4">
+                    <div className="bg-green-100 text-green-600 p-3 rounded-xl flex-shrink-0">
+                        <CheckCircleIcon />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">Tỷ lệ hoàn thành</p>
+                        <p className="text-2xl font-bold text-gray-900">{completionPercentage}%</p>
+                    </div>
+                </div>
+
+                {/* Stat: Từ vựng còn lại */}
+                <div className="p-5 flex items-center justify-center md:justify-start gap-4">
+                    <div className="bg-purple-100 text-purple-600 p-3 rounded-xl flex-shrink-0">
+                        <ChartBarIcon />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">Từ vựng còn lại</p>
+                        <p className="text-2xl font-bold text-gray-900">{totalWordsAvailable - totalWordsLearned}</p>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
         {/* --- TÍCH HỢP COMPONENT MỤC TIÊU CỘT MỐC --- */}
