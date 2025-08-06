@@ -4,11 +4,12 @@ import QuizApp from './quiz.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 import WordChainGame from '../word-chain-game.tsx';
+import CoinDisplay from '../coin-display.tsx'; // Import CoinDisplay
 
 // Imports for progress calculation
 import { db, auth } from '../firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, doc, getDoc, getDocs, updateDoc, increment } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, updateDoc, increment, onSnapshot } from 'firebase/firestore'; // Add onSnapshot
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
@@ -119,6 +120,32 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPractice, setSelectedPractice] = useState<number | null>(null);
+  const [user, setUser] = useState(auth.currentUser);
+  const [userCoins, setUserCoins] = useState(0);
+
+  // Effect to listen for auth changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Effect to get coins in real-time when user is available
+  useEffect(() => {
+    if (user) {
+      const unsubscribe = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
+        if (docSnap.exists()) {
+          setUserCoins(docSnap.data().coins || 0);
+        } else {
+          setUserCoins(0);
+        }
+      });
+      return () => unsubscribe();
+    } else {
+      setUserCoins(0); // Reset coins if user logs out
+    }
+  }, [user]);
 
   // --- THÊM USEEFFECT ĐỂ ĐIỀU KHIỂN NAV BAR CHA ---
   useEffect(() => {
@@ -200,7 +227,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               ViewComponent = <WordChainGame onGoBack={goBack} />;
               break;
           case 'analysis':
-              title = '';
+              title = ''; // Title is empty as requested
               ViewComponent = <AnalysisDashboard />;
               break;
       }
@@ -220,7 +247,9 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                               </button>
                             </div>
                             <h2 className="flex-1 text-lg font-bold text-slate-200 truncate text-center px-4">{title}</h2>
-                            <div className="w-24"></div>
+                            <div className="w-24 flex justify-end items-center">
+                               <CoinDisplay displayedCoins={userCoins} isStatsFullscreen={false} />
+                            </div>
                         </>
                     ) : (
                         <>
