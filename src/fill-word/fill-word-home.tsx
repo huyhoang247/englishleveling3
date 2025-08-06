@@ -65,11 +65,11 @@ const BasePopup: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   currentWord: string;
-  titlePrefix: string;
+  title: string;
   dataSource: { english: string; vietnamese: string }[];
   noResultsMessage: string;
   isPhrase?: boolean;
-}> = ({ isOpen, onClose, currentWord, titlePrefix, dataSource, noResultsMessage, isPhrase = false }) => {
+}> = ({ isOpen, onClose, currentWord, title, dataSource, noResultsMessage, isPhrase = false }) => {
   const wordsToSearch = useMemo(() => currentWord.split(' '), [currentWord]);
   const [activeTab, setActiveTab] = useState(0);
   useEffect(() => { setActiveTab(0); }, [currentWord]);
@@ -92,9 +92,11 @@ const BasePopup: React.FC<{
     // --- FIX: Tăng độ tối của overlay từ 60 -> 75 để làm nổi bật popup ---
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={onClose}>
         <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-gray-200 flex-shrink-0">
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1.5 transition-colors z-10"><span className="font-bold text-xl leading-none">×</span></button>
-                <h3 className="text-xl font-bold text-gray-800">{`${titlePrefix} chứa "${capitalizeFirstLetter(searchWord)}"`}</h3>
+            <div className="p-6 border-b border-gray-200 flex-shrink-0 relative">
+                <button onClick={onClose} className="absolute top-4 right-4 p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10">
+                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-5 h-5" />
+                </button>
+                <h3 className="text-xl font-bold text-gray-800">{title}</h3>
                 {wordsToSearch.length > 1 && (
                     <nav className="mt-4 -mb-6 -mx-6 px-6 border-t border-gray-200">
                         <div className="flex space-x-4">
@@ -142,11 +144,11 @@ const allPhraseParts = Array.from(
 );
 
 const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => (
-  <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} titlePrefix="Các cụm từ" dataSource={allPhraseParts} noResultsMessage="Không tìm thấy cụm từ" isPhrase={true} />
+  <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} title="Phrases" dataSource={allPhraseParts} noResultsMessage="Không tìm thấy cụm từ" isPhrase={true} />
 );
 
 const ExamPopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => (
-  <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} titlePrefix="Câu ví dụ" dataSource={exampleData} noResultsMessage="Không tìm thấy ví dụ" />
+  <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} title="Exams" dataSource={exampleData} noResultsMessage="Không tìm thấy ví dụ" />
 );
 
 
