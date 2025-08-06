@@ -93,8 +93,8 @@ const BasePopup: React.FC<{
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={onClose}>
         <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="p-6 border-b border-gray-200 flex-shrink-0 relative">
-                <button onClick={onClose} className="absolute top-3.5 right-3.5 z-10 transition-transform duration-200 hover:scale-110 active:scale-95">
-                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-7 h-7" />
+                <button onClick={onClose} className="absolute top-4 right-4 z-10 transition-transform duration-200 hover:scale-110 active:scale-95">
+                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-5 h-5" />
                 </button>
                 <h3 className="text-xl font-bold text-gray-800">{title}</h3>
                 {wordsToSearch.length > 1 && (
@@ -627,8 +627,8 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         {showImagePopup && currentWord && (selectedPractice % 100 === 1) && (
           <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
             <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-xl">
-                <button onClick={() => setShowImagePopup(false)} className="absolute top-3.5 right-3.5 z-10 transition-transform duration-200 hover:scale-110 active:scale-95">
-                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-7 h-7" />
+                <button onClick={() => setShowImagePopup(false)} className="absolute top-4 right-4 z-10 transition-transform duration-200 hover:scale-110 active:scale-95">
+                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-5 h-5" />
                 </button>
               <h3 className="text-2xl font-bold text-center mb-6 text-indigo-800">{currentWord.word}</h3>
               <img src={generateImageUrl(currentWord.imageIndex)} alt={currentWord.word} className="rounded-lg shadow-md max-w-full max-h-full object-contain" />
