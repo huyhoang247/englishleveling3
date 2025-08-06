@@ -200,7 +200,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               ViewComponent = <WordChainGame onGoBack={goBack} />;
               break;
           case 'analysis':
-              title = 'Phân Tích Tiến Trình';
+              title = '';
               ViewComponent = <AnalysisDashboard />;
               break;
       }
