@@ -92,14 +92,16 @@ const BasePopup: React.FC<{
     // --- FIX: Tăng độ tối của overlay từ 60 -> 75 để làm nổi bật popup ---
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={onClose}>
         <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-gray-200 flex-shrink-0 relative">
-                <button onClick={onClose} className="absolute top-4 right-4 z-10 transition-transform duration-200 hover:scale-110 active:scale-95">
-                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-5 h-5" />
-                </button>
-                <h3 className="text-xl font-bold text-gray-800">{title}</h3>
+            <div className="p-4 border-b border-gray-200 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+                    <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors z-10">
+                        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-5 h-5" />
+                    </button>
+                </div>
                 {wordsToSearch.length > 1 && (
-                    <nav className="mt-4 -mb-6 -mx-6 px-6 border-t border-gray-200">
-                        <div className="flex space-x-4">
+                    <nav className="mt-3 -mb-4 -mx-4">
+                        <div className="flex space-x-4 px-4">
                             {wordsToSearch.map((word, index) => (<button key={index} onClick={() => setActiveTab(index)} className={`${activeTab === index ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-all`}>{capitalizeFirstLetter(word)}</button>))}
                         </div>
                     </nav>
@@ -627,8 +629,8 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
         {showImagePopup && currentWord && (selectedPractice % 100 === 1) && (
           <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
             <div className="relative bg-white rounded-2xl p-6 max-w-3xl max-h-full overflow-auto shadow-xl">
-                <button onClick={() => setShowImagePopup(false)} className="absolute top-4 right-4 z-10 transition-transform duration-200 hover:scale-110 active:scale-95">
-                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-5 h-5" />
+                <button onClick={() => setShowImagePopup(false)} className="absolute top-2 right-2 p-1 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors z-10">
+                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-6 h-6" />
                 </button>
               <h3 className="text-2xl font-bold text-center mb-6 text-indigo-800">{currentWord.word}</h3>
               <img src={generateImageUrl(currentWord.imageIndex)} alt={currentWord.word} className="rounded-lg shadow-md max-w-full max-h-full object-contain" />
