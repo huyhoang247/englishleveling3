@@ -131,10 +131,15 @@ const BasePopup: React.FC<{
   );
 };
 
-const allPhraseParts = phraseData.flatMap(sentence => sentence.parts).map(p => ({
-    english: capitalizeFirstLetter(p.english),
-    vietnamese: capitalizeFirstLetter(p.vietnamese),
-}));
+const allPhraseParts = Array.from(
+    new Map(
+        phraseData.flatMap(sentence => sentence.parts).map(p => {
+            const english = capitalizeFirstLetter(p.english);
+            const vietnamese = capitalizeFirstLetter(p.vietnamese);
+            return [english.toLowerCase(), { english, vietnamese }];
+        })
+    ).values()
+);
 
 const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => (
   <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} titlePrefix="Các cụm từ" dataSource={allPhraseParts} noResultsMessage="Không tìm thấy cụm từ" isPhrase={true} />
@@ -633,5 +638,3 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
     </div>
   );
 }
-
-// --- END OF FILE: fill-word-home.tsx ---
