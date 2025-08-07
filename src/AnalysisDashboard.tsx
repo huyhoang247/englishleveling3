@@ -400,29 +400,33 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
         const dailyActivity: DailyActivityMap = {};
         const allCompletionsForRecent: { word: string; date: Date }[] = [];
         
+        // Chỉ từ đơn (completedWords) mới được tính vào hoạt động hàng ngày (dailyActivity)
         completedWordsSnapshot.forEach(doc => {
-            const data = doc.data(); const lastCompletedAt = data.lastCompletedAt?.toDate(); if (!lastCompletedAt) return;
-            allCompletionsForRecent.push({word: doc.id, date: lastCompletedAt}); const dateString = formatDateToLocalYYYYMMDD(lastCompletedAt);
-            if (!dailyActivity[dateString]) dailyActivity[dateString] = { new: 0, review: 0 };
-            let totalCompletions = 0, totalCorrectForWord = 0;
-            if (data.gameModes) {
-                Object.values(data.gameModes).forEach((modeData: any) => { totalCompletions += modeData.correctCount || 0; });
-                Object.keys(data.gameModes).forEach(mode => {
-                    const correctCount = data.gameModes[mode].correctCount || 0; totalCorrectForWord += correctCount;
-                    if (mode.startsWith('quiz-')) masteryByGame['Trắc nghiệm'] += correctCount;
-                    else if (mode.startsWith('fill-word-')) masteryByGame['Điền từ'] += correctCount;
-                });
-            }
-            if (totalCompletions > 1) dailyActivity[dateString].review++; else if (totalCompletions === 1) dailyActivity[dateString].new++;
-            if (totalCorrectForWord > 0) wordMasteryMap[doc.id] = { mastery: totalCorrectForWord, lastPracticed: lastCompletedAt };
-        });
-        
-        completedMultiWordSnapshot.forEach(doc => {
             const data = doc.data(); const lastCompletedAt = data.lastCompletedAt?.toDate(); if (!lastCompletedAt) return;
             allCompletionsForRecent.push({word: doc.id, date: lastCompletedAt});
             const dateString = formatDateToLocalYYYYMMDD(lastCompletedAt);
             if (!dailyActivity[dateString]) dailyActivity[dateString] = { new: 0, review: 0 };
-            dailyActivity[dateString].review++;
+            
+            let totalCompletions = 0, totalCorrectForWord = 0;
+            if (data.gameModes) {
+                Object.values(data.gameModes).forEach((modeData: any) => { totalCompletions += modeData.correctCount || 0; });
+                Object.keys(data.gameModes).forEach(mode => {
+                    const correctCount = data.gameModes[mode].correctCount || 0;
+                    totalCorrectForWord += correctCount;
+                    if (mode.startsWith('quiz-')) masteryByGame['Trắc nghiệm'] += correctCount;
+                    else if (mode.startsWith('fill-word-')) masteryByGame['Điền từ'] += correctCount;
+                });
+            }
+            if (totalCompletions > 1) dailyActivity[dateString].review++; 
+            else if (totalCompletions === 1) dailyActivity[dateString].new++;
+            
+            if (totalCorrectForWord > 0) wordMasteryMap[doc.id] = { mastery: totalCorrectForWord, lastPracticed: lastCompletedAt };
+        });
+        
+        // Cụm từ (completedMultiWord) chỉ tính vào "Hoạt động gần đây" và "Điểm theo Game"
+        completedMultiWordSnapshot.forEach(doc => {
+            const data = doc.data(); const lastCompletedAt = data.lastCompletedAt?.toDate(); if (!lastCompletedAt) return;
+            allCompletionsForRecent.push({word: doc.id, date: lastCompletedAt});
             if (data.completedIn) Object.keys(data.completedIn).forEach(mode => { if (mode.startsWith('fill-word-')) masteryByGame['Điền từ']++; });
         });
         
@@ -432,7 +436,9 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
         const vocabularyGrowthData = learningActivityData.map(item => { cumulative += item.new; return { date: new Date(item.date).toLocaleDateString('vi-VN'), cumulative }; });
         const masteryData = Object.entries(masteryByGame).map(([game, completed]) => ({ game, completed })).filter(item => item.completed > 0);
         const recentCompletions = [...allCompletionsForRecent].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5).map(c => ({ word: c.word, date: c.date.toLocaleString('vi-VN') }));
-        const totalWordsLearned = new Set([...completedWordsSnapshot.docs.map(d => d.id), ...completedMultiWordSnapshot.docs.map(d => d.id)]).size;
+        
+        const totalWordsLearned = completedWordsSnapshot.size;
+        
         const wordMasteryData: WordMastery[] = Object.entries(wordMasteryMap).map(([word, data]) => ({ word, ...data }));
 
         setAnalysisData({
