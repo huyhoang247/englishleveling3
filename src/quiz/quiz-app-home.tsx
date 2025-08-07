@@ -126,7 +126,9 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPractice, setSelectedPractice] = useState<number | null>(null);
   const [user, setUser] = useState(auth.currentUser);
+  // --- THAY ĐỔI: Thêm state cho displayedCoins để tạo hiệu ứng animation ---
   const [userCoins, setUserCoins] = useState(0);
+  const [displayedUserCoins, setDisplayedUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
 
   // Effect to listen for auth changes
@@ -136,26 +138,56 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
     });
     return () => unsubscribe();
   }, []);
+  
+  // --- THÊM: Hàm animation đếm coin, giống như trong quiz.tsx ---
+  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
+    if (startValue === endValue) return;
+    const isCountingUp = endValue > startValue;
+    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
+    let current = startValue;
+    const interval = setInterval(() => {
+      if (isCountingUp) { current += step; } else { current -= step; }
+      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
+        setDisplayedUserCoins(endValue);
+        clearInterval(interval);
+      } else {
+        setDisplayedUserCoins(current);
+      }
+    }, 30);
+  }, []);
 
   // Effect to get coins in real-time when user is available
   useEffect(() => {
     if (user) {
+      let isInitialLoad = true; // Flag để không animate khi tải lần đầu
       const unsubscribe = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setUserCoins(data.coins || 0);
+          const newCoins = data.coins || 0;
+          // Sử dụng functional update để lấy giá trị state trước đó một cách an toàn
+          setUserCoins(prevCoins => {
+              if (isInitialLoad) {
+                  setDisplayedUserCoins(newCoins);
+                  isInitialLoad = false;
+              } else {
+                  startCoinCountAnimation(prevCoins, newCoins);
+              }
+              return newCoins; // Cập nhật giá trị "thật"
+          });
           setMasteryCount(data.masteryCards || 0);
         } else {
           setUserCoins(0);
+          setDisplayedUserCoins(0);
           setMasteryCount(0);
         }
       });
       return () => unsubscribe();
     } else {
       setUserCoins(0); // Reset coins if user logs out
+      setDisplayedUserCoins(0);
       setMasteryCount(0); // Reset mastery if user logs out
     }
-  }, [user]);
+  }, [user, startCoinCountAnimation]);
 
   // --- THÊM USEEFFECT ĐỂ ĐIỀU KHIỂN NAV BAR CHA ---
   useEffect(() => {
@@ -258,7 +290,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                             </div>
                             <h2 className="flex-1 text-lg font-bold text-slate-200 truncate text-center px-4">{title}</h2>
                             <div className="flex items-center justify-end gap-3">
-                               <CoinDisplay displayedCoins={userCoins} isStatsFullscreen={false} />
+                               <CoinDisplay displayedCoins={displayedUserCoins} isStatsFullscreen={false} />
                                <MasteryDisplay masteryCount={masteryCount} />
                             </div>
                         </>
