@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, FC, ReactNode } from 'react';
 import { db, auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
-import { collection, getDocs, QuerySnapshot, DocumentData } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, QuerySnapshot, DocumentData } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { 
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
@@ -12,6 +12,7 @@ import { defaultVocabulary } from './list-vocabulary.ts'; // Điều chỉnh đ�
 const BookOpenIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
 const ChartBarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
 const CheckCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+const AwardIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>;
 const CalendarCheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>;
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const SortIcon = ({ direction }: { direction?: 'asc' | 'desc' }) => (
@@ -224,6 +225,7 @@ export default function AnalysisDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
+  const [masteryCount, setMasteryCount] = useState(0);
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
   
@@ -237,10 +239,16 @@ export default function AnalysisDashboard() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
+        const [userDocSnap, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
+            getDoc(doc(db, 'users', user.uid)),
             getDocs(collection(db, 'users', user.uid, 'completedWords')),
             getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
         ]);
+        
+        if (userDocSnap.exists()) {
+            setMasteryCount(userDocSnap.data().masteryCards || 0);
+        }
+
         const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
         const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
         const dailyActivity: DailyActivityMap = {};
@@ -353,11 +361,10 @@ export default function AnalysisDashboard() {
   return (
     <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6">Bảng phân tích</h1>
         
         {/* [THIẾT KẾ MỚI] Khối thống kê tổng quan gộp lại */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 my-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200">
                 
                 {/* Stat: Vocabulary Progress */}
                 <div className="p-5 flex items-center gap-4">
@@ -381,6 +388,17 @@ export default function AnalysisDashboard() {
                     <div>
                         <p className="text-sm font-medium text-gray-500">Completion Rate</p>
                         <p className="text-2xl font-bold text-gray-900">{completionPercentage.toFixed(1)}%</p>
+                    </div>
+                </div>
+
+                {/* Stat: Mastery Cards */}
+                <div className="p-5 flex items-center gap-4">
+                    <div className="bg-purple-100 text-purple-600 p-3 rounded-xl flex-shrink-0">
+                        <AwardIcon />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">Mastery Cards</p>
+                        <p className="text-2xl font-bold text-gray-900">{masteryCount}</p>
                     </div>
                 </div>
 
