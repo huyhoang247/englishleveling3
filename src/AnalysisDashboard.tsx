@@ -1,3 +1,5 @@
+// --- START OF FILE: AnalysisDashboard.tsx ---
+
 import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback, memo } from 'react';
 import { db, auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
 import { collection, getDocs, doc, getDoc, updateDoc, increment, arrayUnion } from 'firebase/firestore';
@@ -226,53 +228,48 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
   const [claimedDailyGoals, setClaimedDailyGoals] = useState<number[]>([]);
-  const [isAnimating, setIsAnimating] = useState(false); // [FIX] State to track animation
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const [localCoins, setLocalCoins] = useState(userCoins);
   const [displayedCoins, setDisplayedCoins] = useState(userCoins);
 
-  // [FIX] useEffect is now aware of the animation state
   useEffect(() => {
     setLocalCoins(userCoins);
-    // Only update displayedCoins if no animation is running to prevent flicker
     if (!isAnimating) {
       setDisplayedCoins(userCoins);
     }
   }, [userCoins, isAnimating]);
 
-  // [FIX] Updated animation function to be smoother and manage animation state
+  // [UPDATED] Hàm animation đồng bộ với quiz.tsx
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
-      if (startValue === endValue) {
-          setDisplayedCoins(endValue);
-          return;
+    if (startValue === endValue) {
+      setDisplayedCoins(endValue);
+      return;
+    }
+    
+    setIsAnimating(true); // BẮT ĐẦU animation
+
+    const isCountingUp = endValue > startValue;
+    // Tính toán step giống hệt bên quiz.tsx để có tốc độ tương đồng
+    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
+    let current = startValue;
+
+    const interval = setInterval(() => {
+      if (isCountingUp) {
+        current += step;
+      } else {
+        current -= step;
       }
-      
-      setIsAnimating(true); // START animation
 
-      const duration = 1200; // Animation duration in ms
-      const range = endValue - startValue;
-      let startTime: number | null = null;
-
-      const step = (timestamp: number) => {
-          if (!startTime) startTime = timestamp;
-          
-          const elapsed = timestamp - startTime;
-          const progress = Math.min(elapsed / duration, 1);
-          const easeOutProgress = 1 - Math.pow(1 - progress, 3); // ease-out-cubic
-          const currentValue = Math.floor(startValue + range * easeOutProgress);
-          
-          setDisplayedCoins(currentValue);
-
-          if (progress < 1) {
-              requestAnimationFrame(step);
-          } else {
-              setDisplayedCoins(endValue); // Ensure final value is accurate
-              setIsAnimating(false); // END animation
-          }
-      };
-
-      requestAnimationFrame(step);
-  }, []); // Dependencies are empty as it doesn't depend on external state/props
+      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
+        setDisplayedCoins(endValue);
+        clearInterval(interval);
+        setIsAnimating(false); // KẾT THÚC animation
+      } else {
+        setDisplayedCoins(current);
+      }
+    }, 30); // Tần suất cập nhật 30ms giống quiz.tsx
+  }, []); // Dependencies để trống vì hàm không phụ thuộc vào props/state bên ngoài
   
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
