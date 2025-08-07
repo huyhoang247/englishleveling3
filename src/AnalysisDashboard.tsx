@@ -58,6 +58,11 @@ const ChartCard: FC<{ title: string; children: ReactNode }> = ({ title, children
 
 // --- COMPONENT MỤC TIÊU HÀNG NGÀY (TIẾN TRÌNH CỘT MỐC) ---
 const TrophyIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.25 2.25a.75.75 0 00-1.5 0v1.165a.75.75 0 001.5 0V2.25zM11.25 18.75a.75.75 0 00-1.5 0v-1.165a.75.75 0 001.5 0v1.165zM5.25 10.5a.75.75 0 01.75-.75h1.165a.75.75 0 010 1.5H6a.75.75 0 01-.75-.75zM18.75 10.5a.75.75 0 01-.75.75h-1.165a.75.75 0 010-1.5h1.165a.75.75 0 01.75.75zM6.31 6.31a.75.75 0 00-1.06-1.06L3.93 6.57A.75.75 0 005 7.63l1.31-1.32zM14.75 14.75a.75.75 0 00-1.06-1.06L12.37 15a.75.75 0 001.06 1.06l1.32-1.31zM6.31 14.75a.75.75 0 001.06-1.06L6.05 12.37A.75.75 0 005 13.43l1.31 1.32zM14.75 6.31a.75.75 0 00-1.06 1.06L15 8.69A.75.75 0 1016.06 7.63l-1.31-1.32zM10 5.25a4.75 4.75 0 100 9.5 4.75 4.75 0 000-9.5zM8.25 10a1.75 1.75 0 113.5 0 1.75 1.75 0 01-3.5 0z" clipRule="evenodd" /></svg>;
+const RewardIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+    </svg>
+);
 const GiftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a3 3 0 015.252-2.121l.738.64.738-.64A3 3 0 0115 5v2.212a3 3 0 01-.679 1.943l-4.261 4.26a1.5 1.5 0 01-2.121 0l-4.26-4.26A3 3 0 015 7.212V5zm10 0a1 1 0 10-2 0v.788a1 1 0 01-.321.707l-4.26 4.26a.5.5 0 01-.707 0l-4.26-4.26A1 1 0 014 5.788V5a1 1 0 10-2 0v2.212a5 5 0 001.127 3.238l4.26 4.26a3.5 3.5 0 004.95 0l4.26-4.26A5 5 0 0015 7.212V5z" clipRule="evenodd" /></svg>;
 const CheckCircleIconSmall = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
 
@@ -65,9 +70,10 @@ const GOAL_MILESTONES = [5, 10, 20, 50, 100, 200];
 
 interface DailyGoalMilestonesProps {
   wordsLearnedToday: number;
+  masteryCount: number;
 }
 
-const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday }) => {
+const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, masteryCount }) => {
   const [claimedGoals, setClaimedGoals] = useState<number[]>([]);
 
   const {
@@ -114,9 +120,16 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday }
             {areAllGoalsMet ? (
               <p className="text-xs sm:text-sm text-green-600 font-semibold">All missions completed!</p>
             ) : (
-              <p className="text-xs sm:text-sm text-gray-500">
-                Next Milestone: <span className="font-bold text-indigo-600">{currentGoal}</span> words
-              </p>
+              <div 
+                className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" 
+                title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}
+              >
+                  <span className="font-semibold text-gray-600">Reward for {currentGoal} words:</span>
+                  <span className="flex items-center font-bold text-amber-500 ml-2">
+                      <RewardIcon />
+                      <span>{currentGoal * (masteryCount > 0 ? masteryCount : 1)}</span>
+                  </span>
+              </div>
             )}
           </div>
         </div>
@@ -407,7 +420,7 @@ export default function AnalysisDashboard() {
 
         {/* --- TÍCH HỢP COMPONENT MỤC TIÊU CỘT MỐC --- */}
         <div className="mb-6">
-            <DailyGoalMilestones wordsLearnedToday={wordsLearnedToday} />
+            <DailyGoalMilestones wordsLearnedToday={wordsLearnedToday} masteryCount={masteryCount} />
         </div>
 
         <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
