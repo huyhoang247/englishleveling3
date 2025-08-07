@@ -1,5 +1,3 @@
---- START OF FILE quiz-app-home.tsx (20).txt ---
-
 // quiz-app-home.tsx
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import QuizApp from './quiz.tsx';
