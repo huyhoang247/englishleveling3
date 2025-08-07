@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo, FC, ReactNode } from 'react';
+import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback } from 'react';
 import { db, auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
-import { collection, getDocs, doc, getDoc, QuerySnapshot, DocumentData } from 'firebase/firestore';
+// [CẬP NHẬT] Thêm updateDoc, increment, arrayUnion
+import { collection, getDocs, doc, getDoc, updateDoc, increment, arrayUnion, QuerySnapshot, DocumentData } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { 
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
@@ -60,16 +61,22 @@ const ChartCard: FC<{ title: string; children: ReactNode }> = ({ title, children
 const TrophyIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.25 2.25a.75.75 0 00-1.5 0v1.165a.75.75 0 001.5 0V2.25zM11.25 18.75a.75.75 0 00-1.5 0v-1.165a.75.75 0 001.5 0v1.165zM5.25 10.5a.75.75 0 01.75-.75h1.165a.75.75 0 010 1.5H6a.75.75 0 01-.75-.75zM18.75 10.5a.75.75 0 01-.75.75h-1.165a.75.75 0 010-1.5h1.165a.75.75 0 01.75.75zM6.31 6.31a.75.75 0 00-1.06-1.06L3.93 6.57A.75.75 0 005 7.63l1.31-1.32zM14.75 14.75a.75.75 0 00-1.06-1.06L12.37 15a.75.75 0 001.06 1.06l1.32-1.31zM6.31 14.75a.75.75 0 001.06-1.06L6.05 12.37A.75.75 0 005 13.43l1.31 1.32zM14.75 6.31a.75.75 0 00-1.06 1.06L15 8.69A.75.75 0 1016.06 7.63l-1.31-1.32zM10 5.25a4.75 4.75 0 100 9.5 4.75 4.75 0 000-9.5zM8.25 10a1.75 1.75 0 113.5 0 1.75 1.75 0 01-3.5 0z" clipRule="evenodd" /></svg>;
 const GiftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a3 3 0 015.252-2.121l.738.64.738-.64A3 3 0 0115 5v2.212a3 3 0 01-.679 1.943l-4.261 4.26a1.5 1.5 0 01-2.121 0l-4.26-4.26A3 3 0 015 7.212V5zm10 0a1 1 0 10-2 0v.788a1 1 0 01-.321.707l-4.26 4.26a.5.5 0 01-.707 0l-4.26-4.26A1 1 0 014 5.788V5a1 1 0 10-2 0v2.212a5 5 0 001.127 3.238l4.26 4.26a3.5 3.5 0 004.95 0l4.26-4.26A5 5 0 0015 7.212V5z" clipRule="evenodd" /></svg>;
 const CheckCircleIconSmall = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
 
 const GOAL_MILESTONES = [5, 10, 20, 50, 100, 200];
 
 interface DailyGoalMilestonesProps {
   wordsLearnedToday: number;
   masteryCount: number;
+  // [CẬP NHẬT] Thêm props để nhận dữ liệu từ cha
+  user: User | null;
+  claimedDailyGoals: number[];
+  onClaimSuccess: (milestone: number) => void;
 }
 
-const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, masteryCount }) => {
-  const [claimedGoals, setClaimedGoals] = useState<number[]>([]);
+const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, masteryCount, user, claimedDailyGoals, onClaimSuccess }) => {
+  // [CẬP NHẬT] Thêm state xử lý loading khi claim
+  const [isClaiming, setIsClaiming] = useState(false);
 
   const {
     currentGoal,
@@ -77,7 +84,8 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, 
     isGoalMet,
     areAllGoalsMet,
   } = useMemo(() => {
-    const nextGoalIndex = GOAL_MILESTONES.findIndex(g => !claimedGoals.includes(g));
+    // [CẬP NHẬT] Sử dụng claimedDailyGoals từ props thay vì state cục bộ
+    const nextGoalIndex = GOAL_MILESTONES.findIndex(g => !claimedDailyGoals.includes(g));
 
     if (nextGoalIndex === -1) {
       return { 
@@ -95,14 +103,34 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, 
     const isGoalMet = wordsLearnedToday >= currentGoal;
 
     return { currentGoal, previousGoal, progressPercentage, isGoalMet, areAllGoalsMet: false };
-  }, [wordsLearnedToday, claimedGoals]);
+  }, [wordsLearnedToday, claimedDailyGoals]);
 
-  const handleClaim = () => {
-    if (!isGoalMet || areAllGoalsMet) return;
-    console.log(`Claimed reward for milestone ${currentGoal}!`);
-    alert(`Congratulations! You've reached the ${currentGoal} words milestone and claimed your reward!`);
-    setClaimedGoals(prev => [...prev, currentGoal]);
-  };
+  // [CẬP NHẬT] Hàm xử lý nhận thưởng
+  const handleClaim = useCallback(async () => {
+    if (!isGoalMet || areAllGoalsMet || !user || isClaiming) return;
+
+    setIsClaiming(true);
+    try {
+        const rewardAmount = currentGoal * Math.max(1, masteryCount);
+        const userDocRef = doc(db, 'users', user.uid);
+        const todayString = formatDateToLocalYYYYMMDD(new Date());
+        const fieldKey = `claimedDailyGoals.${todayString}`;
+
+        await updateDoc(userDocRef, {
+            coins: increment(rewardAmount),
+            [fieldKey]: arrayUnion(currentGoal)
+        });
+        
+        alert(`Chúc mừng! Bạn đã nhận được ${rewardAmount.toLocaleString()} coins cho cột mốc ${currentGoal} từ!`);
+        onClaimSuccess(currentGoal);
+
+    } catch (error) {
+        console.error("Lỗi khi nhận thưởng:", error);
+        alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
+    } finally {
+        setIsClaiming(false);
+    }
+  }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaimSuccess]);
 
   return (
     <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
@@ -142,9 +170,11 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, 
           ) : isGoalMet ? (
             <button
               onClick={handleClaim}
-              className="flex items-center justify-center px-4 py-2 font-bold text-white bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg shadow-md hover:scale-105 transform transition-transform duration-200 animate-pulse">
-              <GiftIcon />
-              <span className="ml-1.5 text-sm">Claim</span>
+              disabled={isClaiming}
+              className="flex items-center justify-center px-4 py-2 font-bold text-white bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg shadow-md hover:scale-105 transform transition-transform duration-200 disabled:opacity-70 disabled:cursor-wait"
+            >
+              {isClaiming ? <SpinnerIcon /> : <GiftIcon />}
+              <span className="ml-1.5 text-sm">{isClaiming ? 'Wait' : 'Claim'}</span>
             </button>
           ) : (
             <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed">
@@ -239,6 +269,8 @@ export default function AnalysisDashboard() {
   const [masteryCount, setMasteryCount] = useState(0);
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
+  // [CẬP NHẬT] State để lưu các goal đã nhận trong ngày
+  const [claimedDailyGoals, setClaimedDailyGoals] = useState<number[]>([]);
   
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
@@ -257,7 +289,13 @@ export default function AnalysisDashboard() {
         ]);
         
         if (userDocSnap.exists()) {
-            setMasteryCount(userDocSnap.data().masteryCards || 0);
+            const userData = userDocSnap.data();
+            setMasteryCount(userData.masteryCards || 0);
+            
+            // [CẬP NHẬT] Lấy dữ liệu goal đã nhận của ngày hôm nay
+            const todayString = formatDateToLocalYYYYMMDD(new Date());
+            const todayClaimedGoals = userData.claimedDailyGoals?.[todayString] || [];
+            setClaimedDailyGoals(todayClaimedGoals);
         }
 
         const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
@@ -338,6 +376,11 @@ export default function AnalysisDashboard() {
     if (sortConfig.key === key && sortConfig.direction === 'desc') direction = 'asc';
     setSortConfig({ key, direction });
   };
+  
+  // [CẬP NHẬT] Hàm callback để cập nhật UI ngay lập tức sau khi nhận thưởng thành công
+  const handleGoalClaimSuccess = useCallback((milestone: number) => {
+      setClaimedDailyGoals(prev => [...prev, milestone]);
+  }, []);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -418,7 +461,14 @@ export default function AnalysisDashboard() {
 
         {/* --- TÍCH HỢP COMPONENT MỤC TIÊU CỘT MỐC --- */}
         <div className="mb-6">
-            <DailyGoalMilestones wordsLearnedToday={wordsLearnedToday} masteryCount={masteryCount} />
+            {/* [CẬP NHẬT] Truyền props cần thiết vào component con */}
+            <DailyGoalMilestones 
+                wordsLearnedToday={wordsLearnedToday} 
+                masteryCount={masteryCount}
+                user={user}
+                claimedDailyGoals={claimedDailyGoals}
+                onClaimSuccess={handleGoalClaimSuccess}
+            />
         </div>
 
         <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
