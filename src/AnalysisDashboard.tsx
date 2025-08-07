@@ -538,7 +538,6 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
                   <HomeIcon />
               </button>
             </div>
-            <h2 className="flex-1 text-lg font-bold text-slate-200 truncate text-center px-4">Phân tích & Thống kê</h2>
             <div className="flex items-center justify-end gap-3">
                <CoinDisplay displayedCoins={userCoins} isStatsFullscreen={false} />
                <MasteryDisplay masteryCount={masteryCount} />
