@@ -1,3 +1,5 @@
+--- START OF FILE quiz-app-home.tsx (20).txt ---
+
 // quiz-app-home.tsx
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import QuizApp from './quiz.tsx';
@@ -243,7 +245,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               break;
       }
       
-      // [MODIFIED] The parent header is no longer shown for 'analysis' view
       const showParentHeader = !['quiz', 'vocabularyGame', 'analysis'].includes(currentView);
 
       return (
@@ -251,7 +252,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
             {showParentHeader && (
                 <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
                   <div className="flex h-14 items-center justify-between px-4">
-                     {/* [MODIFIED] Removed the ternary check for 'analysis' as it's now handled by showParentHeader */}
                      <>
                         <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
                             <BackIcon className="h-5 w-5"/>
@@ -265,7 +265,9 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   </div>
                 </header>
             )}
-            <div className={`flex-grow ${showParentHeader ? 'overflow-y-auto' : ''}`}>
+            {/* *** SỬA LỖI SCROLL Ở ĐÂY *** */}
+            {/* Luôn thêm overflow-y-auto để đảm bảo các component toàn màn hình có thể cuộn */}
+            <div className="flex-grow overflow-y-auto">
                 {ViewComponent}
             </div>
         </div>
