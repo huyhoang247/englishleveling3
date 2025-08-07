@@ -126,9 +126,6 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, 
             [fieldKey]: arrayUnion(currentGoal)
         });
         
-        // [REMOVED] Bỏ thông báo alert() theo yêu cầu
-        // alert(`Chúc mừng! Bạn đã nhận được ${rewardAmount.toLocaleString()} coins cho cột mốc ${currentGoal} từ!`);
-        
         onClaimSuccess(currentGoal, rewardAmount);
     } catch (error) {
         console.error("Lỗi khi nhận thưởng:", error);
@@ -238,21 +235,45 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
     setDisplayedCoins(userCoins);
   }, [userCoins]);
 
+  // [UPDATED] Hàm animation mới, mượt mà hơn
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
-    if (startValue === endValue) return;
-    const isCountingUp = endValue > startValue;
-    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
-    let current = startValue;
-    const interval = setInterval(() => {
-      if (isCountingUp) { current += step; } else { current -= step; }
-      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
+    if (startValue === endValue) {
         setDisplayedCoins(endValue);
-        clearInterval(interval);
-      } else {
-        setDisplayedCoins(current);
-      }
-    }, 30);
-  }, []);
+        return;
+    }
+
+    const duration = 1200; // Animation kéo dài 1.2 giây
+    const range = endValue - startValue;
+    let startTime: number | null = null;
+
+    const step = (timestamp: number) => {
+        if (!startTime) startTime = timestamp;
+        
+        const elapsed = timestamp - startTime;
+        
+        // Tính toán tiến trình từ 0 đến 1, không để vượt quá 1
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Áp dụng easing function (ease-out cubic) để tạo hiệu ứng mượt mà
+        // Bắt đầu nhanh, chậm dần về cuối
+        const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+
+        // Tính giá trị hiển thị hiện tại và làm tròn
+        const currentValue = Math.floor(startValue + range * easeOutProgress);
+        setDisplayedCoins(currentValue);
+
+        // Nếu animation chưa kết thúc, tiếp tục gọi frame tiếp theo
+        if (progress < 1) {
+            requestAnimationFrame(step);
+        } else {
+            // Đảm bảo giá trị cuối cùng luôn chính xác
+            setDisplayedCoins(endValue);
+        }
+    };
+
+    // Bắt đầu vòng lặp animation
+    requestAnimationFrame(step);
+  }, []); // Dependencies rỗng vì hàm không phụ thuộc vào state/props bên ngoài
   
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
