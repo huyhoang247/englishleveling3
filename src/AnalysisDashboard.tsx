@@ -226,54 +226,53 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
   const [claimedDailyGoals, setClaimedDailyGoals] = useState<number[]>([]);
+  const [isAnimating, setIsAnimating] = useState(false); // [FIX] State to track animation
 
   const [localCoins, setLocalCoins] = useState(userCoins);
   const [displayedCoins, setDisplayedCoins] = useState(userCoins);
 
+  // [FIX] useEffect is now aware of the animation state
   useEffect(() => {
     setLocalCoins(userCoins);
-    setDisplayedCoins(userCoins);
-  }, [userCoins]);
-
-  // [UPDATED] Hàm animation mới, mượt mà hơn
-  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
-    if (startValue === endValue) {
-        setDisplayedCoins(endValue);
-        return;
+    // Only update displayedCoins if no animation is running to prevent flicker
+    if (!isAnimating) {
+      setDisplayedCoins(userCoins);
     }
+  }, [userCoins, isAnimating]);
 
-    const duration = 1200; // Animation kéo dài 1.2 giây
-    const range = endValue - startValue;
-    let startTime: number | null = null;
+  // [FIX] Updated animation function to be smoother and manage animation state
+  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
+      if (startValue === endValue) {
+          setDisplayedCoins(endValue);
+          return;
+      }
+      
+      setIsAnimating(true); // START animation
 
-    const step = (timestamp: number) => {
-        if (!startTime) startTime = timestamp;
-        
-        const elapsed = timestamp - startTime;
-        
-        // Tính toán tiến trình từ 0 đến 1, không để vượt quá 1
-        const progress = Math.min(elapsed / duration, 1);
+      const duration = 1200; // Animation duration in ms
+      const range = endValue - startValue;
+      let startTime: number | null = null;
 
-        // Áp dụng easing function (ease-out cubic) để tạo hiệu ứng mượt mà
-        // Bắt đầu nhanh, chậm dần về cuối
-        const easeOutProgress = 1 - Math.pow(1 - progress, 3);
+      const step = (timestamp: number) => {
+          if (!startTime) startTime = timestamp;
+          
+          const elapsed = timestamp - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const easeOutProgress = 1 - Math.pow(1 - progress, 3); // ease-out-cubic
+          const currentValue = Math.floor(startValue + range * easeOutProgress);
+          
+          setDisplayedCoins(currentValue);
 
-        // Tính giá trị hiển thị hiện tại và làm tròn
-        const currentValue = Math.floor(startValue + range * easeOutProgress);
-        setDisplayedCoins(currentValue);
+          if (progress < 1) {
+              requestAnimationFrame(step);
+          } else {
+              setDisplayedCoins(endValue); // Ensure final value is accurate
+              setIsAnimating(false); // END animation
+          }
+      };
 
-        // Nếu animation chưa kết thúc, tiếp tục gọi frame tiếp theo
-        if (progress < 1) {
-            requestAnimationFrame(step);
-        } else {
-            // Đảm bảo giá trị cuối cùng luôn chính xác
-            setDisplayedCoins(endValue);
-        }
-    };
-
-    // Bắt đầu vòng lặp animation
-    requestAnimationFrame(step);
-  }, []); // Dependencies rỗng vì hàm không phụ thuộc vào state/props bên ngoài
+      requestAnimationFrame(step);
+  }, []); // Dependencies are empty as it doesn't depend on external state/props
   
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
