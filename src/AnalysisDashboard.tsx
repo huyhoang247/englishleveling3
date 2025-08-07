@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback, memo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback, memo } from 'react';
 import { db, auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
 import { collection, getDocs, doc, getDoc, updateDoc, increment, arrayUnion } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -87,8 +87,7 @@ interface DailyGoalMilestonesProps {
   masteryCount: number;
   user: User | null;
   claimedDailyGoals: number[];
-  // [MODIFIED] onClaimSuccess now only needs the milestone to update the UI
-  onClaimSuccess: (milestone: number) => void;
+  onClaimSuccess: (milestone: number, rewardAmount: number) => void;
 }
 
 const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, masteryCount, user, claimedDailyGoals, onClaimSuccess }) => {
@@ -102,11 +101,7 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, 
   } = useMemo(() => {
     const nextGoalIndex = GOAL_MILESTONES.findIndex(g => !claimedDailyGoals.includes(g));
     if (nextGoalIndex === -1) {
-      return { 
-        areAllGoalsMet: true, progressPercentage: 100, isGoalMet: true, 
-        currentGoal: GOAL_MILESTONES[GOAL_MILESTONES.length - 1], 
-        previousGoal: 0 
-      };
+      return { areAllGoalsMet: true, progressPercentage: 100, isGoalMet: true, currentGoal: GOAL_MILESTONES[GOAL_MILESTONES.length - 1], previousGoal: 0 };
     }
     const currentGoal = GOAL_MILESTONES[nextGoalIndex];
     const previousGoal = nextGoalIndex > 0 ? GOAL_MILESTONES[nextGoalIndex - 1] : 0;
@@ -125,14 +120,17 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, 
         const userDocRef = doc(db, 'users', user.uid);
         const todayString = formatDateToLocalYYYYMMDD(new Date());
         const fieldKey = `claimedDailyGoals.${todayString}`;
+        
+        // This triggers the parent's onSnapshot listener.
         await updateDoc(userDocRef, {
             coins: increment(rewardAmount),
             [fieldKey]: arrayUnion(currentGoal)
         });
+        
         alert(`Chúc mừng! Bạn đã nhận được ${rewardAmount.toLocaleString()} coins cho cột mốc ${currentGoal} từ!`);
-        // The coin animation is now triggered by the parent component listening to Firestore changes.
-        // We just need to update the UI for the claimed button here.
-        onClaimSuccess(currentGoal);
+        
+        // This triggers the parent's instant animation logic.
+        onClaimSuccess(currentGoal, rewardAmount);
     } catch (error) {
         console.error("Lỗi khi nhận thưởng:", error);
         alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
@@ -148,19 +146,10 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, 
           <div className="bg-yellow-100 text-yellow-600 p-2.5 rounded-lg"><TrophyIcon /></div>
           <div>
             <h3 className="text-base sm:text-lg font-bold text-gray-800">Daily Missions</h3>
-            {areAllGoalsMet ? (
-              <p className="text-xs sm:text-sm text-green-600 font-semibold">All missions completed!</p>
-            ) : (
-              <div 
-                className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" 
-                title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}
-              >
+            {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">All missions completed!</p> ) : (
+              <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
                   <span className="flex items-center font-bold text-amber-600">
-                      <img 
-                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp"
-                        alt="Reward Coin"
-                        className="h-5 w-5 mr-1.5"
-                      />
+                      <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp" alt="Reward Coin" className="h-5 w-5 mr-1.5"/>
                       <span className="text-sm">{currentGoal * (masteryCount > 0 ? masteryCount : 1)}</span>
                   </span>
               </div>
@@ -168,36 +157,22 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, 
           </div>
         </div>
         <div className="flex-shrink-0">
-          {areAllGoalsMet ? (
-            <div className="text-center p-2 bg-green-100 text-green-700 rounded-lg flex items-center gap-2">
-              <CheckCircleIconSmall /> <span className="font-bold text-sm">Awesome!</span>
-            </div>
+          {areAllGoalsMet ? ( <div className="text-center p-2 bg-green-100 text-green-700 rounded-lg flex items-center gap-2"><CheckCircleIconSmall /> <span className="font-bold text-sm">Awesome!</span></div>
           ) : isGoalMet ? (
-            <button
-              onClick={handleClaim} disabled={isClaiming}
-              className="flex items-center justify-center px-4 py-2 font-bold text-white bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg shadow-md hover:scale-105 transform transition-transform duration-200 disabled:opacity-70 disabled:cursor-wait"
-            >
+            <button onClick={handleClaim} disabled={isClaiming} className="flex items-center justify-center px-4 py-2 font-bold text-white bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg shadow-md hover:scale-105 transform transition-transform duration-200 disabled:opacity-70 disabled:cursor-wait">
               {isClaiming ? <SpinnerIcon /> : <GiftIcon />}
               <span className="ml-1.5 text-sm">{isClaiming ? 'Wait' : 'Claim'}</span>
             </button>
           ) : (
             <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed">
               <GiftIcon />
-              <span className="flex items-baseline">
-                <span className="text-base font-extrabold text-gray-700">{wordsLearnedToday}</span>
-                <span className="text-sm font-medium text-gray-500">/{currentGoal}</span>
-              </span>
+              <span className="flex items-baseline"><span className="text-base font-extrabold text-gray-700">{wordsLearnedToday}</span><span className="text-sm font-medium text-gray-500">/{currentGoal}</span></span>
             </div>
           )}
         </div>
         <div className="w-full mt-3">
-          {areAllGoalsMet ? (
-            <div className="h-2.5 w-full bg-gradient-to-r from-green-400 to-teal-500 rounded-full" title="All missions completed!"></div>
-          ) : (
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div className="bg-gradient-to-r from-green-400 to-blue-500 h-2.5 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div>
-            </div>
-          )}
+          {areAllGoalsMet ? ( <div className="h-2.5 w-full bg-gradient-to-r from-green-400 to-teal-500 rounded-full" title="All missions completed!"></div>
+          ) : ( <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-gradient-to-r from-green-400 to-blue-500 h-2.5 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div></div> )}
         </div>
       </div>
     </div>
@@ -216,11 +191,7 @@ const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = ({ activityData
             const date = new Date(startDate); date.setDate(startDate.getDate() + i);
             const dateString = formatDateToLocalYYYYMMDD(date); const hasActivity = activityDates.has(dateString);
             const activityDetail = activityData[dateString] || { new: 0, review: 0 };
-            days.push({
-                date, dateString, dayOfMonth: date.getDate(), hasActivity,
-                isToday: date.getTime() === today.getTime(), isFuture: date.getTime() > today.getTime(),
-                tooltip: hasActivity ? `${date.toLocaleDateString('vi-VN')}: Học ${activityDetail.new} từ mới, ôn ${activityDetail.review} từ.` : date.toLocaleDateString('vi-VN'),
-            });
+            days.push({ date, dateString, dayOfMonth: date.getDate(), hasActivity, isToday: date.getTime() === today.getTime(), isFuture: date.getTime() > today.getTime(), tooltip: hasActivity ? `${date.toLocaleDateString('vi-VN')}: Học ${activityDetail.new} từ mới, ôn ${activityDetail.review} từ.` : date.toLocaleDateString('vi-VN'), });
         }
         return days;
     }, [activityData]);
@@ -249,15 +220,6 @@ const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = ({ activityData
     );
 };
 
-// --- [ADDED] Custom hook to get previous value ---
-function usePrevious(value) {
-  const ref = useRef();
-  useEffect(() => {
-    ref.current = value;
-  });
-  return ref.current;
-}
-
 // --- Component chính ---
 export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }: AnalysisDashboardProps) {
   const [user, setUser] = useState<User | null>(auth.currentUser);
@@ -269,15 +231,21 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
   const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
   const [claimedDailyGoals, setClaimedDailyGoals] = useState<number[]>([]);
 
-  // [REFACTORED] State and effect for coin animation
+  // [REFACTORED] Coin state is now managed internally for instant animation.
+  const [localCoins, setLocalCoins] = useState(userCoins);
   const [displayedCoins, setDisplayedCoins] = useState(userCoins);
-  const prevUserCoins = usePrevious(userCoins);
 
+  // This effect syncs the internal state with the external prop from Firestore,
+  // but it does *not* trigger the animation itself. This is for initialization
+  // and for keeping data accurate if the user navigates away and back.
+  useEffect(() => {
+    setLocalCoins(userCoins);
+    setDisplayedCoins(userCoins);
+  }, [userCoins]);
+
+  // [REFACTORED] The animation function, same as in quiz.tsx
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
-    if (startValue === endValue) {
-        setDisplayedCoins(endValue);
-        return;
-    };
+    if (startValue === endValue) return;
     const isCountingUp = endValue > startValue;
     const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
     let current = startValue;
@@ -291,17 +259,6 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
       }
     }, 30);
   }, []);
-
-  useEffect(() => {
-    // This effect now correctly handles animations by comparing the new prop value to the previous one.
-    if (prevUserCoins !== undefined && userCoins > prevUserCoins) {
-      // Animate from the previous value to the new one if coins increased.
-      startCoinCountAnimation(prevUserCoins, userCoins);
-    } else {
-      // If there's no animation (e.g., on first load or coins decreased), just snap to the current value.
-      setDisplayedCoins(userCoins);
-    }
-  }, [userCoins, prevUserCoins, startCoinCountAnimation]);
   
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
@@ -398,10 +355,14 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
     setSortConfig({ key, direction });
   };
   
-  // [REFACTORED] This function now only handles UI updates for the button.
-  const handleGoalClaimSuccess = useCallback((milestone: number) => {
+  // [REFACTORED] This is now the instant trigger for the animation.
+  const handleGoalClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
       setClaimedDailyGoals(prev => [...prev, milestone]);
-  }, []);
+      
+      const newTotalCoins = localCoins + rewardAmount;
+      startCoinCountAnimation(localCoins, newTotalCoins);
+      setLocalCoins(newTotalCoins); // Update internal "real" value for the next claim.
+  }, [localCoins, startCoinCountAnimation]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -423,12 +384,7 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
   
   const mainContent = () => {
     if (!analysisData || analysisData.totalWordsLearned === 0) {
-        return (
-          <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
-              <h2 className="text-2xl font-bold mb-2">Chưa có dữ liệu</h2>
-              <p>Hãy bắt đầu học để xem tiến trình của bạn được phân tích tại đây!</p>
-          </div>
-        );
+        return ( <div className="flex flex-col items-center justify-center h-full text-center text-gray-500"><h2 className="text-2xl font-bold mb-2">Chưa có dữ liệu</h2><p>Hãy bắt đầu học để xem tiến trình của bạn được phân tích tại đây!</p></div> );
     }
 
     const { totalWordsLearned, totalWordsAvailable, learningActivity, masteryByGame, vocabularyGrowth } = analysisData;
@@ -443,10 +399,7 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
                             <div className="bg-blue-100 text-blue-600 p-3 rounded-xl flex-shrink-0"><BookOpenIcon /></div>
                             <div>
                                 <p className="text-sm font-medium text-gray-500">Vocabulary Progress</p>
-                                <div className="flex items-baseline gap-2 mt-1">
-                                    <p className="text-2xl font-bold text-gray-900">{totalWordsLearned}</p>
-                                    <p className="text-base font-medium text-gray-400">/ {totalWordsAvailable}</p>
-                                </div>
+                                <div className="flex items-baseline gap-2 mt-1"><p className="text-2xl font-bold text-gray-900">{totalWordsLearned}</p><p className="text-base font-medium text-gray-400">/ {totalWordsAvailable}</p></div>
                             </div>
                         </div>
                         <div className="p-5 flex items-center gap-4">
@@ -465,17 +418,7 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
                         </div>
                     </div>
                 </div>
-
-                <div className="mb-6">
-                    <DailyGoalMilestones 
-                        wordsLearnedToday={wordsLearnedToday} 
-                        masteryCount={masteryCount}
-                        user={user}
-                        claimedDailyGoals={claimedDailyGoals}
-                        onClaimSuccess={handleGoalClaimSuccess}
-                    />
-                </div>
-
+                <div className="mb-6"><DailyGoalMilestones wordsLearnedToday={wordsLearnedToday} masteryCount={masteryCount} user={user} claimedDailyGoals={claimedDailyGoals} onClaimSuccess={handleGoalClaimSuccess} /></div>
                 <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     <ChartCard title="Tăng trưởng từ vựng"><ResponsiveContainer><AreaChart data={vocabularyGrowth} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}><defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12} /><Tooltip content={<CustomTooltip />} /><Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" /></AreaChart></ResponsiveContainer></ChartCard>
