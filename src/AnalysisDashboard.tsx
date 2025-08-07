@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback, memo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback, memo } from 'react';
 import { db, auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
 // [CẬP NHẬT] Thêm updateDoc, increment, arrayUnion
 import { collection, getDocs, doc, getDoc, updateDoc, increment, arrayUnion, QuerySnapshot, DocumentData } from 'firebase/firestore';
@@ -9,16 +9,6 @@ import {
 } from 'recharts';
 import { defaultVocabulary } from './list-vocabulary.ts'; // Điều chỉnh đường dẫn
 import CoinDisplay from './coin-display.tsx'; // [ADDED] Import for header
-
-// --- [ADDED] Custom hook to track previous value ---
-function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>();
-  useEffect(() => {
-    ref.current = value;
-  });
-  return ref.current;
-}
-
 
 // --- [ADDED] Icons and Components for Header ---
 const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
@@ -100,7 +90,7 @@ interface DailyGoalMilestonesProps {
   // [CẬP NHẬT] Thêm props để nhận dữ liệu từ cha
   user: User | null;
   claimedDailyGoals: number[];
-  onClaimSuccess: (milestone: number) => void;
+  onClaimSuccess: (milestone: number, rewardAmount: number) => void;
 }
 
 const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, masteryCount, user, claimedDailyGoals, onClaimSuccess }) => {
@@ -151,7 +141,7 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, 
         });
         
         alert(`Chúc mừng! Bạn đã nhận được ${rewardAmount.toLocaleString()} coins cho cột mốc ${currentGoal} từ!`);
-        onClaimSuccess(currentGoal);
+        onClaimSuccess(currentGoal, rewardAmount);
 
     } catch (error) {
         console.error("Lỗi khi nhận thưởng:", error);
@@ -295,37 +285,39 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
   const [error, setError] = useState<string | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
-  const [displayedCoins, setDisplayedCoins] = useState(userCoins);
-  const prevUserCoins = usePrevious(userCoins);
-  
+  // [MODIFIED] Removed local masteryCount state, will use prop instead.
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
+  // [CẬP NHẬT] State để lưu các goal đã nhận trong ngày
   const [claimedDailyGoals, setClaimedDailyGoals] = useState<number[]>([]);
   
+  // [ADDED] States for coin animation, inspired by quiz.tsx
+  const [localCoins, setLocalCoins] = useState(userCoins);
+  const [displayedCoins, setDisplayedCoins] = useState(userCoins);
+
+  // [ADDED] Sync with external prop changes from parent.
+  useEffect(() => {
+    setLocalCoins(userCoins);
+    setDisplayedCoins(userCoins);
+  }, [userCoins]);
+
+  // [ADDED] Coin animation function from quiz.tsx
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
-    if (startValue === endValue) {
-        setDisplayedCoins(endValue);
-        return;
-    }
+    if (startValue === endValue) return;
     const isCountingUp = endValue > startValue;
     const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
     let current = startValue;
     const interval = setInterval(() => {
       if (isCountingUp) { current += step; } else { current -= step; }
-      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) { 
-        setDisplayedCoins(endValue); 
-        clearInterval(interval); 
-      } else { 
-        setDisplayedCoins(current); 
+      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
+        setDisplayedCoins(endValue);
+        clearInterval(interval);
+      } else {
+        setDisplayedCoins(current);
       }
     }, 30);
   }, []);
 
-  useEffect(() => {
-    const fromValue = prevUserCoins ?? userCoins;
-    startCoinCountAnimation(fromValue, userCoins);
-  }, [userCoins, prevUserCoins, startCoinCountAnimation]);
-  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
     return () => unsubscribe();
@@ -344,6 +336,9 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
         
         if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
+            // [MODIFIED] masteryCount is now a prop, so no need to set state here.
+            
+            // [CẬP NHẬT] Lấy dữ liệu goal đã nhận của ngày hôm nay
             const todayString = formatDateToLocalYYYYMMDD(new Date());
             const todayClaimedGoals = userData.claimedDailyGoals?.[todayString] || [];
             setClaimedDailyGoals(todayClaimedGoals);
@@ -428,11 +423,14 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
     setSortConfig({ key, direction });
   };
   
-  // [CẬP NHẬT] Hàm callback để cập nhật UI ngay lập tức sau khi nhận thưởng thành công
-  const handleGoalClaimSuccess = useCallback((milestone: number) => {
-      setClaimedDailyGoals(prev => [...prev, milestone]);
-      // Xóa logic animation ở đây, useEffect sẽ xử lý
-  }, []);
+  // [CẬP NHẬT] Hàm callback để cập nhật UI và BẮT ĐẦU ANIMATION sau khi nhận thưởng thành công
+  const handleGoalClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
+    setClaimedDailyGoals(prev => [...prev, milestone]);
+
+    const newTotalCoins = localCoins + rewardAmount;
+    startCoinCountAnimation(localCoins, newTotalCoins);
+    setLocalCoins(newTotalCoins); // Update the "real" local state for the next claim
+  }, [localCoins, startCoinCountAnimation]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
