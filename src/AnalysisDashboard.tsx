@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback, memo } from 'react';
 import { db, auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
 // [CẬP NHẬT] Thêm updateDoc, increment, arrayUnion
 import { collection, getDocs, doc, getDoc, updateDoc, increment, arrayUnion, QuerySnapshot, DocumentData } from 'firebase/firestore';
@@ -8,6 +8,17 @@ import {
     Tooltip, Legend, ResponsiveContainer, Cell
 } from 'recharts';
 import { defaultVocabulary } from './list-vocabulary.ts'; // Điều chỉnh đường dẫn
+import CoinDisplay from './coin-display.tsx'; // [ADDED] Import for header
+
+// --- [ADDED] Icons and Components for Header ---
+const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    </svg>
+);
+const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
+const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => ( <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style> <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div> <div className="relative flex items-center justify-center"><img src={masteryIconUrl} alt="Mastery Icon" className="w-4 h-4" /></div> <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{masteryCount}</div> <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div> <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div> </div> ));
+
 
 // --- Icons (Sử dụng các icon SVG đơn giản để không phụ thuộc vào file ngoài) ---
 const BookOpenIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
@@ -47,6 +58,14 @@ interface AnalysisData {
   wordMastery: WordMastery[];
 }
 type DailyActivityMap = { [date: string]: { new: number; review: number } };
+
+// --- [ADDED] Props for the component ---
+interface AnalysisDashboardProps {
+  onGoBack: () => void;
+  userCoins: number;
+  masteryCount: number;
+}
+
 
 // --- Component Card tái sử dụng cho mỗi biểu đồ ---
 const ChartCard: FC<{ title: string; children: ReactNode }> = ({ title, children }) => (
@@ -260,13 +279,13 @@ const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = ({ activityData
 
 
 // --- Component chính ---
-export default function AnalysisDashboard() {
+export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }: AnalysisDashboardProps) {
   const [user, setUser] = useState<User | null>(auth.currentUser);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
-  const [masteryCount, setMasteryCount] = useState(0);
+  // [MODIFIED] Removed local masteryCount state, will use prop instead.
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
   // [CẬP NHẬT] State để lưu các goal đã nhận trong ngày
@@ -290,7 +309,7 @@ export default function AnalysisDashboard() {
         
         if (userDocSnap.exists()) {
             const userData = userDocSnap.data();
-            setMasteryCount(userData.masteryCards || 0);
+            // [MODIFIED] masteryCount is now a prop, so no need to set state here.
             
             // [CẬP NHẬT] Lấy dữ liệu goal đã nhận của ngày hôm nay
             const todayString = formatDateToLocalYYYYMMDD(new Date());
@@ -399,113 +418,136 @@ export default function AnalysisDashboard() {
   
   if (loading) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">Đang tải phân tích...</div>;
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 p-4">{error}</div>;
-  if (!analysisData || analysisData.totalWordsLearned === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center h-screen text-center text-gray-500">
-            <h2 className="text-2xl font-bold mb-2">Chưa có dữ liệu</h2>
-            <p>Hãy bắt đầu học để xem tiến trình của bạn được phân tích tại đây!</p>
+  
+  const mainContent = () => {
+    if (!analysisData || analysisData.totalWordsLearned === 0) {
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+              <h2 className="text-2xl font-bold mb-2">Chưa có dữ liệu</h2>
+              <p>Hãy bắt đầu học để xem tiến trình của bạn được phân tích tại đây!</p>
+          </div>
+        );
+    }
+
+    const { totalWordsLearned, totalWordsAvailable, learningActivity, masteryByGame, vocabularyGrowth } = analysisData;
+    const completionPercentage = totalWordsAvailable > 0 ? (totalWordsLearned / totalWordsAvailable * 100) : 0;
+    const barColors = ["#8884d8", "#82ca9d"];
+    return (
+        <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-full">
+            <div className="max-w-7xl mx-auto">
+                {/* [THIẾT KẾ MỚI] Khối thống kê tổng quan gộp lại */}
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 my-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+                        
+                        {/* Stat: Vocabulary Progress */}
+                        <div className="p-5 flex items-center gap-4">
+                            <div className="bg-blue-100 text-blue-600 p-3 rounded-xl flex-shrink-0">
+                                <BookOpenIcon />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-gray-500">Vocabulary Progress</p>
+                                <div className="flex items-baseline gap-2 mt-1">
+                                    <p className="text-2xl font-bold text-gray-900">{totalWordsLearned}</p>
+                                    <p className="text-base font-medium text-gray-400">/ {totalWordsAvailable}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Stat: Completion Rate */}
+                        <div className="p-5 flex items-center gap-4">
+                            <div className="bg-green-100 text-green-600 p-3 rounded-xl flex-shrink-0">
+                                <CheckCircleIcon />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-gray-500">Completion Rate</p>
+                                <p className="text-2xl font-bold text-gray-900">{completionPercentage.toFixed(1)}%</p>
+                            </div>
+                        </div>
+
+                        {/* Stat: Mastery Cards */}
+                        <div className="p-5 flex items-center gap-4">
+                            <div className="bg-purple-100 text-purple-600 p-3 rounded-xl flex-shrink-0">
+                                <AwardIcon />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-gray-500">Mastery Cards</p>
+                                <p className="text-2xl font-bold text-gray-900">{masteryCount}</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                {/* --- TÍCH HỢP COMPONENT MỤC TIÊU CỘT MỐC --- */}
+                <div className="mb-6">
+                    {/* [CẬP NHẬT] Truyền props cần thiết vào component con */}
+                    <DailyGoalMilestones 
+                        wordsLearnedToday={wordsLearnedToday} 
+                        masteryCount={masteryCount}
+                        user={user}
+                        claimedDailyGoals={claimedDailyGoals}
+                        onClaimSuccess={handleGoalClaimSuccess}
+                    />
+                </div>
+
+                <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <ChartCard title="Tăng trưởng từ vựng">
+                        <ResponsiveContainer><AreaChart data={vocabularyGrowth} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}><defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12} /><Tooltip content={<CustomTooltip />} /><Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" /></AreaChart></ResponsiveContainer>
+                    </ChartCard>
+                    <ChartCard title="Hoạt động học tập (30 ngày qua)">
+                        <ResponsiveContainer><BarChart data={learningActivity} margin={{ top: 20, right: 20, left: -20, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12}/><Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(136, 132, 216, 0.1)'}}/><Legend verticalAlign="top" wrapperStyle={{top: 0, left: 25}}/><Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" /><Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer>
+                    </ChartCard>
+                    <ChartCard title="Tổng điểm theo Game">
+                        <ResponsiveContainer><BarChart data={masteryByGame} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis type="number" hide /><YAxis dataKey="game" type="category" width={80} tick={{ fontSize: 14 }} /><Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255, 128, 66, 0.1)'}} /><Bar dataKey="completed" name="Tổng điểm" barSize={35}>{masteryByGame.map((entry, index) => (<Cell key={`cell-${index}`} fill={barColors[index % 2]} />))}</Bar></BarChart></ResponsiveContainer>
+                    </ChartCard>
+                    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">Phân tích độ thành thạo Từ vựng</h3>
+                        {sortedWordMastery.length > 0 ? (<>
+                            <div className="overflow-x-auto"><table className="w-full text-sm text-left text-gray-600"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3">Từ vựng</th><th scope="col" className="px-4 py-3 cursor-pointer" onClick={() => handleSort('mastery')}>Điểm thành thạo<SortIcon direction={sortConfig.key === 'mastery' ? sortConfig.direction : undefined} /></th><th scope="col" className="px-4 py-3 cursor-pointer" onClick={() => handleSort('lastPracticed')}>Lần cuối luyện tập<SortIcon direction={sortConfig.key === 'lastPracticed' ? sortConfig.direction : undefined} /></th></tr></thead>
+                                <tbody>{sortedWordMastery.slice(0, visibleMasteryRows).map(({ word, mastery, lastPracticed }) => (
+                                    <tr key={word} className="bg-white border-b hover:bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">{word}</td>
+                                        <td className="px-4 py-3"><div className="flex items-center gap-2"><span className="font-bold w-4 text-center">{mastery}</span><div className="w-20 bg-gray-200 rounded-full h-2"><div className="bg-green-500 h-2 rounded-full" style={{ width: `${Math.min(mastery / 10, 1) * 100}%` }}></div></div></div></td>
+                                        <td className="px-4 py-3">{lastPracticed.toLocaleDateString('vi-VN')}</td>
+                                    </tr>
+                                ))}</tbody></table></div>
+                            {visibleMasteryRows < sortedWordMastery.length && (<div className="text-center mt-4"><button onClick={() => setVisibleMasteryRows(prev => prev + 10)} className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-100 rounded-lg hover:bg-indigo-200 transition-colors">Hiển thị thêm</button></div>)}
+                        </>) : (<p className="text-center text-gray-500 py-4">Không có dữ liệu về độ thành thạo.</p>)}
+                    </div>
+                    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
+                         <h3 className="text-lg font-bold text-gray-800 mb-4">Hoạt động gần đây</h3>
+                         {analysisData.recentCompletions.length > 0 ? (<ul className="space-y-3">{analysisData.recentCompletions.map((item, index) => (
+                            <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
+                                <span className="font-medium text-gray-700 capitalize">{item.word}</span><span className="text-sm text-gray-500">{item.date}</span>
+                            </li>
+                         ))}</ul>) : (<p className="text-center text-gray-500 py-4">Không có hoạt động nào gần đây.</p>)}
+                    </div>
+                </div>
+            </div>
         </div>
-      );
+    );
   }
 
-  const { totalWordsLearned, totalWordsAvailable, learningActivity, masteryByGame, vocabularyGrowth } = analysisData;
-  const completionPercentage = totalWordsAvailable > 0 ? (totalWordsLearned / totalWordsAvailable * 100) : 0;
-  const barColors = ["#8884d8", "#82ca9d"];
-
   return (
-    <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        
-        {/* [THIẾT KẾ MỚI] Khối thống kê tổng quan gộp lại */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 my-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-200">
-                
-                {/* Stat: Vocabulary Progress */}
-                <div className="p-5 flex items-center gap-4">
-                    <div className="bg-blue-100 text-blue-600 p-3 rounded-xl flex-shrink-0">
-                        <BookOpenIcon />
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Vocabulary Progress</p>
-                        <div className="flex items-baseline gap-2 mt-1">
-                            <p className="text-2xl font-bold text-gray-900">{totalWordsLearned}</p>
-                            <p className="text-base font-medium text-gray-400">/ {totalWordsAvailable}</p>
-                        </div>
-                    </div>
-                </div>
-                
-                {/* Stat: Completion Rate */}
-                <div className="p-5 flex items-center gap-4">
-                    <div className="bg-green-100 text-green-600 p-3 rounded-xl flex-shrink-0">
-                        <CheckCircleIcon />
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Completion Rate</p>
-                        <p className="text-2xl font-bold text-gray-900">{completionPercentage.toFixed(1)}%</p>
-                    </div>
-                </div>
-
-                {/* Stat: Mastery Cards */}
-                <div className="p-5 flex items-center gap-4">
-                    <div className="bg-purple-100 text-purple-600 p-3 rounded-xl flex-shrink-0">
-                        <AwardIcon />
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Mastery Cards</p>
-                        <p className="text-2xl font-bold text-gray-900">{masteryCount}</p>
-                    </div>
-                </div>
-
+    <div className="bg-white flex flex-col h-full">
+        <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
+          <div className="flex h-14 items-center justify-between px-4">
+            <div className="w-24">
+              <button onClick={onGoBack} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
+                  <HomeIcon />
+              </button>
             </div>
-        </div>
-
-        {/* --- TÍCH HỢP COMPONENT MỤC TIÊU CỘT MỐC --- */}
-        <div className="mb-6">
-            {/* [CẬP NHẬT] Truyền props cần thiết vào component con */}
-            <DailyGoalMilestones 
-                wordsLearnedToday={wordsLearnedToday} 
-                masteryCount={masteryCount}
-                user={user}
-                claimedDailyGoals={claimedDailyGoals}
-                onClaimSuccess={handleGoalClaimSuccess}
-            />
-        </div>
-
-        <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            <ChartCard title="Tăng trưởng từ vựng">
-                <ResponsiveContainer><AreaChart data={vocabularyGrowth} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}><defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12} /><Tooltip content={<CustomTooltip />} /><Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" /></AreaChart></ResponsiveContainer>
-            </ChartCard>
-            <ChartCard title="Hoạt động học tập (30 ngày qua)">
-                <ResponsiveContainer><BarChart data={learningActivity} margin={{ top: 20, right: 20, left: -20, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12}/><Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(136, 132, 216, 0.1)'}}/><Legend verticalAlign="top" wrapperStyle={{top: 0, left: 25}}/><Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" /><Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer>
-            </ChartCard>
-            <ChartCard title="Tổng điểm theo Game">
-                <ResponsiveContainer><BarChart data={masteryByGame} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis type="number" hide /><YAxis dataKey="game" type="category" width={80} tick={{ fontSize: 14 }} /><Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255, 128, 66, 0.1)'}} /><Bar dataKey="completed" name="Tổng điểm" barSize={35}>{masteryByGame.map((entry, index) => (<Cell key={`cell-${index}`} fill={barColors[index % 2]} />))}</Bar></BarChart></ResponsiveContainer>
-            </ChartCard>
-            <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Phân tích độ thành thạo Từ vựng</h3>
-                {sortedWordMastery.length > 0 ? (<>
-                    <div className="overflow-x-auto"><table className="w-full text-sm text-left text-gray-600"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3">Từ vựng</th><th scope="col" className="px-4 py-3 cursor-pointer" onClick={() => handleSort('mastery')}>Điểm thành thạo<SortIcon direction={sortConfig.key === 'mastery' ? sortConfig.direction : undefined} /></th><th scope="col" className="px-4 py-3 cursor-pointer" onClick={() => handleSort('lastPracticed')}>Lần cuối luyện tập<SortIcon direction={sortConfig.key === 'lastPracticed' ? sortConfig.direction : undefined} /></th></tr></thead>
-                        <tbody>{sortedWordMastery.slice(0, visibleMasteryRows).map(({ word, mastery, lastPracticed }) => (
-                            <tr key={word} className="bg-white border-b hover:bg-gray-50">
-                                <td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">{word}</td>
-                                <td className="px-4 py-3"><div className="flex items-center gap-2"><span className="font-bold w-4 text-center">{mastery}</span><div className="w-20 bg-gray-200 rounded-full h-2"><div className="bg-green-500 h-2 rounded-full" style={{ width: `${Math.min(mastery / 10, 1) * 100}%` }}></div></div></div></td>
-                                <td className="px-4 py-3">{lastPracticed.toLocaleDateString('vi-VN')}</td>
-                            </tr>
-                        ))}</tbody></table></div>
-                    {visibleMasteryRows < sortedWordMastery.length && (<div className="text-center mt-4"><button onClick={() => setVisibleMasteryRows(prev => prev + 10)} className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-100 rounded-lg hover:bg-indigo-200 transition-colors">Hiển thị thêm</button></div>)}
-                </>) : (<p className="text-center text-gray-500 py-4">Không có dữ liệu về độ thành thạo.</p>)}
+            <h2 className="flex-1 text-lg font-bold text-slate-200 truncate text-center px-4">Phân tích & Thống kê</h2>
+            <div className="flex items-center justify-end gap-3">
+               <CoinDisplay displayedCoins={userCoins} isStatsFullscreen={false} />
+               <MasteryDisplay masteryCount={masteryCount} />
             </div>
-            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
-                 <h3 className="text-lg font-bold text-gray-800 mb-4">Hoạt động gần đây</h3>
-                 {analysisData.recentCompletions.length > 0 ? (<ul className="space-y-3">{analysisData.recentCompletions.map((item, index) => (
-                    <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
-                        <span className="font-medium text-gray-700 capitalize">{item.word}</span><span className="text-sm text-gray-500">{item.date}</span>
-                    </li>
-                 ))}</ul>) : (<p className="text-center text-gray-500 py-4">Không có hoạt động nào gần đây.</p>)}
-            </div>
+          </div>
+        </header>
+        <div className="flex-grow overflow-y-auto">
+            {mainContent()}
         </div>
-      </div>
     </div>
   );
 }
