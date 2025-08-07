@@ -126,9 +126,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPractice, setSelectedPractice] = useState<number | null>(null);
   const [user, setUser] = useState(auth.currentUser);
-  // --- THAY ĐỔI: Thêm state cho displayedCoins để tạo hiệu ứng animation ---
   const [userCoins, setUserCoins] = useState(0);
-  const [displayedUserCoins, setDisplayedUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
 
   // Effect to listen for auth changes
@@ -138,56 +136,26 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
     });
     return () => unsubscribe();
   }, []);
-  
-  // --- THÊM: Hàm animation đếm coin, giống như trong quiz.tsx ---
-  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
-    if (startValue === endValue) return;
-    const isCountingUp = endValue > startValue;
-    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
-    let current = startValue;
-    const interval = setInterval(() => {
-      if (isCountingUp) { current += step; } else { current -= step; }
-      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
-        setDisplayedUserCoins(endValue);
-        clearInterval(interval);
-      } else {
-        setDisplayedUserCoins(current);
-      }
-    }, 30);
-  }, []);
 
   // Effect to get coins in real-time when user is available
   useEffect(() => {
     if (user) {
-      let isInitialLoad = true; // Flag để không animate khi tải lần đầu
       const unsubscribe = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const newCoins = data.coins || 0;
-          // Sử dụng functional update để lấy giá trị state trước đó một cách an toàn
-          setUserCoins(prevCoins => {
-              if (isInitialLoad) {
-                  setDisplayedUserCoins(newCoins);
-                  isInitialLoad = false;
-              } else {
-                  startCoinCountAnimation(prevCoins, newCoins);
-              }
-              return newCoins; // Cập nhật giá trị "thật"
-          });
+          setUserCoins(data.coins || 0);
           setMasteryCount(data.masteryCards || 0);
         } else {
           setUserCoins(0);
-          setDisplayedUserCoins(0);
           setMasteryCount(0);
         }
       });
       return () => unsubscribe();
     } else {
       setUserCoins(0); // Reset coins if user logs out
-      setDisplayedUserCoins(0);
       setMasteryCount(0); // Reset mastery if user logs out
     }
-  }, [user, startCoinCountAnimation]);
+  }, [user]);
 
   // --- THÊM USEEFFECT ĐỂ ĐIỀU KHIỂN NAV BAR CHA ---
   useEffect(() => {
@@ -269,43 +237,31 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               ViewComponent = <WordChainGame onGoBack={goBack} />;
               break;
           case 'analysis':
-              title = ''; // Title is empty as requested
-              ViewComponent = <AnalysisDashboard />;
+              title = ''; // Title is not needed here anymore
+              // [MODIFIED] Pass props to AnalysisDashboard for it to manage its own header
+              ViewComponent = <AnalysisDashboard onGoBack={goHome} userCoins={userCoins} masteryCount={masteryCount} />;
               break;
       }
       
-      const showParentHeader = !['quiz', 'vocabularyGame'].includes(currentView);
+      // [MODIFIED] The parent header is no longer shown for 'analysis' view
+      const showParentHeader = !['quiz', 'vocabularyGame', 'analysis'].includes(currentView);
 
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
             {showParentHeader && (
                 <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
                   <div className="flex h-14 items-center justify-between px-4">
-                    {currentView === 'analysis' ? (
-                        <>
-                            <div className="w-24">
-                              <button onClick={goHome} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
-                                  <HomeIcon />
-                              </button>
-                            </div>
-                            <h2 className="flex-1 text-lg font-bold text-slate-200 truncate text-center px-4">{title}</h2>
-                            <div className="flex items-center justify-end gap-3">
-                               <CoinDisplay displayedCoins={displayedUserCoins} isStatsFullscreen={false} />
-                               <MasteryDisplay masteryCount={masteryCount} />
-                            </div>
-                        </>
-                    ) : (
-                        <>
-                            <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
-                                <BackIcon className="h-5 w-5"/>
-                                <span>Quay lại</span>
-                            </button>
-                            <h2 className="text-lg font-bold text-slate-200 truncate px-2">{title}</h2>
-                            <div className="w-28 text-right">
-                                <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ"><HomeIcon className="h-5 w-5"/></button>
-                            </div>
-                        </>
-                    )}
+                     {/* [MODIFIED] Removed the ternary check for 'analysis' as it's now handled by showParentHeader */}
+                     <>
+                        <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
+                            <BackIcon className="h-5 w-5"/>
+                            <span>Quay lại</span>
+                        </button>
+                        <h2 className="text-lg font-bold text-slate-200 truncate px-2">{title}</h2>
+                        <div className="w-28 text-right">
+                            <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ"><HomeIcon className="h-5 w-5"/></button>
+                        </div>
+                    </>
                   </div>
                 </header>
             )}
