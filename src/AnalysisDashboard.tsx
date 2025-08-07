@@ -121,15 +121,14 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, 
         const todayString = formatDateToLocalYYYYMMDD(new Date());
         const fieldKey = `claimedDailyGoals.${todayString}`;
         
-        // This triggers the parent's onSnapshot listener.
         await updateDoc(userDocRef, {
             coins: increment(rewardAmount),
             [fieldKey]: arrayUnion(currentGoal)
         });
         
-        alert(`Chúc mừng! Bạn đã nhận được ${rewardAmount.toLocaleString()} coins cho cột mốc ${currentGoal} từ!`);
+        // [REMOVED] Bỏ thông báo alert() theo yêu cầu
+        // alert(`Chúc mừng! Bạn đã nhận được ${rewardAmount.toLocaleString()} coins cho cột mốc ${currentGoal} từ!`);
         
-        // This triggers the parent's instant animation logic.
         onClaimSuccess(currentGoal, rewardAmount);
     } catch (error) {
         console.error("Lỗi khi nhận thưởng:", error);
@@ -231,19 +230,14 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
   const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
   const [claimedDailyGoals, setClaimedDailyGoals] = useState<number[]>([]);
 
-  // [REFACTORED] Coin state is now managed internally for instant animation.
   const [localCoins, setLocalCoins] = useState(userCoins);
   const [displayedCoins, setDisplayedCoins] = useState(userCoins);
 
-  // This effect syncs the internal state with the external prop from Firestore,
-  // but it does *not* trigger the animation itself. This is for initialization
-  // and for keeping data accurate if the user navigates away and back.
   useEffect(() => {
     setLocalCoins(userCoins);
     setDisplayedCoins(userCoins);
   }, [userCoins]);
 
-  // [REFACTORED] The animation function, same as in quiz.tsx
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
     const isCountingUp = endValue > startValue;
@@ -355,13 +349,12 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
     setSortConfig({ key, direction });
   };
   
-  // [REFACTORED] This is now the instant trigger for the animation.
   const handleGoalClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
       setClaimedDailyGoals(prev => [...prev, milestone]);
       
       const newTotalCoins = localCoins + rewardAmount;
       startCoinCountAnimation(localCoins, newTotalCoins);
-      setLocalCoins(newTotalCoins); // Update internal "real" value for the next claim.
+      setLocalCoins(newTotalCoins);
   }, [localCoins, startCoinCountAnimation]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
