@@ -141,7 +141,7 @@ const VocabularyMilestones: FC<VocabularyMilestonesProps> = ({ totalWordsLearned
         <div className="flex items-center gap-3 flex-shrink-0">
           <div className="bg-blue-100 text-blue-600 p-2.5 rounded-lg"><BookOpenIcon /></div>
           <div>
-            <h3 className="text-base sm:text-lg font-bold text-gray-800">Vocabulary Journey</h3>
+            <h3 className="text-base sm:text-lg font-bold text-gray-800">Voca Journey</h3>
             {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">Max level reached!</p> ) : (
               <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
                   <span className="flex items-center font-bold text-amber-600">
