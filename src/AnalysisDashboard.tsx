@@ -90,7 +90,7 @@ interface DailyGoalMilestonesProps {
   // [CẬP NHẬT] Thêm props để nhận dữ liệu từ cha
   user: User | null;
   claimedDailyGoals: number[];
-  onClaimSuccess: (milestone: number) => void;
+  onClaimSuccess: (milestone: number, rewardAmount: number) => void;
 }
 
 const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, masteryCount, user, claimedDailyGoals, onClaimSuccess }) => {
@@ -141,7 +141,7 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, 
         });
         
         alert(`Chúc mừng! Bạn đã nhận được ${rewardAmount.toLocaleString()} coins cho cột mốc ${currentGoal} từ!`);
-        onClaimSuccess(currentGoal);
+        onClaimSuccess(currentGoal, rewardAmount);
 
     } catch (error) {
         console.error("Lỗi khi nhận thưởng:", error);
@@ -285,6 +285,7 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
   const [error, setError] = useState<string | null>(null);
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
+  const [displayedCoins, setDisplayedCoins] = useState(userCoins);
   // [MODIFIED] Removed local masteryCount state, will use prop instead.
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
@@ -396,10 +397,26 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
     setSortConfig({ key, direction });
   };
   
-  // [CẬP NHẬT] Hàm callback để cập nhật UI ngay lập tức sau khi nhận thưởng thành công
-  const handleGoalClaimSuccess = useCallback((milestone: number) => {
-      setClaimedDailyGoals(prev => [...prev, milestone]);
+  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
+    if (startValue === endValue) return;
+    const isCountingUp = endValue > startValue;
+    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
+    let current = startValue;
+    const interval = setInterval(() => {
+      if (isCountingUp) { current += step; } else { current -= step; }
+      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) { setDisplayedCoins(endValue); clearInterval(interval); } else { setDisplayedCoins(current); }
+    }, 30);
   }, []);
+
+  useEffect(() => {
+    startCoinCountAnimation(displayedCoins, userCoins);
+  }, [userCoins, displayedCoins, startCoinCountAnimation]);
+
+  // [CẬP NHẬT] Hàm callback để cập nhật UI ngay lập tức sau khi nhận thưởng thành công
+  const handleGoalClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
+      setClaimedDailyGoals(prev => [...prev, milestone]);
+      startCoinCountAnimation(displayedCoins, displayedCoins + rewardAmount);
+  }, [displayedCoins, startCoinCountAnimation]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -539,7 +556,7 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
               </button>
             </div>
             <div className="flex items-center justify-end gap-3">
-               <CoinDisplay displayedCoins={userCoins} isStatsFullscreen={false} />
+               <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                <MasteryDisplay masteryCount={masteryCount} />
             </div>
           </div>
