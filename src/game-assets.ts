@@ -68,10 +68,10 @@ export const itemAssets = {
     meteorStaff: require("./assets/equipment/meteor-staff.webp"),
     assassinsDagger: require("./assets/equipment/assassins-dagger.webp"),
     sacrificialSword: require("./assets/equipment/sacrificial-sword.webp"),
-    leviathanAxe: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2013%2C%202025%2C%2008_56_07%20PM.png',
-    chaosStaff: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2015%2C%202025%2C%2011_20_02%20AM.png',
+    leviathanAxe: require("./assets/equipment/leviathan-axe.webp"),
+    chaosStaff: require("./assets/equipment/chaos-staff.webp"),
     // Armor
-    hardArmor: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2002_26_49%20PM.png',
+    hardArmor: require("./assets/equipment/hard-armor.webp"),
     tunic: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_000000001ca461f5a50bac51456de65a.png',
     silverscalePlate: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2004_11_48%20PM.png',
     dragonsBreathArmor: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2006_42_28%20PM.png',
