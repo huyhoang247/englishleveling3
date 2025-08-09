@@ -86,7 +86,8 @@ interface VocabularyMilestonesProps {
   onClaimSuccess: (milestone: number, rewardAmount: number) => void;
 }
 
-const VocabularyMilestones: FC<VocabularyMilestonesProps> = ({ totalWordsLearned, masteryCount, user, claimedVocabMilestones, onClaimSuccess }) => {
+// [ĐÃ SỬA] Bọc component bằng React.memo để ngăn re-render không cần thiết
+const VocabularyMilestones: FC<VocabularyMilestonesProps> = memo(({ totalWordsLearned, masteryCount, user, claimedVocabMilestones, onClaimSuccess }) => {
   const [isClaiming, setIsClaiming] = useState(false);
 
   const {
@@ -172,7 +173,7 @@ const VocabularyMilestones: FC<VocabularyMilestonesProps> = ({ totalWordsLearned
       </div>
     </div>
   );
-};
+});
 
 
 // --- COMPONENT MỤC TIÊU HÀNG NGÀY (TIẾN TRÌNH CỘT MỐC) ---
@@ -191,7 +192,8 @@ interface DailyGoalMilestonesProps {
   onClaimSuccess: (milestone: number, rewardAmount: number) => void;
 }
 
-const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, masteryCount, user, claimedDailyGoals, onClaimSuccess }) => {
+// [ĐÃ SỬA] Bọc component bằng React.memo để ngăn re-render không cần thiết
+const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = memo(({ wordsLearnedToday, masteryCount, user, claimedDailyGoals, onClaimSuccess }) => {
   const [isClaiming, setIsClaiming] = useState(false);
 
   const {
@@ -274,11 +276,12 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = ({ wordsLearnedToday, 
       </div>
     </div>
   );
-};
+});
 
 
 // --- Component Lịch hoạt động (Activity Calendar) ---
-const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = ({ activityData }) => {
+// [ĐÃ SỬA] Bọc component bằng React.memo để ngăn re-render không cần thiết
+const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = memo(({ activityData }) => {
     const calendarData = useMemo(() => {
         const today = new Date(); today.setHours(0, 0, 0, 0); const dayOfWeek = today.getDay(); 
         const startOfWeek = new Date(today); startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
@@ -315,7 +318,7 @@ const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = ({ activityData
             </div>
         </div>
     );
-};
+});
 
 // --- Component chính ---
 const ITEMS_PER_PAGE = 10; // Số mục trên mỗi trang
