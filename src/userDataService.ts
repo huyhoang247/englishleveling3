@@ -50,6 +50,27 @@ export const updateUserCoins = async (userId: string, amount: number): Promise<v
 };
 
 /**
+ * Cập nhật số mastery card của người dùng trên Firestore.
+ * @param userId - ID của người dùng.
+ * @param amount - Số lượng mastery card cần thay đổi. Dùng số dương để cộng, số âm để trừ.
+ * @returns {Promise<void>}
+ */
+export const updateUserMastery = async (userId: string, amount: number): Promise<void> => {
+  if (!userId || amount === 0) {
+    return; // Không thực hiện nếu không có userId hoặc số lượng thay đổi là 0
+  }
+  const userDocRef = doc(db, 'users', userId);
+  try {
+    await updateDoc(userDocRef, {
+      masteryCards: increment(amount)
+    });
+  } catch (error) {
+    console.error(`Failed to update mastery cards for user ${userId}:`, error);
+    throw error; // Ném lỗi ra để component gốc có thể xử lý
+  }
+};
+
+/**
  * Lấy danh sách từ vựng đã mở của người dùng.
  * @param userId - ID của người dùng.
  * @returns {Promise<string[]>} Mảng các từ vựng đã mở.
