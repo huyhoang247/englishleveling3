@@ -11,8 +11,8 @@
  * Ví dụ: icon menu, shop, nút đóng...
  */
 export const uiAssets = {
-  keyIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/key.png",
-  menuIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/right.png",
+  keyIcon: require("./assets/images/key.webp"),
+  menuIcon: require("./assets/images/menu.web"),
   shopIcon: require("./assets/images/shop-icon.webp"),
   inventoryIcon: require("./assets/images/inventory-icon.webp"),
   missionIcon: require("./assets/images/mission-icon.webp"),
