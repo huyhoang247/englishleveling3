@@ -29,6 +29,12 @@ const BackIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
     </svg>
 );
 
+const HomeIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+    </svg>
+);
+
 
 type GameState = 'loading' | 'playerTurn' | 'aiTurn' | 'gameOver';
 type Message = { text: string; type: 'error' | 'info' | 'success' | 'warning' };
@@ -214,21 +220,9 @@ export default function WordChainGame({ onGoBack }) {
             <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
                 <div className="flex h-14 items-center justify-between px-4">
                     <div className="w-28 flex justify-start">
-                        <button onClick={onGoBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors" aria-label="Quay lại">
-                            <BackIcon />
-                            <span>Quay lại</span>
-                        </button>
-                    </div>
-                    
-                    <h1 className="text-lg font-bold text-slate-200 truncate">Nối Từ</h1>
-
-                    <div className="w-28 flex justify-end">
-                        <button 
-                            onClick={startGame} 
-                            disabled={gameState === 'loading' || allLearnedWords.size < 10} 
-                            className="px-4 py-1.5 text-sm font-semibold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 disabled:bg-slate-500 disabled:cursor-not-allowed transition-colors"
-                        >
-                            Ván mới
+                        <button onClick={onGoBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors" aria-label="Home">
+                            <HomeIcon />
+                            <span>Home</span>
                         </button>
                     </div>
                 </div>
