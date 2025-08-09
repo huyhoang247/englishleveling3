@@ -65,9 +65,9 @@ export const itemAssets = {
     demonKnightsSpear: require("./assets/equipment/demon-knights-spear.webp"),
     demonKingsDaggers: require("./assets/equipment/demon-kings-daggers.webp"),
     divineQuarterstaff: require("./assets/equipment/divine-quarter-staff.webp"),
-    meteorStaff: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2013%2C%202025%2C%2010_44_50%20AM.png',
-    assassinsDagger: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2013%2C%202025%2C%2012_29_58%20PM.png',
-    sacrificialSword: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2013%2C%202025%2C%2009_26_47%20PM.png',
+    meteorStaff: require("./assets/equipment/meteor-staff.webp"),
+    assassinsDagger: require("./assets/equipment/assassins-dagger.webp"),
+    sacrificialSword: require("./assets/equipment/sacrificial-sword.webp"),
     leviathanAxe: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2013%2C%202025%2C%2008_56_07%20PM.png',
     chaosStaff: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2015%2C%202025%2C%2011_20_02%20AM.png',
     // Armor
