@@ -36,6 +36,15 @@ export const uiAssets = {
 };
 
 /**
+ * Tài nguyên cho màn hình phân tích (Dashboard)
+ */
+export const dashboardAssets = {
+  masteryIcon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png',
+  vocaJourneyIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/voca-journey.webp",
+  dailyMissionsIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/daily-missions.webp",
+};
+
+/**
  * Tài nguyên cho các icon trong màn hình trang bị (Equipment)
  */
 export const equipmentUiAssets = {
@@ -113,6 +122,7 @@ export const treasureAssets = {
  */
 export const allImageUrls = [
     ...Object.values(uiAssets).filter(url => typeof url === 'string'),
+    ...Object.values(dashboardAssets),
     ...Object.values(equipmentUiAssets),
     ...Object.values(itemAssets),
     ...Object.values(skillAssets).filter(url => typeof url === 'string'),
