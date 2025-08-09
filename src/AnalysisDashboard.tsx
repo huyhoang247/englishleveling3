@@ -566,7 +566,7 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
                             </BarChart>
                         </ResponsiveContainer>
                     </ChartCard>
-                    <ChartCard title="Tổng điểm theo Game"><ResponsiveContainer><BarChart data={masteryByGame} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis type="number" hide /><YAxis dataKey="game" type="category" width={80} tick={{ fontSize: 14 }} /><Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(255, 128, 66, 0.1)'}} /><Bar dataKey="completed" name="Tổng điểm" barSize={35}>{masteryByGame.map((entry, index) => (<Cell key={`cell-${index}`} fill={barColors[index % 2]} />))}</Bar></BarChart></ResponsiveContainer></ChartCard>
+                    {/* The "Tổng điểm theo Game" chart has been removed */}
                     <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
                         <h3 className="text-lg font-bold text-gray-800 mb-4">Vocabulary Mastery Analysis</h3>
                         {sortedWordMastery.length > 0 ? (<>
@@ -605,7 +605,7 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
                         </>) : (<p className="text-center text-gray-500 py-4">No mastery data available.</p>)}
                     </div>
                     <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
-                         <h3 className="text-lg font-bold text-gray-800 mb-4">Hoạt động gần đây</h3>
+                         <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
                          {analysisData.recentCompletions.length > 0 ? (<ul className="space-y-3">{analysisData.recentCompletions.map((item, index) => (
                             <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
                                 <span className="font-medium text-gray-700 capitalize">{item.word}</span><span className="text-sm text-gray-500">{item.date}</span>
