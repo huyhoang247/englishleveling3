@@ -871,7 +871,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
               return (
                 <div key={levelNumber} className="bg-gray-100 p-4 rounded-lg">
                     <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-bold text-gray-700">{levelTitle}</h4>
+                        <h4 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">{levelTitle}</h4>
                         {multiplier > 1 && (<div className={`text-sm font-bold px-2.5 py-1 rounded-full shadow transition-colors ${isInactivePreview ? 'bg-gray-300 text-gray-500' : 'text-white bg-gradient-to-r from-amber-500 to-orange-600'}`}>x{multiplier} Thưởng</div>)}
                     </div>
                     <div className="space-y-3">{levelTiers}</div>
@@ -902,7 +902,10 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
             <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all animate-scale-up" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><GiftIcon className="w-6 h-6 text-yellow-500"/>Rewards: {practiceTitle}</h3>
+                    <div className="flex items-center gap-2">
+                        <GiftIcon className="w-6 h-6 text-yellow-500"/>
+                        <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Rewards: {practiceTitle}</h3>
+                    </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
                 </div>
                 <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50 hide-scrollbar">{renderedTiers}</div>
