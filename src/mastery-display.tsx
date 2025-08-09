@@ -7,12 +7,12 @@ interface MasteryDisplayProps {
 
 // Icon URL
 const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
-const masteryIconPlaceholderUrl = 'https://placehold.co/16x16/10b981/ffffff?text=M'; // Placeholder màu xanh
+const masteryIconPlaceholderUrl = 'https://placehold.co/16x16/94a3b8/ffffff?text=M'; // Placeholder màu xám
 
-// MasteryDisplay component - Emerald/Teal Theme
+// MasteryDisplay component - Platinum/Slate Theme
 const MasteryDisplay: React.FC<MasteryDisplayProps> = memo(({ masteryCount }) => (
-  // Container with a rich emerald-to-teal gradient
-  <div className="bg-gradient-to-br from-emerald-500 to-teal-700 rounded-lg p-0.5 flex items-center shadow-lg border border-teal-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+  // Container with a sleek slate-to-gray gradient
+  <div className="bg-gradient-to-br from-slate-600 to-gray-800 rounded-lg p-0.5 flex items-center shadow-lg border border-slate-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
     {/* Keyframe animation for the pulsing dots */}
     <style jsx>{`
       @keyframes pulse-fast {
@@ -24,8 +24,8 @@ const MasteryDisplay: React.FC<MasteryDisplayProps> = memo(({ masteryCount }) =>
       }
     `}</style>
     
-    {/* Shine effect on hover with a teal tint */}
-    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-teal-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+    {/* Shine effect on hover with a white/light gray tint */}
+    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
     
     {/* Icon container */}
     <div className="relative flex items-center justify-center mr-1">
@@ -41,12 +41,12 @@ const MasteryDisplay: React.FC<MasteryDisplayProps> = memo(({ masteryCount }) =>
       />
     </div>
 
-    {/* Mastery count with a light, cool text color */}
-    <div className="font-bold text-teal-100 text-xs tracking-wide">{masteryCount}</div>
+    {/* Mastery count with a bright, clear text color */}
+    <div className="font-bold text-slate-100 text-xs tracking-wide">{masteryCount}</div>
     
     {/* Pulsing dots for a "live" feel */}
     <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-    <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-emerald-200 rounded-full animate-pulse-fast"></div>
+    <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-slate-300 rounded-full animate-pulse-fast"></div>
   </div>
 ));
 
