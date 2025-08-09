@@ -1,19 +1,15 @@
-
-
 // --- START OF FILE VerticalFlashcardGallery.tsx ---
 
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
-import AddToPlaylistModal from './AddToPlaylistModal.tsx'; // SỬ DỤNG MODAL ĐÃ THIẾT KẾ LẠI
-import { defaultImageUrls as initialDefaultImageUrls } from './image-url.ts';
+import AddToPlaylistModal from './AddToPlaylistModal.tsx';
 import { auth, db } from './firebase.js';
-// <<< THAY ĐỔI 1: IMPORT THÊM `query` VÀ `orderBy` >>>
 import { doc, updateDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
-import detailedMeaningsText from './vocabulary-definitions.ts'; // <-- IMPORT DỮ LIỆU TỪ FILE MỚI
-import { defaultVocabulary } from './list-vocabulary.ts'; // <-- IMPORT DANH SÁCH TỪ VỰNG
-import { exampleData } from './example-data.ts'; // <-- IMPORT DỮ LIỆU VÍ DỤ TỪ FILE MỚI
+
+// <<< THAY ĐỔI LỚN: IMPORT DỮ LIỆU TỪ FILE TRUNG TÂM >>>
+import { ALL_CARDS_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
 
 // --- Interfaces and Data ---
 interface Playlist {
@@ -27,122 +23,12 @@ interface VerticalFlashcardGalleryProps {
   showNavBar: () => void;
   currentUser: User | null;
 }
-interface StyledImageUrls {
-  default: string;
-  anime?: string;
-  comic?: string;
-  realistic?: string;
-}
-interface VocabularyData {
-  word: string;
-  meaning: string;
-  example: string;
-  phrases: string[];
-  popularity: string;
-  synonyms: string[];
-  antonyms: string[];
-}
-interface Flashcard {
-  id: number;
-  imageUrl: StyledImageUrls;
-  vocabulary: VocabularyData;
-}
 interface DisplayCard {
     card: Flashcard;
     isFavorite: boolean;
 }
 
-/**
- * Helper function to capitalize the first letter of a string.
- * @param str The string to capitalize.
- * @returns The string with its first letter capitalized.
- */
-const capitalizeFirstLetter = (str: string): string => {
-    if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1);
-};
-
-
-const generatePlaceholderUrls = (count: number, text: string, color: string): string[] => {
-  const urls: string[] = [];
-  for (let i = 1; i <= count; i++) {
-    urls.push(`https://placehold.co/1024x1536/${color}/FFFFFF?text=${text}+${i}`);
-  }
-  return urls;
-};
-
-// --- LOGIC MỚI: XỬ LÝ ĐỊNH NGHĨA CHI TIẾT ---
-
-/**
- * Phân tích khối văn bản định nghĩa thành một Map để tra cứu.
- * @param text - Chuỗi văn bản chứa các định nghĩa (đã được import).
- * @returns Một Map với key là từ tiếng Anh (viết hoa chữ cái đầu) và value là định nghĩa đầy đủ.
- */
-const parseDetailedMeanings = (text: string): Map<string, string> => {
-    const meaningsMap = new Map<string, string>();
-    const lines = text.trim().split('\n');
-
-    for (const line of lines) {
-        const match = line.match(/\(([^)]+)\)/);
-        if (match && match[1]) {
-            const englishWord = match[1];
-            meaningsMap.set(englishWord, line.trim());
-        }
-    }
-    return meaningsMap;
-};
-
-// Parse dữ liệu text thành Map để tra cứu hiệu quả (O(1))
-const detailedMeaningsMap = parseDetailedMeanings(detailedMeaningsText);
-
-// --- START: LOGIC MỚI ĐỂ TẠO DỮ LIỆU TỪ VỰNG ---
-
-// Cập nhật số lượng flashcard dựa trên danh sách từ vựng đã nhập từ list-vocabulary.ts
-const numberOfSampleFlashcards = defaultVocabulary.length;
-
-// Tạo các mảng URL cho ảnh dựa trên số lượng từ vựng mới
-const defaultImageUrls: string[] = [
-  ...initialDefaultImageUrls,
-  ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialDefaultImageUrls.length), 'Default', 'A0A0A0')
-];
-const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
-const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
-const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
-
-// Tạo Map chứa toàn bộ dữ liệu flashcard, ánh xạ trực tiếp từ defaultVocabulary
-const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
-    Array.from({ length: numberOfSampleFlashcards }, (_, i) => {
-        const cardId = i + 1;
-        const rawWord = defaultVocabulary[i];
-        const capitalizedWord = capitalizeFirstLetter(rawWord); // <-- CHUYỂN ĐỔI CHỮ CÁI ĐẦU THÀNH IN HOA
-
-        // Tra cứu định nghĩa chi tiết bằng từ đã được viết hoa
-        const detailedMeaning = detailedMeaningsMap.get(capitalizedWord);
-
-        // Tạo dữ liệu từ vựng cho flashcard
-        const vocab: VocabularyData = {
-            word: capitalizedWord, // <-- SỬ DỤNG TỪ ĐÃ VIẾT HOA
-            meaning: detailedMeaning || `Meaning of ${capitalizedWord}`, // Fallback nếu không có định nghĩa
-            example: `Example sentence for ${capitalizedWord}.`,
-            phrases: [`Phrase A ${cardId}`, `Phrase B ${cardId}`],
-            popularity: cardId % 3 === 0 ? "Cao" : (cardId % 2 === 0 ? "Trung bình" : "Thấp"),
-            synonyms: [`Synonym 1.${cardId}`, `Synonym 2.${cardId}`],
-            antonyms: [`Antonym 1.${cardId}`, `Antonym 2.${cardId}`]
-        };
-
-        const imageUrls: StyledImageUrls = {
-            default: defaultImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Default+${cardId}`,
-            anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${cardId}`,
-            comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${cardId}`,
-            realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${cardId}`,
-        };
-        
-        const card: Flashcard = { id: cardId, imageUrl: imageUrls, vocabulary: vocab };
-        return [cardId, card];
-    })
-);
-
-// --- END: LOGIC MỚI ĐỂ TẠO DỮ LIỆU TỪ VỰNG ---
+// <<< TOÀN BỘ LOGIC TẠO DỮ LIỆU ĐÃ ĐƯỢC XÓA KHỎI ĐÂY VÀ CHUYỂN SANG flashcard-data.ts >>>
 
 const animations = `
   @keyframes fadeInOut { 0% { opacity: 0; transform: translateY(-10px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-10px); } }
@@ -232,9 +118,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [playlists]);
 
   // --- Effects ---
-  // <<< THAY ĐỔI 2: CẬP NHẬT HOÀN TOÀN LOGIC LẤY DỮ LIỆU ĐỂ SẮP XẾP BẰNG FIRESTORE >>>
   useEffect(() => {
-    // Nếu không có người dùng, reset state và thoát
     if (!currentUser) {
       setLoading(false);
       setOpenedImageIds([]);
@@ -246,7 +130,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     let unsubscribePlaylists: () => void;
     let unsubscribeOpenedCards: () => void;
 
-    // --- Lắng nghe thay đổi của Playlists (Không đổi) ---
     const userDocRef = doc(db, 'users', currentUser.uid);
     unsubscribePlaylists = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
@@ -259,33 +142,25 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       console.error("Error fetching user playlists:", error);
     });
 
-    // --- Lắng nghe thay đổi của bộ sưu tập thẻ VỚI SẮP XẾP ---
     const openedVocabColRef = collection(db, 'users', currentUser.uid, 'openedVocab');
-    
-    // TẠO QUERY MỚI: Sắp xếp theo trường 'collectedAt' giảm dần (mới nhất trước)
     const q = query(openedVocabColRef, orderBy('collectedAt', 'desc'));
 
-    // SỬ DỤNG QUERY `q` THAY VÌ `openedVocabColRef`
     unsubscribeOpenedCards = onSnapshot(q, (querySnapshot) => {
       const ids: number[] = [];
-      // Vì đã orderBy, querySnapshot.forEach sẽ duyệt qua các doc theo đúng thứ tự
       querySnapshot.forEach(doc => {
         const id = Number(doc.id);
         if (!isNaN(id)) {
           ids.push(id);
         }
       });
-      setOpenedImageIds(ids); // `ids` bây giờ đã được sắp xếp đúng thứ tự
+      setOpenedImageIds(ids);
       setLoading(false); 
     }, (error) => {
       console.error("Error fetching ordered cards from subcollection:", error);
-      // QUAN TRỌNG: Nếu có lỗi này, rất có thể bạn chưa tạo Index trong Firestore.
-      // Firestore sẽ cung cấp một link trong console log lỗi để bạn click vào và tự động tạo index.
       setOpenedImageIds([]); 
       setLoading(false);
     });
     
-    // Cleanup function để hủy cả hai listener khi component unmount
     return () => {
       if (unsubscribePlaylists) unsubscribePlaylists();
       if (unsubscribeOpenedCards) unsubscribeOpenedCards();
@@ -295,7 +170,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
   const filteredFlashcardsByTab = useMemo((): DisplayCard[] => {
     const getDisplayCard = (id: number): DisplayCard | undefined => {
-        const card = ALL_CARDS_MAP.get(id); // Tra cứu O(1), cực nhanh!
+        const card = ALL_CARDS_MAP.get(id);
         if (!card) return undefined;
         return {
             card,
@@ -306,7 +181,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     let cardIdsToShow: number[] = [];
 
     if (activeTab === 'collection') {
-        // <<< THAY ĐỔI 3: BỎ `.reverse()` VÌ DỮ LIỆU ĐÃ ĐƯỢC SẮP XẾP TỪ FIRESTORE >>>
         cardIdsToShow = openedImageIds;
     } else if (activeTab === 'favorite') {
         if (selectedPlaylistId === 'all') {
