@@ -3,7 +3,7 @@ import { db, auth } from '../firebase.js';
 import { doc, writeBatch, increment } from 'firebase/firestore'; // Chỉ giữ lại các import cần thiết
 
 // Import các hàm service mới để quản lý dữ liệu người dùng
-import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode } from '../firebase/userDataService.ts';
+import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode } from '../userDataService.ts';
 
 import CoinDisplay from '../coin-display.tsx';
 import quizData from './quiz-data.ts';
