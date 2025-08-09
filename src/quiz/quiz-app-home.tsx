@@ -243,7 +243,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               break;
       }
       
-      const showParentHeader = !['quiz', 'vocabularyGame', 'analysis'].includes(currentView);
+      const showParentHeader = !['quiz', 'vocabularyGame', 'wordChainGame', 'analysis'].includes(currentView);
 
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
