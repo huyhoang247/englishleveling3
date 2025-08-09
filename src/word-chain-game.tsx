@@ -221,7 +221,6 @@ export default function WordChainGame({ onGoBack }) {
         // ... (renderChain function remains unchanged)
         return wordChain.map((entry, index) => {
             const isPlayer = entry.author === 'player';
-            const lastChar = index > 0 ? wordChain[index-1].word.slice(-1) : '';
             const firstChar = entry.word.charAt(0);
 
             return (
@@ -232,12 +231,6 @@ export default function WordChainGame({ onGoBack }) {
                         ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-br-lg'
                         : 'bg-white text-gray-800 rounded-bl-lg'
                     }`}>
-                         {index > 0 && (
-                            <div className="absolute top-1/2 -translate-y-1/2 font-bold text-2xl opacity-20"
-                                style={isPlayer ? { left: '-1rem' } : { right: '-1rem' }}>
-                                {lastChar.toUpperCase()}
-                            </div>
-                        )}
                         <span className="font-bold text-yellow-300">{firstChar}</span>
                         <span>{entry.word.slice(1)}</span>
                     </div>
