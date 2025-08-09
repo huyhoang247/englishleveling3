@@ -276,7 +276,7 @@ export default function WordChainGame({ onGoBack }) {
                 )}
             </div>
 
-            <div className="p-4 bg-white border-t">
+            <div className="flex-shrink-0 p-4 bg-white border-t">
                  {message && (
                     <div className={`mb-3 p-3 rounded-lg text-center text-sm font-medium animate-pop-in
                         ${message.type === 'error' && 'bg-red-100 text-red-700'}
