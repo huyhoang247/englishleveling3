@@ -494,7 +494,7 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
       const finalLabel = payload[0].payload.game ? payload[0].payload.game : `Ngày: ${label}`;
       const total = payload.reduce((sum, entry) => sum + entry.value, 0);
       return (
-        <div className="p-2 bg-gray-800/90 text-white rounded-md shadow-lg text-sm backdrop-blur-sm">
+        <div className="p-2 bg-gray-800 text-white rounded-md shadow-lg text-sm border border-gray-700">
           <p className="font-bold">{finalLabel}</p>
           {payload.map((pld) => <p key={pld.dataKey} style={{ color: pld.fill }}>{`${pld.name}: ${pld.value}`}</p>)}
           {payload.length > 1 && total > 0 && <><hr className="my-1 border-gray-600" /><p className="font-semibold">{`Tổng: ${total}`}</p></>}
