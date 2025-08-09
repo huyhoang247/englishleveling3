@@ -1,5 +1,3 @@
-// --- START OF FILE upgrade-stats.tsx ---
-
 import React, { useState, useEffect, useCallback } from 'react';
 import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
 import { uiAssets } from './game-assets.ts'; // IMPORT TÀI NGUYÊN TẬP TRUNG
@@ -252,21 +250,19 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
 
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
-      <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
-          .font-lilita { font-family: 'Lilita One', cursive; }
-          .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-          .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
-          .text-shadow-cyan { text-shadow: 0 0 8px rgba(0, 246, 255, 0.7); }
-          .animate-border-flow { background-size: 400% 400%; animation: animate-gradient-border 3s linear infinite; }
-          @keyframes animate-gradient-border { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-          .animate-breathing { animation: breathing 5s ease-in-out infinite; }
-          @keyframes breathing { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4)); } 50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.7));} }
-          .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: 0; pointer-events: none; }
-          .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); }
-          .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.1) 0%, transparent 50%); }
-      `}</style>
-
+      {/* ====================================================== */}
+      {/* START: KHỐI <style> ĐÃ ĐƯỢC XÓA BỎ HOÀN TOÀN          */}
+      {/* ====================================================== */}
+      {/*
+          Khối <style> cũ đã bị xóa.
+          Font 'Lilita One' bây giờ được tải từ index.html.
+          Các class như 'font-lilita' sẽ được TailwindCSS xử lý hoặc được định nghĩa trong file CSS toàn cục.
+          Nếu bạn chưa cấu hình font trong Tailwind, bạn có thể thêm các định nghĩa style cần thiết (trừ @import) vào file CSS toàn cục.
+      */}
+      {/* ====================================================== */}
+      {/* END: KHỐI <style> ĐÃ ĐƯỢC XÓA BỎ HOÀN TOÀN           */}
+      {/* ====================================================== */}
+      
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
         <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
           <HomeIcon className="w-5 h-5 text-slate-300" />
@@ -322,4 +318,3 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
     </div>
   );
 }
-   
