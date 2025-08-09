@@ -1,4 +1,4 @@
-// --- START OF REFACTORED FILE quiz.tsx ---
+// --- START OF FILE quiz.tsx (20).txt ---
 
 import { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
 import { db, auth } from '../firebase.js';
@@ -6,8 +6,8 @@ import { doc, writeBatch, increment } from 'firebase/firestore'; // Chỉ giữ 
 
 // Import các hàm service mới để quản lý dữ liệu người dùng
 import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode } from '../userDataService.ts';
+import { useAnimateValue } from './useAnimateValue'; // <--- IMPORT HOOK MỚI
 
-// Chú ý: import CoinDisplay từ file đã refactor ở trên
 import CoinDisplay from '../coin-display.tsx';
 import quizData from './quiz-data.ts';
 import Confetti from '../fill-word/chuc-mung.tsx';
@@ -39,7 +39,6 @@ interface Definition { vietnamese: string; english: string; explanation: string;
 const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> = ({ data, onClose }) => { if (!data) return null; return ( <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose} > <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl w-full max-w-md p-6 relative shadow-lg transform transition-all duration-300 scale-95 opacity-0 animate-scale-up" onClick={(e) => e.stopPropagation()} > <div className="inline-flex items-center bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-sm font-semibold px-3 py-1 rounded-full mb-4"> <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor"> <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /> </svg> <span>{data.english}</span> </div> <p className="text-gray-700 dark:text-gray-400 text-base leading-relaxed italic"> {`${data.vietnamese} (${data.english}) là ${data.explanation}`} </p> </div> <style jsx>{` @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; } `}</style> </div> ); };
 const AudioQuestionDisplay: React.FC<{ audioUrl: string; }> = memo(({ audioUrl }) => { const audioRef = useRef<HTMLAudioElement>(null); const [isPlaying, setIsPlaying] = useState(false); const togglePlay = useCallback(() => { const audio = audioRef.current; if (!audio) return; if (audio.paused) { audio.play().catch(e => console.error("Error playing audio:", e)); } else { audio.pause(); } }, []); useEffect(() => { const audio = audioRef.current; if (!audio) return; const handlePlay = () => setIsPlaying(true); const handlePause = () => setIsPlaying(false); const handleEnded = () => setIsPlaying(false); audio.addEventListener('play', handlePlay); audio.addEventListener('pause', handlePause); audio.addEventListener('ended', handleEnded); audio.play().catch(e => console.error("Autoplay prevented:", e)); return () => { audio.removeEventListener('play', handlePlay); audio.removeEventListener('pause', handlePause); audio.removeEventListener('ended', handleEnded); audio.pause(); }; }, [audioUrl]); return ( <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex flex-col items-center justify-center min-h-[140px]"> <audio ref={audioRef} src={audioUrl} key={audioUrl} preload="auto" className="hidden" /> <button onClick={togglePlay} className="w-20 h-20 flex items-center justify-center bg-white/20 rounded-full text-white hover:bg-white/30 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/50" aria-label={isPlaying ? 'Pause audio' : 'Play audio'} > {isPlaying ? <PauseIcon className="w-10 h-10" /> : <VolumeUpIcon className="w-10 h-10" />} </button> <p className="text-white/80 text-sm mt-3 font-medium">Nghe và chọn đáp án đúng</p> </div> ); });
 
-
 // --- Component Chính Bắt đầu ---
 export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () => void; selectedPractice: number; }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -48,7 +47,8 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
   const [selectedOption, setSelectedOption] = useState(null);
   const [answered, setAnswered] = useState(false);
   const [coins, setCoins] = useState(0);
-  // XÓA BỎ: const [displayedCoins, setDisplayedCoins] = useState(0);
+  // const [displayedCoins, setDisplayedCoins] = useState(0); // <--- XÓA STATE CŨ
+  const displayedCoins = useAnimateValue(coins, 500); // <--- SỬ DỤNG HOOK MỚI
   const [streak, setStreak] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
@@ -102,7 +102,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
           ]);
 
           setCoins(userData.coins || 0);
-          // XÓA BỎ: setDisplayedCoins(userData.coins || 0);
+          // setDisplayedCoins(userData.coins || 0); // <--- XÓA DÒNG NÀY
           setMasteryCount(userData.masteryCards || 0);
           setUserVocabulary(vocabList);
           setCompletedQuizWords(completedSet);
@@ -200,8 +200,9 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     return () => clearInterval(timerId);
   }, [currentQuestion, answered, showScore, playableQuestions.length]);
   
-  // XÓA BỎ: Toàn bộ hàm startCoinCountAnimation không còn cần thiết ở đây.
-  
+  // --- XÓA HÀM startCoinCountAnimation ---
+  // const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => { ... });
+
   const handleAnswer = async (selectedAnswer) => {
     if (answered || playableQuestions.length === 0) return;
     setSelectedOption(selectedAnswer);
@@ -210,9 +211,9 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     const isCorrect = selectedAnswer === currentQuizItem.correctAnswer;
     if (isCorrect) {
       setShowConfetti(true); setScore(score + 1); const newStreak = streak + 1; setStreak(newStreak); const coinsToAdd = masteryCount * newStreak;
-      if (coinsToAdd > 0) {
-        const totalCoins = coins + coinsToAdd;
-        setCoins(totalCoins); // Chỉ cần set state, CoinDisplay sẽ tự động animate
+      // Cập nhật state `coins`, hook `useAnimateValue` sẽ tự động xử lý animation
+      if (coinsToAdd > 0) { 
+        setCoins(prevCoins => prevCoins + coinsToAdd); 
       }
       if (newStreak >= 1) { setStreakAnimation(true); setTimeout(() => setStreakAnimation(false), 1500); }
       const matchedWord = currentQuestionWord;
@@ -228,9 +229,9 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
           await batch.commit();
         } catch (error) { 
           console.error("Lỗi khi thực hiện ghi dữ liệu:", error); 
+          // Hoàn tác lại số coin trên UI nếu có lỗi
           if (coinsToAdd > 0) {
-              // Hoàn tác lại trên UI, CoinDisplay sẽ tự động chạy animation ngược lại
-              setCoins(coins);
+              setCoins(prevCoins => prevCoins - coinsToAdd);
           }
         }
       }
@@ -242,8 +243,8 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     if (hintUsed || answered || coins < HINT_COST || playableQuestions.length === 0) return;
     
     setHintUsed(true); 
-    const newCoins = coins - HINT_COST; 
-    setCoins(newCoins); // Chỉ cần set state, CoinDisplay sẽ tự động animate
+    // Cập nhật state `coins`, hook `useAnimateValue` sẽ tự động xử lý animation
+    setCoins(prevCoins => prevCoins - HINT_COST);
 
     if (user) {
       try {
@@ -251,8 +252,8 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
       }
       catch (error) { 
         console.error("Lỗi khi cập nhật vàng cho gợi ý:", error); 
-        // Hoàn tác lại trên UI, CoinDisplay sẽ tự động chạy animation ngược lại
-        setCoins(coins); 
+        // Hoàn tác lại trên UI nếu gọi API thất bại
+        setCoins(prevCoins => prevCoins + HINT_COST); 
         setHintUsed(false); 
         return; 
       }
@@ -314,7 +315,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
   
   if (loading) return <div className="flex items-center justify-center h-full text-xl font-semibold text-indigo-700">Đang tải dữ liệu Quiz...</div>;
   
-  // --- PHẦN JSX RENDER UI (Chỉ thay đổi cách truyền prop cho CoinDisplay) ---
+  // --- PHẦN JSX RENDER UI (Không thay đổi) ---
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {showConfetti && <Confetti />}
@@ -325,8 +326,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
           <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
         </button>
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* THAY ĐỔI: Truyền `coins` thay vì `displayedCoins` */}
-          <CoinDisplay coins={coins} isStatsFullscreen={false} />
+          <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
           <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
           <MasteryDisplay masteryCount={masteryCount} />
         </div>
