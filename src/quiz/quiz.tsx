@@ -1,4 +1,4 @@
-// --- START OF FILE quiz.tsx (20).txt ---
+// --- START OF FILE quiz.tsx ---
 
 import { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
 import { db, auth } from '../firebase.js';
@@ -6,10 +6,9 @@ import { doc, writeBatch, increment } from 'firebase/firestore'; // Chỉ giữ 
 
 // Import các hàm service mới để quản lý dữ liệu người dùng
 import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode } from '../userDataService.ts';
-import { useAnimateValue } from '../useAnimateValue.ts'; // <--- IMPORT HOOK MỚI
-
+import { useAnimateValue } from '../useAnimateValue.ts'; 
 import CoinDisplay from '../coin-display.tsx';
-import MasteryDisplay from '../mastery-display.tsx'; // <--- IMPORT COMPONENT MỚI
+import MasteryDisplay from '../mastery-display.tsx'; 
 import quizData from './quiz-data.ts';
 import Confetti from '../fill-word/chuc-mung.tsx';
 import detailedMeaningsText from '../vocabulary-definitions.ts';
@@ -22,7 +21,6 @@ const optionLabels = ['A', 'B', 'C', 'D'];
 const streakIconUrls = { default: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire.png', streak1: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(2).png', streak5: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(1).png', streak10: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(3).png', streak20: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/fire%20(4).png', };
 const getStreakIconUrl = (streak: number) => { if (streak >= 20) return streakIconUrls.streak20; if (streak >= 10) return streakIconUrls.streak10; if (streak >= 5) return streakIconUrls.streak5; if (streak >= 1) return streakIconUrls.streak1; return streakIconUrls.default; };
 const StreakDisplay: React.FC<{ displayedStreak: number; isAnimating: boolean; }> = ({ displayedStreak, isAnimating }) => ( <div className={`bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-orange-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer ${isAnimating ? 'scale-110' : 'scale-100'}`}> <style jsx>{` @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; } `}</style> <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-gray-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div> <div className="relative flex items-center justify-center"> <img src={getStreakIconUrl(displayedStreak)} alt="Streak Icon" className="w-4 h-4" /> </div> <div className="font-bold text-gray-800 text-xs tracking-wide streak-counter ml-1">{displayedStreak}</div> <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div> <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast"></div> </div> );
-// --- ĐÃ XÓA MasteryDisplay component từ đây ---
 const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo(({ timeLeft, totalTime }) => { const radius = 20; const circumference = 2 * Math.PI * radius; const progress = Math.max(0, timeLeft / totalTime); const strokeDashoffset = circumference * (1 - progress); const getTimeColor = () => { if (timeLeft <= 0) return 'text-gray-400'; if (timeLeft <= 10) return 'text-red-500'; if (timeLeft <= 20) return 'text-yellow-500'; return 'text-indigo-400'; }; const ringColorClass = getTimeColor(); return ( <div className="relative flex items-center justify-center w-8 h-8"> <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 44 44"> <circle className="text-white/20" stroke="currentColor" strokeWidth="3" fill="transparent" r={radius} cx="22" cy="22" /> <circle className={`${ringColorClass} transition-all duration-500`} stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="transparent" r={radius} cx="22" cy="22" style={{ strokeDasharray: circumference, strokeDashoffset }} /> </svg> <span className={`font-bold text-xs ${ringColorClass}`}>{Math.max(0, timeLeft)}</span> </div> ); });
 const CheckIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17L4 12"></path></svg> );
 const XIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> );
@@ -47,8 +45,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
   const [selectedOption, setSelectedOption] = useState(null);
   const [answered, setAnswered] = useState(false);
   const [coins, setCoins] = useState(0);
-  // const [displayedCoins, setDisplayedCoins] = useState(0); // <--- XÓA STATE CŨ
-  const displayedCoins = useAnimateValue(coins, 500); // <--- SỬ DỤNG HOOK MỚI
+  const displayedCoins = useAnimateValue(coins, 500);
   const [streak, setStreak] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
@@ -102,8 +99,13 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
           ]);
 
           setCoins(userData.coins || 0);
-          // setDisplayedCoins(userData.coins || 0); // <--- XÓA DÒNG NÀY
+          
+          // --- THAY ĐỔI LOGIC ---
+          // Lấy số thẻ Thông Thạo (masteryCards) từ dữ liệu người dùng trả về bởi service
+          // và cập nhật state 'masteryCount'.
           setMasteryCount(userData.masteryCards || 0);
+          // --- KẾT THÚC THAY ĐỔI ---
+          
           setUserVocabulary(vocabList);
           setCompletedQuizWords(completedSet);
 
@@ -199,9 +201,6 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     const timerId = setInterval(() => { setTimeLeft(prevTime => { if (prevTime <= 1) { clearInterval(timerId); handleTimeUp(); return 0; } return prevTime - 1; }); }, 1000);
     return () => clearInterval(timerId);
   }, [currentQuestion, answered, showScore, playableQuestions.length]);
-  
-  // --- XÓA HÀM startCoinCountAnimation ---
-  // const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => { ... });
 
   const handleAnswer = async (selectedAnswer) => {
     if (answered || playableQuestions.length === 0) return;
@@ -211,7 +210,6 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     const isCorrect = selectedAnswer === currentQuizItem.correctAnswer;
     if (isCorrect) {
       setShowConfetti(true); setScore(score + 1); const newStreak = streak + 1; setStreak(newStreak); const coinsToAdd = masteryCount * newStreak;
-      // Cập nhật state `coins`, hook `useAnimateValue` sẽ tự động xử lý animation
       if (coinsToAdd > 0) { 
         setCoins(prevCoins => prevCoins + coinsToAdd); 
       }
@@ -229,7 +227,6 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
           await batch.commit();
         } catch (error) { 
           console.error("Lỗi khi thực hiện ghi dữ liệu:", error); 
-          // Hoàn tác lại số coin trên UI nếu có lỗi
           if (coinsToAdd > 0) {
               setCoins(prevCoins => prevCoins - coinsToAdd);
           }
@@ -243,7 +240,6 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     if (hintUsed || answered || coins < HINT_COST || playableQuestions.length === 0) return;
     
     setHintUsed(true); 
-    // Cập nhật state `coins`, hook `useAnimateValue` sẽ tự động xử lý animation
     setCoins(prevCoins => prevCoins - HINT_COST);
 
     if (user) {
@@ -252,7 +248,6 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
       }
       catch (error) { 
         console.error("Lỗi khi cập nhật vàng cho gợi ý:", error); 
-        // Hoàn tác lại trên UI nếu gọi API thất bại
         setCoins(prevCoins => prevCoins + HINT_COST); 
         setHintUsed(false); 
         return; 
@@ -409,3 +404,4 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     </div>
   );
 }
+// --- END OF FILE quiz.tsx ---
