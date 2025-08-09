@@ -250,18 +250,23 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
 
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
-      {/* ====================================================== */}
-      {/* START: KHỐI <style> ĐÃ ĐƯỢC XÓA BỎ HOÀN TOÀN          */}
-      {/* ====================================================== */}
-      {/*
-          Khối <style> cũ đã bị xóa.
-          Font 'Lilita One' bây giờ được tải từ index.html.
-          Các class như 'font-lilita' sẽ được TailwindCSS xử lý hoặc được định nghĩa trong file CSS toàn cục.
-          Nếu bạn chưa cấu hình font trong Tailwind, bạn có thể thêm các định nghĩa style cần thiết (trừ @import) vào file CSS toàn cục.
-      */}
-      {/* ====================================================== */}
-      {/* END: KHỐI <style> ĐÃ ĐƯỢC XÓA BỎ HOÀN TOÀN           */}
-      {/* ====================================================== */}
+      {/* START: ĐỊNH NGHĨA ANIMATION CHO VIÊN ĐÁ */}
+      <style>{`
+        @keyframes breathing-stone {
+          0%, 100% {
+            transform: scale(1) translateY(0);
+            filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1));
+          }
+          50% {
+            transform: scale(1.03) translateY(-6px);
+            filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18));
+          }
+        }
+        .animate-breathing {
+          animation: breathing-stone 4s ease-in-out infinite;
+        }
+      `}</style>
+      {/* END: ĐỊNH NGHĨA ANIMATION */}
       
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
         <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
@@ -280,7 +285,8 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
       )}
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
-          <div className="mb-4 w-48 h-48 flex items-center justify-center animate-breathing">
+          {/* THAY ĐỔI: Kích thước viên đá nhỏ lại và áp dụng animation */}
+          <div className="mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
             <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
           </div>
 
