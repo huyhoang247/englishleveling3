@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback, memo } from 'react';
 import { db, auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
 import { collection, getDocs, doc, getDoc, updateDoc, increment, arrayUnion } from 'firebase/firestore';
@@ -9,6 +8,7 @@ import {
 } from 'recharts';
 import { defaultVocabulary } from './list-vocabulary.ts'; // Điều chỉnh đường dẫn
 import CoinDisplay from './coin-display.tsx'; // [ADDED] Import for header
+import { uiAssets, dashboardAssets } from './game-assets.ts'; // Import assets
 
 // --- [ADDED] Icons and Components for Header ---
 const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
@@ -16,8 +16,7 @@ const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
     </svg>
 );
-const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
-const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => ( <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style> <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div> <div className="relative flex items-center justify-center"><img src={masteryIconUrl} alt="Mastery Icon" className="w-4 h-4" /></div> <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{masteryCount}</div> <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div> <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div> </div> ));
+const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => ( <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style> <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div> <div className="relative flex items-center justify-center"><img src={dashboardAssets.masteryIcon} alt="Mastery Icon" className="w-4 h-4" /></div> <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{masteryCount}</div> <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div> <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div> </div> ));
 
 
 // --- Icons (Sử dụng các icon SVG đơn giản để không phụ thuộc vào file ngoài) ---
@@ -137,13 +136,13 @@ const VocabularyMilestones: FC<VocabularyMilestonesProps> = memo(({ totalWordsLe
     <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 flex-shrink-0">
-          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/voca-journey.webp" alt="Voca Journey" className="w-11 h-11" />
+          <img src={dashboardAssets.vocaJourneyIcon} alt="Voca Journey" className="w-11 h-11" />
           <div>
             <h3 className="text-base sm:text-lg font-bold text-gray-800">Voca Journey</h3>
             {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">Max level reached!</p> ) : (
               <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
                   <span className="flex items-center font-bold text-amber-600">
-                      <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp" alt="Reward Coin" className="h-5 w-5 mr-1.5"/>
+                      <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-5 w-5 mr-1.5"/>
                       <span className="text-sm">{currentGoal * (masteryCount > 0 ? masteryCount : 1)}</span>
                   </span>
               </div>
@@ -239,13 +238,13 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = memo(({ wordsLearnedTo
     <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 flex-shrink-0">
-          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/daily-missions.webp" alt="Daily Missions" className="w-11 h-11" />
+          <img src={dashboardAssets.dailyMissionsIcon} alt="Daily Missions" className="w-11 h-11" />
           <div>
             <h3 className="text-base sm:text-lg font-bold text-gray-800">Daily Missions</h3>
             {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">All missions completed!</p> ) : (
               <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
                   <span className="flex items-center font-bold text-amber-600">
-                      <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp" alt="Reward Coin" className="h-5 w-5 mr-1.5"/>
+                      <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-5 w-5 mr-1.5"/>
                       <span className="text-sm">{currentGoal * (masteryCount > 0 ? masteryCount : 1)}</span>
                   </span>
               </div>
