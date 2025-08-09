@@ -569,7 +569,7 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
                     <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
                         <h3 className="text-lg font-bold text-gray-800 mb-4">Vocabulary Mastery Analysis</h3>
                         {sortedWordMastery.length > 0 ? (<>
-                            <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 table-fixed"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3">Vocabulary</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('mastery')}>Score</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-right" onClick={() => handleSort('lastPracticed')}>Latest</th></tr></thead>
+                            <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 table-fixed"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3 text-center">Vocabulary</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('mastery')}>Score</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('lastPracticed')}>Latest</th></tr></thead>
                                 <tbody>{paginatedMasteryData.map(({ word, mastery, lastPracticed }) => (
                                     <tr key={word} className="bg-white border-b hover:bg-gray-50">
                                         <td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">{word}</td>
