@@ -262,7 +262,8 @@ export default function WordChainGame({ onGoBack }) {
                 </div>
             </header>
             
-            <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 space-y-4">
+            {/* CHANGE 1: Add custom class to hide scrollbar */}
+            <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 space-y-4 hide-scrollbar">
                 {renderChain()}
                 {gameState === 'aiTurn' && (
                      <div className="flex items-end gap-2 justify-start animate-pop-in">
@@ -333,6 +334,15 @@ export default function WordChainGame({ onGoBack }) {
                 }
                 .delay-150 { animation-delay: 0.15s; }
                 .delay-300 { animation-delay: 0.3s; }
+
+                /* CHANGE 2: Add CSS rules for hiding the scrollbar */
+                .hide-scrollbar {
+                    -ms-overflow-style: none;  /* IE and Edge */
+                    scrollbar-width: none;  /* Firefox */
+                }
+                .hide-scrollbar::-webkit-scrollbar {
+                    display: none; /* Chrome, Safari, and Opera */
+                }
             `}</style>
         </div>
     );
