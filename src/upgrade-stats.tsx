@@ -251,10 +251,10 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
   const progressPercent = (currentProgress / maxProgress) * 100;
 
   return (
-    <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
+    <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-bangers text-white overflow-hidden">
       <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
-          .font-lilita { font-family: 'Lilita One', cursive; }
+          @import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
+          .font-bangers { font-family: 'Bangers', cursive; }
           .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
           .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
           .text-shadow-cyan { text-shadow: 0 0 8px rgba(0, 246, 255, 0.7); }
@@ -278,7 +278,7 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
       </header>
 
       {message && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-bangers animate-bounce">
           {message}
         </div>
       )}
