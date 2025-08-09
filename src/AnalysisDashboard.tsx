@@ -27,13 +27,9 @@ const CheckCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className=
 const AwardIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>;
 const CalendarCheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>;
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
-const SortIcon = ({ direction }: { direction?: 'asc' | 'desc' }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block ml-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        {direction === 'asc' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />}
-        {direction === 'desc' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />}
-        {!direction && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />}
-    </svg>
-);
+const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
+const ChevronRightIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>;
+
 
 // [SỬA LỖI MÚI GIỜ] Hàm trợ giúp để định dạng ngày theo giờ địa phương (YYYY-MM-DD)
 const formatDateToLocalYYYYMMDD = (date: Date): string => {
@@ -322,6 +318,8 @@ const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = ({ activityData
 };
 
 // --- Component chính ---
+const ITEMS_PER_PAGE = 10; // Số mục trên mỗi trang
+
 export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }: AnalysisDashboardProps) {
   const [user, setUser] = useState<User | null>(auth.currentUser);
   const [loading, setLoading] = useState(true);
@@ -329,7 +327,7 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
-  const [visibleMasteryRows, setVisibleMasteryRows] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   const [claimedDailyGoals, setClaimedDailyGoals] = useState<number[]>([]);
   const [claimedVocabMilestones, setClaimedVocabMilestones] = useState<number[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -474,6 +472,7 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
     let direction: 'asc' | 'desc' = 'desc';
     if (sortConfig.key === key && sortConfig.direction === 'desc') direction = 'asc';
     setSortConfig({ key, direction });
+    setCurrentPage(1); // Quay về trang đầu tiên khi sắp xếp
   };
   
   const handleGoalClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
@@ -515,6 +514,20 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
 
     const { totalWordsLearned, learningActivity, masteryByGame, vocabularyGrowth } = analysisData;
     const barColors = ["#8884d8", "#82ca9d"];
+
+    // Logic phân trang
+    const totalPages = Math.ceil(sortedWordMastery.length / ITEMS_PER_PAGE);
+    const paginatedMasteryData = sortedWordMastery.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+    
     return (
         <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-full">
             <div className="max-w-7xl mx-auto">
@@ -557,15 +570,38 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
                     <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
                         <h3 className="text-lg font-bold text-gray-800 mb-4">Vocabulary Mastery Analysis</h3>
                         {sortedWordMastery.length > 0 ? (<>
-                            <div className="overflow-x-auto"><table className="w-full text-sm text-left text-gray-600"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3">Vocabulary</th><th scope="col" className="px-4 py-3 cursor-pointer" onClick={() => handleSort('mastery')}>Score<SortIcon direction={sortConfig.key === 'mastery' ? sortConfig.direction : undefined} /></th><th scope="col" className="px-4 py-3 cursor-pointer" onClick={() => handleSort('lastPracticed')}>Latest<SortIcon direction={sortConfig.key === 'lastPracticed' ? sortConfig.direction : undefined} /></th></tr></thead>
-                                <tbody>{sortedWordMastery.slice(0, visibleMasteryRows).map(({ word, mastery, lastPracticed }) => (
+                            <div className="overflow-x-auto"><table className="w-full text-sm text-left text-gray-600"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3 cursor-pointer" onClick={() => handleSort('mastery')}>Score</th><th scope="col" className="px-4 py-3 cursor-pointer" onClick={() => handleSort('lastPracticed')}>Latest</th><th scope="col" className="px-4 py-3">Vocabulary</th></tr></thead>
+                                <tbody>{paginatedMasteryData.map(({ word, mastery, lastPracticed }) => (
                                     <tr key={word} className="bg-white border-b hover:bg-gray-50">
-                                        <td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">{word}</td>
                                         <td className="px-4 py-3"><div className="flex items-center gap-2"><span className="font-bold w-4 text-center">{mastery}</span><div className="w-16 bg-gray-200 rounded-full h-2"><div className="bg-green-500 h-2 rounded-full" style={{ width: `${Math.min(mastery / 10, 1) * 100}%` }}></div></div></div></td>
                                         <td className="px-4 py-3">{lastPracticed.toLocaleDateString('vi-VN')}</td>
+                                        <td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">{word}</td>
                                     </tr>
                                 ))}</tbody></table></div>
-                            {visibleMasteryRows < sortedWordMastery.length && (<div className="text-center mt-4"><button onClick={() => setVisibleMasteryRows(prev => prev + 10)} className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-100 rounded-lg hover:bg-indigo-200 transition-colors">Show more</button></div>)}
+                            
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-between mt-4">
+                                    <button 
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <ChevronLeftIcon />
+                                        <span className="ml-1">Previous</span>
+                                    </button>
+                                    <span className="text-sm font-medium text-gray-700">
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+                                    <button 
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <span className="mr-1">Next</span>
+                                        <ChevronRightIcon />
+                                    </button>
+                                </div>
+                            )}
                         </>) : (<p className="text-center text-gray-500 py-4">No mastery data available.</p>)}
                     </div>
                     <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
