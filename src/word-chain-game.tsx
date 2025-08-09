@@ -1,9 +1,12 @@
 // --- START OF FILE: src/word-chain/word-chain-game.tsx ---
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { db, auth } from './firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { auth } from './firebase';
+// import { collection, getDocs } from 'firebase/firestore'; // Removed, no longer needed here
 import { onAuthStateChanged } from 'firebase/auth';
+
+// --- New Vocabulary Import ---
+import { defaultVocabulary } from './list-vocabulary.ts'; // Assuming path to your vocabulary file
 
 // --- Service and Hook Imports ---
 import { fetchOrCreateUser, updateUserCoins } from './userDataService.ts'; // Assuming path
@@ -66,42 +69,41 @@ export default function WordChainGame({ onGoBack }) {
         return () => unsubscribe();
     }, []);
 
-    // --- Data Fetching: Fetch user stats and learned words ---
+    // --- Data Fetching: Fetch user stats and load vocabulary ---
     useEffect(() => {
-        if (!user) return;
-        
-        const fetchInitialData = async () => {
+        const prepareGame = async () => {
             setGameState('loading');
             try {
-                // Fetch user data (coins, mastery) and vocabulary in parallel
-                const [userData, vocabSnapshot] = await Promise.all([
-                    fetchOrCreateUser(user.uid),
-                    getDocs(collection(db, 'users', user.uid, 'openedVocab'))
-                ]);
+                // Fetch user data if logged in
+                if (user) {
+                    const userData = await fetchOrCreateUser(user.uid);
+                    setCoins(userData.coins || 0);
+                    setMasteryCount(userData.masteryCards || 0);
+                } else {
+                    setCoins(0);
+                    setMasteryCount(0);
+                }
 
-                // Set user stats from fetched data
-                setCoins(userData.coins || 0);
-                setMasteryCount(userData.masteryCards || 0);
-
-                // Process vocabulary
-                const words = vocabSnapshot.docs
-                    .map(doc => doc.data().word?.toLowerCase())
+                // Load vocabulary from the imported list instead of Firestore
+                const words = defaultVocabulary
+                    .map(word => word.toLowerCase())
                     .filter(Boolean);
                 
                 if (words.length < 10) {
-                    setMessage({ text: `Bạn cần học ít nhất 10 từ (hiện có ${words.length}) để chơi.`, type: 'warning' });
+                    // Updated message to reflect the static dictionary
+                    setMessage({ text: `Từ điển không đủ từ (cần >10).`, type: 'warning' });
                     setGameState('gameOver');
                 } else {
                     setAllLearnedWords(new Set(words));
                 }
             } catch (error) {
-                console.error("Error fetching initial data:", error);
+                console.error("Error preparing game data:", error);
                 setMessage({ text: 'Lỗi khi tải dữ liệu của bạn.', type: 'error' });
                 setGameState('gameOver');
             }
         };
 
-        fetchInitialData();
+        prepareGame();
     }, [user]);
     
     // --- Start Game when words are loaded ---
@@ -168,7 +170,8 @@ export default function WordChainGame({ onGoBack }) {
             return;
         }
         if (!allLearnedWords.has(submittedWord)) {
-            setMessage({ text: 'Bạn chưa học từ này hoặc từ không hợp lệ!', type: 'error' });
+            // Updated message
+            setMessage({ text: 'Từ này không có trong từ điển hoặc không hợp lệ!', type: 'error' });
             return;
         }
 
