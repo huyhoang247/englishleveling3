@@ -5,6 +5,15 @@ import { db, auth } from './firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 
+// --- Service and Hook Imports ---
+import { fetchOrCreateUser, updateUserCoins } from '../firebase/userDataService'; // Assuming path
+import { useAnimateValue } from './useAnimateValue.ts'; // Assuming path
+
+// --- Component Imports ---
+import CoinDisplay from './coin-display.tsx'; // Assuming path
+import MasteryDisplay from './mastery-display.tsx'; // Assuming path
+
+
 // --- Icons ---
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
@@ -20,12 +29,6 @@ const BotIcon = () => (
 const SendIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-    </svg>
-);
-
-const BackIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
     </svg>
 );
 
@@ -49,6 +52,11 @@ export default function WordChainGame({ onGoBack }) {
     const [playerInput, setPlayerInput] = useState('');
     const [message, setMessage] = useState<Message | null>(null);
 
+    // --- User Stats State ---
+    const [coins, setCoins] = useState(0);
+    const [masteryCount, setMasteryCount] = useState(0);
+    const displayedCoins = useAnimateValue(coins, 500); // Animate coin changes
+
     const chatContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -58,17 +66,27 @@ export default function WordChainGame({ onGoBack }) {
         return () => unsubscribe();
     }, []);
 
-    // --- Data Fetching ---
+    // --- Data Fetching: Fetch user stats and learned words ---
     useEffect(() => {
         if (!user) return;
         
-        const fetchLearnedWords = async () => {
+        const fetchInitialData = async () => {
             setGameState('loading');
             try {
-                const vocabSnapshot = await getDocs(collection(db, 'users', user.uid, 'openedVocab'));
+                // Fetch user data (coins, mastery) and vocabulary in parallel
+                const [userData, vocabSnapshot] = await Promise.all([
+                    fetchOrCreateUser(user.uid),
+                    getDocs(collection(db, 'users', user.uid, 'openedVocab'))
+                ]);
+
+                // Set user stats from fetched data
+                setCoins(userData.coins || 0);
+                setMasteryCount(userData.masteryCards || 0);
+
+                // Process vocabulary
                 const words = vocabSnapshot.docs
                     .map(doc => doc.data().word?.toLowerCase())
-                    .filter(Boolean); // Lọc bỏ các giá trị null/undefined, không còn giới hạn độ dài
+                    .filter(Boolean);
                 
                 if (words.length < 10) {
                     setMessage({ text: `Bạn cần học ít nhất 10 từ (hiện có ${words.length}) để chơi.`, type: 'warning' });
@@ -77,13 +95,13 @@ export default function WordChainGame({ onGoBack }) {
                     setAllLearnedWords(new Set(words));
                 }
             } catch (error) {
-                console.error("Error fetching words:", error);
-                setMessage({ text: 'Lỗi khi tải từ vựng của bạn.', type: 'error' });
+                console.error("Error fetching initial data:", error);
+                setMessage({ text: 'Lỗi khi tải dữ liệu của bạn.', type: 'error' });
                 setGameState('gameOver');
             }
         };
 
-        fetchLearnedWords();
+        fetchInitialData();
     }, [user]);
     
     // --- Start Game when words are loaded ---
@@ -132,9 +150,9 @@ export default function WordChainGame({ onGoBack }) {
         return possibleWords[Math.floor(Math.random() * possibleWords.length)];
     };
     
-    const handlePlayerSubmit = (e: React.FormEvent) => {
+    const handlePlayerSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (gameState !== 'playerTurn' || !playerInput.trim()) return;
+        if (gameState !== 'playerTurn' || !playerInput.trim() || !user) return;
 
         const lastEntry = wordChain[wordChain.length - 1];
         const lastChar = lastEntry.word.slice(-1);
@@ -155,6 +173,19 @@ export default function WordChainGame({ onGoBack }) {
         }
 
         // --- Success ---
+        // Award coins based on mastery count
+        if (masteryCount > 0) {
+            try {
+                // The amount to add is the current mastery count
+                await updateUserCoins(user.uid, masteryCount); 
+                // Update local state to trigger animation
+                setCoins(prevCoins => prevCoins + masteryCount); 
+            } catch (error) {
+                console.error("Failed to update coins:", error);
+                // Optionally notify user of the sync error, but don't block gameplay
+            }
+        }
+        
         const newChain = [...wordChain, { word: submittedWord, author: 'player' as const }];
         const newUsedWords = new Set(usedWords).add(submittedWord);
         
@@ -184,6 +215,7 @@ export default function WordChainGame({ onGoBack }) {
     };
 
     const renderChain = () => {
+        // ... (renderChain function remains unchanged)
         return wordChain.map((entry, index) => {
             const isPlayer = entry.author === 'player';
             const lastChar = index > 0 ? wordChain[index-1].word.slice(-1) : '';
@@ -219,11 +251,17 @@ export default function WordChainGame({ onGoBack }) {
         <div className="fixed inset-0 z-[51] bg-gradient-to-br from-gray-100 to-blue-50 flex flex-col">
             <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
                 <div className="flex h-14 items-center justify-between px-4">
-                    <div className="w-28 flex justify-start">
+                    <div className="flex justify-start">
                         <button onClick={onGoBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors" aria-label="Home">
                             <HomeIcon />
                             <span>Home</span>
                         </button>
+                    </div>
+
+                    {/* User Stats Display */}
+                    <div className="flex items-center gap-2">
+                        <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
+                        <MasteryDisplay masteryCount={masteryCount} />
                     </div>
                 </div>
             </header>
