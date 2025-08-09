@@ -23,6 +23,12 @@ const SendIcon = () => (
     </svg>
 );
 
+const BackIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+);
+
 
 type GameState = 'loading' | 'playerTurn' | 'aiTurn' | 'gameOver';
 type Message = { text: string; type: 'error' | 'info' | 'success' | 'warning' };
@@ -205,16 +211,28 @@ export default function WordChainGame({ onGoBack }) {
     
     return (
         <div className="fixed inset-0 z-[51] bg-gradient-to-br from-gray-100 to-blue-50 flex flex-col">
-            <div className="sticky top-0 bg-white/80 backdrop-blur-sm z-10 p-4 border-b flex justify-between items-center">
-                <button onClick={onGoBack} className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                    Quay lại
-                </button>
-                <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Nối Từ</h1>
-                <button onClick={startGame} disabled={gameState === 'loading' || allLearnedWords.size < 10} className="px-3 py-1.5 text-sm font-semibold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 disabled:bg-gray-300 disabled:cursor-not-allowed">
-                    Ván mới
-                </button>
-            </div>
+            <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
+                <div className="flex h-14 items-center justify-between px-4">
+                    <div className="w-28 flex justify-start">
+                        <button onClick={onGoBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors" aria-label="Quay lại">
+                            <BackIcon />
+                            <span>Quay lại</span>
+                        </button>
+                    </div>
+                    
+                    <h1 className="text-lg font-bold text-slate-200 truncate">Nối Từ</h1>
+
+                    <div className="w-28 flex justify-end">
+                        <button 
+                            onClick={startGame} 
+                            disabled={gameState === 'loading' || allLearnedWords.size < 10} 
+                            className="px-4 py-1.5 text-sm font-semibold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 disabled:bg-slate-500 disabled:cursor-not-allowed transition-colors"
+                        >
+                            Ván mới
+                        </button>
+                    </div>
+                </div>
+            </header>
             
             <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 space-y-4">
                 {renderChain()}
