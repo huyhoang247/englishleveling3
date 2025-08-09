@@ -1,20 +1,20 @@
-// --- START OF FILE: src/word-chain/word-chain-game.tsx ---
+// --- START OF FILE: src/word-chain-game.tsx ---
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 import { auth } from './firebase';
-// import { collection, getDocs } from 'firebase/firestore'; // Removed, no longer needed here
 import { onAuthStateChanged } from 'firebase/auth';
 
-// --- New Vocabulary Import ---
-import { defaultVocabulary } from './list-vocabulary.ts'; // Assuming path to your vocabulary file
+// --- NEW: Centralized Data Imports ---
+import { WORD_TO_CARD_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
 
 // --- Service and Hook Imports ---
-import { fetchOrCreateUser, updateUserCoins } from './userDataService.ts'; // Assuming path
-import { useAnimateValue } from './useAnimateValue.ts'; // Assuming path
+import { fetchOrCreateUser, updateUserCoins } from './userDataService.ts';
+import { useAnimateValue } from './useAnimateValue.ts';
 
 // --- Component Imports ---
-import CoinDisplay from './coin-display.tsx'; // Assuming path
-import MasteryDisplay from './mastery-display.tsx'; // Assuming path
+import FlashcardDetailModal from './story/flashcard.tsx'; // Import the modal
+import CoinDisplay from './coin-display.tsx';
+import MasteryDisplay from './mastery-display.tsx';
 
 
 // --- Icons ---
@@ -34,19 +34,17 @@ const SendIcon = () => (
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
     </svg>
 );
-
 const HomeIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
         <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
     </svg>
 );
 
-
 type GameState = 'loading' | 'playerTurn' | 'aiTurn' | 'gameOver';
 type Message = { text: string; type: 'error' | 'info' | 'success' | 'warning' };
 type ChainEntry = { word: string; author: 'player' | 'ai' };
 
-export default function WordChainGame({ onGoBack }) {
+export default function WordChainGame({ onGoBack }: { onGoBack: () => void }) {
     const [user, setUser] = useState(auth.currentUser);
     const [gameState, setGameState] = useState<GameState>('loading');
     const [wordChain, setWordChain] = useState<ChainEntry[]>([]);
@@ -54,11 +52,14 @@ export default function WordChainGame({ onGoBack }) {
     const [allLearnedWords, setAllLearnedWords] = useState<Set<string>>(new Set());
     const [playerInput, setPlayerInput] = useState('');
     const [message, setMessage] = useState<Message | null>(null);
+    
+    // --- NEW: State for Flashcard Modal ---
+    const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null);
 
     // --- User Stats State ---
     const [coins, setCoins] = useState(0);
     const [masteryCount, setMasteryCount] = useState(0);
-    const displayedCoins = useAnimateValue(coins, 500); // Animate coin changes
+    const displayedCoins = useAnimateValue(coins, 500);
 
     const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -69,12 +70,10 @@ export default function WordChainGame({ onGoBack }) {
         return () => unsubscribe();
     }, []);
 
-    // --- Data Fetching: Fetch user stats and load vocabulary ---
     useEffect(() => {
         const prepareGame = async () => {
             setGameState('loading');
             try {
-                // Fetch user data if logged in
                 if (user) {
                     const userData = await fetchOrCreateUser(user.uid);
                     setCoins(userData.coins || 0);
@@ -84,13 +83,10 @@ export default function WordChainGame({ onGoBack }) {
                     setMasteryCount(0);
                 }
 
-                // Load vocabulary from the imported list instead of Firestore
-                const words = defaultVocabulary
-                    .map(word => word.toLowerCase())
-                    .filter(Boolean);
+                // --- NEW: Load vocabulary from the centralized WORD_TO_CARD_MAP ---
+                const words = Array.from(WORD_TO_CARD_MAP.keys());
                 
                 if (words.length < 10) {
-                    // Updated message to reflect the static dictionary
                     setMessage({ text: `Từ điển không đủ từ (cần >10).`, type: 'warning' });
                     setGameState('gameOver');
                 } else {
@@ -102,28 +98,24 @@ export default function WordChainGame({ onGoBack }) {
                 setGameState('gameOver');
             }
         };
-
         prepareGame();
     }, [user]);
     
-    // --- Start Game when words are loaded ---
     useEffect(() => {
         if (allLearnedWords.size > 0 && gameState === 'loading') {
             startGame();
         }
     }, [allLearnedWords, gameState]);
 
-    // --- Scroll to bottom of chat ---
     useEffect(() => {
         if (chatContainerRef.current) {
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
     }, [wordChain]);
 
-    // --- AI's Turn Logic ---
     useEffect(() => {
         if (gameState === 'aiTurn') {
-            const aiThinkTime = Math.random() * 1000 + 800; // 800ms to 1800ms
+            const aiThinkTime = Math.random() * 1000 + 800;
             const timeoutId = setTimeout(() => {
                 handleAiMove();
             }, aiThinkTime);
@@ -160,7 +152,6 @@ export default function WordChainGame({ onGoBack }) {
         const lastChar = lastEntry.word.slice(-1);
         const submittedWord = playerInput.trim().toLowerCase();
 
-        // --- Validation ---
         if (!submittedWord.startsWith(lastChar)) {
             setMessage({ text: `Từ phải bắt đầu bằng chữ '${lastChar.toUpperCase()}'`, type: 'error' });
             return;
@@ -170,22 +161,16 @@ export default function WordChainGame({ onGoBack }) {
             return;
         }
         if (!allLearnedWords.has(submittedWord)) {
-            // Updated message
             setMessage({ text: 'Từ này không có trong từ điển hoặc không hợp lệ!', type: 'error' });
             return;
         }
 
-        // --- Success ---
-        // Award coins based on mastery count
         if (masteryCount > 0) {
             try {
-                // The amount to add is the current mastery count
                 await updateUserCoins(user.uid, masteryCount); 
-                // Update local state to trigger animation
                 setCoins(prevCoins => prevCoins + masteryCount); 
             } catch (error) {
                 console.error("Failed to update coins:", error);
-                // Optionally notify user of the sync error, but don't block gameplay
             }
         }
         
@@ -211,39 +196,53 @@ export default function WordChainGame({ onGoBack }) {
             setUsedWords(newUsedWords);
             setGameState('playerTurn');
         } else {
-            // AI cannot find a word, player wins
             setMessage({ text: 'Chúc mừng! Bạn đã thắng!', type: 'success' });
             setGameState('gameOver');
         }
     };
 
+    // --- NEW: Handlers for Modal ---
+    const handleWordClick = (word: string) => {
+        const card = WORD_TO_CARD_MAP.get(word.toLowerCase());
+        if (card) {
+            setSelectedCard(card);
+        } else {
+            console.warn(`Flashcard for word "${word}" not found.`);
+            setMessage({ text: `Không tìm thấy thông tin chi tiết cho từ "${word}".`, type: 'warning' });
+        }
+    };
+
+    const handleCloseModal = () => {
+        setSelectedCard(null);
+    };
+
     const renderChain = () => {
-        // ... (renderChain function remains unchanged)
         return wordChain.map((entry, index) => {
             const isPlayer = entry.author === 'player';
-            const firstChar = entry.word.charAt(0);
-
             return (
                 <div key={index} className={`flex items-end gap-2 w-full ${isPlayer ? 'justify-end' : 'justify-start'}`}>
                     {!isPlayer && <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500"><BotIcon/></div>}
-                    <div className={`max-w-[70%] rounded-2xl px-4 py-2 text-lg relative shadow-md transition-transform duration-300 transform animate-pop-in ${
+                    <button 
+                     onClick={() => handleWordClick(entry.word)}
+                     className={`max-w-[70%] rounded-2xl px-4 py-2 text-lg text-left relative shadow-md transition-all duration-300 transform animate-pop-in hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 ${
                         isPlayer 
                         ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-br-lg'
                         : 'bg-white text-gray-800 rounded-bl-lg'
                     }`}>
-                        <span className="font-bold text-yellow-300">{firstChar}</span>
-                        <span>{entry.word.slice(1)}</span>
-                    </div>
+                        <span className="font-bold text-yellow-300">{entry.word.charAt(0).toUpperCase()}</span>
+                        <span>{entry.word.slice(1).toLowerCase()}</span>
+                    </button>
                      {isPlayer && <div className="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500"><UserIcon/></div>}
                 </div>
-            )
+            );
         });
-    }
+    };
     
     const lastWord = wordChain.length > 0 ? wordChain[wordChain.length - 1].word : '';
     const nextChar = lastWord.slice(-1);
     
     return (
+      <Fragment>
         <div className="fixed inset-0 z-[51] bg-gradient-to-br from-gray-100 to-blue-50 flex flex-col">
             <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
                 <div className="flex h-14 items-center justify-between px-4">
@@ -253,8 +252,6 @@ export default function WordChainGame({ onGoBack }) {
                             <span>Home</span>
                         </button>
                     </div>
-
-                    {/* User Stats Display */}
                     <div className="flex items-center gap-2">
                         <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                         <MasteryDisplay masteryCount={masteryCount} />
@@ -262,8 +259,7 @@ export default function WordChainGame({ onGoBack }) {
                 </div>
             </header>
             
-            {/* CHANGE 1: Add custom class to hide scrollbar */}
-            <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 space-y-4 hide-scrollbar">
+            <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 space-y-4">
                 {renderChain()}
                 {gameState === 'aiTurn' && (
                      <div className="flex items-end gap-2 justify-start animate-pop-in">
@@ -277,8 +273,8 @@ export default function WordChainGame({ onGoBack }) {
                 )}
             </div>
 
-            <div className="flex-shrink-0 p-4 bg-white border-t">
-                 {message && (
+            <div className="p-4 bg-white border-t">
+                 {message && !selectedCard && (
                     <div className={`mb-3 p-3 rounded-lg text-center text-sm font-medium animate-pop-in
                         ${message.type === 'error' && 'bg-red-100 text-red-700'}
                         ${message.type === 'success' && 'bg-green-100 text-green-700'}
@@ -334,16 +330,16 @@ export default function WordChainGame({ onGoBack }) {
                 }
                 .delay-150 { animation-delay: 0.15s; }
                 .delay-300 { animation-delay: 0.3s; }
-
-                /* CHANGE 2: Add CSS rules for hiding the scrollbar */
-                .hide-scrollbar {
-                    -ms-overflow-style: none;  /* IE and Edge */
-                    scrollbar-width: none;  /* Firefox */
-                }
-                .hide-scrollbar::-webkit-scrollbar {
-                    display: none; /* Chrome, Safari, and Opera */
-                }
             `}</style>
         </div>
+        {/* Render the modal outside of the main game div */}
+        <FlashcardDetailModal
+            selectedCard={selectedCard}
+            showVocabDetail={!!selectedCard}
+            onClose={handleCloseModal}
+            exampleSentencesData={exampleData}
+            currentVisualStyle="default"
+        />
+      </Fragment>
     );
 }
