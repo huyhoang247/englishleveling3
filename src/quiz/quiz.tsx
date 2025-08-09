@@ -6,7 +6,7 @@ import { doc, writeBatch, increment } from 'firebase/firestore'; // Chỉ giữ 
 
 // Import các hàm service mới để quản lý dữ liệu người dùng
 import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode } from '../userDataService.ts';
-import { useAnimateValue } from './useAnimateValue'; // <--- IMPORT HOOK MỚI
+import { useAnimateValue } from '../useAnimateValue.ts'; // <--- IMPORT HOOK MỚI
 
 import CoinDisplay from '../coin-display.tsx';
 import quizData from './quiz-data.ts';
