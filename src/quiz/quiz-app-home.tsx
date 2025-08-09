@@ -405,6 +405,18 @@ const GiftIcon = ({ className }: { className: string }) => (
         <path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
     </svg>
 );
+// --- NEW GRADIENT ICON ---
+const GradientGiftIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="url(#gift-gradient)">
+        <defs>
+            <linearGradient id="gift-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{ stopColor: 'var(--tw-gradient-from, #60A5FA)' }} />
+                <stop offset="100%" style={{ stopColor: 'var(--tw-gradient-to, #818CF8)' }} />
+            </linearGradient>
+        </defs>
+        <path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+    </svg>
+);
 const GoldCoinIcon = ({ className }: { className: string }) => (
     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className={className} />
 );
@@ -903,10 +915,12 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all animate-scale-up" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
                     <div className="flex items-center gap-2">
-                        <GiftIcon className="w-6 h-6 text-yellow-500"/>
-                        <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Rewards: {practiceTitle}</h3>
+                        <GradientGiftIcon className="w-6 h-6 from-blue-500 to-indigo-500" />
+                        <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">{practiceTitle}</h3>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+                    <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 transition-colors">
+                        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-6 h-6"/>
+                    </button>
                 </div>
                 <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50 hide-scrollbar">{renderedTiers}</div>
             </div>
