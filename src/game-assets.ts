@@ -12,7 +12,7 @@
  */
 export const uiAssets = {
   keyIcon: require("./assets/images/key.webp"),
-  menuIcon: require("./assets/images/menu.web"),
+  menuIcon: require("./assets/images/menu.webp"),
   shopIcon: require("./assets/images/shop-icon.webp"),
   inventoryIcon: require("./assets/images/inventory-icon.webp"),
   missionIcon: require("./assets/images/mission-icon.webp"),
