@@ -43,6 +43,11 @@ const MasteryDisplay: React.FC<MasteryDisplayProps> = memo(({ masteryCount }) =>
 
     {/* Mastery count with a bright, clear text color */}
     <div className="font-bold text-slate-100 text-xs tracking-wide">{masteryCount}</div>
+
+    {/* Plus button for Mastery - Adjusted to match the slate theme */}
+    <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-slate-500 to-gray-700 rounded-full flex items-center justify-center cursor-pointer border border-slate-400 shadow-inner hover:shadow-slate-400/50 hover:scale-110 transition-all duration-200">
+      <span className="text-white font-bold text-xs">+</span>
+    </div>
     
     {/* Pulsing dots for a "live" feel */}
     <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
