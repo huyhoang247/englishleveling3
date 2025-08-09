@@ -1,4 +1,3 @@
-// --- START OF FILE: AnalysisDashboard.tsx ---
 
 import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback, memo } from 'react';
 import { db, auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
@@ -22,7 +21,6 @@ const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount
 
 
 // --- Icons (Sử dụng các icon SVG đơn giản để không phụ thuộc vào file ngoài) ---
-const BookOpenIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
 const CheckCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
 const AwardIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>;
 const CalendarCheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>;
@@ -139,7 +137,7 @@ const VocabularyMilestones: FC<VocabularyMilestonesProps> = memo(({ totalWordsLe
     <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="bg-blue-100 text-blue-600 p-2.5 rounded-lg"><BookOpenIcon /></div>
+          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/voca-journey.webp" alt="Voca Journey" className="w-11 h-11" />
           <div>
             <h3 className="text-base sm:text-lg font-bold text-gray-800">Voca Journey</h3>
             {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">Max level reached!</p> ) : (
@@ -177,7 +175,6 @@ const VocabularyMilestones: FC<VocabularyMilestonesProps> = memo(({ totalWordsLe
 
 
 // --- COMPONENT MỤC TIÊU HÀNG NGÀY (TIẾN TRÌNH CỘT MỐC) ---
-const TrophyIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.25 2.25a.75.75 0 00-1.5 0v1.165a.75.75 0 001.5 0V2.25zM11.25 18.75a.75.75 0 00-1.5 0v-1.165a.75.75 0 001.5 0v1.165zM5.25 10.5a.75.75 0 01.75-.75h1.165a.75.75 0 010 1.5H6a.75.75 0 01-.75-.75zM18.75 10.5a.75.75 0 01-.75.75h-1.165a.75.75 0 010-1.5h1.165a.75.75 0 01.75.75zM6.31 6.31a.75.75 0 00-1.06-1.06L3.93 6.57A.75.75 0 005 7.63l1.31-1.32zM14.75 14.75a.75.75 0 00-1.06-1.06L12.37 15a.75.75 0 001.06 1.06l1.32-1.31zM6.31 14.75a.75.75 0 001.06-1.06L6.05 12.37A.75.75 0 005 13.43l1.31 1.32zM14.75 6.31a.75.75 0 00-1.06 1.06L15 8.69A.75.75 0 1016.06 7.63l-1.31-1.32zM10 5.25a4.75 4.75 0 100 9.5 4.75 4.75 0 000-9.5zM8.25 10a1.75 1.75 0 113.5 0 1.75 1.75 0 01-3.5 0z" clipRule="evenodd" /></svg>;
 const GiftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a3 3 0 015.252-2.121l.738.64.738-.64A3 3 0 0115 5v2.212a3 3 0 01-.679 1.943l-4.261 4.26a1.5 1.5 0 01-2.121 0l-4.26-4.26A3 3 0 015 7.212V5zm10 0a1 1 0 10-2 0v.788a1 1 0 01-.321.707l-4.26 4.26a.5.5 0 01-.707 0l-4.26-4.26A1 1 0 014 5.788V5a1 1 0 10-2 0v2.212a5 5 0 001.127 3.238l4.26 4.26a3.5 3.5 0 004.95 0l4.26-4.26A5 5 0 0015 7.212V5z" clipRule="evenodd" /></svg>;
 const CheckCircleIconSmall = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
 const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
@@ -242,7 +239,7 @@ const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = memo(({ wordsLearnedTo
     <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="bg-yellow-100 text-yellow-600 p-2.5 rounded-lg"><TrophyIcon /></div>
+          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/daily-missions.webp" alt="Daily Missions" className="w-11 h-11" />
           <div>
             <h3 className="text-base sm:text-lg font-bold text-gray-800">Daily Missions</h3>
             {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">All missions completed!</p> ) : (
