@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 import { auth } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
-// --- NEW: Centralized Data Imports ---
+// --- Centralized Data Imports ---
 import { WORD_TO_CARD_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
 
 // --- Service and Hook Imports ---
@@ -12,12 +12,11 @@ import { fetchOrCreateUser, updateUserCoins } from './userDataService.ts';
 import { useAnimateValue } from './useAnimateValue.ts';
 
 // --- Component Imports ---
-import FlashcardDetailModal from './story/flashcard.tsx'; // Import the modal
+import FlashcardDetailModal from './story/flashcard.tsx';
 import CoinDisplay from './coin-display.tsx';
 import MasteryDisplay from './mastery-display.tsx';
 
-
-// --- Icons ---
+// --- Icons (Đầy đủ) ---
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
@@ -40,11 +39,13 @@ const HomeIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
     </svg>
 );
 
+// --- Type Definitions ---
 type GameState = 'loading' | 'playerTurn' | 'aiTurn' | 'gameOver';
 type Message = { text: string; type: 'error' | 'info' | 'success' | 'warning' };
 type ChainEntry = { word: string; author: 'player' | 'ai' };
 
 export default function WordChainGame({ onGoBack }: { onGoBack: () => void }) {
+    // --- States ---
     const [user, setUser] = useState(auth.currentUser);
     const [gameState, setGameState] = useState<GameState>('loading');
     const [wordChain, setWordChain] = useState<ChainEntry[]>([]);
@@ -52,17 +53,13 @@ export default function WordChainGame({ onGoBack }: { onGoBack: () => void }) {
     const [allLearnedWords, setAllLearnedWords] = useState<Set<string>>(new Set());
     const [playerInput, setPlayerInput] = useState('');
     const [message, setMessage] = useState<Message | null>(null);
-    
-    // --- NEW: State for Flashcard Modal ---
     const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null);
-
-    // --- User Stats State ---
     const [coins, setCoins] = useState(0);
     const [masteryCount, setMasteryCount] = useState(0);
     const displayedCoins = useAnimateValue(coins, 500);
-
     const chatContainerRef = useRef<HTMLDivElement>(null);
 
+    // --- Effects (Đầy đủ) ---
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, currentUser => {
             setUser(currentUser);
@@ -83,7 +80,6 @@ export default function WordChainGame({ onGoBack }: { onGoBack: () => void }) {
                     setMasteryCount(0);
                 }
 
-                // --- NEW: Load vocabulary from the centralized WORD_TO_CARD_MAP ---
                 const words = Array.from(WORD_TO_CARD_MAP.keys());
                 
                 if (words.length < 10) {
@@ -123,6 +119,7 @@ export default function WordChainGame({ onGoBack }: { onGoBack: () => void }) {
         }
     }, [gameState]);
 
+    // --- Handlers (Đầy đủ) ---
     const startGame = useCallback(() => {
         const availableWords = Array.from(allLearnedWords);
         if (availableWords.length === 0) return;
@@ -201,7 +198,6 @@ export default function WordChainGame({ onGoBack }: { onGoBack: () => void }) {
         }
     };
 
-    // --- NEW: Handlers for Modal ---
     const handleWordClick = (word: string) => {
         const card = WORD_TO_CARD_MAP.get(word.toLowerCase());
         if (card) {
@@ -216,6 +212,7 @@ export default function WordChainGame({ onGoBack }: { onGoBack: () => void }) {
         setSelectedCard(null);
     };
 
+    // --- Render Functions (Đầy đủ) ---
     const renderChain = () => {
         return wordChain.map((entry, index) => {
             const isPlayer = entry.author === 'player';
@@ -238,9 +235,11 @@ export default function WordChainGame({ onGoBack }: { onGoBack: () => void }) {
         });
     };
     
+    // --- Derived State ---
     const lastWord = wordChain.length > 0 ? wordChain[wordChain.length - 1].word : '';
     const nextChar = lastWord.slice(-1);
     
+    // --- Component Return (Đầy đủ) ---
     return (
       <Fragment>
         <div className="fixed inset-0 z-[51] bg-gradient-to-br from-gray-100 to-blue-50 flex flex-col">
@@ -332,13 +331,14 @@ export default function WordChainGame({ onGoBack }: { onGoBack: () => void }) {
                 .delay-300 { animation-delay: 0.3s; }
             `}</style>
         </div>
-        {/* Render the modal outside of the main game div */}
+        
         <FlashcardDetailModal
             selectedCard={selectedCard}
             showVocabDetail={!!selectedCard}
             onClose={handleCloseModal}
             exampleSentencesData={exampleData}
             currentVisualStyle="default"
+            zIndex={100} 
         />
       </Fragment>
     );
