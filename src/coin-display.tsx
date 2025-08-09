@@ -1,4 +1,5 @@
 import React from 'react';
+import { uiAssets } from './game-assets.ts'; // Import from centralized assets file
 
 // Define the props for the CoinDisplay component
 interface CoinDisplayProps {
@@ -6,8 +7,7 @@ interface CoinDisplayProps {
   isStatsFullscreen: boolean; // Flag to hide/show the display when stats are fullscreen
 }
 
-// Coin Icon Image URL
-const coinIconUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png";
+// Placeholder URL for when the main icon fails to load
 const coinIconPlaceholderUrl = "https://placehold.co/16x16/ffd700/000000?text=$"; // Placeholder
 
 // CoinDisplay component
@@ -41,8 +41,8 @@ const CoinDisplay: React.FC<CoinDisplayProps> = ({ displayedCoins, isStatsFullsc
       <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
       {/* Replaced the old coin icon div with the new image tag */}
       <div className="relative mr-0.5 flex items-center justify-center"> {/* Container for the image */}
-        <img
-          src={coinIconUrl}
+        <img // Using the icon from the centralized game-assets file
+          src={uiAssets.goldIcon}
           alt="Dollar Coin Icon" // Add alt text
           className="w-4 h-4" // Adjust size as needed
            // Optional: Add onerror to handle broken image link
