@@ -1,7 +1,7 @@
 // --- START OF FILE: src/flashcard.tsx ---
 
 import React, { useState, useEffect } from 'react';
-import BackButton from './footer-back.tsx';
+import BackButton from '../footer-back.tsx';
 import { ExampleSentence, Flashcard as CoreFlashcard } from './flashcard-data.ts';
 
 // Đổi tên interface để tránh xung đột với tên component, mặc dù vẫn dùng chung cấu trúc từ file data
