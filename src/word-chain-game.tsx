@@ -6,7 +6,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 
 // --- Service and Hook Imports ---
-import { fetchOrCreateUser, updateUserCoins } from '../firebase/userDataService'; // Assuming path
+import { fetchOrCreateUser, updateUserCoins } from './userDataService.ts'; // Assuming path
 import { useAnimateValue } from './useAnimateValue.ts'; // Assuming path
 
 // --- Component Imports ---
