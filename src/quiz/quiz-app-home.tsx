@@ -16,7 +16,7 @@ import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
 // --- THÊM IMPORT CHO CÁC HÀM SERVICE MỚI ---
-import { fetchPracticeListProgress, claimQuizReward } from './userDataService.ts';
+import { fetchPracticeListProgress, claimQuizReward } from '../userDataService.ts';
 
 // --- THÊM INTERFACE CHO PROPS MỚI ---
 interface QuizAppHomeProps {
