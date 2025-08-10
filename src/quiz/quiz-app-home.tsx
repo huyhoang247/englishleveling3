@@ -276,46 +276,41 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
     switch(currentView) {
       case 'main':
         return (
-          <div className="flex flex-col items-center gap-8 w-full pt-8">
-            <div className="w-full max-w-md space-y-5">
-              <button
-                onClick={() => handleQuizSelect(1)}
-                className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-blue-300 group"
-              >
-                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center">
-                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/quiz.webp" alt="Quiz" className="h-16 w-16" />
-                </div>
-                <div className="ml-5 text-left flex-grow">
-                  <h3 className="text-xl font-bold text-gray-800">Quiz</h3>
-                  <p className="text-gray-500 text-sm mt-1">Quiz các câu hỏi multiple choice & fill in the blank</p>
-                </div>
-              </button>
-              
-              <button
-                onClick={() => setCurrentView('wordChainGame')}
-                className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-purple-300 group"
-              >
-                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center">
-                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/word-chain-game.webp" alt="Word Chain" className="h-16 w-16" />
-                </div>
-                <div className="ml-5 text-left flex-grow">
-                    <h3 className="text-xl font-bold text-gray-800">Word Chain</h3>
-                    <p className="text-gray-500 text-sm mt-1">Challenge your vocabulary with a word chain game</p>
-                </div>
-              </button>
+          // --- START: NEW MAIN SCREEN DESIGN ---
+          <div className="grid grid-cols-2 gap-5 sm:gap-6 max-w-md mx-auto pt-4">
+            <button
+              onClick={() => handleQuizSelect(1)}
+              className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-blue-400 group"
+            >
+              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/quiz.webp" alt="Quiz" className="h-20 w-20 mb-3" />
+              <h3 className="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition-colors">Quiz</h3>
+            </button>
+            
+            <button
+              onClick={() => setCurrentView('wordChainGame')}
+              className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-purple-400 group"
+            >
+              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/word-chain-game.webp" alt="Word Chain" className="h-20 w-20 mb-3" />
+              <h3 className="text-lg font-bold text-gray-800 group-hover:text-purple-600 transition-colors">Word Chain</h3>
+            </button>
 
-              <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
-                <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Sắp ra mắt</div>
-                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm"><span className="text-4xl">📄</span></div>
-                <div className="ml-5 text-left flex-grow"><h3 className="text-xl font-bold text-gray-500">Đề Thi</h3><p className="text-gray-400 text-sm mt-1">Kiểm tra kiến thức với các đề thi thử</p></div>
+            <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
+              <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Sắp ra mắt</div>
+              <div className="h-20 w-20 mb-3 flex items-center justify-center rounded-2xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-inner">
+                  <span className="text-4xl opacity-70">📄</span>
               </div>
-              <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
-                <div className="absolute top-2 right-2 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Sắp ra mắt</div>
-                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-sm"><span className="text-4xl">📖</span></div>
-                <div className="ml-5 text-left flex-grow"><h3 className="text-xl font-bold text-gray-500">Ngữ Pháp</h3><p className="text-gray-400 text-sm mt-1">Luyện tập các chủ điểm ngữ pháp</p></div>
+              <h3 className="text-lg font-bold text-gray-500">Đề Thi</h3>
+            </div>
+            
+            <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
+              <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Sắp ra mắt</div>
+              <div className="h-20 w-20 mb-3 flex items-center justify-center rounded-2xl bg-gradient-to-br from-gray-300 to-gray-400 text-white shadow-inner">
+                  <span className="text-4xl opacity-70">📖</span>
               </div>
+              <h3 className="text-lg font-bold text-gray-500">Ngữ Pháp</h3>
             </div>
           </div>
+          // --- END: NEW MAIN SCREEN DESIGN ---
         );
       case 'quizTypes':
         return (
