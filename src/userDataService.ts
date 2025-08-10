@@ -3,7 +3,7 @@
 import { db } from './firebase';
 import { 
   doc, getDoc, setDoc, updateDoc, increment, collection, 
-  getDocs, writeBatch, arrayUnion 
+  getDocs, writeBatch, arrayUnion, onSnapshot, Unsubscribe 
 } from 'firebase/firestore';
 // Import các dữ liệu local cần thiết cho hàm mới
 import quizData from './quiz/quiz-data.ts'; // Giả sử đường dẫn này đúng
@@ -388,6 +388,50 @@ export const claimVocabMilestoneReward = async (userId: string, milestone: numbe
     console.error(`Failed to claim vocabulary milestone for user ${userId}:`, error);
     throw error;
   }
+};
+
+/**
+ * Interface cho dữ liệu cốt lõi của người dùng được lắng nghe.
+ */
+export interface UserCoreData {
+  coins: number;
+  masteryCards: number;
+}
+
+/**
+ * Lắng nghe các thay đổi trên document của người dùng trong thời gian thực.
+ * @param userId - ID của người dùng.
+ * @param callback - Hàm sẽ được gọi với dữ liệu người dùng mỗi khi có thay đổi.
+ * @returns {Unsubscribe} Một hàm để hủy lắng nghe, cho phép component dọn dẹp.
+ */
+export const listenToUserData = (userId: string, callback: (data: UserCoreData | null) => void): Unsubscribe => {
+  if (!userId) {
+    // Nếu không có userId, gọi callback với null và trả về một hàm hủy rỗng.
+    callback(null);
+    return () => {}; 
+  }
+
+  const userDocRef = doc(db, 'users', userId);
+  
+  const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      // Truyền về một object đã được định hình để component sử dụng
+      callback({
+        coins: data.coins || 0,
+        masteryCards: data.masteryCards || 0,
+      });
+    } else {
+      // Document người dùng không tồn tại
+      callback(null);
+    }
+  }, (error) => {
+    console.error(`Error listening to user data for ${userId}:`, error);
+    callback(null); // Báo lỗi về cho component bằng cách truyền null
+  });
+
+  // Trả về hàm unsubscribe để component gọi khi unmount
+  return unsubscribe;
 };
 
 
