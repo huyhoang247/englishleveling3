@@ -10,6 +10,8 @@ import {
 import { defaultVocabulary } from './list-vocabulary.ts'; // Điều chỉnh đường dẫn
 import CoinDisplay from './coin-display.tsx';
 import { uiAssets, dashboardAssets } from './game-assets.ts'; // Import assets
+import MasteryDisplay from './mastery-display.tsx'; // [MODIFIED] Import MasteryDisplay from external file
+import { useAnimateValue } from './useAnimateValue.ts'; // [ADDED] Import the animation hook
 
 // --- [ADDED] Icons and Components for Header ---
 const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
@@ -17,7 +19,7 @@ const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
     </svg>
 );
-const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => ( <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style> <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div> <div className="relative flex items-center justify-center"><img src={dashboardAssets.masteryIcon} alt="Mastery Icon" className="w-4 h-4" /></div> <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{masteryCount}</div> <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div> <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div> </div> ));
+// [REMOVED] The inline MasteryDisplay component has been removed and is now imported.
 
 
 // --- Icons (Sử dụng các icon SVG đơn giản để không phụ thuộc vào file ngoài) ---
@@ -331,6 +333,9 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
   
   // [NEW] State to hold user stats fetched from Firestore
   const [userStats, setUserStats] = useState({ coins: 0, masteryCount: 0 });
+  
+  // [ADDED] Animate coins when the value changes
+  const animatedCoins = useAnimateValue(userStats.coins, 1000);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
@@ -588,7 +593,7 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
               </button>
             </div>
             <div className="flex items-center justify-end gap-3">
-               <CoinDisplay displayedCoins={userStats.coins} isStatsFullscreen={false} />
+               <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
                <MasteryDisplay masteryCount={userStats.masteryCount} />
             </div>
           </div>
