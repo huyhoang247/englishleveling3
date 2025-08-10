@@ -1,3 +1,5 @@
+// --- START OF FILE quiz-app-home.tsx ---
+
 // quiz-app-home.tsx
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import QuizApp from './quiz.tsx';
@@ -9,9 +11,12 @@ import CoinDisplay from '../coin-display.tsx'; // Import CoinDisplay
 // Imports for progress calculation
 import { db, auth } from '../firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, doc, getDoc, getDocs, updateDoc, increment, onSnapshot } from 'firebase/firestore'; // Add onSnapshot
+import { doc, onSnapshot, increment, updateDoc } from 'firebase/firestore'; 
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
+
+// --- THÊM IMPORT CHO CÁC HÀM SERVICE MỚI ---
+import { fetchPracticeListProgress, claimQuizReward } from './userDataService.ts';
 
 // --- THÊM INTERFACE CHO PROPS MỚI ---
 interface QuizAppHomeProps {
@@ -81,9 +86,8 @@ function AppHeader({
                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo-large.webp" alt="Quiz App Logo" className="h-10 w-auto" />
               </a>
             ) : (
-              // MODIFIED: Replaced Back button with Home button
-              <button onClick={goHome} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
-                <HomeIcon />
+              <button onClick={goBack} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Quay lại">
+                <BackIcon />
               </button>
             )}
           </div>
@@ -102,8 +106,9 @@ function AppHeader({
                     <AnalysisIcon />
                 </button>
               ) : (
-                 // MODIFIED: Removed Home button from here
-                 null
+                 <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
+                    <HomeIcon />
+                 </button>
               )}
           </div>
         </div>
@@ -247,18 +252,22 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
 
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
-            {/* MODIFIED: Header for fullscreen quiz/game views */}
-            <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
-              <div className="flex h-14 items-center justify-between px-4">
-                 <>
-                    <button onClick={goHome} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
-                        <HomeIcon className="h-6 w-6"/>
-                    </button>
-                    <h2 className="text-lg font-bold text-slate-200 truncate px-2">{title}</h2>
-                    <div className="w-[calc(theme(spacing.2)*2+theme(spacing.6))]"></div> {/* Placeholder for balance */}
-                </>
-              </div>
-            </header>
+            {showParentHeader && (
+                <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
+                  <div className="flex h-14 items-center justify-between px-4">
+                     <>
+                        <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
+                            <BackIcon className="h-5 w-5"/>
+                            <span>Quay lại</span>
+                        </button>
+                        <h2 className="text-lg font-bold text-slate-200 truncate px-2">{title}</h2>
+                        <div className="w-28 text-right">
+                            <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ"><HomeIcon className="h-5 w-5"/></button>
+                        </div>
+                    </>
+                  </div>
+                </header>
+            )}
             {/* *** SỬA LỖI SCROLL Ở ĐÂY *** */}
             {/* Luôn thêm overflow-y-auto để đảm bảo các component toàn màn hình có thể cuộn */}
             <div className="flex-grow overflow-y-auto">
@@ -311,7 +320,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
-            {/* MODIFIED: Removed header text */}
+            <div className="text-center"><h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Chọn hình thức</h2><p className="mt-2 text-md text-gray-500">Bạn muốn luyện tập theo cách nào?</p></div>
             <div className="space-y-5 w-full">
               <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
@@ -539,127 +548,24 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       return;
     }
 
-    const calculateProgress = async () => {
+    const loadProgress = async () => {
       setLoading(true);
       try {
-        const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
-          getDoc(doc(db, 'users', user.uid)),
-          getDocs(collection(db, 'users', user.uid, 'openedVocab')),
-          getDocs(collection(db, 'users', user.uid, 'completedWords')),
-          getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
-        ]);
-        const userData = userDocSnap.exists() ? userDocSnap.data() : {};
-        setClaimedRewards(userData.claimedQuizRewards || {});
-        const userVocabSet = new Set(openedVocabSnapshot.docs.map(doc => doc.data().word?.toLowerCase()).filter(Boolean));
-        const completedWordsByGameMode = {};
-        completedWordsSnapshot.forEach(doc => {
-          const gameModes = doc.data().gameModes;
-          if (gameModes) {
-            for (const mode in gameModes) {
-              if (!completedWordsByGameMode[mode]) completedWordsByGameMode[mode] = new Set();
-              completedWordsByGameMode[mode].add(doc.id.toLowerCase());
-            }
-          }
-        });
-        const completedMultiWordByGameMode = {};
-        completedMultiWordSnapshot.forEach(docSnap => {
-            const completedIn = docSnap.data().completedIn || {};
-            for (const mode in completedIn) {
-                if (!completedMultiWordByGameMode[mode]) completedMultiWordByGameMode[mode] = new Set();
-                completedMultiWordByGameMode[mode].add(docSnap.id.toLowerCase());
-            }
-        });
-
-        const sentenceToUserVocab = new Map(); 
-        const wordToRelevantExampleSentences = new Map();
-        const questionToUserVocab = new Map();
-
-        if (userVocabSet.size > 0) {
-            const vocabRegex = new RegExp(`\\b(${Array.from(userVocabSet).join('|')})\\b`, 'ig');
-            exampleData.forEach(sentence => {
-                const matches = sentence.english.match(vocabRegex);
-                if (matches) {
-                    const uniqueWords = [...new Set(matches.map(w => w.toLowerCase()))];
-                    sentenceToUserVocab.set(sentence, uniqueWords);
-                    uniqueWords.forEach(word => {
-                        if (!wordToRelevantExampleSentences.has(word)) {
-                            wordToRelevantExampleSentences.set(word, []);
-                        }
-                        wordToRelevantExampleSentences.get(word).push(sentence);
-                    });
-                }
-            });
-            if (selectedType === 'tracNghiem') {
-                quizData.forEach(question => {
-                    const matches = question.question.match(vocabRegex);
-                    if (matches) {
-                         const uniqueWords = [...new Set(matches.map(w => w.toLowerCase()))];
-                         questionToUserVocab.set(question, uniqueWords);
-                    }
-                });
-            }
-        }
+        // *** GỌI HÀM SERVICE MỚI ĐỂ LẤY DỮ LIỆU ***
+        const { progressData: newProgressData, claimedRewards: newClaimedRewards } = 
+            await fetchPracticeListProgress(user.uid, selectedType as any);
         
-        const newProgressData = {};
-        if (selectedType === 'tracNghiem') {
-            const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1, 2, 3, 4] : [i*100+1, i*100+2, i*100+3, i*100+4]).flat();
-            const totalP1 = questionToUserVocab.size;
-            const totalP2_P3 = wordToRelevantExampleSentences.size;
-            const totalP4 = userVocabSet.size;
-            allModes.forEach(num => {
-                const modeId = `quiz-${num}`;
-                const baseNum = num % 100;
-                const completedSet = completedWordsByGameMode[modeId] || new Set();
-                if (baseNum === 1) {
-                    let completedCount = 0;
-                    questionToUserVocab.forEach(words => {
-                        if (words.some(w => completedSet.has(w))) completedCount++;
-                    });
-                    newProgressData[num] = { completed: completedCount, total: totalP1 };
-                } else if (baseNum === 2 || baseNum === 3) {
-                    let completedCount = 0;
-                    for (const word of wordToRelevantExampleSentences.keys()) {
-                        if (completedSet.has(word)) completedCount++;
-                    }
-                    newProgressData[num] = { completed: completedCount, total: totalP2_P3 };
-                } else if (baseNum === 4) {
-                    newProgressData[num] = { completed: completedSet.size, total: totalP4 };
-                }
-            });
-        } else if (selectedType === 'dienTu') {
-            const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1,2,3,4,5,6,7] : [1,2,3,4,5,6,7].map(n => i*100+n)).flat();
-            const totals = { p1: userVocabSet.size, p2: wordToRelevantExampleSentences.size, p3: 0, p4: 0, p5: 0, p6: 0, p7: sentenceToUserVocab.size };
-            sentenceToUserVocab.forEach(words => {
-                if (words.length >= 2) totals.p3++;
-                if (words.length >= 3) totals.p4++;
-                if (words.length >= 4) totals.p5++;
-                if (words.length >= 5) totals.p6++;
-            });
-            allModes.forEach(num => {
-                const modeId = `fill-word-${num}`;
-                const baseNum = num % 100;
-                if (baseNum === 1) {
-                    newProgressData[num] = { completed: (completedWordsByGameMode[modeId] || new Set()).size, total: totals.p1 };
-                } else if (baseNum === 2) {
-                    let completedCount = 0;
-                    const completedSet = completedWordsByGameMode[modeId] || new Set();
-                    for (const word of wordToRelevantExampleSentences.keys()) {
-                        if (completedSet.has(word)) completedCount++;
-                    }
-                    newProgressData[num] = { completed: completedCount, total: totals.p2 };
-                } else if (baseNum >= 3 && baseNum <= 7) {
-                    newProgressData[num] = { completed: (completedMultiWordByGameMode[modeId] || new Set()).size, total: totals[`p${baseNum}`] };
-                }
-            });
-        }
         setProgressData(newProgressData);
+        setClaimedRewards(newClaimedRewards);
+
       } catch (error) {
-        console.error("Lỗi khi tính toán tiến trình:", error);
+        console.error("Lỗi khi tải tiến trình từ service:", error);
       } finally {
         setLoading(false);
       }
     };
-    calculateProgress();
+    
+    loadProgress();
   }, [user, selectedType]);
   
   const practiceDetails = useMemo(() => ({
@@ -792,15 +698,12 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         if (isClaiming || !user) return;
         setIsClaiming(rewardId);
         try {
-            const userDocRef = doc(db, 'users', user.uid);
-            await updateDoc(userDocRef, {
-                coins: increment(coinAmount),
-                cardCapacity: increment(capacityAmount),
-                [`claimedQuizRewards.${rewardId}`]: true
-            });
+            // *** SỬ DỤNG HÀM SERVICE MỚI ***
+            await claimQuizReward(user.uid, rewardId, coinAmount, capacityAmount);
+            
             setClaimedRewards(prev => ({ ...prev, [rewardId]: true }));
         } catch (error) {
-            console.error("Error claiming reward:", error);
+            console.error("Error claiming reward via service:", error);
             alert("Đã có lỗi xảy ra khi nhận thưởng.");
         } finally {
             setIsClaiming(null);
@@ -918,3 +821,4 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         </div>
     );
 };
+// --- END OF FILE quiz-app-home.tsx ---
