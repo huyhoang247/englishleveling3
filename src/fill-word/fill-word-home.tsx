@@ -5,7 +5,7 @@ import { auth } from '../firebase.js'; // Chỉ cần import auth
 import { onAuthStateChanged, User } from 'firebase/auth';
 
 // --- REFACTOR: Import các hàm service thay vì các hàm của firestore ---
-import { fetchGameInitialData, recordGameSuccess } from '../firebase/userDataService'; 
+import { fetchGameInitialData, recordGameSuccess } from '../userDataService.ts'; 
 
 import { defaultImageUrls } from '../image-url.ts';
 import { exampleData } from '../example-data.ts';
