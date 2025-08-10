@@ -67,7 +67,7 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
     </div>
     
     {/* Màu chữ là màu xanh đậm để nổi bật trên nền trắng */}
-    <div className={`font-bold text-sky-800 text-xs tracking-wide streak-counter ml-1 ${isAnimating ? 'is-animating' : ''}`}>
+    <div className={`font-bold text-sky-800 text-xs tracking-wide streak-counter ml-1 mr-1 ${isAnimating ? 'is-animating' : ''}`}>
       {displayedStreak}
     </div>
     
