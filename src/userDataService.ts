@@ -2,8 +2,8 @@
 
 import { db } from './firebase.js'; // Adjust path to your firebase config
 import { doc, getDoc, setDoc, updateDoc, increment, collection, getDocs, writeBatch } from 'firebase/firestore';
-import { exampleData } from '../example-data.ts'; // Adjust path
-import { phraseData } from '../phrase-data.ts'; // Adjust path
+import { exampleData } from './example-data.ts'; // Adjust path
+import { phraseData } from './phrase-data.ts'; // Adjust path
 
 // --- INTERFACES (could be in a shared types file) ---
 interface VocabularyItem {
