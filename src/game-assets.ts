@@ -81,9 +81,9 @@ export const itemAssets = {
     chaosStaff: require("./assets/equipment/chaos-staff.webp"),
     // Armor
     hardArmor: require("./assets/equipment/hard-armor.webp"),
-    tunic: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_000000001ca461f5a50bac51456de65a.png',
-    silverscalePlate: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2004_11_48%20PM.png',
-    dragonsBreathArmor: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2006_42_28%20PM.png',
+    tunic: require("./assets/equipment/tunic.webp"),
+    silverscalePlate: require("./assets/equipment/silverscale-plate.webp"),
+    dragonsBreathArmor: require("./assets/equipment/dragons-breath-armor.webp"),
     
 };
 
