@@ -1,7 +1,7 @@
 // --- START OF FILE: src/firebase/userDataService.ts ---
 
 import { db } from './firebase';
-import { doc, getDoc, setDoc, updateDoc, increment, collection, getDocs, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, increment, collection, getDocs, writeBatch, arrayUnion } from 'firebase/firestore';
 
 /**
  * Lấy dữ liệu người dùng. Nếu người dùng chưa tồn tại trong Firestore, tạo mới với giá trị mặc định.
@@ -96,8 +96,6 @@ export const getCompletedWordsForGameMode = async (userId: string, gameModeId: s
     });
     return completedSet;
 };
-
-// --- CÁC HÀM MỚI ĐƯỢC THÊM VÀO ---
 
 /**
  * Interface cho dữ liệu khởi tạo game.
@@ -206,4 +204,156 @@ export const recordGameSuccess = async (
   }
 
   await batch.commit();
+};
+
+// --- [NEW LOGIC FOR ANALYSIS DASHBOARD] ---
+
+/**
+ * Hàm trợ giúp: Định dạng ngày theo giờ địa phương (YYYY-MM-DD)
+ */
+const formatDateToLocalYYYYMMDD = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+// --- Định nghĩa kiểu dữ liệu cho phân tích (để component có thể import) ---
+interface LearningActivity { date: string; new: number; review: number; }
+export interface WordMastery { word: string; mastery: number; lastPracticed: Date; }
+
+export type DailyActivityMap = { [date: string]: { new: number; review: number } };
+
+export interface AnalysisData {
+  totalWordsLearned: number;
+  totalWordsAvailable: number;
+  learningActivity: LearningActivity[];
+  recentCompletions: { word: string; date: string }[];
+  wordMastery: WordMastery[];
+}
+
+export interface DashboardData {
+    analysisData: AnalysisData | null;
+    dailyActivityMap: DailyActivityMap;
+    userStats: {
+        coins: number;
+        masteryCount: number;
+        claimedDailyGoals: number[];
+        claimedVocabMilestones: number[];
+    };
+}
+
+/**
+ * Lấy toàn bộ dữ liệu cần thiết cho trang Dashboard Phân Tích.
+ * @param userId - ID của người dùng.
+ * @param vocabularyTotal - Tổng số từ vựng có trong hệ thống.
+ * @returns {Promise<DashboardData>} Dữ liệu đã được xử lý cho dashboard.
+ */
+export const fetchDashboardData = async (userId: string, vocabularyTotal: number): Promise<DashboardData> => {
+    const [userData, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
+        fetchOrCreateUser(userId),
+        getDocs(collection(db, 'users', userId, 'completedWords')),
+        getDocs(collection(db, 'users', userId, 'completedMultiWord'))
+    ]);
+
+    const todayString = formatDateToLocalYYYYMMDD(new Date());
+    const userStats = {
+        coins: userData.coins || 0,
+        masteryCount: userData.masteryCards || 0,
+        claimedDailyGoals: userData.claimedDailyGoals?.[todayString] || [],
+        claimedVocabMilestones: userData.claimedVocabMilestones || []
+    };
+
+    const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
+    const dailyActivity: DailyActivityMap = {};
+    const allCompletionsForRecent: { word: string; date: Date }[] = [];
+
+    completedWordsSnapshot.forEach(doc => {
+        const data = doc.data();
+        const lastCompletedAt = data.lastCompletedAt?.toDate();
+        if (!lastCompletedAt) return;
+
+        allCompletionsForRecent.push({ word: doc.id, date: lastCompletedAt });
+        const dateString = formatDateToLocalYYYYMMDD(lastCompletedAt);
+        if (!dailyActivity[dateString]) dailyActivity[dateString] = { new: 0, review: 0 };
+
+        let totalCompletions = 0;
+        let totalCorrectForWord = 0;
+        if (data.gameModes) {
+            Object.values(data.gameModes).forEach((modeData: any) => { totalCompletions += modeData.correctCount || 0; });
+            Object.keys(data.gameModes).forEach(mode => {
+                const correctCount = data.gameModes[mode].correctCount || 0;
+                totalCorrectForWord += correctCount;
+            });
+        }
+        if (totalCompletions > 1) dailyActivity[dateString].review++;
+        else if (totalCompletions === 1) dailyActivity[dateString].new++;
+
+        if (totalCorrectForWord > 0) wordMasteryMap[doc.id] = { mastery: totalCorrectForWord, lastPracticed: lastCompletedAt };
+    });
+
+    completedMultiWordSnapshot.forEach(doc => {
+        const data = doc.data();
+        const lastCompletedAt = data.lastCompletedAt?.toDate();
+        if (!lastCompletedAt) return;
+        allCompletionsForRecent.push({ word: doc.id, date: lastCompletedAt });
+    });
+    
+    if (completedWordsSnapshot.empty && completedMultiWordSnapshot.empty) {
+        return { analysisData: null, dailyActivityMap: {}, userStats };
+    }
+
+    const learningActivityData: LearningActivity[] = Object.entries(dailyActivity)
+        .map(([date, counts]) => ({ date, ...counts }))
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    const recentCompletions = [...allCompletionsForRecent]
+        .sort((a, b) => b.date.getTime() - a.date.getTime())
+        .slice(0, 5)
+        .map(c => ({ word: c.word, date: c.date.toLocaleString('vi-VN') }));
+        
+    const totalWordsLearned = completedWordsSnapshot.size;
+    const wordMasteryData: WordMastery[] = Object.entries(wordMasteryMap).map(([word, data]) => ({ word, ...data }));
+
+    const analysisData: AnalysisData = {
+      totalWordsLearned,
+      totalWordsAvailable: vocabularyTotal,
+      learningActivity: learningActivityData.slice(-30).map(d => ({...d, date: new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })})),
+      recentCompletions,
+      wordMastery: wordMasteryData,
+    };
+    
+    return { analysisData, dailyActivityMap: dailyActivity, userStats };
+};
+
+/**
+ * Ghi nhận việc người dùng nhận thưởng cho mục tiêu hàng ngày.
+ * @param userId - ID người dùng.
+ * @param milestone - Cột mốc đã đạt (ví dụ: 10, 20).
+ * @param rewardAmount - Số coin thưởng.
+ */
+export const claimDailyGoalReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
+    const userDocRef = doc(db, 'users', userId);
+    const todayString = formatDateToLocalYYYYMMDD(new Date());
+    const fieldKey = `claimedDailyGoals.${todayString}`;
+    
+    await updateDoc(userDocRef, {
+        coins: increment(rewardAmount),
+        [fieldKey]: arrayUnion(milestone)
+    });
+};
+
+/**
+ * Ghi nhận việc người dùng nhận thưởng cho cột mốc từ vựng.
+ * @param userId - ID người dùng.
+ * @param milestone - Cột mốc đã đạt (ví dụ: 100, 500).
+ * @param rewardAmount - Số coin thưởng.
+ */
+export const claimVocabMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
+    const userDocRef = doc(db, 'users', userId);
+    
+    await updateDoc(userDocRef, {
+        coins: increment(rewardAmount),
+        claimedVocabMilestones: arrayUnion(milestone)
+    });
 };
