@@ -1,4 +1,4 @@
-// --- START OF FILE streak-display.tsx ---
+// --- START OF FILE streak-display.tsx (Frosty Blue Theme) ---
 
 import React from 'react';
 
@@ -26,21 +26,21 @@ const getStreakIconUrl = (streak: number) => {
   return streakIconUrls.default;
 };
 
-// StreakDisplay component - Redesigned to match CoinDisplay
+// StreakDisplay component - Frosty Blue Theme
 const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimating }) => (
-  // Container được thiết kế lại với gradient, bóng, viền và padding tương tự CoinDisplay
-  <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-lg p-0.5 flex items-center justify-center shadow-lg border border-orange-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-    {/* CSS cho các animation */}
+  // <<< THAY ĐỔI Ở ĐÂY: Gradient, border
+  <div className="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg p-0.5 flex items-center justify-center shadow-lg border border-cyan-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
     <style jsx>{`
-      /* Animation khi số thay đổi, tương tự coin-display */
       @keyframes highlight-change {
         0% {
           color: #FFFFFF;
-          text-shadow: 0 0 8px rgba(255, 165, 0, 0.9); /* Orange glow */
+          /* <<< THAY ĐỔI Ở ĐÂY: Glow color */
+          text-shadow: 0 0 8px rgba(34, 211, 238, 0.9); /* Cyan glow */
           transform: scale(1.15);
         }
         100% {
-          color: #FFEDD5; /* text-orange-100 */
+          /* <<< THAY ĐỔI Ở ĐÂY: Text color */
+          color: #CFFAFE; /* text-cyan-100 */
           text-shadow: none;
           transform: scale(1);
         }
@@ -49,7 +49,6 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
         animation: highlight-change 0.4s ease-out;
       }
       
-      /* Animation lấp lánh */
       @keyframes pulse-fast {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
@@ -59,25 +58,23 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
       }
     `}</style>
     
-    {/* Hiệu ứng "shine" khi hover, sao chép từ coin-display */}
-    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-orange-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+    {/* <<< THAY ĐỔI Ở ĐÂY: Shine color */}
+    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
     
-    {/* Icon lửa */}
     <div className="relative flex items-center justify-center mr-0.5">
       <img src={getStreakIconUrl(displayedStreak)} alt="Streak Icon" className="w-4 h-4" />
     </div>
     
-    {/* Số streak, với màu chữ và animation mới */}
-    <div className={`font-bold text-orange-100 text-xs tracking-wide streak-counter ml-1 ${isAnimating ? 'is-animating' : ''}`}>
+    {/* <<< THAY ĐỔI Ở ĐÂY: Text color */}
+    <div className={`font-bold text-cyan-100 text-xs tracking-wide streak-counter ml-1 ${isAnimating ? 'is-animating' : ''}`}>
       {displayedStreak}
     </div>
     
-    {/* Các chấm lấp lánh, sao chép từ coin-display để tạo sự sống động */}
     <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-    <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse-fast" style={{ animationDelay: '0.6s' }}></div>
+    <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-cyan-200 rounded-full animate-pulse-fast" style={{ animationDelay: '0.6s' }}></div>
   </div>
 );
 
 export default StreakDisplay;
 
-// --- END OF FILE streak-display.tsx ---
+// --- END OF FILE streak-display.tsx (Frosty Blue Theme) ---
