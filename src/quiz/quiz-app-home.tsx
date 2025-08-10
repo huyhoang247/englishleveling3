@@ -238,8 +238,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               break;
           case 'analysis':
               title = ''; // Title is not needed here anymore
-              // [MODIFIED] Pass props to AnalysisDashboard for it to manage its own header
-              ViewComponent = <AnalysisDashboard onGoBack={goHome} userCoins={userCoins} masteryCount={masteryCount} />;
+              // [MODIFIED] AnalysisDashboard now fetches its own data. No props needed.
+              ViewComponent = <AnalysisDashboard onGoBack={goHome} />;
               break;
       }
       
@@ -370,8 +370,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
     </div>
   );
 }
-
-// ... Các component con còn lại (PracticeList, RewardsPopup, etc.) giữ nguyên ...
 
 // --- Icons (moved outside to prevent re-creation) ---
 const CompletedIcon = ({ className }: { className: string }) => (
