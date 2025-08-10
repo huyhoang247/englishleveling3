@@ -1,4 +1,4 @@
-// --- START OF FILE streak-display.tsx (Shadow Steel Theme) ---
+// --- START OF FILE streak-display.tsx (Frosty Crystal Theme) ---
 
 import React from 'react';
 
@@ -26,21 +26,22 @@ const getStreakIconUrl = (streak: number) => {
   return streakIconUrls.default;
 };
 
-// StreakDisplay component - Shadow Steel Theme
+// StreakDisplay component - Frosty Crystal Theme (Trắng Tuyết)
 const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimating }) => (
-  // Thay đổi màu nền gradient và viền
-  <div className="bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg p-0.5 flex items-center justify-center shadow-lg border border-gray-500 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+  // Nền gradient từ trắng tinh sang xanh da trời rất nhạt, viền xanh nhạt
+  <div className="bg-gradient-to-br from-white to-sky-100 rounded-lg p-0.5 flex items-center justify-center shadow-lg border border-sky-200 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
     <style jsx>{`
       @keyframes highlight-change {
         0% {
-          color: #FFFFFF;
-          /* Thay đổi màu sắc của hiệu ứng phát sáng */
-          text-shadow: 0 0 8px rgba(220, 220, 220, 0.8); /* White/Silver glow */
+          /* Chữ sẽ đậm lên thành màu xanh thẫm */
+          color: #0c4a6e; /* Tailwind's sky-900 */
+          /* Hiệu ứng phát sáng màu xanh băng giá */
+          text-shadow: 0 0 7px rgba(56, 189, 248, 0.7); /* Sky-blue frosty glow */
           transform: scale(1.15);
         }
         100% {
-          /* Thay đổi màu sắc của chữ */
-          color: #F3F4F6; /* text-gray-100 */
+          /* Trở về màu chữ mặc định */
+          color: #075985; /* Tailwind's sky-800 */
           text-shadow: none;
           transform: scale(1);
         }
@@ -54,28 +55,28 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
         50% { opacity: 0.5; }
       }
       .animate-pulse-fast {
-        animation: pulse-fast 1.2s infinite;
+        animation: pulse-fast 1.3s infinite;
       }
     `}</style>
     
-    {/* Thay đổi màu sắc của hiệu ứng "shine" */}
-    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-gray-400/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+    {/* Hiệu ứng "shine" trong suốt như một lớp băng mỏng lướt qua */}
+    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/60 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
     
     <div className="relative flex items-center justify-center mr-0.5">
       <img src={getStreakIconUrl(displayedStreak)} alt="Streak Icon" className="w-4 h-4" />
     </div>
     
-    {/* Thay đổi màu chữ */}
-    <div className={`font-bold text-gray-100 text-xs tracking-wide streak-counter ml-1 ${isAnimating ? 'is-animating' : ''}`}>
+    {/* Màu chữ là màu xanh đậm để nổi bật trên nền trắng */}
+    <div className={`font-bold text-sky-800 text-xs tracking-wide streak-counter ml-1 ${isAnimating ? 'is-animating' : ''}`}>
       {displayedStreak}
     </div>
     
-    {/* Thay đổi màu chấm lấp lánh cho phù hợp */}
-    <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-    <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-gray-300 rounded-full animate-pulse-fast" style={{ animationDelay: '0.6s' }}></div>
+    {/* Các chấm lấp lánh màu xanh băng giá */}
+    <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-sky-500 rounded-full animate-pulse-fast"></div>
+    <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-sky-400 rounded-full animate-pulse-fast" style={{ animationDelay: '0.65s' }}></div>
   </div>
 );
 
 export default StreakDisplay;
 
-// --- END OF FILE streak-display.tsx (Shadow Steel Theme) ---
+// --- END OF FILE streak-display.tsx (Frosty Crystal Theme) ---
