@@ -40,8 +40,8 @@ export const uiAssets = {
  */
 export const dashboardAssets = {
   masteryIcon: require("./assets/images/mastery-icon.webp"),
-  vocaJourneyIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/voca-journey.webp",
-  dailyMissionsIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/daily-missions.webp",
+  vocaJourneyIcon: require("./assets/images/voca-journey.webp"),
+  dailyMissionsIcon: require("./assets/images/daily-missions.webp"),
 };
 
 /**
