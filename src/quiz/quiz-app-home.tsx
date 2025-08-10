@@ -9,14 +9,13 @@ import WordChainGame from '../word-chain-game.tsx';
 import CoinDisplay from '../coin-display.tsx'; // Import CoinDisplay
 
 // Imports for progress calculation
-import { db, auth } from '../firebase.js';
+import { auth } from '../firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, onSnapshot, increment, updateDoc } from 'firebase/firestore'; 
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
 // --- THÊM IMPORT CHO CÁC HÀM SERVICE MỚI ---
-import { fetchPracticeListProgress, claimQuizReward } from '../userDataService.ts';
+import { fetchPracticeListProgress, claimQuizReward, listenToUserData } from '../userDataService.ts';
 
 // --- THÊM INTERFACE CHO PROPS MỚI ---
 interface QuizAppHomeProps {
@@ -142,23 +141,28 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
     return () => unsubscribe();
   }, []);
 
-  // Effect to get coins in real-time when user is available
+  // Effect to get coins and mastery in real-time when user is available
   useEffect(() => {
     if (user) {
-      const unsubscribe = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setUserCoins(data.coins || 0);
-          setMasteryCount(data.masteryCards || 0);
+      // Gọi hàm service để thiết lập listener
+      const unsubscribe = listenToUserData(user.uid, (data) => {
+        if (data) {
+          // Cập nhật state khi có dữ liệu mới
+          setUserCoins(data.coins);
+          setMasteryCount(data.masteryCards);
         } else {
+          // Xử lý trường hợp không có dữ liệu (user mới, lỗi, etc.)
           setUserCoins(0);
           setMasteryCount(0);
         }
       });
+
+      // Trả về hàm hủy để React dọn dẹp khi component unmount hoặc user thay đổi
       return () => unsubscribe();
     } else {
-      setUserCoins(0); // Reset coins if user logs out
-      setMasteryCount(0); // Reset mastery if user logs out
+      // Reset state khi người dùng đăng xuất
+      setUserCoins(0);
+      setMasteryCount(0);
     }
   }, [user]);
 
@@ -403,7 +407,7 @@ const GradientGiftIcon = ({ className }: { className: string }) => (
         <defs>
             <linearGradient id="gift-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" style={{ stopColor: 'var(--tw-gradient-from, #60A5FA)' }} />
-                <stop offset="100%" style={{ stopColor: 'var(--tw-gradient-to, #818CF8)' }} />
+                <stop offset="100%" style={{ stopColor: 'var(--tw--gradient-to, #818CF8)' }} />
             </linearGradient>
         </defs>
         <path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
