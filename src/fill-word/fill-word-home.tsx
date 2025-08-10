@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { auth } from '../firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { fetchFillWordGameData, recordGameSuccess } from './userDataService.ts'; // IMPORTING from the new service
+import { fetchFillWordGameData, recordGameSuccess } from '../userDataService.ts'; // IMPORTING from the new service
 import { defaultImageUrls } from '../image-url.ts';
 import { exampleData } from '../example-data.ts';
 import { phraseData } from '../phrase-data.ts';
