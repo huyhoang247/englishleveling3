@@ -4,8 +4,8 @@ import { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
 import { db, auth } from '../firebase.js';
 import { doc, writeBatch, increment } from 'firebase/firestore'; // Chỉ giữ lại các import cần thiết
 
-// Import các hàm service mới để quản lý dữ liệu người dùng
-import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode } from '../userDataService.ts';
+// --- CẬP NHẬT: Import thêm recordGameSuccess và xóa updateUserCoins không cần thiết nữa
+import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../userDataService.ts';
 import { useAnimateValue } from '../useAnimateValue.ts'; 
 import CoinDisplay from '../coin-display.tsx';
 import MasteryDisplay from '../mastery-display.tsx'; 
@@ -98,13 +98,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
           ]);
 
           setCoins(userData.coins || 0);
-          
-          // --- THAY ĐỔI LOGIC ---
-          // Lấy số thẻ Thông Thạo (masteryCards) từ dữ liệu người dùng trả về bởi service
-          // và cập nhật state 'masteryCount'.
           setMasteryCount(userData.masteryCards || 0);
-          // --- KẾT THÚC THAY ĐỔI ---
-          
           setUserVocabulary(vocabList);
           setCompletedQuizWords(completedSet);
 
@@ -214,23 +208,31 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
       }
       if (newStreak >= 1) { setStreakAnimation(true); setTimeout(() => setStreakAnimation(false), 1500); }
       const matchedWord = currentQuestionWord;
+      
+      // --- REFACTOR: SỬ DỤNG recordGameSuccess ĐỂ ĐẢM BẢO AN TOÀN DỮ LIỆU ---
       if (user && matchedWord) {
         try {
-          const batch = writeBatch(db); 
-          const gameModeId = `quiz-${selectedPractice}`;
-          if (coinsToAdd > 0) {
-            await updateUserCoins(user.uid, coinsToAdd);
-          }
-          const completedWordRef = doc(db, 'users', user.uid, 'completedWords', matchedWord.toLowerCase());
-          batch.set(completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
-          await batch.commit();
-        } catch (error) { 
-          console.error("Lỗi khi thực hiện ghi dữ liệu:", error); 
-          if (coinsToAdd > 0) {
-              setCoins(prevCoins => prevCoins - coinsToAdd);
-          }
+            const gameModeId = `quiz-${selectedPractice}`;
+            // Game Quiz luôn là game 1 từ, nên isMultiWordGame là false
+            const isMultiWordGame = false;
+
+            await recordGameSuccess(
+                user.uid,
+                gameModeId,
+                matchedWord,
+                isMultiWordGame,
+                coinsToAdd
+            );
+        } catch (error) {
+            console.error("Lỗi khi ghi lại kết quả game Quiz:", error);
+            // Rollback lại state trên UI nếu có lỗi
+            if (coinsToAdd > 0) {
+                setCoins(prevCoins => prevCoins - coinsToAdd);
+            }
         }
       }
+      // --- KẾT THÚC REFACTOR ---
+
       setTimeout(() => { setShowConfetti(false); setShowNextButton(true); }, 4000); 
     } else { setStreak(0); setShowNextButton(true); }
   };
@@ -403,4 +405,3 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     </div>
   );
 }
-// --- END OF FILE quiz.tsx ---
