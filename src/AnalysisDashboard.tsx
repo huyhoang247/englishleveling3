@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback, memo } from 'react';
 import { auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
 import { onAuthStateChanged, User } from 'firebase/auth';
-// [SỬA] Import các hàm service mới và bỏ các import firestore không cần thiết
 import { 
     fetchAnalysisDashboardData, 
     claimDailyMilestoneReward,
@@ -11,7 +10,7 @@ import {
 } from './userDataService.ts'; 
 import { 
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
-    Tooltip, Legend, ResponsiveContainer, Cell
+    Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { defaultVocabulary } from './list-vocabulary.ts'; // Điều chỉnh đường dẫn
 import CoinDisplay from './coin-display.tsx';
@@ -19,24 +18,17 @@ import { uiAssets, dashboardAssets } from './game-assets.ts'; // Import assets
 import MasteryDisplay from './mastery-display.tsx'; 
 import { useAnimateValue } from './useAnimateValue.ts'; 
 
-// --- Icons and Components for Header ---
-const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    </svg>
-);
-
-// --- Icons ---
-const CheckCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
-const AwardIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>;
+// --- ICONS (Grouped for better organization) ---
+const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
 const CalendarCheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>;
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
 const ChevronRightIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>;
+const GiftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a3 3 0 015.252-2.121l.738.64.738-.64A3 3 0 0115 5v2.212a3 3 0 01-.679 1.943l-4.261 4.26a1.5 1.5 0 01-2.121 0l-4.26-4.26A3 3 0 015 7.212V5zm10 0a1 1 0 10-2 0v.788a1 1 0 01-.321.707l-4.26 4.26a.5.5 0 01-.707 0l-4.26-4.26A1 1 0 014 5.788V5a1 1 0 10-2 0v2.212a5 5 0 001.127 3.238l4.26 4.26a3.5 3.5 0 004.95 0l4.26-4.26A5 5 0 0015 7.212V5z" clipRule="evenodd" /></svg>;
+const CheckCircleIconSmall = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
 
-// [ĐÃ XÓA] Hàm formatDateToLocalYYYYMMDD đã được chuyển sang service
-
-// --- Định nghĩa kiểu dữ liệu cho phân tích ---
+// --- TYPE DEFINITIONS ---
 interface LearningActivity { date: string; new: number; review: number; }
 interface MasteryByGame { game: string; completed: number; }
 interface VocabularyGrowth { date: string; cumulative: number; }
@@ -51,13 +43,16 @@ interface AnalysisData {
   wordMastery: WordMastery[];
 }
 type DailyActivityMap = { [date: string]: { new: number; review: number } };
-
-// --- Props for the component ---
-interface AnalysisDashboardProps {
-  onGoBack: () => void;
+interface UserProgress {
+    coins: number;
+    masteryCount: number;
+    claimedDailyGoals: number[];
+    claimedVocabMilestones: number[];
 }
 
-// --- Component Card tái sử dụng cho mỗi biểu đồ ---
+interface AnalysisDashboardProps { onGoBack: () => void; }
+
+// --- REUSABLE COMPONENTS ---
 const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> = ({ title, children, extra }) => (
     <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
         <div className="flex items-center justify-between mb-4">
@@ -68,196 +63,104 @@ const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> =
     </div>
 );
 
-// --- COMPONENT MỤC TIÊU TỪ VỰNG ---
+// [MỚI] COMPONENT TIẾN TRÌNH NHIỆM VỤ TÁI SỬ DỤNG
+const GOAL_MILESTONES = [5, 10, 20, 50, 100, 200];
 const VOCAB_MILESTONES = [100, 200, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500];
 
-interface VocabularyMilestonesProps {
-  totalWordsLearned: number;
+interface MilestoneProgressProps {
+  title: string;
+  iconSrc: string;
+  milestones: number[];
+  currentProgress: number;
   masteryCount: number;
-  user: User | null;
-  claimedVocabMilestones: number[];
+  claimedMilestones: number[];
+  onClaim: (milestone: number, rewardAmount: number) => Promise<void>;
   onClaimSuccess: (milestone: number, rewardAmount: number) => void;
+  user: User | null;
+  progressColorClass?: string;
+  completedText?: string;
 }
 
-const VocabularyMilestones: FC<VocabularyMilestonesProps> = memo(({ totalWordsLearned, masteryCount, user, claimedVocabMilestones, onClaimSuccess }) => {
-  const [isClaiming, setIsClaiming] = useState(false);
+const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
+    title, iconSrc, milestones, currentProgress, masteryCount, 
+    claimedMilestones, onClaim, onClaimSuccess, user,
+    progressColorClass = "from-green-400 to-blue-500",
+    completedText = "All missions completed!"
+}) => {
+    const [isClaiming, setIsClaiming] = useState(false);
 
-  const {
-    currentGoal,
-    progressPercentage,
-    isGoalMet,
-    areAllGoalsMet,
-  } = useMemo(() => {
-    const nextGoalIndex = VOCAB_MILESTONES.findIndex(g => !claimedVocabMilestones.includes(g));
-    if (nextGoalIndex === -1) {
-      return { areAllGoalsMet: true, progressPercentage: 100, isGoalMet: true, currentGoal: VOCAB_MILESTONES[VOCAB_MILESTONES.length - 1], previousGoal: 0 };
-    }
-    const currentGoal = VOCAB_MILESTONES[nextGoalIndex];
-    const previousGoal = nextGoalIndex > 0 ? VOCAB_MILESTONES[nextGoalIndex - 1] : 0;
-    const progressInMilestone = Math.max(0, totalWordsLearned - previousGoal);
-    const milestoneSize = currentGoal - previousGoal;
-    const progressPercentage = milestoneSize > 0 ? Math.min((progressInMilestone / milestoneSize) * 100, 100) : 100;
-    const isGoalMet = totalWordsLearned >= currentGoal;
-    return { currentGoal, previousGoal, progressPercentage, isGoalMet, areAllGoalsMet: false };
-  }, [totalWordsLearned, claimedVocabMilestones]);
+    const { currentGoal, progressPercentage, isGoalMet, areAllGoalsMet } = useMemo(() => {
+        const nextGoalIndex = milestones.findIndex(g => !claimedMilestones.includes(g));
+        if (nextGoalIndex === -1) {
+            return { areAllGoalsMet: true, progressPercentage: 100, isGoalMet: true, currentGoal: milestones[milestones.length - 1] };
+        }
+        const currentGoal = milestones[nextGoalIndex];
+        const previousGoal = nextGoalIndex > 0 ? milestones[nextGoalIndex - 1] : 0;
+        const progressInMilestone = Math.max(0, currentProgress - previousGoal);
+        const milestoneSize = currentGoal - previousGoal;
+        const progressPercentage = milestoneSize > 0 ? Math.min((progressInMilestone / milestoneSize) * 100, 100) : 100;
+        const isGoalMet = currentProgress >= currentGoal;
+        return { currentGoal, progressPercentage, isGoalMet, areAllGoalsMet: false };
+    }, [currentProgress, claimedMilestones, milestones]);
 
-  const handleClaim = useCallback(async () => {
-    if (!isGoalMet || areAllGoalsMet || !user || isClaiming) return;
-    setIsClaiming(true);
-    try {
-        const rewardAmount = currentGoal * Math.max(1, masteryCount);
-        // [SỬA] Gọi hàm service để nhận thưởng
-        await claimVocabMilestoneReward(user.uid, currentGoal, rewardAmount);
-        onClaimSuccess(currentGoal, rewardAmount);
-    } catch (error) {
-        console.error("Lỗi khi nhận thưởng từ vựng:", error);
-        alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
-    } finally {
-        setIsClaiming(false);
-    }
-  }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaimSuccess]);
+    const handleClaim = useCallback(async () => {
+        if (!isGoalMet || areAllGoalsMet || !user || isClaiming || !currentGoal) return;
+        setIsClaiming(true);
+        try {
+            const rewardAmount = currentGoal * Math.max(1, masteryCount);
+            await onClaim(currentGoal, rewardAmount);
+            onClaimSuccess(currentGoal, rewardAmount);
+        } catch (error) {
+            console.error(`Lỗi khi nhận thưởng cho "${title}":`, error);
+            // Thay thế alert bằng một thông báo tinh tế hơn (ví dụ: react-toastify)
+            alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
+        } finally {
+            setIsClaiming(false);
+        }
+    }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaim, onClaimSuccess, title]);
 
-  // Icons used inside this component
-  const GiftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a3 3 0 015.252-2.121l.738.64.738-.64A3 3 0 0115 5v2.212a3 3 0 01-.679 1.943l-4.261 4.26a1.5 1.5 0 01-2.121 0l-4.26-4.26A3 3 0 015 7.212V5zm10 0a1 1 0 10-2 0v.788a1 1 0 01-.321.707l-4.26 4.26a.5.5 0 01-.707 0l-4.26-4.26A1 1 0 014 5.788V5a1 1 0 10-2 0v2.212a5 5 0 001.127 3.238l4.26 4.26a3.5 3.5 0 004.95 0l4.26-4.26A5 5 0 0015 7.212V5z" clipRule="evenodd" /></svg>;
-  const CheckCircleIconSmall = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
-  const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
-
-  return (
-    <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <img src={dashboardAssets.vocaJourneyIcon} alt="Voca Journey" className="w-11 h-11" />
-          <div>
-            <h3 className="text-base sm:text-lg font-bold text-gray-800">Voca Journey</h3>
-            {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">Max level reached!</p> ) : (
-              <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
-                  <span className="flex items-center font-bold text-amber-600">
-                      <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-5 w-5 mr-1.5"/>
-                      <span className="text-sm">{currentGoal * (masteryCount > 0 ? masteryCount : 1)}</span>
-                  </span>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="flex-shrink-0">
-          {areAllGoalsMet ? ( <div className="text-center p-2 bg-green-100 text-green-700 rounded-lg flex items-center gap-2"><CheckCircleIconSmall /> <span className="font-bold text-sm">Awesome!</span></div>
-          ) : isGoalMet ? (
-            <button onClick={handleClaim} disabled={isClaiming} className="flex items-center justify-center px-4 py-2 font-bold text-white bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg shadow-md hover:scale-105 transform transition-transform duration-200 disabled:opacity-70 disabled:cursor-wait">
-              {isClaiming ? <SpinnerIcon /> : <GiftIcon />}
-              <span className="ml-1.5 text-sm">{isClaiming ? 'Wait' : 'Claim'}</span>
-            </button>
-          ) : (
-            <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed">
-              <GiftIcon />
-              <span className="flex items-baseline"><span className="text-base font-extrabold text-gray-700">{totalWordsLearned}</span><span className="text-sm font-medium text-gray-500">/{currentGoal}</span></span>
+    return (
+        <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3 flex-shrink-0">
+                    <img src={iconSrc} alt={title} className="w-11 h-11" />
+                    <div>
+                        <h3 className="text-base sm:text-lg font-bold text-gray-800">{title}</h3>
+                        {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">{completedText}</p> ) : (
+                        <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
+                            <span className="flex items-center font-bold text-amber-600">
+                                <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-5 w-5 mr-1.5"/>
+                                <span className="text-sm">{currentGoal * Math.max(1, masteryCount)}</span>
+                            </span>
+                        </div>
+                        )}
+                    </div>
+                </div>
+                <div className="flex-shrink-0">
+                    {areAllGoalsMet ? ( <div className="text-center p-2 bg-green-100 text-green-700 rounded-lg flex items-center gap-2"><CheckCircleIconSmall /> <span className="font-bold text-sm">Awesome!</span></div>
+                    ) : isGoalMet ? (
+                        <button onClick={handleClaim} disabled={isClaiming} className="flex items-center justify-center px-4 py-2 font-bold text-white bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg shadow-md hover:scale-105 transform transition-transform duration-200 disabled:opacity-70 disabled:cursor-wait">
+                            {isClaiming ? <SpinnerIcon /> : <GiftIcon />}
+                            <span className="ml-1.5 text-sm">{isClaiming ? 'Wait' : 'Claim'}</span>
+                        </button>
+                    ) : (
+                        <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed">
+                            <GiftIcon />
+                            <span className="flex items-baseline"><span className="text-base font-extrabold text-gray-700">{currentProgress}</span><span className="text-sm font-medium text-gray-500">/{currentGoal}</span></span>
+                        </div>
+                    )}
+                </div>
+                <div className="w-full mt-3">
+                    {areAllGoalsMet ? ( <div className="h-2.5 w-full bg-gradient-to-r from-green-400 to-teal-500 rounded-full" title="All milestones completed!"></div>
+                    ) : ( <div className={`w-full bg-gray-200 rounded-full h-2.5`}><div className={`bg-gradient-to-r ${progressColorClass} h-2.5 rounded-full transition-all duration-500 ease-out`} style={{ width: `${progressPercentage}%` }}></div></div> )}
+                </div>
             </div>
-          )}
         </div>
-        <div className="w-full mt-3">
-          {areAllGoalsMet ? ( <div className="h-2.5 w-full bg-gradient-to-r from-green-400 to-teal-500 rounded-full" title="All milestones completed!"></div>
-          ) : ( <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-gradient-to-r from-blue-400 to-purple-500 h-2.5 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div></div> )}
-        </div>
-      </div>
-    </div>
-  );
+    );
 });
 
-// --- COMPONENT MỤC TIÊU HÀNG NGÀY ---
-const GiftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a3 3 0 015.252-2.121l.738.64.738-.64A3 3 0 0115 5v2.212a3 3 0 01-.679 1.943l-4.261 4.26a1.5 1.5 0 01-2.121 0l-4.26-4.26A3 3 0 015 7.212V5zm10 0a1 1 0 10-2 0v.788a1 1 0 01-.321.707l-4.26 4.26a.5.5 0 01-.707 0l-4.26-4.26A1 1 0 014 5.788V5a1 1 0 10-2 0v2.212a5 5 0 001.127 3.238l4.26 4.26a3.5 3.5 0 004.95 0l4.26-4.26A5 5 0 0015 7.212V5z" clipRule="evenodd" /></svg>;
-const CheckCircleIconSmall = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
-const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
-
-const GOAL_MILESTONES = [5, 10, 20, 50, 100, 200];
-
-interface DailyGoalMilestonesProps {
-  wordsLearnedToday: number;
-  masteryCount: number;
-  user: User | null;
-  claimedDailyGoals: number[];
-  onClaimSuccess: (milestone: number, rewardAmount: number) => void;
-}
-
-const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = memo(({ wordsLearnedToday, masteryCount, user, claimedDailyGoals, onClaimSuccess }) => {
-  const [isClaiming, setIsClaiming] = useState(false);
-
-  const {
-    currentGoal,
-    progressPercentage,
-    isGoalMet,
-    areAllGoalsMet,
-  } = useMemo(() => {
-    const nextGoalIndex = GOAL_MILESTONES.findIndex(g => !claimedDailyGoals.includes(g));
-    if (nextGoalIndex === -1) {
-      return { areAllGoalsMet: true, progressPercentage: 100, isGoalMet: true, currentGoal: GOAL_MILESTONES[GOAL_MILESTONES.length - 1], previousGoal: 0 };
-    }
-    const currentGoal = GOAL_MILESTONES[nextGoalIndex];
-    const previousGoal = nextGoalIndex > 0 ? GOAL_MILESTONES[nextGoalIndex - 1] : 0;
-    const progressInMilestone = Math.max(0, wordsLearnedToday - previousGoal);
-    const milestoneSize = currentGoal - previousGoal;
-    const progressPercentage = Math.min((progressInMilestone / milestoneSize) * 100, 100);
-    const isGoalMet = wordsLearnedToday >= currentGoal;
-    return { currentGoal, previousGoal, progressPercentage, isGoalMet, areAllGoalsMet: false };
-  }, [wordsLearnedToday, claimedDailyGoals]);
-
-  const handleClaim = useCallback(async () => {
-    if (!isGoalMet || areAllGoalsMet || !user || isClaiming) return;
-    setIsClaiming(true);
-    try {
-        const rewardAmount = currentGoal * Math.max(1, masteryCount);
-        // [SỬA] Gọi hàm service để nhận thưởng
-        await claimDailyMilestoneReward(user.uid, currentGoal, rewardAmount);
-        onClaimSuccess(currentGoal, rewardAmount);
-    } catch (error) {
-        console.error("Lỗi khi nhận thưởng:", error);
-        alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
-    } finally {
-        setIsClaiming(false);
-    }
-  }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaimSuccess]);
-
-  return (
-    <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <img src={dashboardAssets.dailyMissionsIcon} alt="Daily Missions" className="w-11 h-11" />
-          <div>
-            <h3 className="text-base sm:text-lg font-bold text-gray-800">Daily Missions</h3>
-            {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">All missions completed!</p> ) : (
-              <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
-                  <span className="flex items-center font-bold text-amber-600">
-                      <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-5 w-5 mr-1.5"/>
-                      <span className="text-sm">{currentGoal * (masteryCount > 0 ? masteryCount : 1)}</span>
-                  </span>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="flex-shrink-0">
-          {areAllGoalsMet ? ( <div className="text-center p-2 bg-green-100 text-green-700 rounded-lg flex items-center gap-2"><CheckCircleIconSmall /> <span className="font-bold text-sm">Awesome!</span></div>
-          ) : isGoalMet ? (
-            <button onClick={handleClaim} disabled={isClaiming} className="flex items-center justify-center px-4 py-2 font-bold text-white bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg shadow-md hover:scale-105 transform transition-transform duration-200 disabled:opacity-70 disabled:cursor-wait">
-              {isClaiming ? <SpinnerIcon /> : <GiftIcon />}
-              <span className="ml-1.5 text-sm">{isClaiming ? 'Wait' : 'Claim'}</span>
-            </button>
-          ) : (
-            <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed">
-              <GiftIcon />
-              <span className="flex items-baseline"><span className="text-base font-extrabold text-gray-700">{wordsLearnedToday}</span><span className="text-sm font-medium text-gray-500">/{currentGoal}</span></span>
-            </div>
-          )}
-        </div>
-        <div className="w-full mt-3">
-          {areAllGoalsMet ? ( <div className="h-2.5 w-full bg-gradient-to-r from-green-400 to-teal-500 rounded-full" title="All missions completed!"></div>
-          ) : ( <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-gradient-to-r from-green-400 to-blue-500 h-2.5 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div></div> )}
-        </div>
-      </div>
-    </div>
-  );
-});
-
-// --- Component Lịch hoạt động (Activity Calendar) ---
+// --- COMPONENT LỊCH HOẠT ĐỘNG ---
 const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = memo(({ activityData }) => {
-    // [SỬA] Hàm formatDateToLocalYYYYMMDD đã bị xóa khỏi đây, nhưng logic bên trong vẫn hoạt động vì nó nhận dữ liệu đã được định dạng sẵn
     const formatDateForCalendar = (date: Date): string => {
         const year = date.getFullYear();
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -302,8 +205,8 @@ const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = memo(({ activit
     );
 });
 
-// --- Component chính ---
-const ITEMS_PER_PAGE = 10; // Số mục trên mỗi trang
+// --- MAIN COMPONENT: AnalysisDashboard ---
+const ITEMS_PER_PAGE = 10;
 
 export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) {
   const [user, setUser] = useState<User | null>(auth.currentUser);
@@ -313,12 +216,16 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
   const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [currentPage, setCurrentPage] = useState(1);
-  const [claimedDailyGoals, setClaimedDailyGoals] = useState<number[]>([]);
-  const [claimedVocabMilestones, setClaimedVocabMilestones] = useState<number[]>([]);
   
-  const [userStats, setUserStats] = useState({ coins: 0, masteryCount: 0 });
+  // [CẢI TIẾN] Gom các state của người dùng vào một object
+  const [userProgress, setUserProgress] = useState<UserProgress>({
+    coins: 0,
+    masteryCount: 0,
+    claimedDailyGoals: [],
+    claimedVocabMilestones: [],
+  });
   
-  const animatedCoins = useAnimateValue(userStats.coins, 1000);
+  const animatedCoins = useAnimateValue(userProgress.coins, 1000);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
@@ -328,19 +235,18 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
   useEffect(() => {
     if (!user) { setLoading(false); setError("Vui lòng đăng nhập để xem phân tích."); return; }
     
-    // [SỬA] Toàn bộ logic fetchData được đơn giản hóa thành một lệnh gọi service
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
         const dataPayload = await fetchAnalysisDashboardData(user.uid, defaultVocabulary.length);
 
-        setUserStats({
+        setUserProgress({
           coins: dataPayload.userData.coins,
           masteryCount: dataPayload.userData.masteryCards,
+          claimedDailyGoals: dataPayload.userData.claimedDailyGoals,
+          claimedVocabMilestones: dataPayload.userData.claimedVocabMilestones,
         });
-        setClaimedDailyGoals(dataPayload.userData.claimedDailyGoals);
-        setClaimedVocabMilestones(dataPayload.userData.claimedVocabMilestones);
         setAnalysisData(dataPayload.analysisData);
         setDailyActivityData(dataPayload.dailyActivityMap);
 
@@ -355,7 +261,7 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
   }, [user]);
 
   const wordsLearnedToday = useMemo(() => {
-    const todayString = new Date().toISOString().slice(0, 10); // Simple YYYY-MM-DD
+    const todayString = new Date().toISOString().slice(0, 10);
     const todayActivity = Object.entries(dailyActivityData).find(([date]) => date.startsWith(todayString));
     return todayActivity ? todayActivity[1].new + todayActivity[1].review : 0;
   }, [dailyActivityData]);
@@ -376,15 +282,33 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
     setCurrentPage(1); 
   };
   
+  // [CẢI TIẾN] Logic cập nhật state sau khi nhận thưởng
   const handleGoalClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
-      setClaimedDailyGoals(prev => [...prev, milestone]);
-      setUserStats(prev => ({ ...prev, coins: prev.coins + rewardAmount }));
+    setUserProgress(prev => ({
+        ...prev,
+        coins: prev.coins + rewardAmount,
+        claimedDailyGoals: [...prev.claimedDailyGoals, milestone],
+    }));
   }, []);
 
   const handleVocabClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
-      setClaimedVocabMilestones(prev => [...prev, milestone]);
-      setUserStats(prev => ({ ...prev, coins: prev.coins + rewardAmount }));
+    setUserProgress(prev => ({
+        ...prev,
+        coins: prev.coins + rewardAmount,
+        claimedVocabMilestones: [...prev.claimedVocabMilestones, milestone],
+    }));
   }, []);
+
+  // [CẢI TIẾN] Các hàm để truyền vào component `MilestoneProgress`
+  const handleDailyClaimReward = useCallback(async (milestone: number, rewardAmount: number) => {
+      if (!user) throw new Error("User not logged in");
+      await claimDailyMilestoneReward(user.uid, milestone, rewardAmount);
+  }, [user]);
+
+  const handleVocabClaimReward = useCallback(async (milestone: number, rewardAmount: number) => {
+      if (!user) throw new Error("User not logged in");
+      await claimVocabMilestoneReward(user.uid, milestone, rewardAmount);
+  }, [user]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -409,56 +333,50 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
         return ( <div className="flex flex-col items-center justify-center h-full text-center text-gray-500"><h2 className="text-2xl font-bold mb-2">Chưa có dữ liệu</h2><p>Hãy bắt đầu học để xem tiến trình của bạn được phân tích tại đây!</p></div> );
     }
 
-    const { totalWordsLearned, learningActivity, masteryByGame, vocabularyGrowth } = analysisData;
-    const barColors = ["#8884d8", "#82ca9d"];
-
+    const { totalWordsLearned, learningActivity, vocabularyGrowth } = analysisData;
     const totalPages = Math.ceil(sortedWordMastery.length / ITEMS_PER_PAGE);
-    const paginatedMasteryData = sortedWordMastery.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
-    );
-
-    const handlePageChange = (newPage: number) => {
-        if (newPage >= 1 && newPage <= totalPages) {
-            setCurrentPage(newPage);
-        }
-    };
+    const paginatedMasteryData = sortedWordMastery.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    const handlePageChange = (newPage: number) => { if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage); };
     
     return (
         <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-full">
             <div className="max-w-7xl mx-auto">
                 <div className="space-y-6 my-6">
-                    <VocabularyMilestones 
-                        totalWordsLearned={totalWordsLearned} 
-                        masteryCount={userStats.masteryCount} 
-                        user={user} 
-                        claimedVocabMilestones={claimedVocabMilestones} 
-                        onClaimSuccess={handleVocabClaimSuccess} 
+                    {/* [CẢI TIẾN] Sử dụng component MilestoneProgress */}
+                    <MilestoneProgress
+                        title="Voca Journey"
+                        iconSrc={dashboardAssets.vocaJourneyIcon}
+                        milestones={VOCAB_MILESTONES}
+                        currentProgress={totalWordsLearned}
+                        masteryCount={userProgress.masteryCount}
+                        claimedMilestones={userProgress.claimedVocabMilestones}
+                        onClaim={handleVocabClaimReward}
+                        onClaimSuccess={handleVocabClaimSuccess}
+                        user={user}
+                        progressColorClass="from-blue-400 to-purple-500"
+                        completedText="Max level reached!"
                     />
-                    <DailyGoalMilestones 
-                        wordsLearnedToday={wordsLearnedToday} 
-                        masteryCount={userStats.masteryCount} 
-                        user={user} 
-                        claimedDailyGoals={claimedDailyGoals} 
-                        onClaimSuccess={handleGoalClaimSuccess} 
+                    <MilestoneProgress
+                        title="Daily Missions"
+                        iconSrc={dashboardAssets.dailyMissionsIcon}
+                        milestones={GOAL_MILESTONES}
+                        currentProgress={wordsLearnedToday}
+                        masteryCount={userProgress.masteryCount}
+                        claimedMilestones={userProgress.claimedDailyGoals}
+                        onClaim={handleDailyClaimReward}
+                        onClaimSuccess={handleGoalClaimSuccess}
+                        user={user}
+                        progressColorClass="from-green-400 to-blue-500"
+                        completedText="All missions completed!"
                     />
                 </div>
                 <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     <ChartCard title="Vocabulary Growth"><ResponsiveContainer><AreaChart data={vocabularyGrowth} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}><defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12} /><Tooltip content={<CustomTooltip />} /><Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" /></AreaChart></ResponsiveContainer></ChartCard>
-                    <ChartCard 
-                        title="Study Activity" 
-                        extra={<span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Last 30 Days</span>}
-                    >
+                    <ChartCard title="Study Activity" extra={<span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Last 30 Days</span>}>
                         <ResponsiveContainer>
                             <BarChart data={learningActivity} margin={{ top: 20, right: 20, left: -20, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                                <XAxis dataKey="date" fontSize={12} />
-                                <YAxis allowDecimals={false} fontSize={12}/>
-                                <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(136, 132, 216, 0.1)'}}/>
-                                <Legend verticalAlign="top" wrapperStyle={{top: 0, left: 25}}/>
-                                <Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" />
-                                <Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12}/><Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(136, 132, 216, 0.1)'}}/><Legend verticalAlign="top" wrapperStyle={{top: 0, left: 25}}/><Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" /><Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </ChartCard>
@@ -476,25 +394,9 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
                             
                             {totalPages > 1 && (
                                 <div className="flex items-center justify-between mt-4">
-                                    <button 
-                                        onClick={() => handlePageChange(currentPage - 1)}
-                                        disabled={currentPage === 1}
-                                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <ChevronLeftIcon />
-                                        <span className="ml-1">Previous</span>
-                                    </button>
-                                    <span className="text-sm font-medium text-gray-700">
-                                        Page {currentPage} of {totalPages}
-                                    </span>
-                                    <button 
-                                        onClick={() => handlePageChange(currentPage + 1)}
-                                        disabled={currentPage === totalPages}
-                                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        <span className="mr-1">Next</span>
-                                        <ChevronRightIcon />
-                                    </button>
+                                    <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeftIcon /><span className="ml-1">Previous</span></button>
+                                    <span className="text-sm font-medium text-gray-700">Page {currentPage} of {totalPages}</span>
+                                    <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"><span className="mr-1">Next</span><ChevronRightIcon /></button>
                                 </div>
                             )}
                         </>) : (<p className="text-center text-gray-500 py-4">No mastery data available.</p>)}
@@ -524,7 +426,7 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
             </div>
             <div className="flex items-center justify-end gap-3">
                <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
-               <MasteryDisplay masteryCount={userStats.masteryCount} />
+               <MasteryDisplay masteryCount={userProgress.masteryCount} />
             </div>
           </div>
         </header>
