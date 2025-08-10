@@ -324,20 +324,26 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
             <div className="space-y-5 w-full">
               <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
-                  {/* --- FIXED HERE --- */}
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center">
                     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/multiple-choice.webp" alt="Multiple choice icon" className="h-10 w-10" />
                   </div>
-                  <div className="ml-5"><h3 className="text-xl font-bold">Multiple choice</h3><p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p></div>
+                  {/* --- FIXED HERE: Added flex-1 --- */}
+                  <div className="ml-5 flex-1">
+                    <h3 className="text-xl font-bold">Multiple choice</h3>
+                    <p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p>
+                  </div>
                 </div>
               </button>
               <button onClick={() => handleTypeSelect('dienTu')} className="w-full text-left p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
-                  {/* --- FIXED HERE --- */}
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center">
                     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/fill-in-the-blank.webp" alt="Fill in the blank icon" className="h-10 w-10" />
                   </div>
-                  <div className="ml-5"><h3 className="text-xl font-bold">Fill in the blank</h3><p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p></div>
+                   {/* --- FIXED HERE: Added flex-1 --- */}
+                  <div className="ml-5 flex-1">
+                    <h3 className="text-xl font-bold">Fill in the blank</h3>
+                    <p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p>
+                  </div>
                 </div>
               </button>
             </div>
