@@ -2,12 +2,13 @@ import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback, memo }
 import { db, auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
 import { collection, getDocs, doc, getDoc, updateDoc, increment, arrayUnion } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { fetchOrCreateUser } from './userDataService.ts'; // Import the service function
 import { 
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
     Tooltip, Legend, ResponsiveContainer, Cell
 } from 'recharts';
 import { defaultVocabulary } from './list-vocabulary.ts'; // Điều chỉnh đường dẫn
-import CoinDisplay from './coin-display.tsx'; // [ADDED] Import for header
+import CoinDisplay from './coin-display.tsx';
 import { uiAssets, dashboardAssets } from './game-assets.ts'; // Import assets
 
 // --- [ADDED] Icons and Components for Header ---
@@ -52,11 +53,9 @@ interface AnalysisData {
 }
 type DailyActivityMap = { [date: string]: { new: number; review: number } };
 
-// --- [ADDED] Props for the component ---
+// --- [MODIFIED] Props for the component ---
 interface AnalysisDashboardProps {
   onGoBack: () => void;
-  userCoins: number;
-  masteryCount: number;
 }
 
 
@@ -319,7 +318,7 @@ const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = memo(({ activit
 // --- Component chính ---
 const ITEMS_PER_PAGE = 10; // Số mục trên mỗi trang
 
-export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }: AnalysisDashboardProps) {
+export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) {
   const [user, setUser] = useState<User | null>(auth.currentUser);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -329,49 +328,10 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
   const [currentPage, setCurrentPage] = useState(1);
   const [claimedDailyGoals, setClaimedDailyGoals] = useState<number[]>([]);
   const [claimedVocabMilestones, setClaimedVocabMilestones] = useState<number[]>([]);
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  const [localCoins, setLocalCoins] = useState(userCoins);
-  const [displayedCoins, setDisplayedCoins] = useState(userCoins);
-
-  useEffect(() => {
-    setLocalCoins(userCoins);
-    if (!isAnimating) {
-      setDisplayedCoins(userCoins);
-    }
-  }, [userCoins, isAnimating]);
-
-  // [UPDATED] Hàm animation đồng bộ với quiz.tsx
-  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
-    if (startValue === endValue) {
-      setDisplayedCoins(endValue);
-      return;
-    }
-    
-    setIsAnimating(true); // BẮT ĐẦU animation
-
-    const isCountingUp = endValue > startValue;
-    // Tính toán step giống hệt bên quiz.tsx để có tốc độ tương đồng
-    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
-    let current = startValue;
-
-    const interval = setInterval(() => {
-      if (isCountingUp) {
-        current += step;
-      } else {
-        current -= step;
-      }
-
-      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
-        setDisplayedCoins(endValue);
-        clearInterval(interval);
-        setIsAnimating(false); // KẾT THÚC animation
-      } else {
-        setDisplayedCoins(current);
-      }
-    }, 30); // Tần suất cập nhật 30ms giống quiz.tsx
-  }, []); // Dependencies để trống vì hàm không phụ thuộc vào props/state bên ngoài
   
+  // [NEW] State to hold user stats fetched from Firestore
+  const [userStats, setUserStats] = useState({ coins: 0, masteryCount: 0 });
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
     return () => unsubscribe();
@@ -382,18 +342,22 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [userDocSnap, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
-            getDoc(doc(db, 'users', user.uid)),
+        const [userData, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
+            fetchOrCreateUser(user.uid),
             getDocs(collection(db, 'users', user.uid, 'completedWords')),
             getDocs(collection(db, 'users', user.uid, 'completedMultiWord'))
         ]);
         
-        if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
-            const todayString = formatDateToLocalYYYYMMDD(new Date());
-            setClaimedDailyGoals(userData.claimedDailyGoals?.[todayString] || []);
-            setClaimedVocabMilestones(userData.claimedVocabMilestones || []);
-        }
+        // Set user stats from fetched data
+        setUserStats({
+          coins: userData.coins || 0,
+          masteryCount: userData.masteryCards || 0,
+        });
+        
+        // Set claimed milestones from fetched data
+        const todayString = formatDateToLocalYYYYMMDD(new Date());
+        setClaimedDailyGoals(userData.claimedDailyGoals?.[todayString] || []);
+        setClaimedVocabMilestones(userData.claimedVocabMilestones || []);
 
         const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
         const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
@@ -474,19 +438,16 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
     setCurrentPage(1); // Quay về trang đầu tiên khi sắp xếp
   };
   
+  // [MODIFIED] Simplified claim handlers
   const handleGoalClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
       setClaimedDailyGoals(prev => [...prev, milestone]);
-      const newTotalCoins = localCoins + rewardAmount;
-      startCoinCountAnimation(localCoins, newTotalCoins);
-      setLocalCoins(newTotalCoins);
-  }, [localCoins, startCoinCountAnimation]);
+      setUserStats(prev => ({ ...prev, coins: prev.coins + rewardAmount }));
+  }, []);
 
   const handleVocabClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
       setClaimedVocabMilestones(prev => [...prev, milestone]);
-      const newTotalCoins = localCoins + rewardAmount;
-      startCoinCountAnimation(localCoins, newTotalCoins);
-      setLocalCoins(newTotalCoins);
-  }, [localCoins, startCoinCountAnimation]);
+      setUserStats(prev => ({ ...prev, coins: prev.coins + rewardAmount }));
+  }, []);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -533,14 +494,14 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
                 <div className="space-y-6 my-6">
                     <VocabularyMilestones 
                         totalWordsLearned={totalWordsLearned} 
-                        masteryCount={masteryCount} 
+                        masteryCount={userStats.masteryCount} 
                         user={user} 
                         claimedVocabMilestones={claimedVocabMilestones} 
                         onClaimSuccess={handleVocabClaimSuccess} 
                     />
                     <DailyGoalMilestones 
                         wordsLearnedToday={wordsLearnedToday} 
-                        masteryCount={masteryCount} 
+                        masteryCount={userStats.masteryCount} 
                         user={user} 
                         claimedDailyGoals={claimedDailyGoals} 
                         onClaimSuccess={handleGoalClaimSuccess} 
@@ -627,8 +588,8 @@ export default function AnalysisDashboard({ onGoBack, userCoins, masteryCount }:
               </button>
             </div>
             <div className="flex items-center justify-end gap-3">
-               <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
-               <MasteryDisplay masteryCount={masteryCount} />
+               <CoinDisplay displayedCoins={userStats.coins} isStatsFullscreen={false} />
+               <MasteryDisplay masteryCount={userStats.masteryCount} />
             </div>
           </div>
         </header>
