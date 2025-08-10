@@ -1,387 +1,536 @@
-// --- START OF FILE: src/firebase/userDataService.ts ---
+// --- START OF FILE: AnalysisDashboard.tsx ---
 
-import { db } from './firebase';
+import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback, memo } from 'react';
+import { auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
+import { onAuthStateChanged, User } from 'firebase/auth';
+// [SỬA] Import các hàm service mới và bỏ các import firestore không cần thiết
 import { 
-  doc, getDoc, setDoc, updateDoc, increment, collection, 
-  getDocs, writeBatch, arrayUnion 
-} from 'firebase/firestore';
+    fetchAnalysisDashboardData, 
+    claimDailyMilestoneReward,
+    claimVocabMilestoneReward
+} from './userDataService.ts'; 
+import { 
+    AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
+    Tooltip, Legend, ResponsiveContainer, Cell
+} from 'recharts';
+import { defaultVocabulary } from './list-vocabulary.ts'; // Điều chỉnh đường dẫn
+import CoinDisplay from './coin-display.tsx';
+import { uiAssets, dashboardAssets } from './game-assets.ts'; // Import assets
+import MasteryDisplay from './mastery-display.tsx'; 
+import { useAnimateValue } from './useAnimateValue.ts'; 
 
-/**
- * Lấy dữ liệu người dùng. Nếu người dùng chưa tồn tại trong Firestore, tạo mới với giá trị mặc định.
- * @param userId - ID của người dùng.
- * @returns {Promise<any>} Dữ liệu của người dùng.
- */
-export const fetchOrCreateUser = async (userId: string) => {
-  if (!userId) throw new Error("User ID is required.");
+// --- Icons and Components for Header ---
+const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    </svg>
+);
 
-  const userDocRef = doc(db, 'users', userId);
-  const docSnap = await getDoc(userDocRef);
+// --- Icons ---
+const CheckCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+const AwardIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>;
+const CalendarCheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>;
+const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
+const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
+const ChevronRightIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>;
 
-  if (docSnap.exists()) {
-    return docSnap.data();
-  } else {
-    // Người dùng không tồn tại, tạo mới document
-    const newUser = {
-      coins: 0,
-      masteryCards: 0,
-      createdAt: new Date(),
-      // Khởi tạo các trường milestone để tránh lỗi khi truy cập
-      claimedDailyGoals: {},
-      claimedVocabMilestones: []
+// [ĐÃ XÓA] Hàm formatDateToLocalYYYYMMDD đã được chuyển sang service
+
+// --- Định nghĩa kiểu dữ liệu cho phân tích ---
+interface LearningActivity { date: string; new: number; review: number; }
+interface MasteryByGame { game: string; completed: number; }
+interface VocabularyGrowth { date: string; cumulative: number; }
+interface WordMastery { word: string; mastery: number; lastPracticed: Date; }
+interface AnalysisData {
+  totalWordsLearned: number;
+  totalWordsAvailable: number;
+  learningActivity: LearningActivity[];
+  masteryByGame: MasteryByGame[];
+  vocabularyGrowth: VocabularyGrowth[];
+  recentCompletions: { word: string; date: string }[];
+  wordMastery: WordMastery[];
+}
+type DailyActivityMap = { [date: string]: { new: number; review: number } };
+
+// --- Props for the component ---
+interface AnalysisDashboardProps {
+  onGoBack: () => void;
+}
+
+// --- Component Card tái sử dụng cho mỗi biểu đồ ---
+const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> = ({ title, children, extra }) => (
+    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+            {extra && <div>{extra}</div>}
+        </div>
+        <div className="h-64 sm:h-72 w-full">{children}</div>
+    </div>
+);
+
+// --- COMPONENT MỤC TIÊU TỪ VỰNG ---
+const VOCAB_MILESTONES = [100, 200, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500];
+
+interface VocabularyMilestonesProps {
+  totalWordsLearned: number;
+  masteryCount: number;
+  user: User | null;
+  claimedVocabMilestones: number[];
+  onClaimSuccess: (milestone: number, rewardAmount: number) => void;
+}
+
+const VocabularyMilestones: FC<VocabularyMilestonesProps> = memo(({ totalWordsLearned, masteryCount, user, claimedVocabMilestones, onClaimSuccess }) => {
+  const [isClaiming, setIsClaiming] = useState(false);
+
+  const {
+    currentGoal,
+    progressPercentage,
+    isGoalMet,
+    areAllGoalsMet,
+  } = useMemo(() => {
+    const nextGoalIndex = VOCAB_MILESTONES.findIndex(g => !claimedVocabMilestones.includes(g));
+    if (nextGoalIndex === -1) {
+      return { areAllGoalsMet: true, progressPercentage: 100, isGoalMet: true, currentGoal: VOCAB_MILESTONES[VOCAB_MILESTONES.length - 1], previousGoal: 0 };
+    }
+    const currentGoal = VOCAB_MILESTONES[nextGoalIndex];
+    const previousGoal = nextGoalIndex > 0 ? VOCAB_MILESTONES[nextGoalIndex - 1] : 0;
+    const progressInMilestone = Math.max(0, totalWordsLearned - previousGoal);
+    const milestoneSize = currentGoal - previousGoal;
+    const progressPercentage = milestoneSize > 0 ? Math.min((progressInMilestone / milestoneSize) * 100, 100) : 100;
+    const isGoalMet = totalWordsLearned >= currentGoal;
+    return { currentGoal, previousGoal, progressPercentage, isGoalMet, areAllGoalsMet: false };
+  }, [totalWordsLearned, claimedVocabMilestones]);
+
+  const handleClaim = useCallback(async () => {
+    if (!isGoalMet || areAllGoalsMet || !user || isClaiming) return;
+    setIsClaiming(true);
+    try {
+        const rewardAmount = currentGoal * Math.max(1, masteryCount);
+        // [SỬA] Gọi hàm service để nhận thưởng
+        await claimVocabMilestoneReward(user.uid, currentGoal, rewardAmount);
+        onClaimSuccess(currentGoal, rewardAmount);
+    } catch (error) {
+        console.error("Lỗi khi nhận thưởng từ vựng:", error);
+        alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
+    } finally {
+        setIsClaiming(false);
+    }
+  }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaimSuccess]);
+
+  // Icons used inside this component
+  const GiftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a3 3 0 015.252-2.121l.738.64.738-.64A3 3 0 0115 5v2.212a3 3 0 01-.679 1.943l-4.261 4.26a1.5 1.5 0 01-2.121 0l-4.26-4.26A3 3 0 015 7.212V5zm10 0a1 1 0 10-2 0v.788a1 1 0 01-.321.707l-4.26 4.26a.5.5 0 01-.707 0l-4.26-4.26A1 1 0 014 5.788V5a1 1 0 10-2 0v2.212a5 5 0 001.127 3.238l4.26 4.26a3.5 3.5 0 004.95 0l4.26-4.26A5 5 0 0015 7.212V5z" clipRule="evenodd" /></svg>;
+  const CheckCircleIconSmall = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+  const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
+
+  return (
+    <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <img src={dashboardAssets.vocaJourneyIcon} alt="Voca Journey" className="w-11 h-11" />
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-gray-800">Voca Journey</h3>
+            {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">Max level reached!</p> ) : (
+              <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
+                  <span className="flex items-center font-bold text-amber-600">
+                      <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-5 w-5 mr-1.5"/>
+                      <span className="text-sm">{currentGoal * (masteryCount > 0 ? masteryCount : 1)}</span>
+                  </span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex-shrink-0">
+          {areAllGoalsMet ? ( <div className="text-center p-2 bg-green-100 text-green-700 rounded-lg flex items-center gap-2"><CheckCircleIconSmall /> <span className="font-bold text-sm">Awesome!</span></div>
+          ) : isGoalMet ? (
+            <button onClick={handleClaim} disabled={isClaiming} className="flex items-center justify-center px-4 py-2 font-bold text-white bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg shadow-md hover:scale-105 transform transition-transform duration-200 disabled:opacity-70 disabled:cursor-wait">
+              {isClaiming ? <SpinnerIcon /> : <GiftIcon />}
+              <span className="ml-1.5 text-sm">{isClaiming ? 'Wait' : 'Claim'}</span>
+            </button>
+          ) : (
+            <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed">
+              <GiftIcon />
+              <span className="flex items-baseline"><span className="text-base font-extrabold text-gray-700">{totalWordsLearned}</span><span className="text-sm font-medium text-gray-500">/{currentGoal}</span></span>
+            </div>
+          )}
+        </div>
+        <div className="w-full mt-3">
+          {areAllGoalsMet ? ( <div className="h-2.5 w-full bg-gradient-to-r from-green-400 to-teal-500 rounded-full" title="All milestones completed!"></div>
+          ) : ( <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-gradient-to-r from-blue-400 to-purple-500 h-2.5 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div></div> )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// --- COMPONENT MỤC TIÊU HÀNG NGÀY ---
+const GiftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a3 3 0 015.252-2.121l.738.64.738-.64A3 3 0 0115 5v2.212a3 3 0 01-.679 1.943l-4.261 4.26a1.5 1.5 0 01-2.121 0l-4.26-4.26A3 3 0 015 7.212V5zm10 0a1 1 0 10-2 0v.788a1 1 0 01-.321.707l-4.26 4.26a.5.5 0 01-.707 0l-4.26-4.26A1 1 0 014 5.788V5a1 1 0 10-2 0v2.212a5 5 0 001.127 3.238l4.26 4.26a3.5 3.5 0 004.95 0l4.26-4.26A5 5 0 0015 7.212V5z" clipRule="evenodd" /></svg>;
+const CheckCircleIconSmall = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
+
+const GOAL_MILESTONES = [5, 10, 20, 50, 100, 200];
+
+interface DailyGoalMilestonesProps {
+  wordsLearnedToday: number;
+  masteryCount: number;
+  user: User | null;
+  claimedDailyGoals: number[];
+  onClaimSuccess: (milestone: number, rewardAmount: number) => void;
+}
+
+const DailyGoalMilestones: FC<DailyGoalMilestonesProps> = memo(({ wordsLearnedToday, masteryCount, user, claimedDailyGoals, onClaimSuccess }) => {
+  const [isClaiming, setIsClaiming] = useState(false);
+
+  const {
+    currentGoal,
+    progressPercentage,
+    isGoalMet,
+    areAllGoalsMet,
+  } = useMemo(() => {
+    const nextGoalIndex = GOAL_MILESTONES.findIndex(g => !claimedDailyGoals.includes(g));
+    if (nextGoalIndex === -1) {
+      return { areAllGoalsMet: true, progressPercentage: 100, isGoalMet: true, currentGoal: GOAL_MILESTONES[GOAL_MILESTONES.length - 1], previousGoal: 0 };
+    }
+    const currentGoal = GOAL_MILESTONES[nextGoalIndex];
+    const previousGoal = nextGoalIndex > 0 ? GOAL_MILESTONES[nextGoalIndex - 1] : 0;
+    const progressInMilestone = Math.max(0, wordsLearnedToday - previousGoal);
+    const milestoneSize = currentGoal - previousGoal;
+    const progressPercentage = Math.min((progressInMilestone / milestoneSize) * 100, 100);
+    const isGoalMet = wordsLearnedToday >= currentGoal;
+    return { currentGoal, previousGoal, progressPercentage, isGoalMet, areAllGoalsMet: false };
+  }, [wordsLearnedToday, claimedDailyGoals]);
+
+  const handleClaim = useCallback(async () => {
+    if (!isGoalMet || areAllGoalsMet || !user || isClaiming) return;
+    setIsClaiming(true);
+    try {
+        const rewardAmount = currentGoal * Math.max(1, masteryCount);
+        // [SỬA] Gọi hàm service để nhận thưởng
+        await claimDailyMilestoneReward(user.uid, currentGoal, rewardAmount);
+        onClaimSuccess(currentGoal, rewardAmount);
+    } catch (error) {
+        console.error("Lỗi khi nhận thưởng:", error);
+        alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
+    } finally {
+        setIsClaiming(false);
+    }
+  }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaimSuccess]);
+
+  return (
+    <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <img src={dashboardAssets.dailyMissionsIcon} alt="Daily Missions" className="w-11 h-11" />
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-gray-800">Daily Missions</h3>
+            {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">All missions completed!</p> ) : (
+              <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
+                  <span className="flex items-center font-bold text-amber-600">
+                      <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-5 w-5 mr-1.5"/>
+                      <span className="text-sm">{currentGoal * (masteryCount > 0 ? masteryCount : 1)}</span>
+                  </span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex-shrink-0">
+          {areAllGoalsMet ? ( <div className="text-center p-2 bg-green-100 text-green-700 rounded-lg flex items-center gap-2"><CheckCircleIconSmall /> <span className="font-bold text-sm">Awesome!</span></div>
+          ) : isGoalMet ? (
+            <button onClick={handleClaim} disabled={isClaiming} className="flex items-center justify-center px-4 py-2 font-bold text-white bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-lg shadow-md hover:scale-105 transform transition-transform duration-200 disabled:opacity-70 disabled:cursor-wait">
+              {isClaiming ? <SpinnerIcon /> : <GiftIcon />}
+              <span className="ml-1.5 text-sm">{isClaiming ? 'Wait' : 'Claim'}</span>
+            </button>
+          ) : (
+            <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed">
+              <GiftIcon />
+              <span className="flex items-baseline"><span className="text-base font-extrabold text-gray-700">{wordsLearnedToday}</span><span className="text-sm font-medium text-gray-500">/{currentGoal}</span></span>
+            </div>
+          )}
+        </div>
+        <div className="w-full mt-3">
+          {areAllGoalsMet ? ( <div className="h-2.5 w-full bg-gradient-to-r from-green-400 to-teal-500 rounded-full" title="All missions completed!"></div>
+          ) : ( <div className="w-full bg-gray-200 rounded-full h-2.5"><div className="bg-gradient-to-r from-green-400 to-blue-500 h-2.5 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div></div> )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// --- Component Lịch hoạt động (Activity Calendar) ---
+const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = memo(({ activityData }) => {
+    // [SỬA] Hàm formatDateToLocalYYYYMMDD đã bị xóa khỏi đây, nhưng logic bên trong vẫn hoạt động vì nó nhận dữ liệu đã được định dạng sẵn
+    const formatDateForCalendar = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
     };
-    await setDoc(userDocRef, newUser);
-    return newUser;
-  }
-};
-
-/**
- * Cập nhật số coin của người dùng trên Firestore.
- * @param userId - ID của người dùng.
- * @param amount - Số coin cần thay đổi. Dùng số dương để cộng, số âm để trừ.
- * @returns {Promise<void>}
- */
-export const updateUserCoins = async (userId: string, amount: number): Promise<void> => {
-  if (!userId || amount === 0) {
-    return; // Không thực hiện nếu không có userId hoặc số lượng thay đổi là 0
-  }
-  const userDocRef = doc(db, 'users', userId);
-  try {
-    await updateDoc(userDocRef, {
-      coins: increment(amount)
-    });
-  } catch (error) {
-    console.error(`Failed to update coins for user ${userId}:`, error);
-    throw error; // Ném lỗi ra để component gốc có thể xử lý
-  }
-};
-
-/**
- * Cập nhật số mastery card của người dùng trên Firestore.
- * @param userId - ID của người dùng.
- * @param amount - Số lượng mastery card cần thay đổi. Dùng số dương để cộng, số âm để trừ.
- * @returns {Promise<void>}
- */
-export const updateUserMastery = async (userId: string, amount: number): Promise<void> => {
-  if (!userId || amount === 0) {
-    return; // Không thực hiện nếu không có userId hoặc số lượng thay đổi là 0
-  }
-  const userDocRef = doc(db, 'users', userId);
-  try {
-    await updateDoc(userDocRef, {
-      masteryCards: increment(amount)
-    });
-  } catch (error) {
-    console.error(`Failed to update mastery cards for user ${userId}:`, error);
-    throw error; // Ném lỗi ra để component gốc có thể xử lý
-  }
-};
-
-/**
- * Lấy danh sách từ vựng đã mở của người dùng.
- * @param userId - ID của người dùng.
- * @returns {Promise<string[]>} Mảng các từ vựng đã mở.
- */
-export const getOpenedVocab = async (userId: string): Promise<string[]> => {
-    const vocabSnapshot = await getDocs(collection(db, 'users', userId, 'openedVocab'));
-    return vocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
-};
-
-/**
- * Lấy danh sách các từ đã hoàn thành trong một game mode cụ thể.
- * @param userId - ID của người dùng.
- * @param gameModeId - ID của chế độ chơi (ví dụ: 'quiz-1').
- * @returns {Promise<Set<string>>} Một Set chứa các từ đã hoàn thành (viết thường).
- */
-export const getCompletedWordsForGameMode = async (userId: string, gameModeId: string): Promise<Set<string>> => {
-    const completedSnapshot = await getDocs(collection(db, 'users', userId, 'completedWords'));
-    const completedSet = new Set<string>();
-    completedSnapshot.forEach((doc) => {
-        if (doc.data()?.gameModes?.[gameModeId]) {
-            completedSet.add(doc.id.toLowerCase());
+    const calendarData = useMemo(() => {
+        const today = new Date(); today.setHours(0, 0, 0, 0); const dayOfWeek = today.getDay(); 
+        const startOfWeek = new Date(today); startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        const startDate = new Date(startOfWeek); startDate.setDate(startOfWeek.getDate() - (4 * 7));
+        const days = []; const activityDates = new Set(Object.keys(activityData));
+        for (let i = 0; i < 35; i++) {
+            const date = new Date(startDate); date.setDate(startDate.getDate() + i);
+            const dateString = formatDateForCalendar(date); const hasActivity = activityDates.has(dateString);
+            const activityDetail = activityData[dateString] || { new: 0, review: 0 };
+            days.push({ date, dateString, dayOfMonth: date.getDate(), hasActivity, isToday: date.getTime() === today.getTime(), isFuture: date.getTime() > today.getTime(), tooltip: hasActivity ? `${date.toLocaleDateString('vi-VN')}: Học ${activityDetail.new} từ mới, ôn ${activityDetail.review} từ.` : date.toLocaleDateString('vi-VN'), });
         }
-    });
-    return completedSet;
-};
+        return days;
+    }, [activityData]);
+    const weekDayHeaders = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    return (
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+            <div className="flex items-center gap-3 mb-4"><div className="bg-indigo-500 p-2 rounded-lg shadow-md"><CalendarIcon /></div><h3 className="text-lg font-bold text-gray-800">Activity</h3></div>
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
+                {weekDayHeaders.map(day => <div key={day} className="text-xs font-semibold text-gray-500 mb-2">{day}</div>)}
+                {calendarData.map((day, index) => {
+                    const baseClass = "w-full aspect-square rounded-lg flex items-center justify-center text-xs font-semibold transition-transform duration-150 ease-in-out hover:scale-110";
+                    let dayClass = "";
+                    if (day.isFuture) dayClass = "bg-gray-100 text-gray-300 cursor-not-allowed";
+                    else if (day.hasActivity) dayClass = "bg-green-500 text-white";
+                    else dayClass = "bg-gray-200 text-gray-400";
+                    if (day.isToday) dayClass += " ring-2 ring-offset-2 ring-indigo-500";
+                    return <div key={index} title={day.tooltip} className={`${baseClass} ${dayClass}`}>{(day.hasActivity && !day.isFuture) ? <CalendarCheckIcon /> : <span>{day.dayOfMonth}</span>}</div>;
+                })}
+            </div>
+            <div className="flex items-center justify-center sm:justify-end gap-4 mt-4 text-xs text-gray-600">
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-lg bg-gray-200"></div><span>Chưa học</span></div>
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-lg bg-green-500"></div><span>Đã học</span></div>
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-lg ring-2 ring-offset-1 ring-indigo-500"></div><span>Hôm nay</span></div>
+            </div>
+        </div>
+    );
+});
 
-// --- CÁC HÀM MỚI ĐƯỢC THÊM VÀO ---
+// --- Component chính ---
+const ITEMS_PER_PAGE = 10; // Số mục trên mỗi trang
 
-/**
- * Interface cho dữ liệu khởi tạo game.
- */
-interface GameInitialData {
-  coins: number;
-  masteryCards: number;
-  openedVocabWords: { id: string, word: string }[];
-  completedWords: Set<string>;
-}
-
-/**
- * Lấy tất cả dữ liệu cần thiết để bắt đầu một màn chơi.
- * @param userId ID người dùng.
- * @param gameModeId ID của chế độ chơi (ví dụ: 'fill-word-1').
- * @param isMultiWordGame Cờ xác định đây là game điền 1 từ hay nhiều từ.
- * @returns {Promise<GameInitialData>} Dữ liệu khởi tạo game.
- */
-export const fetchGameInitialData = async (userId: string, gameModeId: string, isMultiWordGame: boolean): Promise<GameInitialData> => {
-  if (!userId) throw new Error("User ID is required.");
-
-  const userDocRef = doc(db, 'users', userId);
-  const openedVocabRef = collection(db, 'users', userId, 'openedVocab');
-  const completedCollectionName = isMultiWordGame ? 'completedMultiWord' : 'completedWords';
-  const completedWordsRef = collection(db, 'users', userId, completedCollectionName);
-
-  const [userDocSnap, openedVocabSnap, completedWordsSnap] = await Promise.all([
-    getDoc(userDocRef),
-    getDocs(openedVocabRef),
-    getDocs(completedWordsRef)
-  ]);
-
-  const userData = userDocSnap.exists() ? userDocSnap.data() : { coins: 0, masteryCards: 0 };
-
-  const openedVocabWords = openedVocabSnap.docs.map(d => ({ id: d.id, word: d.data().word })).filter(item => item.word);
+export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) {
+  const [user, setUser] = useState<User | null>(auth.currentUser);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+  const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
+  const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [claimedDailyGoals, setClaimedDailyGoals] = useState<number[]>([]);
+  const [claimedVocabMilestones, setClaimedVocabMilestones] = useState<number[]>([]);
   
-  const completedWords = new Set<string>();
-  completedWordsSnap.forEach(docSnap => {
-    const data = docSnap.data();
-    const targetKey = isMultiWordGame ? 'completedIn' : 'gameModes';
-    if (data?.[targetKey]?.[gameModeId]) {
-      completedWords.add(docSnap.id.toLowerCase());
-    }
-  });
+  const [userStats, setUserStats] = useState({ coins: 0, masteryCount: 0 });
+  
+  const animatedCoins = useAnimateValue(userStats.coins, 1000);
 
-  return {
-    coins: userData.coins || 0,
-    masteryCards: userData.masteryCards || 0,
-    openedVocabWords,
-    completedWords
-  };
-};
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
+    return () => unsubscribe();
+  }, []);
 
-/**
- * Ghi lại kết quả khi người dùng trả lời đúng một từ/câu.
- * @param userId ID người dùng.
- * @param gameModeId ID của chế độ chơi.
- * @param completedWord Từ hoặc cụm từ đã hoàn thành.
- * @param isMultiWordGame Cờ xác định game điền 1 từ hay nhiều từ.
- * @param coinReward Số coin thưởng.
- */
-export const recordGameSuccess = async (
-  userId: string,
-  gameModeId: string,
-  completedWord: string,
-  isMultiWordGame: boolean,
-  coinReward: number
-): Promise<void> => {
-  if (!userId || !completedWord) return;
-
-  const batch = writeBatch(db);
-  const userDocRef = doc(db, 'users', userId);
-
-  if (isMultiWordGame) {
-    // Ghi lại việc hoàn thành câu hỏi nhiều từ
-    const multiWordId = completedWord.toLowerCase();
-    const completedMultiWordRef = doc(db, 'users', userId, 'completedMultiWord', multiWordId);
-    batch.set(completedMultiWordRef, {
-      completedIn: { [gameModeId]: true },
-      lastCompletedAt: new Date()
-    }, { merge: true });
-
-    // Ghi lại việc hoàn thành từng từ đơn lẻ trong câu
-    const individualWords = completedWord.split(' ');
-    individualWords.forEach(word => {
-      const individualWordRef = doc(db, 'users', userId, 'completedWords', word.toLowerCase());
-      batch.set(individualWordRef, { 
-        lastCompletedAt: new Date(), 
-        gameModes: { [gameModeId]: { correctCount: increment(1) } } 
-      }, { merge: true });
-    });
-
-  } else {
-    // Ghi lại việc hoàn thành từ đơn
-    const wordId = completedWord.toLowerCase();
-    const completedWordRef = doc(db, 'users', userId, 'completedWords', wordId);
-    batch.set(completedWordRef, { 
-      lastCompletedAt: new Date(), 
-      gameModes: { [gameModeId]: { correctCount: increment(1) } } 
-    }, { merge: true });
-  }
-
-  // Cập nhật coin thưởng nếu có
-  if (coinReward > 0) {
-    batch.update(userDocRef, { coins: increment(coinReward) });
-  }
-
-  await batch.commit();
-};
-
-
-// --- CÁC HÀM MỚI TÍCH HỢP TỪ ANALYSISDASHBOARD ---
-
-/**
- * Interface cho dữ liệu được trả về cho trang Analysis Dashboard.
- */
-interface AnalysisDashboardDataPayload {
-  userData: {
-    coins: number;
-    masteryCards: number;
-    claimedDailyGoals: number[];
-    claimedVocabMilestones: number[];
-  };
-  analysisData: {
-    totalWordsLearned: number;
-    totalWordsAvailable: number;
-    learningActivity: { date: string; new: number; review: number; }[];
-    masteryByGame: { game: string; completed: number; }[];
-    vocabularyGrowth: { date: string; cumulative: number; }[];
-    recentCompletions: { word: string; date: string }[];
-    wordMastery: { word: string; mastery: number; lastPracticed: Date; }[];
-  };
-  dailyActivityMap: { [date: string]: { new: number; review: number } };
-}
-
-/**
- * Hàm trợ giúp để định dạng ngày theo giờ địa phương (YYYY-MM-DD).
- * @param date - Đối tượng Date cần định dạng.
- * @returns {string} Chuỗi ngày tháng theo định dạng YYYY-MM-DD.
- */
-const formatDateToLocalYYYYMMDD = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-
-/**
- * Lấy và xử lý tất cả dữ liệu cần thiết cho trang Analysis Dashboard.
- * @param userId - ID của người dùng.
- * @param totalWordsAvailable - Tổng số từ vựng có trong hệ thống (từ defaultVocabulary.length).
- * @returns {Promise<AnalysisDashboardDataPayload>} Dữ liệu đã được xử lý cho dashboard.
- */
-export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvailable: number): Promise<AnalysisDashboardDataPayload> => {
-  if (!userId) throw new Error("User ID is required.");
-
-  const [userData, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
-    fetchOrCreateUser(userId),
-    getDocs(collection(db, 'users', userId, 'completedWords')),
-    getDocs(collection(db, 'users', userId, 'completedMultiWord'))
-  ]);
-
-  const todayString = formatDateToLocalYYYYMMDD(new Date());
-
-  // Xử lý dữ liệu
-  const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
-  const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
-  const dailyActivityMap: { [date: string]: { new: number; review: number } } = {};
-  const allCompletionsForRecent: { word: string; date: Date }[] = [];
-
-  completedWordsSnapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const lastCompletedAt = data.lastCompletedAt?.toDate();
-    if (!lastCompletedAt) return;
+  useEffect(() => {
+    if (!user) { setLoading(false); setError("Vui lòng đăng nhập để xem phân tích."); return; }
     
-    allCompletionsForRecent.push({ word: docSnap.id, date: lastCompletedAt });
-    const dateString = formatDateToLocalYYYYMMDD(lastCompletedAt);
-    if (!dailyActivityMap[dateString]) dailyActivityMap[dateString] = { new: 0, review: 0 };
+    // [SỬA] Toàn bộ logic fetchData được đơn giản hóa thành một lệnh gọi service
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const dataPayload = await fetchAnalysisDashboardData(user.uid, defaultVocabulary.length);
 
-    let totalCompletions = 0, totalCorrectForWord = 0;
-    if (data.gameModes) {
-      Object.values(data.gameModes).forEach((modeData: any) => { totalCompletions += modeData.correctCount || 0; });
-      Object.keys(data.gameModes).forEach(mode => {
-        const correctCount = data.gameModes[mode].correctCount || 0;
-        totalCorrectForWord += correctCount;
-        if (mode.startsWith('quiz-')) masteryByGame['Trắc nghiệm'] += correctCount;
-        else if (mode.startsWith('fill-word-')) masteryByGame['Điền từ'] += correctCount;
-      });
+        setUserStats({
+          coins: dataPayload.userData.coins,
+          masteryCount: dataPayload.userData.masteryCards,
+        });
+        setClaimedDailyGoals(dataPayload.userData.claimedDailyGoals);
+        setClaimedVocabMilestones(dataPayload.userData.claimedVocabMilestones);
+        setAnalysisData(dataPayload.analysisData);
+        setDailyActivityData(dataPayload.dailyActivityMap);
+
+      } catch (err: any) { 
+        console.error("Lỗi tải dữ liệu phân tích:", err); 
+        setError("Không thể tải dữ liệu phân tích."); 
+      } finally { 
+        setLoading(false); 
+      }
+    };
+    fetchData();
+  }, [user]);
+
+  const wordsLearnedToday = useMemo(() => {
+    const todayString = new Date().toISOString().slice(0, 10); // Simple YYYY-MM-DD
+    const todayActivity = Object.entries(dailyActivityData).find(([date]) => date.startsWith(todayString));
+    return todayActivity ? todayActivity[1].new + todayActivity[1].review : 0;
+  }, [dailyActivityData]);
+
+  const sortedWordMastery = useMemo(() => {
+    if (!analysisData?.wordMastery) return [];
+    return [...analysisData.wordMastery].sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+  }, [analysisData?.wordMastery, sortConfig]);
+
+  const handleSort = (key: keyof WordMastery) => {
+    let direction: 'asc' | 'desc' = 'desc';
+    if (sortConfig.key === key && sortConfig.direction === 'desc') direction = 'asc';
+    setSortConfig({ key, direction });
+    setCurrentPage(1); 
+  };
+  
+  const handleGoalClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
+      setClaimedDailyGoals(prev => [...prev, milestone]);
+      setUserStats(prev => ({ ...prev, coins: prev.coins + rewardAmount }));
+  }, []);
+
+  const handleVocabClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
+      setClaimedVocabMilestones(prev => [...prev, milestone]);
+      setUserStats(prev => ({ ...prev, coins: prev.coins + rewardAmount }));
+  }, []);
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const finalLabel = payload[0].payload.game ? payload[0].payload.game : `Ngày: ${label}`;
+      const total = payload.reduce((sum, entry) => sum + entry.value, 0);
+      return (
+        <div className="p-2 bg-gray-800 text-white rounded-md shadow-lg text-sm border border-gray-700">
+          <p className="font-bold">{finalLabel}</p>
+          {payload.map((pld) => <p key={pld.dataKey} style={{ color: pld.fill }}>{`${pld.name}: ${pld.value}`}</p>)}
+          {payload.length > 1 && total > 0 && <><hr className="my-1 border-gray-600" /><p className="font-semibold">{`Tổng: ${total}`}</p></>}
+        </div>
+      );
+    }
+    return null;
+  };
+  
+  if (loading) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">Đang tải phân tích...</div>;
+  if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 p-4">{error}</div>;
+  
+  const mainContent = () => {
+    if (!analysisData || analysisData.totalWordsLearned === 0) {
+        return ( <div className="flex flex-col items-center justify-center h-full text-center text-gray-500"><h2 className="text-2xl font-bold mb-2">Chưa có dữ liệu</h2><p>Hãy bắt đầu học để xem tiến trình của bạn được phân tích tại đây!</p></div> );
     }
 
-    if (totalCompletions > 1) dailyActivityMap[dateString].review++;
-    else if (totalCompletions === 1) dailyActivityMap[dateString].new++;
+    const { totalWordsLearned, learningActivity, masteryByGame, vocabularyGrowth } = analysisData;
+    const barColors = ["#8884d8", "#82ca9d"];
+
+    const totalPages = Math.ceil(sortedWordMastery.length / ITEMS_PER_PAGE);
+    const paginatedMasteryData = sortedWordMastery.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
     
-    if (totalCorrectForWord > 0) wordMasteryMap[docSnap.id] = { mastery: totalCorrectForWord, lastPracticed: lastCompletedAt };
-  });
-
-  completedMultiWordSnapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const lastCompletedAt = data.lastCompletedAt?.toDate();
-    if (!lastCompletedAt) return;
-    allCompletionsForRecent.push({ word: docSnap.id, date: lastCompletedAt });
-    if (data.completedIn) Object.keys(data.completedIn).forEach(mode => { if (mode.startsWith('fill-word-')) masteryByGame['Điền từ']++; });
-  });
-
-  const learningActivityData = Object.entries(dailyActivityMap).map(([date, counts]) => ({ date, ...counts })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  
-  let cumulative = 0;
-  const vocabularyGrowthData = learningActivityData.map(item => {
-    cumulative += item.new;
-    return { date: new Date(item.date).toLocaleDateString('vi-VN'), cumulative };
-  });
-
-  const masteryData = Object.entries(masteryByGame).map(([game, completed]) => ({ game, completed })).filter(item => item.completed > 0);
-  const recentCompletions = [...allCompletionsForRecent].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5).map(c => ({ word: c.word, date: c.date.toLocaleString('vi-VN') }));
-  const wordMasteryData = Object.entries(wordMasteryMap).map(([word, data]) => ({ word, ...data }));
-
-  return {
-    userData: {
-      coins: userData.coins || 0,
-      masteryCards: userData.masteryCards || 0,
-      claimedDailyGoals: userData.claimedDailyGoals?.[todayString] || [],
-      claimedVocabMilestones: userData.claimedVocabMilestones || [],
-    },
-    analysisData: {
-      totalWordsLearned: completedWordsSnapshot.size,
-      totalWordsAvailable,
-      learningActivity: learningActivityData.slice(-30).map(d => ({...d, date: new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })})),
-      masteryByGame: masteryData,
-      vocabularyGrowth: vocabularyGrowthData,
-      recentCompletions,
-      wordMastery: wordMasteryData,
-    },
-    dailyActivityMap,
-  };
-};
-
-/**
- * Ghi nhận việc người dùng nhận thưởng cột mốc hàng ngày.
- * @param userId - ID của người dùng.
- * @param milestone - Cột mốc đã đạt (ví dụ: 5, 10, 20).
- * @param rewardAmount - Số coin thưởng.
- * @returns {Promise<void>}
- */
-export const claimDailyMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
-  if (!userId) return;
-  const userDocRef = doc(db, 'users', userId);
-  const todayString = formatDateToLocalYYYYMMDD(new Date());
-  const fieldKey = `claimedDailyGoals.${todayString}`;
-
-  try {
-    await updateDoc(userDocRef, {
-      coins: increment(rewardAmount),
-      [fieldKey]: arrayUnion(milestone)
-    });
-  } catch (error) {
-    console.error(`Failed to claim daily milestone for user ${userId}:`, error);
-    throw error;
+    return (
+        <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-full">
+            <div className="max-w-7xl mx-auto">
+                <div className="space-y-6 my-6">
+                    <VocabularyMilestones 
+                        totalWordsLearned={totalWordsLearned} 
+                        masteryCount={userStats.masteryCount} 
+                        user={user} 
+                        claimedVocabMilestones={claimedVocabMilestones} 
+                        onClaimSuccess={handleVocabClaimSuccess} 
+                    />
+                    <DailyGoalMilestones 
+                        wordsLearnedToday={wordsLearnedToday} 
+                        masteryCount={userStats.masteryCount} 
+                        user={user} 
+                        claimedDailyGoals={claimedDailyGoals} 
+                        onClaimSuccess={handleGoalClaimSuccess} 
+                    />
+                </div>
+                <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <ChartCard title="Vocabulary Growth"><ResponsiveContainer><AreaChart data={vocabularyGrowth} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}><defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12} /><Tooltip content={<CustomTooltip />} /><Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" /></AreaChart></ResponsiveContainer></ChartCard>
+                    <ChartCard 
+                        title="Study Activity" 
+                        extra={<span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Last 30 Days</span>}
+                    >
+                        <ResponsiveContainer>
+                            <BarChart data={learningActivity} margin={{ top: 20, right: 20, left: -20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                                <XAxis dataKey="date" fontSize={12} />
+                                <YAxis allowDecimals={false} fontSize={12}/>
+                                <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(136, 132, 216, 0.1)'}}/>
+                                <Legend verticalAlign="top" wrapperStyle={{top: 0, left: 25}}/>
+                                <Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" />
+                                <Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </ChartCard>
+                    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">Vocabulary Mastery Analysis</h3>
+                        {sortedWordMastery.length > 0 ? (<>
+                            <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 table-fixed"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3 text-center">Vocabulary</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('mastery')}>Score</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('lastPracticed')}>Latest</th></tr></thead>
+                                <tbody>{paginatedMasteryData.map(({ word, mastery, lastPracticed }) => (
+                                    <tr key={word} className="bg-white border-b hover:bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">{word}</td>
+                                        <td className="px-4 py-3 text-center"><div className="inline-flex items-center gap-2"><span className="font-bold w-4 text-center">{mastery}</span><div className="w-12 bg-gray-200 rounded-full h-2"><div className="bg-green-500 h-2 rounded-full" style={{ width: `${Math.min(mastery / 10, 1) * 100}%` }}></div></div></div></td>
+                                        <td className="px-4 py-3 text-right">{lastPracticed.toLocaleDateString('vi-VN')}</td>
+                                    </tr>
+                                ))}</tbody></table></div>
+                            
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-between mt-4">
+                                    <button 
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <ChevronLeftIcon />
+                                        <span className="ml-1">Previous</span>
+                                    </button>
+                                    <span className="text-sm font-medium text-gray-700">
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+                                    <button 
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <span className="mr-1">Next</span>
+                                        <ChevronRightIcon />
+                                    </button>
+                                </div>
+                            )}
+                        </>) : (<p className="text-center text-gray-500 py-4">No mastery data available.</p>)}
+                    </div>
+                    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
+                         <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
+                         {analysisData.recentCompletions.length > 0 ? (<ul className="space-y-3">{analysisData.recentCompletions.map((item, index) => (
+                            <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
+                                <span className="font-medium text-gray-700 capitalize">{item.word}</span><span className="text-sm text-gray-500">{item.date}</span>
+                            </li>
+                         ))}</ul>) : (<p className="text-center text-gray-500 py-4">Không có hoạt động nào gần đây.</p>)}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
   }
-};
 
-/**
- * Ghi nhận việc người dùng nhận thưởng cột mốc từ vựng trọn đời.
- * @param userId - ID của người dùng.
- * @param milestone - Cột mốc đã đạt (ví dụ: 100, 200, 500).
- * @param rewardAmount - Số coin thưởng.
- * @returns {Promise<void>}
- */
-export const claimVocabMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
-  if (!userId) return;
-  const userDocRef = doc(db, 'users', userId);
-
-  try {
-    await updateDoc(userDocRef, {
-      coins: increment(rewardAmount),
-      claimedVocabMilestones: arrayUnion(milestone)
-    });
-  } catch (error) {
-    console.error(`Failed to claim vocabulary milestone for user ${userId}:`, error);
-    throw error;
-  }
-};
+  return (
+    <div className="bg-white flex flex-col h-full">
+        <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
+          <div className="flex h-14 items-center justify-between px-4">
+            <div className="w-24">
+              <button onClick={onGoBack} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
+                  <HomeIcon />
+              </button>
+            </div>
+            <div className="flex items-center justify-end gap-3">
+               <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
+               <MasteryDisplay masteryCount={userStats.masteryCount} />
+            </div>
+          </div>
+        </header>
+        <div className="flex-grow overflow-y-auto">
+            {mainContent()}
+        </div>
+    </div>
+  );
+}
