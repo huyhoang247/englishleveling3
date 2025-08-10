@@ -3,8 +3,6 @@
 import { db } from './firebase';
 import { doc, getDoc, setDoc, updateDoc, increment, collection, getDocs, writeBatch } from 'firebase/firestore';
 
-// --- CÁC HÀM HIỆN CÓ (giữ nguyên) ---
-
 /**
  * Lấy dữ liệu người dùng. Nếu người dùng chưa tồn tại trong Firestore, tạo mới với giá trị mặc định.
  * @param userId - ID của người dùng.
@@ -107,7 +105,7 @@ export const getCompletedWordsForGameMode = async (userId: string, gameModeId: s
 interface GameInitialData {
   coins: number;
   masteryCards: number;
-  openedVocabWords: string[];
+  openedVocabWords: { id: string, word: string }[];
   completedWords: Set<string>;
 }
 
@@ -134,19 +132,14 @@ export const fetchGameInitialData = async (userId: string, gameModeId: string, i
 
   const userData = userDocSnap.exists() ? userDocSnap.data() : { coins: 0, masteryCards: 0 };
 
-  const openedVocabWords = openedVocabSnap.docs.map(d => d.data().word).filter(Boolean);
+  const openedVocabWords = openedVocabSnap.docs.map(d => ({ id: d.id, word: d.data().word })).filter(item => item.word);
   
   const completedWords = new Set<string>();
   completedWordsSnap.forEach(docSnap => {
     const data = docSnap.data();
-    if (isMultiWordGame) {
-      if (data.completedIn?.[gameModeId]) {
-        completedWords.add(docSnap.id.toLowerCase());
-      }
-    } else {
-      if (data.gameModes?.[gameModeId]) {
-        completedWords.add(docSnap.id.toLowerCase());
-      }
+    const targetKey = isMultiWordGame ? 'completedIn' : 'gameModes';
+    if (data?.[targetKey]?.[gameModeId]) {
+      completedWords.add(docSnap.id.toLowerCase());
     }
   });
 
@@ -179,6 +172,7 @@ export const recordGameSuccess = async (
   const userDocRef = doc(db, 'users', userId);
 
   if (isMultiWordGame) {
+    // Ghi lại việc hoàn thành câu hỏi nhiều từ
     const multiWordId = completedWord.toLowerCase();
     const completedMultiWordRef = doc(db, 'users', userId, 'completedMultiWord', multiWordId);
     batch.set(completedMultiWordRef, {
@@ -186,6 +180,7 @@ export const recordGameSuccess = async (
       lastCompletedAt: new Date()
     }, { merge: true });
 
+    // Ghi lại việc hoàn thành từng từ đơn lẻ trong câu
     const individualWords = completedWord.split(' ');
     individualWords.forEach(word => {
       const individualWordRef = doc(db, 'users', userId, 'completedWords', word.toLowerCase());
@@ -196,6 +191,7 @@ export const recordGameSuccess = async (
     });
 
   } else {
+    // Ghi lại việc hoàn thành từ đơn
     const wordId = completedWord.toLowerCase();
     const completedWordRef = doc(db, 'users', userId, 'completedWords', wordId);
     batch.set(completedWordRef, { 
@@ -204,6 +200,7 @@ export const recordGameSuccess = async (
     }, { merge: true });
   }
 
+  // Cập nhật coin thưởng nếu có
   if (coinReward > 0) {
     batch.update(userDocRef, { coins: increment(coinReward) });
   }
