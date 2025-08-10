@@ -282,8 +282,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                 onClick={() => handleQuizSelect(1)}
                 className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-blue-300 group"
               >
-                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 text-white shadow-md">
-                  <span className="text-4xl">💪</span>
+                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center">
+                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/quiz.webp" alt="Quiz" className="h-16 w-16" />
                 </div>
                 <div className="ml-5 text-left flex-grow">
                   <h3 className="text-xl font-bold text-gray-800">Quiz</h3>
