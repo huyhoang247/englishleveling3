@@ -295,19 +295,19 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               </button>
               
               <button
-                  onClick={() => setCurrentView('wordChainGame')}
-                  className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-purple-300 group"
+                onClick={() => setCurrentView('wordChainGame')}
+                className="w-full flex items-center p-5 bg-white rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-purple-300 group"
               >
-                  <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-md">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-9 w-9" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" /></svg>
-                  </div>
-                  <div className="ml-5 text-left flex-grow">
-                      <h3 className="text-xl font-bold text-gray-800">Nối Từ</h3>
-                      <p className="text-gray-500 text-sm mt-1">Thử thách nối từ với kho từ vựng của bạn</p>
-                  </div>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-purple-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                <div className="flex-shrink-0 h-16 w-16 flex items-center justify-center">
+                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/word-chain-game.webp" alt="Word Chain" className="h-16 w-16" />
+                </div>
+                <div className="ml-5 text-left flex-grow">
+                    <h3 className="text-xl font-bold text-gray-800">Word Chain</h3>
+                    <p className="text-gray-500 text-sm mt-1">Challenge your vocabulary with a word chain game</p>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-purple-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
 
               <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
