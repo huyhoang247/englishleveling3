@@ -1,5 +1,3 @@
-// --- START OF FILE quiz.tsx (23).txt ---
-
 // --- START OF FILE quiz.tsx ---
 
 import { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
@@ -323,8 +321,8 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
         </button>
         <div className="flex items-center gap-2 sm:gap-3">
           <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
-          <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
           <MasteryDisplay masteryCount={masteryCount} />
+          <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
         </div>
       </header>
       
@@ -406,4 +404,3 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
   );
 }
 // --- END OF FILE quiz.tsx ---
-// --- END OF FILE quiz.tsx (23).txt ---
