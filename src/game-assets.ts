@@ -33,6 +33,8 @@ export const uiAssets = {
   // -- Thêm mới từ skill.tsx & skill-data.tsx --
   bookIcon: require("./assets/images/ancient-book.webp"),
   goldIcon: require("./assets/images/coin.webp"),
+  // -- Thêm mới từ mastery-display.tsx --
+  masteryIconPlaceholder: 'https://placehold.co/16x16/94a3b8/ffffff?text=M',
 };
 
 /**
@@ -55,7 +57,7 @@ export const equipmentUiAssets = {
 
 /**
  * Tài nguyên cho các vật phẩm trong túi đồ
- */ 
+ */
 export const itemAssets = {
     // Weapons
     nomadSword: require("./assets/equipment/nomad-sword‎.webp"),
@@ -84,7 +86,7 @@ export const itemAssets = {
     tunic: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/file_000000001ca461f5a50bac51456de65a.png',
     silverscalePlate: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2004_11_48%20PM.png',
     dragonsBreathArmor: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/inventory/ChatGPT%20Image%20Jun%2012%2C%202025%2C%2006_42_28%20PM.png',
-    
+
 };
 
 /**
