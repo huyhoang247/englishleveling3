@@ -1,10 +1,14 @@
-// --- START OF FILE: src/firebase/userDataService.ts ---
+// --- START OF FILE userDataService.ts ---
 
 import { db } from './firebase';
 import { 
   doc, getDoc, setDoc, updateDoc, increment, collection, 
   getDocs, writeBatch, arrayUnion 
 } from 'firebase/firestore';
+// Import các dữ liệu local cần thiết cho hàm mới
+import quizData from '../quiz/quiz-data'; // Giả sử đường dẫn này đúng
+import { exampleData } from '../example-data'; // Giả sử đường dẫn này đúng
+
 
 /**
  * Lấy dữ liệu người dùng. Nếu người dùng chưa tồn tại trong Firestore, tạo mới với giá trị mặc định.
@@ -25,9 +29,10 @@ export const fetchOrCreateUser = async (userId: string) => {
       coins: 0,
       masteryCards: 0,
       createdAt: new Date(),
-      // Khởi tạo các trường milestone để tránh lỗi khi truy cập
+      // Khởi tạo các trường milestone và rewards để tránh lỗi khi truy cập
       claimedDailyGoals: {},
-      claimedVocabMilestones: []
+      claimedVocabMilestones: [],
+      claimedQuizRewards: {}
     };
     await setDoc(userDocRef, newUser);
     return newUser;
@@ -382,6 +387,189 @@ export const claimVocabMilestoneReward = async (userId: string, milestone: numbe
     });
   } catch (error) {
     console.error(`Failed to claim vocabulary milestone for user ${userId}:`, error);
+    throw error;
+  }
+};
+
+
+// --- CÁC HÀM MỚI TÁI CẤU TRÚC TỪ QUIZ-APP-HOME ---
+
+/**
+ * Interface cho dữ liệu tiến trình trả về.
+ */
+export interface PracticeProgressPayload {
+  progressData: { [key: number]: { completed: number; total: number } };
+  claimedRewards: { [key: string]: boolean };
+}
+
+/**
+ * Lấy và tính toán dữ liệu tiến trình cho danh sách bài luyện tập (Quiz và Fill Word).
+ * Tái cấu trúc từ hàm calculateProgress trong component PracticeList.
+ * @param userId ID người dùng.
+ * @param selectedType Loại hình luyện tập ('tracNghiem' hoặc 'dienTu').
+ * @returns {Promise<PracticeProgressPayload>} Dữ liệu tiến trình và các phần thưởng đã nhận.
+ */
+export const fetchPracticeListProgress = async (
+  userId: string, 
+  selectedType: 'tracNghiem' | 'dienTu'
+): Promise<PracticeProgressPayload> => {
+  if (!userId || !selectedType) {
+    throw new Error("User ID and selected type are required.");
+  }
+
+  // 1. Fetch tất cả dữ liệu cần thiết từ Firestore
+  const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
+    getDoc(doc(db, 'users', userId)),
+    getDocs(collection(db, 'users', userId, 'openedVocab')),
+    getDocs(collection(db, 'users', userId, 'completedWords')),
+    getDocs(collection(db, 'users', userId, 'completedMultiWord'))
+  ]);
+
+  // 2. Xử lý dữ liệu đã fetch
+  const userData = userDocSnap.exists() ? userDocSnap.data() : {};
+  const claimedRewards = userData.claimedQuizRewards || {};
+  const userVocabSet = new Set(openedVocabSnapshot.docs.map(doc => doc.data().word?.toLowerCase()).filter(Boolean));
+  
+  const completedWordsByGameMode: { [mode: string]: Set<string> } = {};
+  completedWordsSnapshot.forEach(doc => {
+    const gameModes = doc.data().gameModes;
+    if (gameModes) {
+      for (const mode in gameModes) {
+        if (!completedWordsByGameMode[mode]) completedWordsByGameMode[mode] = new Set();
+        completedWordsByGameMode[mode].add(doc.id.toLowerCase());
+      }
+    }
+  });
+
+  const completedMultiWordByGameMode: { [mode: string]: Set<string> } = {};
+  completedMultiWordSnapshot.forEach(docSnap => {
+      const completedIn = docSnap.data().completedIn || {};
+      for (const mode in completedIn) {
+          if (!completedMultiWordByGameMode[mode]) completedMultiWordByGameMode[mode] = new Set();
+          completedMultiWordByGameMode[mode].add(docSnap.id.toLowerCase());
+      }
+  });
+  
+  // 3. Logic tính toán tiến trình (business logic)
+  const newProgressData: { [key: number]: { completed: number; total: number } } = {};
+  const MAX_PREVIEWS = 5; // Có thể truyền vào như một tham số nếu cần
+
+  if (userVocabSet.size > 0) {
+      const vocabRegex = new RegExp(`\\b(${Array.from(userVocabSet).join('|')})\\b`, 'ig');
+
+      // Tính toán cho loại 'tracNghiem'
+      if (selectedType === 'tracNghiem') {
+          const questionToUserVocab = new Map<any, string[]>();
+          quizData.forEach(question => {
+              const matches = question.question.match(vocabRegex);
+              if (matches) questionToUserVocab.set(question, [...new Set(matches.map(w => w.toLowerCase()))]);
+          });
+          
+          const wordToRelevantExampleSentences = new Map<string, any[]>();
+          exampleData.forEach(sentence => {
+              const matches = sentence.english.match(vocabRegex);
+              if (matches) [...new Set(matches.map(w => w.toLowerCase()))].forEach(word => {
+                  if (!wordToRelevantExampleSentences.has(word)) wordToRelevantExampleSentences.set(word, []);
+                  wordToRelevantExampleSentences.get(word)!.push(sentence);
+              });
+          });
+
+          const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1, 2, 3, 4] : [1, 2, 3, 4].map(n => i*100+n)).flat();
+          const totalP1 = questionToUserVocab.size;
+          const totalP2_P3 = wordToRelevantExampleSentences.size;
+          const totalP4 = userVocabSet.size;
+
+          allModes.forEach(num => {
+              const modeId = `quiz-${num}`;
+              const baseNum = num % 100;
+              const completedSet = completedWordsByGameMode[modeId] || new Set();
+              if (baseNum === 1) {
+                  let completedCount = 0;
+                  questionToUserVocab.forEach(words => { if (words.some(w => completedSet.has(w))) completedCount++; });
+                  newProgressData[num] = { completed: completedCount, total: totalP1 };
+              } else if (baseNum === 2 || baseNum === 3) {
+                  let completedCount = 0;
+                  for (const word of wordToRelevantExampleSentences.keys()) { if (completedSet.has(word)) completedCount++; }
+                  newProgressData[num] = { completed: completedCount, total: totalP2_P3 };
+              } else if (baseNum === 4) {
+                  newProgressData[num] = { completed: completedSet.size, total: totalP4 };
+              }
+          });
+      } 
+      // Tính toán cho loại 'dienTu'
+      else if (selectedType === 'dienTu') {
+          const sentenceToUserVocab = new Map<any, string[]>();
+          exampleData.forEach(sentence => {
+              const matches = sentence.english.match(vocabRegex);
+              if (matches) sentenceToUserVocab.set(sentence, [...new Set(matches.map(w => w.toLowerCase()))]);
+          });
+          const wordToRelevantExampleSentences = new Map<string, any[]>();
+          sentenceToUserVocab.forEach((words, sentence) => {
+              words.forEach(word => {
+                  if (!wordToRelevantExampleSentences.has(word)) wordToRelevantExampleSentences.set(word, []);
+                  wordToRelevantExampleSentences.get(word)!.push(sentence);
+              });
+          });
+
+          const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1,2,3,4,5,6,7] : [1,2,3,4,5,6,7].map(n => i*100+n)).flat();
+          const totals = { p1: userVocabSet.size, p2: wordToRelevantExampleSentences.size, p3: 0, p4: 0, p5: 0, p6: 0, p7: sentenceToUserVocab.size };
+          sentenceToUserVocab.forEach(words => {
+              if (words.length >= 2) totals.p3++;
+              if (words.length >= 3) totals.p4++;
+              if (words.length >= 4) totals.p5++;
+              if (words.length >= 5) totals.p6++;
+          });
+
+          allModes.forEach(num => {
+              const modeId = `fill-word-${num}`;
+              const baseNum = num % 100;
+              if (baseNum === 1) {
+                  newProgressData[num] = { completed: (completedWordsByGameMode[modeId] || new Set()).size, total: totals.p1 };
+              } else if (baseNum === 2) {
+                  let completedCount = 0;
+                  const completedSet = completedWordsByGameMode[modeId] || new Set();
+                  for (const word of wordToRelevantExampleSentences.keys()) { if (completedSet.has(word)) completedCount++; }
+                  newProgressData[num] = { completed: completedCount, total: totals.p2 };
+              } else if (baseNum >= 3 && baseNum <= 7) {
+                  newProgressData[num] = { completed: (completedMultiWordByGameMode[modeId] || new Set()).size, total: totals[`p${baseNum}`] };
+              }
+          });
+      }
+  }
+
+  return {
+    progressData: newProgressData,
+    claimedRewards: claimedRewards
+  };
+};
+
+
+/**
+ * Ghi nhận việc người dùng nhận thưởng từ một cột mốc trong quiz.
+ * Tái cấu trúc từ hàm handleClaim trong component RewardsPopup.
+ * @param userId - ID của người dùng.
+ * @param rewardId - ID của phần thưởng (ví dụ: 'tracNghiem-1-100').
+ * @param coinAmount - Số coin thưởng.
+ * @param masteryCardAmount - Số thẻ mastery thưởng (đã sửa từ cardCapacity).
+ * @returns {Promise<void>}
+ */
+export const claimQuizReward = async (
+  userId: string,
+  rewardId: string,
+  coinAmount: number,
+  masteryCardAmount: number
+): Promise<void> => {
+  if (!userId || !rewardId) return;
+
+  const userDocRef = doc(db, 'users', userId);
+  try {
+    await updateDoc(userDocRef, {
+      coins: increment(coinAmount),
+      masteryCards: increment(masteryCardAmount), // Sử dụng masteryCards cho nhất quán
+      [`claimedQuizRewards.${rewardId}`]: true
+    });
+  } catch (error) {
+    console.error(`Failed to claim quiz reward ${rewardId} for user ${userId}:`, error);
     throw error;
   }
 };
