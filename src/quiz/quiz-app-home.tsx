@@ -320,7 +320,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
-            <div className="text-center"><h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Chọn hình thức</h2><p className="mt-2 text-md text-gray-500">Bạn muốn luyện tập theo cách nào?</p></div>
+            <div className="text-center"><h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Select a mode</h2><p className="mt-2 text-md text-gray-500">How would you like to practice?</p></div>
             <div className="space-y-5 w-full">
               <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
@@ -330,7 +330,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   {/* --- FIXED HERE: Added flex-1 --- */}
                   <div className="ml-5 flex-1">
                     <h3 className="text-xl font-bold">Multiple choice</h3>
-                    <p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p>
+                    <p className="text-sm text-blue-100 mt-1">Choose the correct answer from the options.</p>
                   </div>
                 </div>
               </button>
@@ -342,7 +342,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                    {/* --- FIXED HERE: Added flex-1 --- */}
                   <div className="ml-5 flex-1">
                     <h3 className="text-xl font-bold">Fill in the blank</h3>
-                    <p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p>
+                    <p className="text-sm text-pink-100 mt-1">Complete the sentence by filling in the missing word.</p>
                   </div>
                 </div>
               </button>
