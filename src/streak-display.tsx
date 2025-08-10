@@ -1,4 +1,4 @@
-// --- START OF FILE streak-display.tsx (Frosty Crystal Theme) ---
+// --- START OF FILE streak-display.tsx (Frosty Crystal Theme with Lilita Font) ---
 
 import React from 'react';
 
@@ -33,14 +33,11 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
     <style jsx>{`
       @keyframes highlight-change {
         0% {
-          /* Chữ sẽ đậm lên thành màu xanh thẫm */
           color: #0c4a6e; /* Tailwind's sky-900 */
-          /* Hiệu ứng phát sáng màu xanh băng giá */
           text-shadow: 0 0 7px rgba(56, 189, 248, 0.7); /* Sky-blue frosty glow */
           transform: scale(1.15);
         }
         100% {
-          /* Trở về màu chữ mặc định */
           color: #075985; /* Tailwind's sky-800 */
           text-shadow: none;
           transform: scale(1);
@@ -59,19 +56,21 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
       }
     `}</style>
     
-    {/* Hiệu ứng "shine" trong suốt như một lớp băng mỏng lướt qua */}
     <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/60 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
     
     <div className="relative flex items-center justify-center mr-0.5">
       <img src={getStreakIconUrl(displayedStreak)} alt="Streak Icon" className="w-4 h-4" />
     </div>
     
-    {/* Màu chữ là màu xanh đậm để nổi bật trên nền trắng */}
-    <div className={`font-bold text-sky-800 text-xs tracking-wide streak-counter ml-1 ${isAnimating ? 'is-animating' : ''}`}>
+    {/* <<< THAY ĐỔI Ở ĐÂY */}
+    <div className={`
+        font-lilita text-sky-800 text-xs tracking-wide streak-counter 
+        ml-1 pr-1
+        ${isAnimating ? 'is-animating' : ''}
+    `}>
       {displayedStreak}
     </div>
     
-    {/* Các chấm lấp lánh màu xanh băng giá */}
     <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-sky-500 rounded-full animate-pulse-fast"></div>
     <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-sky-400 rounded-full animate-pulse-fast" style={{ animationDelay: '0.65s' }}></div>
   </div>
@@ -79,4 +78,4 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
 
 export default StreakDisplay;
 
-// --- END OF FILE streak-display.tsx (Frosty Crystal Theme) ---
+// --- END OF FILE streak-display.tsx (Frosty Crystal Theme with Lilita Font) ---
