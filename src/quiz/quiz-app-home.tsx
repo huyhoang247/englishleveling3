@@ -289,9 +289,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   <h3 className="text-xl font-bold text-gray-800">Quiz</h3>
                   <p className="text-gray-500 text-sm mt-1">Quiz các câu hỏi multiple choice & fill in the blank</p>
                 </div>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
               </button>
               
               <button
@@ -305,9 +302,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                     <h3 className="text-xl font-bold text-gray-800">Word Chain</h3>
                     <p className="text-gray-500 text-sm mt-1">Challenge your vocabulary with a word chain game</p>
                 </div>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400 group-hover:text-purple-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
               </button>
 
               <div className="relative w-full flex items-center p-5 bg-gray-50 rounded-2xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
