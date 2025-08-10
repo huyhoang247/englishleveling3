@@ -6,8 +6,8 @@ import {
   getDocs, writeBatch, arrayUnion 
 } from 'firebase/firestore';
 // Import các dữ liệu local cần thiết cho hàm mới
-import quizData from '../quiz/quiz-data'; // Giả sử đường dẫn này đúng
-import { exampleData } from '../example-data'; // Giả sử đường dẫn này đúng
+import quizData from './quiz/quiz-data.ts'; // Giả sử đường dẫn này đúng
+import { exampleData } from './example-data.ts'; // Giả sử đường dẫn này đúng
 
 /**
  * Lấy dữ liệu người dùng. Nếu người dùng chưa tồn tại trong Firestore, tạo mới với giá trị mặc định.
