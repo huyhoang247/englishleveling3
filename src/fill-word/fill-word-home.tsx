@@ -539,7 +539,7 @@ export default function VocabularyGame({ onGoBack, selectedPractice }: Vocabular
 
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
         <button onClick={onGoBack} className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100" aria-label="Quay lại"><BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" /></button>
-        <div className="flex items-center gap-2 sm:gap-3"><CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} /><StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} /><MasteryDisplay masteryCount={masteryCount} /></div>
+        <div className="flex items-center gap-2 sm:gap-3"><CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} /><MasteryDisplay masteryCount={masteryCount} /><StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} /></div>
       </header>
       
       <main className="flex-grow px-4 sm:px-8 pt-8 pb-8 w-full flex flex-col items-center">
