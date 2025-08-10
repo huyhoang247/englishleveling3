@@ -81,8 +81,9 @@ function AppHeader({
                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo-large.webp" alt="Quiz App Logo" className="h-10 w-auto" />
               </a>
             ) : (
-              <button onClick={goBack} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Quay lại">
-                <BackIcon />
+              // MODIFIED: Replaced Back button with Home button
+              <button onClick={goHome} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
+                <HomeIcon />
               </button>
             )}
           </div>
@@ -101,9 +102,8 @@ function AppHeader({
                     <AnalysisIcon />
                 </button>
               ) : (
-                 <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
-                    <HomeIcon />
-                 </button>
+                 // MODIFIED: Removed Home button from here
+                 null
               )}
           </div>
         </div>
@@ -247,22 +247,18 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
 
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
-            {showParentHeader && (
-                <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
-                  <div className="flex h-14 items-center justify-between px-4">
-                     <>
-                        <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
-                            <BackIcon className="h-5 w-5"/>
-                            <span>Quay lại</span>
-                        </button>
-                        <h2 className="text-lg font-bold text-slate-200 truncate px-2">{title}</h2>
-                        <div className="w-28 text-right">
-                            <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ"><HomeIcon className="h-5 w-5"/></button>
-                        </div>
-                    </>
-                  </div>
-                </header>
-            )}
+            {/* MODIFIED: Header for fullscreen quiz/game views */}
+            <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
+              <div className="flex h-14 items-center justify-between px-4">
+                 <>
+                    <button onClick={goHome} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
+                        <HomeIcon className="h-6 w-6"/>
+                    </button>
+                    <h2 className="text-lg font-bold text-slate-200 truncate px-2">{title}</h2>
+                    <div className="w-[calc(theme(spacing.2)*2+theme(spacing.6))]"></div> {/* Placeholder for balance */}
+                </>
+              </div>
+            </header>
             {/* *** SỬA LỖI SCROLL Ở ĐÂY *** */}
             {/* Luôn thêm overflow-y-auto để đảm bảo các component toàn màn hình có thể cuộn */}
             <div className="flex-grow overflow-y-auto">
@@ -315,7 +311,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
-            <div className="text-center"><h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Chọn hình thức</h2><p className="mt-2 text-md text-gray-500">Bạn muốn luyện tập theo cách nào?</p></div>
+            {/* MODIFIED: Removed header text */}
             <div className="space-y-5 w-full">
               <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
