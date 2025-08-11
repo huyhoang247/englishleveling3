@@ -26,6 +26,12 @@ import SkillScreen from './skill.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
 import RateLimitToast from './thong-bao.tsx';
+// TÁI CẤU TRÚC: Import các hàm từ file service mới
+import { 
+  fetchOrCreateUserGameData, 
+  updateUserCoins, 
+  updateUserGems 
+} from './gameDataService.ts';
 
 
 // --- SVG Icon Components ---
@@ -274,57 +280,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     } catch (error) { console.error("Error fetching and syncing vocabulary achievements data:", error); setVocabularyData(initialVocabularyData); }
   };
 
-  const fetchUserData = async (userId: string) => {
-    setIsLoadingUserData(true);
-    try {
-      const userDocRef = doc(db, 'users', userId);
-      const userDocSnap = await getDoc(userDocRef);
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data(); console.log("User data fetched:", userData);
-        setCoins(userData.coins || 0); setDisplayedCoins(userData.coins || 0); setGems(userData.gems || 0);
-        setMasteryCards(userData.masteryCards || 0); setPickaxes(typeof userData.pickaxes === 'number' ? userData.pickaxes : 50);
-        setMinerChallengeHighestFloor(userData.minerChallengeHighestFloor || 0);
-        setUserStats(userData.stats || { hp: 0, atk: 0, def: 0 });
-        setBossBattleHighestFloor(userData.bossBattleHighestFloor || 0);
-        setAncientBooks(userData.ancientBooks || 0);
-        const skillsData = userData.skills || { owned: [], equipped: [null, null, null] };
-        setOwnedSkills(skillsData.owned);
-        setEquippedSkillIds(skillsData.equipped);
-        setTotalVocabCollected(userData.totalVocabCollected || 0);
-        setCardCapacity(userData.cardCapacity || 100);
-        const equipmentData = userData.equipment || { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } };
-        setEquipmentPieces(equipmentData.pieces);
-        setOwnedItems(equipmentData.owned);
-        setEquippedItems(equipmentData.equipped);
-      } else {
-        console.log("No user document found, creating default.");
-        await setDoc(userDocRef, {
-          coins: 0, gems: 0, masteryCards: 0, stats: { hp: 0, atk: 0, def: 0 },
-          pickaxes: 50, minerChallengeHighestFloor: 0, 
-          bossBattleHighestFloor: 0,
-          ancientBooks: 0,
-          skills: { owned: [], equipped: [null, null, null] },
-          totalVocabCollected: 0,
-          equipment: { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } },
-          cardCapacity: 100,
-          createdAt: new Date(),
-        });
-        setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0); setPickaxes(50);
-        setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
-        setBossBattleHighestFloor(0);
-        setAncientBooks(0);
-        setOwnedSkills([]);
-        setEquippedSkillIds([null, null, null]);
-        setTotalVocabCollected(0);
-        setEquipmentPieces(100);
-        setOwnedItems([]);
-        setEquippedItems({ weapon: null, armor: null, accessory: null });
-        setCardCapacity(100);
-      }
-    } catch (error) { console.error("Error fetching user data:", error); } 
-    finally { setIsLoadingUserData(false); }
-  };
-
   const fetchJackpotPool = async () => {
     try {
         const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
@@ -358,50 +313,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       console.error("Firestore update failed for boss floor: ", error);
     }
   };
-
-
-  const updateCoinsInFirestore = async (userId: string, amount: number) => {
-    if (!userId) { console.error("Cannot update coins: User not authenticated."); return; }
-    const userDocRef = doc(db, 'users', userId);
-    try {
-      await runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) { transaction.set(userDocRef, { coins: coins, gems: gems, createdAt: new Date() }); } 
-        else {
-          const currentCoins = userDoc.data().coins || 0; const newCoins = currentCoins + amount;
-          const finalCoins = Math.max(0, newCoins); transaction.update(userDocRef, { coins: finalCoins });
-          console.log(`Coins updated in Firestore for user ${userId}: ${currentCoins} -> ${finalCoins}`);
-          setCoins(finalCoins);
-        }
-      });
-    } catch (error) { console.error("Firestore Transaction failed for coins: ", error); }
-  };
-
-  const updateGemsInFirestore = async (userId: string, amount: number) => {
-    if (!userId) {
-      console.error("Cannot update gems: User not authenticated.");
-      return;
-    }
-    const userDocRef = doc(db, 'users', userId);
-    try {
-      await runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) {
-          transaction.set(userDocRef, { gems: amount, createdAt: new Date() });
-        } else {
-          const currentGems = userDoc.data().gems || 0;
-          const newGems = currentGems + amount;
-          const finalGems = Math.max(0, newGems);
-          transaction.update(userDocRef, { gems: finalGems });
-          console.log(`Gems updated in Firestore for user ${userId}: ${currentGems} -> ${finalGems}`);
-          setGems(finalGems);
-        }
-      });
-    } catch (error) {
-      console.error("Firestore Transaction failed for gems: ", error);
-    }
-  };
-
+  
   const updateMasteryCardsInFirestore = async (userId: string, amount: number) => {
     if (!userId) { console.error("Cannot update mastery cards: User not authenticated."); return; }
     const userDocRef = doc(db, 'users', userId);
@@ -520,7 +432,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   const handleGemReward = async (amount: number) => {
     if (auth.currentUser) {
-      await updateGemsInFirestore(auth.currentUser.uid, amount);
+      const newGems = await updateUserGems(auth.currentUser.uid, amount);
+      setGems(newGems);
     }
   };
     
@@ -727,9 +640,39 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => { // Make async
       if (user) {
-        fetchUserData(user.uid); fetchVocabularyData(user.uid); fetchJackpotPool();
+        setIsLoadingUserData(true);
+        try {
+          // TÁI CẤU TRÚC: Gọi hàm từ gameDataService.ts
+          const gameData = await fetchOrCreateUserGameData(user.uid);
+          
+          // Cập nhật tất cả state từ dữ liệu nhận được
+          setCoins(gameData.coins);
+          setDisplayedCoins(gameData.coins);
+          setGems(gameData.gems);
+          setMasteryCards(gameData.masteryCards);
+          setPickaxes(gameData.pickaxes);
+          setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor);
+          setUserStats(gameData.stats);
+          setBossBattleHighestFloor(gameData.bossBattleHighestFloor);
+          setAncientBooks(gameData.ancientBooks);
+          setOwnedSkills(gameData.skills.owned);
+          setEquippedSkillIds(gameData.skills.equipped);
+          setTotalVocabCollected(gameData.totalVocabCollected);
+          setCardCapacity(gameData.cardCapacity);
+          setEquipmentPieces(gameData.equipment.pieces);
+          setOwnedItems(gameData.equipment.owned);
+          setEquippedItems(gameData.equipment.equipped);
+          
+          // Các hàm fetch khác
+          fetchVocabularyData(user.uid);
+          fetchJackpotPool();
+        } catch (error) {
+          console.error("Error fetching user game data:", error);
+        } finally {
+          setIsLoadingUserData(false);
+        }
       } else {
         setIsRankOpen(false); setIsInventoryOpen(false); setIsLuckyGameOpen(false);
         setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
@@ -925,7 +868,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         {/* --- Overlays / Modals --- */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isInventoryOpen ? 'block' : 'none' }}> <ErrorBoundary><Inventory onClose={toggleInventory} /></ErrorBoundary> </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} />)}</ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(auth.currentUser!.uid, amount))} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} />)}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isMinerChallengeOpen && auth.currentUser && (
                 <MinerChallenge
@@ -944,10 +887,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <BossBattle
                         onClose={toggleBossBattle}
                         playerInitialStats={getPlayerBattleStats()}
-                        onBattleEnd={(result, rewards) => {
+                        onBattleEnd={async (result, rewards) => {
                             console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`);
                             if (result === 'win' && auth.currentUser) {
-                                updateCoinsInFirestore(auth.currentUser.uid, rewards.coins);
+                                const newCoins = await updateUserCoins(auth.currentUser.uid, rewards.coins);
+                                setCoins(newCoins);
                             }
                         }}
                         initialFloor={bossBattleHighestFloor}
@@ -965,8 +909,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <VocabularyChestScreen 
                         onClose={toggleVocabularyChest} 
                         currentUserId={currentUser.uid} 
-                        onUpdateCoins={(amount) => updateCoinsInFirestore(currentUser.uid, amount)} 
-                        onUpdateGems={(amount) => updateGemsInFirestore(currentUser.uid, amount)}
+                        onUpdateCoins={async (amount) => setCoins(await updateUserCoins(currentUser.uid, amount))} 
+                        onUpdateGems={async (amount) => setGems(await updateUserGems(currentUser.uid, amount))}
                         onGemReward={handleGemReward} 
                         displayedCoins={displayedCoins} 
                         gems={gems}
@@ -1001,7 +945,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onClose={toggleBaseBuilding}
                         coins={coins}
                         gems={gems}
-                        onUpdateCoins={(amount) => updateCoinsInFirestore(auth.currentUser!.uid, amount)}
+                        onUpdateCoins={async (amount) => setCoins(await updateUserCoins(auth.currentUser!.uid, amount))}
                     />
                 )}
             </ErrorBoundary>
