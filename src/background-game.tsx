@@ -19,7 +19,7 @@ import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
-import AchievementsScreen, { VocabularyItem, initialVocabularyData } from './thanh-tuu.tsx';
+import AchievementsScreen, { initialVocabularyData } from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './skill.tsx';
@@ -30,7 +30,9 @@ import RateLimitToast from './thong-bao.tsx';
 import { 
   fetchOrCreateUserGameData, 
   updateUserCoins, 
-  updateUserGems 
+  updateUserGems,
+  fetchAndSyncVocabularyData,
+  VocabularyItem
 } from './gameDataService.ts';
 
 
@@ -253,31 +255,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   const fetchVocabularyData = async (userId: string) => {
     try {
-        const completedWordsCol = collection(db, 'users', userId, 'completedWords');
-        const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-        const [completedWordsSnap, achievementDocSnap] = await Promise.all([ getDocs(completedWordsCol), getDoc(achievementDocRef), ]);
-        const wordToExpMap = new Map<string, number>();
-        completedWordsSnap.forEach(wordDoc => {
-            const word = wordDoc.id; const gameModes = wordDoc.data().gameModes || {}; let totalCorrectCount = 0;
-            Object.values(gameModes).forEach((mode: any) => { totalCorrectCount += mode.correctCount || 0; });
-            wordToExpMap.set(word, totalCorrectCount * 100);
-        });
-        const existingAchievements: VocabularyItem[] = achievementDocSnap.exists() ? achievementDocSnap.data().vocabulary || [] : [];
-        const finalVocabularyData: VocabularyItem[] = []; const processedWords = new Set<string>();
-        let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map((i: VocabularyItem) => i.id)) : 0) + 1;
-        wordToExpMap.forEach((totalExp, word) => {
-            const existingItem = existingAchievements.find(item => item.word === word);
-            if (existingItem) {
-                let expSpentToReachCurrentLevel = 0;
-                for (let i = 1; i < existingItem.level; i++) { expSpentToReachCurrentLevel += i * 100; }
-                const currentProgressExp = totalExp - expSpentToReachCurrentLevel;
-                finalVocabularyData.push({ ...existingItem, exp: currentProgressExp, maxExp: existingItem.level * 100, });
-            } else { finalVocabularyData.push({ id: idCounter++, word: word, exp: totalExp, level: 1, maxExp: 100, }); }
-            processedWords.add(word);
-        });
-        existingAchievements.forEach(item => { if (!processedWords.has(item.word)) { finalVocabularyData.push(item); } });
-        console.log("Vocabulary achievements data synced and merged correctly."); setVocabularyData(finalVocabularyData);
-    } catch (error) { console.error("Error fetching and syncing vocabulary achievements data:", error); setVocabularyData(initialVocabularyData); }
+      // TÁI CẤU TRÚC: Gọi hàm từ service để lấy dữ liệu thành tựu
+      const syncedData = await fetchAndSyncVocabularyData(userId);
+      setVocabularyData(syncedData);
+      console.log("Vocabulary achievements data synced via service.");
+    } catch (error) {
+      console.error("Error fetching vocabulary data via service:", error);
+      // Giữ lại fallback để UI không bị crash
+      setVocabularyData(initialVocabularyData); 
+    }
   };
 
   const fetchJackpotPool = async () => {
