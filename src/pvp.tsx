@@ -40,25 +40,23 @@ interface PvpArenaProps {
 
 // --- UI HELPER COMPONENTS ---
 
-// --- CHANGE: Renamed WagerModal to ContributionModal and updated its content to reflect the "Pool" concept.
-const ContributionModal = ({ 
+// --- NEW ---: Wager Modal Component (Simplified for deposit logic)
+const WagerModal = ({ 
     onClose, 
     onConfirm,
-    currentContribution,
     playerCoins
 }: { 
     onClose: () => void, 
     onConfirm: (amount: number) => void,
-    currentContribution: string,
     playerCoins: number
 }) => {
-    const [inputValue, setInputValue] = useState(currentContribution);
+    // CHANGE: The modal now manages its own input, defaulting to '100' for a new deposit.
+    const [inputValue, setInputValue] = useState('100');
 
     const handleConfirm = () => {
         const amount = parseInt(inputValue, 10);
         if (!isNaN(amount) && amount > 0) {
-            onConfirm(amount);
-            onClose();
+            onConfirm(amount); // Pass the deposit amount to the parent handler.
         }
     };
     
@@ -67,8 +65,7 @@ const ContributionModal = ({
             <div className="relative w-80 bg-slate-900/90 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
                 <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
                 <div className="p-6 pt-10 flex flex-col items-center">
-                    {/* CHANGE: Updated title to reflect contribution to a pool. */}
-                    <h3 className="text-2xl font-bold text-yellow-300 text-shadow-sm tracking-wide mb-4">GÓP VÀNG VÀO POOL</h3>
+                    <h3 className="text-2xl font-bold text-yellow-300 text-shadow-sm tracking-wide mb-4">NẠP VÀNG CƯỢC</h3>
                     <p className="font-sans text-sm text-slate-400 mb-2">Vàng hiện có: <span className="font-bold text-yellow-200">{(playerCoins || 0).toLocaleString()}</span></p>
                     <input 
                         type="number"
@@ -78,7 +75,7 @@ const ContributionModal = ({
                         autoFocus
                     />
                     <button onClick={handleConfirm} className="mt-5 w-full px-8 py-3 bg-green-600/50 hover:bg-green-600 rounded-lg font-bold text-base text-green-50 tracking-wider uppercase border border-green-500 hover:border-green-400 transition-all duration-200 active:scale-95">
-                        Xác Nhận
+                        Xác Nhận Nạp
                     </button>
                 </div>
             </div>
@@ -169,11 +166,10 @@ export default function PvpArena({
   const [damages, setDamages] = useState<{ id: number, text: string, positionClass: string, colorClass: string }[]>([]);
   const [showStatsModal, setShowStatsModal] = useState(false);
   
-  // --- CHANGE: Renamed states to reflect the "Pool" concept. ---
-  const [contributionAmount, setContributionAmount] = useState('100');
-  const [totalPool, setTotalPool] = useState(0);
+  // --- WAGER & MODAL STATES (CHANGED FOR CUMULATIVE POOL) ---
+  const [goldPool, setGoldPool] = useState(0); // Represents player's contribution, becomes total prize pool during match
   const [error, setError] = useState('');
-  const [showContributionModal, setShowContributionModal] = useState(false); 
+  const [showWagerModal, setShowWagerModal] = useState(false); 
 
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -258,21 +254,28 @@ export default function PvpArena({
   
   const skipMatch = () => { if (battleIntervalRef.current) clearInterval(battleIntervalRef.current); battleIntervalRef.current = setInterval(runBattleTurn, 100); };
 
-  // --- CHANGE: Updated endMatch to use new "Pool" logic and terminology.
+  // CHANGE: endMatch logic updated for cumulative pool system
   const endMatch = async (result) => {
     if (matchResult) return;
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    const contribution = parseInt(contributionAmount, 10) || 0;
+    
+    // At this stage, goldPool is the TOTAL prize pool (player's contribution * 2)
+    const playerContribution = goldPool / 2;
+
     if (result === 'player1') {
-        addLog(`<b class="text-yellow-300">BẠN THẮNG!</b> Nhận được <b class="text-yellow-400">${totalPool.toLocaleString()}</b> vàng từ Pool.`);
-        onCoinChange(player1.coins + totalPool);
-        await updateUserCoins(userId, totalPool);
+        addLog(`<b class="text-yellow-300">BẠN THẮNG!</b> Nhận được <b class="text-yellow-400">${goldPool.toLocaleString()}</b> vàng từ bể cược.`);
+        // Player gets the whole pool. Their coin state is (initial_coins - contribution),
+        // so adding the whole pool results in (initial_coins + contribution).
+        onCoinChange(player1.coins + goldPool);
+        await updateUserCoins(userId, goldPool);
     } else if (result === 'player2') {
-        addLog(`<b class="text-red-400">BẠN THUA!</b> Mất <b class="text-yellow-400">${contribution.toLocaleString()}</b> vàng đã góp.`);
+        addLog(`<b class="text-red-400">BẠN THUA!</b> Mất <b class="text-yellow-400">${playerContribution.toLocaleString()}</b> vàng đã cược.`);
+        // No coin change needed, coins were already deducted when depositing.
     } else if (result === 'draw') {
-        addLog(`<b class="text-slate-400">HÒA!</b> Hoàn lại <b class="text-yellow-400">${contribution.toLocaleString()}</b> vàng đã góp.`);
-        onCoinChange(player1.coins + contribution);
-        await updateUserCoins(userId, contribution);
+        addLog(`<b class="text-slate-400">HÒA!</b> Nhận lại <b class="text-yellow-400">${playerContribution.toLocaleString()}</b> vàng đã cược.`);
+        // Give the player's contribution back.
+        onCoinChange(player1.coins + playerContribution);
+        await updateUserCoins(userId, playerContribution);
     }
     setMatchResult(result);
     setBattlePhase('finished');
@@ -280,52 +283,80 @@ export default function PvpArena({
     onMatchEnd(matchEndPayload);
   };
   
-  // --- CHANGE: Updated handleSearch to use new "Pool" logic and terminology.
+  // CHANGE: handleSearch logic is now simplified. It only starts the search.
   const handleSearch = async () => {
-    if (battlePhase !== 'idle') return;
-    const contribution = parseInt(contributionAmount, 10);
-    if (isNaN(contribution) || contribution <= 0) { setError('Số vàng góp không hợp lệ.'); return; }
-    if (contribution > player1.coins) { setError('Bạn không đủ vàng để góp.'); return; }
-    
-    setError('');
-    onCoinChange(player1.coins - contribution);
-    
-    try {
-        await updateUserCoins(userId, -contribution);
-        setTotalPool(contribution * 2);
-        addLog(`[Hệ thống] Bạn đã góp <b class="text-yellow-400">${contribution.toLocaleString()}</b> vàng vào Pool. Đang tìm đối thủ...`);
-        setBattlePhase('searching');
-    } catch (e) {
-        console.error("Failed to update user coins for contribution:", e);
-        setError("Lỗi khi góp vàng. Vui lòng thử lại.");
-        onCoinChange(player1.coins);
+    if (battlePhase !== 'idle' || goldPool <= 0) {
+        setError('Bạn phải nạp vàng vào Bể Cược trước khi tìm trận.');
+        return;
     }
+    setError('');
+    addLog(`[Hệ thống] Đặt cược <b class="text-yellow-400">${goldPool.toLocaleString()}</b> vàng. Đang tìm đối thủ...`);
+    setBattlePhase('searching');
   };
   
-  // --- CHANGE: Updated reset function for new state variables.
   const resetForNewSearch = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    setCombatLog([]); setTurnCounter(0); setCurrentPlayerTurn('player1'); setMatchResult(null); setBattlePhase('idle'); setDamages([]); setPlayer1Stats(player1.initialStats); setPlayer2Stats(player2.initialStats); 
-    setTotalPool(0); setContributionAmount('100'); setError('');
+    // CHANGE: Only goldPool needs to be reset for the new match.
+    setCombatLog([]); setTurnCounter(0); setCurrentPlayerTurn('player1'); setMatchResult(null); setBattlePhase('idle'); setDamages([]); setPlayer1Stats(player1.initialStats); setPlayer2Stats(player2.initialStats); setGoldPool(0); setError('');
   };
 
-  // --- CHANGE: Renamed handler for clarity.
-  const handleConfirmContribution = (newAmount: number) => {
-    setContributionAmount(String(newAmount));
+  // CHANGE: New handler for depositing gold into the pool.
+  const handleDeposit = async (amount: number) => {
+    if (isNaN(amount) || amount <= 0) {
+        setError('Số vàng nạp không hợp lệ.');
+        return;
+    }
+    if (amount > player1.coins) {
+        setError('Bạn không đủ vàng để nạp.');
+        return;
+    }
     setError('');
+
+    const originalCoins = player1.coins;
+    const originalPool = goldPool;
+
+    // Optimistic UI updates
+    setGoldPool(prev => prev + amount);
+    onCoinChange(player1.coins - amount);
+    setShowWagerModal(false);
+
+    try {
+        await updateUserCoins(userId, -amount);
+        addLog(`[Hệ thống] Bạn đã nạp thêm <b class="text-yellow-400">${amount.toLocaleString()}</b> vàng vào bể cược.`);
+    } catch (e) {
+        console.error("Failed to deposit coins:", e);
+        setError("Lỗi khi nạp vàng. Vui lòng thử lại.");
+        // Revert optimistic updates on failure
+        setGoldPool(originalPool);
+        onCoinChange(originalCoins);
+    }
   };
 
   useEffect(() => {
-    if (battlePhase === 'searching') { searchTimeoutRef.current = setTimeout(() => { addLog(`[Lượt 0] Đã tìm thấy đối thủ: ${player2.name}. Trận đấu bắt đầu!`); setBattlePhase('fighting'); }, 2500); } else if (battlePhase === 'fighting' && !matchResult) { battleIntervalRef.current = setInterval(runBattleTurn, 1500); }
-    return () => { if (battleIntervalRef.current) clearInterval(battleIntervalRef.current); if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current); };
-  }, [battlePhase, matchResult, turnCounter]);
+    // CHANGE: When a match is found, the pool is doubled to create the total prize.
+    if (battlePhase === 'searching') { 
+        searchTimeoutRef.current = setTimeout(() => { 
+            const totalPool = goldPool * 2;
+            addLog(`[Hệ thống] Bể cược tổng cộng là <b class="text-yellow-400">${totalPool.toLocaleString()}</b> vàng.`);
+            addLog(`[Lượt 0] Đã tìm thấy đối thủ: ${player2.name}. Trận đấu bắt đầu!`);
+            setGoldPool(totalPool); // Update state to reflect total prize pool
+            setBattlePhase('fighting'); 
+        }, 2500); 
+    } else if (battlePhase === 'fighting' && !matchResult) { 
+        battleIntervalRef.current = setInterval(runBattleTurn, 1500); 
+    }
+    return () => { 
+        if (battleIntervalRef.current) clearInterval(battleIntervalRef.current); 
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current); 
+    };
+  }, [battlePhase, matchResult]);
 
   // --- RENDER ---
   return (
     <>
       <style>{`
-        /* ... CSS unchanged ... */
+        /* ... CSS from previous version, no changes needed ... */
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap'); .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.3s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
         .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); }
         @keyframes pulse-fast { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.05); } } 
@@ -334,8 +365,8 @@ export default function PvpArena({
       
       {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} positionClass={d.positionClass} colorClass={d.colorClass} />))}
       {showStatsModal && <PlayerStatsModal player={player1.initialStats} onClose={() => setShowStatsModal(false)} />}
-      {/* CHANGE: Updated to use ContributionModal and new state/handlers. */}
-      {showContributionModal && <ContributionModal onClose={() => setShowContributionModal(false)} onConfirm={handleConfirmContribution} currentContribution={contributionAmount} playerCoins={player1.coins}/>}
+      {/* CHANGE: Pass the new handleDeposit function to the modal */}
+      {showWagerModal && <WagerModal onClose={() => setShowWagerModal(false)} onConfirm={handleDeposit} playerCoins={player1.coins}/>}
       {battlePhase === 'searching' && <SearchingModal />}
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
@@ -375,30 +406,19 @@ export default function PvpArena({
                           <span className="text-8xl font-black text-slate-500 select-none">?</span>
                       </div>
                       
-                      {/* --- CHANGE: Replaced wager display with a detailed Pool contribution UI. --- */}
+                      {/* CHANGE: UI now shows the cumulative Gold Pool */}
                       <div className="flex flex-col items-center gap-3 w-full max-w-xs">
-                          <div className="flex flex-col items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-lg p-3 w-full">
-                              <div className="w-full flex justify-between items-center">
-                                  <span className="font-sans text-slate-300">Góp của bạn:</span>
-                                  <span className="font-bold text-lg text-yellow-300">{(parseInt(contributionAmount, 10) || 0).toLocaleString()}</span>
-                              </div>
-                              <div className="w-full flex justify-between items-center text-sm">
-                                  <span className="font-sans text-slate-400">Đối thủ góp (dự kiến):</span>
-                                  <span className="font-semibold text-yellow-400/80">{(parseInt(contributionAmount, 10) || 0).toLocaleString()}</span>
-                              </div>
-                              <hr className="w-full border-t border-slate-600 my-1" />
-                              <div className="w-full flex justify-between items-center">
-                                  <span className="font-sans font-bold text-slate-100">Tổng Pool:</span>
-                                  <span className="font-bold text-xl text-yellow-200">{((parseInt(contributionAmount, 10) || 0) * 2).toLocaleString()}</span>
-                              </div>
-                              <button onClick={() => setShowContributionModal(true)} className="mt-2 w-full font-sans text-sm bg-sky-600/50 hover:bg-sky-600 border border-sky-500 rounded px-3 py-1.5 transition-colors active:scale-95">
-                                  Thay Đổi Mức Góp
+                          <div className="flex items-center justify-center gap-4 bg-slate-900/50 border border-slate-700 rounded-lg p-2 w-full">
+                              <span className="font-sans text-slate-300">Bể Cược:</span>
+                              <span className="font-bold text-lg text-yellow-300">{(goldPool || 0).toLocaleString()}</span>
+                              <button onClick={() => setShowWagerModal(true)} className="ml-auto font-sans text-xs bg-sky-600/50 hover:bg-sky-600 border border-sky-500 rounded px-3 py-1 transition-colors active:scale-95">
+                                  Nạp
                               </button>
                           </div>
                           {error && <p className="text-red-400 text-sm font-sans mt-1">{error}</p>}
                       </div>
 
-                      <button onClick={handleSearch} className="btn-shine relative overflow-hidden px-10 py-3 bg-red-800/80 rounded-lg text-red-100 border border-red-500/40 transition-all duration-300 hover:text-white hover:border-red-400 hover:shadow-[0_0_20px_theme(colors.red.500/0.6)] active:scale-95">
+                      <button onClick={handleSearch} disabled={goldPool <= 0} className="btn-shine relative overflow-hidden px-10 py-3 bg-red-800/80 rounded-lg text-red-100 border border-red-500/40 transition-all duration-300 hover:text-white hover:border-red-400 hover:shadow-[0_0_20px_theme(colors.red.500/0.6)] active:scale-95 disabled:bg-slate-700/50 disabled:text-slate-400 disabled:cursor-not-allowed disabled:hover:shadow-none">
                           <span className="font-bold text-xl tracking-widest uppercase">Search</span>
                       </button>
                     </div>
@@ -417,10 +437,10 @@ export default function PvpArena({
             {(battlePhase === 'fighting' || battlePhase === 'finished') && (
               <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
                   <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
-                      {/* --- CHANGE: Updated combat log to show totalPool --- */}
-                      {combatLog.length > 0 && totalPool > 0 && (
+                      {/* CHANGE: Condition to show pool info now checks if it's greater than 0 */}
+                      {combatLog.length > 0 && goldPool > 0 && battlePhase !== 'idle' && (
                           <div className="text-center mb-2 font-bold text-yellow-300 border-t border-b border-yellow-600/30 py-1">
-                            Pool: {(totalPool || 0).toLocaleString()} Vàng
+                            Bể cược: {(goldPool || 0).toLocaleString()} Vàng
                           </div>
                       )}
                       {combatLog.map((entry, index) => (
@@ -436,3 +456,4 @@ export default function PvpArena({
     </>
   );
 }
+// --- END OF FILE pvp.tsx (đã sửa đổi) ---
