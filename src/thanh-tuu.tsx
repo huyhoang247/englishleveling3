@@ -1,10 +1,15 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import CoinDisplay from './coin-display.tsx';
-// TÁI CẤU TRÚC: Import các hàm và đối tượng cần thiết từ Firebase và service
-import { db } from './firebase.js';
-import { doc, runTransaction } from 'firebase/firestore';
-// TÁI CẤU TRÚC: Import cả hai hàm service cần thiết để lấy dữ liệu
-import { fetchOrCreateUserGameData, fetchAndSyncVocabularyData } from './gameDataService.ts';
+// TÁI CẤU TRÚC: Không import trực tiếp từ Firebase nữa
+// import { db } from './firebase.js';
+// import { doc, runTransaction } from 'firebase/firestore';
+
+// TÁI CẤU TRÚC: Import hàm updateAchievementData và các service cần thiết khác
+import { 
+  fetchOrCreateUserGameData, 
+  fetchAndSyncVocabularyData,
+  updateAchievementData 
+} from './gameDataService.ts';
 
 // --- Định nghĩa Type cho dữ liệu ---
 export type VocabularyItem = {
@@ -27,11 +32,10 @@ export const initialVocabularyData: VocabularyItem[] = [
   ...Array.from({ length: 40 }, (_, i) => ({ id: i + 8, word: `Word ${i + 1}`, exp: Math.floor(Math.random() * 200), level: Math.floor(Math.random() * 5) + 1, maxExp: (Math.floor(Math.random() * 5) + 1) * 100 })),
 ];
 
-// --- CẬP NHẬT: Signature của Props đã được đơn giản hóa ---
+// --- Signature của Props ---
 interface AchievementsScreenProps {
   onClose: () => void;
   userId: string;
-  // `initialData` và `masteryCardsCount` đã bị xóa
   onDataUpdated: (updates: { coins: number; masteryCards: number; vocabulary: VocabularyItem[] }) => void;
 }
 
@@ -48,25 +52,17 @@ const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg 
 
 // --- Thành phần chính của ứng dụng ---
 export default function AchievementsScreen({ onClose, userId, onDataUpdated }: AchievementsScreenProps) {
-  // TÁI CẤU TRÚC: State để quản lý dữ liệu được fetch từ Firestore
   const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
   const [masteryCardsCount, setMasteryCardsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-
-  // State cho logic nhận thưởng và UI
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimingId, setClaimingId] = useState<number | null>(null);
   const [isClaimingAll, setIsClaimingAll] = useState(false);
-  
-  // State cho phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 30;
-
-  // State cục bộ cho coin
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
 
-  // TÁI CẤU TRÚC: Lấy tất cả dữ liệu cần thiết khi component được mount
   useEffect(() => {
     if (!userId) {
         setIsLoading(false);
@@ -77,19 +73,14 @@ export default function AchievementsScreen({ onClose, userId, onDataUpdated }: A
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            // Lấy dữ liệu chung của người dùng (coins, mastery cards, etc.)
             const gameData = await fetchOrCreateUserGameData(userId);
-            // Lấy dữ liệu từ vựng riêng
             const vocabData = await fetchAndSyncVocabularyData(userId);
-
             setCoins(gameData.coins);
             setDisplayedCoins(gameData.coins);
             setMasteryCardsCount(gameData.masteryCards);
             setVocabulary(vocabData);
-            
         } catch (error) {
             console.error("Failed to fetch data for Achievements screen:", error);
-            // Fallback to empty/default data in case of error
             setVocabulary([]);
             setMasteryCardsCount(0);
             setCoins(0);
@@ -167,36 +158,20 @@ export default function AchievementsScreen({ onClose, userId, onDataUpdated }: A
     const minDelayPromise = new Promise(resolve => setTimeout(resolve, 500));
 
     try {
-      const userDocRef = doc(db, 'users', userId);
-      const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-      
-      let newTotalCoins: number | undefined;
-      let newTotalMasteryCards: number | undefined;
-
-      await runTransaction(db, async (transaction) => {
-          const userDoc = await transaction.get(userDocRef);
-          if (!userDoc.exists()) throw new Error("User document does not exist!");
-          
-          const currentCoins = userDoc.data().coins || 0;
-          const currentCards = userDoc.data().masteryCards || 0;
-
-          newTotalCoins = currentCoins + goldReward;
-          newTotalMasteryCards = currentCards + masteryCardReward;
-
-          transaction.update(userDocRef, { coins: newTotalCoins, masteryCards: newTotalMasteryCards });
-          transaction.set(achievementDocRef, { vocabulary: updatedList }, { merge: true });
+      // TÁI CẤU TRÚC: Gọi service để cập nhật database
+      const { newCoins, newMasteryCards } = await updateAchievementData(userId, {
+        coinsToAdd: goldReward,
+        cardsToAdd: masteryCardReward,
+        newVocabularyData: updatedList,
       });
 
       await minDelayPromise;
 
-      if (newTotalCoins === undefined || newTotalMasteryCards === undefined) {
-          throw new Error("Transaction completed but new values are missing.");
-      }
-      
+      // Cập nhật state cục bộ và gọi callback cho component cha với dữ liệu từ server
       setVocabulary(updatedList);
-      setCoins(newTotalCoins);
-      setMasteryCardsCount(newTotalMasteryCards); // Cập nhật state cục bộ
-      onDataUpdated({ coins: newTotalCoins, masteryCards: newTotalMasteryCards, vocabulary: updatedList });
+      setCoins(newCoins);
+      setMasteryCardsCount(newMasteryCards);
+      onDataUpdated({ coins: newCoins, masteryCards: newMasteryCards, vocabulary: updatedList });
 
     } catch (error) {
       console.error("Claiming failed, reverting UI:", error);
@@ -236,36 +211,20 @@ export default function AchievementsScreen({ onClose, userId, onDataUpdated }: A
     const minDelayPromise = new Promise(resolve => setTimeout(resolve, 500));
     
     try {
-        const userDocRef = doc(db, 'users', userId);
-        const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-
-        let newTotalCoins: number | undefined;
-        let newTotalMasteryCards: number | undefined;
-
-        await runTransaction(db, async (transaction) => {
-            const userDoc = await transaction.get(userDocRef);
-            if (!userDoc.exists()) throw new Error("User document does not exist!");
-
-            const currentCoins = userDoc.data().coins || 0;
-            const currentCards = userDoc.data().masteryCards || 0;
-
-            newTotalCoins = currentCoins + totalGoldReward;
-            newTotalMasteryCards = currentCards + totalMasteryCardReward;
-
-            transaction.update(userDocRef, { coins: newTotalCoins, masteryCards: newTotalMasteryCards });
-            transaction.set(achievementDocRef, { vocabulary: updatedList }, { merge: true });
+        // TÁI CẤU TRÚC: Gọi service để cập nhật database
+        const { newCoins, newMasteryCards } = await updateAchievementData(userId, {
+          coinsToAdd: totalGoldReward,
+          cardsToAdd: totalMasteryCardReward,
+          newVocabularyData: updatedList,
         });
 
         await minDelayPromise;
 
-        if (newTotalCoins === undefined || newTotalMasteryCards === undefined) {
-            throw new Error("Transaction completed but new values are missing.");
-        }
-
+        // Cập nhật state cục bộ và gọi callback cho component cha với dữ liệu từ server
         setVocabulary(updatedList);
-        setCoins(newTotalCoins);
-        setMasteryCardsCount(newTotalMasteryCards); // Cập nhật state cục bộ
-        onDataUpdated({ coins: newTotalCoins, masteryCards: newTotalMasteryCards, vocabulary: updatedList });
+        setCoins(newCoins);
+        setMasteryCardsCount(newMasteryCards);
+        onDataUpdated({ coins: newCoins, masteryCards: newMasteryCards, vocabulary: updatedList });
 
     } catch (error) {
        console.error("Claiming all failed, reverting UI:", error);
@@ -284,7 +243,6 @@ export default function AchievementsScreen({ onClose, userId, onDataUpdated }: A
     return { gold, masteryCards };
   }, [vocabulary]);
 
-  // TÁI CẤU TRÚC: Thêm UI cho trạng thái loading
   if (isLoading) {
     return (
       <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center justify-center">
@@ -428,7 +386,6 @@ function VocabularyRow({ item, rank, onClaim, isBeingClaimed, isAnyClaiming, isC
     <div className="grid grid-cols-12 gap-x-4 gap-y-3 items-center p-4 bg-slate-800/70 rounded-xl border border-slate-700/80 hover:bg-slate-700/60 hover:border-cyan-500/50 transition-all duration-300">
       <div className="col-span-2 md:col-span-1 text-center flex items-center justify-center"> <span className="text-xl font-bold text-slate-500">{rank}</span> </div>
       <div className="col-span-10 md:col-span-3">
-        {/* [ĐÃ CẬP NHẬT] Tự động viết hoa chữ cái đầu */}
         <p className="font-bold text-lg text-white">{word.charAt(0).toUpperCase() + word.slice(1)}</p>
         <span className="md:hidden text-xs text-slate-400">{`Cấp ${level}`}</span>
         <span className="hidden md:block text-xs text-slate-400">{`Cấp ${level}`}</span>
@@ -440,14 +397,12 @@ function VocabularyRow({ item, rank, onClaim, isBeingClaimed, isAnyClaiming, isC
   );
 }
 
-// --- Component Phân Trang - Ưu tiên Trải nghiệm người dùng ---
+// --- Component Phân Trang ---
 const PaginationControls = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void; }) => {
-    // Sử dụng useMemo để tính toán danh sách trang chỉ khi các dependency thay đổi
     const paginationRange = useMemo(() => {
-        const siblingCount = 1; // Số lượng trang liền kề hiển thị ở mỗi bên của trang hiện tại
-        const totalPageNumbers = siblingCount + 5; // Số mục tối đa hiển thị (ví dụ: 1 ... 4 5 6 ... 10)
+        const siblingCount = 1;
+        const totalPageNumbers = siblingCount + 5;
 
-        // Case 1: Nếu tổng số trang ít hơn số trang ta muốn hiển thị, trả về tất cả các trang
         if (totalPageNumbers >= totalPages) {
             return Array.from({ length: totalPages }, (_, i) => i + 1);
         }
@@ -459,35 +414,28 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
 
         const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
         const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
-
-        // Quyết định khi nào hiển thị dấu "..."
         const shouldShowLeftDots = leftSiblingIndex > 2;
         const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
-
         const firstPageIndex = 1;
         const lastPageIndex = totalPages;
 
-        // Case 2: Chỉ hiển thị dấu "..." bên phải
         if (!shouldShowLeftDots && shouldShowRightDots) {
             let leftItemCount = 3 + 2 * siblingCount;
             let leftRange = range(1, leftItemCount);
             return [...leftRange, '...', totalPages];
         }
 
-        // Case 3: Chỉ hiển thị dấu "..." bên trái
         if (shouldShowLeftDots && !shouldShowRightDots) {
             let rightItemCount = 3 + 2 * siblingCount;
             let rightRange = range(totalPages - rightItemCount + 1, totalPages);
             return [firstPageIndex, '...', ...rightRange];
         }
         
-        // Case 4: Hiển thị dấu "..." ở cả hai bên
         if (shouldShowLeftDots && shouldShowRightDots) {
             let middleRange = range(leftSiblingIndex, rightSiblingIndex);
             return [firstPageIndex, '...', ...middleRange, '...', lastPageIndex];
         }
 
-        // Fallback (thường không xảy ra với logic trên nhưng để an toàn)
         return Array.from({ length: totalPages }, (_, i) => i + 1);
 
     }, [currentPage, totalPages]);
