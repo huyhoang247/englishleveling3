@@ -350,18 +350,20 @@ export default function PvpArena({
         </header>
 
         <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
-            {(battlePhase === 'fighting' || battlePhase === 'finished') && (
-                <div className="w-full max-w-2xl mx-auto mb-4">
-                    <div className="w-1/2 mx-auto">
+            {/* Player 1 display area. Shows health bar and related buttons */}
+            {(battlePhase === 'idle' || battlePhase === 'fighting' || battlePhase === 'finished') && (
+                <div className="w-full max-w-2xl mx-auto mb-4 flex flex-col items-center gap-3">
+                    <div className="w-1/2">
                         <HealthBar current={player1Stats.hp} max={player1Stats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
                     </div>
+                    {battlePhase === 'idle' && (
+                        <button onClick={() => setShowStatsModal(true)} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md">View Stats</button>
+                    )}
                 </div>
             )}
 
+            {/* Container for other action buttons like 'Skip Battle' */}
             <div className="w-full flex justify-center items-center gap-3 mb-4">
-                {battlePhase === 'idle' && (
-                  <button onClick={() => setShowStatsModal(true)} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md">View Stats</button>
-                )}
                 {battlePhase === 'fighting' && !matchResult && (<button onClick={skipMatch} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button>)}
             </div>
 
