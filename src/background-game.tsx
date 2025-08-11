@@ -721,29 +721,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   };
 
-  const handleRewardClaim = async (reward: { gold: number; masteryCards: number }, updatedVocabulary: VocabularyItem[]) => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) { console.error("Cannot claim reward: User not authenticated."); throw new Error("User not authenticated"); }
-    const userDocRef = doc(db, 'users', userId);
-    const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-    setIsSyncingData(true);
-    try {
-        await runTransaction(db, async (transaction) => {
-            const userDoc = await transaction.get(userDocRef);
-            if (!userDoc.exists()) { throw "User document does not exist!"; }
-            const currentCoins = userDoc.data().coins || 0; const currentCards = userDoc.data().masteryCards || 0;
-            const newCoins = currentCoins + reward.gold; const newCards = currentCards + reward.masteryCards;
-            transaction.update(userDocRef, { coins: newCoins, masteryCards: newCards });
-            transaction.set(achievementDocRef, { vocabulary: updatedVocabulary }, { merge: true });
-        });
-        console.log("Reward claimed and achievements updated successfully in a single transaction.");
-        setCoins(prev => prev + reward.gold); setMasteryCards(prev => prev + reward.masteryCards);
-        setVocabularyData(updatedVocabulary);
-    } catch (error) {
-        console.error("Transaction for claiming reward failed:", error);
-    } finally {
-        setIsSyncingData(false);
-    }
+  // TÁI CẤU TRÚC: Logic xử lý nhận thưởng đã được chuyển vào `thanh-tuu.tsx`.
+  // Hàm này giờ chỉ dùng để cập nhật state của component cha.
+  const handleAchievementsUpdate = (updates: { coins: number; masteryCards: number; vocabulary: VocabularyItem[] }) => {
+    console.log("Syncing state from AchievementsScreen. New coin count:", updates.coins);
+    setCoins(updates.coins);
+    setMasteryCards(updates.masteryCards);
+    setVocabularyData(updates.vocabulary);
   };
 
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>, ...otherSetters: React.Dispatch<React.SetStateAction<boolean>>[]) => {
@@ -921,7 +905,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 )}
             </ErrorBoundary> 
         </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}> <ErrorBoundary> {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && ( <AchievementsScreen onClose={toggleAchievements} userId={auth.currentUser.uid} initialData={vocabularyData} onClaimReward={handleRewardClaim} masteryCardsCount={masteryCards} displayedCoins={displayedCoins} /> )} </ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
+            <ErrorBoundary>
+                {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && (
+                    <AchievementsScreen
+                        onClose={toggleAchievements}
+                        userId={auth.currentUser.uid}
+                        initialData={vocabularyData}
+                        onDataUpdated={handleAchievementsUpdate}
+                        masteryCardsCount={masteryCards}
+                    />
+                )}
+            </ErrorBoundary>
+        </div>
         
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
