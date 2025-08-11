@@ -1,17 +1,9 @@
+// src/thanh-tuu.tsx
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import CoinDisplay from './coin-display.tsx';
-// TÁI CẤU TRÚC: Không import trực tiếp từ Firebase nữa
-// import { db } from './firebase.js';
-// import { doc, runTransaction } from 'firebase/firestore';
+import { useAchievements } from './contexts/AchievementsContext.tsx';
 
-// TÁI CẤU TRÚC: Import hàm updateAchievementData và các service cần thiết khác
-import { 
-  fetchOrCreateUserGameData, 
-  fetchAndSyncVocabularyData,
-  updateAchievementData 
-} from './gameDataService.ts';
-
-// --- Định nghĩa Type cho dữ liệu ---
+// --- Định nghĩa Type ---
 export type VocabularyItem = {
   id: number;
   word: string;
@@ -19,25 +11,6 @@ export type VocabularyItem = {
   level: number;
   maxExp: number;
 };
-
-// --- Dữ liệu mẫu (chỉ sử dụng làm fallback) ---
-export const initialVocabularyData: VocabularyItem[] = [
-  { id: 1, word: 'Ephemeral', exp: 75, level: 3, maxExp: 100 },
-  { id: 2, word: 'Serendipity', exp: 100, level: 5, maxExp: 100 },
-  { id: 3, word: 'Luminous', exp: 30, level: 2, maxExp: 100 },
-  { id: 4, word: 'Ubiquitous', exp: 95, level: 8, maxExp: 100 },
-  { id: 5, word: 'Mellifluous', exp: 100, level: 1, maxExp: 100 },
-  { id: 6, word: 'Petrichor', exp: 15, level: 4, maxExp: 100 },
-  { id: 7, word: 'Ineffable', exp: 60, level: 7, maxExp: 100 },
-  ...Array.from({ length: 40 }, (_, i) => ({ id: i + 8, word: `Word ${i + 1}`, exp: Math.floor(Math.random() * 200), level: Math.floor(Math.random() * 5) + 1, maxExp: (Math.floor(Math.random() * 5) + 1) * 100 })),
-];
-
-// --- Signature của Props ---
-interface AchievementsScreenProps {
-  onClose: () => void;
-  userId: string;
-  onDataUpdated: (updates: { coins: number; masteryCards: number; vocabulary: VocabularyItem[] }) => void;
-}
 
 // --- Các component icon (Không thay đổi) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -50,65 +23,66 @@ const GiftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" /> </svg> );
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
+// --- Signature của Props ---
+interface AchievementsScreenProps {
+  onClose: () => void;
+}
+
 // --- Thành phần chính của ứng dụng ---
-export default function AchievementsScreen({ onClose, userId, onDataUpdated }: AchievementsScreenProps) {
-  const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
-  const [masteryCardsCount, setMasteryCardsCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+export default function AchievementsScreen({ onClose }: AchievementsScreenProps) {
+  // Lấy dữ liệu và các hàm hành động từ context
+  const { 
+    vocabulary, 
+    masteryCardsCount, 
+    coins, 
+    isLoading, 
+    claimReward, 
+    claimAllRewards 
+  } = useAchievements();
+
+  // State chỉ dành cho UI của component này
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimingId, setClaimingId] = useState<number | null>(null);
   const [isClaimingAll, setIsClaimingAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 30;
-  const [coins, setCoins] = useState(0);
-  const [displayedCoins, setDisplayedCoins] = useState(0);
+  const [displayedCoins, setDisplayedCoins] = useState(coins);
 
-  useEffect(() => {
-    if (!userId) {
-        setIsLoading(false);
-        console.warn("AchievementsScreen: No userId provided.");
-        return;
-    };
-
-    const fetchData = async () => {
-        setIsLoading(true);
-        try {
-            const gameData = await fetchOrCreateUserGameData(userId);
-            const vocabData = await fetchAndSyncVocabularyData(userId);
-            setCoins(gameData.coins);
-            setDisplayedCoins(gameData.coins);
-            setMasteryCardsCount(gameData.masteryCards);
-            setVocabulary(vocabData);
-        } catch (error) {
-            console.error("Failed to fetch data for Achievements screen:", error);
-            setVocabulary([]);
-            setMasteryCardsCount(0);
-            setCoins(0);
-            setDisplayedCoins(0);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    fetchData();
-  }, [userId]);
-
+  // Hàm animation cho coin
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
     const isCountingUp = endValue > startValue;
-    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
-    let current = startValue;
-    const interval = setInterval(() => {
-      if (isCountingUp) { current += step; } else { current -= step; }
-      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
-        setDisplayedCoins(endValue);
-        clearInterval(interval);
-      } else {
-        setDisplayedCoins(current);
-      }
-    }, 30);
+    const duration = 500; // ms
+    const frameDuration = 1000 / 60; // 60fps
+    const totalFrames = Math.round(duration / frameDuration);
+    const step = (endValue - startValue) / totalFrames;
+    let currentFrame = 0;
+    
+    const animate = () => {
+        currentFrame++;
+        const newValue = Math.round(startValue + step * currentFrame);
+        if ((isCountingUp && newValue >= endValue) || (!isCountingUp && newValue <= endValue)) {
+            setDisplayedCoins(endValue);
+        } else {
+            setDisplayedCoins(newValue);
+            requestAnimationFrame(animate);
+        }
+    };
+    requestAnimationFrame(animate);
   }, []);
 
+  // Effect để chạy animation khi `coins` từ context thay đổi
+  useEffect(() => {
+    startCoinCountAnimation(displayedCoins, coins);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coins]);
+  
+  // Khởi tạo displayedCoins khi component mount lần đầu
+  useEffect(() => {
+    setDisplayedCoins(coins);
+  }, []); // Chỉ chạy một lần
+
+  // Logic sắp xếp và phân trang không đổi
   const sortedVocabulary = useMemo(() => [...vocabulary].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
     const bIsClaimable = b.exp >= b.maxExp;
@@ -118,11 +92,9 @@ export default function AchievementsScreen({ onClose, userId, onDataUpdated }: A
   }), [vocabulary]);
 
   const totalPages = Math.ceil(sortedVocabulary.length / ITEMS_PER_PAGE);
-  
   const paginatedVocabulary = useMemo(() => {
       const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-      const endIndex = startIndex + ITEMS_PER_PAGE;
-      return sortedVocabulary.slice(startIndex, endIndex);
+      return sortedVocabulary.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [sortedVocabulary, currentPage]);
 
   useEffect(() => {
@@ -131,108 +103,33 @@ export default function AchievementsScreen({ onClose, userId, onDataUpdated }: A
   }, [currentPage, totalPages, sortedVocabulary.length]);
 
   const handleClaim = useCallback(async (id: number) => {
-    if (isClaiming || isClaimingAll || !userId) return;
-
-    const originalItem = vocabulary.find(item => item.id === id);
-    if (!originalItem || originalItem.exp < originalItem.maxExp) return;
-
+    if (isClaiming || isClaimingAll) return;
     setIsClaiming(true);
     setClaimingId(id);
-
-    const goldReward = originalItem.level * 100;
-    const masteryCardReward = 1;
-    const initialCoinCount = displayedCoins;
-
-    startCoinCountAnimation(initialCoinCount, initialCoinCount + goldReward);
-
-    const updatedList = vocabulary.map(item => {
-      if (item.id === id) {
-        const expRemaining = item.exp - item.maxExp;
-        const newLevel = item.level + 1;
-        const newMaxExp = newLevel * 100;
-        return { ...item, level: newLevel, exp: expRemaining, maxExp: newMaxExp };
-      }
-      return item;
-    });
-
-    const minDelayPromise = new Promise(resolve => setTimeout(resolve, 500));
-
     try {
-      // TÁI CẤU TRÚC: Gọi service để cập nhật database
-      const { newCoins, newMasteryCards } = await updateAchievementData(userId, {
-        coinsToAdd: goldReward,
-        cardsToAdd: masteryCardReward,
-        newVocabularyData: updatedList,
-      });
-
-      await minDelayPromise;
-
-      // Cập nhật state cục bộ và gọi callback cho component cha với dữ liệu từ server
-      setVocabulary(updatedList);
-      setCoins(newCoins);
-      setMasteryCardsCount(newMasteryCards);
-      onDataUpdated({ coins: newCoins, masteryCards: newMasteryCards, vocabulary: updatedList });
-
+      await claimReward(id); // Gọi hàm từ context
     } catch (error) {
-      console.error("Claiming failed, reverting UI:", error);
-      startCoinCountAnimation(displayedCoins, initialCoinCount);
+      console.error("UI Error: Claiming failed:", error);
+      // Có thể hiển thị thông báo lỗi cho người dùng ở đây
     } finally {
       setIsClaiming(false);
       setClaimingId(null);
     }
-  }, [vocabulary, userId, isClaiming, isClaimingAll, displayedCoins, startCoinCountAnimation, onDataUpdated]);
+  }, [isClaiming, isClaimingAll, claimReward]);
 
   const handleClaimAll = useCallback(async () => {
-    if (isClaiming || isClaimingAll || !userId) return;
-
     const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
-    if (claimableItems.length === 0) return;
+    if (isClaiming || isClaimingAll || claimableItems.length === 0) return;
     
     setIsClaimingAll(true);
-
-    let totalGoldReward = 0;
-    let totalMasteryCardReward = 0;
-    const claimableIds = new Set(claimableItems.map(item => item.id));
-    const initialCoinCount = displayedCoins;
-
-    const updatedList = vocabulary.map(item => {
-      if (claimableIds.has(item.id)) {
-        totalGoldReward += item.level * 100;
-        totalMasteryCardReward += 1;
-        const expRemaining = item.exp - item.maxExp;
-        const newLevel = item.level + 1;
-        const newMaxExp = newLevel * 100;
-        return { ...item, level: newLevel, exp: expRemaining, maxExp: newMaxExp };
-      }
-      return item;
-    });
-    
-    startCoinCountAnimation(initialCoinCount, initialCoinCount + totalGoldReward);
-    const minDelayPromise = new Promise(resolve => setTimeout(resolve, 500));
-    
     try {
-        // TÁI CẤU TRÚC: Gọi service để cập nhật database
-        const { newCoins, newMasteryCards } = await updateAchievementData(userId, {
-          coinsToAdd: totalGoldReward,
-          cardsToAdd: totalMasteryCardReward,
-          newVocabularyData: updatedList,
-        });
-
-        await minDelayPromise;
-
-        // Cập nhật state cục bộ và gọi callback cho component cha với dữ liệu từ server
-        setVocabulary(updatedList);
-        setCoins(newCoins);
-        setMasteryCardsCount(newMasteryCards);
-        onDataUpdated({ coins: newCoins, masteryCards: newMasteryCards, vocabulary: updatedList });
-
+      await claimAllRewards(); // Gọi hàm từ context
     } catch (error) {
-       console.error("Claiming all failed, reverting UI:", error);
-       startCoinCountAnimation(displayedCoins, initialCoinCount);
+       console.error("UI Error: Claiming all failed:", error);
     } finally {
       setIsClaimingAll(false);
     }
-  }, [vocabulary, userId, isClaiming, isClaimingAll, displayedCoins, startCoinCountAnimation, onDataUpdated]);
+  }, [vocabulary, isClaiming, isClaimingAll, claimAllRewards]);
   
   const totalWords = vocabulary.length;
   
@@ -243,7 +140,9 @@ export default function AchievementsScreen({ onClose, userId, onDataUpdated }: A
     return { gold, masteryCards };
   }, [vocabulary]);
 
-  if (isLoading) {
+  // Màn hình loading vẫn hữu ích nếu người dùng mở màn hình này ngay lập tức
+  // sau khi đăng nhập, trước khi context kịp tải xong dữ liệu.
+  if (isLoading && vocabulary.length === 0) {
     return (
       <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-cyan-400"></div>
