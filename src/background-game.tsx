@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx ---
+// --- START OF FILE background-game.tsx (UPDATED) ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -10,7 +10,8 @@ import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
-import Inventory from './inventory.tsx';
+// import Inventory from './inventory.tsx'; // ĐÃ XÓA
+import PvpArena from './pvp.tsx'; // ĐÃ THÊM
 import DungeonCanvasBackground from './background-canvas.tsx';
 import LuckyChestGame from './lucky-game.tsx';
 import { uiAssets, lottieAssets } from './game-assets.ts';
@@ -208,7 +209,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
-  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  // const [isInventoryOpen, setIsInventoryOpen] = useState(false); // ĐÃ XÓA
+  const [isPvpArenaOpen, setIsPvpArenaOpen] = useState(false); // ĐÃ THÊM
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
   const [isMinerChallengeOpen, setIsMinerChallengeOpen] = useState(false);
   const [isBossBattleOpen, setIsBossBattleOpen] = useState(false);
@@ -660,7 +662,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           setIsLoadingUserData(false);
         }
       } else {
-        setIsRankOpen(false); setIsInventoryOpen(false); setIsLuckyGameOpen(false);
+        setIsRankOpen(false); // setIsInventoryOpen(false); // ĐÃ XÓA
+        setIsPvpArenaOpen(false); // ĐÃ THÊM
+        setIsLuckyGameOpen(false);
         setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false);
         setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
@@ -698,7 +702,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   }, [coins]);
 
   const renderCharacter = () => {
-    const isAnyOverlayOpen = isRankOpen || isInventoryOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
+    const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
     const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
     return (
       <div className="character-container absolute w-28 h-28 left-1/2 -translate-x-1/2 bottom-40 z-20">
@@ -727,7 +731,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const newState = !prev;
             if (newState) {
                 hideNavBar();
-                [ setIsRankOpen, setIsInventoryOpen, setIsLuckyGameOpen, 
+                [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, // ĐÃ CẬP NHẬT
                   setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen,
                   setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen
                 ].forEach(s => { if (s !== setter) s(false); });
@@ -738,7 +742,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleRank = createToggleFunction(setIsRankOpen);
-  const toggleInventory = createToggleFunction(setIsInventoryOpen);
+  // const toggleInventory = createToggleFunction(setIsInventoryOpen); // ĐÃ XÓA
+  const togglePvpArena = createToggleFunction(setIsPvpArenaOpen); // ĐÃ THÊM
   const toggleLuckyGame = createToggleFunction(setIsLuckyGameOpen);
   const toggleMinerChallenge = createToggleFunction(setIsMinerChallengeOpen);
   const toggleBossBattle = createToggleFunction(setIsBossBattleOpen);
@@ -752,7 +757,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
   const handleSetToggleSidebar = (toggleFn: () => void) => { sidebarToggleRef.current = toggleFn; };
 
-  const isAnyOverlayOpen = isRankOpen || isInventoryOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen;
+  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen; // ĐÃ CẬP NHẬT
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
@@ -761,9 +766,26 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const bonusHp = calculateTotalStatValue(userStats.hp, statConfig.hp.baseUpgradeBonus);
       const bonusAtk = calculateTotalStatValue(userStats.atk, statConfig.atk.baseUpgradeBonus);
       const bonusDef = calculateTotalStatValue(userStats.def, statConfig.def.baseUpgradeBonus);
+      
+      // Get stat bonuses from equipped items
+      let itemHpBonus = 0;
+      let itemAtkBonus = 0;
+      let itemDefBonus = 0;
+
+      Object.values(equippedItems).forEach(item => {
+          if (item) {
+              itemHpBonus += item.stats.hp || 0;
+              itemAtkBonus += item.stats.atk || 0;
+              itemDefBonus += item.stats.def || 0;
+          }
+      });
+      
       return {
-          maxHp: BASE_HP + bonusHp, hp: BASE_HP + bonusHp, atk: BASE_ATK + bonusAtk,
-          def: BASE_DEF + bonusDef, maxEnergy: 50, energy: 50,
+          maxHp: BASE_HP + bonusHp + itemHpBonus, 
+          hp: BASE_HP + bonusHp + itemHpBonus, 
+          atk: BASE_ATK + bonusAtk + itemAtkBonus,
+          def: BASE_DEF + bonusDef + itemDefBonus, 
+          maxEnergy: 50, energy: 50,
       };
   };
 
@@ -771,19 +793,21 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       if (!ownedSkills || !equippedSkillIds) return [];
       
       const equippedDetails = equippedSkillIds
-          .map(ownedId => {
-              if (!ownedId) return null;
-              const owned = ownedSkills.find(s => s.id === ownedId);
+          .map(equippedId => { // Renamed from ownedId for clarity
+              if (!equippedId) return null;
+              // The equippedId directly corresponds to the unique ID in the ownedSkills array
+              const owned = ownedSkills.find(s => s.id === equippedId);
               if (!owned) return null;
               
+              // The owned skill has a skillId that points to the blueprint
               const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId);
               if (!blueprint) return null;
 
               return { ...owned, ...blueprint };
           })
-          .filter(Boolean);
+          .filter((skill): skill is OwnedSkill & SkillBlueprint => skill !== null);
 
-      return equippedDetails as (OwnedSkill & SkillBlueprint)[];
+      return equippedDetails;
   };
 
   return (
@@ -823,7 +847,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle },
                  { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop },
-                 { icon: <img src={uiAssets.inventoryIcon} alt="Inventory Icon" className="w-full h-full object-contain" />, onClick: toggleInventory }
+                 // ĐÃ THAY THẾ NÚT INVENTORY BẰNG PVP
+                 // Hãy chắc chắn bạn đã thêm 'pvpIcon' vào file game-assets.ts
+                 { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena }
               ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
@@ -837,7 +863,37 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
         {/* --- Overlays / Modals --- */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary> </div>
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isInventoryOpen ? 'block' : 'none' }}> <ErrorBoundary><Inventory onClose={toggleInventory} /></ErrorBoundary> </div>
+        
+        {/* KHỐI INVENTORY ĐÃ BỊ XÓA */}
+
+        {/* KHỐI PVP ARENA MỚI ĐÃ ĐƯỢC THÊM */}
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isPvpArenaOpen ? 'block' : 'none' }}>
+            <ErrorBoundary>
+                {isPvpArenaOpen && auth.currentUser && (
+                    <PvpArena
+                        onClose={togglePvpArena}
+                        player1={{
+                            name: auth.currentUser.displayName || "You",
+                            avatarUrl: auth.currentUser.photoURL || "",
+                            initialStats: getPlayerBattleStats(),
+                            equippedSkills: getEquippedSkillsDetails()
+                        }}
+                        // Dữ liệu đối thủ này là giả lập, cần thay thế bằng hệ thống tìm trận
+                        player2={{
+                            name: "Shadow Fiend",
+                            avatarUrl: "https://i.imgur.com/kQoG2Yd.png", // Một avatar giả lập
+                            initialStats: { maxHp: 1500, hp: 1500, atk: 120, def: 55 },
+                            equippedSkills: [] // Tạm thời để trống
+                        }}
+                        onMatchEnd={(result) => {
+                            console.log(`Match ended. Winner: ${result.winner}`);
+                            // TODO: Thêm logic cập nhật điểm rank, phần thưởng...
+                        }}
+                    />
+                )}
+            </ErrorBoundary>
+        </div>
+
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(auth.currentUser!.uid, amount))} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} />)}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isMinerChallengeOpen && auth.currentUser && (
