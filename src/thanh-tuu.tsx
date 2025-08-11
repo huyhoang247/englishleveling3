@@ -3,7 +3,8 @@ import CoinDisplay from './coin-display.tsx';
 // TÁI CẤU TRÚC: Import các hàm và đối tượng cần thiết từ Firebase và service
 import { db } from './firebase.js';
 import { doc, runTransaction } from 'firebase/firestore';
-import { fetchOrCreateUserGameData } from './gameDataService.ts';
+// TÁI CẤU TRÚC: Import cả hai hàm service cần thiết để lấy dữ liệu
+import { fetchOrCreateUserGameData, fetchAndSyncVocabularyData } from './gameDataService.ts';
 
 // --- Định nghĩa Type cho dữ liệu ---
 export type VocabularyItem = {
@@ -14,7 +15,7 @@ export type VocabularyItem = {
   maxExp: number;
 };
 
-// --- Dữ liệu mẫu ---
+// --- Dữ liệu mẫu (chỉ sử dụng làm fallback) ---
 export const initialVocabularyData: VocabularyItem[] = [
   { id: 1, word: 'Ephemeral', exp: 75, level: 3, maxExp: 100 },
   { id: 2, word: 'Serendipity', exp: 100, level: 5, maxExp: 100 },
@@ -26,13 +27,12 @@ export const initialVocabularyData: VocabularyItem[] = [
   ...Array.from({ length: 40 }, (_, i) => ({ id: i + 8, word: `Word ${i + 1}`, exp: Math.floor(Math.random() * 200), level: Math.floor(Math.random() * 5) + 1, maxExp: (Math.floor(Math.random() * 5) + 1) * 100 })),
 ];
 
-// --- Cập nhật Signature của Props ---
+// --- CẬP NHẬT: Signature của Props đã được đơn giản hóa ---
 interface AchievementsScreenProps {
   onClose: () => void;
   userId: string;
-  initialData: VocabularyItem[];
+  // `initialData` và `masteryCardsCount` đã bị xóa
   onDataUpdated: (updates: { coins: number; masteryCards: number; vocabulary: VocabularyItem[] }) => void;
-  masteryCardsCount: number;
 }
 
 // --- Các component icon (Không thay đổi) ---
@@ -47,32 +47,59 @@ const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg x
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
 // --- Thành phần chính của ứng dụng ---
-export default function AchievementsScreen({ onClose, userId, initialData, onDataUpdated, masteryCardsCount }: AchievementsScreenProps) {
-  const [vocabulary, setVocabulary] = useState(initialData);
+export default function AchievementsScreen({ onClose, userId, onDataUpdated }: AchievementsScreenProps) {
+  // TÁI CẤU TRÚC: State để quản lý dữ liệu được fetch từ Firestore
+  const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
+  const [masteryCardsCount, setMasteryCardsCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // State cho logic nhận thưởng và UI
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimingId, setClaimingId] = useState<number | null>(null);
   const [isClaimingAll, setIsClaimingAll] = useState(false);
   
+  // State cho phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 30;
 
-  // TÁI CẤU TRÚC: Quản lý coin state cục bộ trong component này
+  // State cục bộ cho coin
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
 
-  // TÁI CẤU TRÚC: Lấy dữ liệu coin ban đầu khi component được mount
+  // TÁI CẤU TRÚC: Lấy tất cả dữ liệu cần thiết khi component được mount
   useEffect(() => {
-    if (!userId) return;
-    const fetchInitialCoins = async () => {
-      try {
-        const gameData = await fetchOrCreateUserGameData(userId);
-        setCoins(gameData.coins);
-        setDisplayedCoins(gameData.coins);
-      } catch (error) {
-        console.error("Failed to fetch initial coins for Achievements screen:", error);
-      }
+    if (!userId) {
+        setIsLoading(false);
+        console.warn("AchievementsScreen: No userId provided.");
+        return;
     };
-    fetchInitialCoins();
+
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            // Lấy dữ liệu chung của người dùng (coins, mastery cards, etc.)
+            const gameData = await fetchOrCreateUserGameData(userId);
+            // Lấy dữ liệu từ vựng riêng
+            const vocabData = await fetchAndSyncVocabularyData(userId);
+
+            setCoins(gameData.coins);
+            setDisplayedCoins(gameData.coins);
+            setMasteryCardsCount(gameData.masteryCards);
+            setVocabulary(vocabData);
+            
+        } catch (error) {
+            console.error("Failed to fetch data for Achievements screen:", error);
+            // Fallback to empty/default data in case of error
+            setVocabulary([]);
+            setMasteryCardsCount(0);
+            setCoins(0);
+            setDisplayedCoins(0);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    fetchData();
   }, [userId]);
 
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
@@ -90,10 +117,6 @@ export default function AchievementsScreen({ onClose, userId, initialData, onDat
       }
     }, 30);
   }, []);
-
-  useEffect(() => {
-      setVocabulary(initialData);
-  }, [initialData]);
 
   const sortedVocabulary = useMemo(() => [...vocabulary].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
@@ -172,6 +195,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onDat
       
       setVocabulary(updatedList);
       setCoins(newTotalCoins);
+      setMasteryCardsCount(newTotalMasteryCards); // Cập nhật state cục bộ
       onDataUpdated({ coins: newTotalCoins, masteryCards: newTotalMasteryCards, vocabulary: updatedList });
 
     } catch (error) {
@@ -240,6 +264,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onDat
 
         setVocabulary(updatedList);
         setCoins(newTotalCoins);
+        setMasteryCardsCount(newTotalMasteryCards); // Cập nhật state cục bộ
         onDataUpdated({ coins: newTotalCoins, masteryCards: newTotalMasteryCards, vocabulary: updatedList });
 
     } catch (error) {
@@ -258,6 +283,16 @@ export default function AchievementsScreen({ onClose, userId, initialData, onDat
     const masteryCards = claimableItems.length;
     return { gold, masteryCards };
   }, [vocabulary]);
+
+  // TÁI CẤU TRÚC: Thêm UI cho trạng thái loading
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-cyan-400"></div>
+        <p className="mt-4 text-lg font-semibold text-slate-300">Đang tải dữ liệu thành tựu...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center">
