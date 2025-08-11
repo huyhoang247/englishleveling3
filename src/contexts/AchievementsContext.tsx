@@ -1,192 +1,203 @@
-// src/contexts/AchievementsContext.tsx
-import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode } from 'react';
-import type { User } from 'firebase/auth';
-import {
-  fetchOrCreateUserGameData,
+// src/AchievementsContext.tsx
+
+import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode, useMemo } from 'react';
+import { User } from 'firebase/auth';
+import { 
+  fetchOrCreateUserGameData, 
   fetchAndSyncVocabularyData,
   updateAchievementData,
-} from '../gameDataService.ts';
+  VocabularyItem
+} from './gameDataService.ts';
 
-// --- Type Definitions ---
-// Lấy type từ file thanh-tuu để tránh định nghĩa lại
-export interface VocabularyItem {
-  id: number;
-  word: string;
-  exp: number;
-  level: number;
-  maxExp: number;
-}
-
-interface AchievementsState {
+// Định nghĩa shape của Context
+interface AchievementsContextState {
+  // --- Dữ liệu ---
   vocabulary: VocabularyItem[];
-  masteryCardsCount: number;
   coins: number;
-  isLoading: boolean;
-  error: Error | null;
+  masteryCards: number;
+  // --- Trạng thái ---
+  isInitialLoading: boolean; // Chỉ true trong lần tải đầu tiên
+  isUpdating: boolean; // True khi đang thực hiện hành động (nhận thưởng)
+  // --- Hành động ---
+  claimAchievement: (id: number) => Promise<void>;
+  claimAllAchievements: () => Promise<void>;
+  refreshData: () => Promise<void>;
+  // --- Dữ liệu Phần thưởng có thể nhận ---
+  totalClaimableRewards: { gold: number; masteryCards: number; };
 }
 
-interface AchievementsActions {
-  claimReward: (itemId: number) => Promise<void>;
-  claimAllRewards: () => Promise<void>;
-  forceRefresh: () => void;
-}
+// Tạo Context với giá trị mặc định
+const AchievementsContext = createContext<AchievementsContextState | undefined>(undefined);
 
-type AchievementsContextType = AchievementsState & AchievementsActions;
-
-// --- Context Creation ---
-
-const AchievementsContext = createContext<AchievementsContextType | undefined>(undefined);
-
-// --- Provider Component ---
-
+// Props cho Provider
 interface AchievementsProviderProps {
   children: ReactNode;
-  currentUser: User | null; // Nhận user object từ props
+  user: User | null; // Cần user để lấy dữ liệu
 }
 
-export const AchievementsProvider: React.FC<AchievementsProviderProps> = ({ children, currentUser }) => {
-  const [state, setState] = useState<AchievementsState>({
-    vocabulary: [],
-    masteryCardsCount: 0,
-    coins: 0,
-    isLoading: true, // Bắt đầu với trạng thái loading
-    error: null,
-  });
-
-  const fetchData = useCallback(async (userId: string) => {
-    // Chỉ set loading=true nếu chưa có dữ liệu hoặc đang có lỗi
-    if (!state.vocabulary.length || state.error) {
-      setState(prevState => ({ ...prevState, isLoading: true, error: null }));
-    }
-    try {
-      // Tải song song 2 nguồn dữ liệu
-      const [gameData, vocabData] = await Promise.all([
-        fetchOrCreateUserGameData(userId),
-        fetchAndSyncVocabularyData(userId),
-      ]);
-
-      setState({
-        coins: gameData.coins,
-        masteryCardsCount: gameData.masteryCards,
-        vocabulary: vocabData,
-        isLoading: false,
-        error: null,
-      });
-    } catch (e) {
-      console.error("Failed to fetch achievements data in context:", e);
-      setState(prevState => ({
-        ...prevState,
-        isLoading: false,
-        error: e instanceof Error ? e : new Error('An unknown error occurred'),
-      }));
-    }
-  }, [state.vocabulary.length, state.error]);
+// Component Provider
+export const AchievementsProvider = ({ children, user }: AchievementsProviderProps) => {
+  const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
+  const [coins, setCoins] = useState(0);
+  const [masteryCards, setMasteryCards] = useState(0);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   
-  // Effect để tải dữ liệu khi người dùng đăng nhập
+  // Hàm tải/làm mới dữ liệu chính
+  const loadData = useCallback(async (userId: string) => {
+    try {
+      const gameDataPromise = fetchOrCreateUserGameData(userId);
+      const vocabDataPromise = fetchAndSyncVocabularyData(userId);
+      
+      const [gameData, vocabData] = await Promise.all([gameDataPromise, vocabDataPromise]);
+
+      setCoins(gameData.coins);
+      setMasteryCards(gameData.masteryCards);
+      setVocabulary(vocabData);
+
+    } catch (error) {
+      console.error("Failed to load achievements data in context:", error);
+      // Đặt lại state về rỗng/0 để tránh hiển thị dữ liệu cũ/sai
+      setVocabulary([]);
+      setCoins(0);
+      setMasteryCards(0);
+    }
+  }, []);
+
+  // Effect để tải dữ liệu lần đầu khi user đăng nhập
   useEffect(() => {
-    if (currentUser?.uid) {
-      fetchData(currentUser.uid);
+    if (user && user.uid) {
+      setIsInitialLoading(true);
+      loadData(user.uid).finally(() => setIsInitialLoading(false));
     } else {
-      // Reset state khi người dùng đăng xuất
-      setState({
-        vocabulary: [],
-        masteryCardsCount: 0,
-        coins: 0,
-        isLoading: false, 
-        error: null,
-      });
+      // Reset state khi logout hoặc không có user
+      setIsInitialLoading(true);
+      setVocabulary([]);
+      setCoins(0);
+      setMasteryCards(0);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser]); // Chỉ chạy khi currentUser thay đổi
+  }, [user, loadData]);
 
-  const claimReward = async (itemId: number): Promise<void> => {
-    if (!currentUser?.uid) throw new Error("User not authenticated.");
+  // Hàm nhận một phần thưởng
+  const claimAchievement = useCallback(async (id: number) => {
+    if (isUpdating || !user?.uid) return;
 
-    const originalItem = state.vocabulary.find(item => item.id === itemId);
-    if (!originalItem || originalItem.exp < originalItem.maxExp) {
-        throw new Error("Item not claimable.");
-    }
+    const itemToClaim = vocabulary.find(item => item.id === id);
+    if (!itemToClaim || itemToClaim.exp < itemToClaim.maxExp) return;
 
-    const goldReward = originalItem.level * 100;
+    setIsUpdating(true);
+    const goldReward = itemToClaim.level * 100;
     const masteryCardReward = 1;
 
-    const updatedList = state.vocabulary.map(item => {
-      if (item.id === itemId) {
-        const expRemaining = item.exp - item.maxExp;
+    // Tạo danh sách mới dựa trên logic nhận thưởng
+    const updatedList = vocabulary.map(item => {
+      if (item.id === id) {
         const newLevel = item.level + 1;
-        const newMaxExp = newLevel * 100;
-        return { ...item, level: newLevel, exp: expRemaining, maxExp: newMaxExp };
+        return { 
+          ...item, 
+          level: newLevel, 
+          exp: item.exp - item.maxExp, 
+          maxExp: newLevel * 100 
+        };
       }
       return item;
     });
 
     try {
-      const { newCoins, newMasteryCards } = await updateAchievementData(currentUser.uid, {
+      const { newCoins, newMasteryCards } = await updateAchievementData(user.uid, {
         coinsToAdd: goldReward,
         cardsToAdd: masteryCardReward,
         newVocabularyData: updatedList,
       });
 
-      // Cập nhật state của context với dữ liệu chính xác từ server
-      setState(prevState => ({
-        ...prevState,
-        vocabulary: updatedList,
-        coins: newCoins,
-        masteryCardsCount: newMasteryCards,
-      }));
+      // Cập nhật state với dữ liệu chính xác từ server sau khi thành công
+      setVocabulary(updatedList);
+      setCoins(newCoins);
+      setMasteryCards(newMasteryCards);
+
     } catch (error) {
-      console.error("Claiming reward failed in context:", error);
-      throw error; // Ném lỗi ra để component UI có thể xử lý
+      console.error("Failed to claim single achievement, re-syncing data:", error);
+      // Nếu có lỗi, tải lại toàn bộ dữ liệu để đảm bảo đồng bộ
+      await loadData(user.uid); 
+    } finally {
+      setIsUpdating(false);
     }
-  };
+  }, [vocabulary, user, isUpdating, loadData]);
 
-  const claimAllRewards = async (): Promise<void> => {
-    if (!currentUser?.uid) throw new Error("User not authenticated.");
-
-    const claimableItems = state.vocabulary.filter(item => item.exp >= item.maxExp);
+  // Hàm nhận tất cả phần thưởng
+  const claimAllAchievements = useCallback(async () => {
+    if (isUpdating || !user?.uid) return;
+    
+    const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
     if (claimableItems.length === 0) return;
+
+    setIsUpdating(true);
 
     let totalGoldReward = 0;
     let totalMasteryCardReward = 0;
     const claimableIds = new Set(claimableItems.map(item => item.id));
 
-    const updatedList = state.vocabulary.map(item => {
+    const updatedList = vocabulary.map(item => {
       if (claimableIds.has(item.id)) {
         totalGoldReward += item.level * 100;
         totalMasteryCardReward += 1;
-        const expRemaining = item.exp - item.maxExp;
         const newLevel = item.level + 1;
-        const newMaxExp = newLevel * 100;
-        return { ...item, level: newLevel, exp: expRemaining, maxExp: newMaxExp };
+        return { 
+          ...item, 
+          level: newLevel, 
+          exp: item.exp - item.maxExp, 
+          maxExp: newLevel * 100 
+        };
       }
       return item;
     });
-    
-    try {
-        const { newCoins, newMasteryCards } = await updateAchievementData(currentUser.uid, {
-          coinsToAdd: totalGoldReward,
-          cardsToAdd: totalMasteryCardReward,
-          newVocabularyData: updatedList,
-        });
 
-        // Cập nhật state của context
-        setState(prevState => ({
-          ...prevState,
-          vocabulary: updatedList,
-          coins: newCoins,
-          masteryCardsCount: newMasteryCards,
-        }));
+    try {
+      const { newCoins, newMasteryCards } = await updateAchievementData(user.uid, {
+        coinsToAdd: totalGoldReward,
+        cardsToAdd: totalMasteryCardReward,
+        newVocabularyData: updatedList,
+      });
+      // Cập nhật state với dữ liệu chính xác từ server
+      setVocabulary(updatedList);
+      setCoins(newCoins);
+      setMasteryCards(newMasteryCards);
     } catch (error) {
-       console.error("Claiming all rewards failed in context:", error);
-       throw error; // Ném lỗi ra để component UI có thể xử lý
+      console.error("Failed to claim all achievements, re-syncing data:", error);
+      await loadData(user.uid);
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [vocabulary, user, isUpdating, loadData]);
+  
+  // Hàm làm mới dữ liệu thủ công (ví dụ: cho nút refresh)
+  const refreshData = async () => {
+    if (user?.uid && !isUpdating) {
+        setIsUpdating(true); // Có thể dùng isUpdating để hiển thị loading
+        await loadData(user.uid);
+        setIsUpdating(false);
     }
   };
 
-  const value: AchievementsContextType = {
-    ...state,
-    claimReward,
-    claimAllRewards,
-    forceRefresh: () => currentUser?.uid ? fetchData(currentUser.uid) : undefined,
+  // Tính toán phần thưởng có thể nhận, chỉ tính lại khi vocabulary thay đổi
+  const totalClaimableRewards = useMemo(() => {
+    const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
+    const gold = claimableItems.reduce((sum, item) => sum + (item.level * 100), 0);
+    const masteryCards = claimableItems.length;
+    return { gold, masteryCards };
+  }, [vocabulary]);
+  
+  // Giá trị được cung cấp cho các component con
+  const value = {
+    vocabulary,
+    coins,
+    masteryCards,
+    isInitialLoading,
+    isUpdating,
+    claimAchievement,
+    claimAllAchievements,
+    refreshData,
+    totalClaimableRewards,
   };
 
   return (
@@ -196,9 +207,8 @@ export const AchievementsProvider: React.FC<AchievementsProviderProps> = ({ chil
   );
 };
 
-// --- Custom Hook ---
-
-export const useAchievements = (): AchievementsContextType => {
+// Custom Hook để sử dụng Context
+export const useAchievements = () => {
   const context = useContext(AchievementsContext);
   if (context === undefined) {
     throw new Error('useAchievements must be used within an AchievementsProvider');
