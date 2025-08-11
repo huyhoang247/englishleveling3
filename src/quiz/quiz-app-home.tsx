@@ -1,3 +1,5 @@
+
+
 // --- START OF FILE quiz-app-home.tsx ---
 
 // quiz-app-home.tsx
@@ -16,6 +18,7 @@ import { exampleData } from '../example-data.ts';
 
 // --- THÊM IMPORT CHO CÁC HÀM SERVICE MỚI ---
 import { fetchPracticeListProgress, claimQuizReward, listenToUserData } from '../userDataService.ts';
+import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts'; // THÊM IMPORT TÀI NGUYÊN
 
 // --- THÊM INTERFACE CHO PROPS MỚI ---
 interface QuizAppHomeProps {
@@ -82,7 +85,7 @@ function AppHeader({
           <div className="w-24">
             {currentView === 'main' ? (
               <a className="flex items-center" href="#" onClick={(e) => { e.preventDefault(); goHome(); }}>
-                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo-large.webp" alt="Quiz App Logo" className="h-10 w-auto" />
+                 <img src={quizHomeAssets.logoLarge} alt="Quiz App Logo" className="h-10 w-auto" />
               </a>
             ) : (
               <button onClick={goBack} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Quay lại">
@@ -118,8 +121,7 @@ function AppHeader({
 // --- END: UNIFIED HEADER COMPONENT ---
 
 // --- START: MASTERY DISPLAY COMPONENT (COPIED FROM QUIZ.TSX) ---
-const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
-const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => ( <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style> <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div> <div className="relative flex items-center justify-center"><img src={masteryIconUrl} alt="Mastery Icon" className="w-4 h-4" /></div> <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{masteryCount}</div> <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div> <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div> </div> ));
+const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => ( <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style> <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div> <div className="relative flex items-center justify-center"><img src={dashboardAssets.masteryIcon} alt="Mastery Icon" className="w-4 h-4" /></div> <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{masteryCount}</div> <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div> <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div> </div> ));
 // --- END: MASTERY DISPLAY COMPONENT ---
 
 
@@ -291,7 +293,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               onClick={() => handleQuizSelect(1)}
               className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-blue-400 group"
             >
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/quiz.webp" alt="Quiz" className="h-20 w-20 mb-3" />
+              <img src={quizHomeAssets.quizIcon} alt="Quiz" className="h-20 w-20 mb-3" />
               <h3 className="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition-colors">Quiz</h3>
             </button>
             
@@ -299,19 +301,19 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               onClick={() => setCurrentView('wordChainGame')}
               className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-purple-400 group"
             >
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/word-chain-game.webp" alt="Word Chain" className="h-20 w-20 mb-3" />
+              <img src={quizHomeAssets.wordChainGameIcon} alt="Word Chain" className="h-20 w-20 mb-3" />
               <h3 className="text-lg font-bold text-gray-800 group-hover:text-purple-600 transition-colors">Word Chain</h3>
             </button>
 
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/exam.webp" alt="Exam" className="h-20 w-20 mb-3" />
+              <img src={quizHomeAssets.examIcon} alt="Exam" className="h-20 w-20 mb-3" />
               <h3 className="text-lg font-bold text-gray-500">Exam</h3>
             </div>
             
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/grammar.webp" alt="Grammar" className="h-20 w-20 mb-3" />
+              <img src={quizHomeAssets.grammarIcon} alt="Grammar" className="h-20 w-20 mb-3" />
               <h3 className="text-lg font-bold text-gray-500">Grammar</h3>
             </div>
           </div>
@@ -325,7 +327,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center">
-                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/multiple-choice.webp" alt="Multiple choice icon" className="h-10 w-10" />
+                    <img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice icon" className="h-10 w-10" />
                   </div>
                   {/* --- FIXED HERE: Added flex-1 --- */}
                   <div className="ml-5 flex-1">
@@ -337,7 +339,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               <button onClick={() => handleTypeSelect('dienTu')} className="w-full text-left p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center">
-                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/fill-in-the-blank.webp" alt="Fill in the blank icon" className="h-10 w-10" />
+                    <img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank icon" className="h-10 w-10" />
                   </div>
                    {/* --- FIXED HERE: Added flex-1 --- */}
                   <div className="ml-5 flex-1">
@@ -420,10 +422,10 @@ const GradientGiftIcon = ({ className }: { className: string }) => (
     </svg>
 );
 const GoldCoinIcon = ({ className }: { className: string }) => (
-    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin icon" className={className} />
+    <img src={uiAssets.goldIcon} alt="Coin icon" className={className} />
 );
 const CardCapacityIcon = ({ className }: { className: string }) => (
-    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png" alt="Card Capacity Icon" className={className} />
+    <img src={uiAssets.cardCapacityIcon} alt="Card Capacity Icon" className={className} />
 );
 
 
@@ -815,7 +817,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
                         <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">{practiceTitle}</h3>
                     </div>
                     <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 transition-colors">
-                        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-6 h-6"/>
+                        <img src={uiAssets.closeIcon} alt="Close" className="w-6 h-6"/>
                     </button>
                 </div>
                 <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50 hide-scrollbar">{renderedTiers}</div>
@@ -831,4 +833,3 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         </div>
     );
 };
-// --- END OF FILE quiz-app-home.tsx ---
