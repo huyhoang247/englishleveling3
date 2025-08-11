@@ -1,5 +1,9 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import CoinDisplay from './coin-display.tsx';
+// TÁI CẤU TRÚC: Import các hàm và đối tượng cần thiết từ Firebase và service
+import { db } from './firebase.js';
+import { doc, runTransaction } from 'firebase/firestore';
+import { fetchOrCreateUserGameData } from './gameDataService.ts';
 
 // --- Định nghĩa Type cho dữ liệu ---
 export type VocabularyItem = {
@@ -27,9 +31,8 @@ interface AchievementsScreenProps {
   onClose: () => void;
   userId: string;
   initialData: VocabularyItem[];
-  onClaimReward: (reward: { gold: number; masteryCards: number }, updatedData: VocabularyItem[]) => Promise<void>;
+  onDataUpdated: (updates: { coins: number; masteryCards: number; vocabulary: VocabularyItem[] }) => void;
   masteryCardsCount: number;
-  displayedCoins: number;
 }
 
 // --- Các component icon (Không thay đổi) ---
@@ -44,7 +47,7 @@ const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg x
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
 // --- Thành phần chính của ứng dụng ---
-export default function AchievementsScreen({ onClose, userId, initialData, onClaimReward, masteryCardsCount, displayedCoins }: AchievementsScreenProps) {
+export default function AchievementsScreen({ onClose, userId, initialData, onDataUpdated, masteryCardsCount }: AchievementsScreenProps) {
   const [vocabulary, setVocabulary] = useState(initialData);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimingId, setClaimingId] = useState<number | null>(null);
@@ -53,11 +56,24 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 30;
 
-  const [localDisplayedCoins, setLocalDisplayedCoins] = useState(displayedCoins);
+  // TÁI CẤU TRÚC: Quản lý coin state cục bộ trong component này
+  const [coins, setCoins] = useState(0);
+  const [displayedCoins, setDisplayedCoins] = useState(0);
 
+  // TÁI CẤU TRÚC: Lấy dữ liệu coin ban đầu khi component được mount
   useEffect(() => {
-    setLocalDisplayedCoins(displayedCoins);
-  }, [displayedCoins]);
+    if (!userId) return;
+    const fetchInitialCoins = async () => {
+      try {
+        const gameData = await fetchOrCreateUserGameData(userId);
+        setCoins(gameData.coins);
+        setDisplayedCoins(gameData.coins);
+      } catch (error) {
+        console.error("Failed to fetch initial coins for Achievements screen:", error);
+      }
+    };
+    fetchInitialCoins();
+  }, [userId]);
 
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
@@ -67,10 +83,10 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     const interval = setInterval(() => {
       if (isCountingUp) { current += step; } else { current -= step; }
       if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
-        setLocalDisplayedCoins(endValue);
+        setDisplayedCoins(endValue);
         clearInterval(interval);
       } else {
-        setLocalDisplayedCoins(current);
+        setDisplayedCoins(current);
       }
     }, 30);
   }, []);
@@ -101,7 +117,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
   }, [currentPage, totalPages, sortedVocabulary.length]);
 
   const handleClaim = useCallback(async (id: number) => {
-    if (isClaiming || isClaimingAll) return;
+    if (isClaiming || isClaimingAll || !userId) return;
 
     const originalItem = vocabulary.find(item => item.id === id);
     if (!originalItem || originalItem.exp < originalItem.maxExp) return;
@@ -111,7 +127,9 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
 
     const goldReward = originalItem.level * 100;
     const masteryCardReward = 1;
-    const initialCoinCount = localDisplayedCoins;
+    const initialCoinCount = displayedCoins;
+
+    startCoinCountAnimation(initialCoinCount, initialCoinCount + goldReward);
 
     const updatedList = vocabulary.map(item => {
       if (item.id === id) {
@@ -123,26 +141,50 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
       return item;
     });
 
-    startCoinCountAnimation(initialCoinCount, initialCoinCount + goldReward);
-
-    const claimPromise = onClaimReward({ gold: goldReward, masteryCards: masteryCardReward }, updatedList);
     const minDelayPromise = new Promise(resolve => setTimeout(resolve, 500));
 
     try {
-      await Promise.all([claimPromise, minDelayPromise]);
-      // Cập nhật state cục bộ để đồng bộ hóa giao diện và tránh "nháy"
+      const userDocRef = doc(db, 'users', userId);
+      const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
+      
+      let newTotalCoins: number | undefined;
+      let newTotalMasteryCards: number | undefined;
+
+      await runTransaction(db, async (transaction) => {
+          const userDoc = await transaction.get(userDocRef);
+          if (!userDoc.exists()) throw new Error("User document does not exist!");
+          
+          const currentCoins = userDoc.data().coins || 0;
+          const currentCards = userDoc.data().masteryCards || 0;
+
+          newTotalCoins = currentCoins + goldReward;
+          newTotalMasteryCards = currentCards + masteryCardReward;
+
+          transaction.update(userDocRef, { coins: newTotalCoins, masteryCards: newTotalMasteryCards });
+          transaction.set(achievementDocRef, { vocabulary: updatedList }, { merge: true });
+      });
+
+      await minDelayPromise;
+
+      if (newTotalCoins === undefined || newTotalMasteryCards === undefined) {
+          throw new Error("Transaction completed but new values are missing.");
+      }
+      
       setVocabulary(updatedList);
+      setCoins(newTotalCoins);
+      onDataUpdated({ coins: newTotalCoins, masteryCards: newTotalMasteryCards, vocabulary: updatedList });
+
     } catch (error) {
       console.error("Claiming failed, reverting UI:", error);
-      startCoinCountAnimation(localDisplayedCoins, initialCoinCount);
+      startCoinCountAnimation(displayedCoins, initialCoinCount);
     } finally {
       setIsClaiming(false);
       setClaimingId(null);
     }
-  }, [vocabulary, onClaimReward, isClaiming, isClaimingAll, localDisplayedCoins, startCoinCountAnimation]);
+  }, [vocabulary, userId, isClaiming, isClaimingAll, displayedCoins, startCoinCountAnimation, onDataUpdated]);
 
   const handleClaimAll = useCallback(async () => {
-    if (isClaiming || isClaimingAll) return;
+    if (isClaiming || isClaimingAll || !userId) return;
 
     const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
     if (claimableItems.length === 0) return;
@@ -152,7 +194,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     let totalGoldReward = 0;
     let totalMasteryCardReward = 0;
     const claimableIds = new Set(claimableItems.map(item => item.id));
-    const initialCoinCount = localDisplayedCoins;
+    const initialCoinCount = displayedCoins;
 
     const updatedList = vocabulary.map(item => {
       if (claimableIds.has(item.id)) {
@@ -167,21 +209,46 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
     });
     
     startCoinCountAnimation(initialCoinCount, initialCoinCount + totalGoldReward);
-    
-    const claimPromise = onClaimReward({ gold: totalGoldReward, masteryCards: totalMasteryCardReward }, updatedList);
     const minDelayPromise = new Promise(resolve => setTimeout(resolve, 500));
     
     try {
-       await Promise.all([claimPromise, minDelayPromise]);
-       // Cập nhật state cục bộ để đồng bộ hóa giao diện và tránh "nháy"
-       setVocabulary(updatedList);
+        const userDocRef = doc(db, 'users', userId);
+        const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
+
+        let newTotalCoins: number | undefined;
+        let newTotalMasteryCards: number | undefined;
+
+        await runTransaction(db, async (transaction) => {
+            const userDoc = await transaction.get(userDocRef);
+            if (!userDoc.exists()) throw new Error("User document does not exist!");
+
+            const currentCoins = userDoc.data().coins || 0;
+            const currentCards = userDoc.data().masteryCards || 0;
+
+            newTotalCoins = currentCoins + totalGoldReward;
+            newTotalMasteryCards = currentCards + totalMasteryCardReward;
+
+            transaction.update(userDocRef, { coins: newTotalCoins, masteryCards: newTotalMasteryCards });
+            transaction.set(achievementDocRef, { vocabulary: updatedList }, { merge: true });
+        });
+
+        await minDelayPromise;
+
+        if (newTotalCoins === undefined || newTotalMasteryCards === undefined) {
+            throw new Error("Transaction completed but new values are missing.");
+        }
+
+        setVocabulary(updatedList);
+        setCoins(newTotalCoins);
+        onDataUpdated({ coins: newTotalCoins, masteryCards: newTotalMasteryCards, vocabulary: updatedList });
+
     } catch (error) {
        console.error("Claiming all failed, reverting UI:", error);
-       startCoinCountAnimation(localDisplayedCoins, initialCoinCount);
+       startCoinCountAnimation(displayedCoins, initialCoinCount);
     } finally {
       setIsClaimingAll(false);
     }
-  }, [vocabulary, onClaimReward, isClaiming, isClaimingAll, localDisplayedCoins, startCoinCountAnimation]);
+  }, [vocabulary, userId, isClaiming, isClaimingAll, displayedCoins, startCoinCountAnimation, onDataUpdated]);
   
   const totalWords = vocabulary.length;
   
@@ -205,7 +272,7 @@ export default function AchievementsScreen({ onClose, userId, initialData, onCla
           <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
         </button>
         <div className="flex items-center gap-2">
-          <CoinDisplay displayedCoins={localDisplayedCoins} isStatsFullscreen={false} />
+          <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
         </div>
       </header>
 
