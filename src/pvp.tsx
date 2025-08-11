@@ -40,12 +40,51 @@ interface PvpArenaProps {
 
 // --- UI HELPER COMPONENTS ---
 
-const GoldPotIcon = ({ className = '' }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path fillRule="evenodd" d="M8.25 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM9.75 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM11.25 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM12.75 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM14.25 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM15.75 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75z" clipRule="evenodd" />
-    <path fillRule="evenodd" d="M5.25 2.25a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h13.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75H5.25zM4.5 6.75a.75.75 0 00-.75.75v10.5c0 .414.336.75.75.75h15a.75.75 0 00.75-.75V7.5a.75.75 0 00-.75-.75H4.5zM3 7.5a1.5 1.5 0 011.5-1.5h15a1.5 1.5 0 011.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5h-15a1.5 1.5 0 01-1.5-1.5V7.5z" clipRule="evenodd" />
-  </svg>
-);
+// --- NEW ---: Wager Modal Component
+const WagerModal = ({ 
+    onClose, 
+    onConfirm,
+    currentWager,
+    playerCoins
+}: { 
+    onClose: () => void, 
+    onConfirm: (amount: number) => void,
+    currentWager: string,
+    playerCoins: number
+}) => {
+    const [inputValue, setInputValue] = useState(currentWager);
+
+    const handleConfirm = () => {
+        const amount = parseInt(inputValue, 10);
+        if (!isNaN(amount) && amount > 0) {
+            onConfirm(amount);
+            onClose();
+        }
+    };
+    
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
+            <div className="relative w-80 bg-slate-900/90 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
+                <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
+                <div className="p-6 pt-10 flex flex-col items-center">
+                    <h3 className="text-2xl font-bold text-yellow-300 text-shadow-sm tracking-wide mb-4">NẠP VÀNG CƯỢC</h3>
+                    <p className="font-sans text-sm text-slate-400 mb-2">Vàng hiện có: <span className="font-bold text-yellow-200">{(playerCoins || 0).toLocaleString()}</span></p>
+                    <input 
+                        type="number"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        className="w-full text-center bg-slate-800/70 border border-slate-600 rounded-lg p-2 text-xl font-bold text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all"
+                        autoFocus
+                    />
+                    <button onClick={handleConfirm} className="mt-5 w-full px-8 py-3 bg-green-600/50 hover:bg-green-600 rounded-lg font-bold text-base text-green-50 tracking-wider uppercase border border-green-500 hover:border-green-400 transition-all duration-200 active:scale-95">
+                        Xác Nhận
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
@@ -99,29 +138,8 @@ const SearchingModal = () => (
 const MatchResultModal = ({ result, player1Name, player2Name, onSearchAgain }: { result: 'player1' | 'player2' | 'draw', player1Name: string, player2Name: string, onSearchAgain: () => void }) => {
   const isWinner = result === 'player1';
   const isDraw = result === 'draw';
-  
-  let title, bgColor, borderColor, textColor, message;
-
-  if (isDraw) {
-    title = "HÒA";
-    bgColor = "bg-slate-900/90";
-    borderColor = "border-slate-500/30";
-    textColor = "text-slate-300";
-    message = `Cả hai chiến binh đã chiến đấu ngang tài ngang sức.`;
-  } else if (isWinner) {
-    title = "VICTORY";
-    bgColor = "bg-slate-900/90";
-    borderColor = "border-yellow-500/30";
-    textColor = "text-yellow-300";
-    message = `Bạn đã đánh bại ${player2Name} và khẳng định sức mạnh của mình!`;
-  } else {
-    title = "DEFEAT";
-    bgColor = "bg-slate-900/90";
-    borderColor = "border-red-500/30";
-    textColor = "text-red-400";
-    message = `Bạn đã gục ngã trước ${player2Name}. Hãy luyện tập và trở lại mạnh mẽ hơn.`;
-  }
-
+  let title, message, textColor, borderColor, bgColor;
+  if (isDraw) { title = "HÒA"; bgColor = "bg-slate-900/90"; borderColor = "border-slate-500/30"; textColor = "text-slate-300"; message = `Cả hai chiến binh đã chiến đấu ngang tài ngang sức.`; } else if (isWinner) { title = "VICTORY"; bgColor = "bg-slate-900/90"; borderColor = "border-yellow-500/30"; textColor = "text-yellow-300"; message = `Bạn đã đánh bại ${player2Name} và khẳng định sức mạnh của mình!`; } else { title = "DEFEAT"; bgColor = "bg-slate-900/90"; borderColor = "border-red-500/30"; textColor = "text-red-400"; message = `Bạn đã gục ngã trước ${player2Name}. Hãy luyện tập và trở lại mạnh mẽ hơn.`; }
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
       <div className={`relative w-80 ${bgColor} border ${borderColor} rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center`}>
@@ -136,12 +154,7 @@ const MatchResultModal = ({ result, player1Name, player2Name, onSearchAgain }: {
 
 // --- MAIN PVP ARENA COMPONENT ---
 export default function PvpArena({ 
-  onClose, 
-  userId,
-  onCoinChange,
-  player1, 
-  player2,
-  onMatchEnd
+  onClose, userId, onCoinChange, player1, player2, onMatchEnd
 }: PvpArenaProps) {
   
   // --- STATE MANAGEMENT ---
@@ -155,12 +168,12 @@ export default function PvpArena({
   const [damages, setDamages] = useState<{ id: number, text: string, positionClass: string, colorClass: string }[]>([]);
   const [showStatsModal, setShowStatsModal] = useState(false);
   
-  // --- STATES FOR WAGER POOL ---
+  // --- WAGER & MODAL STATES ---
   const [wagerAmount, setWagerAmount] = useState('100');
   const [goldPool, setGoldPool] = useState(0);
-  // --- FIX ---: Initialize with a fallback to prevent 'undefined' error.
   const [player1Coins, setPlayer1Coins] = useState(player1.coins || 0);
   const [error, setError] = useState('');
+  const [showWagerModal, setShowWagerModal] = useState(false); // --- NEW ---
 
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -175,23 +188,18 @@ export default function PvpArena({
     setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
   };
   
-  // --- CORE BATTLE LOGIC FUNCTION ---
-  const executeTurn = (
-    attacker: { data: PlayerData, stats: CombatStats }, 
-    defender: { data: PlayerData, stats: CombatStats }, 
-    turn: number
-  ) => {
+  // --- CORE BATTLE LOGIC (Unchanged) ---
+  const executeTurn = ( attacker, defender, turn ) => {
+    // ... (logic from previous version, no changes needed here)
     const turnLogs: string[] = [];
     const log = (msg: string) => turnLogs.push(`[Lượt ${turn}] ${msg}`);
     const checkActivation = (rarity: string) => Math.random() * 100 < getActivationChance(rarity);
     const getSkillEffect = (skill: ActiveSkill) => (skill.baseEffectValue || 0) + (skill.level - 1) * (skill.effectValuePerLevel || 0);
     const calculateDamage = (atk: number, def: number) => Math.max(1, Math.floor(atk * (0.8 + Math.random() * 0.4) * (1 - def / (def + 100))));
-    
     let newAttackerStats = { ...attacker.stats };
     let newDefenderStats = { ...defender.stats };
     let winner: 'attacker' | 'defender' | null = null;
     let turnEvents = { attackerHeal: 0, attackerReflectDmg: 0, defenderDmg: 0 };
-    
     let atkMods = { boost: 1, armorPen: 0 };
     attacker.data.equippedSkills.forEach(skill => {
         if ((skill.id === 'damage_boost' || skill.id === 'armor_penetration') && checkActivation(skill.rarity)) {
@@ -201,12 +209,10 @@ export default function PvpArena({
             if (skill.id === 'armor_penetration') atkMods.armorPen += effect / 100;
         }
     });
-    
     const attackDmg = calculateDamage(newAttackerStats.atk * atkMods.boost, Math.max(0, newDefenderStats.def * (1 - atkMods.armorPen)));
     turnEvents.defenderDmg = attackDmg;
     log(`<span class="font-bold text-cyan-300">${attacker.data.name}</span> tấn công, gây <b class="text-red-400">${attackDmg}</b> sát thương lên <span class="font-bold text-orange-300">${defender.data.name}</span>.`);
     newDefenderStats.hp -= attackDmg;
-    
     attacker.data.equippedSkills.forEach(skill => {
         if (skill.id === 'life_steal' && checkActivation(skill.rarity)) {
             const healed = Math.ceil(attackDmg * (getSkillEffect(skill) / 100));
@@ -218,13 +224,7 @@ export default function PvpArena({
             }
         }
     });
-
-    if (newDefenderStats.hp <= 0) {
-        newDefenderStats.hp = 0; winner = 'attacker';
-        log(`<span class="font-bold text-orange-300">${defender.data.name}</span> đã bị đánh bại!`);
-        return { newAttackerStats, newDefenderStats, turnLogs, winner, turnEvents };
-    }
-    
+    if (newDefenderStats.hp <= 0) { newDefenderStats.hp = 0; winner = 'attacker'; log(`<span class="font-bold text-orange-300">${defender.data.name}</span> đã bị đánh bại!`); return { newAttackerStats, newDefenderStats, turnLogs, winner, turnEvents }; }
     let totalReflectDmg = 0;
     defender.data.equippedSkills.forEach(skill => {
         if (skill.id === 'thorns' && checkActivation(skill.rarity)) {
@@ -233,64 +233,36 @@ export default function PvpArena({
             log(`<span class="font-bold text-orange-300">${defender.data.name}</span> phản lại <b class="text-orange-400">${reflectDmg}</b> sát thương nhờ <span class="text-orange-400">[${skill.name}]</span>.`);
         }
     });
-    if (totalReflectDmg > 0) {
-      newAttackerStats.hp -= totalReflectDmg;
-      turnEvents.attackerReflectDmg = totalReflectDmg;
-    }
-
-    if (newAttackerStats.hp <= 0) {
-        newAttackerStats.hp = 0; winner = 'defender';
-        log(`<span class="font-bold text-cyan-300">${attacker.data.name}</span> đã gục ngã vì sát thương phản lại!`);
-    }
-
+    if (totalReflectDmg > 0) { newAttackerStats.hp -= totalReflectDmg; turnEvents.attackerReflectDmg = totalReflectDmg; }
+    if (newAttackerStats.hp <= 0) { newAttackerStats.hp = 0; winner = 'defender'; log(`<span class="font-bold text-cyan-300">${attacker.data.name}</span> đã gục ngã vì sát thương phản lại!`); }
     return { newAttackerStats, newDefenderStats, turnLogs, winner, turnEvents };
   };
 
-  // --- BATTLE CONTROL FUNCTIONS ---
+  // --- BATTLE CONTROL FUNCTIONS (largely unchanged) ---
   const runBattleTurn = () => {
     const nextTurn = turnCounter + 1;
-    
     const isP1Turn = currentPlayerTurn === 'player1';
     const attacker = { data: isP1Turn ? player1 : player2, stats: isP1Turn ? player1Stats : player2Stats };
     const defender = { data: isP1Turn ? player2 : player1, stats: isP1Turn ? player2Stats : player1Stats };
     const attackerId = isP1Turn ? 'player1' : 'player2';
     const defenderId = isP1Turn ? 'player2' : 'player1';
-
     const { newAttackerStats, newDefenderStats, turnLogs, winner, turnEvents } = executeTurn(attacker, defender, nextTurn);
-
     if (turnEvents.defenderDmg > 0) showFloatingText(`-${formatDamageText(turnEvents.defenderDmg)}`, 'text-red-500', defenderId);
     if (turnEvents.attackerHeal > 0) showFloatingText(`+${formatDamageText(turnEvents.attackerHeal)}`, 'text-green-400', attackerId);
     if (turnEvents.attackerReflectDmg > 0) showFloatingText(`-${formatDamageText(turnEvents.attackerReflectDmg)}`, 'text-orange-400', attackerId);
-
-    if(isP1Turn) {
-      setPlayer1Stats(newAttackerStats); setPlayer2Stats(newDefenderStats);
-    } else {
-      setPlayer2Stats(newAttackerStats); setPlayer1Stats(newDefenderStats);
-    }
-
+    if(isP1Turn) { setPlayer1Stats(newAttackerStats); setPlayer2Stats(newDefenderStats); } else { setPlayer2Stats(newAttackerStats); setPlayer1Stats(newDefenderStats); }
     setCombatLog(prev => [...turnLogs.reverse(), ...prev]);
     setTurnCounter(nextTurn);
     setCurrentPlayerTurn(isP1Turn ? 'player2' : 'player1');
-
-    if (winner) {
-      const finalWinner = winner === 'attacker' ? attackerId : defenderId;
-      endMatch(finalWinner);
-    } else if (nextTurn >= 50) {
-      endMatch('draw');
-    }
+    if (winner) { const finalWinner = winner === 'attacker' ? attackerId : defenderId; endMatch(finalWinner); } else if (nextTurn >= 50) { endMatch('draw'); }
   };
   
-  const skipMatch = () => {
-    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    battleIntervalRef.current = setInterval(runBattleTurn, 100);
-  };
+  const skipMatch = () => { if (battleIntervalRef.current) clearInterval(battleIntervalRef.current); battleIntervalRef.current = setInterval(runBattleTurn, 100); };
 
-  const endMatch = async (result: 'player1' | 'player2' | 'draw') => {
+  const endMatch = async (result) => {
     if (matchResult) return;
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    
     const wager = parseInt(wagerAmount, 10) || 0;
-    
     if (result === 'player1') {
         addLog(`<b class="text-yellow-300">BẠN THẮNG!</b> Nhận được <b class="text-yellow-400">${goldPool.toLocaleString()}</b> vàng từ bể cược.`);
         const newTotalCoins = player1Coins + goldPool;
@@ -306,90 +278,58 @@ export default function PvpArena({
         onCoinChange(newTotalCoins);
         await updateUserCoins(userId, wager);
     }
-
     setMatchResult(result);
     setBattlePhase('finished');
-    const matchEndPayload = {
-      winner: result === 'draw' ? 'draw' : result,
-      loser: result === 'draw' ? null : (result === 'player1' ? 'player2' : 'player1')
-    };
+    const matchEndPayload = { winner: result === 'draw' ? 'draw' : result, loser: result === 'draw' ? null : (result === 'player1' ? 'player2' : 'player1') };
     onMatchEnd(matchEndPayload);
   };
   
-  const handleWagerAndSearch = async () => {
+  // --- MODIFIED ---: Renamed back to handleSearch for clarity
+  const handleSearch = async () => {
     if (battlePhase !== 'idle') return;
-    
     const wager = parseInt(wagerAmount, 10);
-    
-    if (isNaN(wager) || wager <= 0) {
-      setError('Số vàng cược không hợp lệ.');
-      return;
-    }
-    if (wager > player1Coins) {
-      setError('Bạn không đủ vàng để cược.');
-      return;
-    }
-    
+    if (isNaN(wager) || wager <= 0) { setError('Số vàng cược không hợp lệ.'); return; }
+    if (wager > player1Coins) { setError('Bạn không đủ vàng để cược.'); return; }
     setError('');
-
     const newPlayerCoins = player1Coins - wager;
     setPlayer1Coins(newPlayerCoins);
     onCoinChange(newPlayerCoins);
-    
     try {
         await updateUserCoins(userId, -wager);
         setGoldPool(wager * 2);
-        
         addLog(`[Hệ thống] Bạn đã cược <b class="text-yellow-400">${wager.toLocaleString()}</b> vàng. Đang tìm đối thủ...`);
         setBattlePhase('searching');
     } catch (e) {
         console.error("Failed to update user coins for wager:", e);
         setError("Lỗi khi đặt cược. Vui lòng thử lại.");
-        setPlayer1Coins(player1Coins);
-        onCoinChange(player1Coins);
+        setPlayer1Coins(player1Coins); onCoinChange(player1Coins);
     }
   };
   
   const resetForNewSearch = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    
-    setCombatLog([]);
-    setTurnCounter(0);
-    setCurrentPlayerTurn('player1');
-    setMatchResult(null);
-    setBattlePhase('idle');
-    setDamages([]);
-    setPlayer1Stats(player1.initialStats);
-    setPlayer2Stats(player2.initialStats);
-    setGoldPool(0);
-    setWagerAmount('100');
+    setCombatLog([]); setTurnCounter(0); setCurrentPlayerTurn('player1'); setMatchResult(null); setBattlePhase('idle'); setDamages([]); setPlayer1Stats(player1.initialStats); setPlayer2Stats(player2.initialStats); setGoldPool(0); setWagerAmount('100'); setError('');
+  };
+
+  // --- NEW ---: Handler for confirming wager from modal
+  const handleConfirmWager = (newAmount: number) => {
+    setWagerAmount(String(newAmount));
     setError('');
   };
 
-  // --- REACT HOOKS ---
+  // --- REACT HOOKS (unchanged) ---
   useEffect(() => {
-    if (battlePhase === 'searching') {
-      searchTimeoutRef.current = setTimeout(() => {
-        addLog(`[Lượt 0] Đã tìm thấy đối thủ: ${player2.name}. Trận đấu bắt đầu!`);
-        setBattlePhase('fighting');
-      }, 2500);
-    } else if (battlePhase === 'fighting' && !matchResult) {
-      battleIntervalRef.current = setInterval(runBattleTurn, 1500);
-    }
-    
-    return () => {
-      if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    };
+    if (battlePhase === 'searching') { searchTimeoutRef.current = setTimeout(() => { addLog(`[Lượt 0] Đã tìm thấy đối thủ: ${player2.name}. Trận đấu bắt đầu!`); setBattlePhase('fighting'); }, 2500); } else if (battlePhase === 'fighting' && !matchResult) { battleIntervalRef.current = setInterval(runBattleTurn, 1500); }
+    return () => { if (battleIntervalRef.current) clearInterval(battleIntervalRef.current); if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current); };
   }, [battlePhase, matchResult, turnCounter]);
 
   // --- RENDER ---
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
-        .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.3s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
+        /* ... CSS from previous version, no changes needed ... */
+        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap'); .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.3s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
         .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); }
         @keyframes pulse-fast { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.05); } } 
         .animate-pulse-turn { animation: pulse-fast 1.5s infinite; }
@@ -397,17 +337,13 @@ export default function PvpArena({
       
       {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} positionClass={d.positionClass} colorClass={d.colorClass} />))}
       {showStatsModal && <PlayerStatsModal player={player1.initialStats} onClose={() => setShowStatsModal(false)} />}
+      {showWagerModal && <WagerModal onClose={() => setShowWagerModal(false)} onConfirm={handleConfirmWager} currentWager={wagerAmount} playerCoins={player1Coins}/>}
       {battlePhase === 'searching' && <SearchingModal />}
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
         <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
-                <button
-                  onClick={onClose}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
-                  aria-label="Go Home"
-                  title="Go Home"
-                >
+                <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Go Home" title="Go Home">
                   <HomeIcon className="w-5 h-5 text-slate-300" />
                   <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                 </button>
@@ -435,25 +371,27 @@ export default function PvpArena({
             </div>
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
+                {/* --- MODIFIED ---: Reverted to old '?' UI and added wager display */}
                 {battlePhase === 'idle' && (
-                    <div className="flex flex-col items-center gap-6 w-full max-w-sm bg-slate-900/50 border border-slate-700/80 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-                      <h2 className="text-3xl text-yellow-300 tracking-wider text-shadow">WAGER POOL</h2>
-                      <GoldPotIcon className="w-24 h-24 text-yellow-400/80" />
-                      
-                      <div className="w-full flex flex-col items-center gap-2">
-                          <label htmlFor="wager-input" className="font-sans text-sm text-slate-400">Nhập số vàng bạn muốn cược:</label>
-                          <input 
-                            id="wager-input"
-                            type="number"
-                            value={wagerAmount}
-                            onChange={(e) => setWagerAmount(e.target.value)}
-                            className="w-full text-center bg-slate-800/70 border border-slate-600 rounded-lg p-2 text-xl font-bold text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all"
-                          />
-                          {error && <p className="text-red-400 text-sm font-sans mt-1">{error}</p>}
+                    <div className="flex flex-col items-center gap-8">
+                      <div className="w-40 h-40 md:w-56 md:h-56 bg-black/20 rounded-full flex items-center justify-center border-4 border-slate-700">
+                          <span className="text-8xl font-black text-slate-500 select-none">?</span>
                       </div>
                       
-                      <button onClick={handleWagerAndSearch} className="btn-shine relative overflow-hidden w-full px-10 py-3 bg-red-800/80 rounded-lg text-red-100 border border-red-500/40 transition-all duration-300 hover:text-white hover:border-red-400 hover:shadow-[0_0_20px_theme(colors.red.500/0.6)] active:scale-95">
-                          <span className="font-bold text-xl tracking-widest uppercase">Cược & Tìm Trận</span>
+                      {/* --- NEW --- Wager Display Area */}
+                      <div className="flex flex-col items-center gap-3 w-full max-w-xs">
+                          <div className="flex items-center justify-center gap-4 bg-slate-900/50 border border-slate-700 rounded-lg p-2 w-full">
+                              <span className="font-sans text-slate-300">Tiền cược:</span>
+                              <span className="font-bold text-lg text-yellow-300">{(parseInt(wagerAmount, 10) || 0).toLocaleString()}</span>
+                              <button onClick={() => setShowWagerModal(true)} className="ml-auto font-sans text-xs bg-sky-600/50 hover:bg-sky-600 border border-sky-500 rounded px-3 py-1 transition-colors active:scale-95">
+                                  Nạp
+                              </button>
+                          </div>
+                          {error && <p className="text-red-400 text-sm font-sans mt-1">{error}</p>}
+                      </div>
+
+                      <button onClick={handleSearch} className="btn-shine relative overflow-hidden px-10 py-3 bg-red-800/80 rounded-lg text-red-100 border border-red-500/40 transition-all duration-300 hover:text-white hover:border-red-400 hover:shadow-[0_0_20px_theme(colors.red.500/0.6)] active:scale-95">
+                          <span className="font-bold text-xl tracking-widest uppercase">Search</span>
                       </button>
                     </div>
                 )}
@@ -477,17 +415,13 @@ export default function PvpArena({
                           </div>
                       )}
                       {combatLog.map((entry, index) => (
-                        <p key={index} 
-                           className={`mb-1 transition-opacity duration-500 ${index === 0 ? 'opacity-100 font-semibold' : 'opacity-70'}`} 
-                           dangerouslySetInnerHTML={{__html: entry}}></p>
+                        <p key={index} className={`mb-1 transition-opacity duration-500 ${index === 0 ? 'opacity-100 font-semibold' : 'opacity-70'}`} dangerouslySetInnerHTML={{__html: entry}}></p>
                       ))}
                   </div>
               </div>
             )}
 
-            {battlePhase === 'finished' && matchResult && (
-                <MatchResultModal result={matchResult} player1Name={player1.name} player2Name={player2.name} onSearchAgain={resetForNewSearch} />
-            )}
+            {battlePhase === 'finished' && matchResult && ( <MatchResultModal result={matchResult} player1Name={player1.name} player2Name={player2.name} onSearchAgain={resetForNewSearch} /> )}
         </main>
       </div>
     </>
