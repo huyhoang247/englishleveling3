@@ -40,19 +40,19 @@ interface PvpArenaProps {
 
 // --- UI HELPER COMPONENTS ---
 
-// --- NEW ---: Wager Modal Component
-const WagerModal = ({ 
+// --- CHANGE: Renamed WagerModal to ContributionModal and updated its content to reflect the "Pool" concept.
+const ContributionModal = ({ 
     onClose, 
     onConfirm,
-    currentWager,
+    currentContribution,
     playerCoins
 }: { 
     onClose: () => void, 
     onConfirm: (amount: number) => void,
-    currentWager: string,
+    currentContribution: string,
     playerCoins: number
 }) => {
-    const [inputValue, setInputValue] = useState(currentWager);
+    const [inputValue, setInputValue] = useState(currentContribution);
 
     const handleConfirm = () => {
         const amount = parseInt(inputValue, 10);
@@ -67,7 +67,8 @@ const WagerModal = ({
             <div className="relative w-80 bg-slate-900/90 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
                 <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
                 <div className="p-6 pt-10 flex flex-col items-center">
-                    <h3 className="text-2xl font-bold text-yellow-300 text-shadow-sm tracking-wide mb-4">NẠP VÀNG CƯỢC</h3>
+                    {/* CHANGE: Updated title to reflect contribution to a pool. */}
+                    <h3 className="text-2xl font-bold text-yellow-300 text-shadow-sm tracking-wide mb-4">GÓP VÀNG VÀO POOL</h3>
                     <p className="font-sans text-sm text-slate-400 mb-2">Vàng hiện có: <span className="font-bold text-yellow-200">{(playerCoins || 0).toLocaleString()}</span></p>
                     <input 
                         type="number"
@@ -168,13 +169,11 @@ export default function PvpArena({
   const [damages, setDamages] = useState<{ id: number, text: string, positionClass: string, colorClass: string }[]>([]);
   const [showStatsModal, setShowStatsModal] = useState(false);
   
-  // --- WAGER & MODAL STATES ---
-  const [wagerAmount, setWagerAmount] = useState('100');
-  const [goldPool, setGoldPool] = useState(0);
-  // CHANGE: Removed local state for player coins. We now use player1.coins from props.
-  // const [player1Coins, setPlayer1Coins] = useState(player1.coins || 0); 
+  // --- CHANGE: Renamed states to reflect the "Pool" concept. ---
+  const [contributionAmount, setContributionAmount] = useState('100');
+  const [totalPool, setTotalPool] = useState(0);
   const [error, setError] = useState('');
-  const [showWagerModal, setShowWagerModal] = useState(false); 
+  const [showContributionModal, setShowContributionModal] = useState(false); 
 
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -259,24 +258,21 @@ export default function PvpArena({
   
   const skipMatch = () => { if (battleIntervalRef.current) clearInterval(battleIntervalRef.current); battleIntervalRef.current = setInterval(runBattleTurn, 100); };
 
+  // --- CHANGE: Updated endMatch to use new "Pool" logic and terminology.
   const endMatch = async (result) => {
     if (matchResult) return;
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    const wager = parseInt(wagerAmount, 10) || 0;
+    const contribution = parseInt(contributionAmount, 10) || 0;
     if (result === 'player1') {
-        addLog(`<b class="text-yellow-300">BẠN THẮNG!</b> Nhận được <b class="text-yellow-400">${goldPool.toLocaleString()}</b> vàng từ bể cược.`);
-        // CHANGE: Call onCoinChange to update parent state.
-        // The parent state already has the wager subtracted. We just add the whole pool.
-        onCoinChange(player1.coins + goldPool);
-        await updateUserCoins(userId, goldPool);
+        addLog(`<b class="text-yellow-300">BẠN THẮNG!</b> Nhận được <b class="text-yellow-400">${totalPool.toLocaleString()}</b> vàng từ Pool.`);
+        onCoinChange(player1.coins + totalPool);
+        await updateUserCoins(userId, totalPool);
     } else if (result === 'player2') {
-        addLog(`<b class="text-red-400">BẠN THUA!</b> Mất <b class="text-yellow-400">${wager.toLocaleString()}</b> vàng đã cược.`);
-        // No coin change needed, parent state was already updated on wager.
+        addLog(`<b class="text-red-400">BẠN THUA!</b> Mất <b class="text-yellow-400">${contribution.toLocaleString()}</b> vàng đã góp.`);
     } else if (result === 'draw') {
-        addLog(`<b class="text-slate-400">HÒA!</b> Nhận lại <b class="text-yellow-400">${wager.toLocaleString()}</b> vàng đã cược.`);
-        // CHANGE: Call onCoinChange to give the wager back to parent state.
-        onCoinChange(player1.coins + wager);
-        await updateUserCoins(userId, wager);
+        addLog(`<b class="text-slate-400">HÒA!</b> Hoàn lại <b class="text-yellow-400">${contribution.toLocaleString()}</b> vàng đã góp.`);
+        onCoinChange(player1.coins + contribution);
+        await updateUserCoins(userId, contribution);
     }
     setMatchResult(result);
     setBattlePhase('finished');
@@ -284,39 +280,39 @@ export default function PvpArena({
     onMatchEnd(matchEndPayload);
   };
   
-  // CHANGE: Modified logic to use props and callbacks
+  // --- CHANGE: Updated handleSearch to use new "Pool" logic and terminology.
   const handleSearch = async () => {
     if (battlePhase !== 'idle') return;
-    const wager = parseInt(wagerAmount, 10);
-    if (isNaN(wager) || wager <= 0) { setError('Số vàng cược không hợp lệ.'); return; }
-    // CHANGE: Check against props instead of local state
-    if (wager > player1.coins) { setError('Bạn không đủ vàng để cược.'); return; }
+    const contribution = parseInt(contributionAmount, 10);
+    if (isNaN(contribution) || contribution <= 0) { setError('Số vàng góp không hợp lệ.'); return; }
+    if (contribution > player1.coins) { setError('Bạn không đủ vàng để góp.'); return; }
     
     setError('');
-    // CHANGE: Call onCoinChange to inform the parent component about the wager.
-    onCoinChange(player1.coins - wager);
+    onCoinChange(player1.coins - contribution);
     
     try {
-        await updateUserCoins(userId, -wager);
-        setGoldPool(wager * 2);
-        addLog(`[Hệ thống] Bạn đã cược <b class="text-yellow-400">${wager.toLocaleString()}</b> vàng. Đang tìm đối thủ...`);
+        await updateUserCoins(userId, -contribution);
+        setTotalPool(contribution * 2);
+        addLog(`[Hệ thống] Bạn đã góp <b class="text-yellow-400">${contribution.toLocaleString()}</b> vàng vào Pool. Đang tìm đối thủ...`);
         setBattlePhase('searching');
     } catch (e) {
-        console.error("Failed to update user coins for wager:", e);
-        setError("Lỗi khi đặt cược. Vui lòng thử lại.");
-        // CHANGE: Inform parent to revert the coin change
+        console.error("Failed to update user coins for contribution:", e);
+        setError("Lỗi khi góp vàng. Vui lòng thử lại.");
         onCoinChange(player1.coins);
     }
   };
   
+  // --- CHANGE: Updated reset function for new state variables.
   const resetForNewSearch = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    setCombatLog([]); setTurnCounter(0); setCurrentPlayerTurn('player1'); setMatchResult(null); setBattlePhase('idle'); setDamages([]); setPlayer1Stats(player1.initialStats); setPlayer2Stats(player2.initialStats); setGoldPool(0); setWagerAmount('100'); setError('');
+    setCombatLog([]); setTurnCounter(0); setCurrentPlayerTurn('player1'); setMatchResult(null); setBattlePhase('idle'); setDamages([]); setPlayer1Stats(player1.initialStats); setPlayer2Stats(player2.initialStats); 
+    setTotalPool(0); setContributionAmount('100'); setError('');
   };
 
-  const handleConfirmWager = (newAmount: number) => {
-    setWagerAmount(String(newAmount));
+  // --- CHANGE: Renamed handler for clarity.
+  const handleConfirmContribution = (newAmount: number) => {
+    setContributionAmount(String(newAmount));
     setError('');
   };
 
@@ -329,7 +325,7 @@ export default function PvpArena({
   return (
     <>
       <style>{`
-        /* ... CSS from previous version, no changes needed ... */
+        /* ... CSS unchanged ... */
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap'); .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.3s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
         .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); }
         @keyframes pulse-fast { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.05); } } 
@@ -338,8 +334,8 @@ export default function PvpArena({
       
       {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} positionClass={d.positionClass} colorClass={d.colorClass} />))}
       {showStatsModal && <PlayerStatsModal player={player1.initialStats} onClose={() => setShowStatsModal(false)} />}
-      {/* CHANGE: Pass player1.coins from props to the modal */}
-      {showWagerModal && <WagerModal onClose={() => setShowWagerModal(false)} onConfirm={handleConfirmWager} currentWager={wagerAmount} playerCoins={player1.coins}/>}
+      {/* CHANGE: Updated to use ContributionModal and new state/handlers. */}
+      {showContributionModal && <ContributionModal onClose={() => setShowContributionModal(false)} onConfirm={handleConfirmContribution} currentContribution={contributionAmount} playerCoins={player1.coins}/>}
       {battlePhase === 'searching' && <SearchingModal />}
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
@@ -351,7 +347,6 @@ export default function PvpArena({
                 </button>
                 <h1 className="text-2xl font-bold text-yellow-300 text-shadow tracking-widest">PVP</h1>
                 <div className="w-fit flex justify-end">
-                    {/* CHANGE: Display coins from props, the single source of truth */}
                     <CoinDisplay displayedCoins={player1.coins} isStatsFullscreen={false} />
                 </div>
             </div>
@@ -380,12 +375,24 @@ export default function PvpArena({
                           <span className="text-8xl font-black text-slate-500 select-none">?</span>
                       </div>
                       
+                      {/* --- CHANGE: Replaced wager display with a detailed Pool contribution UI. --- */}
                       <div className="flex flex-col items-center gap-3 w-full max-w-xs">
-                          <div className="flex items-center justify-center gap-4 bg-slate-900/50 border border-slate-700 rounded-lg p-2 w-full">
-                              <span className="font-sans text-slate-300">Tiền cược:</span>
-                              <span className="font-bold text-lg text-yellow-300">{(parseInt(wagerAmount, 10) || 0).toLocaleString()}</span>
-                              <button onClick={() => setShowWagerModal(true)} className="ml-auto font-sans text-xs bg-sky-600/50 hover:bg-sky-600 border border-sky-500 rounded px-3 py-1 transition-colors active:scale-95">
-                                  Nạp
+                          <div className="flex flex-col items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-lg p-3 w-full">
+                              <div className="w-full flex justify-between items-center">
+                                  <span className="font-sans text-slate-300">Góp của bạn:</span>
+                                  <span className="font-bold text-lg text-yellow-300">{(parseInt(contributionAmount, 10) || 0).toLocaleString()}</span>
+                              </div>
+                              <div className="w-full flex justify-between items-center text-sm">
+                                  <span className="font-sans text-slate-400">Đối thủ góp (dự kiến):</span>
+                                  <span className="font-semibold text-yellow-400/80">{(parseInt(contributionAmount, 10) || 0).toLocaleString()}</span>
+                              </div>
+                              <hr className="w-full border-t border-slate-600 my-1" />
+                              <div className="w-full flex justify-between items-center">
+                                  <span className="font-sans font-bold text-slate-100">Tổng Pool:</span>
+                                  <span className="font-bold text-xl text-yellow-200">{((parseInt(contributionAmount, 10) || 0) * 2).toLocaleString()}</span>
+                              </div>
+                              <button onClick={() => setShowContributionModal(true)} className="mt-2 w-full font-sans text-sm bg-sky-600/50 hover:bg-sky-600 border border-sky-500 rounded px-3 py-1.5 transition-colors active:scale-95">
+                                  Thay Đổi Mức Góp
                               </button>
                           </div>
                           {error && <p className="text-red-400 text-sm font-sans mt-1">{error}</p>}
@@ -410,9 +417,10 @@ export default function PvpArena({
             {(battlePhase === 'fighting' || battlePhase === 'finished') && (
               <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
                   <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
-                      {combatLog.length > 0 && goldPool > 0 && (
+                      {/* --- CHANGE: Updated combat log to show totalPool --- */}
+                      {combatLog.length > 0 && totalPool > 0 && (
                           <div className="text-center mb-2 font-bold text-yellow-300 border-t border-b border-yellow-600/30 py-1">
-                            Bể cược: {(goldPool || 0).toLocaleString()} Vàng
+                            Pool: {(totalPool || 0).toLocaleString()} Vàng
                           </div>
                       )}
                       {combatLog.map((entry, index) => (
@@ -428,4 +436,3 @@ export default function PvpArena({
     </>
   );
 }
-// --- END OF FILE pvp.tsx (đã sửa đổi) ---
