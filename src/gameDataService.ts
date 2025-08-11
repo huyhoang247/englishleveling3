@@ -2,7 +2,8 @@
 
 import { db } from './firebase';
 import { 
-  doc, getDoc, setDoc, runTransaction 
+  doc, getDoc, setDoc, runTransaction, 
+  collection, getDocs 
 } from 'firebase/firestore';
 
 /**
@@ -22,6 +23,18 @@ export interface UserGameData {
   cardCapacity: number;
   equipment: { pieces: number; owned: any[]; equipped: { weapon: null; armor: null; accessory: null } };
 }
+
+/**
+ * Interface cho một mục từ vựng trong dữ liệu thành tựu.
+ */
+export interface VocabularyItem {
+  id: number;
+  word: string;
+  exp: number;
+  level: number;
+  maxExp: number;
+}
+
 
 /**
  * Lấy dữ liệu game của người dùng. Nếu chưa có, tạo mới với giá trị mặc định.
@@ -149,6 +162,141 @@ export const updateUserGems = async (userId: string, amount: number): Promise<nu
     return newAmount;
   } catch (error) {
     console.error(`Failed to run transaction to update gems for user ${userId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Lấy và đồng bộ hóa dữ liệu thành tựu từ vựng của người dùng.
+ * Hàm này hợp nhất dữ liệu từ `completedWords` (nguồn chính cho EXP)
+ * và `gamedata/achievements` (nơi lưu trữ cấp độ và trạng thái).
+ * @param userId - ID của người dùng.
+ * @returns {Promise<VocabularyItem[]>} Một mảng dữ liệu thành tựu từ vựng đã được đồng bộ.
+ */
+export const fetchAndSyncVocabularyData = async (userId: string): Promise<VocabularyItem[]> => {
+  if (!userId) throw new Error("User ID is required.");
+
+  try {
+    const completedWordsCol = collection(db, 'users', userId, 'completedWords');
+    const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
+
+    const [completedWordsSnap, achievementDocSnap] = await Promise.all([
+      getDocs(completedWordsCol),
+      getDoc(achievementDocRef),
+    ]);
+
+    const wordToExpMap = new Map<string, number>();
+    completedWordsSnap.forEach(wordDoc => {
+      const word = wordDoc.id;
+      const gameModes = wordDoc.data().gameModes || {};
+      let totalCorrectCount = 0;
+      Object.values(gameModes).forEach((mode: any) => {
+        totalCorrectCount += mode.correctCount || 0;
+      });
+      wordToExpMap.set(word, totalCorrectCount * 100);
+    });
+
+    const existingAchievements: VocabularyItem[] = achievementDocSnap.exists()
+      ? achievementDocSnap.data().vocabulary || []
+      : [];
+
+    const finalVocabularyData: VocabularyItem[] = [];
+    const processedWords = new Set<string>();
+    let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map(i => i.id)) : 0) + 1;
+
+    wordToExpMap.forEach((totalExp, word) => {
+      const existingItem = existingAchievements.find(item => item.word === word);
+      if (existingItem) {
+        let expSpentToReachCurrentLevel = 0;
+        for (let i = 1; i < existingItem.level; i++) {
+          expSpentToReachCurrentLevel += i * 100;
+        }
+        const currentProgressExp = totalExp - expSpentToReachCurrentLevel;
+        finalVocabularyData.push({
+          ...existingItem,
+          exp: currentProgressExp,
+          maxExp: existingItem.level * 100,
+        });
+      } else {
+        finalVocabularyData.push({
+          id: idCounter++,
+          word: word,
+          exp: totalExp,
+          level: 1,
+          maxExp: 100,
+        });
+      }
+      processedWords.add(word);
+    });
+
+    existingAchievements.forEach(item => {
+      if (!processedWords.has(item.word)) {
+        finalVocabularyData.push(item);
+      }
+    });
+    
+    return finalVocabularyData;
+  } catch (error) {
+    console.error("Error fetching and syncing vocabulary achievements data in service:", error);
+    throw error;
+  }
+};
+
+
+/**
+ * Cập nhật dữ liệu thành tựu và phần thưởng cho người dùng một cách an toàn.
+ * Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu.
+ * @param userId - ID của người dùng.
+ * @param updates - Một object chứa các thay đổi cần áp dụng.
+ * @param updates.coinsToAdd - Số coin cần cộng thêm.
+ * @param updates.cardsToAdd - Số thẻ mastery cần cộng thêm.
+ * @param updates.newVocabularyData - Mảng dữ liệu thành tựu từ vựng mới để ghi đè.
+ * @returns {Promise<{newCoins: number; newMasteryCards: number}>} Số dư coin và thẻ mới.
+ */
+export const updateAchievementData = async (
+  userId: string,
+  updates: {
+    coinsToAdd: number;
+    cardsToAdd: number;
+    newVocabularyData: VocabularyItem[];
+  }
+): Promise<{ newCoins: number; newMasteryCards: number }> => {
+  if (!userId) throw new Error("User ID is required for updating achievements.");
+
+  const userDocRef = doc(db, 'users', userId);
+  const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
+  const { coinsToAdd, cardsToAdd, newVocabularyData } = updates;
+
+  try {
+    const { newCoins, newMasteryCards } = await runTransaction(db, async (transaction) => {
+      const userDoc = await transaction.get(userDocRef);
+      if (!userDoc.exists()) {
+        throw new Error("User document does not exist!");
+      }
+
+      const currentCoins = userDoc.data().coins || 0;
+      const currentCards = userDoc.data().masteryCards || 0;
+
+      const finalCoins = currentCoins + coinsToAdd;
+      const finalCards = currentCards + cardsToAdd;
+
+      transaction.update(userDocRef, {
+        coins: finalCoins,
+        masteryCards: finalCards,
+      });
+
+      transaction.set(achievementDocRef, {
+        vocabulary: newVocabularyData,
+        lastUpdated: new Date(),
+      });
+
+      return { newCoins: finalCoins, newMasteryCards: finalCards };
+    });
+
+    console.log(`Achievements updated for user ${userId}.`);
+    return { newCoins, newMasteryCards };
+  } catch (error) {
+    console.error(`Failed to run transaction to update achievements for user ${userId}:`, error);
     throw error;
   }
 };
