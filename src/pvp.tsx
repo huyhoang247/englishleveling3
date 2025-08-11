@@ -7,6 +7,9 @@ import {
     getActivationChance, 
     getRarityTextColor 
 } from './skill-data.tsx';
+// --- NEW ---
+import CoinDisplay from './coin-display'; // Import component hiển thị vàng
+import { updateUserCoins } from './gameDataService.ts'; // Import hàm cập nhật vàng
 
 // --- TYPE DEFINITIONS ---
 type ActiveSkill = OwnedSkill & SkillBlueprint;
@@ -19,15 +22,20 @@ type CombatStats = {
 };
 
 // Data structure for a player entering the arena
+// --- MODIFIED ---: Thêm coins để quản lý việc cược
 type PlayerData = {
     name: string;
     avatarUrl: string; // URL to player's avatar image
+    coins: number; // --- NEW ---: Số vàng hiện tại của người chơi
     initialStats: CombatStats;
     equippedSkills: ActiveSkill[];
 };
 
+// --- MODIFIED ---: Thêm userId và onCoinChange
 interface PvpArenaProps {
   onClose: () => void;
+  userId: string; // --- NEW ---: ID người dùng để cập nhật dữ liệu
+  onCoinChange: (newAmount: number) => void; // --- NEW ---: Callback để cập nhật vàng ở component cha
   // Player 1 is assumed to be the local user
   player1: PlayerData; 
   // Player 2 is the opponent
@@ -37,6 +45,15 @@ interface PvpArenaProps {
 
 
 // --- UI HELPER COMPONENTS (Adapted from boss.tsx) ---
+
+// --- NEW ---: SVG Icon cho bể vàng
+const GoldPotIcon = ({ className = '' }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path fillRule="evenodd" d="M8.25 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM9.75 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM11.25 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM12.75 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM14.25 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM15.75 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75z" clipRule="evenodd" />
+    <path fillRule="evenodd" d="M5.25 2.25a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h13.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75H5.25zM4.5 6.75a.75.75 0 00-.75.75v10.5c0 .414.336.75.75.75h15a.75.75 0 00.75-.75V7.5a.75.75 0 00-.75-.75H4.5zM3 7.5a1.5 1.5 0 011.5-1.5h15a1.5 1.5 0 011.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5h-15a1.5 1.5 0 01-1.5-1.5V7.5z" clipRule="evenodd" />
+  </svg>
+);
+
 
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
@@ -128,6 +145,8 @@ const MatchResultModal = ({ result, player1Name, player2Name, onSearchAgain }: {
 // --- MAIN PVP ARENA COMPONENT ---
 export default function PvpArena({ 
   onClose, 
+  userId, // --- NEW ---
+  onCoinChange, // --- NEW ---
   player1, 
   player2,
   onMatchEnd
@@ -144,6 +163,12 @@ export default function PvpArena({
   const [damages, setDamages] = useState<{ id: number, text: string, positionClass: string, colorClass: string }[]>([]);
   const [showStatsModal, setShowStatsModal] = useState(false);
   
+  // --- NEW STATES FOR WAGER POOL ---
+  const [wagerAmount, setWagerAmount] = useState('100');
+  const [goldPool, setGoldPool] = useState(0);
+  const [player1Coins, setPlayer1Coins] = useState(player1.coins);
+  const [error, setError] = useState('');
+
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -268,9 +293,30 @@ export default function PvpArena({
     battleIntervalRef.current = setInterval(runBattleTurn, 100);
   };
 
-  const endMatch = (result: 'player1' | 'player2' | 'draw') => {
+  // --- MODIFIED ---: Updated to handle wager payout
+  const endMatch = async (result: 'player1' | 'player2' | 'draw') => {
     if (matchResult) return;
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+    
+    const wager = parseInt(wagerAmount, 10) || 0;
+    
+    if (result === 'player1') {
+        addLog(`<b class="text-yellow-300">BẠN THẮNG!</b> Nhận được <b class="text-yellow-400">${goldPool}</b> vàng từ bể cược.`);
+        const newTotalCoins = player1Coins + goldPool;
+        setPlayer1Coins(newTotalCoins);
+        onCoinChange(newTotalCoins);
+        await updateUserCoins(userId, goldPool);
+    } else if (result === 'player2') {
+        addLog(`<b class="text-red-400">BẠN THUA!</b> Mất <b class="text-yellow-400">${wager}</b> vàng đã cược.`);
+        // Vàng đã bị trừ trước đó, không cần làm gì thêm
+    } else if (result === 'draw') {
+        addLog(`<b class="text-slate-400">HÒA!</b> Nhận lại <b class="text-yellow-400">${wager}</b> vàng đã cược.`);
+        const newTotalCoins = player1Coins + wager;
+        setPlayer1Coins(newTotalCoins);
+        onCoinChange(newTotalCoins);
+        await updateUserCoins(userId, wager); // Hoàn lại tiền cược
+    }
+
     setMatchResult(result);
     setBattlePhase('finished');
     const matchEndPayload = {
@@ -279,10 +325,43 @@ export default function PvpArena({
     };
     onMatchEnd(matchEndPayload);
   };
-
-  const handleSearch = () => {
+  
+  // --- NEW ---: Handles wager validation and starts the search
+  const handleWagerAndSearch = async () => {
     if (battlePhase !== 'idle') return;
-    setBattlePhase('searching');
+    
+    const wager = parseInt(wagerAmount, 10);
+    
+    if (isNaN(wager) || wager <= 0) {
+      setError('Số vàng cược không hợp lệ.');
+      return;
+    }
+    if (wager > player1Coins) {
+      setError('Bạn không đủ vàng để cược.');
+      return;
+    }
+    
+    setError('');
+
+    // Deduct coins from player
+    const newPlayerCoins = player1Coins - wager;
+    setPlayer1Coins(newPlayerCoins);
+    onCoinChange(newPlayerCoins);
+    
+    try {
+        await updateUserCoins(userId, -wager);
+        // Set up the gold pool (player's wager + opponent's matched wager)
+        setGoldPool(wager * 2);
+        
+        addLog(`[Hệ thống] Bạn đã cược <b class="text-yellow-400">${wager}</b> vàng. Đang tìm đối thủ...`);
+        setBattlePhase('searching');
+    } catch (e) {
+        console.error("Failed to update user coins for wager:", e);
+        setError("Lỗi khi đặt cược. Vui lòng thử lại.");
+        // Revert local state if backend call fails
+        setPlayer1Coins(player1Coins);
+        onCoinChange(player1Coins);
+    }
   };
   
   const resetForNewSearch = () => {
@@ -297,6 +376,11 @@ export default function PvpArena({
     setDamages([]);
     setPlayer1Stats(player1.initialStats);
     setPlayer2Stats(player2.initialStats);
+
+    // --- NEW ---: Reset wager state
+    setGoldPool(0);
+    setWagerAmount('100');
+    setError('');
   };
 
   // --- REACT HOOKS ---
@@ -345,12 +429,14 @@ export default function PvpArena({
                   <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                 </button>
                 <h1 className="text-2xl font-bold text-yellow-300 text-shadow tracking-widest">PVP</h1>
-                <div className="w-24"></div>
+                {/* --- MODIFIED ---: Added CoinDisplay here */}
+                <div className="w-fit flex justify-end">
+                    <CoinDisplay displayedCoins={player1Coins} isStatsFullscreen={false} />
+                </div>
             </div>
         </header>
 
         <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
-            {/* Player 1 display area. Shows health bar and related buttons */}
             {(battlePhase === 'idle' || battlePhase === 'fighting' || battlePhase === 'finished') && (
                 <div className="w-full max-w-2xl mx-auto mb-4 flex flex-col items-center gap-3">
                     <div className="w-1/2">
@@ -362,19 +448,31 @@ export default function PvpArena({
                 </div>
             )}
 
-            {/* Container for other action buttons like 'Skip Battle' */}
             <div className="w-full flex justify-center items-center gap-3 mb-4">
                 {battlePhase === 'fighting' && !matchResult && (<button onClick={skipMatch} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button>)}
             </div>
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
+                {/* --- MODIFIED ---: Replaced idle display with Wager Pool UI */}
                 {battlePhase === 'idle' && (
-                    <div className="flex flex-col items-center gap-8">
-                      <div className="w-40 h-40 md:w-56 md:h-56 bg-black/20 rounded-full flex items-center justify-center border-4 border-slate-700">
-                          <span className="text-8xl font-black text-slate-500 select-none">?</span>
+                    <div className="flex flex-col items-center gap-6 w-full max-w-sm bg-slate-900/50 border border-slate-700/80 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
+                      <h2 className="text-3xl text-yellow-300 tracking-wider text-shadow">WAGER POOL</h2>
+                      <GoldPotIcon className="w-24 h-24 text-yellow-400/80" />
+                      
+                      <div className="w-full flex flex-col items-center gap-2">
+                          <label htmlFor="wager-input" className="font-sans text-sm text-slate-400">Nhập số vàng bạn muốn cược:</label>
+                          <input 
+                            id="wager-input"
+                            type="number"
+                            value={wagerAmount}
+                            onChange={(e) => setWagerAmount(e.target.value)}
+                            className="w-full text-center bg-slate-800/70 border border-slate-600 rounded-lg p-2 text-xl font-bold text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all"
+                          />
+                          {error && <p className="text-red-400 text-sm font-sans mt-1">{error}</p>}
                       </div>
-                      <button onClick={handleSearch} className="btn-shine relative overflow-hidden px-10 py-3 bg-red-800/80 rounded-lg text-red-100 border border-red-500/40 transition-all duration-300 hover:text-white hover:border-red-400 hover:shadow-[0_0_20px_theme(colors.red.500/0.6)] active:scale-95">
-                          <span className="font-bold text-xl tracking-widest uppercase">Search</span>
+                      
+                      <button onClick={handleWagerAndSearch} className="btn-shine relative overflow-hidden w-full px-10 py-3 bg-red-800/80 rounded-lg text-red-100 border border-red-500/40 transition-all duration-300 hover:text-white hover:border-red-400 hover:shadow-[0_0_20px_theme(colors.red.500/0.6)] active:scale-95">
+                          <span className="font-bold text-xl tracking-widest uppercase">Cược & Tìm Trận</span>
                       </button>
                     </div>
                 )}
@@ -392,6 +490,11 @@ export default function PvpArena({
             {(battlePhase === 'fighting' || battlePhase === 'finished') && (
               <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
                   <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
+                      {combatLog.length > 0 && goldPool > 0 && (
+                          <div className="text-center mb-2 font-bold text-yellow-300 border-t border-b border-yellow-600/30 py-1">
+                            Bể cược: {goldPool.toLocaleString()} Vàng
+                          </div>
+                      )}
                       {combatLog.map((entry, index) => (
                         <p key={index} 
                            className={`mb-1 transition-opacity duration-500 ${index === 0 ? 'opacity-100 font-semibold' : 'opacity-70'}`} 
