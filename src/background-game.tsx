@@ -893,13 +893,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
-                {isAchievementsOpen && auth.currentUser && Array.isArray(vocabularyData) && (
+                {isAchievementsOpen && auth.currentUser && (
                     <AchievementsScreen
                         onClose={toggleAchievements}
                         userId={auth.currentUser.uid}
-                        initialData={vocabularyData}
                         onDataUpdated={handleAchievementsUpdate}
-                        masteryCardsCount={masteryCards}
                     />
                 )}
             </ErrorBoundary>
