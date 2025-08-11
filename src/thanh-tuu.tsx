@@ -1,16 +1,12 @@
-// src/thanh-tuu.tsx
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import CoinDisplay from './coin-display.tsx';
 import { useAchievements } from './contexts/AchievementsContext.tsx';
+import type { VocabularyItem } from './gameDataService.ts';
 
-// --- Định nghĩa Type ---
-export type VocabularyItem = {
-  id: number;
-  word: string;
-  exp: number;
-  level: number;
-  maxExp: number;
-};
+// --- Signature của Props ---
+interface AchievementsScreenProps {
+  onClose: () => void;
+}
 
 // --- Các component icon (Không thay đổi) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -23,66 +19,63 @@ const GiftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" /> </svg> );
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
-// --- Signature của Props ---
-interface AchievementsScreenProps {
-  onClose: () => void;
+// Hook helper để lấy giá trị trước đó của một biến
+function usePrevious<T>(value: T): T | undefined {
+    const ref = useRef<T>();
+    useEffect(() => {
+      ref.current = value;
+    }, [value]);
+    return ref.current;
 }
+
 
 // --- Thành phần chính của ứng dụng ---
 export default function AchievementsScreen({ onClose }: AchievementsScreenProps) {
-  // Lấy dữ liệu và các hàm hành động từ context
-  const { 
-    vocabulary, 
-    masteryCardsCount, 
-    coins, 
-    isLoading, 
-    claimReward, 
-    claimAllRewards 
+  // Lấy toàn bộ dữ liệu và hàm từ context
+  const {
+    vocabulary,
+    coins,
+    masteryCards,
+    isInitialLoading,
+    isUpdating,
+    claimAchievement,
+    claimAllAchievements,
+    totalClaimableRewards,
   } = useAchievements();
-
-  // State chỉ dành cho UI của component này
-  const [isClaiming, setIsClaiming] = useState(false);
-  const [claimingId, setClaimingId] = useState<number | null>(null);
-  const [isClaimingAll, setIsClaimingAll] = useState(false);
+  
+  // State cục bộ chỉ dành cho UI của component này
   const [currentPage, setCurrentPage] = useState(1);
+  const [displayedCoins, setDisplayedCoins] = useState(0);
   const ITEMS_PER_PAGE = 30;
-  const [displayedCoins, setDisplayedCoins] = useState(coins);
 
-  // Hàm animation cho coin
+  // Xử lý animation cho coin
+  const previousCoins = usePrevious(coins);
+  useEffect(() => {
+    // Nếu giá trị coin trước đó tồn tại và coin mới lớn hơn (có thưởng)
+    if (previousCoins !== undefined && coins > previousCoins) {
+        startCoinCountAnimation(previousCoins, coins);
+    } else {
+        // Ngược lại, chỉ cần cập nhật giá trị hiển thị (VD: lúc đầu, hoặc khi bị trừ tiền)
+        setDisplayedCoins(coins);
+    }
+  }, [coins]); // Phụ thuộc vào `coins` từ context
+
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
     const isCountingUp = endValue > startValue;
-    const duration = 500; // ms
-    const frameDuration = 1000 / 60; // 60fps
-    const totalFrames = Math.round(duration / frameDuration);
-    const step = (endValue - startValue) / totalFrames;
-    let currentFrame = 0;
-    
-    const animate = () => {
-        currentFrame++;
-        const newValue = Math.round(startValue + step * currentFrame);
-        if ((isCountingUp && newValue >= endValue) || (!isCountingUp && newValue <= endValue)) {
-            setDisplayedCoins(endValue);
-        } else {
-            setDisplayedCoins(newValue);
-            requestAnimationFrame(animate);
-        }
-    };
-    requestAnimationFrame(animate);
+    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
+    let current = startValue;
+    const interval = setInterval(() => {
+      if (isCountingUp) { current += step; } else { current -= step; }
+      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
+        setDisplayedCoins(endValue);
+        clearInterval(interval);
+      } else {
+        setDisplayedCoins(current);
+      }
+    }, 30);
   }, []);
 
-  // Effect để chạy animation khi `coins` từ context thay đổi
-  useEffect(() => {
-    startCoinCountAnimation(displayedCoins, coins);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [coins]);
-  
-  // Khởi tạo displayedCoins khi component mount lần đầu
-  useEffect(() => {
-    setDisplayedCoins(coins);
-  }, []); // Chỉ chạy một lần
-
-  // Logic sắp xếp và phân trang không đổi
   const sortedVocabulary = useMemo(() => [...vocabulary].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
     const bIsClaimable = b.exp >= b.maxExp;
@@ -92,61 +85,23 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
   }), [vocabulary]);
 
   const totalPages = Math.ceil(sortedVocabulary.length / ITEMS_PER_PAGE);
+  
   const paginatedVocabulary = useMemo(() => {
       const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-      return sortedVocabulary.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+      const endIndex = startIndex + ITEMS_PER_PAGE;
+      return sortedVocabulary.slice(startIndex, endIndex);
   }, [sortedVocabulary, currentPage]);
 
   useEffect(() => {
     if(currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
     else if (totalPages === 0 && sortedVocabulary.length > 0) setCurrentPage(1);
   }, [currentPage, totalPages, sortedVocabulary.length]);
-
-  const handleClaim = useCallback(async (id: number) => {
-    if (isClaiming || isClaimingAll) return;
-    setIsClaiming(true);
-    setClaimingId(id);
-    try {
-      await claimReward(id); // Gọi hàm từ context
-    } catch (error) {
-      console.error("UI Error: Claiming failed:", error);
-      // Có thể hiển thị thông báo lỗi cho người dùng ở đây
-    } finally {
-      setIsClaiming(false);
-      setClaimingId(null);
-    }
-  }, [isClaiming, isClaimingAll, claimReward]);
-
-  const handleClaimAll = useCallback(async () => {
-    const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
-    if (isClaiming || isClaimingAll || claimableItems.length === 0) return;
-    
-    setIsClaimingAll(true);
-    try {
-      await claimAllRewards(); // Gọi hàm từ context
-    } catch (error) {
-       console.error("UI Error: Claiming all failed:", error);
-    } finally {
-      setIsClaimingAll(false);
-    }
-  }, [vocabulary, isClaiming, isClaimingAll, claimAllRewards]);
   
-  const totalWords = vocabulary.length;
-  
-  const totalClaimableRewards = useMemo(() => {
-    const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
-    const gold = claimableItems.reduce((sum, item) => sum + (item.level * 100), 0);
-    const masteryCards = claimableItems.length;
-    return { gold, masteryCards };
-  }, [vocabulary]);
-
-  // Màn hình loading vẫn hữu ích nếu người dùng mở màn hình này ngay lập tức
-  // sau khi đăng nhập, trước khi context kịp tải xong dữ liệu.
-  if (isLoading && vocabulary.length === 0) {
+  if (isInitialLoading) {
     return (
       <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-cyan-400"></div>
-        <p className="mt-4 text-lg font-semibold text-slate-300">Đang tải dữ liệu thành tựu...</p>
+        <p className="mt-4 text-lg font-semibold text-slate-300">Đang đồng bộ dữ liệu thành tựu...</p>
       </div>
     );
   }
@@ -173,14 +128,14 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
           <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
             <BookOpenIcon className="w-7 h-7 text-cyan-400 flex-shrink-0" />
             <div>
-              <p className="text-xl font-bold text-white">{totalWords}</p>
+              <p className="text-xl font-bold text-white">{vocabulary.length}</p>
               <p className="text-sm text-slate-400">Vocabulary</p>
             </div>
           </div>
           <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
             <MasteryCardIcon className="w-7 h-7 flex-shrink-0" />
             <div>
-              <p className="text-xl font-bold text-white">{masteryCardsCount}</p>
+              <p className="text-xl font-bold text-white">{masteryCards}</p>
               <p className="text-sm text-slate-400">Mastery</p>
             </div>
           </div>
@@ -188,11 +143,11 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
 
         <div className="mb-6 flex justify-center">
             <button
-                onClick={handleClaimAll}
-                disabled={totalClaimableRewards.masteryCards === 0 || isClaimingAll || isClaiming}
+                onClick={claimAllAchievements}
+                disabled={totalClaimableRewards.masteryCards === 0 || isUpdating}
                 className={`
                     w-full max-w-md rounded-xl transition-all duration-300
-                    ${totalClaimableRewards.masteryCards > 0 && !isClaimingAll && !isClaiming
+                    ${totalClaimableRewards.masteryCards > 0 && !isUpdating
                         ? 'bg-gradient-to-br from-purple-600 to-indigo-700 text-white border border-purple-500/60 shadow-lg shadow-purple-600/30 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/40 cursor-pointer'
                         : 'bg-slate-800/80 border border-slate-700 text-slate-500 cursor-not-allowed'
                     }
@@ -200,13 +155,13 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
             >
                 <div className="flex items-center justify-between w-full p-3">
                     <div className="flex items-center gap-3">
-                        <GiftIcon className={`w-8 h-8 transition-colors duration-300 ${totalClaimableRewards.masteryCards > 0 && !isClaimingAll && !isClaiming ? 'text-purple-300' : 'text-slate-600'}`} />
+                        <GiftIcon className={`w-8 h-8 transition-colors duration-300 ${totalClaimableRewards.masteryCards > 0 && !isUpdating ? 'text-purple-300' : 'text-slate-600'}`} />
                         <span className="font-bold text-lg">
-                            {isClaimingAll ? 'Đang xử lý...' : 'Nhận Tất Cả'}
+                            {isUpdating ? 'Đang xử lý...' : 'Nhận Tất Cả'}
                         </span>
                     </div>
 
-                    {totalClaimableRewards.masteryCards > 0 && !isClaimingAll ? (
+                    {totalClaimableRewards.masteryCards > 0 && !isUpdating ? (
                         <div className="flex items-center gap-3 bg-black/20 rounded-lg px-3 py-1.5 shadow-inner">
                             <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.masteryCards} Thẻ Thông Thạo`}>
                                 <MasteryCardIcon className="w-7 h-7" />
@@ -219,7 +174,7 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
                             </div>
                         </div>
                     ) : (
-                        !isClaimingAll && (
+                        !isUpdating && (
                           <span className="text-sm font-medium text-slate-500 pr-2">Chưa có thưởng</span>
                         )
                     )}
@@ -242,10 +197,8 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
                 key={`${item.id}-${item.level}`}
                 item={item}
                 rank={(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
-                onClaim={handleClaim}
-                isBeingClaimed={claimingId === item.id}
-                isAnyClaiming={isClaiming}
-                isClaimingAll={isClaimingAll}
+                onClaim={claimAchievement}
+                isAnyClaiming={isUpdating}
               />
             ))}
             {paginatedVocabulary.length === 0 && (
@@ -270,14 +223,14 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
 }
 
 // --- Component con ---
-function VocabularyRow({ item, rank, onClaim, isBeingClaimed, isAnyClaiming, isClaimingAll }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void, isBeingClaimed: boolean, isAnyClaiming: boolean, isClaimingAll: boolean }) {
+function VocabularyRow({ item, rank, onClaim, isAnyClaiming }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void, isAnyClaiming: boolean }) {
   const { id, word, exp, level, maxExp } = item;
   const progressPercentage = maxExp > 0 ? Math.min((exp / maxExp) * 100, 100) : 0;
   const isClaimable = exp >= maxExp;
   const goldReward = 100 * level;
 
   const handleClaimClick = () => {
-    if (!isClaimable || isAnyClaiming || isClaimingAll) return;
+    if (!isClaimable || isAnyClaiming) return;
     onClaim(id);
   };
   
@@ -291,7 +244,7 @@ function VocabularyRow({ item, rank, onClaim, isBeingClaimed, isAnyClaiming, isC
       </div>
       <div className="col-span-12 md:col-span-3 md:px-2"> <div className="w-full bg-slate-700 rounded-full h-3"> <div className="bg-gradient-to-r from-teal-400 to-cyan-500 h-3 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div> </div> <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p> </div>
       <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">x1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
-      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming || isClaimingAll} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming && !isClaimingAll ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isBeingClaimed ? 'Đang nhận...' : isClaimable ? 'Nhận' : 'Chưa Đạt'} </button> </div>
+      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isAnyClaiming ? 'Đang nhận...' : isClaimable ? 'Nhận' : 'Chưa Đạt'} </button> </div>
     </div>
   );
 }
