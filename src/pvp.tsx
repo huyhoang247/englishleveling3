@@ -1,4 +1,4 @@
-// --- START OF FILE pvp.tsx ---
+// --- START OF FILE pvp.tsx (đã sửa đổi) ---
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
@@ -8,7 +8,6 @@ import {
     getRarityTextColor 
 } from './skill-data.tsx';
 import CoinDisplay from './coin-display.tsx';
-// updateUserCoins đã được import, chúng ta sẽ tận dụng nó
 import { updateUserCoins } from './gameDataService.ts';
 
 // --- TYPE DEFINITIONS ---
@@ -172,10 +171,10 @@ export default function PvpArena({
   // --- WAGER & MODAL STATES ---
   const [wagerAmount, setWagerAmount] = useState('100');
   const [goldPool, setGoldPool] = useState(0);
-  // Khởi tạo state với giá trị từ props, nhưng sẽ được cập nhật ngay sau đó
-  const [player1Coins, setPlayer1Coins] = useState(player1.coins || 0);
+  // CHANGE: Removed local state for player coins. We now use player1.coins from props.
+  // const [player1Coins, setPlayer1Coins] = useState(player1.coins || 0); 
   const [error, setError] = useState('');
-  const [showWagerModal, setShowWagerModal] = useState(false);
+  const [showWagerModal, setShowWagerModal] = useState(false); 
 
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -266,17 +265,17 @@ export default function PvpArena({
     const wager = parseInt(wagerAmount, 10) || 0;
     if (result === 'player1') {
         addLog(`<b class="text-yellow-300">BẠN THẮNG!</b> Nhận được <b class="text-yellow-400">${goldPool.toLocaleString()}</b> vàng từ bể cược.`);
-        const newTotalCoins = player1Coins + goldPool;
-        setPlayer1Coins(newTotalCoins);
-        onCoinChange(newTotalCoins);
+        // CHANGE: Call onCoinChange to update parent state.
+        // The parent state already has the wager subtracted. We just add the whole pool.
+        onCoinChange(player1.coins + goldPool);
         await updateUserCoins(userId, goldPool);
     } else if (result === 'player2') {
         addLog(`<b class="text-red-400">BẠN THUA!</b> Mất <b class="text-yellow-400">${wager.toLocaleString()}</b> vàng đã cược.`);
+        // No coin change needed, parent state was already updated on wager.
     } else if (result === 'draw') {
         addLog(`<b class="text-slate-400">HÒA!</b> Nhận lại <b class="text-yellow-400">${wager.toLocaleString()}</b> vàng đã cược.`);
-        const newTotalCoins = player1Coins + wager;
-        setPlayer1Coins(newTotalCoins);
-        onCoinChange(newTotalCoins);
+        // CHANGE: Call onCoinChange to give the wager back to parent state.
+        onCoinChange(player1.coins + wager);
         await updateUserCoins(userId, wager);
     }
     setMatchResult(result);
@@ -285,16 +284,18 @@ export default function PvpArena({
     onMatchEnd(matchEndPayload);
   };
   
-  // --- MODIFIED ---: Renamed back to handleSearch for clarity
+  // CHANGE: Modified logic to use props and callbacks
   const handleSearch = async () => {
     if (battlePhase !== 'idle') return;
     const wager = parseInt(wagerAmount, 10);
     if (isNaN(wager) || wager <= 0) { setError('Số vàng cược không hợp lệ.'); return; }
-    if (wager > player1Coins) { setError('Bạn không đủ vàng để cược.'); return; }
+    // CHANGE: Check against props instead of local state
+    if (wager > player1.coins) { setError('Bạn không đủ vàng để cược.'); return; }
+    
     setError('');
-    const newPlayerCoins = player1Coins - wager;
-    setPlayer1Coins(newPlayerCoins);
-    onCoinChange(newPlayerCoins);
+    // CHANGE: Call onCoinChange to inform the parent component about the wager.
+    onCoinChange(player1.coins - wager);
+    
     try {
         await updateUserCoins(userId, -wager);
         setGoldPool(wager * 2);
@@ -303,7 +304,8 @@ export default function PvpArena({
     } catch (e) {
         console.error("Failed to update user coins for wager:", e);
         setError("Lỗi khi đặt cược. Vui lòng thử lại.");
-        setPlayer1Coins(player1Coins); onCoinChange(player1Coins);
+        // CHANGE: Inform parent to revert the coin change
+        onCoinChange(player1.coins);
     }
   };
   
@@ -318,29 +320,10 @@ export default function PvpArena({
     setError('');
   };
 
-  // --- REACT HOOKS ---
-
-  // *** NEW: Lấy dữ liệu coin mới nhất khi component được tải ***
-  useEffect(() => {
-    const fetchLatestCoins = async () => {
-      try {
-        // Gọi updateUserCoins với amount = 0 để chỉ đọc dữ liệu coin hiện tại
-        const latestCoins = await updateUserCoins(userId, 0);
-        setPlayer1Coins(latestCoins);
-        onCoinChange(latestCoins); // Cập nhật cả state của component cha
-      } catch (error) {
-        console.error("Failed to fetch latest coins:", error);
-        // Nếu lỗi, giữ lại giá trị từ props như một phương án dự phòng
-      }
-    };
-
-    fetchLatestCoins();
-  }, [userId]); // Chạy lại nếu userId thay đổi
-
   useEffect(() => {
     if (battlePhase === 'searching') { searchTimeoutRef.current = setTimeout(() => { addLog(`[Lượt 0] Đã tìm thấy đối thủ: ${player2.name}. Trận đấu bắt đầu!`); setBattlePhase('fighting'); }, 2500); } else if (battlePhase === 'fighting' && !matchResult) { battleIntervalRef.current = setInterval(runBattleTurn, 1500); }
     return () => { if (battleIntervalRef.current) clearInterval(battleIntervalRef.current); if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current); };
-  }, [battlePhase, matchResult, turnCounter]); // Các dependencies cũ vẫn giữ nguyên
+  }, [battlePhase, matchResult, turnCounter]);
 
   // --- RENDER ---
   return (
@@ -355,7 +338,8 @@ export default function PvpArena({
       
       {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} positionClass={d.positionClass} colorClass={d.colorClass} />))}
       {showStatsModal && <PlayerStatsModal player={player1.initialStats} onClose={() => setShowStatsModal(false)} />}
-      {showWagerModal && <WagerModal onClose={() => setShowWagerModal(false)} onConfirm={handleConfirmWager} currentWager={wagerAmount} playerCoins={player1Coins}/>}
+      {/* CHANGE: Pass player1.coins from props to the modal */}
+      {showWagerModal && <WagerModal onClose={() => setShowWagerModal(false)} onConfirm={handleConfirmWager} currentWager={wagerAmount} playerCoins={player1.coins}/>}
       {battlePhase === 'searching' && <SearchingModal />}
 
       <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
@@ -367,7 +351,8 @@ export default function PvpArena({
                 </button>
                 <h1 className="text-2xl font-bold text-yellow-300 text-shadow tracking-widest">PVP</h1>
                 <div className="w-fit flex justify-end">
-                    <CoinDisplay displayedCoins={player1Coins} isStatsFullscreen={false} />
+                    {/* CHANGE: Display coins from props, the single source of truth */}
+                    <CoinDisplay displayedCoins={player1.coins} isStatsFullscreen={false} />
                 </div>
             </div>
         </header>
@@ -443,4 +428,4 @@ export default function PvpArena({
     </>
   );
 }
-// --- END OF FILE pvp.tsx ---
+// --- END OF FILE pvp.tsx (đã sửa đổi) ---
