@@ -7,9 +7,8 @@ import {
     getActivationChance, 
     getRarityTextColor 
 } from './skill-data.tsx';
-// --- NEW ---
-import CoinDisplay from './coin-display.tsx'; // Import component hiển thị vàng
-import { updateUserCoins } from './gameDataService.ts'; // Import hàm cập nhật vàng
+import CoinDisplay from './coin-display.tsx';
+import { updateUserCoins } from './gameDataService.ts';
 
 // --- TYPE DEFINITIONS ---
 type ActiveSkill = OwnedSkill & SkillBlueprint;
@@ -21,39 +20,32 @@ type CombatStats = {
     def: number;
 };
 
-// Data structure for a player entering the arena
-// --- MODIFIED ---: Thêm coins để quản lý việc cược
 type PlayerData = {
     name: string;
-    avatarUrl: string; // URL to player's avatar image
-    coins: number; // --- NEW ---: Số vàng hiện tại của người chơi
+    avatarUrl: string;
+    coins: number; 
     initialStats: CombatStats;
     equippedSkills: ActiveSkill[];
 };
 
-// --- MODIFIED ---: Thêm userId và onCoinChange
 interface PvpArenaProps {
   onClose: () => void;
-  userId: string; // --- NEW ---: ID người dùng để cập nhật dữ liệu
-  onCoinChange: (newAmount: number) => void; // --- NEW ---: Callback để cập nhật vàng ở component cha
-  // Player 1 is assumed to be the local user
+  userId: string;
+  onCoinChange: (newAmount: number) => void;
   player1: PlayerData; 
-  // Player 2 is the opponent
   player2: PlayerData; 
   onMatchEnd: (result: { winner: 'player1' | 'player2' | 'draw', loser: 'player1' | 'player2' | null }) => void;
 }
 
 
-// --- UI HELPER COMPONENTS (Adapted from boss.tsx) ---
+// --- UI HELPER COMPONENTS ---
 
-// --- NEW ---: SVG Icon cho bể vàng
 const GoldPotIcon = ({ className = '' }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
     <path fillRule="evenodd" d="M8.25 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM9.75 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM11.25 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM12.75 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM14.25 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75zM15.75 7.5a.75.75 0 01.75.75v5.25a.75.75 0 01-1.5 0V8.25a.75.75 0 01.75-.75z" clipRule="evenodd" />
     <path fillRule="evenodd" d="M5.25 2.25a.75.75 0 00-.75.75v1.5c0 .414.336.75.75.75h13.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75H5.25zM4.5 6.75a.75.75 0 00-.75.75v10.5c0 .414.336.75.75.75h15a.75.75 0 00.75-.75V7.5a.75.75 0 00-.75-.75H4.5zM3 7.5a1.5 1.5 0 011.5-1.5h15a1.5 1.5 0 011.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5h-15a1.5 1.5 0 01-1.5-1.5V7.5z" clipRule="evenodd" />
   </svg>
 );
-
 
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
@@ -145,8 +137,8 @@ const MatchResultModal = ({ result, player1Name, player2Name, onSearchAgain }: {
 // --- MAIN PVP ARENA COMPONENT ---
 export default function PvpArena({ 
   onClose, 
-  userId, // --- NEW ---
-  onCoinChange, // --- NEW ---
+  userId,
+  onCoinChange,
   player1, 
   player2,
   onMatchEnd
@@ -163,10 +155,11 @@ export default function PvpArena({
   const [damages, setDamages] = useState<{ id: number, text: string, positionClass: string, colorClass: string }[]>([]);
   const [showStatsModal, setShowStatsModal] = useState(false);
   
-  // --- NEW STATES FOR WAGER POOL ---
+  // --- STATES FOR WAGER POOL ---
   const [wagerAmount, setWagerAmount] = useState('100');
   const [goldPool, setGoldPool] = useState(0);
-  const [player1Coins, setPlayer1Coins] = useState(player1.coins);
+  // --- FIX ---: Initialize with a fallback to prevent 'undefined' error.
+  const [player1Coins, setPlayer1Coins] = useState(player1.coins || 0);
   const [error, setError] = useState('');
 
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -177,13 +170,12 @@ export default function PvpArena({
   const addLog = (message: string) => setCombatLog(prev => [message, ...prev].slice(0, 50));
   const showFloatingText = (text: string, colorClass: string, target: 'player1' | 'player2') => {
     const id = Date.now() + Math.random();
-    // Adjusted positions to center around the combatants
     const positionClass = target === 'player1' ? 'left-[25%]' : 'right-[25%]'; 
     setDamages(prev => [...prev, { id, text, positionClass, colorClass }]);
     setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
   };
   
-  // --- CORE BATTLE LOGIC FUNCTION (Unchanged) ---
+  // --- CORE BATTLE LOGIC FUNCTION ---
   const executeTurn = (
     attacker: { data: PlayerData, stats: CombatStats }, 
     defender: { data: PlayerData, stats: CombatStats }, 
@@ -293,7 +285,6 @@ export default function PvpArena({
     battleIntervalRef.current = setInterval(runBattleTurn, 100);
   };
 
-  // --- MODIFIED ---: Updated to handle wager payout
   const endMatch = async (result: 'player1' | 'player2' | 'draw') => {
     if (matchResult) return;
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
@@ -301,20 +292,19 @@ export default function PvpArena({
     const wager = parseInt(wagerAmount, 10) || 0;
     
     if (result === 'player1') {
-        addLog(`<b class="text-yellow-300">BẠN THẮNG!</b> Nhận được <b class="text-yellow-400">${goldPool}</b> vàng từ bể cược.`);
+        addLog(`<b class="text-yellow-300">BẠN THẮNG!</b> Nhận được <b class="text-yellow-400">${goldPool.toLocaleString()}</b> vàng từ bể cược.`);
         const newTotalCoins = player1Coins + goldPool;
         setPlayer1Coins(newTotalCoins);
         onCoinChange(newTotalCoins);
         await updateUserCoins(userId, goldPool);
     } else if (result === 'player2') {
-        addLog(`<b class="text-red-400">BẠN THUA!</b> Mất <b class="text-yellow-400">${wager}</b> vàng đã cược.`);
-        // Vàng đã bị trừ trước đó, không cần làm gì thêm
+        addLog(`<b class="text-red-400">BẠN THUA!</b> Mất <b class="text-yellow-400">${wager.toLocaleString()}</b> vàng đã cược.`);
     } else if (result === 'draw') {
-        addLog(`<b class="text-slate-400">HÒA!</b> Nhận lại <b class="text-yellow-400">${wager}</b> vàng đã cược.`);
+        addLog(`<b class="text-slate-400">HÒA!</b> Nhận lại <b class="text-yellow-400">${wager.toLocaleString()}</b> vàng đã cược.`);
         const newTotalCoins = player1Coins + wager;
         setPlayer1Coins(newTotalCoins);
         onCoinChange(newTotalCoins);
-        await updateUserCoins(userId, wager); // Hoàn lại tiền cược
+        await updateUserCoins(userId, wager);
     }
 
     setMatchResult(result);
@@ -326,7 +316,6 @@ export default function PvpArena({
     onMatchEnd(matchEndPayload);
   };
   
-  // --- NEW ---: Handles wager validation and starts the search
   const handleWagerAndSearch = async () => {
     if (battlePhase !== 'idle') return;
     
@@ -343,22 +332,19 @@ export default function PvpArena({
     
     setError('');
 
-    // Deduct coins from player
     const newPlayerCoins = player1Coins - wager;
     setPlayer1Coins(newPlayerCoins);
     onCoinChange(newPlayerCoins);
     
     try {
         await updateUserCoins(userId, -wager);
-        // Set up the gold pool (player's wager + opponent's matched wager)
         setGoldPool(wager * 2);
         
-        addLog(`[Hệ thống] Bạn đã cược <b class="text-yellow-400">${wager}</b> vàng. Đang tìm đối thủ...`);
+        addLog(`[Hệ thống] Bạn đã cược <b class="text-yellow-400">${wager.toLocaleString()}</b> vàng. Đang tìm đối thủ...`);
         setBattlePhase('searching');
     } catch (e) {
         console.error("Failed to update user coins for wager:", e);
         setError("Lỗi khi đặt cược. Vui lòng thử lại.");
-        // Revert local state if backend call fails
         setPlayer1Coins(player1Coins);
         onCoinChange(player1Coins);
     }
@@ -376,8 +362,6 @@ export default function PvpArena({
     setDamages([]);
     setPlayer1Stats(player1.initialStats);
     setPlayer2Stats(player2.initialStats);
-
-    // --- NEW ---: Reset wager state
     setGoldPool(0);
     setWagerAmount('100');
     setError('');
@@ -387,10 +371,9 @@ export default function PvpArena({
   useEffect(() => {
     if (battlePhase === 'searching') {
       searchTimeoutRef.current = setTimeout(() => {
-        // Match "found"
         addLog(`[Lượt 0] Đã tìm thấy đối thủ: ${player2.name}. Trận đấu bắt đầu!`);
         setBattlePhase('fighting');
-      }, 2500); // Simulate 2.5 second search time
+      }, 2500);
     } else if (battlePhase === 'fighting' && !matchResult) {
       battleIntervalRef.current = setInterval(runBattleTurn, 1500);
     }
@@ -399,7 +382,7 @@ export default function PvpArena({
       if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     };
-  }, [battlePhase, matchResult, turnCounter]); // Re-run effect based on phase changes
+  }, [battlePhase, matchResult, turnCounter]);
 
   // --- RENDER ---
   return (
@@ -429,7 +412,6 @@ export default function PvpArena({
                   <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                 </button>
                 <h1 className="text-2xl font-bold text-yellow-300 text-shadow tracking-widest">PVP</h1>
-                {/* --- MODIFIED ---: Added CoinDisplay here */}
                 <div className="w-fit flex justify-end">
                     <CoinDisplay displayedCoins={player1Coins} isStatsFullscreen={false} />
                 </div>
@@ -453,7 +435,6 @@ export default function PvpArena({
             </div>
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                {/* --- MODIFIED ---: Replaced idle display with Wager Pool UI */}
                 {battlePhase === 'idle' && (
                     <div className="flex flex-col items-center gap-6 w-full max-w-sm bg-slate-900/50 border border-slate-700/80 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
                       <h2 className="text-3xl text-yellow-300 tracking-wider text-shadow">WAGER POOL</h2>
@@ -492,7 +473,7 @@ export default function PvpArena({
                   <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
                       {combatLog.length > 0 && goldPool > 0 && (
                           <div className="text-center mb-2 font-bold text-yellow-300 border-t border-b border-yellow-600/30 py-1">
-                            Bể cược: {goldPool.toLocaleString()} Vàng
+                            Bể cược: {(goldPool || 0).toLocaleString()} Vàng
                           </div>
                       )}
                       {combatLog.map((entry, index) => (
