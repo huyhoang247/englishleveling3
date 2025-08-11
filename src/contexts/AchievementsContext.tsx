@@ -7,7 +7,7 @@ import {
   fetchAndSyncVocabularyData,
   updateAchievementData,
   VocabularyItem
-} from './gameDataService.ts';
+} from '../gameDataService.ts';
 
 // Định nghĩa shape của Context
 interface AchievementsContextState {
