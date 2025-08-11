@@ -1,4 +1,4 @@
-// --- START OF FILE item-database.ts (UPGRADED RANDOMNESS) ---
+// --- START OF FILE item-database.ts (UPGRADED RANDOMNESS & NEW WEAPONS) ---
 
 import { itemAssets } from '../game-assets.ts';
 
@@ -46,6 +46,7 @@ const rankModifiers: { [key in ItemRank]: { statMultiplier: number; levelMultipl
 };
 
 export const itemBlueprints: ItemBlueprint[] = [
+    // --- Các vật phẩm đã có ---
     { baseId: 1000, name: 'Nomad Sword', type: 'weapon', baseDescription: 'Thanh kiếm của dân du mục, thích hợp cho những chuyến đi dài.', icon: itemAssets.nomadSword, baseStats: { HP: 1000, ATK: 100, DEF: 50 }, baseMaxLevel: 10 },
     { baseId: 2000, name: 'Tunic', type: 'armor', baseDescription: 'Một chiếc áo tunic đơn giản, cung cấp sự bảo vệ cơ bản.', icon: itemAssets.tunic, baseStats: { defense: 8, magicResist: 2 }, baseMaxLevel: 10 },
     { baseId: 3000, name: 'Warrior\'s Sword', type: 'weapon', baseDescription: 'Thanh kiếm được rèn cho những chiến binh dũng cảm.', icon: itemAssets.warriorsSword, baseStats: { HP: 1800, ATK: 180, DEF: 90 }, baseMaxLevel: 15 },
@@ -54,6 +55,29 @@ export const itemBlueprints: ItemBlueprint[] = [
     { baseId: 6000, name: 'Forest Staff', type: 'weapon', baseDescription: 'Cây trượng làm từ gỗ rừng cổ thụ.', icon: itemAssets.forestStaff, baseStats: { HP: 1200, ATK: 200, DEF: 60 }, baseMaxLevel: 15 },
     { baseId: 7000, name: 'Hawkeye Bow', type: 'weapon', baseDescription: 'Cung của xạ thủ đại bàng, tầm bắn xa và độ chính xác cao.', icon: itemAssets.hawkeyeBow, baseStats: { HP: 1400, ATK: 160, DEF: 70 }, baseMaxLevel: 15 },
     { baseId: 8000, name: 'Assassin\'s Dagger', type: 'weapon', baseDescription: 'Con dao găm của sát thủ, nhanh và chí mạng.', icon: itemAssets.assassinsDagger, baseStats: { HP: 1100, ATK: 190, DEF: 55 }, baseMaxLevel: 15 },
+    
+    // --- CÁC VŨ KHÍ MỚI ĐƯỢC THÊM TỪ GAME-ASSETS.TS ---
+    
+    // Tier cơ bản (Tương tự Nomad)
+    { baseId: 9000, name: 'Nomad Staff', type: 'weapon', baseDescription: 'Cây trượng của dân du mục, chứa đựng ma thuật cơ bản.', icon: itemAssets.nomadStaff, baseStats: { HP: 900, ATK: 120, DEF: 40 }, baseMaxLevel: 10 },
+    { baseId: 10000, name: 'Nomad Bow', type: 'weapon', baseDescription: 'Cây cung của dân du mục, đáng tin cậy trên đường đi.', icon: itemAssets.nomadBow, baseStats: { HP: 1100, ATK: 110, DEF: 45 }, baseMaxLevel: 10 },
+
+    // Tier trung cấp (Tương tự Warrior's / Hawkeye)
+    { baseId: 11000, name: 'Mystic Staff', type: 'weapon', baseDescription: 'Cây trượng ẩn chứa những bí thuật cổ xưa, khuếch đại sức mạnh phép thuật.', icon: itemAssets.mysticStaff, baseStats: { HP: 1300, ATK: 220, DEF: 65 }, baseMaxLevel: 15 },
+    { baseId: 12000, name: 'Sacrificial Sword', type: 'weapon', baseDescription: 'Thanh kiếm hiến tế, đánh đổi sinh mệnh để lấy sức mạnh vô song.', icon: itemAssets.sacrificialSword, baseStats: { HP: 800, ATK: 260, DEF: 50 }, baseMaxLevel: 20 },
+
+    // Tier cao cấp (Mạnh mẽ, tương đương hoặc hơn Giant's Hammer)
+    { baseId: 13000, name: 'Leviathan Axe', type: 'weapon', baseDescription: 'Chiếc rìu được chế tác từ vảy của thủy quái Leviathan, mang sức nặng của đại dương.', icon: itemAssets.leviathanAxe, baseStats: { HP: 2800, ATK: 270, DEF: 120 }, baseMaxLevel: 20 },
+    { baseId: 14000, name: 'Angel Bow', type: 'weapon', baseDescription: 'Cây cung được ban phước bởi các thiên thần, bắn ra những mũi tên ánh sáng.', icon: itemAssets.angelBow, baseStats: { HP: 1600, ATK: 240, DEF: 80 }, baseMaxLevel: 20 },
+    { baseId: 15000, name: 'Shadow Scythe', type: 'weapon', baseDescription: 'Lưỡi hái của bóng tối, gặt hái linh hồn kẻ địch với mỗi nhát chém.', icon: itemAssets.shadowScythe, baseStats: { HP: 1500, ATK: 280, DEF: 70 }, baseMaxLevel: 20 },
+    { baseId: 16000, name: 'Demon Knight\'s Spear', type: 'weapon', baseDescription: 'Ngọn giáo của kỵ sĩ quỷ, có khả năng xuyên thủng mọi lớp giáp.', icon: itemAssets.demonKnightsSpear, baseStats: { HP: 2200, ATK: 250, DEF: 180 }, baseMaxLevel: 20 },
+
+    // Tier thần thoại (Vũ khí cuối game, cực kỳ mạnh)
+    { baseId: 17000, name: 'Divine Quarterstaff', type: 'weapon', baseDescription: 'Cây trường côn thần thánh, tỏa ra năng lượng thuần khiết có thể thanh tẩy mọi thứ.', icon: itemAssets.divineQuarterstaff, baseStats: { HP: 2000, ATK: 300, DEF: 120 }, baseMaxLevel: 25 },
+    { baseId: 18000, name: 'Meteor Staff', type: 'weapon', baseDescription: 'Cây trượng có khả năng triệu hồi những cơn mưa thiên thạch hủy diệt.', icon: itemAssets.meteorStaff, baseStats: { HP: 1800, ATK: 330, DEF: 90 }, baseMaxLevel: 25 },
+    { baseId: 19000, name: 'Chaos Staff', type: 'weapon', baseDescription: 'Cây trượng chứa đựng sức mạnh hỗn mang, không thể kiểm soát và không thể đoán trước.', icon: itemAssets.chaosStaff, baseStats: { HP: 2200, ATK: 380, DEF: 100 }, baseMaxLevel: 25 },
+    { baseId: 20000, name: 'Demon King\'s Daggers', type: 'weapon', baseDescription: 'Cặp dao găm của Quỷ Vương, mỗi nhát chém đều mang theo sự hủy diệt.', icon: itemAssets.demonKingsDaggers, baseStats: { HP: 1300, ATK: 320, DEF: 60 }, baseMaxLevel: 25 },
+    { baseId: 21000, name: 'Demon King\'s Longsword', type: 'weapon', baseDescription: 'Thanh trường kiếm của Quỷ Vương, thấm đẫm quyền năng hắc ám.', icon: itemAssets.demonKingsLongsword, baseStats: { HP: 3000, ATK: 350, DEF: 150 }, baseMaxLevel: 25 },
 ];
 
 const blueprintByBaseId = new Map<number, ItemBlueprint>(itemBlueprints.map(bp => [bp.baseId, bp]));
@@ -134,18 +158,20 @@ export function generateItemDefinition(blueprint: ItemBlueprint, rank: ItemRank,
 export const itemDatabase = new Map<number, ItemDefinition>([
     [2, { id: 2, name: 'Hard Armor', type: 'armor', rarity: 'B', description: 'Áo giáp cứng cáp, cung cấp khả năng phòng thủ vượt trội.', stats: { defense: 25, durability: 120 }, icon: itemAssets.hardArmor, maxLevel: 25 }],
     [26, { id: 26, name: 'Lá cây hiếm', type: 'material', rarity: 'D', description: 'Lá cây dùng để chế thuốc.', icon: '🍃' }],
-    [43, { id: 43, name: 'Sắt', type: 'material', rarity: 'E', description: 'Nguyên liệu cơ bản để rèn trang bị.', icon: itemAssets.sat }],
-    [44, { id: 44, name: 'Gỗ', type: 'material', rarity: 'E', description: 'Nguyên liệu cơ bản để chế tạo vật phẩm.', icon: itemAssets.go }],
-    [45, { id: 45, name: 'Da', type: 'material', rarity: 'E', description: 'Da động vật, nguyên liệu cơ bản để chế tạo giáp nhẹ.', icon: itemAssets.da }],
-    [46, { id: 46, name: 'Vải', type: 'material', rarity: 'E', description: 'Vải thô, dùng để chế tạo quần áo và túi.', icon: itemAssets.vai }],
-    [47, { id: 47, name: 'Mảnh ghép vũ khí', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một vũ khí ngẫu nhiên.', icon: itemAssets.manhGhepVuKhi }],
-    [48, { id: 48, name: 'Mảnh ghép áo giáp', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một áo giáp ngẫu nhiên.', icon: itemAssets.manhGhepAoGiap }],
-    [49, { id: 49, name: 'Thạch anh', type: 'material', rarity: 'E', description: 'Thạch anh, một loại nguyên liệu phổ biến.', icon: itemAssets.thachAnh }],
-    [50, { id: 50, name: 'Ngọc lục bảo', type: 'material', rarity: 'D', description: 'Ngọc lục bảo, nguyên liệu dùng trong chế tác.', icon: itemAssets.ngocLucBao }],
-    [51, { id: 51, name: 'Mảnh ghép helmet', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một chiếc mũ ngẫu nhiên.', icon: itemAssets.manhGhepHelmet }],
-    [52, { id: 52, name: 'Mảnh ghép găng tay', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một đôi găng tay ngẫu nhiên.', icon: itemAssets.manhGhepGangTay }],
-    [53, { id: 53, name: 'Mảnh ghép giày', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một đôi giày ngẫu nhiên.', icon: itemAssets.manhGhepGiay }],
-    [54, { id: 54, name: 'Mảnh ghép trang sức', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một món trang sức ngẫu nhiên.', icon: itemAssets.manhGhepTrangSuc }],
+    // Lưu ý: Các asset như sat, go, da... không tồn tại trong file game-assets.ts. 
+    // Giữ nguyên để không phá vỡ logic cũ nhưng cần được cập nhật sau.
+    [43, { id: 43, name: 'Sắt', type: 'material', rarity: 'E', description: 'Nguyên liệu cơ bản để rèn trang bị.', icon: 'placeholder' /* itemAssets.sat */ }],
+    [44, { id: 44, name: 'Gỗ', type: 'material', rarity: 'E', description: 'Nguyên liệu cơ bản để chế tạo vật phẩm.', icon: 'placeholder' /* itemAssets.go */ }],
+    [45, { id: 45, name: 'Da', type: 'material', rarity: 'E', description: 'Da động vật, nguyên liệu cơ bản để chế tạo giáp nhẹ.', icon: 'placeholder' /* itemAssets.da */ }],
+    [46, { id: 46, name: 'Vải', type: 'material', rarity: 'E', description: 'Vải thô, dùng để chế tạo quần áo và túi.', icon: 'placeholder' /* itemAssets.vai */ }],
+    [47, { id: 47, name: 'Mảnh ghép vũ khí', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một vũ khí ngẫu nhiên.', icon: 'placeholder' /* itemAssets.manhGhepVuKhi */ }],
+    [48, { id: 48, name: 'Mảnh ghép áo giáp', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một áo giáp ngẫu nhiên.', icon: 'placeholder' /* itemAssets.manhGhepAoGiap */ }],
+    [49, { id: 49, name: 'Thạch anh', type: 'material', rarity: 'E', description: 'Thạch anh, một loại nguyên liệu phổ biến.', icon: 'placeholder' /* itemAssets.thachAnh */ }],
+    [50, { id: 50, name: 'Ngọc lục bảo', type: 'material', rarity: 'D', description: 'Ngọc lục bảo, nguyên liệu dùng trong chế tác.', icon: 'placeholder' /* itemAssets.ngocLucBao */ }],
+    [51, { id: 51, name: 'Mảnh ghép helmet', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một chiếc mũ ngẫu nhiên.', icon: 'placeholder' /* itemAssets.manhGhepHelmet */ }],
+    [52, { id: 52, name: 'Mảnh ghép găng tay', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một đôi găng tay ngẫu nhiên.', icon: 'placeholder' /* itemAssets.manhGhepGangTay */ }],
+    [53, { id: 53, name: 'Mảnh ghép giày', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một đôi giày ngẫu nhiên.', icon: 'placeholder' /* itemAssets.manhGhepGiay */ }],
+    [54, { id: 54, name: 'Mảnh ghép trang sức', type: 'piece', rarity: 'E', description: 'Tập hợp đủ mảnh ghép có thể tạo ra một món trang sức ngẫu nhiên.', icon: 'placeholder' /* itemAssets.manhGhepTrangSuc */ }],
 ]);
 
 
@@ -160,7 +186,8 @@ export function getItemDefinition(id: number): ItemDefinition | undefined {
     const blueprint = blueprintByBaseId.get(baseId);
     if (blueprint && rankIndex >= 0 && rankIndex < RARITY_ORDER.length) {
         const rank = RARITY_ORDER[rankIndex];
-        const newItemDef = generateItemDefinition(blueprint, rank, true); // Vẫn gọi với true để cache lần đầu
+        // Khi lấy item theo ID, ta không dùng randomized craft mà dùng chỉ số gốc
+        const newItemDef = generateItemDefinition(blueprint, rank, false); 
         
         itemDatabase.set(newItemDef.id, newItemDef);
         
@@ -175,4 +202,4 @@ export function getBlueprintByName(name: string): ItemBlueprint | undefined {
     return blueprintByName.get(name);
 }
 
-// --- END OF FILE item-database.ts (UPGRADED RANDOMNESS) ---
+// --- END OF FILE item-database.ts (UPGRADED RANDOMNESS & NEW WEAPONS) ---
