@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx (UPDATED) ---
+// --- START OF FILE background-game.tsx ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -10,8 +10,7 @@ import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
-// import Inventory from './inventory.tsx'; // ĐÃ XÓA
-import PvpArena from './pvp.tsx'; // ĐÃ THÊM
+import PvpArena from './pvp.tsx';
 import DungeonCanvasBackground from './background-canvas.tsx';
 import LuckyChestGame from './lucky-game.tsx';
 import { uiAssets, lottieAssets } from './game-assets.ts';
@@ -209,8 +208,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
-  // const [isInventoryOpen, setIsInventoryOpen] = useState(false); // ĐÃ XÓA
-  const [isPvpArenaOpen, setIsPvpArenaOpen] = useState(false); // ĐÃ THÊM
+  const [isPvpArenaOpen, setIsPvpArenaOpen] = useState(false);
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
   const [isMinerChallengeOpen, setIsMinerChallengeOpen] = useState(false);
   const [isBossBattleOpen, setIsBossBattleOpen] = useState(false);
@@ -662,8 +660,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           setIsLoadingUserData(false);
         }
       } else {
-        setIsRankOpen(false); // setIsInventoryOpen(false); // ĐÃ XÓA
-        setIsPvpArenaOpen(false); // ĐÃ THÊM
+        setIsRankOpen(false); 
+        setIsPvpArenaOpen(false);
         setIsLuckyGameOpen(false);
         setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false);
@@ -711,8 +709,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   };
 
-  // TÁI CẤU TRÚC: Logic xử lý nhận thưởng đã được chuyển vào `thanh-tuu.tsx`.
-  // Hàm này giờ chỉ dùng để cập nhật state của component cha.
   const handleAchievementsUpdate = (updates: { coins: number; masteryCards: number; vocabulary: VocabularyItem[] }) => {
     console.log("Syncing state from AchievementsScreen. New coin count:", updates.coins);
     setCoins(updates.coins);
@@ -731,7 +727,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             const newState = !prev;
             if (newState) {
                 hideNavBar();
-                [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, // ĐÃ CẬP NHẬT
+                [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen,
                   setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen,
                   setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen
                 ].forEach(s => { if (s !== setter) s(false); });
@@ -742,8 +738,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   const toggleRank = createToggleFunction(setIsRankOpen);
-  // const toggleInventory = createToggleFunction(setIsInventoryOpen); // ĐÃ XÓA
-  const togglePvpArena = createToggleFunction(setIsPvpArenaOpen); // ĐÃ THÊM
+  const togglePvpArena = createToggleFunction(setIsPvpArenaOpen);
   const toggleLuckyGame = createToggleFunction(setIsLuckyGameOpen);
   const toggleMinerChallenge = createToggleFunction(setIsMinerChallengeOpen);
   const toggleBossBattle = createToggleFunction(setIsBossBattleOpen);
@@ -757,7 +752,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
   const handleSetToggleSidebar = (toggleFn: () => void) => { sidebarToggleRef.current = toggleFn; };
 
-  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen; // ĐÃ CẬP NHẬT
+  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
@@ -767,7 +762,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       const bonusAtk = calculateTotalStatValue(userStats.atk, statConfig.atk.baseUpgradeBonus);
       const bonusDef = calculateTotalStatValue(userStats.def, statConfig.def.baseUpgradeBonus);
       
-      // Get stat bonuses from equipped items
       let itemHpBonus = 0;
       let itemAtkBonus = 0;
       let itemDefBonus = 0;
@@ -793,13 +787,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       if (!ownedSkills || !equippedSkillIds) return [];
       
       const equippedDetails = equippedSkillIds
-          .map(equippedId => { // Renamed from ownedId for clarity
+          .map(equippedId => {
               if (!equippedId) return null;
-              // The equippedId directly corresponds to the unique ID in the ownedSkills array
               const owned = ownedSkills.find(s => s.id === equippedId);
               if (!owned) return null;
               
-              // The owned skill has a skillId that points to the blueprint
               const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId);
               if (!blueprint) return null;
 
@@ -847,8 +839,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
               {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle },
                  { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop },
-                 // ĐÃ THAY THẾ NÚT INVENTORY BẰNG PVP
-                 // Hãy chắc chắn bạn đã thêm 'pvpIcon' vào file game-assets.ts
                  { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena }
               ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
@@ -864,30 +854,30 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         {/* --- Overlays / Modals --- */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary> </div>
         
-        {/* KHỐI INVENTORY ĐÃ BỊ XÓA */}
-
-        {/* KHỐI PVP ARENA MỚI ĐÃ ĐƯỢC THÊM */}
+        {/* PVP ARENA BLOCK */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isPvpArenaOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isPvpArenaOpen && auth.currentUser && (
                     <PvpArena
                         onClose={togglePvpArena}
+                        userId={auth.currentUser.uid}
                         player1={{
                             name: auth.currentUser.displayName || "You",
                             avatarUrl: auth.currentUser.photoURL || "",
+                            coins: coins,
                             initialStats: getPlayerBattleStats(),
                             equippedSkills: getEquippedSkillsDetails()
                         }}
-                        // Dữ liệu đối thủ này là giả lập, cần thay thế bằng hệ thống tìm trận
                         player2={{
                             name: "Shadow Fiend",
-                            avatarUrl: "https://i.imgur.com/kQoG2Yd.png", // Một avatar giả lập
+                            avatarUrl: "https://i.imgur.com/kQoG2Yd.png",
                             initialStats: { maxHp: 1500, hp: 1500, atk: 120, def: 55 },
-                            equippedSkills: [] // Tạm thời để trống
+                            equippedSkills: []
                         }}
+                        onCoinChange={setCoins}
                         onMatchEnd={(result) => {
                             console.log(`Match ended. Winner: ${result.winner}`);
-                            // TODO: Thêm logic cập nhật điểm rank, phần thưởng...
+                            // TODO: Implement logic for rank updates, rewards, etc.
                         }}
                     />
                 )}
