@@ -8,6 +8,7 @@ import {
     getRarityTextColor 
 } from './skill-data.tsx';
 import CoinDisplay from './coin-display.tsx';
+// updateUserCoins đã được import, chúng ta sẽ tận dụng nó
 import { updateUserCoins } from './gameDataService.ts';
 
 // --- TYPE DEFINITIONS ---
@@ -171,9 +172,10 @@ export default function PvpArena({
   // --- WAGER & MODAL STATES ---
   const [wagerAmount, setWagerAmount] = useState('100');
   const [goldPool, setGoldPool] = useState(0);
+  // Khởi tạo state với giá trị từ props, nhưng sẽ được cập nhật ngay sau đó
   const [player1Coins, setPlayer1Coins] = useState(player1.coins || 0);
   const [error, setError] = useState('');
-  const [showWagerModal, setShowWagerModal] = useState(false); // --- NEW ---
+  const [showWagerModal, setShowWagerModal] = useState(false);
 
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -190,7 +192,6 @@ export default function PvpArena({
   
   // --- CORE BATTLE LOGIC (Unchanged) ---
   const executeTurn = ( attacker, defender, turn ) => {
-    // ... (logic from previous version, no changes needed here)
     const turnLogs: string[] = [];
     const log = (msg: string) => turnLogs.push(`[Lượt ${turn}] ${msg}`);
     const checkActivation = (rarity: string) => Math.random() * 100 < getActivationChance(rarity);
@@ -312,17 +313,34 @@ export default function PvpArena({
     setCombatLog([]); setTurnCounter(0); setCurrentPlayerTurn('player1'); setMatchResult(null); setBattlePhase('idle'); setDamages([]); setPlayer1Stats(player1.initialStats); setPlayer2Stats(player2.initialStats); setGoldPool(0); setWagerAmount('100'); setError('');
   };
 
-  // --- NEW ---: Handler for confirming wager from modal
   const handleConfirmWager = (newAmount: number) => {
     setWagerAmount(String(newAmount));
     setError('');
   };
 
-  // --- REACT HOOKS (unchanged) ---
+  // --- REACT HOOKS ---
+
+  // *** NEW: Lấy dữ liệu coin mới nhất khi component được tải ***
+  useEffect(() => {
+    const fetchLatestCoins = async () => {
+      try {
+        // Gọi updateUserCoins với amount = 0 để chỉ đọc dữ liệu coin hiện tại
+        const latestCoins = await updateUserCoins(userId, 0);
+        setPlayer1Coins(latestCoins);
+        onCoinChange(latestCoins); // Cập nhật cả state của component cha
+      } catch (error) {
+        console.error("Failed to fetch latest coins:", error);
+        // Nếu lỗi, giữ lại giá trị từ props như một phương án dự phòng
+      }
+    };
+
+    fetchLatestCoins();
+  }, [userId]); // Chạy lại nếu userId thay đổi
+
   useEffect(() => {
     if (battlePhase === 'searching') { searchTimeoutRef.current = setTimeout(() => { addLog(`[Lượt 0] Đã tìm thấy đối thủ: ${player2.name}. Trận đấu bắt đầu!`); setBattlePhase('fighting'); }, 2500); } else if (battlePhase === 'fighting' && !matchResult) { battleIntervalRef.current = setInterval(runBattleTurn, 1500); }
     return () => { if (battleIntervalRef.current) clearInterval(battleIntervalRef.current); if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current); };
-  }, [battlePhase, matchResult, turnCounter]);
+  }, [battlePhase, matchResult, turnCounter]); // Các dependencies cũ vẫn giữ nguyên
 
   // --- RENDER ---
   return (
@@ -371,14 +389,12 @@ export default function PvpArena({
             </div>
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                {/* --- MODIFIED ---: Reverted to old '?' UI and added wager display */}
                 {battlePhase === 'idle' && (
                     <div className="flex flex-col items-center gap-8">
                       <div className="w-40 h-40 md:w-56 md:h-56 bg-black/20 rounded-full flex items-center justify-center border-4 border-slate-700">
                           <span className="text-8xl font-black text-slate-500 select-none">?</span>
                       </div>
                       
-                      {/* --- NEW --- Wager Display Area */}
                       <div className="flex flex-col items-center gap-3 w-full max-w-xs">
                           <div className="flex items-center justify-center gap-4 bg-slate-900/50 border border-slate-700 rounded-lg p-2 w-full">
                               <span className="font-sans text-slate-300">Tiền cược:</span>
