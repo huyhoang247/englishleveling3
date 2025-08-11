@@ -1,3 +1,5 @@
+
+
 // --- START OF FILE game-assets.ts ---
 
 // ========================================================
@@ -42,6 +44,19 @@ export const dashboardAssets = {
   masteryIcon: require("./assets/images/mastery-icon.webp"),
   vocaJourneyIcon: require("./assets/images/voca-journey.webp"),
   dailyMissionsIcon: require("./assets/images/daily-missions.webp"),
+};
+
+/**
+ * Tài nguyên cho màn hình chính của tab Quiz
+ */
+export const quizHomeAssets = {
+  logoLarge: require("./assets/images/logo-large.webp"),
+  quizIcon: require("./assets/images/quiz.webp"),
+  wordChainGameIcon: require("./assets/images/word-chain-game.webp"),
+  examIcon: require("./assets/images/exam.webp"),
+  grammarIcon: require("./assets/images/grammar.webp"),
+  multipleChoiceIcon: require("./assets/images/multiple-choice.webp"),
+  fillInTheBlankIcon: require("./assets/images/fill-in-the-blank.webp"),
 };
 
 /**
@@ -123,10 +138,10 @@ export const treasureAssets = {
 export const allImageUrls = [
     ...Object.values(uiAssets).filter(url => typeof url === 'string'),
     ...Object.values(dashboardAssets),
+    ...Object.values(quizHomeAssets),
     ...Object.values(equipmentUiAssets),
     ...Object.values(itemAssets),
     ...Object.values(skillAssets).filter(url => typeof url === 'string'),
     ...Object.values(treasureAssets).filter(url => typeof url === 'string'),
 ];
 
-// --- END OF FILE game-assets.ts ---
