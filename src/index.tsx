@@ -12,7 +12,7 @@ import { auth, db } from './firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { allImageUrls } from './game-assets.ts';
-import { AchievementsProvider } from './contexts/AchievementsContext.tsx'; // THÊM IMPORT NÀY
+import { AchievementsProvider } from './contexts/AchievementsContext.tsx'; // THÊM DÒNG NÀY
 
 // Định nghĩa các loại tab có thể có
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
@@ -232,7 +232,7 @@ const App: React.FC = () => {
 
   // Giai đoạn 4: Mọi thứ đã sẵn sàng, hiển thị ứng dụng
   return (
-    <AchievementsProvider currentUser={currentUser}>
+    <AchievementsProvider user={currentUser}>
       <div className="app-container">
         {activeTab === 'home' && (
           <Home
