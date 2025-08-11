@@ -85,8 +85,6 @@ const App: React.FC = () => {
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [logoFloating, setLogoFloating] = useState(true);
-  
-  // THÊM STATE MỚI CHO THANH PROGRESS XÁC THỰC
   const [authLoadProgress, setAuthLoadProgress] = useState(0);
 
   // Effect để tạo animation "float" cho logo trên màn hình loading
@@ -97,27 +95,23 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // THÊM EFFECT MỚI ĐỂ TẠO HIỆU ỨNG TẢI CHO MÀN HÌNH XÁC THỰC
+  // Effect để tạo hiệu ứng tải cho màn hình xác thực
   useEffect(() => {
     if (loadingAuth) {
       const interval = setInterval(() => {
         setAuthLoadProgress(prev => {
-          // Tăng dần tiến trình nhưng không vượt quá 95%
-          // để chờ quá trình xác thực thật hoàn tất.
           if (prev >= 95) {
             clearInterval(interval);
             return 95;
           }
-          // Tăng ngẫu nhiên một chút cho "thật" hơn
           return prev + Math.floor(Math.random() * 5) + 2; 
         });
-      }, 120); // Cập nhật mỗi 120ms
-
-      return () => clearInterval(interval); // Dọn dẹp khi effect kết thúc
+      }, 120);
+      return () => clearInterval(interval);
     }
   }, [loadingAuth]);
 
-  // Effect để tải trước tất cả tài nguyên game, CHỈ KHI ĐÃ ĐĂNG NHẬP
+  // Effect để tải trước tất cả tài nguyên game
   useEffect(() => {
     let isCancelled = false;
     async function preloadAssets() {
@@ -147,21 +141,19 @@ const App: React.FC = () => {
   // Effect để lắng nghe trạng thái đăng nhập
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-       // Có một chút delay nhỏ để người dùng kịp thấy thanh progress chạy
        setTimeout(async () => {
         setCurrentUser(user);
         if (user) {
           await ensureUserDocumentExists(user);
         }
         setLoadingAuth(false);
-      }, 1500); // Delay 1.5 giây để hiệu ứng loading đẹp hơn
+      }, 1500);
     });
     return () => unsubscribe();
   }, []);
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    // Luôn hiển thị lại nav bar khi chuyển tab, component con sẽ tự quyết định ẩn đi nếu cần.
     setIsNavBarVisible(true);
   };
 
@@ -170,7 +162,7 @@ const App: React.FC = () => {
 
   // Giai đoạn 1: Chờ kiểm tra trạng thái đăng nhập ban đầu
   if (loadingAuth) {
-    const progress = authLoadProgress; // SỬA: Dùng state mới
+    const progress = authLoadProgress;
     return (
       <div className="relative flex flex-col items-center justify-start pt-40 w-full h-screen bg-slate-950 text-white font-sans
                       bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
@@ -182,11 +174,15 @@ const App: React.FC = () => {
               filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))',
           }}
         />
+        {/* SỬA ĐỔI: Đồng bộ giao diện */}
         <h1 className="text-xl font-bold tracking-wider text-gray-200 uppercase"
             style={{ textShadow: '0 0 8px rgba(0, 255, 255, 0.3)' }}>
-            Đang Xác Thực
+            ĐANG TẢI
         </h1>
-        <div className="w-80 lg:w-96 relative mt-5">
+        <p className="mt-1 mb-5 text-sm text-cyan-400/70 tracking-wide">
+            Xác thực người dùng...
+        </p>
+        <div className="w-80 lg:w-96 relative"> {/* SỬA ĐỔI: Bỏ mt-5 */}
           <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
                style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 20px rgba(0, 255, 255, 0.1)' }}>
             <div
