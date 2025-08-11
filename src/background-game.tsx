@@ -19,7 +19,7 @@ import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
-import AchievementsScreen, { initialVocabularyData } from './thanh-tuu.tsx';
+import AchievementsScreen from './thanh-tuu.tsx';
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './skill.tsx';
@@ -262,7 +262,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     } catch (error) {
       console.error("Error fetching vocabulary data via service:", error);
       // Giữ lại fallback để UI không bị crash
-      setVocabularyData(initialVocabularyData); 
+      setVocabularyData([]); 
     }
   };
 
