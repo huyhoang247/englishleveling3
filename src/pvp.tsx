@@ -8,7 +8,7 @@ import {
     getRarityTextColor 
 } from './skill-data.tsx';
 // --- NEW ---
-import CoinDisplay from './coin-display'; // Import component hiển thị vàng
+import CoinDisplay from './coin-display.tsx'; // Import component hiển thị vàng
 import { updateUserCoins } from './gameDataService.ts'; // Import hàm cập nhật vàng
 
 // --- TYPE DEFINITIONS ---
