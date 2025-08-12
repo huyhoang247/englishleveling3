@@ -103,5 +103,3 @@ to tell him the good news (để thông báo tin tốt lành)
 The company (Công ty)
 won a contract (đã giành được hợp đồng)
 to build the new bridge (xây dựng cây cầu mới)
-
-// --- END OF FILE phrases.txt ---
