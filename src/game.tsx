@@ -607,14 +607,17 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         {contentLines.map((line, index) => {
           if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
 
-          let renderableParts: (JSX.Element | string)[] = [];
+          let renderableParts: (JSX.Element | string | null)[] = [];
 
           // --- LOGIC PHÂN TÁCH DỰA TRÊN CHẾ ĐỘ ---
           if (highlightMode === 'phrase' && phraseRegex) {
               const parts = line.split(phraseRegex);
               renderableParts = parts.map((part, partIndex) => {
+                  if (!part) return null; // <<< FIX: Thêm guard clause để bỏ qua các phần rỗng
+
                   const normalizedPart = part.toLowerCase();
                   const foundPhrase = phraseMap.get(normalizedPart);
+                  
                   if (foundPhrase) {
                       return (
                           <span
@@ -629,7 +632,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                       );
                   }
                   return part;
-              });
+              }).filter(Boolean); // <<< FIX: Thêm filter để loại bỏ các phần tử null
 
           } else { // Chế độ 'word' (mặc định)
               const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
@@ -652,7 +655,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                   );
                 }
                 return <span key={`${index}-${partIndex}`}>{part}</span>;
-              }).filter(Boolean) as JSX.Element[];
+              }).filter(Boolean);
           }
 
           const isLikelyChapterTitle = index === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
