@@ -16,6 +16,7 @@ interface PhraseSentence {
 // QUAN TRỌNG: Mỗi câu phải được cách nhau bằng MỘT DÒNG TRỐNG.
 const rawPhraseStream = `
 
+couple of (cặp đôi)
 are created equals (đều được tạo ra bình đẳng)
 Finding equals (Việc tìm kiếm những người ngang tài ngang sức)
 in a competitive field (trong một lĩnh vực cạnh tranh)
