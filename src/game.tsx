@@ -607,13 +607,13 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         {contentLines.map((line, index) => {
           if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
 
-          let renderableParts: (JSX.Element | string | null)[] = [];
+          let renderableParts: (JSX.Element | null)[] = [];
 
           // --- LOGIC PHÂN TÁCH DỰA TRÊN CHẾ ĐỘ ---
           if (highlightMode === 'phrase' && phraseRegex) {
               const parts = line.split(phraseRegex);
               renderableParts = parts.map((part, partIndex) => {
-                  if (!part) return null; // <<< FIX: Thêm guard clause để bỏ qua các phần rỗng
+                  if (!part) return null; 
 
                   const normalizedPart = part.toLowerCase();
                   const foundPhrase = phraseMap.get(normalizedPart);
@@ -631,8 +631,9 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                           </span>
                       );
                   }
-                  return part;
-              }).filter(Boolean); // <<< FIX: Thêm filter để loại bỏ các phần tử null
+                  // <<< FIX: Bọc phần text thông thường vào một span với key duy nhất
+                  return <span key={`${index}-${partIndex}`}>{part}</span>;
+              }).filter(Boolean);
 
           } else { // Chế độ 'word' (mặc định)
               const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
