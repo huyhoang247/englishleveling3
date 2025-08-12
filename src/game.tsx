@@ -1,16 +1,16 @@
 // --- START OF FILE game.tsx ---
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import FlashcardDetailModal from './story/flashcard.tsx';
-import { defaultVocabulary } from './list-vocabulary.ts';
-import { defaultImageUrls as gameImageUrls } from './image-url.ts';
-import { Book, sampleBooks as initialSampleBooks } from './books-data.ts';
+import FlashcardDetailModal from './story/flashcard.tsx'; 
+import { defaultVocabulary } from './list-vocabulary.ts'; 
+import { defaultImageUrls as gameImageUrls } from './image-url.ts'; 
+import { Book, sampleBooks as initialSampleBooks } from './books-data.ts'; 
 import { auth, db } from './firebase.js'; 
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
-import { phraseData, PhraseSentence } from './phrase-data.ts'; 
-import PhraseDetailModal from './PhraseDetailModal.tsx';      
+// ================== THAY ĐỔI 1: IMPORT DỮ LIỆU CỤM TỪ ==================
+import { phraseData, PhraseSentence } from './phrase-data.ts';
 
 // --- Icons ---
 const PlayIcon = () => (
@@ -43,12 +43,20 @@ const StatsIcon = () => (
   </svg>
 );
 
-const HighlightIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-    <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
-  </svg>
+// ================== THAY ĐỔI 2: THÊM ICON MỚI CHO NÚT CHUYỂN ĐỔI ==================
+const HighlightWordIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4zm5.5 5.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" clipRule="evenodd" />
+        <path d="M10.857 13.25a.75.75 0 00-1.06 1.06l1.06-1.06zM13.25 15.143a.75.75 0 101.06-1.06l-1.06 1.06zm-2.393 1.893a.75.75 0 001.06-1.06l-1.06 1.06zM12.19 14.083l-1.333 1.333a.75.75 0 001.06 1.06l1.334-1.333a.75.75 0 00-1.06-1.06z" />
+    </svg>
 );
+
+const HighlightPhraseIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+    </svg>
+);
+
 
 // --- Interfaces ---
 interface Vocabulary {
@@ -358,6 +366,61 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
 };
 
 
+// ================== THAY ĐỔI 3: COMPONENT MODAL CHI TIẾT CỤM TỪ ==================
+interface PhraseDetailModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  phrase: PhraseSentence | null;
+}
+
+const PhraseDetailModal: React.FC<PhraseDetailModalProps> = ({ isOpen, onClose, phrase }) => {
+  if (!isOpen || !phrase) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg transform transition-all duration-300 max-h-[90vh] flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+            Chi tiết Cụm từ
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors"
+            aria-label="Đóng"
+          >
+            <XIcon />
+          </button>
+        </div>
+
+        <div className="p-6 overflow-y-auto">
+          <div className="mb-4">
+            <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-1">{phrase.fullEnglish}</h3>
+            <p className="text-md text-gray-600 dark:text-gray-300">{phrase.fullVietnamese}</p>
+          </div>
+          
+          <hr className="my-4 border-gray-200 dark:border-gray-600" />
+          
+          <div>
+            <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Phân tích từng phần</h4>
+            <ul className="space-y-2">
+              {phrase.parts.map((part, index) => (
+                <li key={index} className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md">
+                  <p className="font-medium text-gray-800 dark:text-gray-100">{part.english}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{part.vietnamese}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 // --- EbookReader Component ---
 const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => {
   const [booksData, setBooksData] = useState<Book[]>(initialSampleBooks);
@@ -373,16 +436,18 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isBatchPlaylistModalOpen, setIsBatchPlaylistModalOpen] = useState(false);
-  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   
-  // State mới cho chế độ highlight và chi tiết cụm từ
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+
+  // ================== THAY ĐỔI 4: THÊM STATE CHO CHẾ ĐỘ TÔ SÁNG VÀ MODAL CỤM TỪ ==================
   const [highlightMode, setHighlightMode] = useState<'word' | 'phrase'>('word');
   const [selectedPhrase, setSelectedPhrase] = useState<PhraseSentence | null>(null);
-  const [showPhraseDetail, setShowPhraseDetail] = useState(false);
-  
+  const [isPhraseModalOpen, setIsPhraseModalOpen] = useState(false);
+
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(user => {
       setCurrentUser(user);
@@ -428,26 +493,31 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   const currentBook = booksData.find(book => book.id === selectedBookId);
   
-  // Logic mới để xử lý cụm từ
-  const escapeRegExp = (string: string) => {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  };
+  // ================== THAY ĐỔI 5: XỬ LÝ TRƯỚC DỮ LIỆU CỤM TỪ ==================
+  const { phraseMap, phraseRegex } = useMemo(() => {
+    if (!phraseData || phraseData.length === 0) {
+      return { phraseMap: new Map(), phraseRegex: null };
+    }
+    
+    // Tạo map để tra cứu chi tiết cụm từ nhanh chóng
+    const map = new Map<string, PhraseSentence>();
+    phraseData.forEach(phrase => {
+      // Dùng tiếng Anh đầy đủ, không dấu câu, viết thường làm key để tìm kiếm dễ hơn
+      const key = phrase.fullEnglish.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").toLowerCase();
+      map.set(key, phrase);
+    });
+    
+    // Tạo một regex để tìm tất cả các cụm từ trong văn bản
+    const sortedPhrases = [...map.keys()].sort((a, b) => b.length - a.length);
+    const escapedPhrases = sortedPhrases.map(p =>
+      p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    );
+    
+    const regex = new RegExp(`(${escapedPhrases.join('|')})`, 'gi');
 
-  const phraseMap = useMemo(() => {
-      const map = new Map<string, PhraseSentence>();
-      phraseData.forEach(p => {
-          map.set(p.fullEnglish.toLowerCase(), p);
-      });
-      return map;
+    return { phraseMap: map, phraseRegex: regex };
   }, []);
 
-  const phraseRegex = useMemo(() => {
-      if (phraseMap.size === 0) return null;
-      const allPhrases = Array.from(phraseMap.keys()).sort((a, b) => b.length - a.length);
-      const escapedPhrases = allPhrases.map(phrase => escapeRegExp(phrase));
-      return new RegExp(`(${escapedPhrases.join('|')})`, 'gi');
-  }, [phraseMap]);
-  
   const bookVocabularyCardIds = useMemo(() => {
     if (!currentBook || vocabMap.size === 0) {
       return [];
@@ -526,7 +596,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         audioPlayerRef.current.pause();
       }
       setIsAudioPlaying(false);
-      setIsSidebarOpen(false);
+      setIsSidebarOpen(false); 
     }
   }, [selectedBookId, currentBook, hideNavBar, showNavBar, playbackSpeed]);
 
@@ -561,22 +631,24 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     }
   };
 
-  const handlePhraseClick = (phraseText: string) => {
-      const foundPhrase = phraseMap.get(phraseText.toLowerCase());
-      if (foundPhrase) {
-          setSelectedPhrase(foundPhrase);
-          setShowPhraseDetail(true);
-      }
-  };
-  
-  const closePhraseDetail = () => {
-    setShowPhraseDetail(false);
-    setSelectedPhrase(null);
-  };
-
   const closeVocabDetail = () => {
     setShowVocabDetail(false);
     setSelectedVocabCard(null);
+  };
+  
+  // ================== THAY ĐỔI 6: THÊM HANDLER CHO VIỆC CLICK VÀ ĐÓNG MODAL CỤM TỪ ==================
+  const handlePhraseClick = (phraseText: string) => {
+      const key = phraseText.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").toLowerCase();
+      const phraseDetails = phraseMap.get(key);
+      if (phraseDetails) {
+          setSelectedPhrase(phraseDetails);
+          setIsPhraseModalOpen(true);
+      }
+  };
+
+  const closePhraseModal = () => {
+      setIsPhraseModalOpen(false);
+      setSelectedPhrase(null);
   };
 
   const handleSelectBook = (bookId: string) => {
@@ -589,79 +661,82 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  const toggleHighlightMode = () => {
-    setHighlightMode(prev => prev === 'word' ? 'phrase' : 'word');
-  };
-
   const groupedBooks = groupBooksByCategory(booksData);
 
+  // ================== THAY ĐỔI 7: CẬP NHẬT LOGIC RENDER NỘI DUNG SÁCH ==================
   const renderBookContent = () => {
     if (isLoadingVocab) return <div className="text-center p-10 text-gray-500 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
     if (!currentBook) return <div className="text-center p-10 text-gray-500 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
 
     const contentLines = currentBook.content.trim().split(/\n+/);
-
+    
+    // --- Render theo từng dòng ---
     return (
       <div className="font-['Inter',_sans-serif] text-gray-800 dark:text-gray-200 px-2 sm:px-4 pb-24">
-        {contentLines.map((line, index) => {
-          if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
-          
-          let renderableParts;
+        {contentLines.map((line, lineIndex) => {
+            if (line.trim() === '') return <div key={`blank-${lineIndex}`} className="h-3 sm:h-4"></div>;
 
-          if (highlightMode === 'phrase' && phraseRegex) {
-              const parts = line.split(phraseRegex);
-              renderableParts = parts.map((part, partIndex) => {
-                  if (!part) return null;
-                  const isPhrase = partIndex % 2 === 1;
-                  if (isPhrase) {
-                      return (
-                          <span
-                              key={`${index}-${partIndex}`}
-                              className="font-semibold text-green-600 dark:text-green-400 bg-green-100/60 dark:bg-green-800/30 rounded-md px-1 py-0.5 hover:underline underline-offset-2 decoration-1 decoration-green-500/70 dark:decoration-green-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:bg-green-100 dark:hover:bg-green-800/50"
-                              onClick={() => handlePhraseClick(part)}
-                              role="button" tabIndex={0}
-                              onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handlePhraseClick(part); }}
-                          >
-                              {part}
-                          </span>
-                      );
-                  }
-                  return <span key={`${index}-${partIndex}`}>{part}</span>;
-              }).filter(Boolean);
-          } else {
-              const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
-              renderableParts = parts.map((part, partIndex) => {
-                  if (!part) return null;
-                  const isWord = /^\w+$/.test(part);
-                  const normalizedPart = part.toLowerCase();
-                  const isVocabWord = isWord && vocabMap.has(normalizedPart);
-                  if (isVocabWord) {
-                      return (
-                          <span
-                              key={`${index}-${partIndex}`}
-                              className="font-semibold text-blue-600 dark:text-blue-400 hover:underline underline-offset-2 decoration-1 decoration-blue-500/70 dark:decoration-blue-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-blue-700 dark:hover:text-blue-300"
-                              onClick={() => handleWordClick(part)}
-                              role="button" tabIndex={0}
-                              onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleWordClick(part); }}
-                          >
-                              {part}
-                          </span>
-                      );
-                  }
-                  return <span key={`${index}-${partIndex}`}>{part}</span>;
-              }).filter(Boolean);
-          }
+            let renderableParts;
 
-          const isLikelyChapterTitle = index === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
-          const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && index < 5 && index > 0) || ((line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70);
+            // --- Chế độ tô sáng CỤM TỪ ---
+            if (highlightMode === 'phrase' && phraseRegex) {
+                renderableParts = line.split(phraseRegex).map((part, partIndex) => {
+                    if (!part) return null;
+                    const key = part.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").toLowerCase();
+                    const isPhrase = phraseMap.has(key);
 
-          if (isLikelyChapterTitle) return <h2 key={`line-${index}`} className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-6 text-center">{renderableParts}</h2>;
-          if (isLikelySectionTitle) return <h3 key={`line-${index}`} className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">{renderableParts}</h3>;
-          return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
+                    if (isPhrase) {
+                        return (
+                            <span
+                                key={`${lineIndex}-${partIndex}`}
+                                className="font-semibold text-green-600 dark:text-green-400 hover:underline underline-offset-2 decoration-1 decoration-green-500/70 dark:decoration-green-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-green-700 dark:hover:text-green-300"
+                                onClick={() => handlePhraseClick(part)}
+                                role="button" tabIndex={0}
+                                onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handlePhraseClick(part); }}
+                            >
+                                {part}
+                            </span>
+                        );
+                    }
+                    return <span key={`${lineIndex}-${partIndex}`}>{part}</span>;
+                }).filter(Boolean);
+            } 
+            // --- Chế độ tô sáng TỪ ĐƠN (Mặc định) ---
+            else {
+                renderableParts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g).map((part, partIndex) => {
+                    if (!part) return null;
+                    const isWord = /^\w+$/.test(part);
+                    const normalizedPart = part.toLowerCase();
+                    const isVocabWord = isWord && vocabMap.has(normalizedPart);
+                    if (isVocabWord) {
+                        return (
+                            <span
+                                key={`${lineIndex}-${partIndex}`}
+                                className="font-semibold text-blue-600 dark:text-blue-400 hover:underline underline-offset-2 decoration-1 decoration-blue-500/70 dark:decoration-blue-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-blue-700 dark:hover:text-blue-300"
+                                onClick={() => handleWordClick(part)}
+                                role="button" tabIndex={0}
+                                onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleWordClick(part); }}
+                            >
+                                {part}
+                            </span>
+                        );
+                    }
+                    return <span key={`${lineIndex}-${partIndex}`}>{part}</span>;
+                }).filter(Boolean);
+            }
+            
+            // Logic xác định tiêu đề (giữ nguyên)
+            const isLikelyChapterTitle = lineIndex === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
+            const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && lineIndex < 5 && lineIndex > 0) || ((line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70);
+
+            if (isLikelyChapterTitle) return <h2 key={`line-${lineIndex}`} className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-6 text-center">{renderableParts}</h2>;
+            if (isLikelySectionTitle) return <h3 key={`line-${lineIndex}`} className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">{renderableParts}</h3>;
+            return <p key={`line-${lineIndex}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
         })}
       </div>
     );
   };
+
 
   const togglePlayPause = () => {
     if (!audioPlayerRef.current) return;
@@ -792,7 +867,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
           />
       )}
 
-
       {/* Main content */}
       {!selectedBookId ? (
         <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-850">
@@ -824,14 +898,16 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                     className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white dark:text-gray-200 dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105"
                   >
                     <StatsIcon />
-                    Thống kê Sách
+                    Thống kê
                   </button>
+
+                  {/* ================== THAY ĐỔI 8: NÚT CHUYỂN ĐỔI CHẾ ĐỘ TÔ SÁNG ================== */}
                   <button
-                    onClick={toggleHighlightMode}
+                    onClick={() => setHighlightMode(prev => prev === 'word' ? 'phrase' : 'word')}
                     className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white dark:text-gray-200 dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105"
                   >
-                    <HighlightIcon />
-                    {highlightMode === 'word' ? 'Highlight Cụm từ' : 'Highlight Từ đơn'}
+                    {highlightMode === 'word' ? <HighlightWordIcon /> : <HighlightPhraseIcon />}
+                    {highlightMode === 'word' ? 'Tô sáng: Từ' : 'Tô sáng: Cụm từ'}
                   </button>
                 </div>
               </div>
@@ -912,17 +988,15 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         vocabMap={vocabMap}
       />
       
-      {selectedPhrase && showPhraseDetail && (
-          <PhraseDetailModal
-            isOpen={showPhraseDetail}
-            onClose={closePhraseDetail}
-            phrase={selectedPhrase}
-          />
-      )}
+      {/* ================== THAY ĐỔI 9: RENDER MODAL CỤM TỪ ================== */}
+      <PhraseDetailModal
+        isOpen={isPhraseModalOpen}
+        onClose={closePhraseModal}
+        phrase={selectedPhrase}
+      />
     </div>
   );
 };
 
 export default EbookReader;
-
 // --- END OF FILE game.tsx ---
