@@ -1,0 +1,169 @@
+// --- START OF FILE: phrase-data.ts ---
+
+interface PhrasePart {
+  english: string;
+  vietnamese: string;
+}
+
+interface PhraseSentence {
+  parts: PhrasePart[];
+  fullEnglish: string;
+  fullVietnamese: string;
+}
+
+// --- DỮ LIỆU GỐC ---
+// Dán toàn bộ danh sách cụm từ vào đây.
+// QUAN TRỌNG: Mỗi câu phải được cách nhau bằng MỘT DÒNG TRỐNG.
+const rawPhraseStream = `
+
+are created equals (đều được tạo ra bình đẳng)
+Finding equals (Việc tìm kiếm những người ngang tài ngang sức)
+in a competitive field (trong một lĩnh vực cạnh tranh)
+can be challenging (có thể rất thách thức)
+Researchers (Các nhà nghiên cứu)
+have discovered (đã phát hiện ra)
+a new treatment (một phương pháp điều trị mới)
+for the disease (cho căn bệnh)
+The team of researchers (Nhóm nghiên cứu)
+is conducting a survey (đang tiến hành một cuộc khảo sát)
+on consumer behavior (về hành vi tiêu dùng)
+Researchers need (Các nhà nghiên cứu cần)
+to publish their findings (công bố kết quả nghiên cứu của mình)
+to share knowledge (để chia sẻ kiến thức)
+She had made (Cô ấy đã)
+all the arrangements (sắp xếp tất cả mọi thứ)
+prior to her departure (trước khi rời đi)
+Prior experience (Kinh nghiệm trước đó)
+in the field (trong lĩnh vực này)
+is required (là yêu cầu)
+for this job (cho công việc này)
+It's important (Việc là quan trọng)
+to set priorities (đặt ra các ưu tiên)
+prior to making a decision (trước khi đưa ra quyết định)
+The conflict (Xung đột)
+between the two countries (giữa hai quốc gia)
+has escalated (đã leo thang)
+She tries (Cô ấy cố gắng)
+to avoid conflict (tránh xung đột)
+at work (tại nơi làm việc)
+There is (Có)
+a major conflict of interest (một mâu thuẫn lợi ích lớn)
+between the two parties involved (giữa hai bên liên quan)
+The research institute (Viện nghiên cứu)
+focuses on (tập trung vào)
+environmental studies (nghiên cứu môi trường)
+He enrolled (Anh ấy đã nhập học)
+in an institute (tại một tổ chức)
+to learn English (để học tiếng Anh)
+The institute (Viện)
+offers (cung cấp)
+various courses (các khóa học đa dạng)
+for professionals (cho các chuyên gia)
+The car (Chiếc xe)
+got stuck (bị mắc kẹt)
+in the mud (trong bùn)
+I'm stuck (Tôi mắc kẹt)
+on this problem (ở bài toán này);
+can you help me? (bạn có thể giúp tôi không?)
+She felt stuck (Cô ấy cảm thấy mắc kẹt)
+in a job (trong một công việc)
+that she didn't love (mà cô ấy không yêu thích)
+He climbed (Anh ấy leo)
+to the top of the mountain (lên đỉnh núi)
+and enjoyed the view (và tận hưởng khung cảnh)
+She placed (Cô ấy đặt)
+the book (quyển sách)
+on the top shelf (lên kệ trên cùng)
+of the bookshelf (của giá sách)
+Winning the competition (Chiến thắng cuộc thi)
+put her (đã đưa cô ấy)
+at the top of the leaderboard (lên đầu bảng xếp hạng)
+The manager (Người quản lý)
+asked for (yêu cầu)
+the sales reports (các báo cáo bán hàng)
+by the end of the day (vào cuối ngày)
+There are reports (Có báo cáo)
+of heavy rain (về mưa lớn)
+in the northern region (ở khu vực phía Bắc)
+Students must submit (Sinh viên phải nộp)
+their project reports (báo cáo dự án của mình)
+before the deadline (trước hạn chót)
+The government (Chính phủ)
+will grant funds (sẽ cấp kinh phí)
+to the research project (cho dự án nghiên cứu)
+The scholarship grant (Học bổng)
+covers (chi trả)
+all her tuition fees (toàn bộ học phí của cô ấy)
+We applied for (Chúng tôi đã xin)
+a grant (một khoản tài trợ)
+to start our research (để bắt đầu nghiên cứu)
+The journalist (Nhà báo)
+used (đã sử dụng)
+multiple sources (nhiều nguồn)
+for her article (cho bài báo của mình)
+Renewable energy sources (Nguồn năng lượng tái tạo)
+are vital (rất quan trọng)
+for sustainable development (cho sự phát triển bền vững)
+The book (Cuốn sách)
+lists (liệt kê)
+all its sources (tất cả các nguồn của nó)
+at the end (ở cuối)
+Her husband (Chồng cô ấy)
+works (làm việc)
+in the IT industry (trong ngành công nghệ thông tin)
+They became (Họ trở thành)
+husband and wife (vợ chồng)
+in a beautiful ceremony (trong một lễ cưới tuyệt đẹp)
+She called (Cô ấy gọi)
+her husband (cho chồng)
+to tell him the good news (để thông báo tin tốt lành)
+The company (Công ty)
+won a contract (đã giành được hợp đồng)
+to build the new bridge (xây dựng cây cầu mới)
+
+
+`;
+
+// --- LOGIC TỰ ĐỘNG XỬ LÝ --- (Không cần sửa phần dưới này)
+
+/**
+ * Phân tích một khối chuỗi của một câu thành các phần (Anh-Việt).
+ * @param block Chuỗi của một câu.
+ * @returns Một mảng các đối tượng PhrasePart.
+ */
+const parseSingleSentenceBlock = (block: string): PhrasePart[] => {
+  const lines = block.split('\n').filter(line => line.trim() !== '');
+  const partRegex = /^(.*)\s\((.*)\)$/;
+
+  return lines.map(line => {
+    const match = line.trim().match(partRegex);
+    if (match && match.length === 3) {
+      return {
+        // Tự động loại bỏ dấu ' và , khỏi tiếng Anh
+        english: match[1].trim().replace(/'/g, '').replace(/,/g, ''),
+        vietnamese: match[2].trim(),
+      };
+    }
+    console.warn(`Dòng sau không khớp định dạng "English (Vietnamese)": ${line}`);
+    return { english: line.trim(), vietnamese: 'N/A' };
+  });
+};
+
+// Tự động xử lý toàn bộ khối văn bản để cung cấp cho ứng dụng
+export const phraseData: PhraseSentence[] = rawPhraseStream
+  .trim()
+  // Tách thành các câu dựa trên các dòng trống
+  .split(/\n\s*\n/)
+  .map(block => {
+    const parts = parseSingleSentenceBlock(block.trim());
+    if (parts.length === 0) return null;
+    return {
+      parts,
+      fullEnglish: parts.map(p => p.english).join(' '),
+      fullVietnamese: parts.map(p => p.vietnamese).join(' '),
+    };
+  })
+  // Lọc ra các kết quả rỗng (nếu có nhiều dòng trống liên tiếp)
+  .filter((item): item is PhraseSentence => item !== null);
+
+// --- END OF FILE: phrase-data.ts ---
