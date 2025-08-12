@@ -9,7 +9,7 @@ import { auth, db } from './firebase.js';
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
-import { phraseData } from '../phrase-data.ts'; // <-- IMPORT PHRASE DATA
+import { phraseData } from './phrase-data.ts'; // <-- IMPORT PHRASE DATA
 import PhraseDetailModal from './PhraseDetailModal.tsx'; // <-- IMPORT PHRASE MODAL MỚI
 
 // --- Icons ---
