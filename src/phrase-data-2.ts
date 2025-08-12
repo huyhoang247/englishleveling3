@@ -13,7 +13,7 @@ interface PhraseSentence {
 
 // --- DỮ LIỆU GỐC ---
 // Dán toàn bộ danh sách cụm từ vào đây.
-// QUAN TRỌNG: Mỗi câu phải được cách nhau bằng MỘT DÒNG TRỐNG.
+// QUAN TRỌNG: Mỗi cụm từ đơn lẻ nên nằm trên MỘT DÒNG.
 const rawPhraseStream = `
 
 couple of (cặp đôi)
@@ -125,46 +125,35 @@ to build the new bridge (xây dựng cây cầu mới)
 
 `;
 
-// --- LOGIC TỰ ĐỘNG XỬ LÝ --- (Không cần sửa phần dưới này)
+// --- LOGIC TỰ ĐỘNG XỬ LÝ --- (ĐÃ SỬA LỖI)
 
-/**
- * Phân tích một khối chuỗi của một câu thành các phần (Anh-Việt).
- * @param block Chuỗi của một câu.
- * @returns Một mảng các đối tượng PhrasePart.
- */
-const parseSingleSentenceBlock = (block: string): PhrasePart[] => {
-  const lines = block.split('\n').filter(line => line.trim() !== '');
-  const partRegex = /^(.*)\s\((.*)\)$/;
-
-  return lines.map(line => {
-    const match = line.trim().match(partRegex);
-    if (match && match.length === 3) {
-      return {
-        // Tự động loại bỏ dấu ' và , khỏi tiếng Anh
-        english: match[1].trim().replace(/'/g, '').replace(/,/g, ''),
-        vietnamese: match[2].trim(),
-      };
-    }
-    console.warn(`Dòng sau không khớp định dạng "English (Vietnamese)": ${line}`);
-    return { english: line.trim(), vietnamese: 'N/A' };
-  });
-};
+const partRegex = /^(.*)\s\((.*)\)$/;
 
 // Tự động xử lý toàn bộ khối văn bản để cung cấp cho ứng dụng
 export const phraseData: PhraseSentence[] = rawPhraseStream
   .trim()
-  // Tách thành các câu dựa trên các dòng trống
-  .split(/\n\s*\n/)
-  .map(block => {
-    const parts = parseSingleSentenceBlock(block.trim());
-    if (parts.length === 0) return null;
+  // Tách thành các dòng riêng lẻ, vì mỗi dòng là một cụm từ
+  .split('\n')
+  // Lọc ra các dòng trống hoặc dòng comment
+  .filter(line => line.trim() !== '' && !line.trim().startsWith('//'))
+  .map(line => {
+    const match = line.trim().match(partRegex);
+    if (!match || match.length !== 3) {
+      console.warn(`Dòng sau không khớp định dạng "English (Vietnamese)": ${line}`);
+      return null;
+    }
+
+    const englishPart = match[1].trim().replace(/'/g, '').replace(/,/g, '');
+    const vietnamesePart = match[2].trim();
+
+    // Mỗi dòng bây giờ là một "PhraseSentence" hoàn chỉnh với một "PhrasePart" duy nhất
     return {
-      parts,
-      fullEnglish: parts.map(p => p.english).join(' '),
-      fullVietnamese: parts.map(p => p.vietnamese).join(' '),
+      parts: [{ english: englishPart, vietnamese: vietnamesePart }],
+      fullEnglish: englishPart,
+      fullVietnamese: vietnamesePart,
     };
   })
-  // Lọc ra các kết quả rỗng (nếu có nhiều dòng trống liên tiếp)
+  // Lọc ra các kết quả rỗng (do dòng không đúng định dạng)
   .filter((item): item is PhraseSentence => item !== null);
 
 // --- END OF FILE: phrase-data.ts ---
