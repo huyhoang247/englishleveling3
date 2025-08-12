@@ -639,7 +639,6 @@ to call me (gọi cho tôi)
 I (Tôi)
 don't want you (không muốn bạn)
 to get into trouble (gặp rắc rối)
-Chắc chắn rồi! Dưới đây là các câu đã được tách thành các cụm từ dễ hiểu, đã loại bỏ các đường gạch ngang
 Her outspokenness (Sự thẳng thắn của cô ấy)
 sometimes causes trouble (đôi khi gây rắc rối)
 at work (tại nơi làm việc)
