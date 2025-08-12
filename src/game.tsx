@@ -9,7 +9,6 @@ import { auth, db } from './firebase.js';
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
-// ================== THAY ĐỔI 1: IMPORT DỮ LIỆU CỤM TỪ ==================
 import { phraseData, PhraseSentence } from './phrase-data.ts';
 
 // --- Icons ---
@@ -43,16 +42,14 @@ const StatsIcon = () => (
   </svg>
 );
 
-// ================== THAY ĐỔI 2: THÊM ICON MỚI CHO NÚT CHUYỂN ĐỔI ==================
 const HighlightWordIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4zm5.5 5.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" clipRule="evenodd" />
-        <path d="M10.857 13.25a.75.75 0 00-1.06 1.06l1.06-1.06zM13.25 15.143a.75.75 0 101.06-1.06l-1.06 1.06zm-2.393 1.893a.75.75 0 001.06-1.06l-1.06 1.06zM12.19 14.083l-1.333 1.333a.75.75 0 001.06 1.06l1.334-1.333a.75.75 0 00-1.06-1.06z" />
     </svg>
 );
 
 const HighlightPhraseIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
         <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
     </svg>
 );
@@ -366,7 +363,7 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
 };
 
 
-// ================== THAY ĐỔI 3: COMPONENT MODAL CHI TIẾT CỤM TỪ ==================
+// --- Phrase Detail Modal Component ---
 interface PhraseDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -397,7 +394,7 @@ const PhraseDetailModal: React.FC<PhraseDetailModalProps> = ({ isOpen, onClose, 
 
         <div className="p-6 overflow-y-auto">
           <div className="mb-4">
-            <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-1">{phrase.fullEnglish}</h3>
+            <h3 className="text-xl font-bold text-green-600 dark:text-green-400 mb-1">{phrase.fullEnglish}</h3>
             <p className="text-md text-gray-600 dark:text-gray-300">{phrase.fullVietnamese}</p>
           </div>
           
@@ -443,10 +440,12 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
 
-  // ================== THAY ĐỔI 4: THÊM STATE CHO CHẾ ĐỘ TÔ SÁNG VÀ MODAL CỤM TỪ ==================
   const [highlightMode, setHighlightMode] = useState<'word' | 'phrase'>('word');
   const [selectedPhrase, setSelectedPhrase] = useState<PhraseSentence | null>(null);
   const [isPhraseModalOpen, setIsPhraseModalOpen] = useState(false);
+
+  // SỬA LỖI: Thêm state để lưu các câu ví dụ tìm được
+  const [relatedExampleSentences, setRelatedExampleSentences] = useState<PhraseSentence[]>([]);
 
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(user => {
@@ -493,27 +492,23 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   const currentBook = booksData.find(book => book.id === selectedBookId);
   
-  // ================== THAY ĐỔI 5: XỬ LÝ TRƯỚC DỮ LIỆU CỤM TỪ ==================
   const { phraseMap, phraseRegex } = useMemo(() => {
     if (!phraseData || phraseData.length === 0) {
       return { phraseMap: new Map(), phraseRegex: null };
     }
     
-    // Tạo map để tra cứu chi tiết cụm từ nhanh chóng
     const map = new Map<string, PhraseSentence>();
     phraseData.forEach(phrase => {
-      // Dùng tiếng Anh đầy đủ, không dấu câu, viết thường làm key để tìm kiếm dễ hơn
       const key = phrase.fullEnglish.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").toLowerCase();
       map.set(key, phrase);
     });
     
-    // Tạo một regex để tìm tất cả các cụm từ trong văn bản
     const sortedPhrases = [...map.keys()].sort((a, b) => b.length - a.length);
     const escapedPhrases = sortedPhrases.map(p =>
       p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     );
     
-    const regex = new RegExp(`(${escapedPhrases.join('|')})`, 'gi');
+    const regex = new RegExp(`\\b(${escapedPhrases.join('|')})\\b`, 'gi');
 
     return { phraseMap: map, phraseRegex: regex };
   }, []);
@@ -608,35 +603,47 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     }
   }, [isDarkMode]);
 
+  // SỬA LỖI: Cập nhật hàm handleWordClick
   const handleWordClick = (word: string) => {
     const normalizedWord = word.toLowerCase();
     const foundVocab = vocabMap.get(normalizedWord);
 
     if (foundVocab) {
+      // Tìm URL ảnh
       let cardImageUrl = `https://placehold.co/1024x1536/E0E0E0/333333?text=${encodeURIComponent(foundVocab.word)}`;
       const vocabIndex = defaultVocabulary.findIndex(v => v.toLowerCase() === normalizedWord);
-
       if (vocabIndex !== -1 && vocabIndex < gameImageUrls.length) {
         cardImageUrl = gameImageUrls[vocabIndex];
       }
-
+      
+      // Tạo flashcard tạm thời
       const tempFlashcard: Flashcard = {
         id: vocabIndex !== -1 ? vocabIndex + 1 : Date.now(),
         imageUrl: { default: cardImageUrl },
         isFavorite: false,
         vocabulary: foundVocab,
       };
+
+      // Tìm các câu ví dụ liên quan từ phraseData (dùng cho tab "Ví dụ" trong modal)
+      const sentences = phraseData.filter(sentence =>
+        // Dùng regex để tìm chính xác từ, tránh trường hợp từ này là một phần của từ khác
+        new RegExp(`\\b${foundVocab.word}\\b`, 'i').test(sentence.fullEnglish)
+      );
+
+      // Cập nhật state để mở modal
       setSelectedVocabCard(tempFlashcard);
+      setRelatedExampleSentences(sentences); // Set dữ liệu câu ví dụ
       setShowVocabDetail(true);
     }
   };
 
+  // SỬA LỖI: Cập nhật hàm closeVocabDetail để reset state
   const closeVocabDetail = () => {
     setShowVocabDetail(false);
     setSelectedVocabCard(null);
+    setRelatedExampleSentences([]); // Reset mảng câu ví dụ khi đóng modal
   };
   
-  // ================== THAY ĐỔI 6: THÊM HANDLER CHO VIỆC CLICK VÀ ĐÓNG MODAL CỤM TỪ ==================
   const handlePhraseClick = (phraseText: string) => {
       const key = phraseText.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").toLowerCase();
       const phraseDetails = phraseMap.get(key);
@@ -663,14 +670,12 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   const groupedBooks = groupBooksByCategory(booksData);
 
-  // ================== THAY ĐỔI 7: CẬP NHẬT LOGIC RENDER NỘI DUNG SÁCH ==================
   const renderBookContent = () => {
     if (isLoadingVocab) return <div className="text-center p-10 text-gray-500 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
     if (!currentBook) return <div className="text-center p-10 text-gray-500 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
 
     const contentLines = currentBook.content.trim().split(/\n+/);
     
-    // --- Render theo từng dòng ---
     return (
       <div className="font-['Inter',_sans-serif] text-gray-800 dark:text-gray-200 px-2 sm:px-4 pb-24">
         {contentLines.map((line, lineIndex) => {
@@ -678,7 +683,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
             let renderableParts;
 
-            // --- Chế độ tô sáng CỤM TỪ ---
             if (highlightMode === 'phrase' && phraseRegex) {
                 renderableParts = line.split(phraseRegex).map((part, partIndex) => {
                     if (!part) return null;
@@ -701,7 +705,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                     return <span key={`${lineIndex}-${partIndex}`}>{part}</span>;
                 }).filter(Boolean);
             } 
-            // --- Chế độ tô sáng TỪ ĐƠN (Mặc định) ---
             else {
                 renderableParts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g).map((part, partIndex) => {
                     if (!part) return null;
@@ -725,7 +728,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                 }).filter(Boolean);
             }
             
-            // Logic xác định tiêu đề (giữ nguyên)
             const isLikelyChapterTitle = lineIndex === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
             const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && lineIndex < 5 && lineIndex > 0) || ((line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70);
 
@@ -880,7 +882,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white text-center mb-2">{currentBook.title}</h1>
                 {currentBook.author && <p className="text-sm sm:text-md text-center text-gray-500 dark:text-gray-400">Tác giả: {currentBook.author}</p>}
                 
-                <div className="mt-6 flex flex-wrap justify-center items-center gap-4">
+                <div className="mt-6 flex flex-wrap justify-center items-center gap-3">
                   {currentUser && bookVocabularyCardIds.length > 0 && (
                       <button
                           onClick={() => setIsBatchPlaylistModalOpen(true)}
@@ -890,7 +892,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                               <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" />
                               <path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" />
                           </svg>
-                          Lưu {bookVocabularyCardIds.length} từ vựng
+                          Lưu {bookVocabularyCardIds.length} từ
                       </button>
                   )}
                   <button
@@ -900,14 +902,13 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                     <StatsIcon />
                     Thống kê
                   </button>
-
-                  {/* ================== THAY ĐỔI 8: NÚT CHUYỂN ĐỔI CHẾ ĐỘ TÔ SÁNG ================== */}
+                  
                   <button
                     onClick={() => setHighlightMode(prev => prev === 'word' ? 'phrase' : 'word')}
                     className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white dark:text-gray-200 dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105"
                   >
                     {highlightMode === 'word' ? <HighlightWordIcon /> : <HighlightPhraseIcon />}
-                    {highlightMode === 'word' ? 'Tô sáng: Từ' : 'Tô sáng: Cụm từ'}
+                    {highlightMode === 'word' ? 'Tô sáng Từ' : 'Tô sáng Cụm'}
                   </button>
                 </div>
               </div>
@@ -960,11 +961,12 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         </div>
       )}
 
+      {/* SỬA LỖI: Truyền đúng dữ liệu vào prop exampleSentencesData */}
       {selectedVocabCard && showVocabDetail && (
         <FlashcardDetailModal
           selectedCard={selectedVocabCard}
           showVocabDetail={showVocabDetail}
-          exampleSentencesData={[]}
+          exampleSentencesData={relatedExampleSentences} 
           onClose={closeVocabDetail}
           currentVisualStyle="default"
         />
@@ -988,7 +990,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         vocabMap={vocabMap}
       />
       
-      {/* ================== THAY ĐỔI 9: RENDER MODAL CỤM TỪ ================== */}
       <PhraseDetailModal
         isOpen={isPhraseModalOpen}
         onClose={closePhraseModal}
