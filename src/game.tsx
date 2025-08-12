@@ -1,15 +1,16 @@
 // --- START OF FILE game.tsx ---
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import FlashcardDetailModal from './story/flashcard.tsx'; 
-import { defaultVocabulary } from './list-vocabulary.ts'; 
-import { defaultImageUrls as gameImageUrls } from './image-url.ts'; 
-import { Book, sampleBooks as initialSampleBooks } from './books-data.ts'; 
+import FlashcardDetailModal from './story/flashcard.tsx'; // Assuming this path is correct
+import { defaultVocabulary } from './list-vocabulary.ts'; // Assuming this path is correct
+import { defaultImageUrls as gameImageUrls } from './image-url.ts'; // Assuming this path is correct
+import { Book, sampleBooks as initialSampleBooks } from './books-data.ts'; // Assuming this path is correct
 import { auth, db } from './firebase.js'; 
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
-import { phraseData, PhraseSentence } from './phrase-data.ts';
+import { phraseData } from '../phrase-data.ts'; // <-- IMPORT PHRASE DATA
+import PhraseDetailModal from './PhraseDetailModal.tsx'; // <-- IMPORT PHRASE MODAL MỚI
 
 // --- Icons ---
 const PlayIcon = () => (
@@ -30,7 +31,7 @@ const MenuIcon = () => (
   </svg>
 );
 
-const XIcon = () => (
+const XIcon = () => ( // For closing modals and sidebar
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
@@ -40,18 +41,6 @@ const StatsIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
     <path fillRule="evenodd" d="M5 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zM9 9a1 1 0 00-1 1v6a1 1 0 102 0v-6a1 1 0 00-1-1zm4-5a1 1 0 00-1 1v10a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" />
   </svg>
-);
-
-const HighlightWordIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4zm5.5 5.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" clipRule="evenodd" />
-    </svg>
-);
-
-const HighlightPhraseIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
-    </svg>
 );
 
 
@@ -83,6 +72,14 @@ interface Playlist {
   name: string;
   cardIds: number[];
 }
+
+// Cập nhật interface này để bao gồm dữ liệu cụm từ
+interface PhraseSentence {
+  parts: { english: string; vietnamese: string; }[];
+  fullEnglish: string;
+  fullVietnamese: string;
+}
+
 
 interface EbookReaderProps {
   hideNavBar: () => void;
@@ -222,7 +219,7 @@ const BookSidebar: React.FC<BookSidebarProps> = ({ isOpen, onClose, book, isDark
   );
 };
 
-// --- Book Stats Modal Component ---
+// --- Book Stats Modal Component (UPDATED) ---
 interface BookStatsModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -249,6 +246,7 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
         return { inDictionaryWords: inDict, outOfDictionaryWords: outDict };
     }, [stats, vocabMap]);
 
+    // Reset tab to 'in' whenever the modal opens with new stats
     useEffect(() => {
       if(isOpen) {
         setActiveTab('in');
@@ -313,6 +311,7 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                     <div>
                         <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 mb-3">Tần suất từ vựng</h3>
 
+                        {/* Elegant Tab Control */}
                         <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1 flex space-x-1 mb-4">
                             <TabButton
                                 isActive={activeTab === 'in'}
@@ -328,6 +327,7 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
                             />
                         </div>
 
+                        {/* Tab Content */}
                         <div className="p-1 max-h-64 overflow-y-auto min-h-[10rem]">
                             <ul className="space-y-1">
                                 {activeTab === 'in' && inDictionaryWords.map(([word, count]) => (
@@ -363,61 +363,6 @@ const BookStatsModal: React.FC<BookStatsModalProps> = ({ isOpen, onClose, stats,
 };
 
 
-// --- Phrase Detail Modal Component ---
-interface PhraseDetailModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  phrase: PhraseSentence | null;
-}
-
-const PhraseDetailModal: React.FC<PhraseDetailModalProps> = ({ isOpen, onClose, phrase }) => {
-  if (!isOpen || !phrase) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg transform transition-all duration-300 max-h-[90vh] flex flex-col"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
-            Chi tiết Cụm từ
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors"
-            aria-label="Đóng"
-          >
-            <XIcon />
-          </button>
-        </div>
-
-        <div className="p-6 overflow-y-auto">
-          <div className="mb-4">
-            <h3 className="text-xl font-bold text-green-600 dark:text-green-400 mb-1">{phrase.fullEnglish}</h3>
-            <p className="text-md text-gray-600 dark:text-gray-300">{phrase.fullVietnamese}</p>
-          </div>
-          
-          <hr className="my-4 border-gray-200 dark:border-gray-600" />
-          
-          <div>
-            <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Phân tích từng phần</h4>
-            <ul className="space-y-2">
-              {phrase.parts.map((part, index) => (
-                <li key={index} className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md">
-                  <p className="font-medium text-gray-800 dark:text-gray-100">{part.english}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{part.vietnamese}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-
 // --- EbookReader Component ---
 const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => {
   const [booksData, setBooksData] = useState<Book[]>(initialSampleBooks);
@@ -439,13 +384,10 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   const [isBatchPlaylistModalOpen, setIsBatchPlaylistModalOpen] = useState(false);
   
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
-
+  
+  // --- STATE MỚI CHO CHỨC NĂNG CỤM TỪ ---
   const [highlightMode, setHighlightMode] = useState<'word' | 'phrase'>('word');
   const [selectedPhrase, setSelectedPhrase] = useState<PhraseSentence | null>(null);
-  const [isPhraseModalOpen, setIsPhraseModalOpen] = useState(false);
-
-  // SỬA LỖI: Thêm state để lưu các câu ví dụ tìm được
-  const [relatedExampleSentences, setRelatedExampleSentences] = useState<PhraseSentence[]>([]);
 
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(user => {
@@ -490,29 +432,30 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     setIsLoadingVocab(false);
   }, []);
 
-  const currentBook = booksData.find(book => book.id === selectedBookId);
-  
+  // --- DỮ LIỆU CỤM TỪ ĐƯỢC CHUẨN BỊ ---
   const { phraseMap, phraseRegex } = useMemo(() => {
-    if (!phraseData || phraseData.length === 0) {
+    if (phraseData.length === 0) {
       return { phraseMap: new Map(), phraseRegex: null };
     }
-    
-    const map = new Map<string, PhraseSentence>();
-    phraseData.forEach(phrase => {
-      const key = phrase.fullEnglish.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").toLowerCase();
-      map.set(key, phrase);
+    // Sắp xếp các cụm từ theo độ dài giảm dần để ưu tiên khớp các cụm từ dài hơn trước
+    const sortedPhrases = [...phraseData].sort((a, b) => b.fullEnglish.length - a.fullEnglish.length);
+    const tempMap = new Map<string, PhraseSentence>();
+    const phraseStrings: string[] = [];
+
+    sortedPhrases.forEach(phrase => {
+      const lowerCasePhrase = phrase.fullEnglish.toLowerCase();
+      tempMap.set(lowerCasePhrase, phrase);
+      // Escape special characters for regex
+      phraseStrings.push(lowerCasePhrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     });
     
-    const sortedPhrases = [...map.keys()].sort((a, b) => b.length - a.length);
-    const escapedPhrases = sortedPhrases.map(p =>
-      p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    );
-    
-    const regex = new RegExp(`\\b(${escapedPhrases.join('|')})\\b`, 'gi');
-
-    return { phraseMap: map, phraseRegex: regex };
+    const regex = new RegExp(`(${phraseStrings.join('|')})`, 'gi');
+    return { phraseMap: tempMap, phraseRegex: regex };
   }, []);
 
+
+  const currentBook = booksData.find(book => book.id === selectedBookId);
+  
   const bookVocabularyCardIds = useMemo(() => {
     if (!currentBook || vocabMap.size === 0) {
       return [];
@@ -591,7 +534,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         audioPlayerRef.current.pause();
       }
       setIsAudioPlaying(false);
-      setIsSidebarOpen(false); 
+      setIsSidebarOpen(false); // Close sidebar when returning to library
     }
   }, [selectedBookId, currentBook, hideNavBar, showNavBar, playbackSpeed]);
 
@@ -603,60 +546,43 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     }
   }, [isDarkMode]);
 
-  // SỬA LỖI: Cập nhật hàm handleWordClick
   const handleWordClick = (word: string) => {
     const normalizedWord = word.toLowerCase();
     const foundVocab = vocabMap.get(normalizedWord);
 
     if (foundVocab) {
-      // Tìm URL ảnh
       let cardImageUrl = `https://placehold.co/1024x1536/E0E0E0/333333?text=${encodeURIComponent(foundVocab.word)}`;
       const vocabIndex = defaultVocabulary.findIndex(v => v.toLowerCase() === normalizedWord);
+
       if (vocabIndex !== -1 && vocabIndex < gameImageUrls.length) {
         cardImageUrl = gameImageUrls[vocabIndex];
       }
-      
-      // Tạo flashcard tạm thời
+
       const tempFlashcard: Flashcard = {
         id: vocabIndex !== -1 ? vocabIndex + 1 : Date.now(),
         imageUrl: { default: cardImageUrl },
         isFavorite: false,
         vocabulary: foundVocab,
       };
-
-      // Tìm các câu ví dụ liên quan từ phraseData (dùng cho tab "Ví dụ" trong modal)
-      const sentences = phraseData.filter(sentence =>
-        // Dùng regex để tìm chính xác từ, tránh trường hợp từ này là một phần của từ khác
-        new RegExp(`\\b${foundVocab.word}\\b`, 'i').test(sentence.fullEnglish)
-      );
-
-      // Cập nhật state để mở modal
       setSelectedVocabCard(tempFlashcard);
-      setRelatedExampleSentences(sentences); // Set dữ liệu câu ví dụ
       setShowVocabDetail(true);
     }
   };
 
-  // SỬA LỖI: Cập nhật hàm closeVocabDetail để reset state
   const closeVocabDetail = () => {
     setShowVocabDetail(false);
     setSelectedVocabCard(null);
-    setRelatedExampleSentences([]); // Reset mảng câu ví dụ khi đóng modal
   };
   
-  const handlePhraseClick = (phraseText: string) => {
-      const key = phraseText.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").toLowerCase();
-      const phraseDetails = phraseMap.get(key);
-      if (phraseDetails) {
-          setSelectedPhrase(phraseDetails);
-          setIsPhraseModalOpen(true);
-      }
+  // --- HANDLER CHO VIỆC CLICK CỤM TỪ ---
+  const handlePhraseClick = (phrase: PhraseSentence) => {
+    setSelectedPhrase(phrase);
   };
 
-  const closePhraseModal = () => {
-      setIsPhraseModalOpen(false);
-      setSelectedPhrase(null);
+  const closePhraseDetail = () => {
+    setSelectedPhrase(null);
   };
+
 
   const handleSelectBook = (bookId: string) => {
     setSelectedBookId(bookId);
@@ -675,70 +601,71 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     if (!currentBook) return <div className="text-center p-10 text-gray-500 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
 
     const contentLines = currentBook.content.trim().split(/\n+/);
-    
+
     return (
       <div className="font-['Inter',_sans-serif] text-gray-800 dark:text-gray-200 px-2 sm:px-4 pb-24">
-        {contentLines.map((line, lineIndex) => {
-            if (line.trim() === '') return <div key={`blank-${lineIndex}`} className="h-3 sm:h-4"></div>;
+        {contentLines.map((line, index) => {
+          if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
 
-            let renderableParts;
+          let renderableParts: (JSX.Element | string)[] = [];
 
-            if (highlightMode === 'phrase' && phraseRegex) {
-                renderableParts = line.split(phraseRegex).map((part, partIndex) => {
-                    if (!part) return null;
-                    const key = part.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").toLowerCase();
-                    const isPhrase = phraseMap.has(key);
+          // --- LOGIC PHÂN TÁCH DỰA TRÊN CHẾ ĐỘ ---
+          if (highlightMode === 'phrase' && phraseRegex) {
+              const parts = line.split(phraseRegex);
+              renderableParts = parts.map((part, partIndex) => {
+                  const normalizedPart = part.toLowerCase();
+                  const foundPhrase = phraseMap.get(normalizedPart);
+                  if (foundPhrase) {
+                      return (
+                          <span
+                              key={`${index}-${partIndex}`}
+                              className="font-semibold text-green-600 dark:text-green-400 hover:underline underline-offset-2 decoration-1 decoration-green-500/70 dark:decoration-green-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-green-700 dark:hover:text-green-300 bg-green-50 dark:bg-green-500/10 rounded px-1"
+                              onClick={() => handlePhraseClick(foundPhrase)}
+                              role="button" tabIndex={0}
+                              onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handlePhraseClick(foundPhrase); }}
+                          >
+                              {part}
+                          </span>
+                      );
+                  }
+                  return part;
+              });
 
-                    if (isPhrase) {
-                        return (
-                            <span
-                                key={`${lineIndex}-${partIndex}`}
-                                className="font-semibold text-green-600 dark:text-green-400 hover:underline underline-offset-2 decoration-1 decoration-green-500/70 dark:decoration-green-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-green-700 dark:hover:text-green-300"
-                                onClick={() => handlePhraseClick(part)}
-                                role="button" tabIndex={0}
-                                onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handlePhraseClick(part); }}
-                            >
-                                {part}
-                            </span>
-                        );
-                    }
-                    return <span key={`${lineIndex}-${partIndex}`}>{part}</span>;
-                }).filter(Boolean);
-            } 
-            else {
-                renderableParts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g).map((part, partIndex) => {
-                    if (!part) return null;
-                    const isWord = /^\w+$/.test(part);
-                    const normalizedPart = part.toLowerCase();
-                    const isVocabWord = isWord && vocabMap.has(normalizedPart);
-                    if (isVocabWord) {
-                        return (
-                            <span
-                                key={`${lineIndex}-${partIndex}`}
-                                className="font-semibold text-blue-600 dark:text-blue-400 hover:underline underline-offset-2 decoration-1 decoration-blue-500/70 dark:decoration-blue-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-blue-700 dark:hover:text-blue-300"
-                                onClick={() => handleWordClick(part)}
-                                role="button" tabIndex={0}
-                                onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleWordClick(part); }}
-                            >
-                                {part}
-                            </span>
-                        );
-                    }
-                    return <span key={`${lineIndex}-${partIndex}`}>{part}</span>;
-                }).filter(Boolean);
-            }
-            
-            const isLikelyChapterTitle = lineIndex === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
-            const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && lineIndex < 5 && lineIndex > 0) || ((line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70);
+          } else { // Chế độ 'word' (mặc định)
+              const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
+              renderableParts = parts.map((part, partIndex) => {
+                if (!part) return null;
+                const isWord = /^\w+$/.test(part);
+                const normalizedPart = part.toLowerCase();
+                const isVocabWord = isWord && vocabMap.has(normalizedPart);
+                if (isVocabWord) {
+                  return (
+                    <span
+                      key={`${index}-${partIndex}`}
+                      className="font-semibold text-blue-600 dark:text-blue-400 hover:underline underline-offset-2 decoration-1 decoration-blue-500/70 dark:decoration-blue-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-blue-700 dark:hover:text-blue-300"
+                      onClick={() => handleWordClick(part)}
+                      role="button" tabIndex={0}
+                      onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleWordClick(part); }}
+                    >
+                      {part}
+                    </span>
+                  );
+                }
+                return <span key={`${index}-${partIndex}`}>{part}</span>;
+              }).filter(Boolean) as JSX.Element[];
+          }
 
-            if (isLikelyChapterTitle) return <h2 key={`line-${lineIndex}`} className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-6 text-center">{renderableParts}</h2>;
-            if (isLikelySectionTitle) return <h3 key={`line-${lineIndex}`} className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">{renderableParts}</h3>;
-            return <p key={`line-${lineIndex}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
+          const isLikelyChapterTitle = index === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
+          const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && index < 5 && index > 0) || ((line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70);
+
+          if (isLikelyChapterTitle) return <h2 key={`line-${index}`} className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-6 text-center">{renderableParts}</h2>;
+          if (isLikelySectionTitle) return <h3 key={`line-${index}`} className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">{renderableParts}</h3>;
+          return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
         })}
       </div>
     );
   };
-
+  
 
   const togglePlayPause = () => {
     if (!audioPlayerRef.current) return;
@@ -869,6 +796,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
           />
       )}
 
+
       {/* Main content */}
       {!selectedBookId ? (
         <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-850">
@@ -882,7 +810,8 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white text-center mb-2">{currentBook.title}</h1>
                 {currentBook.author && <p className="text-sm sm:text-md text-center text-gray-500 dark:text-gray-400">Tác giả: {currentBook.author}</p>}
                 
-                <div className="mt-6 flex flex-wrap justify-center items-center gap-3">
+                {/* === CÁC NÚT HÀNH ĐỘNG === */}
+                <div className="mt-6 flex flex-wrap justify-center items-center gap-4">
                   {currentUser && bookVocabularyCardIds.length > 0 && (
                       <button
                           onClick={() => setIsBatchPlaylistModalOpen(true)}
@@ -892,7 +821,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                               <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" />
                               <path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" />
                           </svg>
-                          Lưu {bookVocabularyCardIds.length} từ
+                          Lưu {bookVocabularyCardIds.length} từ vựng
                       </button>
                   )}
                   <button
@@ -900,16 +829,33 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                     className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white dark:text-gray-200 dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105"
                   >
                     <StatsIcon />
-                    Thống kê
+                    Thống kê Sách
                   </button>
-                  
-                  <button
-                    onClick={() => setHighlightMode(prev => prev === 'word' ? 'phrase' : 'word')}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white dark:text-gray-200 dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105"
-                  >
-                    {highlightMode === 'word' ? <HighlightWordIcon /> : <HighlightPhraseIcon />}
-                    {highlightMode === 'word' ? 'Tô sáng Từ' : 'Tô sáng Cụm'}
-                  </button>
+                </div>
+                {/* === NÚT CHUYỂN ĐỔI CHẾ ĐỘ HIGHLIGHT === */}
+                 <div className="mt-6 flex justify-center">
+                    <div className="inline-flex rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 p-1">
+                        <button
+                            onClick={() => setHighlightMode('word')}
+                            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                                highlightMode === 'word' 
+                                ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 shadow' 
+                                : 'text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            }`}
+                        >
+                            In đậm từ đơn
+                        </button>
+                        <button
+                            onClick={() => setHighlightMode('phrase')}
+                            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                                highlightMode === 'phrase' 
+                                ? 'bg-white dark:bg-gray-900 text-green-600 dark:text-green-400 shadow' 
+                                : 'text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            }`}
+                        >
+                            In đậm cụm từ
+                        </button>
+                    </div>
                 </div>
               </div>
             )}
@@ -961,12 +907,11 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         </div>
       )}
 
-      {/* SỬA LỖI: Truyền đúng dữ liệu vào prop exampleSentencesData */}
       {selectedVocabCard && showVocabDetail && (
         <FlashcardDetailModal
           selectedCard={selectedVocabCard}
           showVocabDetail={showVocabDetail}
-          exampleSentencesData={relatedExampleSentences} 
+          exampleSentencesData={[]}
           onClose={closeVocabDetail}
           currentVisualStyle="default"
         />
@@ -981,6 +926,14 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
             existingPlaylists={playlists}
           />
       )}
+      
+      {/* MODAL CHI TIẾT CỤM TỪ */}
+      <PhraseDetailModal 
+        isOpen={!!selectedPhrase}
+        onClose={closePhraseDetail}
+        phrase={selectedPhrase}
+      />
+
 
       <BookStatsModal
         isOpen={isStatsModalOpen}
@@ -988,12 +941,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         stats={bookStats}
         bookTitle={currentBook?.title || ''}
         vocabMap={vocabMap}
-      />
-      
-      <PhraseDetailModal
-        isOpen={isPhraseModalOpen}
-        onClose={closePhraseModal}
-        phrase={selectedPhrase}
       />
     </div>
   );
