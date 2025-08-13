@@ -27,13 +27,14 @@ interface CryptogramGameProps {
 
 // Main Component
 export default function CryptogramGame({ onGoBack }: CryptogramGameProps) {
-    // --- START: NEW STATE MANAGEMENT ---
-    const [puzzleWord, setPuzzleWord] = useState<string | null>(null);
+    // --- START: MODIFIED STATE MANAGEMENT ---
+    // Change from a single puzzleWord to an array of puzzleWords
+    const [puzzleWords, setPuzzleWords] = useState<string[] | null>(null);
     const [userVocab, setUserVocab] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState(auth.currentUser);
-    // --- END: NEW STATE MANAGEMENT ---
+    // --- END: MODIFIED STATE MANAGEMENT ---
 
     const [quote, setQuote] = useState('');
     const [cipher, setCipher] = useState({});
@@ -49,19 +50,27 @@ export default function CryptogramGame({ onGoBack }: CryptogramGameProps) {
         return () => unsubscribe();
     }, []);
 
-    // Function to select a new suitable word from a list
-    const selectNewWord = useCallback((vocabList: string[]) => {
+    // --- START: MODIFIED LOGIC TO SELECT MULTIPLE WORDS ---
+    // Function to select multiple new suitable words from a list
+    const selectNewWords = useCallback((vocabList: string[]) => {
         if (vocabList.length > 0) {
             // Filter for words with at least 3 letters and only alphabetic characters
             const suitableWords = vocabList.filter(word => word.length >= 3 && /^[A-Z]+$/i.test(word));
             if (suitableWords.length > 0) {
-                const randomWord = suitableWords[Math.floor(Math.random() * suitableWords.length)];
-                setPuzzleWord(randomWord); // Set the internal state
-                return true;
+                // Shuffle the suitable words to get a random set
+                const shuffled = suitableWords.sort(() => 0.5 - Math.random());
+                // Select up to 10 words for the puzzle
+                const selectedWords = shuffled.slice(0, 10);
+                
+                if (selectedWords.length > 0) {
+                    setPuzzleWords(selectedWords); // Set the internal state with the array of words
+                    return true;
+                }
             }
         }
         return false;
     }, []);
+    // --- END: MODIFIED LOGIC TO SELECT MULTIPLE WORDS ---
 
     // Fetch vocabulary and initialize the first game
     useEffect(() => {
@@ -71,7 +80,8 @@ export default function CryptogramGame({ onGoBack }: CryptogramGameProps) {
             getOpenedVocab(user.uid)
                 .then(vocab => {
                     setUserVocab(vocab);
-                    if (!selectNewWord(vocab)) {
+                    // Use the new function to select multiple words
+                    if (!selectNewWords(vocab)) {
                         setError("Bạn cần học thêm từ vựng (từ 3 chữ cái, không ký tự đặc biệt) để chơi chế độ này.");
                     }
                 })
@@ -86,25 +96,29 @@ export default function CryptogramGame({ onGoBack }: CryptogramGameProps) {
             setError("Vui lòng đăng nhập để chơi.");
             setIsLoading(false);
         }
-    }, [user, selectNewWord]);
+    }, [user, selectNewWords]);
 
-    // Function to start a new game based on a given word
-    const startNewGame = useCallback((newWord: string) => {
-        const preparedWord = newWord.toUpperCase().replace(/[^A-Z\s]/g, '');
+    // --- START: MODIFIED FUNCTION TO START GAME WITH MULTIPLE WORDS ---
+    // Function to start a new game based on a given list of words
+    const startNewGame = useCallback((newWords: string[]) => {
+        // Join the words into a single string (quote), separated by spaces.
+        // The rendering logic will split them back up.
+        const preparedQuote = newWords.map(w => w.toUpperCase().replace(/[^A-Z]/g, '')).join(' ');
         const newCipher = generateCipher();
-        setQuote(preparedWord);
+        setQuote(preparedQuote);
         setCipher(newCipher);
         setGuesses({});
         setActiveInput(null);
         setIncorrectInputs(new Set());
     }, []);
+    // --- END: MODIFIED FUNCTION TO START GAME WITH MULTIPLE WORDS ---
     
-    // Initialize or update the game when the internal puzzleWord state changes
+    // Initialize or update the game when the internal puzzleWords state changes
     useEffect(() => {
-        if (puzzleWord) {
-            startNewGame(puzzleWord);
+        if (puzzleWords && puzzleWords.length > 0) {
+            startNewGame(puzzleWords);
         }
-    }, [puzzleWord, startNewGame]);
+    }, [puzzleWords, startNewGame]);
     
     // Create a reverse map from number to the correct letter for easy validation
     const numberToLetterMap = useMemo(() => {
@@ -118,6 +132,7 @@ export default function CryptogramGame({ onGoBack }: CryptogramGameProps) {
     // Memoize the processed puzzle data to avoid recalculating on every render
     const puzzle = useMemo(() => {
         if (!quote || !cipher) return [];
+        // This logic works perfectly for multiple words separated by spaces.
         return quote.split(' ').map(word => 
             word.split('').map(char => {
                 const isLetter = /[A-Z]/.test(char);
@@ -174,7 +189,8 @@ export default function CryptogramGame({ onGoBack }: CryptogramGameProps) {
 
     // Internal handler for the "New Game" button
     const handleNewGameRequest = () => {
-        if (!selectNewWord(userVocab)) {
+        // Use the new function to select multiple words
+        if (!selectNewWords(userVocab)) {
             alert('Không còn từ mới nào phù hợp để chơi!');
         }
     };
@@ -223,45 +239,48 @@ export default function CryptogramGame({ onGoBack }: CryptogramGameProps) {
 
             <div className="text-center mb-8">
                 <h1 className="text-4xl md:text-5xl font-bold text-[#6A5A5A] mb-2">Cryptogram</h1>
-                <p className="text-lg text-[#8B7E7E]">Giải mã từ vựng bằng cách thay thế các con số bằng chữ cái.</p>
+                <p className="text-lg text-[#8B7E7E]">Giải mã các từ vựng bằng cách thay thế những con số bằng chữ cái.</p>
             </div>
 
             <div className="max-w-4xl w-full flex flex-col items-center gap-y-4 md:gap-y-6 mb-8">
-                {puzzle.map((word, wordIndex) => (
-                    <div key={wordIndex} className="flex flex-wrap justify-center items-end gap-x-2 md:gap-x-3">
-                        {word.map((item, letterIndex) => {
-                            const uniqueKey = `${wordIndex}-${letterIndex}`;
-                            if (item.display) {
-                                return <span key={uniqueKey} className="text-3xl md:text-4xl font-bold leading-none mb-4">{item.display}</span>;
-                            }
-                            const number = item.number;
-                            const guessedLetter = guesses[number];
-                            const isActive = activeInput === uniqueKey;
-                            const isIncorrect = incorrectInputs.has(uniqueKey);
+                {/* The existing rendering logic uses flex-wrap, which beautifully handles multiple words, arranging them in lines. */}
+                <div className="flex flex-wrap justify-center items-end gap-x-4 gap-y-6">
+                    {puzzle.map((word, wordIndex) => (
+                        <div key={wordIndex} className="flex flex-wrap justify-center items-end gap-x-2 md:gap-x-3">
+                            {word.map((item, letterIndex) => {
+                                const uniqueKey = `${wordIndex}-${letterIndex}`;
+                                if (item.display) {
+                                    return <span key={uniqueKey} className="text-3xl md:text-4xl font-bold leading-none mb-4">{item.display}</span>;
+                                }
+                                const number = item.number;
+                                const guessedLetter = guesses[number];
+                                const isActive = activeInput === uniqueKey;
+                                const isIncorrect = incorrectInputs.has(uniqueKey);
 
-                            let bgColor = 'bg-transparent';
-                            if (isActive) bgColor = 'bg-yellow-200';
-                            else if (isIncorrect) bgColor = 'bg-red-300';
-                            
-                            return (
-                                <div key={uniqueKey} className="flex flex-col items-center">
-                                    <input
-                                        type="text"
-                                        maxLength="1"
-                                        value={guesses[number] || ''}
-                                        onChange={(e) => handleInputChange(number, e.target.value, uniqueKey)}
-                                        onFocus={() => setActiveInput(uniqueKey)}
-                                        onBlur={() => setActiveInput(null)}
-                                        className={`w-10 h-12 md:w-12 md:h-14 text-center text-3xl md:text-4xl font-bold uppercase border-b-2 border-[#6A5A5A] focus:outline-none transition-colors duration-300 rounded-t-md ${bgColor} ${isIncorrect ? 'shake' : ''}`}
-                                        aria-label={`Letter for number ${number}`}
-                                        disabled={isSolved}
-                                    />
-                                    <span className="text-sm md:text-base text-[#8B7E7E] mt-1">{number}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                ))}
+                                let bgColor = 'bg-transparent';
+                                if (isActive) bgColor = 'bg-yellow-200';
+                                else if (isIncorrect) bgColor = 'bg-red-300';
+                                
+                                return (
+                                    <div key={uniqueKey} className="flex flex-col items-center">
+                                        <input
+                                            type="text"
+                                            maxLength="1"
+                                            value={guesses[number] || ''}
+                                            onChange={(e) => handleInputChange(number, e.target.value, uniqueKey)}
+                                            onFocus={() => setActiveInput(uniqueKey)}
+                                            onBlur={() => setActiveInput(null)}
+                                            className={`w-10 h-12 md:w-12 md:h-14 text-center text-3xl md:text-4xl font-bold uppercase border-b-2 border-[#6A5A5A] focus:outline-none transition-colors duration-300 rounded-t-md ${bgColor} ${isIncorrect ? 'shake' : ''}`}
+                                            aria-label={`Letter for number ${number}`}
+                                            disabled={isSolved}
+                                        />
+                                        <span className="text-sm md:text-base text-[#8B7E7E] mt-1">{number}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {isSolved && (
