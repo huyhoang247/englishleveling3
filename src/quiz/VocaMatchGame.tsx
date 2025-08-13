@@ -75,13 +75,11 @@ export default function VocaMatchGame({ onGoBack, selectedPractice }: VocaMatchG
           setMasteryCount(userData.masteryCards || 0);
           const userVocabSet = new Set(vocabList.map(v => v.toLowerCase()));
 
-          // *** THIS IS THE FIX ***
           // 1. Find all pairs that the user is eligible to play (words they have opened)
           const allEligiblePairs = allWordPairs.filter(pair => userVocabSet.has(pair.english.toLowerCase()));
 
           // 2. From the eligible pairs, filter out the ones they have ALREADY completed in this game mode.
           const remainingPairs = allEligiblePairs.filter(pair => !completedSet.has(pair.english.toLowerCase()));
-          // *** END OF FIX ***
           
           setPlayablePairs(shuffleArray(remainingPairs));
           setTotalEligiblePairs(allEligiblePairs);
@@ -234,15 +232,33 @@ export default function VocaMatchGame({ onGoBack, selectedPractice }: VocaMatchG
       </header>
 
       <div className="flex-grow p-4 sm:p-6 flex flex-col">
-        <div className="flex-shrink-0 mb-4">
-            <div className="flex justify-between items-center mb-2 text-sm font-medium text-gray-600">
-                <span>Tiến trình</span>
-                <span>{pairsCompletedInSession} / {totalPairsInSession || '...'}</span>
+        {/* --- START: Progress Display (Giống Quiz) --- */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 rounded-xl shadow-lg mb-4 sm:mb-6">
+            <div className="flex justify-between items-center mb-4">
+                <div className="relative">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2.5 py-1 shadow-inner border border-white/30">
+                        <div className="flex items-center">
+                            <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">
+                                {/* +1 để hiển thị người dùng đang ở câu số mấy, thay vì đã hoàn thành bao nhiêu */}
+                                {Math.min(pairsCompletedInSession + 1, totalPairsInSession)}
+                            </span>
+                            <span className="mx-0.5 text-white/70 text-xs">/</span>
+                            <span className="text-xs text-white/50">{totalPairsInSession}</span>
+                        </div>
+                    </div>
+                </div>
+                <p className="text-sm font-semibold text-white/90">Tiến Độ</p>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div className="bg-gradient-to-r from-teal-400 to-blue-500 h-2.5 rounded-full transition-all duration-500" style={{ width: `${gameProgress}%` }}></div>
+            <div className="w-full h-3 bg-gray-700/80 rounded-full overflow-hidden relative">
+                <div 
+                    className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" 
+                    style={{ width: `${gameProgress}%` }}
+                >
+                    <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
+                </div>
             </div>
         </div>
+        {/* --- END: Progress Display --- */}
 
         <main className="flex-grow grid grid-cols-2 gap-4 sm:gap-6">
           <div className="flex flex-col gap-3">
