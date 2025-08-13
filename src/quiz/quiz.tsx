@@ -2,9 +2,6 @@
 
 import { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
 import { db, auth } from '../firebase.js';
-// ĐÃ XÓA CÁC IMPORT FIRESTORE TRỰC TIẾP KHÔNG CÒN SỬ DỤNG
-
-// Import các service cần thiết từ userDataService
 import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../userDataService.ts';
 import { useAnimateValue } from '../useAnimateValue.ts'; 
 import CoinDisplay from '../coin-display.tsx';
