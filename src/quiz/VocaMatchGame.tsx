@@ -48,6 +48,11 @@ const GAME_SIZE = 5; // Number of pairs per round
 const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ definition }) => {
   if (!definition) return null;
 
+  // Viết hoa chữ cái đầu của câu giải thích để dễ đọc hơn
+  const capitalizedExplanation = definition.explanation
+    ? definition.explanation.charAt(0).toUpperCase() + definition.explanation.slice(1)
+    : '';
+
   return (
     <div className="flex-shrink-0 p-4 pt-0">
       <div
@@ -60,7 +65,7 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
           <span className="text-gray-500 font-medium ml-2">/ {definition.vietnamese}</span>
         </div>
         <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
-          {definition.explanation}
+          {capitalizedExplanation}
         </p>
       </div>
     </div>
