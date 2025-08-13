@@ -1,7 +1,7 @@
 // VocaMatchGame.tsx (Upgraded Version)
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { auth } from '../firebase.js';
-import { fetchOrCreateUser, recordGameSuccess } from '../userDataService.ts';
+import { fetchOrCreateUser, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../userDataService.ts';
 import { allWordPairs, shuffleArray } from './voca-match-data.ts';
 import Confetti from '../fill-word/chuc-mung.tsx';
 
@@ -35,6 +35,7 @@ export default function VocaMatchGame({ onGoBack, selectedPractice }: VocaMatchG
   const [user, setUser] = useState(auth.currentUser);
   const [loading, setLoading] = useState(true);
   const [playablePairs, setPlayablePairs] = useState<any[]>([]);
+  const [totalEligiblePairs, setTotalEligiblePairs] = useState<any[]>([]);
   const [currentRound, setCurrentRound] = useState(0);
 
   // --- ADDED: State for UI and game logic ---
@@ -73,17 +74,29 @@ export default function VocaMatchGame({ onGoBack, selectedPractice }: VocaMatchG
           setCoins(userData.coins || 0);
           setMasteryCount(userData.masteryCards || 0);
           const userVocabSet = new Set(vocabList.map(v => v.toLowerCase()));
-          const relevantPairs = allWordPairs.filter(pair => userVocabSet.has(pair.english.toLowerCase()));
-          const remainingPairs = relevantPairs.filter(pair => !completedSet.has(pair.english.toLowerCase()));
 
+          // *** THIS IS THE FIX ***
+          // 1. Find all pairs that the user is eligible to play (words they have opened)
+          const allEligiblePairs = allWordPairs.filter(pair => userVocabSet.has(pair.english.toLowerCase()));
+
+          // 2. From the eligible pairs, filter out the ones they have ALREADY completed in this game mode.
+          const remainingPairs = allEligiblePairs.filter(pair => !completedSet.has(pair.english.toLowerCase()));
+          // *** END OF FIX ***
+          
           setPlayablePairs(shuffleArray(remainingPairs));
+          setTotalEligiblePairs(allEligiblePairs);
+
         } catch (error) {
           console.error("Error fetching data for Voca Match:", error);
+          setPlayablePairs([]);
+          setTotalEligiblePairs([]);
         } finally {
           setLoading(false);
         }
       } else {
         setLoading(false);
+        setPlayablePairs([]);
+        setTotalEligiblePairs([]);
       }
     };
     fetchData();
@@ -92,18 +105,24 @@ export default function VocaMatchGame({ onGoBack, selectedPractice }: VocaMatchG
   // Setup a new round
   const setupNewRound = useCallback(() => {
     const roundStart = currentRound * GAME_SIZE;
-    if (roundStart >= playablePairs.length) {
+    if (playablePairs.length > 0 && roundStart >= playablePairs.length) {
       setShowEndScreen(true);
       return;
     }
     const roundPairs = playablePairs.slice(roundStart, roundStart + GAME_SIZE);
     
+    // If there are no pairs for this round (end of game), show end screen
+    if(roundPairs.length === 0 && !loading) {
+        setShowEndScreen(true);
+        return;
+    }
+
     setLeftColumn(roundPairs.map(p => p.english));
     setRightColumn(shuffleArray(roundPairs.map(p => p.vietnamese)));
     setCorrectPairs([]);
     setSelectedLeft(null);
     setIncorrectPair(null);
-  }, [currentRound, playablePairs]);
+  }, [currentRound, playablePairs, loading]);
 
   useEffect(() => {
     if (!loading) {
@@ -193,8 +212,9 @@ export default function VocaMatchGame({ onGoBack, selectedPractice }: VocaMatchG
     );
   }
 
-  const totalPairsInSession = playablePairs.length;
-  const pairsCompletedInSession = currentRound * GAME_SIZE + correctPairs.length;
+  const totalPairsInSession = totalEligiblePairs.length;
+  const completedWordsBeforeSession = totalEligiblePairs.length - playablePairs.length;
+  const pairsCompletedInSession = completedWordsBeforeSession + score;
   const gameProgress = totalPairsInSession > 0 ? (pairsCompletedInSession / totalPairsInSession) * 100 : 0;
 
 
@@ -202,7 +222,6 @@ export default function VocaMatchGame({ onGoBack, selectedPractice }: VocaMatchG
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-blue-50 to-indigo-100">
       {showConfetti && <Confetti />}
       
-      {/* --- ADDED: HEADER --- */}
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
         <button onClick={onGoBack} className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100" aria-label="Quay lại">
           <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
@@ -215,18 +234,16 @@ export default function VocaMatchGame({ onGoBack, selectedPractice }: VocaMatchG
       </header>
 
       <div className="flex-grow p-4 sm:p-6 flex flex-col">
-        {/* --- ADDED: PROGRESS BAR AND COUNTER --- */}
         <div className="flex-shrink-0 mb-4">
             <div className="flex justify-between items-center mb-2 text-sm font-medium text-gray-600">
                 <span>Tiến trình</span>
-                <span>{pairsCompletedInSession} / {totalPairsInSession}</span>
+                <span>{pairsCompletedInSession} / {totalPairsInSession || '...'}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
               <div className="bg-gradient-to-r from-teal-400 to-blue-500 h-2.5 rounded-full transition-all duration-500" style={{ width: `${gameProgress}%` }}></div>
             </div>
         </div>
 
-        {/* --- MODIFIED: Main game area --- */}
         <main className="flex-grow grid grid-cols-2 gap-4 sm:gap-6">
           <div className="flex flex-col gap-3">
             {leftColumn.map(word => {
@@ -240,7 +257,7 @@ export default function VocaMatchGame({ onGoBack, selectedPractice }: VocaMatchG
                   onClick={() => handleLeftSelect(word)}
                   disabled={isCorrect}
                   className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm
-                    ${isCorrect ? 'bg-gray-200 text-gray-400 line-through' : 'bg-white text-gray-800 hover:bg-indigo-50'}
+                    ${isCorrect ? 'bg-gray-200 text-gray-400 line-through cursor-default' : 'bg-white text-gray-800 hover:bg-indigo-50'}
                     ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''}
                     ${isIncorrect ? 'bg-red-200 ring-2 ring-red-500 animate-shake' : ''}
                   `}
@@ -263,7 +280,7 @@ export default function VocaMatchGame({ onGoBack, selectedPractice }: VocaMatchG
                   onClick={() => handleRightSelect(word)}
                   disabled={isCorrect || !selectedLeft}
                   className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm
-                    ${isCorrect ? 'bg-gray-200 text-gray-400 line-through' : 'bg-white text-gray-800'}
+                    ${isCorrect ? 'bg-gray-200 text-gray-400 line-through cursor-default' : 'bg-white text-gray-800'}
                     ${isIncorrect ? 'bg-red-200 ring-2 ring-red-500 animate-shake' : ''}
                     ${!isCorrect && selectedLeft ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'}
                     ${isCorrect ? 'opacity-100' : 'disabled:opacity-50'}
