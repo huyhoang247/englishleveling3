@@ -469,11 +469,21 @@ const PracticeCard = memo(({ practiceNumber, details, progress, onPracticeSelect
                     </div>
                     <div className="text-left flex-grow">
                         <h3 className="font-medium text-gray-800">{details.title}</h3>
-                        {details.desc === 'Word Meaning' ? (
-                            <div className="mt-1.5">
-                                <span className="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full">
-                                    Word Meaning
-                                </span>
+                        {Array.isArray(details.desc) ? (
+                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                {details.desc.map(tag => {
+                                    const tagColorClass = {
+                                        indigo: 'bg-indigo-100 text-indigo-800',
+                                        pink: 'bg-pink-100 text-pink-800',
+                                        teal: 'bg-teal-100 text-teal-800',
+                                        orange: 'bg-orange-100 text-orange-800',
+                                        green: 'bg-green-100 text-green-800',
+                                        purple: 'bg-purple-100 text-purple-800',
+                                        yellow: 'bg-yellow-100 text-yellow-800',
+                                        red: 'bg-red-100 text-red-800',
+                                    }[details.color] || 'bg-gray-100 text-gray-800';
+                                    return <span key={tag} className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${tagColorClass}`}>{tag}</span>;
+                                })}
                             </div>
                         ) : (
                             <p className="text-xs text-gray-500 mt-1">{details.desc}</p>
@@ -599,10 +609,10 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   
   const practiceDetails = useMemo(() => ({
     tracNghiem: {
-      '1': { title: 'Practice 1', desc: 'Word Meaning', color: 'indigo' },
-      '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
-      '3': { title: 'Practice 3', desc: 'Điền 1 từ vào câu (không gợi ý nghĩa)', color: 'teal' },
-      '4': { title: 'Practice 4', desc: 'Nghe audio và chọn từ đúng', color: 'orange' },
+      '1': { title: 'Practice 1', desc: ['Word Meaning'], color: 'indigo' },
+      '2': { title: 'Practice 2', desc: ['Gap Fill', 'EN-VI'], color: 'pink' },
+      '3': { title: 'Practice 3', desc: ['Gap Fill', 'EN'], color: 'teal' },
+      '4': { title: 'Practice 4', desc: ['Listening', 'Words'], color: 'orange' },
     },
     vocaMatch: { // ADDED
       '1': { title: 'Practice 1', desc: 'Nối từ cơ bản', color: 'green' },
