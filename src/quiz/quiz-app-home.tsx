@@ -448,8 +448,8 @@ const CheckIcon = ({ className }: { className: string }) => (
     </svg>
 );
 
-// THÊM MỚI: Component hiển thị thanh tiến trình tròn
-const CircularProgress = memo(({ percentage, size, strokeWidth, color, trackColor }) => {
+// SỬA ĐỔI: Component hiển thị thanh tiến trình tròn với gradient
+const CircularProgress = memo(({ percentage, size, strokeWidth, trackColor }) => {
     const viewBox = `0 0 ${size} ${size}`;
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * 2 * Math.PI;
@@ -457,6 +457,12 @@ const CircularProgress = memo(({ percentage, size, strokeWidth, color, trackColo
 
     return (
         <svg width={size} height={size} viewBox={viewBox} className="-rotate-90">
+            <defs>
+                <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#6366F1" />
+                    <stop offset="100%" stopColor="#A78BFA" />
+                </linearGradient>
+            </defs>
             {/* Vòng tròn nền (track) */}
             <circle
                 className={trackColor}
@@ -469,8 +475,7 @@ const CircularProgress = memo(({ percentage, size, strokeWidth, color, trackColo
             />
             {/* Vòng tròn tiến trình */}
             <circle
-                className={color}
-                stroke="currentColor"
+                stroke="url(#progress-gradient)"
                 strokeWidth={strokeWidth}
                 strokeDasharray={circumference}
                 strokeDashoffset={offset}
@@ -503,9 +508,6 @@ const PracticeCard = memo(({ practiceNumber, details, progress, onPracticeSelect
     const isCompleted = progress && progress.total > 0 && progress.completed >= progress.total;
     const percentage = progress && progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 0;
     
-    // Nếu hoàn thành, màu sắc sẽ là màu xanh lá
-    const progressColorClass = isCompleted ? 'text-green-500' : colors.text;
-
     return (
         <div
             onClick={() => onPracticeSelect(practiceNumber)}
@@ -519,14 +521,13 @@ const PracticeCard = memo(({ practiceNumber, details, progress, onPracticeSelect
                             percentage={percentage}
                             size={40}
                             strokeWidth={4}
-                            color={progressColorClass}
                             trackColor="text-gray-200"
                         />
-                        <div className={`absolute inset-0 flex items-center justify-center ${progressColorClass}`}>
+                        <div className="absolute inset-0 flex items-center justify-center">
                             {isCompleted ? (
                                 <CheckIcon className="w-5 h-5 text-green-500" />
                             ) : (
-                                <span className={`text-xs font-bold ${colors.text}`}>{`${percentage}%`}</span>
+                                <span className="text-xs font-bold text-indigo-600">{`${percentage}%`}</span>
                             )}
                         </div>
                     </div>
