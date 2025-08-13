@@ -6,7 +6,7 @@ import QuizApp from './quiz.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 import WordChainGame from '../word-chain-game.tsx';
-import CryptogramGame from '../Cryptogram.tsx'; // --- THÊM MỚI ---
+import CryptogramGame from '../Cryptogram.tsx'; 
 import CoinDisplay from '../coin-display.tsx'; 
 
 // Imports for progress calculation
@@ -15,9 +15,9 @@ import { onAuthStateChanged } from 'firebase/auth';
 import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
-// --- THÊM IMPORT CHO CÁC HÀM SERVICE MỚI ---
-import { fetchPracticeListProgress, claimQuizReward, listenToUserData, getOpenedVocab } from '../userDataService.ts';
-import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts'; // THÊM IMPORT TÀI NGUYÊN
+// --- BỎ IMPORT `getOpenedVocab` không cần thiết ---
+import { fetchPracticeListProgress, claimQuizReward, listenToUserData } from '../userDataService.ts';
+import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts'; 
 
 // --- THÊM INTERFACE CHO PROPS MỚI ---
 interface QuizAppHomeProps {
@@ -134,10 +134,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   const [userCoins, setUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
 
-  // --- THÊM MỚI: State cho game Cryptogram ---
-  const [userVocab, setUserVocab] = useState<string[]>([]);
-  const [currentCryptogramWord, setCurrentCryptogramWord] = useState<string | null>(null);
-  const [isGameLoading, setIsGameLoading] = useState(false); // State để hiển thị loading
+  // --- LOẠI BỎ STATE KHÔNG CẦN THIẾT CHO CRYPTOGRAM ---
 
   // Effect to listen for auth changes
   useEffect(() => {
@@ -212,47 +209,16 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
     }
   }, [selectedType]);
 
-  // --- THÊM MỚI: Logic để chuẩn bị và bắt đầu game Cryptogram ---
-  const selectNewCryptogramWord = useCallback((vocabList: string[]) => {
-      if (vocabList.length > 0) {
-        // Lọc các từ có ít nhất 3 chữ cái và chỉ chứa chữ cái
-        const suitableWords = vocabList.filter(word => word.length >= 3 && /^[A-Z]+$/i.test(word));
-        if (suitableWords.length > 0) {
-            const randomWord = suitableWords[Math.floor(Math.random() * suitableWords.length)];
-            setCurrentCryptogramWord(randomWord);
-            return true;
-        }
+  // --- ĐƠN GIẢN HÓA: Logic để bắt đầu game Cryptogram ---
+  const handleCryptogramSelect = useCallback(() => {
+      if (!user) {
+          alert("Vui lòng đăng nhập để chơi.");
+          return;
       }
-      return false;
-  }, []);
+      setCurrentView('cryptogram');
+  }, [user]);
 
-  const handleCryptogramSelect = useCallback(async () => {
-      if (!user) return;
-      setIsGameLoading(true);
-      try {
-          const vocab = await getOpenedVocab(user.uid);
-          setUserVocab(vocab);
-
-          if (selectNewCryptogramWord(vocab)) {
-              setCurrentView('cryptogram');
-          } else {
-              alert('Bạn cần học thêm từ vựng (từ 3 chữ cái trở lên và không chứa ký tự đặc biệt) để chơi chế độ này!');
-          }
-      } catch (error) {
-          console.error("Lỗi khi tải từ vựng cho Cryptogram:", error);
-          alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
-      } finally {
-          setIsGameLoading(false);
-      }
-  }, [user, selectNewCryptogramWord]);
-
-  // --- THÊM MỚI: Callback để lấy từ mới cho game ---
-  const handleNewCryptogramRequest = useCallback(() => {
-      if (!selectNewCryptogramWord(userVocab)) {
-        alert('Không còn từ mới nào phù hợp để chơi!');
-      }
-  }, [userVocab, selectNewCryptogramWord]);
-
+  // --- LOẠI BỎ CÁC HÀM KHÔNG CẦN THIẾT ---
 
   const goBack = useCallback(() => {
     if (currentView === 'vocabularyGame' || currentView === 'quiz') {
@@ -297,9 +263,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
           case 'cryptogram':
               ViewComponent = (
                   <CryptogramGame 
-                      puzzleWord={currentCryptogramWord} 
                       onGoBack={goBack}
-                      onNewGameRequest={handleNewCryptogramRequest}
                   />
               );
               break;
@@ -380,8 +344,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                {/* --- THÊM MỚI: Nút chọn game Cryptogram --- */}
               <button 
                 onClick={handleCryptogramSelect} 
-                disabled={isGameLoading}
-                className="w-full text-left p-6 bg-gradient-to-br from-yellow-500 to-orange-600 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group disabled:opacity-70 disabled:cursor-wait"
+                className="w-full text-left p-6 bg-gradient-to-br from-yellow-500 to-orange-600 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group"
               >
                 <div className="flex items-center">
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center">
@@ -392,7 +355,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                     <h3 className="text-xl font-bold">Cryptogram</h3>
                     <p className="text-sm text-orange-100 mt-1">Giải mã từ vựng đã học.</p>
                   </div>
-                  {isGameLoading && <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
                 </div>
               </button>
             </div>
