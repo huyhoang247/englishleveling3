@@ -6,7 +6,8 @@ import QuizApp from './quiz.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 import WordChainGame from '../word-chain-game.tsx';
-import CoinDisplay from '../coin-display.tsx'; // Import CoinDisplay
+import CryptogramGame from '../Cryptogram.tsx'; // --- THÊM MỚI ---
+import CoinDisplay from '../coin-display.tsx'; 
 
 // Imports for progress calculation
 import { auth } from '../firebase.js';
@@ -15,7 +16,7 @@ import quizData from './quiz-data.ts';
 import { exampleData } from '../example-data.ts';
 
 // --- THÊM IMPORT CHO CÁC HÀM SERVICE MỚI ---
-import { fetchPracticeListProgress, claimQuizReward, listenToUserData } from '../userDataService.ts';
+import { fetchPracticeListProgress, claimQuizReward, listenToUserData, getOpenedVocab } from '../userDataService.ts';
 import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts'; // THÊM IMPORT TÀI NGUYÊN
 
 // --- THÊM INTERFACE CHO PROPS MỚI ---
@@ -23,198 +24,6 @@ interface QuizAppHomeProps {
   hideNavBar?: () => void;
   showNavBar?: () => void;
 }
-
-// =================================================================
-// START: CRYPTOGRAM GAME COMPONENT (Integrated from Cryptogram.tsx)
-// =================================================================
-const generateCipher = () => {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-    for (let i = alphabet.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [alphabet[i], alphabet[j]] = [alphabet[j], alphabet[i]];
-    }
-    const newCipher = {};
-    alphabet.forEach((letter, index) => {
-        newCipher[letter] = index + 1;
-    });
-    return newCipher;
-};
-
-interface CryptogramGameProps {
-    learnedWords: string[];
-}
-
-const CryptogramGame: React.FC<CryptogramGameProps> = ({ learnedWords }) => {
-    const [quote, setQuote] = useState('');
-    const [cipher, setCipher] = useState({});
-    const [guesses, setGuesses] = useState({}); // Stores mappings from number -> guessed letter
-    const [activeInput, setActiveInput] = useState(null);
-    const [incorrectInputs, setIncorrectInputs] = useState(new Set());
-
-    const startNewGame = useCallback(() => {
-        if (!learnedWords || learnedWords.length === 0) return;
-
-        // Create a quote from a random selection of learned words
-        const shuffled = [...learnedWords].sort(() => 0.5 - Math.random());
-        const wordCount = Math.min(shuffled.length, Math.floor(Math.random() * 3) + 4); // 4 to 6 words
-        const randomQuote = shuffled.slice(0, wordCount).join(' ').toUpperCase();
-
-        const newCipher = generateCipher();
-        setQuote(randomQuote);
-        setCipher(newCipher);
-        setGuesses({});
-        setActiveInput(null);
-        setIncorrectInputs(new Set());
-    }, [learnedWords]);
-
-    useEffect(() => {
-        startNewGame();
-    }, [startNewGame]);
-
-    const numberToLetterMap = useMemo(() => {
-        const map = {};
-        for (const letter in cipher) {
-            map[cipher[letter]] = letter;
-        }
-        return map;
-    }, [cipher]);
-
-    const puzzle = useMemo(() => {
-        if (!quote || !cipher) return [];
-        return quote.split(' ').map(word => 
-            word.split('').map(char => {
-                const isLetter = /[A-Z]/.test(char);
-                return {
-                    char: isLetter ? char : null,
-                    display: isLetter ? null : char,
-                    number: isLetter ? cipher[char] : null,
-                };
-            })
-        );
-    }, [quote, cipher]);
-
-    const handleInputChange = (number, value, uniqueKey) => {
-        const upperValue = value.toUpperCase();
-        if (/^[A-Z]$/.test(upperValue) || value === '') {
-            setGuesses(prevGuesses => ({ ...prevGuesses, [number]: upperValue }));
-
-            if (upperValue && upperValue !== numberToLetterMap[number]) {
-                setIncorrectInputs(prev => new Set(prev.add(uniqueKey)));
-                setTimeout(() => {
-                    setGuesses(prev => {
-                        const newGuesses = { ...prev };
-                        if (newGuesses[number] === upperValue) {
-                           delete newGuesses[number];
-                        }
-                        return newGuesses;
-                    });
-                    setIncorrectInputs(prev => {
-                        const newSet = new Set(prev);
-                        newSet.delete(uniqueKey);
-                        return newSet;
-                    });
-                }, 820);
-            }
-        }
-    };
-
-    const isSolved = useMemo(() => {
-        if (Object.keys(cipher).length === 0 || !quote) return false;
-        const uniqueLetters = [...new Set(quote.replace(/ /g, ''))];
-        if(Object.keys(guesses).length < uniqueLetters.length) return false;
-        return uniqueLetters.every(letter => guesses[cipher[letter]] === letter);
-    }, [guesses, cipher, quote]);
-
-    if (!learnedWords || learnedWords.length < 3) {
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-center p-4">
-                <h2 className="text-2xl font-bold text-gray-700">Chưa đủ từ vựng</h2>
-                <p className="mt-2 text-gray-500">Bạn cần học ít nhất 3 từ để có thể chơi màn này. Hãy quay lại sau khi đã học thêm nhé!</p>
-            </div>
-        );
-    }
-    
-    if (!quote) {
-       return <div className="text-center p-8">Đang tạo câu đố...</div>;
-    }
-
-
-    return (
-        <div className="bg-[#F8F5F2] min-h-full flex flex-col items-center justify-center font-serif p-4 text-[#4A4A4A]">
-            <style>{`
-                @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
-                .shake { animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both; }
-            `}</style>
-
-            <div className="text-center mb-8">
-                <h1 className="text-4xl md:text-5xl font-bold text-[#6A5A5A] mb-2">Mật Thư</h1>
-                <p className="text-lg text-[#8B7E7E]">Dùng các từ đã học, hãy giải mã mật thư bằng cách thay số bằng chữ.</p>
-            </div>
-
-            <div className="max-w-4xl w-full flex flex-col items-center gap-y-4 md:gap-y-6 mb-8">
-                {puzzle.map((word, wordIndex) => (
-                    <div key={wordIndex} className="flex flex-wrap justify-center items-end gap-x-2 md:gap-x-3">
-                        {word.map((item, letterIndex) => {
-                            const uniqueKey = `${wordIndex}-${letterIndex}`;
-                            if (item.display) {
-                                return <span key={uniqueKey} className="text-3xl md:text-4xl font-bold leading-none mb-4">{item.display}</span>;
-                            }
-                            const number = item.number;
-                            const guessedLetter = guesses[number];
-                            const isGuessed = guessedLetter && guessedLetter !== '';
-                            const isCorrect = isGuessed && guessedLetter === numberToLetterMap[number];
-                            const isActive = activeInput === uniqueKey;
-                            const isIncorrect = incorrectInputs.has(uniqueKey);
-
-                            let bgColor = 'bg-transparent';
-                            if (isActive) bgColor = 'bg-yellow-200';
-                            else if (isIncorrect) bgColor = 'bg-red-300';
-                            else if (isGuessed) bgColor = isCorrect ? 'bg-green-200' : 'bg-transparent';
-                            
-                            return (
-                                <div key={uniqueKey} className="flex flex-col items-center">
-                                    <input
-                                        type="text" maxLength="1" value={guesses[number] || ''}
-                                        onChange={(e) => handleInputChange(number, e.target.value, uniqueKey)}
-                                        onFocus={() => setActiveInput(uniqueKey)}
-                                        onBlur={() => setActiveInput(null)}
-                                        className={`w-10 h-12 md:w-12 md:h-14 text-center text-3xl md:text-4xl font-bold uppercase border-b-2 border-[#6A5A5A] focus:outline-none transition-colors duration-300 rounded-t-md ${bgColor} ${isIncorrect ? 'shake' : ''}`}
-                                        aria-label={`Letter for number ${number}`}
-                                    />
-                                    <span className="text-sm md:text-base text-[#8B7E7E] mt-1">{number}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                ))}
-            </div>
-
-            {isSolved && (
-                <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md shadow-lg mb-6 animate-pulse" role="alert">
-                    <p className="font-bold">Chúc mừng!</p>
-                    <p>Bạn đã giải mã thành công câu đố.</p>
-                </div>
-            )}
-
-            <div className="flex gap-4">
-                <button
-                    onClick={startNewGame}
-                    className="px-6 py-3 bg-[#6A5A5A] text-white font-bold rounded-lg shadow-md hover:bg-[#524646] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6A5A5A] transition-all duration-200">
-                    Trò chơi mới
-                </button>
-                 <button
-                    onClick={() => setGuesses({})}
-                    className="px-6 py-3 bg-gray-300 text-gray-800 font-bold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-all duration-200">
-                    Làm lại
-                </button>
-            </div>
-        </div>
-    );
-};
-// =================================================================
-// END: CRYPTOGRAM GAME COMPONENT
-// =================================================================
-
 
 // --- START: UNIFIED HEADER COMPONENT (NO BREADCRUMBS) ---
 
@@ -264,7 +73,6 @@ function AppHeader({
     }
   }, [currentView, selectedType]);
 
-  // Hide header for all fullscreen game views
   if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'cryptogram'].includes(currentView)) {
       return null;
   }
@@ -311,7 +119,7 @@ function AppHeader({
 }
 // --- END: UNIFIED HEADER COMPONENT ---
 
-// --- START: MASTERY DISPLAY COMPONENT (COPIED FROM QUIZ.TSX) ---
+// --- START: MASTERY DISPLAY COMPONENT ---
 const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => ( <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"> <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style> <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div> <div className="relative flex items-center justify-center"><img src={dashboardAssets.masteryIcon} alt="Mastery Icon" className="w-4 h-4" /></div> <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{masteryCount}</div> <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div> <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div> </div> ));
 // --- END: MASTERY DISPLAY COMPONENT ---
 
@@ -325,10 +133,11 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   const [user, setUser] = useState(auth.currentUser);
   const [userCoins, setUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
-  // State for Cryptogram game
-  const [cryptogramWords, setCryptogramWords] = useState<string[] | null>(null);
-  const [isLoadingCryptogram, setIsLoadingCryptogram] = useState(false);
 
+  // --- THÊM MỚI: State cho game Cryptogram ---
+  const [userVocab, setUserVocab] = useState<string[]>([]);
+  const [currentCryptogramWord, setCurrentCryptogramWord] = useState<string | null>(null);
+  const [isGameLoading, setIsGameLoading] = useState(false); // State để hiển thị loading
 
   // Effect to listen for auth changes
   useEffect(() => {
@@ -341,17 +150,23 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   // Effect to get coins and mastery in real-time when user is available
   useEffect(() => {
     if (user) {
+      // Gọi hàm service để thiết lập listener
       const unsubscribe = listenToUserData(user.uid, (data) => {
         if (data) {
+          // Cập nhật state khi có dữ liệu mới
           setUserCoins(data.coins);
           setMasteryCount(data.masteryCards);
         } else {
+          // Xử lý trường hợp không có dữ liệu (user mới, lỗi, etc.)
           setUserCoins(0);
           setMasteryCount(0);
         }
       });
+
+      // Trả về hàm hủy để React dọn dẹp khi component unmount hoặc user thay đổi
       return () => unsubscribe();
     } else {
+      // Reset state khi người dùng đăng xuất
       setUserCoins(0);
       setMasteryCount(0);
     }
@@ -359,11 +174,16 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
 
   // --- THÊM USEEFFECT ĐỂ ĐIỀU KHIỂN NAV BAR CHA ---
   useEffect(() => {
+    // Nếu view hiện tại không phải là màn hình chính của tab quiz, ẩn nav bar đi
     if (currentView !== 'main') {
-      hideNavBar?.();
+      hideNavBar?.(); // ?. để tránh lỗi nếu prop không được truyền
     } else {
+      // Nếu là màn hình chính, hiện nav bar ra
       showNavBar?.();
     }
+    
+    // Hàm cleanup: Khi component QuizAppHome bị unmount (người dùng chuyển sang tab khác),
+    // đảm bảo nav bar sẽ hiện lại cho tab mới.
     return () => {
       showNavBar?.();
     };
@@ -392,43 +212,56 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
     }
   }, [selectedType]);
 
-  // --- NEW: Handler for selecting Cryptogram game ---
-  const handleCryptogramSelect = useCallback(async () => {
-      if (!user) {
-          alert("Bạn cần đăng nhập để chơi."); // Replace with a proper modal/toast
-          return;
+  // --- THÊM MỚI: Logic để chuẩn bị và bắt đầu game Cryptogram ---
+  const selectNewCryptogramWord = useCallback((vocabList: string[]) => {
+      if (vocabList.length > 0) {
+        // Lọc các từ có ít nhất 3 chữ cái và chỉ chứa chữ cái
+        const suitableWords = vocabList.filter(word => word.length >= 3 && /^[A-Z]+$/i.test(word));
+        if (suitableWords.length > 0) {
+            const randomWord = suitableWords[Math.floor(Math.random() * suitableWords.length)];
+            setCurrentCryptogramWord(randomWord);
+            return true;
+        }
       }
-      setIsLoadingCryptogram(true);
-      setCurrentView('cryptogram'); // Switch view immediately to show loading
+      return false;
+  }, []);
 
+  const handleCryptogramSelect = useCallback(async () => {
+      if (!user) return;
+      setIsGameLoading(true);
       try {
-          // In a real app, you would fetch learned words from your backend/service
-          // const words = await fetchLearnedWords(user.uid, 10);
-          
-          // For demonstration, we'll use a sample of words from exampleData
-          // This simulates fetching ~10 random learned words
-          const learnedWords = exampleData
-              .map(item => item.word)
-              .sort(() => 0.5 - Math.random())
-              .slice(0, 10);
-              
-          setCryptogramWords(learnedWords);
+          const vocab = await getOpenedVocab(user.uid);
+          setUserVocab(vocab);
+
+          if (selectNewCryptogramWord(vocab)) {
+              setCurrentView('cryptogram');
+          } else {
+              alert('Bạn cần học thêm từ vựng (từ 3 chữ cái trở lên và không chứa ký tự đặc biệt) để chơi chế độ này!');
+          }
       } catch (error) {
-          console.error("Failed to fetch words for cryptogram:", error);
-          setCryptogramWords([]); // Handle error case
+          console.error("Lỗi khi tải từ vựng cho Cryptogram:", error);
+          alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
       } finally {
-          setIsLoadingCryptogram(false);
+          setIsGameLoading(false);
       }
-  }, [user]);
+  }, [user, selectNewCryptogramWord]);
+
+  // --- THÊM MỚI: Callback để lấy từ mới cho game ---
+  const handleNewCryptogramRequest = useCallback(() => {
+      if (!selectNewCryptogramWord(userVocab)) {
+        alert('Không còn từ mới nào phù hợp để chơi!');
+      }
+  }, [userVocab, selectNewCryptogramWord]);
 
 
   const goBack = useCallback(() => {
     if (currentView === 'vocabularyGame' || currentView === 'quiz') {
        setCurrentView('practices');
        setSelectedPractice(null);
-    } else if (['wordChainGame', 'analysis', 'cryptogram'].includes(currentView)) { // Add cryptogram here
+    } else if (currentView === 'wordChainGame' || currentView === 'analysis') {
        setCurrentView('main');
-       setCryptogramWords(null); // Cleanup state
+    } else if (currentView === 'cryptogram') {
+        setCurrentView('quizTypes');
     } else if (currentView === 'practices') {
       setCurrentView('quizTypes');
       setSelectedType(null);
@@ -442,59 +275,38 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
     setSelectedQuiz(null);
     setSelectedType(null);
     setSelectedPractice(null);
-    setCryptogramWords(null); // Cleanup state
   }, []);
 
   // --- Fullscreen Views Logic ---
   if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'cryptogram'].includes(currentView)) {
-      let title = '';
       let ViewComponent = null;
 
       switch(currentView) {
           case 'quiz':
-              title = `Multiple choice - Practice ${selectedPractice % 100}`;
               ViewComponent = <QuizApp onGoBack={goBack} selectedPractice={selectedPractice} />;
               break;
           case 'vocabularyGame':
-              title = `Fill in the blank - Practice ${selectedPractice % 100}`;
               ViewComponent = <VocabularyGame onGoBack={goBack} selectedPractice={selectedPractice} />;
               break;
           case 'wordChainGame':
-              title = 'Nối Từ';
               ViewComponent = <WordChainGame onGoBack={goBack} />;
               break;
           case 'analysis':
-              title = 'Báo cáo & Phân tích';
               ViewComponent = <AnalysisDashboard onGoBack={goHome} />;
               break;
           case 'cryptogram':
-              title = 'Mật Thư';
-              if (isLoadingCryptogram) {
-                  ViewComponent = <div className="flex items-center justify-center h-full"><div className="text-center p-8 text-gray-600">Đang tải dữ liệu...</div></div>;
-              } else if (cryptogramWords) {
-                  ViewComponent = <CryptogramGame learnedWords={cryptogramWords} />;
-              } else {
-                  ViewComponent = <div className="flex items-center justify-center h-full"><div className="text-center p-8 text-red-500">Không thể tải trò chơi.</div></div>;
-              }
+              ViewComponent = (
+                  <CryptogramGame 
+                      puzzleWord={currentCryptogramWord} 
+                      onGoBack={goBack}
+                      onNewGameRequest={handleNewCryptogramRequest}
+                  />
+              );
               break;
       }
       
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
-            <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
-              <div className="flex h-14 items-center justify-between px-4">
-                 <>
-                    <button onClick={goBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors">
-                        <BackIcon className="h-5 w-5"/>
-                        <span>Quay lại</span>
-                    </button>
-                    <h2 className="text-lg font-bold text-slate-200 truncate px-2">{title}</h2>
-                    <div className="w-28 text-right">
-                        <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ"><HomeIcon className="h-5 w-5"/></button>
-                    </div>
-                </>
-              </div>
-            </header>
             <div className="flex-grow overflow-y-auto">
                 {ViewComponent}
             </div>
@@ -506,6 +318,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
     switch(currentView) {
       case 'main':
         return (
+          // --- START: NEW MAIN SCREEN DESIGN ---
           <div className="grid grid-cols-2 gap-5 sm:gap-6 max-w-md mx-auto pt-4">
             <button
               onClick={() => handleQuizSelect(1)}
@@ -523,21 +336,19 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               <h3 className="text-lg font-bold text-gray-800 group-hover:text-purple-600 transition-colors">Word Chain</h3>
             </button>
 
-            {/* --- NEW: Cryptogram Game Button --- */}
-            <button
-              onClick={handleCryptogramSelect}
-              className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-teal-400 group"
-            >
-              <img src={quizHomeAssets.cryptogramIcon || 'https://cdn-icons-png.flaticon.com/512/3409/3409848.png'} alt="Cryptogram Game" className="h-20 w-20 mb-3" />
-              <h3 className="text-lg font-bold text-gray-800 group-hover:text-teal-600 transition-colors">Mật Thư</h3>
-            </button>
-
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
               <img src={quizHomeAssets.examIcon} alt="Exam" className="h-20 w-20 mb-3" />
               <h3 className="text-lg font-bold text-gray-500">Exam</h3>
             </div>
+            
+            <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
+              <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
+              <img src={quizHomeAssets.grammarIcon} alt="Grammar" className="h-20 w-20 mb-3" />
+              <h3 className="text-lg font-bold text-gray-500">Grammar</h3>
+            </div>
           </div>
+          // --- END: NEW MAIN SCREEN DESIGN ---
         );
       case 'quizTypes':
         return (
@@ -566,6 +377,24 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   </div>
                 </div>
               </button>
+               {/* --- THÊM MỚI: Nút chọn game Cryptogram --- */}
+              <button 
+                onClick={handleCryptogramSelect} 
+                disabled={isGameLoading}
+                className="w-full text-left p-6 bg-gradient-to-br from-yellow-500 to-orange-600 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group disabled:opacity-70 disabled:cursor-wait"
+              >
+                <div className="flex items-center">
+                  <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center">
+                     {/* Sử dụng một SVG icon tạm thời */}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H5v-2H3v-2H1.25a1 1 0 01-1-1V6a1 1 0 011-1H4a1 1 0 011-1h2a1 1 0 011 1h2a1 1 0 011 1h2a1 1 0 011 1h2a1 1 0 011 1V7M9 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
+                  </div>
+                  <div className="ml-5 flex-1">
+                    <h3 className="text-xl font-bold">Cryptogram</h3>
+                    <p className="text-sm text-orange-100 mt-1">Giải mã từ vựng đã học.</p>
+                  </div>
+                  {isGameLoading && <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
+                </div>
+              </button>
             </div>
           </div>
         );
@@ -587,20 +416,25 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
           setCurrentView={setCurrentView}
         />
         <main className="flex-grow overflow-y-auto">
+          {/* Giảm padding bottom khi nav bar bị ẩn để tránh khoảng trống thừa */}
           <div className={`p-6 max-w-screen-xl mx-auto ${currentView === 'main' ? 'pb-24' : 'pb-6'}`}>
             {renderContent()}
           </div>
         </main>
       </div>
       <style jsx>{`
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar {
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none; /* Safari and Chrome */
+        }
       `}</style>
     </div>
   );
 }
 
-// ... (Rest of the file: PracticeList, RewardsPopup, icons, etc. remains unchanged)
 // --- Icons (moved outside to prevent re-creation) ---
 const CompletedIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
@@ -622,7 +456,6 @@ const GiftIcon = ({ className }: { className: string }) => (
         <path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
     </svg>
 );
-// --- NEW GRADIENT ICON ---
 const GradientGiftIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="url(#gift-gradient)">
         <defs>
@@ -1046,3 +879,4 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         </div>
     );
 };
+// --- END OF FILE quiz-app-home.tsx ---
