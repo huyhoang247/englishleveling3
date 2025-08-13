@@ -1,13 +1,12 @@
-// --- START OF FILE userDataService.ts ---
-
 import { db } from './firebase';
 import { 
   doc, getDoc, setDoc, updateDoc, increment, collection, 
   getDocs, writeBatch, arrayUnion, onSnapshot, Unsubscribe 
 } from 'firebase/firestore';
 // Import các dữ liệu local cần thiết cho hàm mới
-import quizData from './quiz/quiz-data.ts'; // Giả sử đường dẫn này đúng
-import { exampleData } from './example-data.ts'; // Giả sử đường dẫn này đúng
+import quizData from './quiz/quiz-data.ts'; 
+import { exampleData } from './example-data.ts';
+import { allWordPairs } from './voca-match-data.ts'; // ADDED
 
 /**
  * Lấy dữ liệu người dùng. Nếu người dùng chưa tồn tại trong Firestore, tạo mới với giá trị mặc định.
@@ -406,7 +405,6 @@ export interface UserCoreData {
  */
 export const listenToUserData = (userId: string, callback: (data: UserCoreData | null) => void): Unsubscribe => {
   if (!userId) {
-    // Nếu không có userId, gọi callback với null và trả về một hàm hủy rỗng.
     callback(null);
     return () => {}; 
   }
@@ -416,21 +414,18 @@ export const listenToUserData = (userId: string, callback: (data: UserCoreData |
   const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
     if (docSnap.exists()) {
       const data = docSnap.data();
-      // Truyền về một object đã được định hình để component sử dụng
       callback({
         coins: data.coins || 0,
         masteryCards: data.masteryCards || 0,
       });
     } else {
-      // Document người dùng không tồn tại
       callback(null);
     }
   }, (error) => {
     console.error(`Error listening to user data for ${userId}:`, error);
-    callback(null); // Báo lỗi về cho component bằng cách truyền null
+    callback(null);
   });
 
-  // Trả về hàm unsubscribe để component gọi khi unmount
   return unsubscribe;
 };
 
@@ -449,18 +444,17 @@ export interface PracticeProgressPayload {
  * Lấy và tính toán dữ liệu tiến trình cho danh sách bài luyện tập (Quiz và Fill Word).
  * Tái cấu trúc từ hàm calculateProgress trong component PracticeList.
  * @param userId ID người dùng.
- * @param selectedType Loại hình luyện tập ('tracNghiem' hoặc 'dienTu').
+ * @param selectedType Loại hình luyện tập ('tracNghiem', 'dienTu', hoặc 'vocaMatch').
  * @returns {Promise<PracticeProgressPayload>} Dữ liệu tiến trình và các phần thưởng đã nhận.
  */
 export const fetchPracticeListProgress = async (
   userId: string, 
-  selectedType: 'tracNghiem' | 'dienTu'
+  selectedType: 'tracNghiem' | 'dienTu' | 'vocaMatch'
 ): Promise<PracticeProgressPayload> => {
   if (!userId || !selectedType) {
     throw new Error("User ID and selected type are required.");
   }
 
-  // 1. Fetch tất cả dữ liệu cần thiết từ Firestore
   const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
     getDoc(doc(db, 'users', userId)),
     getDocs(collection(db, 'users', userId, 'openedVocab')),
@@ -468,7 +462,6 @@ export const fetchPracticeListProgress = async (
     getDocs(collection(db, 'users', userId, 'completedMultiWord'))
   ]);
 
-  // 2. Xử lý dữ liệu đã fetch
   const userData = userDocSnap.exists() ? userDocSnap.data() : {};
   const claimedRewards = userData.claimedQuizRewards || {};
   const userVocabSet = new Set(openedVocabSnapshot.docs.map(doc => doc.data().word?.toLowerCase()).filter(Boolean));
@@ -493,14 +486,12 @@ export const fetchPracticeListProgress = async (
       }
   });
   
-  // 3. Logic tính toán tiến trình (business logic)
   const newProgressData: { [key: number]: { completed: number; total: number } } = {};
-  const MAX_PREVIEWS = 5; // Có thể truyền vào như một tham số nếu cần
+  const MAX_PREVIEWS = 5;
 
   if (userVocabSet.size > 0) {
       const vocabRegex = new RegExp(`\\b(${Array.from(userVocabSet).join('|')})\\b`, 'ig');
 
-      // Tính toán cho loại 'tracNghiem'
       if (selectedType === 'tracNghiem') {
           const questionToUserVocab = new Map<any, string[]>();
           quizData.forEach(question => {
@@ -539,7 +530,15 @@ export const fetchPracticeListProgress = async (
               }
           });
       } 
-      // Tính toán cho loại 'dienTu'
+      else if (selectedType === 'vocaMatch') { // CORRECTED
+          const relevantPairs = allWordPairs.filter(pair => userVocabSet.has(pair.english.toLowerCase()));
+          const totalWords = relevantPairs.length;
+          
+          const practiceModeId = 'match-1';
+          const completedSet = completedWordsByGameMode[practiceModeId] || new Set();
+          
+          newProgressData[1] = { completed: completedSet.size, total: totalWords };
+      }
       else if (selectedType === 'dienTu') {
           const sentenceToUserVocab = new Map<any, string[]>();
           exampleData.forEach(sentence => {
@@ -616,4 +615,3 @@ export const claimQuizReward = async (
     throw error;
   }
 };
-// --- END OF FILE userDataService.ts ---
