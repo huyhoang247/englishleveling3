@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import QuizApp from './quiz.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
-import VocaMatchGame from './VocaMatchGame.tsx'; // ADDED
+import VocaMatchGame from './VocaMatchGame.tsx'; // ADDED: Import for the new game
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 import WordChainGame from '../word-chain-game.tsx';
 import CoinDisplay from '../coin-display.tsx';
@@ -573,7 +573,6 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     const loadProgress = async () => {
       setLoading(true);
       try {
-        // *** GỌI HÀM SERVICE MỚI ĐỂ LẤY DỮ LIỆU ***
         const { progressData: newProgressData, claimedRewards: newClaimedRewards } = 
             await fetchPracticeListProgress(user.uid, selectedType as any);
         
