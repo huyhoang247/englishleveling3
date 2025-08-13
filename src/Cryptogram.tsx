@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+// --- START OF FILE Cryptogram.tsx ---
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 // Helper function to generate a new cipher map
 const generateCipher = () => {
@@ -16,39 +18,38 @@ const generateCipher = () => {
     return newCipher;
 };
 
-// List of quotes for the game
-const quotes = [
-    "WHERE THERE IS LOVE THERE IS LIFE",
-    "THE ONLY WAY TO DO GREAT WORK IS TO LOVE WHAT YOU DO",
-    "SUCCESS IS NOT FINAL FAILURE IS NOT FATAL IT IS THE COURAGE TO CONTINUE THAT COUNTS",
-    "THE FUTURE BELONGS TO THOSE WHO BELIEVE IN THE BEAUTY OF THEIR DREAMS",
-    "YOU MUST BE THE CHANGE YOU WISH TO SEE IN THE WORLD"
-];
+// Interface for props
+interface CryptogramGameProps {
+    puzzleWord: string | null;
+    onGoBack: () => void;
+    onNewGameRequest: () => void;
+}
 
-// Main App Component
-export default function App() {
-    // State for the current quote, cipher, and user guesses
+// Main Component
+export default function CryptogramGame({ puzzleWord, onGoBack, onNewGameRequest }: CryptogramGameProps) {
     const [quote, setQuote] = useState('');
     const [cipher, setCipher] = useState({});
     const [guesses, setGuesses] = useState({}); // Stores mappings from number -> guessed letter
     const [activeInput, setActiveInput] = useState(null); // Tracks the currently focused input
     const [incorrectInputs, setIncorrectInputs] = useState(new Set()); // Tracks inputs that are currently incorrect and shaking
 
-    // Function to start a new game
-    const startNewGame = () => {
-        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    // Function to start a new game based on a given word
+    const startNewGame = useCallback((newWord: string) => {
+        const preparedWord = newWord.toUpperCase().replace(/[^A-Z\s]/g, '');
         const newCipher = generateCipher();
-        setQuote(randomQuote);
+        setQuote(preparedWord);
         setCipher(newCipher);
         setGuesses({});
         setActiveInput(null);
         setIncorrectInputs(new Set());
-    };
-
-    // Initialize the game on the first render
-    useEffect(() => {
-        startNewGame();
     }, []);
+    
+    // Initialize or update the game when the puzzleWord prop changes
+    useEffect(() => {
+        if (puzzleWord) {
+            startNewGame(puzzleWord);
+        }
+    }, [puzzleWord, startNewGame]);
     
     // Create a reverse map from number to the correct letter for easy validation
     const numberToLetterMap = useMemo(() => {
@@ -105,13 +106,27 @@ export default function App() {
 
     // Check if the puzzle is solved correctly
     const isSolved = useMemo(() => {
-        if (Object.keys(cipher).length === 0 || Object.keys(guesses).length === 0) return false;
-        return Object.entries(cipher).every(([letter, number]) => guesses[number] === letter);
-    }, [guesses, cipher]);
+        if (!quote || Object.keys(cipher).length === 0) return false;
+        const uniqueLetters = [...new Set(quote.replace(/\s/g, ''))];
+        if (uniqueLetters.length === 0) return false;
+        if (Object.keys(guesses).length < uniqueLetters.length) return false;
+        
+        return uniqueLetters.every(letter => {
+            const number = cipher[letter];
+            return guesses[number] === letter;
+        });
+    }, [guesses, cipher, quote]);
+
+    if (!puzzleWord) {
+        return (
+            <div className="bg-[#F8F5F2] min-h-screen flex flex-col items-center justify-center p-4">
+                <h1 className="text-2xl font-bold text-[#6A5A5A]">Đang tải câu đố...</h1>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-[#F8F5F2] min-h-screen flex flex-col items-center justify-center font-serif p-4 text-[#4A4A4A]">
-            {/* CSS for the shake animation */}
             <style>{`
                 @keyframes shake {
                   10%, 90% { transform: translate3d(-1px, 0, 0); }
@@ -124,12 +139,17 @@ export default function App() {
                 }
             `}</style>
 
+            <header className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center">
+                <button onClick={onGoBack} className="px-4 py-2 bg-white/50 rounded-lg shadow-sm hover:bg-white transition-colors duration-200 text-gray-700 font-semibold">
+                    &larr; Quay lại
+                </button>
+            </header>
+
             <div className="text-center mb-8">
                 <h1 className="text-4xl md:text-5xl font-bold text-[#6A5A5A] mb-2">Cryptogram</h1>
-                <p className="text-lg text-[#8B7E7E]">Giải mã câu nói nổi tiếng bằng cách thay thế các con số bằng chữ cái.</p>
+                <p className="text-lg text-[#8B7E7E]">Giải mã từ vựng bằng cách thay thế các con số bằng chữ cái.</p>
             </div>
 
-            {/* Game Board */}
             <div className="max-w-4xl w-full flex flex-col items-center gap-y-4 md:gap-y-6 mb-8">
                 {puzzle.map((word, wordIndex) => (
                     <div key={wordIndex} className="flex flex-wrap justify-center items-end gap-x-2 md:gap-x-3">
@@ -140,15 +160,12 @@ export default function App() {
                             }
                             const number = item.number;
                             const guessedLetter = guesses[number];
-                            const isGuessed = guessedLetter && guessedLetter !== '';
-                            const isCorrect = isGuessed && guessedLetter === numberToLetterMap[number];
                             const isActive = activeInput === uniqueKey;
                             const isIncorrect = incorrectInputs.has(uniqueKey);
 
                             let bgColor = 'bg-transparent';
                             if (isActive) bgColor = 'bg-yellow-200';
-                            else if (isIncorrect) bgColor = 'bg-red-300'; // Red when shaking
-                            else if (isGuessed) bgColor = isCorrect ? 'bg-green-200' : 'bg-transparent';
+                            else if (isIncorrect) bgColor = 'bg-red-300';
                             
                             return (
                                 <div key={uniqueKey} className="flex flex-col items-center">
@@ -161,6 +178,7 @@ export default function App() {
                                         onBlur={() => setActiveInput(null)}
                                         className={`w-10 h-12 md:w-12 md:h-14 text-center text-3xl md:text-4xl font-bold uppercase border-b-2 border-[#6A5A5A] focus:outline-none transition-colors duration-300 rounded-t-md ${bgColor} ${isIncorrect ? 'shake' : ''}`}
                                         aria-label={`Letter for number ${number}`}
+                                        disabled={isSolved}
                                     />
                                     <span className="text-sm md:text-base text-[#8B7E7E] mt-1">{number}</span>
                                 </div>
@@ -170,21 +188,19 @@ export default function App() {
                 ))}
             </div>
 
-            {/* Success Message */}
             {isSolved && (
                 <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md shadow-lg mb-6 animate-pulse" role="alert">
-                    <p className="font-bold">Chúc mừng!</p>
-                    <p>Bạn đã giải mã thành công câu đố.</p>
+                    <p className="font-bold">Chính xác!</p>
+                    <p>Đáp án đúng là: <span className="font-mono">{quote}</span></p>
                 </div>
             )}
 
-            {/* Control Buttons */}
             <div className="flex gap-4">
                 <button
-                    onClick={startNewGame}
+                    onClick={onNewGameRequest}
                     className="px-6 py-3 bg-[#6A5A5A] text-white font-bold rounded-lg shadow-md hover:bg-[#524646] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6A5A5A] transition-all duration-200"
                 >
-                    Trò chơi mới
+                    Từ mới
                 </button>
                  <button
                     onClick={() => setGuesses({})}
@@ -196,3 +212,5 @@ export default function App() {
         </div>
     );
 }
+
+// --- END OF FILE Cryptogram.tsx ---
