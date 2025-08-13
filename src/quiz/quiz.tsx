@@ -2,9 +2,9 @@
 
 import { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
 import { db, auth } from '../firebase.js';
-import { doc, writeBatch, increment } from 'firebase/firestore'; // Chỉ giữ lại các import cần thiết
+// ĐÃ XÓA CÁC IMPORT FIRESTORE TRỰC TIẾP KHÔNG CÒN SỬ DỤNG
 
-// --- CẬP NHẬT: Import thêm recordGameSuccess và xóa updateUserCoins không cần thiết nữa
+// Import các service cần thiết từ userDataService
 import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../userDataService.ts';
 import { useAnimateValue } from '../useAnimateValue.ts'; 
 import CoinDisplay from '../coin-display.tsx';
@@ -19,7 +19,6 @@ import { generateAudioQuizQuestions } from '../audio-quiz-generator.ts';
 
 // --- PHẦN CODE KHÔNG ĐỔI (Các component con) ---
 const optionLabels = ['A', 'B', 'C', 'D'];
-// ĐÃ XÓA streakIconUrls, getStreakIconUrl, và StreakDisplay component khỏi đây
 const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo(({ timeLeft, totalTime }) => { const radius = 20; const circumference = 2 * Math.PI * radius; const progress = Math.max(0, timeLeft / totalTime); const strokeDashoffset = circumference * (1 - progress); const getTimeColor = () => { if (timeLeft <= 0) return 'text-gray-400'; if (timeLeft <= 10) return 'text-red-500'; if (timeLeft <= 20) return 'text-yellow-500'; return 'text-indigo-400'; }; const ringColorClass = getTimeColor(); return ( <div className="relative flex items-center justify-center w-8 h-8"> <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 44 44"> <circle className="text-white/20" stroke="currentColor" strokeWidth="3" fill="transparent" r={radius} cx="22" cy="22" /> <circle className={`${ringColorClass} transition-all duration-500`} stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="transparent" r={radius} cx="22" cy="22" style={{ strokeDasharray: circumference, strokeDashoffset }} /> </svg> <span className={`font-bold text-xs ${ringColorClass}`}>{Math.max(0, timeLeft)}</span> </div> ); });
 const CheckIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17L4 12"></path></svg> );
 const XIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> );
@@ -209,7 +208,6 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
       if (newStreak >= 1) { setStreakAnimation(true); setTimeout(() => setStreakAnimation(false), 1500); }
       const matchedWord = currentQuestionWord;
       
-      // --- REFACTOR: SỬ DỤNG recordGameSuccess ĐỂ ĐẢM BẢO AN TOÀN DỮ LIỆU ---
       if (user && matchedWord) {
         try {
             const gameModeId = `quiz-${selectedPractice}`;
@@ -231,7 +229,6 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
             }
         }
       }
-      // --- KẾT THÚC REFACTOR ---
 
       setTimeout(() => { setShowConfetti(false); setShowNextButton(true); }, 4000); 
     } else { setStreak(0); setShowNextButton(true); }
