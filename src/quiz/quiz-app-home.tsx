@@ -441,6 +441,50 @@ const CardCapacityIcon = ({ className }: { className: string }) => (
 
 // --- START: MEMOIZED CHILD COMPONENTS ---
 
+// THÊM MỚI: Biểu tượng Checkmark nhỏ cho vòng tròn tiến độ
+const CheckIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+);
+
+// THÊM MỚI: Component hiển thị thanh tiến trình tròn
+const CircularProgress = memo(({ percentage, size, strokeWidth, color, trackColor }) => {
+    const viewBox = `0 0 ${size} ${size}`;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const offset = circumference - (percentage / 100) * circumference;
+
+    return (
+        <svg width={size} height={size} viewBox={viewBox} className="-rotate-90">
+            {/* Vòng tròn nền (track) */}
+            <circle
+                className={trackColor}
+                stroke="currentColor"
+                strokeWidth={strokeWidth}
+                fill="transparent"
+                r={radius}
+                cx={size / 2}
+                cy={size / 2}
+            />
+            {/* Vòng tròn tiến trình */}
+            <circle
+                className={color}
+                stroke="currentColor"
+                strokeWidth={strokeWidth}
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                strokeLinecap="round"
+                fill="transparent"
+                r={radius}
+                cx={size / 2}
+                cy={size / 2}
+                style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
+            />
+        </svg>
+    );
+});
+
 const colorClasses = {
     indigo: { border: 'hover:border-indigo-300', bg: 'bg-indigo-100', text: 'text-indigo-600', hoverBg: 'group-hover:bg-indigo-200', arrow: 'group-hover:text-indigo-500' },
     pink:   { border: 'hover:border-pink-300',   bg: 'bg-pink-100',   text: 'text-pink-600',   hoverBg: 'group-hover:bg-pink-200',   arrow: 'group-hover:text-pink-500' },
@@ -453,9 +497,14 @@ const colorClasses = {
     gray:   { border: 'border-gray-300', bg: 'bg-gray-200', text: 'text-gray-500', hoverBg: 'group-hover:bg-gray-200', arrow: 'group-hover:text-gray-400' },
 };
 
+// SỬA ĐỔI: Toàn bộ component PracticeCard được thiết kế lại
 const PracticeCard = memo(({ practiceNumber, details, progress, onPracticeSelect, onRewardsClick, onReviewClick }) => {
     const colors = colorClasses[details.color] || colorClasses.gray;
     const isCompleted = progress && progress.total > 0 && progress.completed >= progress.total;
+    const percentage = progress && progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 0;
+    
+    // Nếu hoàn thành, màu sắc sẽ là màu xanh lá
+    const progressColorClass = isCompleted ? 'text-green-500' : colors.text;
 
     return (
         <div
@@ -464,8 +513,22 @@ const PracticeCard = memo(({ practiceNumber, details, progress, onPracticeSelect
         >
             <div className="flex justify-between items-center">
                 <div className="flex items-center flex-grow">
-                    <div className={`${colors.bg} ${colors.text} rounded-full w-10 h-10 flex items-center justify-center mr-4 ${colors.hoverBg} transition-colors`}>
-                       <span className="font-bold">{practiceNumber}</span>
+                    {/* Vòng tròn tiến độ mới */}
+                    <div className="relative w-10 h-10 flex-shrink-0 mr-4 flex items-center justify-center">
+                        <CircularProgress
+                            percentage={percentage}
+                            size={40}
+                            strokeWidth={4}
+                            color={progressColorClass}
+                            trackColor="text-gray-200"
+                        />
+                        <div className={`absolute inset-0 flex items-center justify-center ${progressColorClass}`}>
+                            {isCompleted ? (
+                                <CheckIcon className="w-5 h-5 text-green-500" />
+                            ) : (
+                                <span className={`text-xs font-bold ${colors.text}`}>{`${percentage}%`}</span>
+                            )}
+                        </div>
                     </div>
                     <div className="text-left flex-grow">
                         <h3 className="font-medium text-gray-800">{details.title}</h3>
