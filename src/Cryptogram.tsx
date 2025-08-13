@@ -1,7 +1,7 @@
 // --- START OF FILE Cryptogram.tsx ---
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { auth } from '../firebase.js';
+import { auth } from './firebase.js';
 import { getOpenedVocab } from '../userDataService.ts';
 
 // Helper function to generate a new cipher map
