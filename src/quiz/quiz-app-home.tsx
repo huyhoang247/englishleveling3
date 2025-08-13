@@ -469,7 +469,15 @@ const PracticeCard = memo(({ practiceNumber, details, progress, onPracticeSelect
                     </div>
                     <div className="text-left flex-grow">
                         <h3 className="font-medium text-gray-800">{details.title}</h3>
-                        <p className="text-xs text-gray-500 mt-1">{details.desc}</p>
+                        {details.desc === 'Word Meaning' ? (
+                            <div className="mt-1.5">
+                                <span className="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                    Word Meaning
+                                </span>
+                            </div>
+                        ) : (
+                            <p className="text-xs text-gray-500 mt-1">{details.desc}</p>
+                        )}
                     </div>
                 </div>
                  <div className="flex items-center gap-3 sm:gap-4 pl-2">
@@ -591,7 +599,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
   
   const practiceDetails = useMemo(() => ({
     tracNghiem: {
-      '1': { title: 'Practice 1', desc: 'Luyện tập từ vựng qua câu hỏi', color: 'indigo' },
+      '1': { title: 'Practice 1', desc: 'Word Meaning', color: 'indigo' },
       '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
       '3': { title: 'Practice 3', desc: 'Điền 1 từ vào câu (không gợi ý nghĩa)', color: 'teal' },
       '4': { title: 'Practice 4', desc: 'Nghe audio và chọn từ đúng', color: 'orange' },
