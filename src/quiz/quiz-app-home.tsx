@@ -472,16 +472,7 @@ const PracticeCard = memo(({ practiceNumber, details, progress, onPracticeSelect
                         {Array.isArray(details.desc) ? (
                             <div className="mt-1.5 flex flex-wrap gap-1.5">
                                 {details.desc.map(tag => {
-                                    const tagColorClass = {
-                                        indigo: 'bg-indigo-100 text-indigo-800',
-                                        pink: 'bg-pink-100 text-pink-800',
-                                        teal: 'bg-teal-100 text-teal-800',
-                                        orange: 'bg-orange-100 text-orange-800',
-                                        green: 'bg-green-100 text-green-800',
-                                        purple: 'bg-purple-100 text-purple-800',
-                                        yellow: 'bg-yellow-100 text-yellow-800',
-                                        red: 'bg-red-100 text-red-800',
-                                    }[details.color] || 'bg-gray-100 text-gray-800';
+                                    const tagColorClass = 'bg-indigo-100 text-indigo-800'; // Set all tags to the same color
                                     return <span key={tag} className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${tagColorClass}`}>{tag}</span>;
                                 })}
                             </div>
