@@ -1,14 +1,11 @@
-
-
-// --- START OF FILE quiz-app-home.tsx ---
-
 // quiz-app-home.tsx
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import QuizApp from './quiz.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
+import VocaMatchGame from './VocaMatchGame.tsx'; // ADDED
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 import WordChainGame from '../word-chain-game.tsx';
-import CoinDisplay from '../coin-display.tsx'; // Import CoinDisplay
+import CoinDisplay from '../coin-display.tsx';
 
 // Imports for progress calculation
 import { auth } from '../firebase.js';
@@ -18,7 +15,7 @@ import { exampleData } from '../example-data.ts';
 
 // --- THÊM IMPORT CHO CÁC HÀM SERVICE MỚI ---
 import { fetchPracticeListProgress, claimQuizReward, listenToUserData } from '../userDataService.ts';
-import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts'; // THÊM IMPORT TÀI NGUYÊN
+import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts';
 
 // --- THÊM INTERFACE CHO PROPS MỚI ---
 interface QuizAppHomeProps {
@@ -68,13 +65,16 @@ function AppHeader({
       case 'quizTypes':
         return 'Quiz';
       case 'practices':
-        return selectedType === 'tracNghiem' ? 'Multiple choice' : 'Fill in the blank';
+        if (selectedType === 'tracNghiem') return 'Multiple choice';
+        if (selectedType === 'dienTu') return 'Fill in the blank';
+        if (selectedType === 'vocaMatch') return 'Voca Match'; // ADDED
+        return null;
       default:
         return null;
     }
   }, [currentView, selectedType]);
 
-  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis'].includes(currentView)) {
+  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame'].includes(currentView)) { // MODIFIED
       return null;
   }
 
@@ -205,11 +205,13 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
       setCurrentView('quiz');
     } else if (selectedType === 'dienTu') {
       setCurrentView('vocabularyGame');
+    } else if (selectedType === 'vocaMatch') { // ADDED
+      setCurrentView('vocaMatchGame');
     }
   }, [selectedType]);
 
   const goBack = useCallback(() => {
-    if (currentView === 'vocabularyGame' || currentView === 'quiz') {
+    if (['vocabularyGame', 'quiz', 'vocaMatchGame'].includes(currentView)) { // MODIFIED
        setCurrentView('practices');
        setSelectedPractice(null);
     } else if (currentView === 'wordChainGame' || currentView === 'analysis') {
@@ -230,7 +232,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   }, []);
 
   // --- Fullscreen Views Logic ---
-  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis'].includes(currentView)) {
+  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame'].includes(currentView)) { // MODIFIED
       let title = '';
       let ViewComponent = null;
 
@@ -243,18 +245,21 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               title = `Fill in the blank - Practice ${selectedPractice % 100}`;
               ViewComponent = <VocabularyGame onGoBack={goBack} selectedPractice={selectedPractice} />;
               break;
+          case 'vocaMatchGame': // ADDED
+              title = `Voca Match - Practice ${selectedPractice % 100}`;
+              ViewComponent = <VocaMatchGame onGoBack={goBack} selectedPractice={selectedPractice} />;
+              break;
           case 'wordChainGame':
               title = 'Nối Từ';
               ViewComponent = <WordChainGame onGoBack={goBack} />;
               break;
           case 'analysis':
               title = ''; // Title is not needed here anymore
-              // [MODIFIED] AnalysisDashboard now fetches its own data. No props needed.
               ViewComponent = <AnalysisDashboard onGoBack={goHome} />;
               break;
       }
       
-      const showParentHeader = !['quiz', 'vocabularyGame', 'wordChainGame', 'analysis'].includes(currentView);
+      const showParentHeader = !['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame'].includes(currentView); // MODIFIED
 
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
@@ -274,8 +279,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   </div>
                 </header>
             )}
-            {/* *** SỬA LỖI SCROLL Ở ĐÂY *** */}
-            {/* Luôn thêm overflow-y-auto để đảm bảo các component toàn màn hình có thể cuộn */}
             <div className="flex-grow overflow-y-auto">
                 {ViewComponent}
             </div>
@@ -287,7 +290,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
     switch(currentView) {
       case 'main':
         return (
-          // --- START: NEW MAIN SCREEN DESIGN ---
           <div className="grid grid-cols-2 gap-5 sm:gap-6 max-w-md mx-auto pt-4">
             <button
               onClick={() => handleQuizSelect(1)}
@@ -317,7 +319,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               <h3 className="text-lg font-bold text-gray-500">Grammar</h3>
             </div>
           </div>
-          // --- END: NEW MAIN SCREEN DESIGN ---
         );
       case 'quizTypes':
         return (
@@ -329,19 +330,30 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center">
                     <img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice icon" className="h-10 w-10" />
                   </div>
-                  {/* --- FIXED HERE: Added flex-1 --- */}
                   <div className="ml-5 flex-1">
                     <h3 className="text-xl font-bold">Multiple choice</h3>
                     <p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p>
                   </div>
                 </div>
               </button>
+              
+              <button onClick={() => handleTypeSelect('vocaMatch')} className="w-full text-left p-6 bg-gradient-to-br from-green-400 to-cyan-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
+                <div className="flex items-center">
+                  <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                  </div>
+                  <div className="ml-5 flex-1">
+                    <h3 className="text-xl font-bold">Voca Match</h3>
+                    <p className="text-sm text-cyan-100 mt-1">Nối từ tiếng Anh với nghĩa tiếng Việt.</p>
+                  </div>
+                </div>
+              </button>
+
               <button onClick={() => handleTypeSelect('dienTu')} className="w-full text-left p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center">
                     <img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank icon" className="h-10 w-10" />
                   </div>
-                   {/* --- FIXED HERE: Added flex-1 --- */}
                   <div className="ml-5 flex-1">
                     <h3 className="text-xl font-bold">Fill in the blank</h3>
                     <p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p>
@@ -369,7 +381,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
           setCurrentView={setCurrentView}
         />
         <main className="flex-grow overflow-y-auto">
-          {/* Giảm padding bottom khi nav bar bị ẩn để tránh khoảng trống thừa */}
           <div className={`p-6 max-w-screen-xl mx-auto ${currentView === 'main' ? 'pb-24' : 'pb-6'}`}>
             {renderContent()}
           </div>
@@ -409,7 +420,6 @@ const GiftIcon = ({ className }: { className: string }) => (
         <path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
     </svg>
 );
-// --- NEW GRADIENT ICON ---
 const GradientGiftIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="url(#gift-gradient)">
         <defs>
@@ -587,6 +597,9 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       '3': { title: 'Practice 3', desc: 'Điền 1 từ vào câu (không gợi ý nghĩa)', color: 'teal' },
       '4': { title: 'Practice 4', desc: 'Nghe audio và chọn từ đúng', color: 'orange' },
     },
+    vocaMatch: { // ADDED
+      '1': { title: 'Practice 1', desc: 'Nối từ cơ bản', color: 'green' },
+    },
     dienTu: {
       '1': { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo' },
       '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
@@ -710,7 +723,6 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         if (isClaiming || !user) return;
         setIsClaiming(rewardId);
         try {
-            // *** SỬ DỤNG HÀM SERVICE MỚI ***
             await claimQuizReward(user.uid, rewardId, coinAmount, capacityAmount);
             
             setClaimedRewards(prev => ({ ...prev, [rewardId]: true }));
