@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { auth } from '../firebase.js';
 import { fetchOrCreateUser, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../userDataService.ts';
-import { allWordPairs, shuffleArray } from '../voca-match-data.ts';
+import { allWordPairs, shuffleArray } from './voca-match-data.ts';
 import Confetti from '../fill-word/chuc-mung.tsx';
 
 // --- ADDED: Import UI components and hooks ---
