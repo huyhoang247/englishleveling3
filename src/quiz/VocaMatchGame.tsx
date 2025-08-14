@@ -1,5 +1,5 @@
 // VocaMatchGame.tsx (Refactored to use Context)
-import React from 'react';
+import React, { useMemo } from 'react';
 import { VocaMatchProvider, useVocaMatch } from './VocaMatchContext.tsx'; // Import context
 import Confetti from '../fill-word/chuc-mung.tsx';
 import VocaMatchLoadingSkeleton from './VocaMatchLoadingSkeleton.tsx'; // <<<--- IMPORT SKELETON MỚI
@@ -90,8 +90,19 @@ const VocaMatchUI: React.FC = () => {
     allWordPairs
   } = useVocaMatch();
 
-  // <<<--- THAY ĐỔI QUAN TRỌNG ---
-  // Thay thế div "Đang tải" bằng component Skeleton chuyên dụng
+  // Logic mới để tìm các từ tiếng Việt đã được ghép đúng
+  const matchedVietnameseWords = useMemo(() => {
+    const matchedSet = new Set<string>();
+    correctPairs.forEach(englishWord => {
+      const pair = allWordPairs.find(p => p.english === englishWord);
+      if (pair) {
+        matchedSet.add(pair.vietnamese);
+      }
+    });
+    return matchedSet;
+  }, [correctPairs, allWordPairs]);
+
+
   if (loading) {
     return <VocaMatchLoadingSkeleton />;
   }
@@ -114,6 +125,10 @@ const VocaMatchUI: React.FC = () => {
       </div>
     );
   }
+
+  // Style cho các trạng thái của nút để code gọn hơn
+  const correctStyle = 'bg-teal-100 text-teal-600 line-through cursor-default opacity-80';
+  const incorrectStyle = 'bg-red-200 ring-2 ring-red-500 animate-shake';
 
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -160,7 +175,11 @@ const VocaMatchUI: React.FC = () => {
               const isCorrect = correctPairs.includes(word);
               const isIncorrect = incorrectPair?.left === word;
               return (
-                <button key={word} onClick={() => handleLeftSelect(word)} disabled={isCorrect} className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? 'bg-gray-200 text-gray-400 line-through cursor-default' : 'bg-white text-gray-800 hover:bg-indigo-50'} ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''} ${isIncorrect ? 'bg-red-200 ring-2 ring-red-500 animate-shake' : ''}`}>
+                <button
+                  key={word}
+                  onClick={() => handleLeftSelect(word)}
+                  disabled={isCorrect}
+                  className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800 hover:bg-indigo-50'} ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''} ${isIncorrect ? incorrectStyle : ''}`}>
                   {word}
                 </button>
               );
@@ -168,10 +187,15 @@ const VocaMatchUI: React.FC = () => {
           </div>
           <div className="flex flex-col gap-3">
             {rightColumn.map(word => {
+              const isCorrect = matchedVietnameseWords.has(word);
               const isIncorrect = incorrectPair?.right === word;
                                             
               return (
-                <button key={word} onClick={() => handleRightSelect(word)} disabled={!selectedLeft} className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isIncorrect ? 'bg-red-200 ring-2 ring-red-500 animate-shake' : 'bg-white text-gray-800'} ${selectedLeft ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'} disabled:opacity-50`}>
+                <button
+                  key={word}
+                  onClick={() => handleRightSelect(word)}
+                  disabled={isCorrect || !selectedLeft}
+                  className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800'} ${isIncorrect ? incorrectStyle : ''} ${selectedLeft && !isCorrect ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'} disabled:opacity-50`}>
                   {word}
                 </button>
               );
