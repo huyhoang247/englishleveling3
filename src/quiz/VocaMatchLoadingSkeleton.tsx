@@ -48,18 +48,6 @@ const VocaMatchLoadingSkeleton: React.FC = () => {
           </div>
         </main>
         
-        {/* Skeleton cho phần hiển thị định nghĩa (xuất hiện ở cuối) */}
-        <div className="flex-shrink-0 pt-4"> {/* Giả lập khoảng trống ở trên */}
-             <div className="bg-gray-200/80 rounded-xl p-4 shadow-md h-24 w-full animate-pulse">
-                {/* Nội dung giả bên trong thẻ định nghĩa */}
-                <div className="flex items-center mb-3">
-                    <div className="w-5 h-5 bg-gray-300 rounded-full mr-2"></div>
-                    <div className="h-5 w-32 bg-gray-300 rounded"></div>
-                </div>
-                <div className="h-4 w-full bg-gray-300 rounded mt-2"></div>
-                <div className="h-4 w-3/4 bg-gray-300 rounded mt-1.5"></div>
-             </div>
-        </div>
       </div>
     </div>
   );
