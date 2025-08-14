@@ -5,6 +5,7 @@ import VocabularyGame from '../fill-word/fill-word-home.tsx';
 import VocaMatchGame from './VocaMatchGame.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 import WordChainGame from '../word-chain-game.tsx';
+import PracticeListLoadingSkeleton from './PracticeListLoadingSkeleton.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
 import { QuizAppProvider, useQuizApp } from './quiz-app.context.tsx';
@@ -291,7 +292,11 @@ function PracticeList() {
   const handleReviewClick = useCallback((practiceNumber) => { setSelectedPracticeForReview(practiceNumber); setView('reviews'); }, []);
   const handleRewardsClick = useCallback((practiceNumber, practiceTitle) => { setSelectedPracticeForRewards({ number: practiceNumber, title: practiceTitle }); setIsRewardsPopupOpen(true); }, []);
 
-  if (loading) { return <div className="text-center text-gray-500">Đang tải tiến độ...</div>; }
+  // <<< THAY ĐỔI TẠI ĐÂY
+  if (loading) {
+    return <PracticeListLoadingSkeleton />;
+  }
+
   if (isRewardsPopupOpen) { return <RewardsPopup isOpen={isRewardsPopupOpen} onClose={() => setIsRewardsPopupOpen(false)} practiceNumber={selectedPracticeForRewards.number} practiceTitle={selectedPracticeForRewards.title} progressData={progressData} claimedRewards={claimedRewards} setClaimedRewards={setClaimedRewards} user={user} selectedType={selectedType} MAX_PREVIEWS={MAX_PREVIEWS} />; }
   if (view === 'reviews' && selectedPracticeForReview) {
       const basePracticeDetails = practiceDetails[selectedType]?.[String(selectedPracticeForReview)];
