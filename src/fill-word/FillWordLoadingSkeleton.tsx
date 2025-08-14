@@ -1,4 +1,4 @@
-// --- START OF NEW FILE: FillWordLoadingSkeleton.tsx ---
+// --- START OF FILE: FillWordLoadingSkeleton.tsx ---
 
 import React from 'react';
 
@@ -39,37 +39,14 @@ const FillWordLoadingSkeleton: React.FC = () => {
             <div className="w-full h-16 bg-gray-300 rounded-lg mt-4"></div>
           </div>
 
-          {/* Skeleton cho khu vực tương tác */}
-          <div className="w-full mt-8 space-y-8">
-            {/* Skeleton cho các ô nhập từ (WordSquaresInput) */}
-            <div className="flex justify-center gap-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="w-12 h-14 bg-gray-200 rounded-lg animate-pulse"></div>
-              ))}
-            </div>
-            
-            {/* Skeleton cho Bàn phím ảo (VirtualKeyboard) */}
-            <div className="w-full max-w-sm mx-auto space-y-2">
-              {/* Hàng phím trên */}
-              <div className="flex justify-center gap-1.5">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="w-8 h-10 bg-gray-200 rounded-md animate-pulse"></div>
-                ))}
-              </div>
-              {/* Hàng phím giữa */}
-              <div className="flex justify-center gap-1.5">
-                {Array.from({ length: 9 }).map((_, i) => (
-                  <div key={i} className="w-8 h-10 bg-gray-200 rounded-md animate-pulse"></div>
-                ))}
-              </div>
-              {/* Hàng phím dưới */}
-              <div className="flex justify-center gap-1.5">
-                {Array.from({ length: 7 }).map((_, i) => (
-                  <div key={i} className="w-10 h-10 bg-gray-200 rounded-md animate-pulse"></div>
-                ))}
-              </div>
-            </div>
+          {/* --- THAY ĐỔI Ở ĐÂY --- */}
+          {/* Skeleton cho khu vực tương tác (Đã được đơn giản hóa) */}
+          <div className="w-full mt-10 flex justify-center">
+            {/* Placeholder chung cho khu vực nhập liệu, thay vì ô chữ và bàn phím chi tiết */}
+            <div className="w-full max-w-sm h-24 bg-gray-200 rounded-lg animate-pulse"></div>
           </div>
+          {/* --- KẾT THÚC THAY ĐỔI --- */}
+
         </div>
       </main>
     </div>
