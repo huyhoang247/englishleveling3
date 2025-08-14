@@ -1,69 +1,73 @@
-// --- START OF FILE VerticalFlashcardGallerySkeleton.tsx ---
-
 import React from 'react';
+import { SidebarLayout } from './sidebar-story.tsx';
 
-// Component con cho một flashcard skeleton, giúp tái sử dụng dễ dàng
-const FlashcardItemSkeleton: React.FC = () => {
-  return (
-    <div className="flex flex-col bg-white dark:bg-gray-800 shadow-xl overflow-hidden animate-pulse">
-      {/* Skeleton cho phần hình ảnh */}
-      <div 
-        className="w-full bg-gray-200 dark:bg-gray-700" 
-        style={{ aspectRatio: '1024/1536' }}
-      ></div>
-    </div>
-  );
-};
+// Component skeleton cho một thẻ flashcard
+const FlashcardSkeletonItem: React.FC = () => (
+  <div className="flex flex-col bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
+    {/* Placeholder cho ảnh với đúng tỉ lệ */}
+    <div 
+      className="w-full bg-gray-200 dark:bg-gray-700 animate-pulse" 
+      style={{ aspectRatio: '1024/1536' }}
+    />
+  </div>
+);
 
-const VerticalFlashcardGallerySkeleton: React.FC = () => {
+// Component skeleton chính, mô phỏng toàn bộ giao diện của VerticalFlashcardGallery
+const FlashcardGallerySkeleton: React.FC = () => {
+  const dummyFunc = () => {}; // Hàm giả để truyền vào props của SidebarLayout
+
   return (
-    // Container chính, giữ màu nền và cấu trúc chung
-    <div className="flex flex-col h-screen overflow-hidden bg-white dark:bg-gray-900">
-      <div className="w-full max-w-6xl py-6 mx-auto">
+    // Sử dụng SidebarLayout để đảm bảo cấu trúc trang nhất quán
+    <SidebarLayout
+      setToggleSidebar={dummyFunc}
+      onShowHome={dummyFunc}
+      onShowStats={dummyFunc}
+      onShowRank={dummyFunc}
+      onShowGoldMine={dummyFunc}
+      onShowTasks={dummyFunc}
+      onShowPerformance={dummyFunc}
+      onShowSettings={dummyFunc}
+      onShowHelp={dummyFunc}
+      activeScreen="home"
+    >
+      <div className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900">
         
-        {/* --- Skeleton cho Header --- */}
-        <div className="flex justify-between items-center mb-4 px-4">
-          {/* Title giả */}
-          <div className="h-8 w-48 bg-gray-300 dark:bg-gray-700 rounded-md animate-pulse"></div>
-          {/* Các nút điều khiển giả */}
-          <div className="flex items-center space-x-2">
-            <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-            <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+        {/* Skeleton cho Header và Tabs */}
+        <div className="w-full max-w-6xl py-6 mx-auto animate-pulse">
+          <div className="flex justify-between items-center mb-4 px-4">
+            {/* Title */}
+            <div className="h-8 w-48 bg-gray-300 dark:bg-gray-600 rounded-md" />
+            {/* Các nút điều khiển */}
+            <div className="flex items-center space-x-2">
+              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex items-center p-1 mb-4 mx-4 bg-gray-100 dark:bg-gray-800 rounded-lg w-fit">
+            {/* Tab đang active */}
+            <div className="h-10 w-36 bg-indigo-100 dark:bg-gray-700 rounded-lg" />
+            {/* Tab không active */}
+            <div className="h-10 w-36 bg-gray-200 dark:bg-gray-700/50 rounded-lg ml-1" />
           </div>
         </div>
 
-        {/* --- Skeleton cho Tabs --- */}
-        <div className="inline-flex rounded-lg p-1 mb-4 mx-4 animate-pulse">
-          <div className="h-10 w-36 bg-gray-200 dark:bg-gray-700 rounded-lg mr-2"></div>
-          <div className="h-10 w-36 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-        </div>
-        
-        {/* --- Skeleton cho Playlist Pills (giả định) --- */}
-        <div className="px-4 mb-6">
-           <div className="h-4 w-40 bg-gray-300 dark:bg-gray-600 rounded-md mb-3 animate-pulse"></div>
-           <div className="flex items-center space-x-2">
-               <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-               <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-               <div className="h-10 w-28 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-           </div>
-        </div>
-
-        {/* --- Skeleton cho Grid Flashcards --- */}
-        {/* Sử dụng grid 2 cột để trông đẹp hơn khi loading */}
-        <div className="min-h-0">
+        {/* Skeleton cho lưới Flashcards */}
+        <div className="min-h-0 flex-grow">
           <div className="w-full max-w-6xl mx-auto">
-            <div className="grid gap-4 px-4 grid-cols-2">
-              {/* Lặp lại component FlashcardItemSkeleton để lấp đầy màn hình */}
+            {/* Lưới sẽ có 1 cột trên màn hình nhỏ và 2 cột trên màn hình lớn hơn */}
+            <div className="grid gap-4 px-4 grid-cols-1 sm:grid-cols-2">
+              {/* Tạo ra 6 item để lấp đầy màn hình ban đầu */}
               {Array.from({ length: 6 }).map((_, index) => (
-                <FlashcardItemSkeleton key={index} />
+                <FlashcardSkeletonItem key={index} />
               ))}
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </SidebarLayout>
   );
 };
 
-export default VerticalFlashcardGallerySkeleton;
-// --- END OF FILE VerticalFlashcardGallerySkeleton.tsx ---
+export default FlashcardGallerySkeleton;
