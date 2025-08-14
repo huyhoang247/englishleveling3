@@ -670,7 +670,7 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       '4': { title: 'Practice 4', desc: ['Listening', 'Words'], color: 'orange' },
     },
     vocaMatch: { // ADDED
-      '1': { title: 'Practice 1', desc: 'Nối từ cơ bản', color: 'green' },
+      '1': { title: 'Practice 1', desc: ['Match Words'], color: 'green' },
     },
     dienTu: {
       '1': { title: 'Practice 1', desc: ['Type Word', 'Picture'], color: 'indigo' },
