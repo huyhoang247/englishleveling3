@@ -11,6 +11,9 @@ import { SidebarLayout } from './sidebar-story.tsx';
 // <<< THAY ĐỔI LỚN: IMPORT DỮ LIỆU TỪ FILE TRUNG TÂM >>>
 import { ALL_CARDS_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
 
+// <<< THAY ĐỔI: IMPORT SKELETON LOADING MỚI >>>
+import VerticalFlashcardGallerySkeleton from './VerticalFlashcardGallerySkeleton.tsx';
+
 // --- Interfaces and Data ---
 interface Playlist {
   id: string;
@@ -27,8 +30,6 @@ interface DisplayCard {
     card: Flashcard;
     isFavorite: boolean;
 }
-
-// <<< TOÀN BỘ LOGIC TẠO DỮ LIỆU ĐÃ ĐƯỢC XÓA KHỎI ĐÂY VÀ CHUYỂN SANG flashcard-data.ts >>>
 
 const animations = `
   @keyframes fadeInOut { 0% { opacity: 0; transform: translateY(-10px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-10px); } }
@@ -93,7 +94,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
   const [activeTab, setActiveTab] = useState('collection');
   const [showSettings, setShowSettings] = useState(false);
-  const [layoutMode, setLayoutMode] = useState('single');
+  const [layoutMode, setLayoutMode] = useState('double'); // <<< THAY ĐỔI: Đặt mặc định là 2 cột để khớp với skeleton
   const [visualStyle, setVisualStyle] = useState('default');
   const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null);
   const [showVocabDetail, setShowVocabDetail] = useState(false);
@@ -369,8 +370,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [playlistToDelete, currentUser, playlists, selectedPlaylistId]);
 
 
+  // <<< THAY ĐỔI: Sử dụng component Skeleton mới >>>
   if (loading) {
-    return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
+    return <VerticalFlashcardGallerySkeleton />;
   }
 
   return (
@@ -710,3 +712,4 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     </SidebarLayout>
   );
 }
+// --- END OF FILE VerticalFlashcardGallery.tsx ---
