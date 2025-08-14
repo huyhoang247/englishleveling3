@@ -1,11 +1,16 @@
+// --- START OF FILE src/quiz/quiz.tsx ---
+
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
-import { QuizProvider, useQuiz } from './QuizContext.tsx'; 
+import { QuizProvider, useQuiz } from './QuizContext.tsx';
 import { useAnimateValue } from '../useAnimateValue.ts'; 
 import CoinDisplay from '../coin-display.tsx';
 import MasteryDisplay from '../mastery-display.tsx'; 
 import StreakDisplay from '../streak-display.tsx';
 import Confetti from '../fill-word/chuc-mung.tsx';
-import QuizLoadingSkeleton from './QuizLoadingSkeleton.tsx'; // <<<--- DÒNG IMPORT QUAN TRỌNG ĐÂY!
+
+// --- IMPORT THƯ VIỆN SKELETON ---
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css'; // Bắt buộc phải import CSS này
 
 // --- PHẦN CODE KHÔNG ĐỔI (Các component con & Icons) ---
 const optionLabels = ['A', 'B', 'C', 'D'];
@@ -22,9 +27,9 @@ const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http:/
 const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
 interface Definition { vietnamese: string; english: string; explanation: string; }
 const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> = ({ data, onClose }) => { if (!data) return null; return ( <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose} > <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl w-full max-w-md p-6 relative shadow-lg transform transition-all duration-300 scale-95 opacity-0 animate-scale-up" onClick={(e) => e.stopPropagation()} > <div className="inline-flex items-center bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-sm font-semibold px-3 py-1 rounded-full mb-4"> <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor"> <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /> </svg> <span>{data.english}</span> </div> <p className="text-gray-700 dark:text-gray-400 text-base leading-relaxed italic"> {`${data.vietnamese} (${data.english}) là ${data.explanation}`} </p> </div> <style jsx>{` @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; } `}</style> </div> ); };
-const AudioQuestionDisplay: React.FC<{ audioUrl: string; }> = memo(({ audioUrl }) => { const audioRef = useRef<HTMLAudioElement>(null); const [isPlaying, setIsPlaying] = useState(false); const togglePlay = useCallback(() => { const audio = audioRef.current; if (!audio) return; if (audio.paused) { audio.play().catch(e => console.error("Error playing audio:", e)); } else { audio.pause(); } }, []); useEffect(() => { const audio = audioRef.current; if (!audio) return; const handlePlay = () => setIsPlaying(true); const handlePause = () => setIsPlaying(false); const handleEnded = () => setIsPlaying(false); audio.addEventListener('play', handlePlay); audio.addEventListener('pause', handlePause); audio.addEventListener('ended', handleEnded); audio.play().catch(e => console.error("Autoplay prevented:", e)); return () => { audio.removeEventListener('play', handlePlay); audio.removeEventListener('pause', handlePause); audio.removeEventListener('ended', handleEnded); audio.pause(); }; }, [audioUrl]); return ( <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex flex-col items-center justify-center min-h-[140px]"> <audio ref={audioRef} src={audioUrl} key={audioUrl} preload="auto" className="hidden" /> <button onClick={togglePlay} className="w-20 h-20 flex items-center justify-center bg-white/20 rounded-full text-white hover:bg-white/30 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/50" aria-label={isPlaying ? 'Pause audio' : 'Play audio'} > {isPlaying ? <PauseIcon className="w-10 h-10" /> : <VolumeUpIcon className="w-10 h-10" />} </button> <p className="text-white/80 text-sm mt-3 font-medium">Nghe và chọn đáp án đúng</p> </div> ); });
+const AudioQuestionDisplay: React.FC<{ audioUrl: string; isLoading: boolean; }> = memo(({ audioUrl, isLoading }) => { const audioRef = useRef<HTMLAudioElement>(null); const [isPlaying, setIsPlaying] = useState(false); const togglePlay = useCallback(() => { const audio = audioRef.current; if (!audio) return; if (audio.paused) { audio.play().catch(e => console.error("Error playing audio:", e)); } else { audio.pause(); } }, []); useEffect(() => { if (isLoading) return; const audio = audioRef.current; if (!audio) return; const handlePlay = () => setIsPlaying(true); const handlePause = () => setIsPlaying(false); const handleEnded = () => setIsPlaying(false); audio.addEventListener('play', handlePlay); audio.addEventListener('pause', handlePause); audio.addEventListener('ended', handleEnded); audio.play().catch(e => console.error("Autoplay prevented:", e)); return () => { audio.removeEventListener('play', handlePlay); audio.removeEventListener('pause', handlePause); audio.removeEventListener('ended', handleEnded); if (audio) audio.pause(); }; }, [audioUrl, isLoading]); if (isLoading) { return ( <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex flex-col items-center justify-center min-h-[140px]"> <Skeleton circle width={80} height={80} containerClassName="flex-1" /> <Skeleton width={150} /> </div> ); } return ( <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex flex-col items-center justify-center min-h-[140px]"> <audio ref={audioRef} src={audioUrl} key={audioUrl} preload="auto" className="hidden" /> <button onClick={togglePlay} className="w-20 h-20 flex items-center justify-center bg-white/20 rounded-full text-white hover:bg-white/30 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/50" aria-label={isPlaying ? 'Pause audio' : 'Play audio'} > {isPlaying ? <PauseIcon className="w-10 h-10" /> : <VolumeUpIcon className="w-10 h-10" />} </button> <p className="text-white/80 text-sm mt-3 font-medium">Nghe và chọn đáp án đúng</p> </div> ); });
 
-// --- Component UI chính, nhận dữ liệu từ Context ---
+// --- Component UI chính, đã được tích hợp Skeleton ---
 function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
   const {
     loading, showScore, currentQuestion, score, coins, streak, masteryCount, streakAnimation,
@@ -40,27 +45,35 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
 
   const totalCompletedBeforeSession = filteredQuizData.length > 0 ? filteredQuizData.length - playableQuestions.length : 0;
   const quizProgress = filteredQuizData.length > 0 ? ((totalCompletedBeforeSession + currentQuestion) / filteredQuizData.length) * 100 : 0;
+  
+  // Theme cho Skeleton
+  const skeletonHeaderTheme = { baseColor: "#4A5568", highlightColor: "#718096" }; // Màu tối cho header
+  const skeletonBodyTheme = { baseColor: "#E2E8F0", highlightColor: "#F7FAFC" }; // Màu sáng cho body
 
-  if (loading) return <QuizLoadingSkeleton />;
-
-  // --- PHẦN JSX RENDER UI (Không thay đổi) ---
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {showConfetti && <Confetti />}
       {showDetailPopup && <DetailPopup data={detailData} onClose={onCloseDetailPopup} />}
 
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
-        <button onClick={onGoBack} className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100" aria-label="Quay lại">
-          <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
-        </button>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
-          <MasteryDisplay masteryCount={masteryCount} />
-          <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />
-        </div>
+        <SkeletonTheme baseColor={skeletonHeaderTheme.baseColor} highlightColor={skeletonHeaderTheme.highlightColor}>
+          {loading ? (
+             <Skeleton circle width={28} height={28} />
+          ) : (
+            <button onClick={onGoBack} className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100" aria-label="Quay lại">
+              <BackIcon className="w-3.5 h-3.5 text-white/80 group-hover:text-white transition-colors" />
+            </button>
+          )}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {loading ? <Skeleton height={28} width={80} borderRadius={8} /> : <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />}
+            {loading ? <Skeleton height={28} width={70} borderRadius={8} /> : <MasteryDisplay masteryCount={masteryCount} />}
+            {loading ? <Skeleton height={28} width={70} borderRadius={8} /> : <StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} />}
+          </div>
+        </SkeletonTheme>
       </header>
       
       <main className="flex-grow overflow-y-auto flex justify-center p-4">
+        <SkeletonTheme baseColor={skeletonBodyTheme.baseColor} highlightColor={skeletonBodyTheme.highlightColor}>
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
           {showScore ? (
               <div className="p-10 text-center">
@@ -71,53 +84,68 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                 </div>
                 <button onClick={resetQuiz} className="flex items-center justify-center mx-auto px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><RefreshIcon className="mr-2 h-5 w-5" />Chơi tiếp</button>
               </div>
-          ) : filteredQuizData.length === 0 ? (
-            <div className="p-10 text-center flex flex-col items-center justify-center h-full"><h2 className="text-2xl font-bold text-gray-800 mb-4">Không có câu hỏi phù hợp</h2><p className="text-gray-600">Bạn cần mở thêm thẻ từ vựng để có câu hỏi trong mục này.</p></div>
-          ) : playableQuestions.length === 0 ? (
-            <div className="p-10 text-center flex flex-col items-center justify-center h-full"><TrophyIcon className="w-20 h-20 text-yellow-500 mb-4" /><h2 className="text-2xl font-bold text-gray-800 mb-4">Xin chúc mừng!</h2><p className="text-gray-600">Bạn đã hoàn thành tất cả các câu hỏi có sẵn. Hãy quay lại sau khi học thêm từ vựng mới nhé!</p></div>
-          ) : (
+          ) : loading || playableQuestions.length > 0 ? (
               <>
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="relative"><div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{totalCompletedBeforeSession + currentQuestion + 1}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{filteredQuizData.length}</span></div></div></div>
-                    <div className="flex items-center gap-2">
-                       <button onClick={handleHintClick} disabled={hintUsed || answered || coins < HINT_COST || playableQuestions.length === 0} className="group relative flex items-center justify-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs font-bold text-white transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed hover:enabled:bg-white/25 active:enabled:bg-white/30" aria-label={`Sử dụng gợi ý (tốn ${HINT_COST} vàng)`}><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000944c623081c4672d72472f68.png" alt="Hint" className="w-4 h-4" /><span className="text-yellow-300">{HINT_COST}</span><div className="absolute -top-1 -right-1 w-1 h-1 bg-yellow-300 rounded-full animate-pulse-fast group-disabled:hidden"></div></button>
-                      <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
+                <div className={`text-white p-6 relative ${loading ? 'bg-gray-300' : 'bg-gradient-to-r from-indigo-600 to-purple-600'}`}>
+                  <SkeletonTheme baseColor={skeletonHeaderTheme.baseColor} highlightColor={skeletonHeaderTheme.highlightColor} enableAnimation={loading}>
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="relative">
+                        {loading ? <Skeleton width={60} height={26} borderRadius={8} /> : <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{totalCompletedBeforeSession + currentQuestion + 1}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{filteredQuizData.length}</span></div></div>}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {loading ? <Skeleton width={70} height={26} borderRadius={8} /> : <button onClick={handleHintClick} disabled={hintUsed || answered || coins < HINT_COST || playableQuestions.length === 0} className="group relative flex items-center justify-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs font-bold text-white transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed hover:enabled:bg-white/25 active:enabled:bg-white/30" aria-label={`Sử dụng gợi ý (tốn ${HINT_COST} vàng)`}><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000944c623081c4672d72472f68.png" alt="Hint" className="w-4 h-4" /><span className="text-yellow-300">{HINT_COST}</span><div className="absolute -top-1 -right-1 w-1 h-1 bg-yellow-300 rounded-full animate-pulse-fast group-disabled:hidden"></div></button>}
+                        {loading ? <Skeleton circle width={32} height={32} /> : <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />}
+                      </div>
                     </div>
-                  </div>
-                  <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
-                  
-                  { (playableQuestions[currentQuestion]?.word && playableQuestions[currentQuestion]?.audioUrl) ? (
-                      <AudioQuestionDisplay audioUrl={playableQuestions[currentQuestion].audioUrl} />
-                  ) : (
-                      <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1"><h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>{playableQuestions[currentQuestion]?.vietnamese && (!playableQuestions[currentQuestion]?.word || playableQuestions[currentQuestion]?.word && !playableQuestions[currentQuestion]?.audioUrl) && (<p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>)}</div>
-                  )}
-
+                    <div className="w-full h-3 bg-gray-700/50 rounded-full overflow-hidden relative mb-6">
+                      {loading ? <Skeleton height="100%" borderRadius={999} containerClassName="h-full" /> : <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div>}
+                    </div>
+                    
+                    { (loading || (playableQuestions[currentQuestion]?.word && playableQuestions[currentQuestion]?.audioUrl)) ? (
+                        <AudioQuestionDisplay audioUrl={playableQuestions[currentQuestion]?.audioUrl} isLoading={loading} />
+                    ) : (
+                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1"><h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>{playableQuestions[currentQuestion]?.vietnamese && (!playableQuestions[currentQuestion]?.word || playableQuestions[currentQuestion]?.word && !playableQuestions[currentQuestion]?.audioUrl) && (<p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>)}</div>
+                    )}
+                  </SkeletonTheme>
                 </div>
                 <div className="p-6">
                   <div className="space-y-3 mb-6">
-                    {shuffledOptions.map((option, index) => {
-                      const isCorrect = option === playableQuestions[currentQuestion]?.correctAnswer; const isSelected = option === selectedOption; const isHiddenByHint = hiddenOptions.includes(option);
-                      let bgColor = "bg-white"; let borderColor = "border-gray-200"; let textColor = "text-gray-700"; let labelBg = "bg-gray-100";
-                      if (answered) {
-                        if (isCorrect) { bgColor = "bg-green-50"; borderColor = "border-green-500"; textColor = "text-green-800"; labelBg = "bg-green-500 text-white"; }
-                        else if (isSelected) { bgColor = "bg-red-50"; borderColor = "border-red-500"; textColor = "text-red-800"; labelBg = "bg-red-500 text-white"; }
-                      }
-                      return (
-                        <button key={option} onClick={() => !answered && !isHiddenByHint && handleAnswer(option)} disabled={answered || playableQuestions.length === 0 || isHiddenByHint} className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition-all duration-300 hover:shadow-sm ${!answered && playableQuestions.length > 0 && !isHiddenByHint ? "hover:border-indigo-300 hover:bg-indigo-50" : ""} ${isHiddenByHint ? 'opacity-40 line-through pointer-events-none' : ''}`} >
-                          <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>{optionLabels[index]}</div>
-                          <span className="flex-grow">{option}</span>
-                          {answered && isCorrect && <CheckIcon className="h-4 w-4 text-green-600 ml-1" />}
-                          {answered && isSelected && !isCorrect && <XIcon className="h-4 w-4 text-red-600 ml-1" />}
-                        </button>
-                      );
-                    })}
+                    {loading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                         <div key={i} className="flex items-center w-full p-3 rounded-lg border border-gray-200 bg-white">
+                           <Skeleton circle width={24} height={24} />
+                           <Skeleton width="80%" height={20} className="ml-2" />
+                         </div>
+                      ))
+                    ) : (
+                      shuffledOptions.map((option, index) => {
+                        const isCorrect = option === playableQuestions[currentQuestion]?.correctAnswer; const isSelected = option === selectedOption; const isHiddenByHint = hiddenOptions.includes(option);
+                        let bgColor = "bg-white"; let borderColor = "border-gray-200"; let textColor = "text-gray-700"; let labelBg = "bg-gray-100";
+                        if (answered) {
+                          if (isCorrect) { bgColor = "bg-green-50"; borderColor = "border-green-500"; textColor = "text-green-800"; labelBg = "bg-green-500 text-white"; }
+                          else if (isSelected) { bgColor = "bg-red-50"; borderColor = "border-red-500"; textColor = "text-red-800"; labelBg = "bg-red-500 text-white"; }
+                        }
+                        return (
+                          <button key={option} onClick={() => !answered && !isHiddenByHint && handleAnswer(option)} disabled={answered || playableQuestions.length === 0 || isHiddenByHint} className={`w-full text-left p-3 rounded-lg border ${borderColor} ${bgColor} ${textColor} flex items-center transition-all duration-300 hover:shadow-sm ${!answered && playableQuestions.length > 0 && !isHiddenByHint ? "hover:border-indigo-300 hover:bg-indigo-50" : ""} ${isHiddenByHint ? 'opacity-40 line-through pointer-events-none' : ''}`} >
+                            <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 text-sm font-bold ${labelBg}`}>{optionLabels[index]}</div>
+                            <span className="flex-grow">{option}</span>
+                            {answered && isCorrect && <CheckIcon className="h-4 w-4 text-green-600 ml-1" />}
+                            {answered && isSelected && !isCorrect && <XIcon className="h-4 w-4 text-red-600 ml-1" />}
+                          </button>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </>
+            ) : filteredQuizData.length === 0 ? (
+                <div className="p-10 text-center flex flex-col items-center justify-center h-full"><h2 className="text-2xl font-bold text-gray-800 mb-4">Không có câu hỏi phù hợp</h2><p className="text-gray-600">Bạn cần mở thêm thẻ từ vựng để có câu hỏi trong mục này.</p></div>
+            ) : (
+                <div className="p-10 text-center flex flex-col items-center justify-center h-full"><TrophyIcon className="w-20 h-20 text-yellow-500 mb-4" /><h2 className="text-2xl font-bold text-gray-800 mb-4">Xin chúc mừng!</h2><p className="text-gray-600">Bạn đã hoàn thành tất cả các câu hỏi có sẵn. Hãy quay lại sau khi học thêm từ vựng mới nhé!</p></div>
             )
           }
         </div>
+        </SkeletonTheme>
       </main>
       
       {showNextButton && (playableQuestions.length > 0) && (
@@ -137,7 +165,6 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
     </div>
   );
 }
-
 
 // --- Component Wrapper, cung cấp Context Provider ---
 export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () => void; selectedPractice: number; }) {
