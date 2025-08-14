@@ -7,7 +7,6 @@ import { auth, db } from './firebase.js';
 import { doc, updateDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
-import FlashcardGallerySkeleton from './VerticalFlashcardGallerySkeleton.tsx'; // <<<--- DÒNG IMPORT QUAN TRỌNG ĐÂY!
 
 // <<< THAY ĐỔI LỚN: IMPORT DỮ LIỆU TỪ FILE TRUNG TÂM >>>
 import { ALL_CARDS_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
@@ -370,9 +369,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [playlistToDelete, currentUser, playlists, selectedPlaylistId]);
 
 
-  // <<< THAY ĐỔI QUAN TRỌNG: HIỂN THỊ SKELETON KHI ĐANG TẢI >>>
   if (loading) {
-    return <FlashcardGallerySkeleton />;
+    return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
   }
 
   return (
