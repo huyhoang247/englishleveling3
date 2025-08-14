@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { VocaMatchProvider, useVocaMatch } from './VocaMatchContext.tsx'; // Import context
 import Confetti from '../fill-word/chuc-mung.tsx';
-import VocaMatchLoadingSkeleton from './VocaMatchLoadingSkeleton.tsx'; // <<<--- IMPORT SKELETON MỚI
+import VocaMatchLoadingSkeleton from './VocaMatchLoadingSkeleton.tsx';
 
 // --- UI components and hooks ---
 import CoinDisplay from '../coin-display.tsx';
@@ -126,8 +126,8 @@ const VocaMatchUI: React.FC = () => {
     );
   }
 
-  // Style cho các trạng thái của nút để code gọn hơn
-  const correctStyle = 'bg-teal-100 text-teal-600 line-through cursor-default opacity-80';
+  // <<<--- THAY ĐỔI DUY NHẤT: Quay lại style màu xám như cũ ---
+  const correctStyle = 'bg-gray-200 text-gray-400 line-through cursor-default';
   const incorrectStyle = 'bg-red-200 ring-2 ring-red-500 animate-shake';
 
   return (
@@ -195,7 +195,7 @@ const VocaMatchUI: React.FC = () => {
                   key={word}
                   onClick={() => handleRightSelect(word)}
                   disabled={isCorrect || !selectedLeft}
-                  className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800'} ${isIncorrect ? incorrectStyle : ''} ${selectedLeft && !isCorrect ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'} disabled:opacity-50`}>
+                  className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800'} ${isIncorrect ? incorrectStyle : ''} ${selectedLeft && !isCorrect ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'} ${!isCorrect && 'disabled:opacity-50'}`}>
                   {word}
                 </button>
               );
