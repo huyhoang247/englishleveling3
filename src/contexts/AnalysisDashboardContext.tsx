@@ -16,8 +16,8 @@ import {
     fetchAnalysisDashboardData, 
     claimDailyMilestoneReward,
     claimVocabMilestoneReward
-} from './userDataService.ts'; 
-import { defaultVocabulary } from './list-vocabulary.ts';
+} from '../userDataService.ts'; 
+import { defaultVocabulary } from '../list-vocabulary.ts';
 
 // --- TYPE DEFINITIONS (Should be in a shared types file, but kept here for context) ---
 interface LearningActivity { date: string; new: number; review: number; }
