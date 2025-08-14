@@ -17,7 +17,7 @@ const AnalysisDashboardSkeleton: React.FC = () => {
         </div>
       </header>
 
-      {/* --- Skeleton cho Main Content --- */}
+      {/* --- Skeleton cho Main Content (Phần hiển thị ngay lập tức) --- */}
       <main className="flex-grow overflow-y-auto bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 sm:p-6">
         <div className="max-w-7xl mx-auto animate-pulse">
           {/* --- Skeleton cho Milestone Cards --- */}
@@ -63,40 +63,10 @@ const AnalysisDashboardSkeleton: React.FC = () => {
             </div>
           </div>
 
-          {/* --- Skeleton cho các Chart và Bảng --- */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {/* Chart Card Skeleton */}
-            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-              <div className="h-6 w-48 bg-gray-200 rounded-md mb-4"></div>
-              <div className="h-64 bg-gray-200 rounded-lg"></div>
-            </div>
-            {/* Chart Card Skeleton */}
-            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
-              <div className="h-6 w-40 bg-gray-200 rounded-md mb-4"></div>
-              <div className="h-64 bg-gray-200 rounded-lg"></div>
-            </div>
-
-            {/* Vocabulary Mastery Table Skeleton */}
-            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
-              <div className="h-6 w-56 bg-gray-200 rounded-md mb-4"></div>
-              <div className="space-y-3">
-                {/* Header của bảng */}
-                <div className="flex justify-between p-2 bg-gray-100 rounded-md">
-                   <div className="h-4 w-1/3 bg-gray-200 rounded-md"></div>
-                   <div className="h-4 w-1/4 bg-gray-200 rounded-md"></div>
-                   <div className="h-4 w-1/4 bg-gray-200 rounded-md"></div>
-                </div>
-                {/* Lặp 5 hàng dữ liệu giả */}
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex justify-between items-center p-2 border-b border-gray-100">
-                    <div className="h-5 w-1/3 bg-gray-200 rounded-md"></div>
-                    <div className="h-5 w-1/4 bg-gray-200 rounded-md"></div>
-                    <div className="h-5 w-1/4 bg-gray-200 rounded-md"></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* 
+            Phần skeleton cho Charts và Table đã được lược bỏ 
+            để giao diện loading không cần cuộn.
+          */}
         </div>
       </main>
     </div>
