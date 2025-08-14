@@ -673,13 +673,13 @@ function PracticeList({ selectedType, onPracticeSelect }) {
       '1': { title: 'Practice 1', desc: 'Nối từ cơ bản', color: 'green' },
     },
     dienTu: {
-      '1': { title: 'Practice 1', desc: 'Đoán từ qua hình ảnh', color: 'indigo' },
-      '2': { title: 'Practice 2', desc: 'Điền 1 từ vào câu', color: 'pink' },
-      '3': { title: 'Practice 3', desc: 'Điền 2 từ vào câu (Khó)', color: 'teal' },
-      '4': { title: 'Practice 4', desc: 'Điền 3 từ vào câu (Rất Khó)', color: 'orange' },
-      '5': { title: 'Practice 5', desc: 'Điền 4 từ vào câu (Siêu Khó)', color: 'purple' },
-      '6': { title: 'Practice 6', desc: 'Điền 5 từ vào câu (Địa Ngục)', color: 'yellow' },
-      '7': { title: 'Practice 7', desc: 'Điền tất cả từ đã học trong câu (Cực Đại)', color: 'red' },
+      '1': { title: 'Practice 1', desc: ['Type Word', 'Picture'], color: 'indigo' },
+      '2': { title: 'Practice 2', desc: ['Gap Fill', 'Hide 1 Word'], color: 'pink' },
+      '3': { title: 'Practice 3', desc: ['Gap Fill', 'Hide 2 Word'], color: 'teal' },
+      '4': { title: 'Practice 4', desc: ['Gap Fill', 'Hide 3 Word'], color: 'orange' },
+      '5': { title: 'Practice 5', desc: ['Gap Fill', 'Hide 4 Word'], color: 'purple' },
+      '6': { title: 'Practice 6', desc: ['Gap Fill', 'Hide 5 Word'], color: 'yellow' },
+      '7': { title: 'Practice 7', desc: ['Gap Fill', 'Random Hide'], color: 'red' },
     },
   }), []);
   
