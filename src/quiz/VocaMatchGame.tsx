@@ -2,6 +2,7 @@
 import React from 'react';
 import { VocaMatchProvider, useVocaMatch } from './VocaMatchContext.tsx'; // Import context
 import Confetti from '../fill-word/chuc-mung.tsx';
+import VocaMatchLoadingSkeleton from './VocaMatchLoadingSkeleton.tsx'; // <<<--- IMPORT SKELETON MỚI
 
 // --- UI components and hooks ---
 import CoinDisplay from '../coin-display.tsx';
@@ -86,16 +87,13 @@ const VocaMatchUI: React.FC = () => {
     handleRightSelect,
     resetGame,
     onGoBack,
-    allWordPairs // Note: This isn't in context but needed for a lookup, let's adjust.
-                  // For simplicity, we can pass it down or assume it's available via an import.
-                  // For now, let's assume `VocaMatchGame` is the only consumer. A better approach
-                  // would be to have the context provide the necessary data.
-                  // Let's refine the logic to avoid needing `allWordPairs` here.
-                  // The logic can be simplified in the component itself.
+    allWordPairs
   } = useVocaMatch();
 
+  // <<<--- THAY ĐỔI QUAN TRỌNG ---
+  // Thay thế div "Đang tải" bằng component Skeleton chuyên dụng
   if (loading) {
-    return <div className="flex items-center justify-center h-full text-xl font-semibold text-indigo-700">Đang tải dữ liệu...</div>;
+    return <VocaMatchLoadingSkeleton />;
   }
 
   if (showEndScreen) {
@@ -170,39 +168,7 @@ const VocaMatchUI: React.FC = () => {
           </div>
           <div className="flex flex-col gap-3">
             {rightColumn.map(word => {
-              // The logic to determine if a right-column word is correct is tricky
-              // without the full pair list. However, we can infer it.
-              // If a word's corresponding English partner is in `correctPairs`, it's correct.
-              // This is handled in the context, so the UI just needs to know if its *own* state is incorrect.
               const isIncorrect = incorrectPair?.right === word;
-              
-              // A better way is to pass down a map or computed state from context.
-              // For now, let's assume the button can't be correct unless its partner is found,
-              // and the context handles marking the English word as correct.
-              // The disabled logic will then work based on `correctPairs`. Let's just pass `isCorrect` from context.
-              // Let's refine the context to provide this. (Let's assume this is done for now).
-              
-              // Let's simplify: A right-column button is disabled if its english pair is in correctPairs
-              // The context already handles this logic implicitly, but the UI component doesn't know which english word matches.
-              // We'll let the context manage the *state* (correct/incorrect), and the UI will just render it.
-              // The current context setup is sufficient.
-              
-              // **Correction:** The original code disabled right buttons based on `correctPairs`. This lookup is slow.
-              // The state should be self-contained. The `handleRightSelect` logic already has what it needs.
-              // Let's re-add the lookup for simplicity in the UI component, or ideally, the context provides this.
-              
-              // **Final Decision:** The context will not expose `allWordPairs`.
-              // The UI doesn't need to know if a right word is 'correct' directly.
-              // The `disabled={isCorrect...}` logic in the original file was flawed anyway.
-              // It should be disabled if its partner is in correctPairs, which it can't know.
-              // Let's simplify: disable if *any* correct pair is made, and `selectedLeft` is null.
-              const isPartnerCorrect = false; // Cannot know this easily without extra data.
-                                            // The `disabled={isCorrect}` on the button needs to be re-thought.
-                                            // A better approach is `disabled = !selectedLeft || isItsPartnerAlreadyMatched`.
-                                            // The context should provide a set of matched Vietnamese words.
-                                            // Let's assume for now the current logic is OK.
-                                            // The original code was `disabled={isCorrect || !selectedLeft}`. `isCorrect` was calculated with a find.
-                                            // This is an anti-pattern. Let's fix this in the context.
                                             
               return (
                 <button key={word} onClick={() => handleRightSelect(word)} disabled={!selectedLeft} className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isIncorrect ? 'bg-red-200 ring-2 ring-red-500 animate-shake' : 'bg-white text-gray-800'} ${selectedLeft ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'} disabled:opacity-50`}>
