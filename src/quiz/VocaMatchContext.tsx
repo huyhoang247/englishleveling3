@@ -43,6 +43,7 @@ interface VocaMatchContextType {
   handleRightSelect: (vietnameseWord: string) => Promise<void>;
   resetGame: () => void;
   onGoBack: () => void;
+  allWordPairs: { english: string; vietnamese: string }[]; // <<< THÊM VÀO
 }
 
 const GAME_SIZE = 5;
@@ -251,6 +252,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     handleRightSelect,
     resetGame,
     onGoBack,
+    allWordPairs, // <<< THÊM VÀO
   };
 
   return <VocaMatchContext.Provider value={value}>{children}</VocaMatchContext.Provider>;
