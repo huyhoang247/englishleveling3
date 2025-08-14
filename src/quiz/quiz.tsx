@@ -1,52 +1,11 @@
-// --- START OF FILE src/quiz/quiz.tsx ---
-
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
-import { QuizProvider, useQuiz } from './QuizContext.tsx'; // IMPORT TỪ CONTEXT MỚI
+import { QuizProvider, useQuiz } from './QuizContext.tsx'; 
 import { useAnimateValue } from '../useAnimateValue.ts'; 
 import CoinDisplay from '../coin-display.tsx';
 import MasteryDisplay from '../mastery-display.tsx'; 
 import StreakDisplay from '../streak-display.tsx';
 import Confetti from '../fill-word/chuc-mung.tsx';
-
-// --- COMPONENT SKELETON LOADING MỚI ---
-const QuizLoadingSkeleton: React.FC = () => {
-  return (
-    <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      {/* --- Skeleton cho Header --- */}
-      <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
-        <div className="w-7 h-7 rounded-full bg-white/20 animate-pulse"></div>
-        <div className="flex items-center gap-3">
-          <div className="h-6 w-20 rounded-md bg-white/20 animate-pulse"></div>
-          <div className="h-6 w-16 rounded-md bg-white/20 animate-pulse"></div>
-          <div className="h-6 w-16 rounded-md bg-white/20 animate-pulse"></div>
-        </div>
-      </header>
-      {/* --- Skeleton cho Main Content --- */}
-      <main className="flex-grow overflow-y-auto flex justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
-          {/* Skeleton cho phần đầu câu hỏi */}
-          <div className="bg-gray-200 p-6 animate-pulse">
-            <div className="flex justify-between items-center mb-4">
-              <div className="h-6 w-16 bg-gray-300 rounded-md"></div>
-              <div className="h-8 w-8 bg-gray-300 rounded-full"></div>
-            </div>
-            <div className="w-full h-3 bg-gray-300 rounded-full mb-6"></div>
-            <div className="w-full h-24 bg-gray-300 rounded-lg"></div>
-          </div>
-          {/* Skeleton cho các lựa chọn */}
-          <div className="p-6">
-            <div className="space-y-3">
-              <div className="w-full h-12 bg-gray-200 rounded-lg animate-pulse"></div>
-              <div className="w-full h-12 bg-gray-200 rounded-lg animate-pulse"></div>
-              <div className="w-full h-12 bg-gray-200 rounded-lg animate-pulse"></div>
-              <div className="w-full h-12 bg-gray-200 rounded-lg animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-};
+import QuizLoadingSkeleton from './QuizLoadingSkeleton.tsx'; // <<<--- DÒNG IMPORT QUAN TRỌNG ĐÂY!
 
 // --- PHẦN CODE KHÔNG ĐỔI (Các component con & Icons) ---
 const optionLabels = ['A', 'B', 'C', 'D'];
@@ -82,7 +41,7 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
   const totalCompletedBeforeSession = filteredQuizData.length > 0 ? filteredQuizData.length - playableQuestions.length : 0;
   const quizProgress = filteredQuizData.length > 0 ? ((totalCompletedBeforeSession + currentQuestion) / filteredQuizData.length) * 100 : 0;
 
-  if (loading) return <QuizLoadingSkeleton />; // <<<--- THAY ĐỔI Ở ĐÂY
+  if (loading) return <QuizLoadingSkeleton />;
 
   // --- PHẦN JSX RENDER UI (Không thay đổi) ---
   return (
