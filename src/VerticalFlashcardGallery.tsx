@@ -7,7 +7,7 @@ import { auth, db } from './firebase.js';
 import { doc, updateDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
-import FlashcardGallerySkeleton from './FlashcardGallerySkeleton.tsx'; // <<<--- DÒNG IMPORT QUAN TRỌNG ĐÂY!
+import FlashcardGallerySkeleton from './VerticalFlashcardGallerySkeleton.tsx'; // <<<--- DÒNG IMPORT QUAN TRỌNG ĐÂY!
 
 // <<< THAY ĐỔI LỚN: IMPORT DỮ LIỆU TỪ FILE TRUNG TÂM >>>
 import { ALL_CARDS_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
