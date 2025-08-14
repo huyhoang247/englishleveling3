@@ -340,7 +340,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               <button onClick={() => handleTypeSelect('vocaMatch')} className="w-full text-left p-6 bg-gradient-to-br from-green-400 to-cyan-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                    <img src={quizHomeAssets.vocaMatchIcon} alt="Voca Match Icon" className="h-10 w-10" />
                   </div>
                   <div className="ml-5 flex-1">
                     <h3 className="text-xl font-bold">Voca Match</h3>
