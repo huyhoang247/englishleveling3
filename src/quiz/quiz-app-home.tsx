@@ -674,11 +674,11 @@ function PracticeList({ selectedType, onPracticeSelect }) {
     },
     dienTu: {
       '1': { title: 'Practice 1', desc: ['Type Word', 'Picture'], color: 'indigo' },
-      '2': { title: 'Practice 2', desc: ['Gap Fill', 'Hide 1 Word'], color: 'pink' },
-      '3': { title: 'Practice 3', desc: ['Gap Fill', 'Hide 2 Word'], color: 'teal' },
-      '4': { title: 'Practice 4', desc: ['Gap Fill', 'Hide 3 Word'], color: 'orange' },
-      '5': { title: 'Practice 5', desc: ['Gap Fill', 'Hide 4 Word'], color: 'purple' },
-      '6': { title: 'Practice 6', desc: ['Gap Fill', 'Hide 5 Word'], color: 'yellow' },
+      '2': { title: 'Practice 2', desc: ['Gap Fill', 'Hide 1'], color: 'pink' },
+      '3': { title: 'Practice 3', desc: ['Gap Fill', 'Hide 2'], color: 'teal' },
+      '4': { title: 'Practice 4', desc: ['Gap Fill', 'Hide 3'], color: 'orange' },
+      '5': { title: 'Practice 5', desc: ['Gap Fill', 'Hide 4'], color: 'purple' },
+      '6': { title: 'Practice 6', desc: ['Gap Fill', 'Hide 5'], color: 'yellow' },
       '7': { title: 'Practice 7', desc: ['Gap Fill', 'Random Hide'], color: 'red' },
     },
   }), []);
