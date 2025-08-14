@@ -1,18 +1,14 @@
 // --- START OF FILE: AnalysisDashboard.tsx ---
 
-import React, { useState, useEffect, useMemo, FC, ReactNode, useCallback, memo } from 'react';
-import { auth } from './firebase.js'; // Điều chỉnh đường dẫn đến file firebase của bạn
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { 
-    fetchAnalysisDashboardData, 
-    claimDailyMilestoneReward,
-    claimVocabMilestoneReward
-} from './userDataService.ts'; 
+import React, { useState, useMemo, FC, ReactNode, useCallback, memo } from 'react';
+import { User } from 'firebase/auth';
+// [MỚI] Import Provider và custom hook
+import { AnalysisDashboardProvider, useAnalysisDashboard, WordMastery } from './AnalysisDashboardContext.tsx';
+
 import { 
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
     Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
-import { defaultVocabulary } from './list-vocabulary.ts'; // Điều chỉnh đường dẫn
 import CoinDisplay from './coin-display.tsx';
 import { uiAssets, dashboardAssets } from './game-assets.ts'; // Import assets
 import MasteryDisplay from './mastery-display.tsx'; 
@@ -29,27 +25,7 @@ const CheckCircleIconSmall = () => <svg xmlns="http://www.w3.org/2000/svg" class
 const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
 
 // --- TYPE DEFINITIONS ---
-interface LearningActivity { date: string; new: number; review: number; }
-interface MasteryByGame { game: string; completed: number; }
-interface VocabularyGrowth { date: string; cumulative: number; }
-interface WordMastery { word: string; mastery: number; lastPracticed: Date; }
-interface AnalysisData {
-  totalWordsLearned: number;
-  totalWordsAvailable: number;
-  learningActivity: LearningActivity[];
-  masteryByGame: MasteryByGame[];
-  vocabularyGrowth: VocabularyGrowth[];
-  recentCompletions: { word: string; date: string }[];
-  wordMastery: WordMastery[];
-}
-type DailyActivityMap = { [date: string]: { new: number; review: number } };
-interface UserProgress {
-    coins: number;
-    masteryCount: number;
-    claimedDailyGoals: number[];
-    claimedVocabMilestones: number[];
-}
-
+// Các type đã được chuyển sang hoặc import từ context, không cần định nghĩa lại ở đây
 interface AnalysisDashboardProps { onGoBack: () => void; }
 
 // --- REUSABLE COMPONENTS ---
@@ -63,7 +39,6 @@ const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> =
     </div>
 );
 
-// [MỚI] COMPONENT TIẾN TRÌNH NHIỆM VỤ TÁI SỬ DỤNG
 const GOAL_MILESTONES = [5, 10, 20, 50, 100, 200];
 const VOCAB_MILESTONES = [100, 200, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500];
 
@@ -75,15 +50,16 @@ interface MilestoneProgressProps {
   masteryCount: number;
   claimedMilestones: number[];
   onClaim: (milestone: number, rewardAmount: number) => Promise<void>;
-  onClaimSuccess: (milestone: number, rewardAmount: number) => void;
   user: User | null;
   progressColorClass?: string;
   completedText?: string;
 }
 
+// Component này được giữ nguyên vì nó đã là một component tái sử dụng tốt.
+// Chỉ thay đổi cách truyền prop `onClaim` và không cần `onClaimSuccess` nữa.
 const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     title, iconSrc, milestones, currentProgress, masteryCount, 
-    claimedMilestones, onClaim, onClaimSuccess, user,
+    claimedMilestones, onClaim, user,
     progressColorClass = "from-green-400 to-blue-500",
     completedText = "All missions completed!"
 }) => {
@@ -109,15 +85,14 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
         try {
             const rewardAmount = currentGoal * Math.max(1, masteryCount);
             await onClaim(currentGoal, rewardAmount);
-            onClaimSuccess(currentGoal, rewardAmount);
+            // Không cần gọi onClaimSuccess nữa, vì context tự cập nhật state
         } catch (error) {
             console.error(`Lỗi khi nhận thưởng cho "${title}":`, error);
-            // Thay thế alert bằng một thông báo tinh tế hơn (ví dụ: react-toastify)
             alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
         } finally {
             setIsClaiming(false);
         }
-    }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaim, onClaimSuccess, title]);
+    }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaim, title]);
 
     return (
         <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
@@ -159,8 +134,8 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     );
 });
 
-// --- COMPONENT LỊCH HOẠT ĐỘNG ---
-const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = memo(({ activityData }) => {
+// Component này được giữ nguyên, nó không cần truy cập context trực tiếp
+const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     const formatDateForCalendar = (date: Date): string => {
         const year = date.getFullYear();
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -205,66 +180,28 @@ const ActivityCalendar: FC<{ activityData: DailyActivityMap }> = memo(({ activit
     );
 });
 
-// --- MAIN COMPONENT: AnalysisDashboard ---
+// --- MAIN DISPLAY COMPONENT ---
 const ITEMS_PER_PAGE = 10;
 
-export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) {
-  const [user, setUser] = useState<User | null>(auth.currentUser);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
-  const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
+function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
+  // [MỚI] Lấy toàn bộ state và các hàm từ context
+  const {
+    user,
+    loading,
+    error,
+    analysisData,
+    dailyActivityData,
+    userProgress,
+    wordsLearnedToday,
+    claimDailyReward,
+    claimVocabReward
+  } = useAnalysisDashboard();
+  
+  // State cục bộ cho việc sắp xếp và phân trang, không cần đưa vào context
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [currentPage, setCurrentPage] = useState(1);
-  
-  // [CẢI TIẾN] Gom các state của người dùng vào một object
-  const [userProgress, setUserProgress] = useState<UserProgress>({
-    coins: 0,
-    masteryCount: 0,
-    claimedDailyGoals: [],
-    claimedVocabMilestones: [],
-  });
-  
+
   const animatedCoins = useAnimateValue(userProgress.coins, 1000);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!user) { setLoading(false); setError("Vui lòng đăng nhập để xem phân tích."); return; }
-    
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const dataPayload = await fetchAnalysisDashboardData(user.uid, defaultVocabulary.length);
-
-        setUserProgress({
-          coins: dataPayload.userData.coins,
-          masteryCount: dataPayload.userData.masteryCards,
-          claimedDailyGoals: dataPayload.userData.claimedDailyGoals,
-          claimedVocabMilestones: dataPayload.userData.claimedVocabMilestones,
-        });
-        setAnalysisData(dataPayload.analysisData);
-        setDailyActivityData(dataPayload.dailyActivityMap);
-
-      } catch (err: any) { 
-        console.error("Lỗi tải dữ liệu phân tích:", err); 
-        setError("Không thể tải dữ liệu phân tích."); 
-      } finally { 
-        setLoading(false); 
-      }
-    };
-    fetchData();
-  }, [user]);
-
-  const wordsLearnedToday = useMemo(() => {
-    const todayString = new Date().toISOString().slice(0, 10);
-    const todayActivity = Object.entries(dailyActivityData).find(([date]) => date.startsWith(todayString));
-    return todayActivity ? todayActivity[1].new + todayActivity[1].review : 0;
-  }, [dailyActivityData]);
 
   const sortedWordMastery = useMemo(() => {
     if (!analysisData?.wordMastery) return [];
@@ -281,34 +218,6 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
     setSortConfig({ key, direction });
     setCurrentPage(1); 
   };
-  
-  // [CẢI TIẾN] Logic cập nhật state sau khi nhận thưởng
-  const handleGoalClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
-    setUserProgress(prev => ({
-        ...prev,
-        coins: prev.coins + rewardAmount,
-        claimedDailyGoals: [...prev.claimedDailyGoals, milestone],
-    }));
-  }, []);
-
-  const handleVocabClaimSuccess = useCallback((milestone: number, rewardAmount: number) => {
-    setUserProgress(prev => ({
-        ...prev,
-        coins: prev.coins + rewardAmount,
-        claimedVocabMilestones: [...prev.claimedVocabMilestones, milestone],
-    }));
-  }, []);
-
-  // [CẢI TIẾN] Các hàm để truyền vào component `MilestoneProgress`
-  const handleDailyClaimReward = useCallback(async (milestone: number, rewardAmount: number) => {
-      if (!user) throw new Error("User not logged in");
-      await claimDailyMilestoneReward(user.uid, milestone, rewardAmount);
-  }, [user]);
-
-  const handleVocabClaimReward = useCallback(async (milestone: number, rewardAmount: number) => {
-      if (!user) throw new Error("User not logged in");
-      await claimVocabMilestoneReward(user.uid, milestone, rewardAmount);
-  }, [user]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -342,7 +251,6 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
         <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-full">
             <div className="max-w-7xl mx-auto">
                 <div className="space-y-6 my-6">
-                    {/* [CẢI TIẾN] Sử dụng component MilestoneProgress */}
                     <MilestoneProgress
                         title="Voca Journey"
                         iconSrc={dashboardAssets.vocaJourneyIcon}
@@ -350,8 +258,7 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
                         currentProgress={totalWordsLearned}
                         masteryCount={userProgress.masteryCount}
                         claimedMilestones={userProgress.claimedVocabMilestones}
-                        onClaim={handleVocabClaimReward}
-                        onClaimSuccess={handleVocabClaimSuccess}
+                        onClaim={claimVocabReward} // [MỚI] Dùng hàm từ context
                         user={user}
                         progressColorClass="from-blue-400 to-purple-500"
                         completedText="Max level reached!"
@@ -363,8 +270,7 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
                         currentProgress={wordsLearnedToday}
                         masteryCount={userProgress.masteryCount}
                         claimedMilestones={userProgress.claimedDailyGoals}
-                        onClaim={handleDailyClaimReward}
-                        onClaimSuccess={handleGoalClaimSuccess}
+                        onClaim={claimDailyReward} // [MỚI] Dùng hàm từ context
                         user={user}
                         progressColorClass="from-green-400 to-blue-500"
                         completedText="All missions completed!"
@@ -434,5 +340,14 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
             {mainContent()}
         </div>
     </div>
+  );
+}
+
+// [MỚI] Component export mặc định sẽ bọc logic hiển thị trong Provider
+export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) {
+  return (
+    <AnalysisDashboardProvider>
+      <DashboardContent onGoBack={onGoBack} />
+    </AnalysisDashboardProvider>
   );
 }
