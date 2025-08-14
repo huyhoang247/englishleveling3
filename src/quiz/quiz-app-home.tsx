@@ -7,7 +7,7 @@ import AnalysisDashboard from '../AnalysisDashboard.tsx';
 import WordChainGame from '../word-chain-game.tsx';
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
-import { QuizAppProvider, useQuizApp } from './quiz-app.context';
+import { QuizAppProvider, useQuizApp } from './quiz-app.context.tsx';
 import { fetchPracticeListProgress, claimQuizReward } from '../userDataService.ts';
 import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts';
 import { User } from 'firebase/auth';
