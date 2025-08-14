@@ -1,5 +1,3 @@
-
-
 // --- START OF FILE game-assets.ts ---
 
 // ========================================================
@@ -57,6 +55,7 @@ export const quizHomeAssets = {
   grammarIcon: require("./assets/images/grammar.webp"),
   multipleChoiceIcon: require("./assets/images/multiple-choice.webp"),
   fillInTheBlankIcon: require("./assets/images/fill-in-the-blank.webp"),
+  vocaMatchIcon: require("./assets/images/voca-match.webp"),
 };
 
 /**
@@ -144,4 +143,3 @@ export const allImageUrls = [
     ...Object.values(skillAssets).filter(url => typeof url === 'string'),
     ...Object.values(treasureAssets).filter(url => typeof url === 'string'),
 ];
-
