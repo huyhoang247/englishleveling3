@@ -10,7 +10,7 @@ import React, {
     FC,
     ReactNode
 } from 'react';
-import { auth } from './firebase.js'; 
+import { auth } from '../firebase.js'; 
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { 
     fetchAnalysisDashboardData, 
