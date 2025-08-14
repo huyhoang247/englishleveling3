@@ -4,6 +4,7 @@ import React, { useState, useMemo, FC, ReactNode, useCallback, memo } from 'reac
 import { User } from 'firebase/auth';
 // [MỚI] Import Provider và custom hook
 import { AnalysisDashboardProvider, useAnalysisDashboard, WordMastery } from './contexts/AnalysisDashboardContext.tsx';
+import AnalysisDashboardSkeleton from './AnalysisDashboardSkeleton.tsx'; // <<<--- DÒNG IMPORT MỚI
 
 import { 
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
@@ -25,7 +26,6 @@ const CheckCircleIconSmall = () => <svg xmlns="http://www.w3.org/2000/svg" class
 const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
 
 // --- TYPE DEFINITIONS ---
-// Các type đã được chuyển sang hoặc import từ context, không cần định nghĩa lại ở đây
 interface AnalysisDashboardProps { onGoBack: () => void; }
 
 // --- REUSABLE COMPONENTS ---
@@ -55,8 +55,6 @@ interface MilestoneProgressProps {
   completedText?: string;
 }
 
-// Component này được giữ nguyên vì nó đã là một component tái sử dụng tốt.
-// Chỉ thay đổi cách truyền prop `onClaim` và không cần `onClaimSuccess` nữa.
 const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     title, iconSrc, milestones, currentProgress, masteryCount, 
     claimedMilestones, onClaim, user,
@@ -85,7 +83,6 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
         try {
             const rewardAmount = currentGoal * Math.max(1, masteryCount);
             await onClaim(currentGoal, rewardAmount);
-            // Không cần gọi onClaimSuccess nữa, vì context tự cập nhật state
         } catch (error) {
             console.error(`Lỗi khi nhận thưởng cho "${title}":`, error);
             alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
@@ -134,7 +131,6 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     );
 });
 
-// Component này được giữ nguyên, nó không cần truy cập context trực tiếp
 const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     const formatDateForCalendar = (date: Date): string => {
         const year = date.getFullYear();
@@ -184,23 +180,13 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
 const ITEMS_PER_PAGE = 10;
 
 function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
-  // [MỚI] Lấy toàn bộ state và các hàm từ context
   const {
-    user,
-    loading,
-    error,
-    analysisData,
-    dailyActivityData,
-    userProgress,
-    wordsLearnedToday,
-    claimDailyReward,
-    claimVocabReward
+    user, loading, error, analysisData, dailyActivityData, userProgress,
+    wordsLearnedToday, claimDailyReward, claimVocabReward
   } = useAnalysisDashboard();
   
-  // State cục bộ cho việc sắp xếp và phân trang, không cần đưa vào context
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [currentPage, setCurrentPage] = useState(1);
-
   const animatedCoins = useAnimateValue(userProgress.coins, 1000);
 
   const sortedWordMastery = useMemo(() => {
@@ -234,7 +220,9 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
     return null;
   };
   
-  if (loading) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">Đang tải phân tích...</div>;
+  // <<<--- THAY ĐỔI TẠI ĐÂY ---
+  if (loading) return <AnalysisDashboardSkeleton />;
+
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 p-4">{error}</div>;
   
   const mainContent = () => {
@@ -258,7 +246,7 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                         currentProgress={totalWordsLearned}
                         masteryCount={userProgress.masteryCount}
                         claimedMilestones={userProgress.claimedVocabMilestones}
-                        onClaim={claimVocabReward} // [MỚI] Dùng hàm từ context
+                        onClaim={claimVocabReward}
                         user={user}
                         progressColorClass="from-blue-400 to-purple-500"
                         completedText="Max level reached!"
@@ -270,7 +258,7 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                         currentProgress={wordsLearnedToday}
                         masteryCount={userProgress.masteryCount}
                         claimedMilestones={userProgress.claimedDailyGoals}
-                        onClaim={claimDailyReward} // [MỚI] Dùng hàm từ context
+                        onClaim={claimDailyReward}
                         user={user}
                         progressColorClass="from-green-400 to-blue-500"
                         completedText="All missions completed!"
