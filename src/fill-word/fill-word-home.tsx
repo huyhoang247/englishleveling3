@@ -6,6 +6,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 
 // --- NEW: Import Context Provider and Hook ---
 import { FillWordProvider, useFillWord } from './fill-word-context.tsx';
+import FillWordLoadingSkeleton from './FillWordLoadingSkeleton.tsx'; // <<<--- DÒNG IMPORT MỚI
 
 import { defaultImageUrls } from '../image-url.ts';
 import { exampleData } from '../example-data.ts';
@@ -70,7 +71,7 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
   }, [currentWord, activeBlankIndex, isMultiWordGame]);
 
   // --- Render logic based on context state ---
-  if (loading) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-indigo-700">Đang tải dữ liệu...</div>;
+  if (loading) return <FillWordLoadingSkeleton />; // <<<--- THAY ĐỔI Ở ĐÂY
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 text-center p-4">{error}</div>;
   if (vocabularyList.length === 0 && !loading && !error) return (
     <div className="flex flex-col items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">
