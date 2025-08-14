@@ -1,20 +1,14 @@
-// --- START OF FILE quiz.tsx ---
+// --- START OF FILE src/quiz/quiz.tsx ---
 
-import { useState, useEffect, memo, useCallback, useMemo, useRef } from 'react';
-import { db, auth } from '../firebase.js';
-import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../userDataService.ts';
+import { memo, useRef, useEffect, useState, useCallback } from 'react';
+import { QuizProvider, useQuiz } from './QuizContext.tsx'; // IMPORT TỪ CONTEXT MỚI
 import { useAnimateValue } from '../useAnimateValue.ts'; 
 import CoinDisplay from '../coin-display.tsx';
 import MasteryDisplay from '../mastery-display.tsx'; 
-import StreakDisplay from '../streak-display.tsx'; // IMPORT MỚI
-import quizData from './quiz-data.ts';
+import StreakDisplay from '../streak-display.tsx';
 import Confetti from '../fill-word/chuc-mung.tsx';
-import detailedMeaningsText from '../vocabulary-definitions.ts';
-import { exampleData } from '../example-data.ts';
-import { defaultVocabulary } from '../list-vocabulary.ts';
-import { generateAudioQuizQuestions } from '../audio-quiz-generator.ts';
 
-// --- PHẦN CODE KHÔNG ĐỔI (Các component con) ---
+// --- PHẦN CODE KHÔNG ĐỔI (Các component con & Icons) ---
 const optionLabels = ['A', 'B', 'C', 'D'];
 const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo(({ timeLeft, totalTime }) => { const radius = 20; const circumference = 2 * Math.PI * radius; const progress = Math.max(0, timeLeft / totalTime); const strokeDashoffset = circumference * (1 - progress); const getTimeColor = () => { if (timeLeft <= 0) return 'text-gray-400'; if (timeLeft <= 10) return 'text-red-500'; if (timeLeft <= 20) return 'text-yellow-500'; return 'text-indigo-400'; }; const ringColorClass = getTimeColor(); return ( <div className="relative flex items-center justify-center w-8 h-8"> <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 44 44"> <circle className="text-white/20" stroke="currentColor" strokeWidth="3" fill="transparent" r={radius} cx="22" cy="22" /> <circle className={`${ringColorClass} transition-all duration-500`} stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="transparent" r={radius} cx="22" cy="22" style={{ strokeDasharray: circumference, strokeDashoffset }} /> </svg> <span className={`font-bold text-xs ${ringColorClass}`}>{Math.max(0, timeLeft)}</span> </div> ); });
 const CheckIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17L4 12"></path></svg> );
@@ -27,289 +21,34 @@ const BookmarkIcon = ({ className }: { className: string }) => ( <svg xmlns="htt
 const ArrowRightIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg> );
 const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg> );
 const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
-const shuffleArray = (array) => { const shuffledArray = [...array]; for (let i = shuffledArray.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; } return shuffledArray; };
 interface Definition { vietnamese: string; english: string; explanation: string; }
 const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> = ({ data, onClose }) => { if (!data) return null; return ( <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose} > <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl w-full max-w-md p-6 relative shadow-lg transform transition-all duration-300 scale-95 opacity-0 animate-scale-up" onClick={(e) => e.stopPropagation()} > <div className="inline-flex items-center bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-sm font-semibold px-3 py-1 rounded-full mb-4"> <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor"> <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /> </svg> <span>{data.english}</span> </div> <p className="text-gray-700 dark:text-gray-400 text-base leading-relaxed italic"> {`${data.vietnamese} (${data.english}) là ${data.explanation}`} </p> </div> <style jsx>{` @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; } `}</style> </div> ); };
 const AudioQuestionDisplay: React.FC<{ audioUrl: string; }> = memo(({ audioUrl }) => { const audioRef = useRef<HTMLAudioElement>(null); const [isPlaying, setIsPlaying] = useState(false); const togglePlay = useCallback(() => { const audio = audioRef.current; if (!audio) return; if (audio.paused) { audio.play().catch(e => console.error("Error playing audio:", e)); } else { audio.pause(); } }, []); useEffect(() => { const audio = audioRef.current; if (!audio) return; const handlePlay = () => setIsPlaying(true); const handlePause = () => setIsPlaying(false); const handleEnded = () => setIsPlaying(false); audio.addEventListener('play', handlePlay); audio.addEventListener('pause', handlePause); audio.addEventListener('ended', handleEnded); audio.play().catch(e => console.error("Autoplay prevented:", e)); return () => { audio.removeEventListener('play', handlePlay); audio.removeEventListener('pause', handlePause); audio.removeEventListener('ended', handleEnded); audio.pause(); }; }, [audioUrl]); return ( <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex flex-col items-center justify-center min-h-[140px]"> <audio ref={audioRef} src={audioUrl} key={audioUrl} preload="auto" className="hidden" /> <button onClick={togglePlay} className="w-20 h-20 flex items-center justify-center bg-white/20 rounded-full text-white hover:bg-white/30 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/50" aria-label={isPlaying ? 'Pause audio' : 'Play audio'} > {isPlaying ? <PauseIcon className="w-10 h-10" /> : <VolumeUpIcon className="w-10 h-10" />} </button> <p className="text-white/80 text-sm mt-3 font-medium">Nghe và chọn đáp án đúng</p> </div> ); });
 
-// --- Component Chính Bắt đầu ---
-export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () => void; selectedPractice: number; }) {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [score, setScore] = useState(0);
-  const [showScore, setShowScore] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [answered, setAnswered] = useState(false);
-  const [coins, setCoins] = useState(0);
+// --- Component UI chính, nhận dữ liệu từ Context ---
+function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
+  const {
+    loading, showScore, currentQuestion, score, coins, streak, masteryCount, streakAnimation,
+    timeLeft, playableQuestions, filteredQuizData, shuffledOptions, selectedOption,
+    answered, showNextButton, hintUsed, hiddenOptions, currentQuestionWord,
+    handleAnswer, handleHintClick, handleNextQuestion, resetQuiz, handleDetailClick,
+    showDetailPopup, detailData, onCloseDetailPopup, showConfetti,
+  } = useQuiz();
+
   const displayedCoins = useAnimateValue(coins, 500);
-  const [streak, setStreak] = useState(0);
-  const [masteryCount, setMasteryCount] = useState(0);
-  const [streakAnimation, setStreakAnimation] = useState(false);
-  const [user, setUser] = useState(null);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const TOTAL_TIME = 30;
-  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
-  const [shuffledOptions, setShuffledOptions] = useState([]);
-  const [showNextButton, setShowNextButton] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
-  const [completedQuizWords, setCompletedQuizWords] = useState<Set<string>>(new Set());
-  const [filteredQuizData, setFilteredQuizData] = useState([]);
-  const [playableQuestions, setPlayableQuestions] = useState([]);
-  const HINT_COST = 200;
-  const [hintUsed, setHintUsed] = useState(false);
-  const [hiddenOptions, setHiddenOptions] = useState<string[]>([]);
-  const [showDetailPopup, setShowDetailPopup] = useState(false);
-  const [detailData, setDetailData] = useState<Definition | null>(null);
-  const [currentQuestionWord, setCurrentQuestionWord] = useState<string | null>(null);
-
-  const definitionsMap = useMemo(() => {
-    const definitions: { [key: string]: Definition } = {};
-    const lines = detailedMeaningsText.trim().split('\n');
-    lines.forEach(line => {
-        if (line.trim() === '') return;
-        const match = line.match(/^(.+?)\s+\((.+?)\)\s+là\s+(.*)/);
-        if (match) {
-            const vietnameseWord = match[1].trim(); const englishWord = match[2].trim(); const explanation = match[3].trim();
-            definitions[englishWord.toLowerCase()] = { vietnamese: vietnameseWord, english: englishWord, explanation: explanation, };
-        }
-    });
-    return definitions;
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => { setUser(currentUser); });
-    return () => unsubscribe();
-  }, []);
-  
-  useEffect(() => {
-    const fetchData = async () => {
-      if (user) {
-        setLoading(true);
-        try {
-          const gameModeId = `quiz-${selectedPractice}`;
-          const [userData, vocabList, completedSet] = await Promise.all([
-            fetchOrCreateUser(user.uid),
-            getOpenedVocab(user.uid),
-            getCompletedWordsForGameMode(user.uid, gameModeId)
-          ]);
-
-          setCoins(userData.coins || 0);
-          setMasteryCount(userData.masteryCards || 0);
-          setUserVocabulary(vocabList);
-          setCompletedQuizWords(completedSet);
-
-        } catch (error) {
-          console.error("Lỗi khi tải dữ liệu người dùng:", error);
-          setCoins(0); setMasteryCount(0); setUserVocabulary([]); setCompletedQuizWords(new Set());
-        } finally { setLoading(false); }
-      } else {
-        setLoading(false);
-        setCoins(0); setMasteryCount(0); setUserVocabulary([]); setCompletedQuizWords(new Set());
-      }
-    };
-    fetchData();
-  }, [user, selectedPractice]);
-
-  const generatePractice1Questions = useCallback(() => {
-      const allMatchingQuestions = quizData.filter(question =>
-          userVocabulary.some(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(question.question))
-      );
-      const remainingQuestions = allMatchingQuestions.filter(q => {
-          return !userVocabulary.some(vocabWord =>
-              completedQuizWords.has(vocabWord.toLowerCase()) && new RegExp(`\\b${vocabWord}\\b`, 'i').test(q.question)
-          );
-      });
-      return { allMatchingQuestions, remainingQuestions };
-  }, [userVocabulary, completedQuizWords]);
-
-  useEffect(() => {
-      if (loading) return;
-      const practiceBaseId = selectedPractice % 100;
-      
-      let allPossibleQuestions = [];
-      let remainingQuestions = [];
-
-      if (practiceBaseId === 2 || practiceBaseId === 3) {
-          allPossibleQuestions = userVocabulary.flatMap(word => {
-              const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
-              const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
-              if (matchingSentences.length > 0) {
-                  const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
-                  const questionText = randomSentence.english.replace(wordRegex, '___');
-                  const incorrectOptions = []; const lowerCaseCorrectWord = word.toLowerCase();
-                  while (incorrectOptions.length < 3) {
-                      const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)];
-                      if (randomWord.toLowerCase() !== lowerCaseCorrectWord && !incorrectOptions.some(opt => opt.toLowerCase() === randomWord.toLowerCase())) {
-                          incorrectOptions.push(randomWord);
-                      }
-                  }
-                  return [{ question: questionText, vietnamese: randomSentence.vietnamese, options: [word.toLowerCase(), ...incorrectOptions.map(opt => opt.toLowerCase())], correctAnswer: word.toLowerCase(), word: word, }];
-              }
-              return [];
-          });
-          remainingQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
-      } else if (practiceBaseId === 4) {
-          allPossibleQuestions = generateAudioQuizQuestions(userVocabulary);
-          remainingQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
-      } else {
-          const { allMatchingQuestions, remainingQuestions: p1Remaining } = generatePractice1Questions();
-          allPossibleQuestions = allMatchingQuestions;
-          remainingQuestions = p1Remaining;
-      }
-
-      setFilteredQuizData(allPossibleQuestions);
-      setPlayableQuestions(shuffleArray(remainingQuestions));
-
-  }, [selectedPractice, loading, userVocabulary, completedQuizWords, generatePractice1Questions]);
-
-
-  useEffect(() => {
-    if (playableQuestions[currentQuestion]?.options) {
-      setShuffledOptions(shuffleArray(playableQuestions[currentQuestion].options));
-    }
-  }, [currentQuestion, playableQuestions]);
-
-  useEffect(() => {
-      if (playableQuestions.length > 0 && currentQuestion < playableQuestions.length) {
-          const currentQuizItem = playableQuestions[currentQuestion];
-          const isSpecialType = [2, 3, 4].includes(selectedPractice % 100);
-          if (isSpecialType) {
-              setCurrentQuestionWord(currentQuizItem.word);
-          } else {
-              const matchedWord = userVocabulary.find(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question));
-              setCurrentQuestionWord(matchedWord || null);
-          }
-      } else { setCurrentQuestionWord(null); }
-  }, [currentQuestion, playableQuestions, userVocabulary, selectedPractice]);
-  
-  const handleTimeUp = () => { if (answered) return; setAnswered(true); setSelectedOption(null); setStreak(0); setShowNextButton(true); };
-
-  useEffect(() => {
-    if (showScore || answered || playableQuestions.length === 0) return;
-    setTimeLeft(TOTAL_TIME);
-    const timerId = setInterval(() => { setTimeLeft(prevTime => { if (prevTime <= 1) { clearInterval(timerId); handleTimeUp(); return 0; } return prevTime - 1; }); }, 1000);
-    return () => clearInterval(timerId);
-  }, [currentQuestion, answered, showScore, playableQuestions.length]);
-
-  const handleAnswer = async (selectedAnswer) => {
-    if (answered || playableQuestions.length === 0) return;
-    setSelectedOption(selectedAnswer);
-    setAnswered(true);
-    const currentQuizItem = playableQuestions[currentQuestion];
-    const isCorrect = selectedAnswer === currentQuizItem.correctAnswer;
-    if (isCorrect) {
-      setShowConfetti(true); setScore(score + 1); const newStreak = streak + 1; setStreak(newStreak); const coinsToAdd = masteryCount * newStreak;
-      if (coinsToAdd > 0) { 
-        setCoins(prevCoins => prevCoins + coinsToAdd); 
-      }
-      if (newStreak >= 1) { setStreakAnimation(true); setTimeout(() => setStreakAnimation(false), 1500); }
-      const matchedWord = currentQuestionWord;
-      
-      if (user && matchedWord) {
-        try {
-            const gameModeId = `quiz-${selectedPractice}`;
-            // Game Quiz luôn là game 1 từ, nên isMultiWordGame là false
-            const isMultiWordGame = false;
-
-            await recordGameSuccess(
-                user.uid,
-                gameModeId,
-                matchedWord,
-                isMultiWordGame,
-                coinsToAdd
-            );
-        } catch (error) {
-            console.error("Lỗi khi ghi lại kết quả game Quiz:", error);
-            // Rollback lại state trên UI nếu có lỗi
-            if (coinsToAdd > 0) {
-                setCoins(prevCoins => prevCoins - coinsToAdd);
-            }
-        }
-      }
-
-      setTimeout(() => { setShowConfetti(false); setShowNextButton(true); }, 4000); 
-    } else { setStreak(0); setShowNextButton(true); }
-  };
-  
-  const handleHintClick = async () => {
-    if (hintUsed || answered || coins < HINT_COST || playableQuestions.length === 0) return;
-    
-    setHintUsed(true); 
-    setCoins(prevCoins => prevCoins - HINT_COST);
-
-    if (user) {
-      try {
-        await updateUserCoins(user.uid, -HINT_COST);
-      }
-      catch (error) { 
-        console.error("Lỗi khi cập nhật vàng cho gợi ý:", error); 
-        setCoins(prevCoins => prevCoins + HINT_COST); 
-        setHintUsed(false); 
-        return; 
-      }
-    }
-    const currentQuizItem = playableQuestions[currentQuestion]; const correctAnswer = currentQuizItem.correctAnswer;
-    const incorrectOptions = shuffledOptions.filter(opt => opt !== correctAnswer);
-    const optionsToHide = shuffleArray(incorrectOptions).slice(0, 2);
-    setHiddenOptions(optionsToHide);
-  };
-
-  const handleNextQuestion = () => {
-    const nextQuestion = currentQuestion + 1;
-    if (nextQuestion < playableQuestions.length) {
-      setCurrentQuestion(nextQuestion); setSelectedOption(null); setAnswered(false); setShowNextButton(false); setHintUsed(false); setHiddenOptions([]);
-    } else { setShowScore(true); }
-  };
-
-  const resetQuiz = () => {
-    let newPlayableQuestions = [];
-    const practiceBaseId = selectedPractice % 100;
-    if ([2, 3].includes(practiceBaseId)) {
-        newPlayableQuestions = userVocabulary.flatMap(word => {
-            const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
-            const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
-            if (matchingSentences.length > 0) {
-                const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
-                const questionText = randomSentence.english.replace(wordRegex, '___');
-                const incorrectOptions = []; const lowerCaseCorrectWord = word.toLowerCase();
-                while (incorrectOptions.length < 3) {
-                    const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)];
-                    if (randomWord.toLowerCase() !== lowerCaseCorrectWord && !incorrectOptions.some(opt => opt.toLowerCase() === randomWord.toLowerCase())) {
-                        incorrectOptions.push(randomWord);
-                    }
-                }
-                return [{ question: questionText, vietnamese: randomSentence.vietnamese, options: [word.toLowerCase(), ...incorrectOptions.map(opt => opt.toLowerCase())], correctAnswer: word.toLowerCase(), word: word }];
-            }
-            return [];
-        }).filter(q => !completedQuizWords.has(q.word.toLowerCase()));
-    } else if (practiceBaseId === 4) {
-        const allPossibleQuestions = generateAudioQuizQuestions(userVocabulary);
-        newPlayableQuestions = allPossibleQuestions.filter(q => !completedQuizWords.has(q.word.toLowerCase()));
-    } else {
-        const { remainingQuestions } = generatePractice1Questions();
-        newPlayableQuestions = remainingQuestions;
-    }
-    setPlayableQuestions(shuffleArray(newPlayableQuestions));
-    setCurrentQuestion(0); setScore(0); setShowScore(false); setSelectedOption(null); setAnswered(false); setStreak(0); setTimeLeft(TOTAL_TIME); setShowNextButton(false); setHintUsed(false); setHiddenOptions([]);
-  };
-
-  const handleDetailClick = () => {
-      if (currentQuestionWord) {
-          const definition = definitionsMap[currentQuestionWord.toLowerCase()];
-          if (definition) { setDetailData(definition); setShowDetailPopup(true); }
-      }
-  };
+  const HINT_COST = 200; // Có thể lấy từ context hoặc định nghĩa lại ở đây
+  const TOTAL_TIME = 30; // Tương tự
 
   const totalCompletedBeforeSession = filteredQuizData.length > 0 ? filteredQuizData.length - playableQuestions.length : 0;
   const quizProgress = filteredQuizData.length > 0 ? ((totalCompletedBeforeSession + currentQuestion) / filteredQuizData.length) * 100 : 0;
-  
+
   if (loading) return <div className="flex items-center justify-center h-full text-xl font-semibold text-indigo-700">Đang tải dữ liệu Quiz...</div>;
-  
+
   // --- PHẦN JSX RENDER UI (Không thay đổi) ---
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {showConfetti && <Confetti />}
-      {showDetailPopup && <DetailPopup data={detailData} onClose={() => setShowDetailPopup(false)} />}
+      {showDetailPopup && <DetailPopup data={detailData} onClose={onCloseDetailPopup} />}
 
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
         <button onClick={onGoBack} className="group w-7 h-7 rounded-full flex items-center justify-center bg-white/10 border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100" aria-label="Quay lại">
@@ -349,10 +88,10 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
                   </div>
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                   
-                  { (selectedPractice % 100 === 4 && playableQuestions[currentQuestion]?.audioUrl) ? (
+                  { (playableQuestions[currentQuestion]?.word && playableQuestions[currentQuestion]?.audioUrl) ? (
                       <AudioQuestionDisplay audioUrl={playableQuestions[currentQuestion].audioUrl} />
                   ) : (
-                      <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1"><h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>{playableQuestions[currentQuestion]?.vietnamese && (selectedPractice % 100 !== 3) && (<p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>)}</div>
+                      <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1"><h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>{playableQuestions[currentQuestion]?.vietnamese && (!playableQuestions[currentQuestion]?.word || playableQuestions[currentQuestion]?.word && !playableQuestions[currentQuestion]?.audioUrl) && (<p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>)}</div>
                   )}
 
                 </div>
@@ -385,7 +124,7 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
       {showNextButton && (playableQuestions.length > 0) && (
         <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3">
           <div className="group relative">
-             <button onClick={handleDetailClick} disabled={!currentQuestionWord || !definitionsMap[currentQuestionWord.toLowerCase()]} className="w-14 h-14 flex items-center justify-center bg-white rounded-full shadow-lg border-2 border-indigo-200 text-indigo-600 transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl hover:border-indigo-400 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" aria-label="Xem chi tiết">
+             <button onClick={handleDetailClick} disabled={!currentQuestionWord || !detailData} className="w-14 h-14 flex items-center justify-center bg-white rounded-full shadow-lg border-2 border-indigo-200 text-indigo-600 transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-xl hover:border-indigo-400 active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" aria-label="Xem chi tiết">
               <BookmarkIcon className="w-6 h-6" />
             </button>
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">Chi tiết<svg className="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xmlSpace="preserve"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg></div>
@@ -399,3 +138,13 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     </div>
   );
 }
+
+
+// --- Component Wrapper, cung cấp Context Provider ---
+export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () => void; selectedPractice: number; }) {
+  return (
+    <QuizProvider selectedPractice={selectedPractice}>
+      <QuizAppUI onGoBack={onGoBack} />
+    </QuizProvider>
+  );
+}        
