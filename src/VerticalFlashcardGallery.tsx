@@ -7,12 +7,10 @@ import { auth, db } from './firebase.js';
 import { doc, updateDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
+import FlashcardGallerySkeleton from './FlashcardGallerySkeleton.tsx'; // <<<--- DÒNG IMPORT QUAN TRỌNG ĐÂY!
 
 // <<< THAY ĐỔI LỚN: IMPORT DỮ LIỆU TỪ FILE TRUNG TÂM >>>
 import { ALL_CARDS_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
-
-// <<< THAY ĐỔI: IMPORT SKELETON LOADING MỚI >>>
-import VerticalFlashcardGallerySkeleton from './VerticalFlashcardGallerySkeleton.tsx';
 
 // --- Interfaces and Data ---
 interface Playlist {
@@ -30,6 +28,8 @@ interface DisplayCard {
     card: Flashcard;
     isFavorite: boolean;
 }
+
+// <<< TOÀN BỘ LOGIC TẠO DỮ LIỆU ĐÃ ĐƯỢC XÓA KHỎI ĐÂY VÀ CHUYỂN SANG flashcard-data.ts >>>
 
 const animations = `
   @keyframes fadeInOut { 0% { opacity: 0; transform: translateY(-10px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-10px); } }
@@ -94,7 +94,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
   const [activeTab, setActiveTab] = useState('collection');
   const [showSettings, setShowSettings] = useState(false);
-  const [layoutMode, setLayoutMode] = useState('double'); // <<< THAY ĐỔI: Đặt mặc định là 2 cột để khớp với skeleton
+  const [layoutMode, setLayoutMode] = useState('single');
   const [visualStyle, setVisualStyle] = useState('default');
   const [selectedCard, setSelectedCard] = useState<Flashcard | null>(null);
   const [showVocabDetail, setShowVocabDetail] = useState(false);
@@ -370,9 +370,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [playlistToDelete, currentUser, playlists, selectedPlaylistId]);
 
 
-  // <<< THAY ĐỔI: Sử dụng component Skeleton mới >>>
+  // <<< THAY ĐỔI QUAN TRỌNG: HIỂN THỊ SKELETON KHI ĐANG TẢI >>>
   if (loading) {
-    return <VerticalFlashcardGallerySkeleton />;
+    return <FlashcardGallerySkeleton />;
   }
 
   return (
@@ -712,4 +712,3 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     </SidebarLayout>
   );
 }
-// --- END OF FILE VerticalFlashcardGallery.tsx ---
