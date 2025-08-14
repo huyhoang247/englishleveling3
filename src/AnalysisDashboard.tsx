@@ -3,7 +3,7 @@
 import React, { useState, useMemo, FC, ReactNode, useCallback, memo } from 'react';
 import { User } from 'firebase/auth';
 // [MỚI] Import Provider và custom hook
-import { AnalysisDashboardProvider, useAnalysisDashboard, WordMastery } from './AnalysisDashboardContext.tsx';
+import { AnalysisDashboardProvider, useAnalysisDashboard, WordMastery } from './contexts/AnalysisDashboardContext.tsx';
 
 import { 
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
