@@ -1,6 +1,6 @@
 import React from 'react';
 
-// Thêm các keyframes và class animation tùy chỉnh.
+// Giữ lại các keyframes và class animation tùy chỉnh vì chúng rất đẹp và hiệu quả.
 // Trong một dự án thực tế, bạn nên đặt chúng trong file tailwind.config.js
 const CustomAnimations = () => (
   <style jsx global>{`
@@ -100,7 +100,6 @@ const CustomAnimations = () => (
   `}</style>
 );
 
-// Thêm type cho props
 type SkeletonProps = {
   isExiting: boolean;
 };
@@ -110,58 +109,77 @@ const AnimatedFlashcardGallerySkeleton: React.FC<SkeletonProps> = ({ isExiting }
     <>
       <CustomAnimations />
       {/* 
-        Container chính được thêm các class transition.
-        Dựa vào prop `isExiting`, nó sẽ thay đổi opacity để tạo hiệu ứng mờ dần.
+        Container chính được thiết kế lại để mô phỏng layout của trang thật.
+        Nó bao gồm header, tabs, và khu vực nội dung chính.
       */}
       <div 
         className={`
-          flex flex-col items-center justify-center h-screen w-screen overflow-hidden 
+          flex flex-col h-screen w-screen overflow-hidden 
           bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900
           transition-opacity duration-500 ease-in-out
           ${isExiting ? 'opacity-0' : 'opacity-100'}
         `}
       >
-        {/* Wrapper của chồng thẻ cũng có hiệu ứng thu nhỏ lại khi thoát */}
-        <div className={`
-          relative w-full max-w-xs sm:max-w-sm h-[500px] sm:h-[550px] animate-float-slow
-          transform -translate-y-16
-          transition-transform duration-500 ease-in-out
-          ${isExiting ? 'scale-95' : 'scale-100'}
-        `}>
-          
-          {/* Thẻ thứ 3 (lớp dưới cùng) */}
-          <div className="absolute inset-0 opacity-0 animate-slide-bottom">
-              <div className="w-full h-full bg-white/60 dark:bg-gray-800/50 shadow-lg rounded-2xl">
-                <div className="w-full h-full bg-gray-300 dark:bg-gray-700/50 rounded-2xl relative overflow-hidden animate-shimmer"></div>
-              </div>
+        {/* --- Skeleton cho Header và Tabs (Lấy cảm hứng từ QuizLoadingSkeleton) --- */}
+        <div className="w-full max-w-6xl mx-auto px-4 pt-6 flex-shrink-0">
+          {/* Skeleton cho Header */}
+          <div className="flex justify-between items-center mb-4 animate-pulse">
+            <div className="h-8 w-1/3 bg-gray-300 dark:bg-gray-700 rounded-md"></div>
+            <div className="flex items-center space-x-2">
+                <div className="h-10 w-10 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
+                <div className="h-10 w-10 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
+            </div>
           </div>
-          
-          {/* Thẻ thứ 2 (lớp giữa) */}
-          <div className="absolute inset-0 opacity-0 animate-slide-middle">
-              <div className="w-full h-full bg-white/80 dark:bg-gray-800/70 shadow-xl rounded-2xl">
-                <div className="w-full h-full bg-gray-300 dark:bg-gray-700/80 rounded-2xl relative overflow-hidden animate-shimmer" style={{ animationDelay: '250ms' }}></div>
-              </div>
+          {/* Skeleton cho Tabs */}
+          <div className="flex space-x-2 animate-pulse">
+            <div className="h-10 w-36 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
+            <div className="h-10 w-36 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
           </div>
+        </div>
 
-          {/* Thẻ thứ 1 (lớp trên cùng, chi tiết nhất) */}
-          <div className="absolute inset-0 w-full h-full bg-white dark:bg-gray-800 shadow-2xl rounded-2xl flex flex-col opacity-0 animate-slide-top overflow-hidden">
-            {/* Placeholder cho ảnh với hiệu ứng shimmer */}
-            <div className="relative overflow-hidden h-3/5 w-full bg-gray-300 dark:bg-gray-600">
-              <div className="animate-shimmer"></div>
+        {/* --- Khu vực trung tâm cho Animation Thẻ bài --- */}
+        {/* 
+          flex-grow đảm bảo khu vực này chiếm hết không gian còn lại.
+          items-center và justify-center để căn giữa chồng thẻ bài.
+        */}
+        <div className="flex-grow flex flex-col items-center justify-center relative">
+          {/* 
+            Wrapper của chồng thẻ được làm nhỏ gọn hơn.
+            Hiệu ứng thu nhỏ khi thoát vẫn được giữ lại.
+          */}
+          <div className={`
+            relative w-full max-w-[280px] h-[420px] animate-float-slow
+            transition-transform duration-500 ease-in-out
+            ${isExiting ? 'scale-95' : 'scale-100'}
+          `}>
+            
+            {/* Thẻ thứ 3 (lớp dưới cùng) */}
+            <div className="absolute inset-0 opacity-0 animate-slide-bottom">
+                <div className="w-full h-full bg-white/60 dark:bg-gray-800/50 shadow-lg rounded-2xl">
+                  <div className="w-full h-full bg-gray-300 dark:bg-gray-700/50 rounded-2xl relative overflow-hidden animate-shimmer"></div>
+                </div>
             </div>
             
-            {/* Placeholder cho nội dung text */}
-            <div className="flex-grow p-6 space-y-4">
-              {/* Shimmer container */}
-              <div className="relative overflow-hidden h-7 w-3/4 bg-gray-400 dark:bg-gray-500 rounded-md">
-                 <div className="animate-shimmer" style={{ animationDelay: '350ms' }}></div>
-              </div>
-              <div className="space-y-2">
-                <div className="relative overflow-hidden h-4 w-full bg-gray-300 dark:bg-gray-600 rounded-md">
-                  <div className="animate-shimmer" style={{ animationDelay: '450ms' }}></div>
+            {/* Thẻ thứ 2 (lớp giữa) */}
+            <div className="absolute inset-0 opacity-0 animate-slide-middle">
+                <div className="w-full h-full bg-white/80 dark:bg-gray-800/70 shadow-xl rounded-2xl">
+                  <div className="w-full h-full bg-gray-300 dark:bg-gray-700/80 rounded-2xl relative overflow-hidden animate-shimmer" style={{ animationDelay: '250ms' }}></div>
                 </div>
-                <div className="relative overflow-hidden h-4 w-5/6 bg-gray-300 dark:bg-gray-600 rounded-md">
-                   <div className="animate-shimmer" style={{ animationDelay: '550ms' }}></div>
+            </div>
+
+            {/* Thẻ thứ 1 (lớp trên cùng, chi tiết nhất) */}
+            <div className="absolute inset-0 w-full h-full bg-white dark:bg-gray-800 shadow-2xl rounded-2xl flex flex-col opacity-0 animate-slide-top overflow-hidden">
+              {/* Placeholder cho ảnh với hiệu ứng shimmer */}
+              <div className="relative overflow-hidden h-3/5 w-full bg-gray-300 dark:bg-gray-600">
+                <div className="animate-shimmer"></div>
+              </div>
+              
+              {/* Placeholder cho nội dung text */}
+              <div className="flex-grow p-6 space-y-4">
+                <div className="relative overflow-hidden h-7 w-3/4 bg-gray-400 dark:bg-gray-500 rounded-md animate-pulse"></div>
+                <div className="space-y-2">
+                  <div className="relative overflow-hidden h-4 w-full bg-gray-300 dark:bg-gray-600 rounded-md animate-pulse"></div>
+                  <div className="relative overflow-hidden h-4 w-5/6 bg-gray-300 dark:bg-gray-600 rounded-md animate-pulse"></div>
                 </div>
               </div>
             </div>
