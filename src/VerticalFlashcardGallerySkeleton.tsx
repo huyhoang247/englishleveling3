@@ -44,27 +44,13 @@ const FlashcardGallerySkeleton: React.FC = () => {
 
         {/* Skeleton cho một Flashcard duy nhất, chiếm phần còn lại của màn hình */}
         <div className="min-h-0 flex-grow flex justify-center items-center p-4 sm:p-6 md:p-8">
-          <div className="w-full max-w-xl flex flex-col bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden animate-pulse">
-            {/* Placeholder cho ảnh với tỉ lệ hợp lý cho một thẻ chính */}
+          {/* Một thẻ duy nhất, trông giống như một tấm ảnh đơn giản */}
+          <div className="w-full max-w-xl bg-white dark:bg-gray-800 shadow-2xl rounded-2xl overflow-hidden animate-pulse">
+            {/* Placeholder cho ảnh, chiếm toàn bộ thẻ */}
             <div 
               className="w-full bg-gray-200 dark:bg-gray-700" 
               style={{ aspectRatio: '4/3' }}
             />
-            {/* Placeholder cho nội dung text và các nút bấm bên dưới */}
-            <div className="p-6 space-y-4">
-              {/* Dòng tiêu đề/thuật ngữ */}
-              <div className="h-6 w-3/4 bg-gray-300 dark:bg-gray-600 rounded-md" />
-              {/* Các dòng mô tả/định nghĩa */}
-              <div className="space-y-2">
-                <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded-md" />
-                <div className="h-4 w-5/6 bg-gray-200 dark:bg-gray-700 rounded-md" />
-              </div>
-              {/* Placeholder cho các nút hành động */}
-              <div className="flex justify-between pt-4">
-                 <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-                 <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-              </div>
-            </div>
           </div>
         </div>
 
