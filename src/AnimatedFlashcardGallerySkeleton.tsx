@@ -143,9 +143,10 @@ const AnimatedFlashcardGallerySkeleton: React.FC<SkeletonProps> = ({ isExiting }
           </div>
 
           {/* Thẻ thứ 1 (lớp trên cùng, chi tiết nhất) */}
-          <div className="absolute inset-0 w-full h-full bg-white dark:bg-gray-800 shadow-2xl rounded-2xl flex flex-col opacity-0 animate-slide-top">
+          <div className="absolute inset-0 w-full h-full bg-white dark:bg-gray-800 shadow-2xl rounded-2xl flex flex-col opacity-0 animate-slide-top overflow-hidden">
             {/* Placeholder cho ảnh với hiệu ứng shimmer */}
             <div className="relative overflow-hidden h-3/5 w-full bg-gray-300 dark:bg-gray-600">
+              {/* Thẻ div này vốn đã có overflow-hidden để chứa shimmer, nhưng không ảnh hưởng đến cha của nó */}
               <div className="animate-shimmer"></div>
             </div>
             
