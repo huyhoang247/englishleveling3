@@ -1,13 +1,13 @@
 // VocaMatchGame.tsx (Refactored to use Context)
 import React, { useMemo } from 'react';
 import { VocaMatchProvider, useVocaMatch } from './VocaMatchContext.tsx'; // Import context
-import Confetti from '../fill-word/chuc-mung.tsx';
+import Confetti from '../../fill-word/chuc-mung.tsx';
 import VocaMatchLoadingSkeleton from './VocaMatchLoadingSkeleton.tsx';
 
 // --- UI components and hooks ---
-import CoinDisplay from '../coin-display.tsx';
-import MasteryDisplay from '../mastery-display.tsx';
-import StreakDisplay from '../streak-display.tsx';
+import CoinDisplay from '../../coin-display.tsx';
+import MasteryDisplay from '../../mastery-display.tsx';
+import StreakDisplay from '../../streak-display.tsx';
 
 // --- Interfaces (can be shared or defined here) ---
 interface Definition {
