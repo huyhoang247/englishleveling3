@@ -1,4 +1,4 @@
-import detailedMeaningsText from '../vocabulary-definitions.ts';
+import detailedMeaningsText from '../../vocabulary-definitions.ts';
 
 export interface WordPair {
   english: string;
