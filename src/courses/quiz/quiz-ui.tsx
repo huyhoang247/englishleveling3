@@ -1,11 +1,11 @@
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import { QuizProvider, useQuiz } from '../../quiz/QuizContext.tsx'; 
 import { useAnimateValue } from '../../useAnimateValue.ts'; 
-import CoinDisplay from '.../coin-display.tsx';
-import MasteryDisplay from '.../mastery-display.tsx'; 
-import StreakDisplay from '.../streak-display.tsx';
-import Confetti from '.../fill-word/chuc-mung.tsx';
-import QuizLoadingSkeleton from '.../quiz/QuizLoadingSkeleton.tsx'; // <<<--- DÒNG IMPORT QUAN TRỌNG ĐÂY!
+import CoinDisplay from '../../coin-display.tsx';
+import MasteryDisplay from '../../mastery-display.tsx'; 
+import StreakDisplay from '../../streak-display.tsx';
+import Confetti from '../../fill-word/chuc-mung.tsx';
+import QuizLoadingSkeleton from '../../quiz/QuizLoadingSkeleton.tsx'; // <<<--- DÒNG IMPORT QUAN TRỌNG ĐÂY!
 
 // --- PHẦN CODE KHÔNG ĐỔI (Các component con & Icons) ---
 const optionLabels = ['A', 'B', 'C', 'D'];
