@@ -1,11 +1,13 @@
 // quiz-app-home.tsx
 import React, { useMemo, memo, useCallback, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion'; // <<< DÒNG MỚI: IMPORT FRAMER MOTION
+
 import QuizApp from './quiz.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
 import VocaMatchGame from './VocaMatchGame.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 import WordChainGame from '../word-chain-game.tsx';
-import PracticeListLoadingSkeleton from './PracticeListLoadingSkeleton.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
+import PracticeListLoadingSkeleton from './PracticeListLoadingSkeleton.tsx';
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
 import { QuizAppProvider, useQuizApp } from './quiz-app.context.tsx';
@@ -28,7 +30,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   );
 }
 
-// --- Component hiển thị nội dung, sử dụng Context ---
+// --- Component hiển thị nội dung, sử dụng Context (ĐÃ ĐƯỢC REFACTOR) ---
 const QuizAppContent: React.FC = () => {
   const { 
     currentView, 
@@ -38,40 +40,44 @@ const QuizAppContent: React.FC = () => {
     setCurrentView,
     handleQuizSelect,
     handleTypeSelect,
+    hideNavBar,
+    showNavBar,
   } = useQuizApp();
 
-  // Logic render các màn hình fullscreen
-  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame'].includes(currentView)) {
-      let ViewComponent = null;
-
-      switch(currentView) {
-          case 'quiz':
-              ViewComponent = <QuizApp onGoBack={goBack} selectedPractice={selectedPractice} />;
-              break;
-          case 'vocabularyGame':
-              ViewComponent = <VocabularyGame onGoBack={goBack} selectedPractice={selectedPractice} />;
-              break;
-          case 'vocaMatchGame':
-              ViewComponent = <VocaMatchGame onGoBack={goBack} selectedPractice={selectedPractice} />;
-              break;
-          case 'wordChainGame':
-              ViewComponent = <WordChainGame onGoBack={goBack} />;
-              break;
-          case 'analysis':
-              ViewComponent = <AnalysisDashboard onGoBack={goHome} />;
-              break;
-      }
-      
-      return (
-        <div className="fixed inset-0 z-[51] bg-white flex flex-col">
-            <div className="flex-grow overflow-y-auto">
-                {ViewComponent}
-            </div>
-        </div>
-      );
-  }
+  // <<< THAY ĐỔI: SỬ DỤNG useMemo ĐỂ XÁC ĐỊNH VIEW FULLSCREEN >>>
+  const isFullscreenView = useMemo(() => 
+    ['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame'].includes(currentView),
+    [currentView]
+  );
   
-  // Logic render nội dung chính trong các view có header
+  // <<< THAY ĐỔI: useEffect ĐỂ QUẢN LÝ VIỆC ẨN/HIỆN NAVBAR >>>
+  useEffect(() => {
+    if (isFullscreenView) {
+      hideNavBar?.();
+    } else {
+      showNavBar?.();
+    }
+  }, [isFullscreenView, hideNavBar, showNavBar]);
+
+  // <<< THAY ĐỔI: TÁCH LOGIC RENDER COMPONENT FULLSCREEN RA HÀM RIÊNG >>>
+  const renderFullscreenComponent = () => {
+    switch(currentView) {
+        case 'quiz':
+            return <QuizApp onGoBack={goBack} selectedPractice={selectedPractice} />;
+        case 'vocabularyGame':
+            return <VocabularyGame onGoBack={goBack} selectedPractice={selectedPractice} />;
+        case 'vocaMatchGame':
+            return <VocaMatchGame onGoBack={goBack} selectedPractice={selectedPractice} />;
+        case 'wordChainGame':
+            return <WordChainGame onGoBack={goBack} />;
+        case 'analysis':
+            return <AnalysisDashboard onGoBack={goHome} />;
+        default:
+            return null;
+    }
+  };
+  
+  // Logic render nội dung chính trong các view có header (KHÔNG THAY ĐỔI)
   const renderContent = () => {
     switch(currentView) {
       case 'main':
@@ -129,6 +135,7 @@ const QuizAppContent: React.FC = () => {
 
   return (
     <div className="h-svh overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Màn hình chính luôn được render ở dưới */}
       <div className="w-full h-full bg-white flex flex-col">
         <AppHeader />
         <main className="flex-grow overflow-y-auto">
@@ -137,6 +144,30 @@ const QuizAppContent: React.FC = () => {
           </div>
         </main>
       </div>
+      
+      {/* <<< THAY ĐỔI: KHU VỰC ANIMATION VỚI FRAMER MOTION >>> */}
+      <AnimatePresence>
+        {isFullscreenView && (
+          <motion.div
+            key={currentView} // Key rất quan trọng để AnimatePresence nhận diện component thay đổi
+            className="fixed inset-0 z-[51] bg-white flex flex-col"
+            initial={{ y: '100%' }} // Bắt đầu từ dưới màn hình
+            animate={{ y: 0 }}       // Di chuyển vào vị trí 0
+            exit={{ y: '100%' }}      // Thoát ra bằng cách trượt xuống dưới
+            transition={{ 
+              type: 'spring', // Sử dụng animation kiểu lò xo cho tự nhiên
+              stiffness: 400, // Độ cứng của lò xo
+              damping: 40     // Độ giảm chấn
+            }}
+          >
+            <div className="flex-grow overflow-y-auto">
+              {renderFullscreenComponent()}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Xóa các keyframes animation thủ công khỏi style */}
       <style jsx>{`
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -193,6 +224,8 @@ function AppHeader() {
     </header>
   );
 }
+
+// --- CÁC COMPONENT CÒN LẠI GIỮ NGUYÊN, KHÔNG CẦN THAY ĐỔI ---
 
 // --- Icons (Static) ---
 const CompletedIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg> );
@@ -292,7 +325,6 @@ function PracticeList() {
   const handleReviewClick = useCallback((practiceNumber) => { setSelectedPracticeForReview(practiceNumber); setView('reviews'); }, []);
   const handleRewardsClick = useCallback((practiceNumber, practiceTitle) => { setSelectedPracticeForRewards({ number: practiceNumber, title: practiceTitle }); setIsRewardsPopupOpen(true); }, []);
 
-  // <<< THAY ĐỔI TẠI ĐÂY
   if (loading) {
     return <PracticeListLoadingSkeleton />;
   }
