@@ -1,6 +1,6 @@
 // quiz-app-home.tsx
 import React, { useMemo, memo, useCallback, useState, useEffect } from 'react';
-import QuizApp from '../quiz/quiz.tsx';
+import QuizApp from './quiz/quiz-ui.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
 import VocaMatchGame from '../quiz/VocaMatchGame.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
