@@ -2,9 +2,10 @@ import React from 'react';
 import { SidebarLayout } from './sidebar-story.tsx';
 
 // Component skeleton cho một thẻ flashcard
+// Đã được tối ưu hóa: không cần thay đổi gì ở đây, nó đã rất tốt.
 const FlashcardSkeletonItem: React.FC = () => (
   <div className="flex flex-col bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
-    {/* Placeholder cho ảnh với đúng tỉ lệ */}
+    {/* Placeholder cho ảnh với hiệu ứng pulse */}
     <div 
       className="w-full bg-gray-200 dark:bg-gray-700 animate-pulse" 
       style={{ aspectRatio: '1024/1536' }}
@@ -12,12 +13,12 @@ const FlashcardSkeletonItem: React.FC = () => (
   </div>
 );
 
-// Component skeleton chính, mô phỏng toàn bộ giao diện của VerticalFlashcardGallery
+// Component skeleton chính, đã được thiết kế lại để logic và đẹp hơn
 const FlashcardGallerySkeleton: React.FC = () => {
-  const dummyFunc = () => {}; // Hàm giả để truyền vào props của SidebarLayout
+  const dummyFunc = () => {}; // Hàm giả để truyền vào props
 
   return (
-    // Sử dụng SidebarLayout để đảm bảo cấu trúc trang nhất quán
+    // SidebarLayout vẫn là layout gốc, đảm bảo tính nhất quán
     <SidebarLayout
       setToggleSidebar={dummyFunc}
       onShowHome={dummyFunc}
@@ -30,41 +31,53 @@ const FlashcardGallerySkeleton: React.FC = () => {
       onShowHelp={dummyFunc}
       activeScreen="home"
     >
-      <div className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900">
+      {/* 
+        THAY ĐỔI CHÍNH: Cấu trúc layout mới
+        - Sử dụng flex-1 và overflow-hidden để container chính chiếm hết không gian còn lại mà không tạo thanh cuộn.
+        - Bên trong, ta chia làm 2 phần: Header (cố định) và Lưới flashcard (sẽ cuộn nếu cần).
+      */}
+      <div className="flex flex-col flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900">
         
-        {/* Skeleton cho Header và Tabs */}
-        <div className="w-full max-w-6xl py-6 mx-auto animate-pulse">
-          <div className="flex justify-between items-center mb-4 px-4">
+        {/* --- Phần 1: Skeleton cho Header và Tabs (Không cuộn) --- */}
+        <div className="w-full max-w-6xl mx-auto px-4 pt-6 pb-4">
+          <div className="flex justify-between items-center mb-6">
             {/* Title */}
-            <div className="h-8 w-48 bg-gray-300 dark:bg-gray-600 rounded-md" />
+            <div className="h-8 w-48 bg-gray-300 dark:bg-gray-600 rounded-md animate-pulse" />
+            
             {/* Các nút điều khiển */}
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center p-1 mb-4 mx-4 bg-gray-100 dark:bg-gray-800 rounded-lg w-fit">
-            {/* Tab đang active */}
-            <div className="h-10 w-36 bg-indigo-100 dark:bg-gray-700 rounded-lg" />
+          <div className="flex items-center p-1 bg-gray-200/80 dark:bg-gray-800 rounded-lg w-fit">
+            {/* Tab đang active (mô phỏng bằng màu sáng hơn) */}
+            <div className="h-10 w-32 bg-white dark:bg-gray-700 rounded-md animate-pulse" />
             {/* Tab không active */}
-            <div className="h-10 w-36 bg-gray-200 dark:bg-gray-700/50 rounded-lg ml-1" />
+            <div className="h-10 w-32 ml-1" /> 
           </div>
         </div>
 
-        {/* Skeleton cho lưới Flashcards */}
-        <div className="min-h-0 flex-grow">
-          <div className="w-full max-w-6xl mx-auto">
-            {/* Lưới sẽ có 1 cột trên màn hình nhỏ và 2 cột trên màn hình lớn hơn */}
-            <div className="grid gap-4 px-4 grid-cols-1 sm:grid-cols-2">
-              {/* Tạo ra 6 item để lấp đầy màn hình ban đầu */}
-              {Array.from({ length: 6 }).map((_, index) => (
+        {/* --- Phần 2: Skeleton cho lưới Flashcards (Phần này sẽ cuộn nếu nội dung quá dài) --- */}
+        {/*
+          - flex-1: Chiếm hết không gian dọc còn lại.
+          - overflow-y-auto: Chỉ tạo thanh cuộn cho khu vực này khi cần.
+          - Với 8 thẻ skeleton, nó sẽ không cuộn trên hầu hết các màn hình, đúng với mục đích.
+        */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="w-full max-w-6xl mx-auto px-4 pb-6">
+            {/* Cải thiện responsive grid: 1 cột trên mobile, 2 trên tablet, 3 trên desktop */}
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Tạo ra 8 item để lấp đầy màn hình tốt hơn */}
+              {Array.from({ length: 8 }).map((_, index) => (
                 <FlashcardSkeletonItem key={index} />
               ))}
             </div>
           </div>
         </div>
+        
       </div>
     </SidebarLayout>
   );
