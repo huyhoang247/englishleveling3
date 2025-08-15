@@ -5,7 +5,7 @@ import Home from './background-game.tsx'; // Component chính của màn hình '
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
 import Story from './VerticalFlashcardGallery.tsx';
 import Profile from './building.tsx';
-import QuizAppHome from './quiz/quiz-app-home.tsx';
+import QuizAppHome from './courses/course-ui.tsx';
 import GameBrowser from './game.tsx';
 import AuthComponent from './auth.js';
 import { auth, db } from './firebase.js';
