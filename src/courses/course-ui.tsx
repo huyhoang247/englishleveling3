@@ -5,7 +5,7 @@ import VocabularyGame from '../fill-word/fill-word-home.tsx';
 import VocaMatchGame from '../quiz/VocaMatchGame.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 import WordChainGame from '../word-chain-game.tsx';
-import PracticeListLoadingSkeleton from '../quiz/PracticeListLoadingSkeleton.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
+import PracticeListLoadingSkeleton from './course-loading.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
 import { QuizAppProvider, useQuizApp } from './course-context.tsx';
