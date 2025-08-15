@@ -1,5 +1,5 @@
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
-import { QuizProvider, useQuiz } from '../../quiz/QuizContext.tsx'; 
+import { QuizProvider, useQuiz } from './quiz-context.tsx'; 
 import { useAnimateValue } from '../../useAnimateValue.ts'; 
 import CoinDisplay from '../../coin-display.tsx';
 import MasteryDisplay from '../../mastery-display.tsx'; 
