@@ -70,25 +70,17 @@ const SkeletonCard: React.FC<{ delay: number }> = ({ delay }) => (
     </div>
 );
 
-
-type SkeletonProps = {
-  isExiting: boolean;
-};
-
-const AnimatedFlashcardGallerySkeleton: React.FC<SkeletonProps> = ({ isExiting }) => {
+const AnimatedFlashcardGallerySkeleton: React.FC = () => {
   return (
     <>
       <CustomAnimations />
       {/* 
         Container chính với background đã được đồng bộ hóa với trang thật.
-        Hiệu ứng mờ dần khi thoát vẫn được giữ nguyên.
       */}
       <div 
         className={`
           flex flex-col h-screen w-screen overflow-hidden 
-          bg-white dark:bg-gray-900
-          transition-opacity duration-500 ease-in-out
-          ${isExiting ? 'opacity-0' : 'opacity-100'}
+          bg-white dark:bg-gray-900 opacity-100
         `}
       >
         {/* --- Skeleton cho Header và Tabs --- */}
