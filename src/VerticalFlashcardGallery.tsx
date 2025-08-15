@@ -1,3 +1,5 @@
+// --- START OF FILE VerticalFlashcardGallery.tsx ---
+
 import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
@@ -5,8 +7,6 @@ import { auth, db } from './firebase.js';
 import { doc, updateDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
-// <<< THAY ĐỔI: Sử dụng phiên bản skeleton đã được nâng cấp cho animation >>>
-import AnimatedFlashcardGallerySkeleton from './AnimatedFlashcardGallerySkeleton.tsx'; 
 
 // <<< THAY ĐỔI LỚN: IMPORT DỮ LIỆU TỪ FILE TRUNG TÂM >>>
 import { ALL_CARDS_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
@@ -28,18 +28,12 @@ interface DisplayCard {
     isFavorite: boolean;
 }
 
-const animations = `
-  /* <<< THAY ĐỔI: Thêm keyframe và class cho hiệu ứng fade-in của nội dung chính >>> */
-  @keyframes fadeIn { 
-    0% { opacity: 0; transform: scale(0.98); } 
-    100% { opacity: 1; transform: scale(1); } 
-  }
-  .animate-fade-in { 
-    animation: fadeIn 0.5s ease-out forwards; 
-  }
+// <<< TOÀN BỘ LOGIC TẠO DỮ LIỆU ĐÃ ĐƯỢC XÓA KHỎI ĐÂY VÀ CHUYỂN SANG flashcard-data.ts >>>
 
+const animations = `
   @keyframes fadeInOut { 0% { opacity: 0; transform: translateY(-10px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-10px); } }
   @keyframes slideIn { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+  @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
   @keyframes scaleIn { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
   @keyframes modalBackdropIn { 0% { opacity: 0; } 100% { opacity: 0.5; } }
   @keyframes modalIn { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
@@ -93,9 +87,6 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
   );
 });
 
-// <<< THAY ĐỔI: Thêm hằng số thời gian chờ tối thiểu >>>
-const MIN_LOADING_TIME_MS = 700;
-
 export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
   // --- States ---
   const mainContainerRef = useRef<HTMLDivElement>(null);
@@ -120,7 +111,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [playlistSearch, setPlaylistSearch] = useState('');
   const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
   const [isUpdatingPlaylists, setIsUpdatingPlaylists] = useState(false);
-  // <<< THAY ĐỔI: Xóa state isExiting >>>
 
   // --- Derived State ---
   const allFavoriteCardIds = useMemo(() => {
@@ -128,27 +118,15 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [playlists]);
 
   // --- Effects ---
-  // <<< THAY ĐỔI LỚN: Cập nhật logic loading để có hiệu ứng chuyển tiếp tức thì >>>
   useEffect(() => {
-    const loadingStartTime = Date.now();
-    setLoading(true);
-
-    const handleLoadFinished = () => {
-      const elapsedTime = Date.now() - loadingStartTime;
-      const delay = Math.max(0, MIN_LOADING_TIME_MS - elapsedTime);
-      
-      setTimeout(() => {
-        setLoading(false); // Trực tiếp gỡ component skeleton
-      }, delay);
-    };
-
     if (!currentUser) {
+      setLoading(false);
       setOpenedImageIds([]);
       setPlaylists([]);
-      handleLoadFinished();
       return;
     }
 
+    setLoading(true);
     let unsubscribePlaylists: () => void;
     let unsubscribeOpenedCards: () => void;
 
@@ -176,12 +154,11 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         }
       });
       setOpenedImageIds(ids);
-      handleLoadFinished();
-
+      setLoading(false); 
     }, (error) => {
       console.error("Error fetching ordered cards from subcollection:", error);
-      setOpenedImageIds([]);
-      handleLoadFinished();
+      setOpenedImageIds([]); 
+      setLoading(false);
     });
     
     return () => {
@@ -392,9 +369,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [playlistToDelete, currentUser, playlists, selectedPlaylistId]);
 
 
-  // <<< THAY ĐỔI: Hiển thị skeleton mà không cần prop isExiting >>>
   if (loading) {
-    return <AnimatedFlashcardGallerySkeleton />;
+    return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
   }
 
   return (
@@ -410,8 +386,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       onShowHelp={handleShowHelp}
       activeScreen={activeScreen}
     >
-      {/* <<< THAY ĐỔI: Thêm class animate-fade-in cho hiệu ứng hiện ra >>> */}
-      <div ref={mainContainerRef} className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900 animate-fade-in">
+      <div ref={mainContainerRef} className="flex flex-col h-screen overflow-y-auto bg-white dark:bg-gray-900">
         <style>{animations}</style>
         <style>{scrollbarHide}</style>
 
