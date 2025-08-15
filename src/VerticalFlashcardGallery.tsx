@@ -120,8 +120,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   const [playlistSearch, setPlaylistSearch] = useState('');
   const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
   const [isUpdatingPlaylists, setIsUpdatingPlaylists] = useState(false);
-  // <<< THAY ĐỔI: Thêm state để quản lý animation thoát >>>
-  const [isExiting, setIsExiting] = useState(false);
+  // <<< THAY ĐỔI: Xóa state isExiting >>>
 
   // --- Derived State ---
   const allFavoriteCardIds = useMemo(() => {
@@ -129,21 +128,17 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [playlists]);
 
   // --- Effects ---
-  // <<< THAY ĐỔI LỚN: Cập nhật logic loading để có hiệu ứng chuyển tiếp mượt mà >>>
+  // <<< THAY ĐỔI LỚN: Cập nhật logic loading để có hiệu ứng chuyển tiếp tức thì >>>
   useEffect(() => {
     const loadingStartTime = Date.now();
     setLoading(true);
-    setIsExiting(false); // Reset trạng thái exit mỗi khi load lại
 
     const handleLoadFinished = () => {
       const elapsedTime = Date.now() - loadingStartTime;
       const delay = Math.max(0, MIN_LOADING_TIME_MS - elapsedTime);
       
       setTimeout(() => {
-        setIsExiting(true); // Bắt đầu animation thoát
-        setTimeout(() => {
-          setLoading(false); // Gỡ component skeleton sau khi animation kết thúc
-        }, 500); // Thời gian này phải khớp với duration của transition
+        setLoading(false); // Trực tiếp gỡ component skeleton
       }, delay);
     };
 
@@ -397,9 +392,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [playlistToDelete, currentUser, playlists, selectedPlaylistId]);
 
 
-  // <<< THAY ĐỔI QUAN TRỌNG: HIỂN THỊ SKELETON VÀ TRUYỀN PROP isExiting >>>
+  // <<< THAY ĐỔI: Hiển thị skeleton mà không cần prop isExiting >>>
   if (loading) {
-    return <AnimatedFlashcardGallerySkeleton isExiting={isExiting} />;
+    return <AnimatedFlashcardGallerySkeleton />;
   }
 
   return (
