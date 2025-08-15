@@ -6,7 +6,7 @@ import {
 // Import các dữ liệu local cần thiết cho hàm mới
 import quizData from './quiz/quiz-data.ts'; 
 import { exampleData } from './example-data.ts';
-import { allWordPairs } from './quiz/voca-match-data.ts'; // ADDED
+import { allWordPairs } from './courses/voca-match/voca-match-data.ts'; // ADDED
 
 /**
  * Lấy dữ liệu người dùng. Nếu người dùng chưa tồn tại trong Firestore, tạo mới với giá trị mặc định.
