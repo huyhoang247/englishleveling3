@@ -1,14 +1,14 @@
 // quiz-app-home.tsx
 import React, { useMemo, memo, useCallback, useState, useEffect } from 'react';
-import QuizApp from './quiz.tsx';
+import QuizApp from '../quiz/quiz.tsx';
 import VocabularyGame from '../fill-word/fill-word-home.tsx';
-import VocaMatchGame from './VocaMatchGame.tsx';
+import VocaMatchGame from '../quiz/VocaMatchGame.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
 import WordChainGame from '../word-chain-game.tsx';
-import PracticeListLoadingSkeleton from './PracticeListLoadingSkeleton.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
+import PracticeListLoadingSkeleton from '../quiz/PracticeListLoadingSkeleton.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
-import { QuizAppProvider, useQuizApp } from './quiz-app.context.tsx';
+import { QuizAppProvider, useQuizApp } from '../quiz/quiz-app.context.tsx';
 import { fetchPracticeListProgress, claimQuizReward } from '../userDataService.ts';
 import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts';
 import { User } from 'firebase/auth';
