@@ -8,7 +8,7 @@ import WordChainGame from '../word-chain-game.tsx';
 import PracticeListLoadingSkeleton from '../quiz/PracticeListLoadingSkeleton.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
-import { QuizAppProvider, useQuizApp } from '../quiz/quiz-app.context.tsx';
+import { QuizAppProvider, useQuizApp } from './course-context.tsx';
 import { fetchPracticeListProgress, claimQuizReward } from '../userDataService.ts';
 import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts';
 import { User } from 'firebase/auth';
