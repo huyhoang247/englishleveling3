@@ -88,6 +88,9 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
   );
 });
 
+// <<< THAY ĐỔI: Thêm hằng số thời gian chờ tối thiểu >>>
+const MIN_LOADING_TIME_MS = 700;
+
 export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
   // --- States ---
   const mainContainerRef = useRef<HTMLDivElement>(null);
@@ -119,15 +122,22 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
   }, [playlists]);
 
   // --- Effects ---
+  // <<< THAY ĐỔI: Cập nhật logic loading để có thời gian chờ tối thiểu >>>
   useEffect(() => {
+    const loadingStartTime = Date.now();
+    setLoading(true);
+
     if (!currentUser) {
-      setLoading(false);
-      setOpenedImageIds([]);
-      setPlaylists([]);
+      const elapsedTime = Date.now() - loadingStartTime;
+      const delay = Math.max(0, MIN_LOADING_TIME_MS - elapsedTime);
+      setTimeout(() => {
+        setLoading(false);
+        setOpenedImageIds([]);
+        setPlaylists([]);
+      }, delay);
       return;
     }
 
-    setLoading(true);
     let unsubscribePlaylists: () => void;
     let unsubscribeOpenedCards: () => void;
 
@@ -155,11 +165,22 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
         }
       });
       setOpenedImageIds(ids);
-      setLoading(false); 
+      
+      const elapsedTime = Date.now() - loadingStartTime;
+      const delay = Math.max(0, MIN_LOADING_TIME_MS - elapsedTime);
+      setTimeout(() => {
+        setLoading(false);
+      }, delay);
+
     }, (error) => {
       console.error("Error fetching ordered cards from subcollection:", error);
-      setOpenedImageIds([]); 
-      setLoading(false);
+      setOpenedImageIds([]);
+      
+      const elapsedTime = Date.now() - loadingStartTime;
+      const delay = Math.max(0, MIN_LOADING_TIME_MS - elapsedTime);
+      setTimeout(() => {
+        setLoading(false);
+      }, delay);
     });
     
     return () => {
