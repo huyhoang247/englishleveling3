@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { VocaMatchProvider, useVocaMatch } from './voca-match-context.tsx'; // Import context
 import Confetti from '../../fill-word/chuc-mung.tsx';
-import VocaMatchLoadingSkeleton from './VocaMatchLoadingSkeleton.tsx';
+import VocaMatchLoadingSkeleton from './voca-match-loading.tsx';
 
 // --- UI components and hooks ---
 import CoinDisplay from '../../coin-display.tsx';
