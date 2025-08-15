@@ -100,18 +100,35 @@ const CustomAnimations = () => (
   `}</style>
 );
 
+// Thêm type cho props
+type SkeletonProps = {
+  isExiting: boolean;
+};
 
-const AnimatedFlashcardGallerySkeleton: React.FC = () => {
+const AnimatedFlashcardGallerySkeleton: React.FC<SkeletonProps> = ({ isExiting }) => {
   return (
     <>
       <CustomAnimations />
-      {/* Container chính: toàn màn hình, nền gradient và căn giữa mọi thứ */}
-      <div className="flex flex-col items-center justify-center h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
-        
-        {/* Wrapper cho hiệu ứng chồng thẻ và floating */}
-        <div className="relative w-full max-w-xs sm:max-w-sm h-[500px] sm:h-[550px] animate-float-slow">
+      {/* 
+        Container chính được thêm các class transition.
+        Dựa vào prop `isExiting`, nó sẽ thay đổi opacity để tạo hiệu ứng mờ dần.
+      */}
+      <div 
+        className={`
+          flex flex-col items-center justify-center h-screen w-screen overflow-hidden 
+          bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900
+          transition-opacity duration-500 ease-in-out
+          ${isExiting ? 'opacity-0' : 'opacity-100'}
+        `}
+      >
+        {/* Wrapper của chồng thẻ cũng có hiệu ứng thu nhỏ lại khi thoát */}
+        <div className={`
+          relative w-full max-w-xs sm:max-w-sm h-[500px] sm:h-[550px] animate-float-slow
+          transition-transform duration-500 ease-in-out
+          ${isExiting ? 'scale-95' : 'scale-100'}
+        `}>
           
-          {/* Thẻ thứ 3 (lớp dưới cùng) - Sẽ trượt vào đầu tiên */}
+          {/* Thẻ thứ 3 (lớp dưới cùng) */}
           <div className="absolute inset-0 opacity-0 animate-slide-bottom">
               <div className="w-full h-full bg-white/60 dark:bg-gray-800/50 shadow-lg rounded-2xl">
                 <div className="w-full h-full bg-gray-300 dark:bg-gray-700/50 rounded-2xl relative overflow-hidden animate-shimmer"></div>
@@ -125,7 +142,7 @@ const AnimatedFlashcardGallerySkeleton: React.FC = () => {
               </div>
           </div>
 
-          {/* Thẻ thứ 1 (lớp trên cùng, chi tiết nhất) - Trượt vào cuối cùng */}
+          {/* Thẻ thứ 1 (lớp trên cùng, chi tiết nhất) */}
           <div className="absolute inset-0 w-full h-full bg-white dark:bg-gray-800 shadow-2xl rounded-2xl flex flex-col opacity-0 animate-slide-top">
             {/* Placeholder cho ảnh với hiệu ứng shimmer */}
             <div className="relative overflow-hidden h-3/5 w-full bg-gray-300 dark:bg-gray-600">
