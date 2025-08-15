@@ -124,6 +124,7 @@ const AnimatedFlashcardGallerySkeleton: React.FC<SkeletonProps> = ({ isExiting }
         {/* Wrapper của chồng thẻ cũng có hiệu ứng thu nhỏ lại khi thoát */}
         <div className={`
           relative w-full max-w-xs sm:max-w-sm h-[500px] sm:h-[550px] animate-float-slow
+          transform -translate-y-16
           transition-transform duration-500 ease-in-out
           ${isExiting ? 'scale-95' : 'scale-100'}
         `}>
@@ -146,7 +147,6 @@ const AnimatedFlashcardGallerySkeleton: React.FC<SkeletonProps> = ({ isExiting }
           <div className="absolute inset-0 w-full h-full bg-white dark:bg-gray-800 shadow-2xl rounded-2xl flex flex-col opacity-0 animate-slide-top overflow-hidden">
             {/* Placeholder cho ảnh với hiệu ứng shimmer */}
             <div className="relative overflow-hidden h-3/5 w-full bg-gray-300 dark:bg-gray-600">
-              {/* Thẻ div này vốn đã có overflow-hidden để chứa shimmer, nhưng không ảnh hưởng đến cha của nó */}
               <div className="animate-shimmer"></div>
             </div>
             
