@@ -1,7 +1,7 @@
 import React from 'react';
 
-// Giữ lại các keyframes và class animation tùy chỉnh vì chúng rất đẹp và hiệu quả.
-// Trong một dự án thực tế, bạn nên đặt chúng trong file tailwind.config.js
+// Tinh chỉnh lại các keyframes để phục vụ cho layout grid mới.
+// Chúng ta sẽ dùng một animation slide-in thống nhất và áp dụng độ trễ khác nhau.
 const CustomAnimations = () => (
   <style jsx global>{`
     @keyframes shimmer {
@@ -10,48 +10,15 @@ const CustomAnimations = () => (
       }
     }
     
-    @keyframes float {
-      0% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-15px);
-      }
-      100% {
-        transform: translateY(0px);
-      }
-    }
-
-    @keyframes slide-in-and-settle-top {
-      0% {
+    /* Animation trượt vào vị trí cho các item trong grid */
+    @keyframes slide-in-item {
+      from {
         opacity: 0;
-        transform: translateY(50px) scale(0.95);
+        transform: translateY(30px) scale(0.98);
       }
-      100% {
+      to {
         opacity: 1;
         transform: translateY(0) scale(1);
-      }
-    }
-
-    @keyframes slide-in-and-settle-middle {
-      0% {
-        opacity: 0;
-        transform: translateY(50px) scale(0.9);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0) scale(0.95) rotate(-3deg);
-      }
-    }
-
-    @keyframes slide-in-and-settle-bottom {
-      0% {
-        opacity: 0;
-        transform: translateY(50px) scale(0.85);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0) scale(0.9) rotate(6deg);
       }
     }
     
@@ -83,22 +50,26 @@ const CustomAnimations = () => (
       );
     }
     
-    /* Utility classes cho animation */
-    .animate-float-slow {
-      animation: float 6s ease-in-out infinite;
+    /* Class tiện ích cho animation, sẽ được dùng với inline style cho delay */
+    .animate-slide-in-item {
+      animation: slide-in-item 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
     }
-    .animate-slide-top {
-      animation: slide-in-and-settle-top 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s forwards;
-    }
-    .animate-slide-middle {
-      animation: slide-in-and-settle-middle 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.15s forwards;
-    }
-    .animate-slide-bottom {
-      animation: slide-in-and-settle-bottom 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    }
-    
   `}</style>
 );
+
+// Component con cho một thẻ placeholder, giúp code gọn gàng hơn
+const SkeletonCard: React.FC<{ delay: number }> = ({ delay }) => (
+    <div 
+      className="flex flex-col bg-white dark:bg-gray-800 shadow-xl overflow-hidden rounded-2xl opacity-0 animate-slide-in-item"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+        {/* Placeholder cho ảnh */}
+        <div className="w-full bg-gray-300 dark:bg-gray-700 relative overflow-hidden" style={{ aspectRatio: '1024/1536' }}>
+            <div className="animate-shimmer" style={{ animationDelay: `${delay + 100}ms` }}></div>
+        </div>
+    </div>
+);
+
 
 type SkeletonProps = {
   isExiting: boolean;
@@ -109,81 +80,45 @@ const AnimatedFlashcardGallerySkeleton: React.FC<SkeletonProps> = ({ isExiting }
     <>
       <CustomAnimations />
       {/* 
-        Container chính được thiết kế lại để mô phỏng layout của trang thật.
-        Nó bao gồm header, tabs, và khu vực nội dung chính.
+        Container chính với background đã được đồng bộ hóa với trang thật.
+        Hiệu ứng mờ dần khi thoát vẫn được giữ nguyên.
       */}
       <div 
         className={`
           flex flex-col h-screen w-screen overflow-hidden 
-          bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900
+          bg-white dark:bg-gray-900
           transition-opacity duration-500 ease-in-out
           ${isExiting ? 'opacity-0' : 'opacity-100'}
         `}
       >
-        {/* --- Skeleton cho Header và Tabs (Lấy cảm hứng từ QuizLoadingSkeleton) --- */}
-        <div className="w-full max-w-6xl mx-auto px-4 pt-6 flex-shrink-0">
-          {/* Skeleton cho Header */}
+        {/* --- Skeleton cho Header và Tabs --- */}
+        <div className="w-full max-w-6xl mx-auto py-6 px-4 flex-shrink-0">
           <div className="flex justify-between items-center mb-4 animate-pulse">
-            <div className="h-8 w-1/3 bg-gray-300 dark:bg-gray-700 rounded-md"></div>
+            <div className="h-8 w-1/3 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
             <div className="flex items-center space-x-2">
-                <div className="h-10 w-10 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
-                <div className="h-10 w-10 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
+                <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
             </div>
           </div>
-          {/* Skeleton cho Tabs */}
-          <div className="flex space-x-2 animate-pulse">
-            <div className="h-10 w-36 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
-            <div className="h-10 w-36 bg-gray-300 dark:bg-gray-700 rounded-lg"></div>
+          <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1 mb-4 shadow-sm animate-pulse">
+            <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
+            <div className="h-10 w-32 ml-1 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
           </div>
         </div>
 
-        {/* --- Khu vực trung tâm cho Animation Thẻ bài --- */}
+        {/* --- Khu vực nội dung chính với layout Grid --- */}
         {/* 
-          flex-grow đảm bảo khu vực này chiếm hết không gian còn lại.
-          items-center và justify-center để căn giữa chồng thẻ bài.
+          Mô phỏng layout grid của trang thật, hiển thị 4 thẻ đầu tiên.
+          Mỗi thẻ có hiệu ứng trượt vào (staggered) để tạo cảm giác sống động.
         */}
-        <div className="flex-grow flex flex-col items-center justify-center relative">
-          {/* 
-            Wrapper của chồng thẻ được làm nhỏ gọn hơn.
-            Hiệu ứng thu nhỏ khi thoát vẫn được giữ lại.
-          */}
-          <div className={`
-            relative w-full max-w-[280px] h-[420px] animate-float-slow
-            transition-transform duration-500 ease-in-out
-            ${isExiting ? 'scale-95' : 'scale-100'}
-          `}>
-            
-            {/* Thẻ thứ 3 (lớp dưới cùng) */}
-            <div className="absolute inset-0 opacity-0 animate-slide-bottom">
-                <div className="w-full h-full bg-white/60 dark:bg-gray-800/50 shadow-lg rounded-2xl">
-                  <div className="w-full h-full bg-gray-300 dark:bg-gray-700/50 rounded-2xl relative overflow-hidden animate-shimmer"></div>
+        <div className="flex-grow min-h-0 overflow-hidden">
+            <div className="w-full max-w-6xl mx-auto px-4">
+                 <div className={`grid gap-4 grid-cols-2`}>
+                    {[...Array(4)].map((_, index) => (
+                        <SkeletonCard key={index} delay={index * 100} />
+                    ))}
                 </div>
             </div>
-            
-            {/* Thẻ thứ 2 (lớp giữa) */}
-            <div className="absolute inset-0 opacity-0 animate-slide-middle">
-                <div className="w-full h-full bg-white/80 dark:bg-gray-800/70 shadow-xl rounded-2xl">
-                  <div className="w-full h-full bg-gray-300 dark:bg-gray-700/80 rounded-2xl relative overflow-hidden animate-shimmer" style={{ animationDelay: '250ms' }}></div>
-                </div>
-            </div>
-
-            {/* Thẻ thứ 1 (lớp trên cùng, chi tiết nhất) */}
-            <div className="absolute inset-0 w-full h-full bg-white dark:bg-gray-800 shadow-2xl rounded-2xl flex flex-col opacity-0 animate-slide-top overflow-hidden">
-              {/* Placeholder cho ảnh với hiệu ứng shimmer */}
-              <div className="relative overflow-hidden h-3/5 w-full bg-gray-300 dark:bg-gray-600">
-                <div className="animate-shimmer"></div>
-              </div>
-              
-              {/* Placeholder cho nội dung text */}
-              <div className="flex-grow p-6 space-y-4">
-                <div className="relative overflow-hidden h-7 w-3/4 bg-gray-400 dark:bg-gray-500 rounded-md animate-pulse"></div>
-                <div className="space-y-2">
-                  <div className="relative overflow-hidden h-4 w-full bg-gray-300 dark:bg-gray-600 rounded-md animate-pulse"></div>
-                  <div className="relative overflow-hidden h-4 w-5/6 bg-gray-300 dark:bg-gray-600 rounded-md animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </>
