@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { defaultVocabulary } from './list-vocabulary.ts';
+import { defaultVocabulary } from './voca-data/list-vocabulary.ts';
 
 // ====================================================================
 // 1. CSS (KHÔNG THAY ĐỔI)
