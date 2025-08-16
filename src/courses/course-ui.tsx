@@ -9,7 +9,7 @@ import PracticeListLoadingSkeleton from './course-loading.tsx'; // <<< DÒNG M�
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
 import { QuizAppProvider, useQuizApp } from './course-context.tsx';
-import { fetchPracticeListProgress, claimQuizReward } from '../userDataService.ts';
+import { fetchPracticeListProgress, claimQuizReward } from './course-data-service.ts';
 import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts';
 import { User } from 'firebase/auth';
 
