@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import BOSS_DATA from './boss/bossData.ts';
-import CoinDisplay from './coin-display.tsx';
+import CoinDisplay from './ui/display/coin-display.tsx';
 import { 
     OwnedSkill, 
     SkillBlueprint, 
