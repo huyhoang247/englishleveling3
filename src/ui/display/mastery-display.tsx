@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { dashboardAssets } from './game-assets.ts'; // <-- Chỉ nhập dashboardAssets
+import { dashboardAssets } from '../../game-assets.ts'; // <-- Chỉ nhập dashboardAssets
 
 // Define the props for the MasteryDisplay component
 interface MasteryDisplayProps {
