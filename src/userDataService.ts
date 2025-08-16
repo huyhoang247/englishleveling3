@@ -4,7 +4,7 @@ import {
   getDocs, writeBatch, arrayUnion, onSnapshot, Unsubscribe 
 } from 'firebase/firestore';
 // Import các dữ liệu local cần thiết cho hàm mới
-import quizData from './quiz/quiz-data.ts'; 
+import quizData from './courses/multiple-choice/multiple-data.ts'; 
 import { exampleData } from './example-data.ts';
 import { allWordPairs } from './courses/voca-match/voca-match-data.ts'; // ADDED
 
