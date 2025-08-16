@@ -1,6 +1,6 @@
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import { QuizProvider, useQuiz } from './multiple-context.tsx'; 
-import { useAnimateValue } from '../../useAnimateValue.ts'; 
+import { useAnimateValue } from '../../ui/useAnimateValue.ts'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 import StreakDisplay from '../../ui/display/streak-display.tsx';
