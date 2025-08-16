@@ -5,7 +5,7 @@ import { auth } from '../../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 // --- Centralized Data Imports ---
-import { exampleData } from '../../story/flashcard-data';
+import { exampleData } from '../../story/flashcard-data.ts';
 
 // --- Context and Hook Imports ---
 import { WordChainProvider, useWordChain } from './word-chain-context.tsx';
