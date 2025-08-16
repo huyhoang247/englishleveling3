@@ -4,7 +4,7 @@ import QuizApp from './multiple-choice/multiple-ui.tsx';
 import VocabularyGame from './fill-in-the-blank/fill-blank-ui.tsx';
 import VocaMatchGame from './voca-match/voca-match-ui.tsx';
 import AnalysisDashboard from '../AnalysisDashboard.tsx';
-import WordChainGame from '../word-chain-game.tsx';
+import WordChainGame from './word-chain-game/word-chain-ui.tsx';
 import PracticeListLoadingSkeleton from './course-loading.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
