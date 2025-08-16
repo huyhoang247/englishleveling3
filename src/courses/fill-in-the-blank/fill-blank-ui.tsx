@@ -1,24 +1,24 @@
 // --- START OF FILE: fill-word-home.tsx ---
 
 import React, { useState, useEffect, memo, useMemo, useCallback } from 'react';
-import { auth } from '../firebase.js';
+import { auth } from '../../firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
 // --- NEW: Import Context Provider and Hook ---
 import { FillWordProvider, useFillWord } from './fill-word-context.tsx';
 import FillWordLoadingSkeleton from './FillWordLoadingSkeleton.tsx'; // <<<--- DÒNG IMPORT MỚI
 
-import { defaultImageUrls } from '../image-url.ts';
-import { exampleData } from '../example-data.ts';
-import { phraseData } from '../phrase-data.ts';
+import { defaultImageUrls } from '../../image-url.ts';
+import { exampleData } from '../../example-data.ts';
+import { phraseData } from '../../phrase-data.ts';
 
 import WordSquaresInput from './vocabulary-input.tsx';
 import Confetti from './chuc-mung.tsx';
-import CoinDisplay from '../coin-display.tsx';
+import CoinDisplay from '../../coin-display.tsx';
 import ImageCarousel3D from './image-carousel-3d.tsx';
 import VirtualKeyboard from './keyboard.tsx';
-import MasteryDisplay from '../mastery-display.tsx';
-import StreakDisplay from '../streak-display.tsx';
+import MasteryDisplay from '../../mastery-display.tsx';
+import StreakDisplay from '../../streak-display.tsx';
 
 
 // --- INTERFACES & STATIC COMPONENTS (KHÔNG THAY ĐỔI) ---
