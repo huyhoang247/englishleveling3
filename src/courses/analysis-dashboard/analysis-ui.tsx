@@ -4,7 +4,7 @@ import React, { useState, useMemo, FC, ReactNode, useCallback, memo } from 'reac
 import { User } from 'firebase/auth';
 // [MỚI] Import Provider và custom hook
 import { AnalysisDashboardProvider, useAnalysisDashboard, WordMastery } from './analysis-context.tsx';
-import AnalysisDashboardSkeleton from '.analysis-loading.tsx'; // <<<--- DÒNG IMPORT MỚI
+import AnalysisDashboardSkeleton from './analysis-loading.tsx'; // <<<--- DÒNG IMPORT MỚI
 
 import { 
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
