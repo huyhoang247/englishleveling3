@@ -13,7 +13,7 @@ import React, {
 import { User } from 'firebase/auth';
 import { fetchGameInitialData, recordGameSuccess } from '../course-data-service.ts';
 import { exampleData } from '../../example-data.ts';
-import { useAnimateValue } from '../../useAnimateValue.ts';
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- HELPER FUNCTION (Giả sử bạn đã chuyển nó sang một file utils) ---
 const shuffleArray = <T extends any[]>(array: T): T => { 
