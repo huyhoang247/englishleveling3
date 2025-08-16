@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 import { auth } from '../firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { listenToUserData } from '../userDataService.ts';
+import { listenToUserData } from './course-data-service.ts';
 
 // --- Định nghĩa "hình dạng" của Context ---
 interface QuizAppContextType {
