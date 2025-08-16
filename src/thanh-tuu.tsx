@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import CoinDisplay from './coin-display.tsx';
+import CoinDisplay from './ui/display/coin-display.tsx';
 import { useAchievements } from './contexts/AchievementsContext.tsx';
 import type { VocabularyItem } from './gameDataService.ts';
 
