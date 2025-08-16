@@ -10,14 +10,14 @@ import React, {
     FC,
     ReactNode
 } from 'react';
-import { auth } from '../firebase.js'; 
+import { auth } from '../../firebase.js'; 
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { 
     fetchAnalysisDashboardData, 
     claimDailyMilestoneReward,
     claimVocabMilestoneReward
-} from '../userDataService.ts'; 
-import { defaultVocabulary } from '../list-vocabulary.ts';
+} from '../../userDataService.ts'; 
+import { defaultVocabulary } from '../../list-vocabulary.ts';
 
 // --- TYPE DEFINITIONS (Should be in a shared types file, but kept here for context) ---
 interface LearningActivity { date: string; new: number; review: number; }
