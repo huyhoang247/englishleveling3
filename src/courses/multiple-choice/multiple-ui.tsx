@@ -2,8 +2,8 @@ import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import { QuizProvider, useQuiz } from './multiple-context.tsx'; 
 import { useAnimateValue } from '../../useAnimateValue.ts'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import MasteryDisplay from '../../mastery-display.tsx'; 
-import StreakDisplay from '../../streak-display.tsx';
+import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
+import StreakDisplay from '../../ui/display/streak-display.tsx';
 import Confetti from '../../ui/fireworks-effect.tsx';
 import QuizLoadingSkeleton from './multiple-loading.tsx'; // <<<--- DÒNG IMPORT QUAN TRỌNG ĐÂY!
 
