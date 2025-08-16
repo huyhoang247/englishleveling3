@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import { User } from 'firebase/auth';
 import { WORD_TO_CARD_MAP, Flashcard } from '../../story/flashcard-data.ts';
-import { fetchOrCreateUser, updateUserCoins } from '../../userDataService.ts';
+import { fetchOrCreateUser, updateUserCoins } from '../course-data-service.ts';
 import { useAnimateValue } from '../../useAnimateValue.ts';
 
 // --- Type Definitions ---
