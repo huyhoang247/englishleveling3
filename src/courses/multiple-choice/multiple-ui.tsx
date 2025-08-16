@@ -4,7 +4,7 @@ import { useAnimateValue } from '../../useAnimateValue.ts';
 import CoinDisplay from '../../coin-display.tsx';
 import MasteryDisplay from '../../mastery-display.tsx'; 
 import StreakDisplay from '../../streak-display.tsx';
-import Confetti from '../../fill-word/chuc-mung.tsx';
+import Confetti from '../../ui/fireworks-effect.tsx';
 import QuizLoadingSkeleton from './multiple-loading.tsx'; // <<<--- DÒNG IMPORT QUAN TRỌNG ĐÂY!
 
 // --- PHẦN CODE KHÔNG ĐỔI (Các component con & Icons) ---
