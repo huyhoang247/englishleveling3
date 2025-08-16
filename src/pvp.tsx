@@ -7,7 +7,7 @@ import {
     getActivationChance, 
     getRarityTextColor 
 } from './skill-data.tsx';
-import CoinDisplay from './coin-display.tsx';
+import CoinDisplay from './ui/display/coin-display.tsx';
 import { updateUserCoins } from './gameDataService.ts';
 
 // --- TYPE DEFINITIONS ---
