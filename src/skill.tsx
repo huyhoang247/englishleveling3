@@ -18,7 +18,7 @@ import {
     type SkillBlueprint,
 } from './skill-data.tsx';
 import { uiAssets } from './game-assets.ts';
-import CoinDisplay from './coin-display.tsx';
+import CoinDisplay from './ui/display/coin-display.tsx';
 import RateLimitToast from './thong-bao.tsx'; // Import component từ file thong-bao.tsx
 
 // --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
