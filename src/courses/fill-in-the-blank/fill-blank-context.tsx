@@ -12,8 +12,8 @@ import React, {
 } from 'react';
 import { User } from 'firebase/auth';
 import { fetchGameInitialData, recordGameSuccess } from '../../userDataService.ts';
-import { exampleData } from '../example-data.ts';
-import { useAnimateValue } from '../useAnimateValue.ts';
+import { exampleData } from '../../example-data.ts';
+import { useAnimateValue } from '../../useAnimateValue.ts';
 
 // --- HELPER FUNCTION (Giả sử bạn đã chuyển nó sang một file utils) ---
 const shuffleArray = <T extends any[]>(array: T): T => { 
