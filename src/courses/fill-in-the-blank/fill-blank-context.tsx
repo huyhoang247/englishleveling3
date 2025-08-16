@@ -11,7 +11,7 @@ import React, {
   ReactNode,
 } from 'react';
 import { User } from 'firebase/auth';
-import { fetchGameInitialData, recordGameSuccess } from '../userDataService.ts';
+import { fetchGameInitialData, recordGameSuccess } from '../../userDataService.ts';
 import { exampleData } from '../example-data.ts';
 import { useAnimateValue } from '../useAnimateValue.ts';
 
