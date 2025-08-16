@@ -12,11 +12,11 @@ import { defaultImageUrls } from '../../image-url.ts';
 import { exampleData } from '../../example-data.ts';
 import { phraseData } from '../../phrase-data.ts';
 
-import WordSquaresInput from './vocabulary-input.tsx';
-import Confetti from './chuc-mung.tsx';
+import WordSquaresInput from '../../ui/vocabulary-input.tsx';
+import Confetti from '../../ui/fireworks-effect.tsx';
 import CoinDisplay from '../../coin-display.tsx';
-import ImageCarousel3D from './image-carousel-3d.tsx';
-import VirtualKeyboard from './keyboard.tsx';
+import ImageCarousel3D from '../../ui/image-carousel-3d.tsx';
+import VirtualKeyboard from '../../ui/keyboard.tsx';
 import MasteryDisplay from '../../mastery-display.tsx';
 import StreakDisplay from '../../streak-display.tsx';
 
