@@ -1,5 +1,5 @@
 import React from 'react';
-import { uiAssets } from './game-assets.ts'; // Import from centralized assets file
+import { uiAssets } from '../../game-assets.ts'; // Import from centralized assets file
 
 // Define the props for the CoinDisplay component
 interface CoinDisplayProps {
