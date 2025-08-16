@@ -16,7 +16,7 @@ import {
 import { uiAssets, equipmentUiAssets } from './game-assets.ts';
 
 // *** THAY ĐỔI QUAN TRỌNG: Import trực tiếp CoinDisplay từ file của nó ***
-import CoinDisplay from './coin-display.tsx'; 
+import CoinDisplay from './ui/display/coin-display.tsx'; 
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
