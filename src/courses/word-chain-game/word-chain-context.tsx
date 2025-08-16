@@ -12,7 +12,7 @@ import React, {
 import { User } from 'firebase/auth';
 import { WORD_TO_CARD_MAP, Flashcard } from '../../story/flashcard-data.ts';
 import { fetchOrCreateUser, updateUserCoins } from '../course-data-service.ts';
-import { useAnimateValue } from '../../useAnimateValue.ts';
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- Type Definitions ---
 type GameState = 'loading' | 'playerTurn' | 'aiTurn' | 'gameOver';
