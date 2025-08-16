@@ -12,7 +12,7 @@ import { auth } from '../../firebase.js';
 import { fetchOrCreateUser, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../course-data-service.ts';
 import { allWordPairs, shuffleArray } from './voca-match-data.ts';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
-import detailedMeaningsText from '../../vocabulary-definitions.ts';
+import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
 
 // --- Interfaces ---
 interface Definition {
