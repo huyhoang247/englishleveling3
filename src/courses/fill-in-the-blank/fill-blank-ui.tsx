@@ -14,7 +14,7 @@ import { phraseData } from '../../phrase-data.ts';
 
 import WordSquaresInput from '../../ui/vocabulary-input.tsx';
 import Confetti from '../../ui/fireworks-effect.tsx';
-import CoinDisplay from '../../coin-display.tsx';
+import CoinDisplay from '../../ui/display/coin-display.tsx';
 import ImageCarousel3D from '../../ui/image-carousel-3d.tsx';
 import VirtualKeyboard from '../../ui/keyboard.tsx';
 import MasteryDisplay from '../../mastery-display.tsx';
