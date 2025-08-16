@@ -2,7 +2,7 @@
 
 import { defaultImageUrls as initialDefaultImageUrls } from '../image-url.ts';
 import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
-import { defaultVocabulary } from '../list-vocabulary.ts';
+import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 import { exampleData } from '../example-data.ts';
 
 // --- Interfaces and Data ---
