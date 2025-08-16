@@ -3,7 +3,7 @@ import React, { useMemo, memo, useCallback, useState, useEffect } from 'react';
 import QuizApp from './multiple-choice/multiple-ui.tsx';
 import VocabularyGame from './fill-in-the-blank/fill-blank-ui.tsx';
 import VocaMatchGame from './voca-match/voca-match-ui.tsx';
-import AnalysisDashboard from '../AnalysisDashboard.tsx';
+import AnalysisDashboard from './analysis-dashboard/analysis-ui.tsx';
 import WordChainGame from './word-chain-game/word-chain-ui.tsx';
 import PracticeListLoadingSkeleton from './course-loading.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
 
