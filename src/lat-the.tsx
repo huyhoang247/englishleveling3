@@ -10,7 +10,7 @@ import { uiAssets, treasureAssets } from './game-assets.ts';
 import { defaultImageUrls } from './image-url.ts'; 
 import ImagePreloader from './ImagePreloader.tsx'; 
 import { defaultVocabulary } from './list-vocabulary.ts';
-import CoinDisplay from './coin-display.tsx';
+import CoinDisplay from './ui/display/coin-display.tsx';
 
 // ========================================================================
 // === 1. COMPONENT CSS ĐÃ ĐƯỢỢC ĐÓNG GÓI ================================
