@@ -6,8 +6,8 @@ import VocaMatchLoadingSkeleton from './voca-match-loading.tsx';
 
 // --- UI components and hooks ---
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import MasteryDisplay from '../../mastery-display.tsx';
-import StreakDisplay from '../../streak-display.tsx';
+import MasteryDisplay from '../../ui/display/mastery-display.tsx';
+import StreakDisplay from '../../ui/display/streak-display.tsx';
 
 // --- Interfaces (can be shared or defined here) ---
 interface Definition {
