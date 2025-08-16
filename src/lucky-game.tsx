@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import CoinDisplay from './coin-display.tsx';
+import CoinDisplay from './ui/display/coin-display.tsx';
 
 // SVG Icons
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
