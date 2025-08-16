@@ -4,7 +4,7 @@
 
 // --- START OF FILE building.tsx (6).txt ---
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import CoinDisplay from './coin-display.tsx';
+import CoinDisplay from './ui/display/coin-display.tsx';
 import { uiAssets } from './game-assets.ts'; 
 
 // --- TIỆN ÍCH ---
