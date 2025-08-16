@@ -5,7 +5,7 @@ import { auth } from '../../firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
 // --- NEW: Import Context Provider and Hook ---
-import { FillWordProvider, useFillWord } from './fill-word-context.tsx';
+import { FillWordProvider, useFillWord } from './fill-blank-context.tsx';
 import FillWordLoadingSkeleton from './FillWordLoadingSkeleton.tsx'; // <<<--- DÒNG IMPORT MỚI
 
 import { defaultImageUrls } from '../../image-url.ts';
