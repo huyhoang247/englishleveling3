@@ -10,7 +10,7 @@ import {
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
     Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
-import CoinDisplay from '../../coin-display.tsx';
+import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets, dashboardAssets } from '../../game-assets.ts'; // Import assets
 import MasteryDisplay from '../../mastery-display.tsx'; 
 import { useAnimateValue } from '../../useAnimateValue.ts'; 
