@@ -1,7 +1,7 @@
 // VocaMatchGame.tsx (Refactored to use Context)
 import React, { useMemo } from 'react';
 import { VocaMatchProvider, useVocaMatch } from './voca-match-context.tsx'; // Import context
-import Confetti from '../../fill-word/chuc-mung.tsx';
+import Confetti from '../../ui/fireworks-effect.tsx';
 import VocaMatchLoadingSkeleton from './voca-match-loading.tsx';
 
 // --- UI components and hooks ---
