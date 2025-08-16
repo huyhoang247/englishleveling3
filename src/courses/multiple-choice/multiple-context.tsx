@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { db, auth } from '../../firebase.js';
-import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../../userDataService.ts';
+import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../course-data-service.ts';
 import quizData from './multiple-data.ts';
 import detailedMeaningsText from '../../vocabulary-definitions.ts';
 import { exampleData } from '../../example-data.ts';
