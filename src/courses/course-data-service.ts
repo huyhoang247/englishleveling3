@@ -1,4 +1,4 @@
-import { db } from './firebase';
+import { db } from '../firebase';
 import { 
   doc, getDoc, setDoc, updateDoc, increment, collection, 
   getDocs, writeBatch, arrayUnion, onSnapshot, Unsubscribe 
