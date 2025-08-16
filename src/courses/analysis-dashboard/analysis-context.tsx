@@ -16,7 +16,7 @@ import {
     fetchAnalysisDashboardData, 
     claimDailyMilestoneReward,
     claimVocabMilestoneReward
-} from './course-đata-service.ts'; 
+} from '../course-đata-service.ts'; 
 import { defaultVocabulary } from '../../list-vocabulary.ts';
 
 // --- TYPE DEFINITIONS (Should be in a shared types file, but kept here for context) ---
