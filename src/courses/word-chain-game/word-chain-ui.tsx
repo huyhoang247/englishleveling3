@@ -12,7 +12,7 @@ import { WordChainProvider, useWordChain } from './word-chain-context.tsx';
 
 // --- Component Imports ---
 import FlashcardDetailModal from '../../story/flashcard.tsx';
-import CoinDisplay from '../../coin-display.tsx';
+import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../mastery-display.tsx';
 
 // --- Icons (Giữ nguyên) ---
