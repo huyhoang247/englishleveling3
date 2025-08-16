@@ -9,7 +9,7 @@ import React, {
   ReactNode,
 } from 'react';
 import { auth } from '../../firebase.js';
-import { fetchOrCreateUser, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../../userDataService.ts';
+import { fetchOrCreateUser, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../course-data-service.ts';
 import { allWordPairs, shuffleArray } from './voca-match-data.ts';
 import { useAnimateValue } from '../../useAnimateValue.ts';
 import detailedMeaningsText from '../../vocabulary-definitions.ts';
