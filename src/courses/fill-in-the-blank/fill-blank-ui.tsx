@@ -17,8 +17,8 @@ import Confetti from '../../ui/fireworks-effect.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import ImageCarousel3D from '../../ui/image-carousel-3d.tsx';
 import VirtualKeyboard from '../../ui/keyboard.tsx';
-import MasteryDisplay from '../../mastery-display.tsx';
-import StreakDisplay from '../../streak-display.tsx';
+import MasteryDisplay from '../../ui/display/mastery-display.tsx';
+import StreakDisplay from '../../ui/display/streak-display.tsx';
 
 
 // --- INTERFACES & STATIC COMPONENTS (KHÔNG THAY ĐỔI) ---
