@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import CoinDisplay from './coin-display.tsx'; // Import the CoinDisplay component
+import CoinDisplay from './ui/display/coin-display.tsx'; // Import the CoinDisplay component
 import { uiAssets } from './game-assets.ts'; // IMPORT TÀI NGUYÊN TẬP TRUNG
 
 // --- ICONS ---
