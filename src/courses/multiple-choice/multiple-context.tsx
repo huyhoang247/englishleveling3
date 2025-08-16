@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { db, auth } from '../../firebase.js';
 import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../course-data-service.ts';
 import quizData from './multiple-data.ts';
-import detailedMeaningsText from '../../vocabulary-definitions.ts';
+import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
 import { exampleData } from '../../example-data.ts';
 import { defaultVocabulary } from '../../list-vocabulary.ts';
 import { generateAudioQuizQuestions } from '../../audio-quiz-generator.ts';
