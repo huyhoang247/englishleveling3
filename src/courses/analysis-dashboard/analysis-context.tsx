@@ -17,7 +17,7 @@ import {
     claimDailyMilestoneReward,
     claimVocabMilestoneReward
 } from '../course-data-service.ts'; 
-import { defaultVocabulary } from '../../list-vocabulary.ts';
+import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
 
 // --- TYPE DEFINITIONS (Should be in a shared types file, but kept here for context) ---
 interface LearningActivity { date: string; new: number; review: number; }
