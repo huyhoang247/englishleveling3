@@ -1,7 +1,7 @@
 // --- START OF FILE: src/flashcard-data.ts ---
 
 import { defaultImageUrls as initialDefaultImageUrls } from '../image-url.ts';
-import detailedMeaningsText from '../vocabulary-definitions.ts';
+import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
 import { defaultVocabulary } from '../list-vocabulary.ts';
 import { exampleData } from '../example-data.ts';
 
