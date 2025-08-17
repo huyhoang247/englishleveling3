@@ -21,7 +21,7 @@ const AchievementsLoadingSkeleton: React.FC = () => {
 
         {/* Skeleton cho nút "Nhận Tất Cả" */}
         <div className="mb-6 flex justify-center">
-          <div className="h-[68px] w-full max-w-md bg-slate-800/80 border border-slate-700 rounded-xl animate-pulse"></div>
+          <div className="h-16 w-full max-w-md bg-slate-800/80 border border-slate-700 rounded-xl animate-pulse"></div>
         </div>
 
         {/* Skeleton cho danh sách thành tựu */}
@@ -45,8 +45,8 @@ const AchievementsLoadingSkeleton: React.FC = () => {
                 <div className="col-span-10 md:col-span-3 space-y-2"><div className="h-5 w-3/4 bg-slate-700 rounded animate-pulse"></div><div className="h-3 w-1/4 bg-slate-700 rounded animate-pulse"></div></div>
                 {/* Progress Bar */}
                 <div className="col-span-12 md:col-span-3 md:px-2 space-y-2"><div className="h-3 w-full bg-slate-700 rounded-full animate-pulse"></div><div className="h-3 w-1/3 bg-slate-700 rounded ml-auto animate-pulse"></div></div>
-                {/* Reward */}
-                <div className="col-span-6 md:col-span-3 flex justify-center"><div className="h-10 w-full max-w-[180px] bg-slate-700 rounded-xl animate-pulse"></div></div>
+                {/* Reward (FIXED: Added items-center) */}
+                <div className="col-span-6 md:col-span-3 flex items-center justify-center"><div className="h-10 w-full max-w-[180px] bg-slate-700 rounded-xl animate-pulse"></div></div>
                 {/* Claim Button */}
                 <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"><div className="h-10 w-24 bg-slate-700 rounded-lg animate-pulse"></div></div>
               </div>
@@ -55,12 +55,13 @@ const AchievementsLoadingSkeleton: React.FC = () => {
         </main>
         
         {/* Skeleton cho Phân trang */}
-        <div className="mt-6 mb-4 flex items-center justify-center gap-2">
-            <div className="w-10 h-10 p-2 bg-slate-800/80 border border-slate-700 rounded-lg animate-pulse"></div>
-            <div className="w-10 h-10 bg-slate-800/80 border border-slate-700 rounded-lg animate-pulse"></div>
-            <div className="w-10 h-10 bg-slate-800/80 border border-slate-700 rounded-lg animate-pulse"></div>
-            <div className="w-10 h-10 hidden sm:block bg-slate-800/80 border border-slate-700 rounded-lg animate-pulse"></div>
-            <div className="w-10 h-10 p-2 bg-slate-800/80 border border-slate-700 rounded-lg animate-pulse"></div>
+        <div className="mt-6 mb-4 flex items-center justify-center gap-1 sm:gap-2">
+            {/* FIXED: Responsive sizing */}
+            <div className="w-9 h-9 sm:w-10 sm:h-10 p-2 bg-slate-800/80 border border-slate-700 rounded-lg animate-pulse"></div>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-slate-800/80 border border-slate-700 rounded-lg animate-pulse"></div>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-slate-800/80 border border-slate-700 rounded-lg animate-pulse"></div>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 hidden sm:block bg-slate-800/80 border border-slate-700 rounded-lg animate-pulse"></div>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 p-2 bg-slate-800/80 border border-slate-700 rounded-lg animate-pulse"></div>
         </div>
       </div>
     </div>
