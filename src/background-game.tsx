@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx (FULL CODE - UPDATED) ---
+// --- START OF FILE background-game.tsx ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -502,17 +502,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           .filter((skill): skill is OwnedSkill & SkillBlueprint => skill !== null);
   };
 
-  const handleDataChangedFromChest = (updates: { coinsChange: number; gemsChange: number; vocabAdded: number }) => {
-      if (updates.coinsChange !== 0) {
-        setCoins(prev => prev + updates.coinsChange);
+  // --- UPDATED: Handler for VocabularyChestScreen data changes ---
+  // This function receives the DELTA (change) from the child component
+  // and applies it to the main game state. This keeps the parent's state
+  // in sync with the self-managed state of the child component.
+  const handleDataChangedFromChest = (updates: { coinsChange?: number; gemsChange?: number; vocabAdded?: number }) => {
+      if (updates.coinsChange) {
+          setCoins(prev => prev + (updates.coinsChange || 0));
       }
-      if (updates.gemsChange !== 0) {
-        setGems(prev => prev + updates.gemsChange);
+      if (updates.gemsChange) {
+          setGems(prev => prev + (updates.gemsChange || 0));
       }
-      if (updates.vocabAdded !== 0) {
-        setTotalVocabCollected(prev => prev + updates.vocabAdded);
+      if (updates.vocabAdded) {
+          setTotalVocabCollected(prev => prev + (updates.vocabAdded || 0));
       }
-      console.log("Master game state updated from chest:", updates);
   };
 
   const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => {
@@ -562,9 +565,21 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <ErrorBoundary>{isBossBattleOpen && auth.currentUser && (<BossBattle onClose={toggleBossBattle} playerInitialStats={getPlayerBattleStats()} onBattleEnd={async (result, rewards) => { if (result === 'win' && auth.currentUser) setCoins(await updateUserCoins(auth.currentUser.uid, rewards.coins)); }} initialFloor={bossBattleHighestFloor} onFloorComplete={handleBossFloorUpdate} equippedSkills={getEquippedSkillsDetails()} displayedCoins={displayedCoins} />)}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} onPurchase={handleShopPurchase} currentUser={auth.currentUser} />}</ErrorBoundary> </div>
+        
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> 
-            <ErrorBoundary>{isVocabularyChestOpen && currentUser && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} initialCoins={coins} initialGems={gems} initialTotalVocab={totalVocabCollected} initialCardCapacity={cardCapacity} onDataChanged={handleDataChangedFromChest} />)}</ErrorBoundary> 
+            <ErrorBoundary>{isVocabularyChestOpen && currentUser && (
+                <VocabularyChestScreen 
+                    onClose={toggleVocabularyChest} 
+                    currentUserId={currentUser.uid} 
+                    initialCoins={coins} 
+                    initialGems={gems} 
+                    initialTotalVocab={totalVocabCollected} 
+                    initialCardCapacity={cardCapacity} 
+                    onDataChanged={handleDataChangedFromChest} 
+                />
+            )}</ErrorBoundary> 
         </div>
+
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isAchievementsOpen && (<AchievementsScreen user={auth.currentUser} onClose={toggleAchievements} onDataUpdate={handleAchievementsDataUpdate} />)}</ErrorBoundary>
         </div>
@@ -586,3 +601,5 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
+
+// --- END OF FILE background-game.tsx ---
