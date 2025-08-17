@@ -1,9 +1,17 @@
-// src/AchievementsContext.tsx
+// --- START OF FILE achievement-context.tsx ---
 
-import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode, useMemo } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+  ReactNode,
+  useMemo
+} from 'react';
 import { User } from 'firebase/auth';
-import { 
-  fetchOrCreateUserGameData, 
+import {
+  fetchOrCreateUserGameData,
   fetchAndSyncVocabularyData,
   updateAchievementData,
   VocabularyItem
@@ -42,13 +50,13 @@ export const AchievementsProvider = ({ children, user }: AchievementsProviderPro
   const [masteryCards, setMasteryCards] = useState(0);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  
+
   // Hàm tải/làm mới dữ liệu chính
   const loadData = useCallback(async (userId: string) => {
     try {
       const gameDataPromise = fetchOrCreateUserGameData(userId);
       const vocabDataPromise = fetchAndSyncVocabularyData(userId);
-      
+
       const [gameData, vocabData] = await Promise.all([gameDataPromise, vocabDataPromise]);
 
       setCoins(gameData.coins);
@@ -57,7 +65,6 @@ export const AchievementsProvider = ({ children, user }: AchievementsProviderPro
 
     } catch (error) {
       console.error("Failed to load achievements data in context:", error);
-      // Đặt lại state về rỗng/0 để tránh hiển thị dữ liệu cũ/sai
       setVocabulary([]);
       setCoins(0);
       setMasteryCards(0);
@@ -70,7 +77,6 @@ export const AchievementsProvider = ({ children, user }: AchievementsProviderPro
       setIsInitialLoading(true);
       loadData(user.uid).finally(() => setIsInitialLoading(false));
     } else {
-      // Reset state khi logout hoặc không có user
       setIsInitialLoading(true);
       setVocabulary([]);
       setCoins(0);
@@ -89,15 +95,14 @@ export const AchievementsProvider = ({ children, user }: AchievementsProviderPro
     const goldReward = itemToClaim.level * 100;
     const masteryCardReward = 1;
 
-    // Tạo danh sách mới dựa trên logic nhận thưởng
     const updatedList = vocabulary.map(item => {
       if (item.id === id) {
         const newLevel = item.level + 1;
-        return { 
-          ...item, 
-          level: newLevel, 
-          exp: item.exp - item.maxExp, 
-          maxExp: newLevel * 100 
+        return {
+          ...item,
+          level: newLevel,
+          exp: item.exp - item.maxExp,
+          maxExp: newLevel * 100
         };
       }
       return item;
@@ -110,15 +115,13 @@ export const AchievementsProvider = ({ children, user }: AchievementsProviderPro
         newVocabularyData: updatedList,
       });
 
-      // Cập nhật state với dữ liệu chính xác từ server sau khi thành công
       setVocabulary(updatedList);
       setCoins(newCoins);
       setMasteryCards(newMasteryCards);
 
     } catch (error) {
       console.error("Failed to claim single achievement, re-syncing data:", error);
-      // Nếu có lỗi, tải lại toàn bộ dữ liệu để đảm bảo đồng bộ
-      await loadData(user.uid); 
+      await loadData(user.uid);
     } finally {
       setIsUpdating(false);
     }
@@ -127,7 +130,7 @@ export const AchievementsProvider = ({ children, user }: AchievementsProviderPro
   // Hàm nhận tất cả phần thưởng
   const claimAllAchievements = useCallback(async () => {
     if (isUpdating || !user?.uid) return;
-    
+
     const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
     if (claimableItems.length === 0) return;
 
@@ -142,11 +145,11 @@ export const AchievementsProvider = ({ children, user }: AchievementsProviderPro
         totalGoldReward += item.level * 100;
         totalMasteryCardReward += 1;
         const newLevel = item.level + 1;
-        return { 
-          ...item, 
-          level: newLevel, 
-          exp: item.exp - item.maxExp, 
-          maxExp: newLevel * 100 
+        return {
+          ...item,
+          level: newLevel,
+          exp: item.exp - item.maxExp,
+          maxExp: newLevel * 100
         };
       }
       return item;
@@ -158,7 +161,6 @@ export const AchievementsProvider = ({ children, user }: AchievementsProviderPro
         cardsToAdd: totalMasteryCardReward,
         newVocabularyData: updatedList,
       });
-      // Cập nhật state với dữ liệu chính xác từ server
       setVocabulary(updatedList);
       setCoins(newCoins);
       setMasteryCards(newMasteryCards);
@@ -169,15 +171,15 @@ export const AchievementsProvider = ({ children, user }: AchievementsProviderPro
       setIsUpdating(false);
     }
   }, [vocabulary, user, isUpdating, loadData]);
-  
-  // Hàm làm mới dữ liệu thủ công (ví dụ: cho nút refresh)
-  const refreshData = async () => {
+
+  // <<<--- THAY ĐỔI: Bọc hàm trong useCallback để ổn định tham chiếu ---
+  const refreshData = useCallback(async () => {
     if (user?.uid && !isUpdating) {
-        setIsUpdating(true); // Có thể dùng isUpdating để hiển thị loading
+        setIsUpdating(true);
         await loadData(user.uid);
         setIsUpdating(false);
     }
-  };
+  }, [user, isUpdating, loadData]);
 
   // Tính toán phần thưởng có thể nhận, chỉ tính lại khi vocabulary thay đổi
   const totalClaimableRewards = useMemo(() => {
@@ -186,9 +188,11 @@ export const AchievementsProvider = ({ children, user }: AchievementsProviderPro
     const masteryCards = claimableItems.length;
     return { gold, masteryCards };
   }, [vocabulary]);
-  
-  // Giá trị được cung cấp cho các component con
-  const value = {
+
+  // <<<--- THAY ĐỔI QUAN TRỌNG: Bọc giá trị của context trong useMemo ---
+  // Điều này ngăn chặn việc re-render không cần thiết ở các component con
+  // khi không có giá trị nào thực sự thay đổi.
+  const value = useMemo(() => ({
     vocabulary,
     coins,
     masteryCards,
@@ -198,7 +202,17 @@ export const AchievementsProvider = ({ children, user }: AchievementsProviderPro
     claimAllAchievements,
     refreshData,
     totalClaimableRewards,
-  };
+  }), [
+    vocabulary,
+    coins,
+    masteryCards,
+    isInitialLoading,
+    isUpdating,
+    claimAchievement,
+    claimAllAchievements,
+    refreshData,
+    totalClaimableRewards
+  ]);
 
   return (
     <AchievementsContext.Provider value={value}>
