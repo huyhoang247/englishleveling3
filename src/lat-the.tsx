@@ -13,6 +13,8 @@ import CoinDisplay from './ui/display/coin-display.tsx';
 import CardCapacityDisplay from './ui/display/card-capacity-display.tsx'; // TÁCH COMPONENT
 // --- REFACTORED: Import service để tự quản lý logic ---
 import { processVocabularyChestOpening } from './gameDataService.ts'; 
+// --- REFACTORED: Import hook animate số đếm ---
+import { useAnimateValue } from './ui/useAnimateValue.ts';
 
 // ========================================================================
 // === 1. COMPONENT CSS ĐÃ ĐƯỢỢC ĐÓNG GÓI ================================
@@ -330,6 +332,12 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [localGems, setLocalGems] = useState(initialGems);
     const [localTotalVocab, setLocalTotalVocab] = useState(initialTotalVocab);
     
+    // --- REFACTORED: Thêm hook để animate giá trị tiền tệ ---
+    // State `localCoins` và `localGems` vẫn là "nguồn chân lý" (source of truth).
+    // Các giá trị `animated...` này sẽ đuổi theo giá trị thật để tạo hiệu ứng.
+    const animatedCoins = useAnimateValue(localCoins, 500);
+    const animatedGems = useAnimateValue(localGems, 500);
+
     useEffect(() => { setLocalCoins(initialCoins); setLocalGems(initialGems); setLocalTotalVocab(initialTotalVocab); }, [initialCoins, initialGems, initialTotalVocab, currentUserId]);
 
     useEffect(() => {
@@ -455,12 +463,14 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                         <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                             <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                             <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={16} color="#a78bfa" className="relative z-20" /></div>
-                            <div className="font-bold text-purple-200 text-xs tracking-wide">{localGems.toLocaleString()}</div>
+                            {/* --- REFACTORED: Hiển thị giá trị gem đã được animate --- */}
+                            <div className="font-bold text-purple-200 text-xs tracking-wide">{Math.round(animatedGems).toLocaleString()}</div>
                             <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"><span className="text-white font-bold text-xs">+</span></div>
                             <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
                             <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                         </div>
-                        <CoinDisplay displayedCoins={localCoins} isStatsFullscreen={false} />
+                        {/* --- REFACTORED: Truyền giá trị coin đã được animate vào component con --- */}
+                        <CoinDisplay displayedCoins={Math.round(animatedCoins)} isStatsFullscreen={false} />
                     </div>
                 </header>
             )}
