@@ -9,7 +9,7 @@ import { FillWordProvider, useFillWord } from './fill-blank-context.tsx';
 import FillWordLoadingSkeleton from './fill-blank-loading.tsx'; // <<<--- DÒNG IMPORT MỚI
 
 import { defaultImageUrls } from '../../image-url.ts';
-import { exampleData } from '../../example-data.ts';
+import { exampleData } from '../../voca-data/example-data.ts';
 import { phraseData } from '../../phrase-data.ts';
 
 import WordSquaresInput from '../../ui/vocabulary-input.tsx';
