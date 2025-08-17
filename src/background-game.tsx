@@ -502,10 +502,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           .filter((skill): skill is OwnedSkill & SkillBlueprint => skill !== null);
   };
 
-  const handleDataChangedFromChest = (updates: { coinsChange?: number; gemsChange?: number; vocabAdded?: number }) => {
-      if (updates.coinsChange) setCoins(prev => prev + updates.coinsChange);
-      if (updates.gemsChange) setGems(prev => prev + updates.gemsChange);
-      if (updates.vocabAdded) setTotalVocabCollected(prev => prev + updates.vocabAdded);
+  const handleDataChangedFromChest = (updates: { coinsChange: number; gemsChange: number; vocabAdded: number }) => {
+      if (updates.coinsChange !== 0) {
+        setCoins(prev => prev + updates.coinsChange);
+      }
+      if (updates.gemsChange !== 0) {
+        setGems(prev => prev + updates.gemsChange);
+      }
+      if (updates.vocabAdded !== 0) {
+        setTotalVocabCollected(prev => prev + updates.vocabAdded);
+      }
+      console.log("Master game state updated from chest:", updates);
   };
 
   const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => {
