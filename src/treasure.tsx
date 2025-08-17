@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 // Import the image URLs list
-import { defaultImageUrls } from './image-url.ts'; // Adjust the path if necessary
+import { defaultImageUrls } from './voca-data/image-url.ts'; // Adjust the path if necessary
 
 // NEW: Import treasure assets
 import { treasureAssets } from './game-assets.ts'; // Adjust path if necessary
