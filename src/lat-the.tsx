@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { db } from './firebase.js'; 
-import { doc, setDoc, updateDoc, collection, getDocs, writeBatch, increment } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
 // -- BƯỚC 1: IMPORT TÀI NGUYÊN TẬP TRUNG --
 import { uiAssets, treasureAssets } from './game-assets.ts'; 
@@ -11,7 +11,7 @@ import ImagePreloader from './ImagePreloader.tsx';
 import { defaultVocabulary } from './voca-data/list-vocabulary.ts';
 import CoinDisplay from './ui/display/coin-display.tsx';
 // --- REFACTORED: Import service để tự quản lý logic ---
-import { updateUserCoins, updateUserGems } from './gameDataService.ts'; 
+import { processVocabularyChestOpening } from './gameDataService.ts'; 
 
 // ========================================================================
 // === 1. COMPONENT CSS ĐÃ ĐƯỢỢC ĐÓNG GÓI ================================
@@ -218,119 +218,67 @@ const ScopedStyles = () => (
 // === 2. CÁC COMPONENT CON VÀ DATA =======================================
 // ========================================================================
 
-interface GemIconProps {
-  size?: number;
-  color?: string;
-  className?: string;
-  [key: string]: any;
-}
+interface GemIconProps { size?: number; color?: string; className?: string; [key: string]: any; }
 const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => {
   return (
     <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
-      <img
-        src={uiAssets.gemIcon}
-        alt="Tourmaline Gem Icon"
-        className="w-full h-full object-contain"
-      />
+      <img src={uiAssets.gemIcon} alt="Tourmaline Gem Icon" className="w-full h-full object-contain" />
     </div>
   );
 };
-
 const HomeIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
         <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
     </svg>
 );
-
 const CardCapacityDisplay = ({ current, max }: { current: number; max: number }) => (
     <div 
         className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg p-0.5 flex items-center shadow-lg border border-slate-600 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"
         title="Nâng cấp sức chứa thẻ"
     >
         <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-blue-500/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-        
-        <div className="relative mr-1 flex items-center justify-center">
-            <img src={uiAssets.cardCapacityIcon} alt="Sức chứa thẻ" className="w-4 h-4" />
-        </div>
-
+        <div className="relative mr-1 flex items-center justify-center"><img src={uiAssets.cardCapacityIcon} alt="Sức chứa thẻ" className="w-4 h-4" /></div>
         <div className="font-bold text-white text-xs tracking-wide">
             {current.toLocaleString()}
-            <span className="text-slate-400/80 font-medium opacity-90">
-                 / {max.toLocaleString()}
-            </span>
+            <span className="text-slate-400/80 font-medium opacity-90"> / {max.toLocaleString()}</span>
         </div>
-
-        <div className="ml-1 w-3 h-3 bg-gradient-to-br from-slate-700 to-slate-800 rounded-full flex items-center justify-center cursor-pointer border border-slate-500 shadow-inner hover:shadow-blue-500/50 hover:scale-110 transition-all duration-200">
-            <span className="text-white font-bold text-xs">+</span>
-        </div>
-
+        <div className="ml-1 w-3 h-3 bg-gradient-to-br from-slate-700 to-slate-800 rounded-full flex items-center justify-center cursor-pointer border border-slate-500 shadow-inner hover:shadow-blue-500/50 hover:scale-110 transition-all duration-200"><span className="text-white font-bold text-xs">+</span></div>
         <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
         <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-blue-400 rounded-full animate-pulse-fast"></div>
     </div>
 );
-
-
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
     if (!isVisible) return null;
-    return (
-        <div className="loading-spinner-container">
-            <div className="loading-spinner"></div>
-            <p className="loading-text">Loading...</p>
-        </div>
-    );
+    return ( <div className="loading-spinner-container"><div className="loading-spinner"></div><p className="loading-text">Loading...</p></div> );
 };
-
 interface ImageCard { id: number; url: string; }
-
 const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, isFlipping: boolean, flipDelay: number }) => (
     <div className={`card-container ${isFlipping ? 'is-flipping' : ''}`}>
         <div className="card-inner" style={{ animationDelay: `${flipDelay}ms` }}>
             <div className="card-face card-back">?</div>
-            <div className="card-face card-front">
-                <img src={cardData.url} alt={`Revealed content ${cardData.id}`} className="card-image-in-card" />
-            </div>
+            <div className="card-face card-front"><img src={cardData.url} alt={`Revealed content ${cardData.id}`} className="card-image-in-card" /></div>
         </div>
     </div>
 ));
-
 const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => {
     const [isFlipping, setIsFlipping] = useState(false);
     const [isProcessing, setIsProcessing] = useState(true);
-
     useEffect(() => {
         const t1 = setTimeout(() => setIsFlipping(true), 300);
         const t2 = setTimeout(() => setIsProcessing(false), 300 + 800);
         return () => { clearTimeout(t1); clearTimeout(t2); };
     }, [card]);
-
-    const handleOpenAgain = () => {
-        if (isProcessing) return;
-        setIsProcessing(true);
-        setIsFlipping(false);
-        setTimeout(() => { onOpenAgain(); }, 300);
-    }
-
+    const handleOpenAgain = () => { if (isProcessing) return; setIsProcessing(true); setIsFlipping(false); setTimeout(() => { onOpenAgain(); }, 300); }
     return (
         <>
-            <div style={{ textAlign: 'center' }}>
-                <div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw' }}>
-                    <Card cardData={card} isFlipping={isFlipping} flipDelay={0} />
-                </div>
-            </div>
-            <div className="overlay-footer">
-                <button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>
-                    {isProcessing ? 'Đang mở...' : 'Mở Lại'}
-                </button>
-                <button onClick={onClose} className="footer-btn">Đóng</button>
-            </div>
+            <div style={{ textAlign: 'center' }}><div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw' }}><Card cardData={card} isFlipping={isFlipping} flipDelay={0} /></div></div>
+            <div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>{isProcessing ? 'Đang mở...' : 'Mở Lại'}</button><button onClick={onClose} className="footer-btn">Đóng</button></div>
         </>
     );
 };
-
 const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => {
     const [startFlipping, setStartFlipping] = useState(false);
     const [phase, setPhase] = useState('DEALING');
-
     const startRound = useCallback(() => {
         setPhase('DEALING');
         setStartFlipping(false);
@@ -342,16 +290,8 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
             setTimeout(() => setPhase('REVEALED'), totalFlipTime);
         }, totalDealTime);
     }, [cards.length]);
-
-    useEffect(() => {
-        if (cards.length > 0) startRound();
-    }, [cards, startRound]);
-
-    const handleOpenAgain = () => {
-        if (phase !== 'REVEALED') return;
-        onOpenAgain();
-    };
-
+    useEffect(() => { if (cards.length > 0) startRound(); }, [cards, startRound]);
+    const handleOpenAgain = () => { if (phase !== 'REVEALED') return; onOpenAgain(); };
     const btnProps = (() => {
         switch (phase) {
             case 'DEALING': return { text: 'Đang chia bài...', disabled: true };
@@ -360,111 +300,38 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
             default: return { text: '', disabled: true };
         }
     })();
-
     return (
         <>
-            <div style={{ textAlign: 'center' }}>
-                <div className="four-card-grid-container">
-                    {cards.map((card, index) => (
-                        <div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}>
-                            <Card cardData={card} isFlipping={startFlipping} flipDelay={index * 200} />
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <div className="overlay-footer">
-                <button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button>
-                <button onClick={onClose} className="footer-btn">Đóng</button>
-            </div>
+            <div style={{ textAlign: 'center' }}><div className="four-card-grid-container">{cards.map((card, index) => (<div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}><Card cardData={card} isFlipping={startFlipping} flipDelay={index * 200} /></div>))}</div></div>
+            <div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button><button onClick={onClose} className="footer-btn">Đóng</button></div>
         </>
     );
 };
-
 interface ChestUIProps { headerTitle: string; levelName: string | null; imageUrl: string; infoText: React.ReactNode; price1: number | string; price10: number | null; priceIconUrl: string; onOpen1: () => void; onOpen10: () => void; isComingSoon: boolean; remainingCount: number; }
-
 const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, infoText, price1, price10, priceIconUrl, onOpen1, onOpen10, isComingSoon, remainingCount }) => {
     return (
         <div className={`chest-ui-container ${isComingSoon ? 'is-coming-soon' : ''}`}>
             <header className="chest-header">{headerTitle}</header>
             <main className="chest-body">
-                <div className="chest-top-section">
-                    <div className="chest-level-info">
-                        {levelName && !isComingSoon && <button className="chest-help-icon" title="Thông tin">?</button>}
-                        {levelName && <span className="chest-level-name">{levelName}</span>}
-                    </div>
-                    
-                    <p className="remaining-count-text">
-                        {isComingSoon 
-                            ? "Sắp ra mắt" 
-                            : <>Còn lại: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> thẻ</>
-                        }
-                    </p>
-                </div>
-                
-                <div className="chest-visual-row">
-                    <img src={imageUrl} alt={headerTitle} className="chest-image" />
-                    <div className="info-bubble">{infoText}</div>
-                </div>
-                                
-                <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '15px' }}>
-                    <button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}>
-                        <span>Mở x1</span>
-                        {typeof price1 === 'number' && (
-                           <span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price1.toLocaleString()}</span>
-                        )}
-                    </button>
-                    {price10 !== null && (
-                        <button className="chest-button btn-get-10" onClick={onOpen10} disabled={isComingSoon || remainingCount < 4}>
-                            <span>Mở x4</span>
-                            <span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price10.toLocaleString()}</span>
-                        </button>
-                    )}
-                </div>
+                <div className="chest-top-section"><div className="chest-level-info">{levelName && !isComingSoon && <button className="chest-help-icon" title="Thông tin">?</button>}{levelName && <span className="chest-level-name">{levelName}</span>}</div><p className="remaining-count-text">{isComingSoon ? "Sắp ra mắt" : <>Còn lại: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> thẻ</>}</p></div>
+                <div className="chest-visual-row"><img src={imageUrl} alt={headerTitle} className="chest-image" /><div className="info-bubble">{infoText}</div></div>
+                <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '15px' }}><button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}><span>Mở x1</span>{typeof price1 === 'number' && (<span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price1.toLocaleString()}</span>)}</button>{price10 !== null && (<button className="chest-button btn-get-10" onClick={onOpen10} disabled={isComingSoon || remainingCount < 4}><span>Mở x4</span><span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price10.toLocaleString()}</span></button>)}</div>
             </main>
         </div>
     );
 };
-
-const CHEST_DEFINITIONS = {
-    basic: { id: 'basic_vocab_chest', currency: 'gold' as const, chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: treasureAssets.chestBasic, infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 1200, isComingSoon: false, range: [0, 2399] as const, },
-    elementary: { id: 'elementary_vocab_chest', currency: 'gem' as const, chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: treasureAssets.chestElementary, infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 10, price10: 40, isComingSoon: false, range: [2400, 4099] as const, },
-    intermediate: { id: 'intermediate_vocab_chest', currency: 'gem' as const, chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: treasureAssets.chestIntermediate, infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 10, price10: 40, isComingSoon: false, range: [4100, 6499] as const, },
-    advanced: { id: 'advanced_vocab_chest', currency: 'gem' as const, chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: treasureAssets.chestAdvanced, infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 10, price10: 40, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, },
-    master: { id: 'master_vocab_chest', currency: 'gem' as const, chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: treasureAssets.chestMaster, infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, price1: 0, price10: 0, isComingSoon: true, range: [null, null] as const, },
-};
-
+const CHEST_DEFINITIONS = { basic: { id: 'basic_vocab_chest', currency: 'gold' as const, chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: treasureAssets.chestBasic, infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 1200, isComingSoon: false, range: [0, 2399] as const, }, elementary: { id: 'elementary_vocab_chest', currency: 'gem' as const, chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: treasureAssets.chestElementary, infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 10, price10: 40, isComingSoon: false, range: [2400, 4099] as const, }, intermediate: { id: 'intermediate_vocab_chest', currency: 'gem' as const, chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: treasureAssets.chestIntermediate, infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 10, price10: 40, isComingSoon: false, range: [4100, 6499] as const, }, advanced: { id: 'advanced_vocab_chest', currency: 'gem' as const, chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: treasureAssets.chestAdvanced, infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 10, price10: 40, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, }, master: { id: 'master_vocab_chest', currency: 'gem' as const, chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: treasureAssets.chestMaster, infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, price1: 0, price10: 0, isComingSoon: true, range: [null, null] as const, }, };
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
 // ========================================================================
 // === 3. COMPONENT CHÍNH (ĐÃ TÁI CẤU TRÚC) ===============================
 // ========================================================================
-
-// --- REFACTORED: Props interface được đơn giản hóa ---
-interface VocabularyChestScreenProps { 
-    onClose: () => void; 
-    currentUserId: string;
-    
-    // Dữ liệu ban đầu để hiển thị
-    initialCoins: number; 
-    initialGems: number;
-    initialTotalVocab: number;
-    initialCardCapacity: number;
-
-    // Callback duy nhất để báo cho cha biết dữ liệu đã thay đổi
-    onDataChanged: (updates: { 
-        coinsChange?: number; 
-        gemsChange?: number; 
-        vocabAdded?: number 
-    }) => void;
-}
-
+interface VocabularyChestScreenProps { onClose: () => void; currentUserId: string; initialCoins: number; initialGems: number; initialTotalVocab: number; initialCardCapacity: number; onDataChanged: (updates: { coinsChange?: number; gemsChange?: number; vocabAdded?: number }) => void; }
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced' | 'master';
 const PRELOAD_POOL_SIZE = 20;
 const GEM_REWARD_PER_CARD = 1;
 
-const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ 
-    onClose, currentUserId, initialCoins, initialGems, initialTotalVocab, initialCardCapacity, onDataChanged 
-}) => {
+const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, initialCoins, initialGems, initialTotalVocab, initialCardCapacity, onDataChanged }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [], master: [] });
     const [preloadPool, setPreloadPool] = useState<number[]>([]);
@@ -473,27 +340,17 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({
     const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
     const [isProcessingClick, setIsProcessingClick] = useState(false);
     const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType, price: number } | null>(null);
-
-    // --- REFACTORED: Quản lý state cục bộ để UI phản hồi ngay lập tức ---
     const [localCoins, setLocalCoins] = useState(initialCoins);
     const [localGems, setLocalGems] = useState(initialGems);
     const [localTotalVocab, setLocalTotalVocab] = useState(initialTotalVocab);
     
-    // Đồng bộ state cục bộ nếu props ban đầu thay đổi
-    useEffect(() => {
-        setLocalCoins(initialCoins);
-        setLocalGems(initialGems);
-        setLocalTotalVocab(initialTotalVocab);
-    }, [initialCoins, initialGems, initialTotalVocab, currentUserId]);
+    useEffect(() => { setLocalCoins(initialCoins); setLocalGems(initialGems); setLocalTotalVocab(initialTotalVocab); }, [initialCoins, initialGems, initialTotalVocab, currentUserId]);
 
     useEffect(() => {
         const fetchOpenedItems = async () => {
             setIsLoading(true);
             try {
-                const totalVocab = defaultVocabulary.length;
-                const totalImages = defaultImageUrls.length;
-                const totalItems = Math.min(totalVocab, totalImages);
-                
+                const totalItems = Math.min(defaultVocabulary.length, defaultImageUrls.length);
                 const allIndices: Record<ChestType, number[]> = { basic: [], elementary: [], intermediate: [], advanced: [], master: [] };
                 for (const key in CHEST_DEFINITIONS) {
                     const chest = CHEST_DEFINITIONS[key as ChestType];
@@ -503,24 +360,18 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({
                         allIndices[key as ChestType].push(i);
                     }
                 }
-                
                 if (!currentUserId) {
                     setAvailableIndices(allIndices);
                     return;
                 }
-
                 const userOpenedVocabColRef = collection(db, 'users', currentUserId, 'openedVocab');
                 const querySnapshot = await getDocs(userOpenedVocabColRef);
-
-                const openedIndices0Based = new Set<number>();
-                querySnapshot.forEach(doc => {
-                    openedIndices0Based.add(Number(doc.id) - 1);
-                });
-                
+                const openedIndices = new Set<number>();
+                querySnapshot.forEach(doc => { openedIndices.add(Number(doc.id) - 1); });
                 const remainingIndices: Record<ChestType, number[]> = { basic: [], elementary: [], intermediate: [], advanced: [], master: [] };
                 for (const key in allIndices) {
                     const chestType = key as ChestType;
-                    remainingIndices[chestType] = allIndices[chestType].filter(index => !openedIndices0Based.has(index));
+                    remainingIndices[chestType] = allIndices[chestType].filter(index => !openedIndices.has(index));
                 }
                 setAvailableIndices(remainingIndices);
             } catch (error) {
@@ -536,9 +387,9 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({
         const allAvailable = Object.values(availableIndices).flat();
         if (preloadPool.length < PRELOAD_POOL_SIZE && allAvailable.length > 0) {
             const needed = PRELOAD_POOL_SIZE - preloadPool.length;
-            const indicesToAddToPool = allAvailable.filter(idx => !preloadPool.includes(idx)).slice(0, needed);
-            if (indicesToAddToPool.length > 0) {
-                setPreloadPool(prevPool => [...prevPool, ...indicesToAddToPool]);
+            const indicesToAdd = allAvailable.filter(idx => !preloadPool.includes(idx)).slice(0, needed);
+            if (indicesToAdd.length > 0) {
+                setPreloadPool(prevPool => [...prevPool, ...indicesToAdd]);
             }
         }
     }, [availableIndices, preloadPool]);
@@ -547,169 +398,74 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({
         return preloadPool.map(index => defaultImageUrls[index]);
     }, [preloadPool]);
 
-    const updateUserProgressInFirestore = async (imageIds: number[], chestType: ChestType) => {
-        if (!currentUserId || imageIds.length === 0) return;
-
-        const newWordsData = imageIds
-            .map(id => ({ id, word: defaultVocabulary[id - 1] }))
-            .filter(item => !!item.word);
-
-        if (newWordsData.length === 0) {
-            console.warn("Không tìm thấy từ vựng hợp lệ cho các ID:", imageIds);
-            return;
-        }
-
-        const userDocRef = doc(db, 'users', currentUserId);
-        const userOpenedVocabColRef = collection(userDocRef, 'openedVocab');
-
-        try {
-            const batch = writeBatch(db);
-
-            newWordsData.forEach(item => {
-                const newVocabDocRef = doc(userOpenedVocabColRef, String(item.id));
-                batch.set(newVocabDocRef, {
-                    word: item.word,
-                    collectedAt: new Date(),
-                    chestType: chestType,
-                });
-            });
-
-            batch.update(userDocRef, {
-                totalVocabCollected: increment(newWordsData.length)
-            });
-
-            await batch.commit();
-            console.log(`Batch write thành công cho ${newWordsData.length} từ mới.`);
-        } catch (e) {
-            const err = e as { code?: string };
-            if (err.code === 'not-found') {
-                console.log('User document not found, creating a new one...');
-                try {
-                   await setDoc(userDocRef, { totalVocabCollected: 0, cardCapacity: 100, gems: 0, coins: 0 }); 
-                   await updateUserProgressInFirestore(imageIds, chestType); 
-                } catch(creationError) {
-                    console.error("Error creating user document:", creationError);
-                }
-            } else {
-                 console.error("Lỗi khi ghi batch vào Firestore:", e);
-            }
-        }
-    };
-    
     const handleOpenCards = async (count: 1 | 4, chestType: ChestType) => {
         if (isProcessingClick || !currentUserId) return;
-
         const chestDef = CHEST_DEFINITIONS[chestType];
         if (!chestDef || chestDef.isComingSoon) return;
-
         const price = count === 1 ? chestDef.price1 : (chestDef.price10 || 0);
-        if (price === null) return;
-
-        if (localTotalVocab + count > initialCardCapacity) {
-            alert(`Kho thẻ đã đầy! (${localTotalVocab}/${initialCardCapacity}).\nVui lòng nâng cấp sức chứa để tiếp tục.`);
-            return;
-        }
-
-        if (chestDef.currency === 'gold' && localCoins < price) {
-            alert(`Bạn không đủ vàng! Cần ${price.toLocaleString()}, bạn đang có ${localCoins.toLocaleString()}.`);
-            return;
-        } else if (chestDef.currency === 'gem' && localGems < price) {
-            alert(`Bạn không đủ gem! Cần ${price.toLocaleString()}, bạn đang có ${localGems.toLocaleString()}.`);
-            return;
-        }
-
+        if (localTotalVocab + count > initialCardCapacity) { alert(`Kho thẻ đã đầy! (${localTotalVocab}/${initialCardCapacity}).\nVui lòng nâng cấp sức chứa để tiếp tục.`); return; }
+        if (chestDef.currency === 'gold' && localCoins < price) { alert(`Bạn không đủ vàng! Cần ${price.toLocaleString()}, bạn đang có ${localCoins.toLocaleString()}.`); return; }
+        if (chestDef.currency === 'gem' && localGems < price) { alert(`Bạn không đủ gem! Cần ${price.toLocaleString()}, bạn đang có ${localGems.toLocaleString()}.`); return; }
         const targetPool = availableIndices[chestType];
-        if (targetPool.length < count) {
-            alert(`Không đủ thẻ trong rương này để mở (cần ${count}, còn ${targetPool.length}).`);
-            return;
-        }
+        if (targetPool.length < count) { alert(`Không đủ thẻ trong rương này để mở (cần ${count}, còn ${targetPool.length}).`); return; }
 
         setIsProcessingClick(true);
         setLastOpenedChest({ count, type: chestType, price }); 
-
-        const gemReward = count * GEM_REWARD_PER_CARD;
-        const coinsChange = chestDef.currency === 'gold' ? -price : 0;
-        const gemsChange = (chestDef.currency === 'gem' ? -price : 0) + gemReward;
-
-        // 1. Cập nhật UI ngay lập tức (Optimistic Update)
-        if(coinsChange !== 0) setLocalCoins(prev => prev + coinsChange);
-        if(gemsChange !== 0) setLocalGems(prev => prev + gemsChange);
         
         try {
             let tempPool = [...targetPool];
-            const selectedCards: ImageCard[] = [];
             const selectedOriginalIndices: number[] = [];
+            const selectedCardsForPopup: ImageCard[] = [];
             for (let i = 0; i < count; i++) {
-                const randomIndexInPool = Math.floor(Math.random() * tempPool.length);
-                const originalImageIndex = tempPool[randomIndexInPool];
-                selectedCards.push({ id: originalImageIndex + 1, url: defaultImageUrls[originalImageIndex] });
+                const randomIndex = Math.floor(Math.random() * tempPool.length);
+                const originalImageIndex = tempPool[randomIndex];
                 selectedOriginalIndices.push(originalImageIndex);
-                tempPool.splice(randomIndexInPool, 1);
+                selectedCardsForPopup.push({ id: originalImageIndex + 1, url: defaultImageUrls[originalImageIndex] });
+                tempPool.splice(randomIndex, 1);
             }
-            const imageIdsToSave = selectedOriginalIndices.map(index => index + 1);
-            const vocabAdded = imageIdsToSave.length;
+            const newWordsToSave = selectedOriginalIndices.map(index => ({ id: index + 1, word: defaultVocabulary[index], chestType: chestType }));
 
-            // 2. Thực hiện các lệnh gọi DB song song
-            const dbPromises = [];
-            if (coinsChange !== 0) dbPromises.push(updateUserCoins(currentUserId, coinsChange));
-            if (gemsChange !== 0) dbPromises.push(updateUserGems(currentUserId, gemsChange));
-            dbPromises.push(updateUserProgressInFirestore(imageIdsToSave, chestType));
+            const { newCoins, newGems, newTotalVocab } = await processVocabularyChestOpening(
+                currentUserId, {
+                    currency: chestDef.currency,
+                    cost: price,
+                    gemReward: count * GEM_REWARD_PER_CARD,
+                    newWordsData: newWordsToSave,
+                }
+            );
             
-            await Promise.all(dbPromises);
-            
-            // 3. Cập nhật state cục bộ và thông báo cho component cha
-            setLocalTotalVocab(prev => prev + vocabAdded);
-            onDataChanged({ coinsChange, gemsChange, vocabAdded });
-
-            setAvailableIndices(prev => ({ ...prev, [chestType]: prev[chestType].filter(idx => !selectedOriginalIndices.includes(idx)) }));
+            setLocalCoins(newCoins);
+            setLocalGems(newGems);
+            setLocalTotalVocab(newTotalVocab);
+            onDataChanged({ coinsChange: newCoins - initialCoins, gemsChange: newGems - initialGems, vocabAdded: newTotalVocab - initialTotalVocab });
+            setAvailableIndices(prev => ({ ...prev, [chestType]: tempPool }));
             setPreloadPool(prev => prev.filter(idx => !selectedOriginalIndices.includes(idx)));
-            
-            setCardsForPopup(selectedCards);
-            if (count === 1) setShowSingleOverlay(true);
-            else setShowFourOverlay(true);
+            setCardsForPopup(selectedCardsForPopup);
+            if (count === 1) setShowSingleOverlay(true); else setShowFourOverlay(true);
 
         } catch (error) {
-            console.error("Lỗi khi xử lý mở thẻ:", error);
-            alert("Đã xảy ra lỗi. Giao dịch đã được hoàn lại.");
-            // Hoàn lại tiền trên UI nếu có lỗi
-            if(coinsChange !== 0) setLocalCoins(prev => prev - coinsChange);
-            if(gemsChange !== 0) setLocalGems(prev => prev - gemsChange);
-            // Thông báo cho cha để hoàn lại state
-            onDataChanged({ coinsChange: -coinsChange, gemsChange: -gemsChange });
+            console.error("Lỗi khi xử lý mở thẻ qua service:", error);
+            alert(`Đã xảy ra lỗi. Giao dịch đã bị hủy.\nChi tiết: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
             setTimeout(() => setIsProcessingClick(false), 500); 
         }
     };
     
-    const handleCloseOverlay = () => {
-        setShowSingleOverlay(false);
-        setShowFourOverlay(false);
-        setCardsForPopup([]);
-    };
-    
-    const handleOpenAgain = () => {
-        if (lastOpenedChest) {
-            handleOpenCards(lastOpenedChest.count, lastOpenedChest.type);
-        }
-    };
+    const handleCloseOverlay = () => { setShowSingleOverlay(false); setShowFourOverlay(false); setCardsForPopup([]); };
+    const handleOpenAgain = () => { if (lastOpenedChest) { handleOpenCards(lastOpenedChest.count, lastOpenedChest.type); } };
     
     return (
         <div className="vocabulary-chest-root">
             <ScopedStyles />
             <ImagePreloader imageUrls={urlsToPreload} />
-            
             {isLoading && <LoadingOverlay isVisible={true} />}
-
             {!isLoading && (
                  <header className="main-header">
                     <button onClick={onClose} className={`vocab-screen-home-btn ${showSingleOverlay || showFourOverlay ? 'is-hidden' : ''}`} title="Quay lại Trang Chính">
-                        <HomeIcon />
-                        <span>Trang Chính</span>
+                        <HomeIcon /><span>Trang Chính</span>
                     </button>
-                    
                     <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <CardCapacityDisplay current={localTotalVocab} max={initialCardCapacity} />
-                        
                         <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
                             <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
                             <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={16} color="#a78bfa" className="relative z-20" /></div>
@@ -718,18 +474,15 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({
                             <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
                             <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
                         </div>
-
                         <CoinDisplay displayedCoins={localCoins} isStatsFullscreen={false} />
                     </div>
                 </header>
             )}
-
             {!showSingleOverlay && !showFourOverlay && !isLoading && (
                 <div className="chest-gallery-container">
                     {CHEST_DATA.map((chest) => {
                         const remainingCount = availableIndices[chest.chestType]?.length ?? 0;
                         const priceIcon = chest.currency === 'gem' ? uiAssets.gemIcon : uiAssets.priceIcon;
-
                         return (
                             <ChestUI
                                 key={chest.id}
@@ -743,7 +496,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({
                     })}
                 </div>
             )}
-
             {showSingleOverlay && cardsForPopup.length > 0 && (
                 <div className="card-opening-overlay">
                     <div className="overlay-content">
