@@ -1,3 +1,5 @@
+// --- START OF FILE thanh-tuu.tsx ---
+
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import { useAchievements } from './contexts/AchievementsContext.tsx';
