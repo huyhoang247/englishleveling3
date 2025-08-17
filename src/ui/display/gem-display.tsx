@@ -1,5 +1,5 @@
 import React from 'react';
-import { uiAssets } from './game-assets.ts'; // Assuming path is relative to component location
+import { uiAssets } from '../../game-assets.ts'; // Assuming path is relative to component location
 
 // Define the props for the GemDisplay component
 interface GemDisplayProps {
