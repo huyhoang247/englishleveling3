@@ -81,7 +81,7 @@ const AchievementsLoadingSkeleton: React.FC = () => {
 
           {/* Các dòng skeleton */}
           <div className="flex flex-col gap-2 mt-0 md:mt-2">
-            {Array(5).fill(0).map((_, index) => ( // Tăng số lượng dòng skeleton để trông thực tế hơn
+            {Array(2).fill(0).map((_, index) => ( // Tăng số lượng dòng skeleton để trông thực tế hơn
                 <SkeletonRow key={index} />
             ))}
           </div>
