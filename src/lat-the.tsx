@@ -10,7 +10,9 @@ import { defaultImageUrls } from './voca-data/image-url.ts';
 import ImagePreloader from './ImagePreloader.tsx'; 
 import { defaultVocabulary } from './voca-data/list-vocabulary.ts';
 import CoinDisplay from './ui/display/coin-display.tsx';
-import CardCapacityDisplay from './ui/display/card-capacity-display.tsx'; // TÁCH COMPONENT
+import CardCapacityDisplay from './ui/display/card-capacity-display.tsx';
+// --- MODIFIED: Import GemDisplay mới ---
+import GemDisplay from './ui/display/gem-display.tsx'; 
 // --- REFACTORED: Import service để tự quản lý logic ---
 import { processVocabularyChestOpening } from './gameDataService.ts'; 
 // --- REFACTORED: Import hook animate số đếm ---
@@ -168,6 +170,9 @@ const ScopedStyles = () => (
         @keyframes vocabulary-chest-flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
         @keyframes vocabulary-chest-deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
+        // --- MODIFIED: Không cần định nghĩa pulse-fast ở đây nữa vì GemDisplay đã tự quản lý ---
+        // Tuy nhiên, việc giữ lại không gây hại vì nó được scope bởi .vocabulary-chest-root
+        // và có thể được dùng bởi component khác trong tương lai.
         @keyframes vocabulary-chest-pulse-fast {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -221,20 +226,22 @@ const ScopedStyles = () => (
 // === 2. CÁC COMPONENT CON VÀ DATA =======================================
 // ========================================================================
 
-interface GemIconProps { size?: number; color?: string; className?: string; [key: string]: any; }
-const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => {
-  return (
-    <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
-      <img src={uiAssets.gemIcon} alt="Tourmaline Gem Icon" className="w-full h-full object-contain" />
-    </div>
-  );
-};
+// --- MODIFIED: Component GemIcon không còn được sử dụng và có thể xóa đi ---
+// interface GemIconProps { size?: number; color?: string; className?: string; [key: string]: any; }
+// const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => {
+//   return (
+//     <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
+//       <img src={uiAssets.gemIcon} alt="Tourmaline Gem Icon" className="w-full h-full object-contain" />
+//     </div>
+//   );
+// };
+
 const HomeIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
         <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
     </svg>
 );
-// CardCapacityDisplay component has been moved to its own file.
+
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
     if (!isVisible) return null;
     return ( <div className="loading-spinner-container"><div className="loading-spinner"></div><p className="loading-text">Loading...</p></div> );
@@ -332,9 +339,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [localGems, setLocalGems] = useState(initialGems);
     const [localTotalVocab, setLocalTotalVocab] = useState(initialTotalVocab);
     
-    // --- REFACTORED: Thêm hook để animate giá trị tiền tệ ---
-    // State `localCoins` và `localGems` vẫn là "nguồn chân lý" (source of truth).
-    // Các giá trị `animated...` này sẽ đuổi theo giá trị thật để tạo hiệu ứng.
     const animatedCoins = useAnimateValue(localCoins, 500);
     const animatedGems = useAnimateValue(localGems, 500);
 
@@ -460,17 +464,11 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                     </button>
                     <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <CardCapacityDisplay current={localTotalVocab} max={initialCardCapacity} />
-                        <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-                            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                            <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={16} color="#a78bfa" className="relative z-20" /></div>
-                            {/* --- REFACTORED: Hiển thị giá trị gem đã được animate --- */}
-                            <div className="font-bold text-purple-200 text-xs tracking-wide">{Math.round(animatedGems).toLocaleString()}</div>
-                            <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"><span className="text-white font-bold text-xs">+</span></div>
-                            <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                            <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
-                        </div>
-                        {/* --- REFACTORED: Truyền giá trị coin đã được animate vào component con --- */}
-                        <CoinDisplay displayedCoins={Math.round(animatedCoins)} isStatsFullscreen={false} />
+                        
+                        {/* --- MODIFIED: Thay thế khối JSX bằng component GemDisplay --- */}
+                        <GemDisplay displayedGems={animatedGems} />
+                        
+                        <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
                     </div>
                 </header>
             )}
