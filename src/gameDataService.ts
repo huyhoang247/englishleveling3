@@ -1,4 +1,4 @@
-// --- START OF FILE gameDataService.ts (FULL CODE - REFACTORED) ---
+// --- START OF FILE gameDataService.ts (FULL CODE - CORRECTED & COMPLETE) ---
 
 import { db } from './firebase';
 import { 
@@ -49,7 +49,6 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
 
   if (docSnap.exists()) {
     const data = docSnap.data();
-    // Trả về dữ liệu, đảm bảo có giá trị mặc định cho các trường có thể thiếu
     return {
       coins: data.coins || 0,
       gems: data.gems || 0,
@@ -65,19 +64,12 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       equipment: data.equipment || { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } },
     };
   } else {
-    // Người dùng không tồn tại, tạo mới document với dữ liệu game mặc định
     const newUserData: UserGameData & { createdAt: Date; claimedDailyGoals: object; claimedVocabMilestones: any[], claimedQuizRewards: object; } = {
-      coins: 0,
-      gems: 0,
-      masteryCards: 0,
-      pickaxes: 50,
-      minerChallengeHighestFloor: 0,
-      stats: { hp: 0, atk: 0, def: 0 },
-      bossBattleHighestFloor: 0,
-      ancientBooks: 0,
+      coins: 0, gems: 0, masteryCards: 0, pickaxes: 50,
+      minerChallengeHighestFloor: 0, stats: { hp: 0, atk: 0, def: 0 },
+      bossBattleHighestFloor: 0, ancientBooks: 0,
       skills: { owned: [], equipped: [null, null, null] },
-      totalVocabCollected: 0,
-      cardCapacity: 100,
+      totalVocabCollected: 0, cardCapacity: 100,
       equipment: { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } },
       createdAt: new Date(),
       claimedDailyGoals: {},
@@ -89,12 +81,6 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
   }
 };
 
-/**
- * Cập nhật số coin của người dùng an toàn bằng transaction.
- * @param userId - ID của người dùng.
- * @param amount - Số coin cần thay đổi (dương để cộng, âm để trừ).
- * @returns {Promise<number>} Số coin mới.
- */
 export const updateUserCoins = async (userId: string, amount: number): Promise<number> => {
   if (!userId) throw new Error("User ID is required.");
   if (amount === 0) {
@@ -111,12 +97,6 @@ export const updateUserCoins = async (userId: string, amount: number): Promise<n
   });
 };
 
-/**
- * Cập nhật số gem của người dùng an toàn bằng transaction.
- * @param userId - ID của người dùng.
- * @param amount - Số gem cần thay đổi.
- * @returns {Promise<number>} Số gem mới.
- */
 export const updateUserGems = async (userId: string, amount: number): Promise<number> => {
     if (!userId) throw new Error("User ID is required.");
     if (amount === 0) {
@@ -133,10 +113,6 @@ export const updateUserGems = async (userId: string, amount: number): Promise<nu
     });
 };
 
-/**
- * Lấy hoặc tạo dữ liệu Jackpot Pool chung của ứng dụng.
- * @returns {Promise<number>} Số tiền trong hũ Jackpot.
- */
 export const fetchJackpotPool = async (): Promise<number> => {
     const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
     const docSnap = await getDoc(jackpotDocRef);
@@ -145,12 +121,6 @@ export const fetchJackpotPool = async (): Promise<number> => {
     return 200;
 };
 
-/**
- * Cập nhật Jackpot Pool bằng transaction.
- * @param amount - Số tiền cần thêm vào (dương) hoặc bớt đi (âm).
- * @param reset - Nếu true, đặt lại hũ về 200.
- * @returns {Promise<number>} Số tiền mới trong hũ.
- */
 export const updateJackpotPool = async (amount: number, reset: boolean = false): Promise<number> => {
     const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
     return runTransaction(db, async (t) => {
@@ -162,35 +132,17 @@ export const updateJackpotPool = async (amount: number, reset: boolean = false):
     });
 };
 
-/**
- * Cập nhật tầng boss cao nhất của người dùng.
- * @param userId - ID người dùng.
- * @param newFloor - Tầng mới đã hoàn thành.
- * @param currentHighest - Tầng cao nhất hiện tại của người chơi (để tránh ghi không cần thiết).
- */
 export const updateUserBossFloor = async (userId: string, newFloor: number, currentHighest: number): Promise<void> => {
     if (newFloor <= currentHighest) return;
     await setDoc(doc(db, 'users', userId), { bossBattleHighestFloor: newFloor }, { merge: true });
 };
 
-/**
- * Cập nhật Cuốc (Pickaxes).
- * @param userId - ID người dùng.
- * @param newTotal - Tổng số cuốc mới.
- * @returns {Promise<number>} Số cuốc mới.
- */
 export const updateUserPickaxes = async (userId: string, newTotal: number): Promise<number> => {
     const finalAmount = Math.max(0, newTotal);
     await setDoc(doc(db, 'users', userId), { pickaxes: finalAmount }, { merge: true });
     return finalAmount;
 };
 
-/**
- * Xử lý kết quả sau khi kết thúc Miner Challenge.
- * @param userId - ID người dùng.
- * @param result - Dữ liệu kết quả từ game.
- * @returns Dữ liệu mới sau khi cập nhật.
- */
 export const processMinerChallengeResult = async (userId: string, result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
     const userDocRef = doc(db, 'users', userId);
     return runTransaction(db, async (t) => {
@@ -204,13 +156,6 @@ export const processMinerChallengeResult = async (userId: string, result: { fina
     });
 };
 
-/**
- * Xử lý việc nâng cấp chỉ số cho người dùng.
- * @param userId - ID người dùng.
- * @param cost - Chi phí nâng cấp.
- * @param newStats - Các chỉ số mới.
- * @returns Dữ liệu mới sau khi nâng cấp.
- */
 export const upgradeUserStats = async (userId: string, cost: number, newStats: { hp: number; atk: number; def: number; }) => {
     const userDocRef = doc(db, 'users', userId);
     return runTransaction(db, async (t) => {
@@ -224,12 +169,6 @@ export const upgradeUserStats = async (userId: string, cost: number, newStats: {
     });
 };
 
-/**
- * Xử lý cập nhật kỹ năng cho người dùng.
- * @param userId - ID người dùng.
- * @param updates - Các thay đổi về kỹ năng và tài nguyên.
- * @returns Dữ liệu tài nguyên mới.
- */
 export const updateUserSkills = async (userId: string, updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
     const userDocRef = doc(db, 'users', userId);
     return runTransaction(db, async (t) => {
@@ -249,12 +188,6 @@ export const updateUserSkills = async (userId: string, updates: { newOwned: Owne
     });
 };
 
-/**
- * Xử lý cập nhật trang bị cho người dùng.
- * @param userId - ID người dùng.
- * @param updates - Các thay đổi về trang bị và tài nguyên.
- * @returns Dữ liệu tài nguyên mới.
- */
 export const updateUserInventory = async (userId: string, updates: { newOwned: OwnedItem[]; newEquipped: EquippedItems; goldChange: number; piecesChange: number; }) => {
     const userDocRef = doc(db, 'users', userId);
     return runTransaction(db, async (t) => {
@@ -274,13 +207,6 @@ export const updateUserInventory = async (userId: string, updates: { newOwned: O
     });
 };
 
-/**
- * Xử lý logic mua sắm.
- * @param userId - ID người dùng.
- * @param item - Vật phẩm cần mua.
- * @param quantity - Số lượng.
- * @returns Dữ liệu tài nguyên mới sau khi mua.
- */
 export const processShopPurchase = async (userId: string, item: any, quantity: number) => {
     const userDocRef = doc(db, 'users', userId);
     const totalCost = item.price * quantity;
@@ -295,10 +221,10 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
         let newBooks = data.ancientBooks || 0;
         let newCapacity = data.cardCapacity || 100;
 
-        if (item.id === 1009) { // Sách Cổ
+        if (item.id === 1009) {
             newBooks += quantity;
             updates.ancientBooks = newBooks;
-        } else if (item.id === 2001) { // Nâng Cấp Sức Chứa Thẻ
+        } else if (item.id === 2001) {
             newCapacity += quantity;
             updates.cardCapacity = newCapacity;
         }
@@ -308,11 +234,6 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
     });
 };
 
-/**
- * Ghi nhận các từ vựng mới người dùng đã mở vào sub-collection bằng Batch Write.
- * @param userId - ID người dùng.
- * @param newWordsData - Mảng các từ mới.
- */
 const recordNewVocabUnlocks = async (userId: string, newWordsData: { id: number; word: string; chestType: string }[]) => {
     if (newWordsData.length === 0) return;
     const userOpenedVocabColRef = collection(db, 'users', userId, 'openedVocab');
@@ -328,12 +249,6 @@ const recordNewVocabUnlocks = async (userId: string, newWordsData: { id: number;
     await batch.commit();
 };
 
-/**
- * Xử lý toàn bộ logic mở rương từ vựng trong một transaction duy nhất.
- * @param userId - ID người dùng.
- * @param details - Chi tiết về việc mở rương.
- * @returns Dữ liệu tài nguyên mới sau khi giao dịch thành công.
- */
 export const processVocabularyChestOpening = async (
   userId: string, 
   details: {
@@ -351,7 +266,6 @@ export const processVocabularyChestOpening = async (
         if (!userDoc.exists()) throw new Error("User document does not exist!");
         const data = userDoc.data();
 
-        // Kiểm tra điều kiện trên server một lần nữa
         if (currency === 'gold' && (data.coins || 0) < cost) throw new Error("Không đủ vàng.");
         if (currency === 'gem' && (data.gems || 0) < cost) throw new Error("Không đủ gem.");
         if ((data.totalVocabCollected || 0) + newWordsData.length > (data.cardCapacity || 100)) {
@@ -370,8 +284,100 @@ export const processVocabularyChestOpening = async (
         return { newCoins: finalCoins, newGems: finalGems, newTotalVocab: finalTotalVocab };
     });
 
-    // Sau khi transaction thành công, ghi log các thẻ đã mở
     await recordNewVocabUnlocks(userId, newWordsData);
 
     return { newCoins, newGems, newTotalVocab };
+};
+
+// ========================================================================
+// === HÀM BỊ THIẾU ĐÃ ĐƯỢC THÊM LẠI =======================================
+// ========================================================================
+
+/**
+ * Lấy và đồng bộ hóa dữ liệu thành tựu từ vựng của người dùng.
+ * @param userId - ID của người dùng.
+ * @returns {Promise<VocabularyItem[]>} Một mảng dữ liệu thành tựu từ vựng đã được đồng bộ.
+ */
+export const fetchAndSyncVocabularyData = async (userId: string): Promise<VocabularyItem[]> => {
+  if (!userId) throw new Error("User ID is required.");
+  try {
+    const completedWordsCol = collection(db, 'users', userId, 'completedWords');
+    const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
+    const [completedWordsSnap, achievementDocSnap] = await Promise.all([
+      getDocs(completedWordsCol),
+      getDoc(achievementDocRef),
+    ]);
+    const wordToExpMap = new Map<string, number>();
+    completedWordsSnap.forEach(wordDoc => {
+      const word = wordDoc.id;
+      const gameModes = wordDoc.data().gameModes || {};
+      let totalCorrectCount = 0;
+      Object.values(gameModes).forEach((mode: any) => {
+        totalCorrectCount += mode.correctCount || 0;
+      });
+      wordToExpMap.set(word, totalCorrectCount * 100);
+    });
+    const existingAchievements: VocabularyItem[] = achievementDocSnap.exists()
+      ? achievementDocSnap.data().vocabulary || [] : [];
+    const finalVocabularyData: VocabularyItem[] = [];
+    const processedWords = new Set<string>();
+    let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map(i => i.id)) : 0) + 1;
+    wordToExpMap.forEach((totalExp, word) => {
+      const existingItem = existingAchievements.find(item => item.word === word);
+      if (existingItem) {
+        let expSpentToReachCurrentLevel = 0;
+        for (let i = 1; i < existingItem.level; i++) {
+          expSpentToReachCurrentLevel += i * 100;
+        }
+        const currentProgressExp = totalExp - expSpentToReachCurrentLevel;
+        finalVocabularyData.push({ ...existingItem, exp: currentProgressExp, maxExp: existingItem.level * 100 });
+      } else {
+        finalVocabularyData.push({ id: idCounter++, word: word, exp: totalExp, level: 1, maxExp: 100 });
+      }
+      processedWords.add(word);
+    });
+    existingAchievements.forEach(item => {
+      if (!processedWords.has(item.word)) {
+        finalVocabularyData.push(item);
+      }
+    });
+    return finalVocabularyData;
+  } catch (error) {
+    console.error("Error fetching and syncing vocabulary achievements data in service:", error);
+    throw error;
+  }
+};
+
+/**
+ * Cập nhật dữ liệu thành tựu và phần thưởng cho người dùng một cách an toàn.
+ * @param userId - ID của người dùng.
+ * @param updates - Một object chứa các thay đổi cần áp dụng.
+ * @returns Số dư coin và thẻ mới.
+ */
+export const updateAchievementData = async (
+  userId: string,
+  updates: { coinsToAdd: number; cardsToAdd: number; newVocabularyData: VocabularyItem[]; }
+): Promise<{ newCoins: number; newMasteryCards: number }> => {
+  if (!userId) throw new Error("User ID is required for updating achievements.");
+  const userDocRef = doc(db, 'users', userId);
+  const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
+  const { coinsToAdd, cardsToAdd, newVocabularyData } = updates;
+  try {
+    const { newCoins, newMasteryCards } = await runTransaction(db, async (transaction) => {
+      const userDoc = await transaction.get(userDocRef);
+      if (!userDoc.exists()) throw new Error("User document does not exist!");
+      const currentCoins = userDoc.data().coins || 0;
+      const currentCards = userDoc.data().masteryCards || 0;
+      const finalCoins = currentCoins + coinsToAdd;
+      const finalCards = currentCards + cardsToAdd;
+      transaction.update(userDocRef, { coins: finalCoins, masteryCards: finalCards });
+      transaction.set(achievementDocRef, { vocabulary: newVocabularyData, lastUpdated: new Date() });
+      return { newCoins: finalCoins, newMasteryCards: finalCards };
+    });
+    console.log(`Achievements updated for user ${userId}.`);
+    return { newCoins, newMasteryCards };
+  } catch (error) {
+    console.error(`Failed to run transaction to update achievements for user ${userId}:`, error);
+    throw error;
+  }
 };
