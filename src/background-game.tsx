@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './ui/display/coin-display.tsx';
-import GemDisplay from './ui/display/gem-display.tsx'; // Import the new GemDisplay component
-import { getFirestore, doc, getDoc, setDoc, runTransaction, collection, getDocs } from 'firebase/firestore';
+import GemDisplay from './ui/display/gem-display.tsx';
 import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
 import useSessionStorage from './bo-nho-tam.tsx';
@@ -27,12 +26,21 @@ import SkillScreen from './skill.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
 import RateLimitToast from './thong-bao.tsx';
-// TÁI CẤU TRÚC: Import các hàm từ file service mới
+
+// TÁI CẤU TRÚC: Import TẤT CẢ các hàm từ file service mới
 import { 
   fetchOrCreateUserGameData, 
   updateUserCoins, 
   updateUserGems,
-  VocabularyItem
+  fetchJackpotPool,
+  updateJackpotPool,
+  updateUserBossFloor,
+  updateUserPickaxes,
+  processMinerChallengeResult,
+  upgradeUserStats,
+  updateUserSkills,
+  updateUserInventory,
+  processShopPurchase
 } from './gameDataService.ts';
 
 
@@ -55,83 +63,45 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
     <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
-
-
-// --- START of content from icon.tsx ---
-
-// --- Component Icon Gem ---
-interface GemIconProps {
-  size?: number;
-  color?: string;
-  className?: string;
-  [key: string]: any;
-}
-
-const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => {
-  return (
-    <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
-      <img
-        src={uiAssets.gemIcon}
-        alt="Tourmaline Gem Icon"
-        className="w-full h-full object-contain"
-      />
-    </div>
-  );
-};
-
-// --- Component Stats Icon ---
-interface StatsIconProps {
-  onClick: () => void;
-}
-
-const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => {
-  return (
-    <div className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-10"
-         onClick={onClick}
-         title="Xem chỉ số nhân vật"
-    >
-      <img
-        src={uiAssets.statsIcon}
-        alt="Award Icon"
-        className="w-full h-full object-contain"
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-          target.onerror = null;
-          target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon";
-        }}
-      />
-    </div>
-  );
-};
-
-// --- END of content from icon.tsx ---
-
+interface GemIconProps { size?: number; color?: string; className?: string; [key: string]: any; }
+const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
+    <img src={uiAssets.gemIcon} alt="Tourmaline Gem Icon" className="w-full h-full object-contain" />
+  </div>
+);
+interface StatsIconProps { onClick: () => void; }
+const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => (
+  <div className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-10"
+       onClick={onClick}
+       title="Xem chỉ số nhân vật"
+  >
+    <img
+      src={uiAssets.statsIcon}
+      alt="Award Icon"
+      className="w-full h-full object-contain"
+      onError={(e) => {
+        const target = e.target as HTMLImageElement;
+        target.onerror = null;
+        target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon";
+      }}
+    />
+  </div>
+);
 
 // --- Error Boundary Component ---
-interface ErrorBoundaryProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
-}
-
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
-}
-
+interface ErrorBoundaryProps { children: React.ReactNode; fallback?: React.ReactNode; }
+interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
-
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error: error };
   }
-
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("Uncaught error in component:", error, errorInfo);
   }
-
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
@@ -142,19 +112,14 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         </div>
       );
     }
-
     return this.props.children;
   }
 }
 
 const LoadingSpinner = () => (
   <div className="flex flex-col items-center justify-center text-center">
-    <div
-        className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-purple-400"
-    ></div>
-    <p className="mt-5 text-lg font-medium text-gray-300">
-      Loading...
-    </p>
+    <div className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-purple-400"></div>
+    <p className="mt-5 text-lg font-medium text-gray-300">Loading...</p>
   </div>
 );
 
@@ -190,8 +155,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
   const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, accessory: null });
 
-
-
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [isPvpArenaOpen, setIsPvpArenaOpen] = useState(false);
@@ -212,8 +175,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [showRateLimitToast, setShowRateLimitToast] = useState(false);
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
-  const db = getFirestore();
-
+  
   // Set body overflow and app height
   useEffect(() => {
     const originalHtmlOverflow = document.documentElement.style.overflow;
@@ -238,71 +200,30 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return () => clearTimeout(timer);
     }
   }, [showRateLimitToast]);
-
-  const fetchJackpotPool = async () => {
-    try {
-        const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
-        const jackpotDocSnap = await getDoc(jackpotDocRef);
-        if (jackpotDocSnap.exists()) {
-            const data = jackpotDocSnap.data(); setJackpotPool(data.poolAmount || 200);
-            console.log("Jackpot Pool fetched:", data.poolAmount);
-        } else {
-            console.log("No global jackpot pool document found, creating default.");
-            await setDoc(jackpotDocRef, { poolAmount: 200, lastUpdated: new Date() }); setJackpotPool(200);
-        }
-    } catch (error) { console.error("Error fetching jackpot pool:", error); }
-  };
-    
+  
   const handleBossFloorUpdate = async (newFloor: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) {
-      console.error("Cannot update boss floor: User not authenticated.");
-      return;
+        console.error("Cannot update boss floor: User not authenticated.");
+        return;
     }
-    if (newFloor <= bossBattleHighestFloor) {
-      console.log(`New floor ${newFloor} is not higher than current ${bossBattleHighestFloor}. No update needed.`);
-      return;
-    }
-    const userDocRef = doc(db, 'users', userId);
     try {
-      await setDoc(userDocRef, { bossBattleHighestFloor: newFloor }, { merge: true });
-      setBossBattleHighestFloor(newFloor); 
-      console.log(`Updated boss floor to ${newFloor} for user ${userId}.`);
+        await updateUserBossFloor(userId, newFloor, bossBattleHighestFloor);
+        if (newFloor > bossBattleHighestFloor) {
+            setBossBattleHighestFloor(newFloor);
+        }
+        console.log(`Updated boss floor to ${newFloor} for user ${userId} via service.`);
     } catch (error) {
-      console.error("Firestore update failed for boss floor: ", error);
+        console.error("Firestore update failed for boss floor via service: ", error);
     }
   };
   
-  const updateMasteryCardsInFirestore = async (userId: string, amount: number) => {
-    if (!userId) { console.error("Cannot update mastery cards: User not authenticated."); return; }
-    const userDocRef = doc(db, 'users', userId);
-    try {
-      await runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) { transaction.set(userDocRef, { masteryCards: amount }); } 
-        else {
-          const currentCards = userDoc.data().masteryCards || 0;
-          const newCards = currentCards + amount; transaction.update(userDocRef, { masteryCards: newCards });
-          setMasteryCards(newCards);
-        }
-      });
-      console.log(`Mastery Cards updated in Firestore for user ${userId}.`);
-    } catch (error) { console.error("Firestore Transaction failed for mastery cards: ", error); }
-  };
-    
-  const handleMinerChallengeEnd = async (result: {
-    finalPickaxes: number;
-    coinsEarned: number;
-    highestFloorCompleted: number;
-  }) => {
+  const handleMinerChallengeEnd = async (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
     const userId = auth.currentUser?.uid;
     if (!userId) {
       console.error("Cannot update game data: User not authenticated.");
       return;
     }
-
-    const userDocRef = doc(db, 'users', userId);
-    console.log("Ending Miner Challenge session. Updating Firestore with:", result);
 
     if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) {
         console.log("No changes to update from Miner Challenge.");
@@ -310,167 +231,61 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     }
 
     setIsSyncingData(true);
-
     try {
-      await runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) {
-          transaction.set(userDocRef, {
-            coins: result.coinsEarned,
-            pickaxes: result.finalPickaxes,
-            minerChallengeHighestFloor: result.highestFloorCompleted,
-          });
-        } else {
-          const currentCoins = userDoc.data().coins || 0;
-          const newCoins = currentCoins + result.coinsEarned;
-
-          transaction.update(userDocRef, {
-            coins: newCoins,
-            pickaxes: result.finalPickaxes,
-            minerChallengeHighestFloor: Math.max(
-              userDoc.data().minerChallengeHighestFloor || 0,
-              result.highestFloorCompleted
-            ),
-          });
-        }
-      });
-      
-      setPickaxes(result.finalPickaxes);
-      setCoins(prevCoins => prevCoins + result.coinsEarned);
-      if (result.highestFloorCompleted > minerChallengeHighestFloor) {
-        setMinerChallengeHighestFloor(result.highestFloorCompleted);
-      }
-      
-      console.log("Firestore updated successfully after Miner Challenge.");
-
+      const { newCoins, newPickaxes, newHighestFloor } = await processMinerChallengeResult(userId, result);
+      setCoins(newCoins);
+      setPickaxes(newPickaxes);
+      setMinerChallengeHighestFloor(newHighestFloor);
+      console.log("Firestore updated successfully after Miner Challenge via service.");
     } catch (error) {
-      console.error("Firestore Transaction failed for Miner Challenge end: ", error);
+      console.error("Service call for Miner Challenge end failed: ", error);
     } finally {
       setIsSyncingData(false);
     }
   };
 
-  const updatePickaxesInFirestore = async (userId: string, newTotalAmount: number) => {
-      if (!userId) { console.error("Cannot update pickaxes: User not authenticated."); return; }
-      const userDocRef = doc(db, 'users', userId);
-      try {
-          await runTransaction(db, async (transaction) => {
-              const userDoc = await transaction.get(userDocRef);
-              const finalAmount = Math.max(0, newTotalAmount);
-              if (!userDoc.exists()) { transaction.set(userDocRef, { pickaxes: finalAmount }); } 
-              else { transaction.update(userDocRef, { pickaxes: finalAmount }); }
-              setPickaxes(finalAmount);
-          });
-      } catch (error) { console.error("Firestore Transaction failed for pickaxes: ", error); }
-  };
-
   const handleUpdatePickaxes = async (amountToAdd: number) => {
     const userId = auth.currentUser?.uid;
-    if (!userId) { console.error("Cannot update pickaxes: User not authenticated."); return; }
-    const newTotal = pickaxes + amountToAdd;
-    await updatePickaxesInFirestore(userId, newTotal);
+    if (!userId) return;
+    const newTotal = await updateUserPickaxes(userId, pickaxes + amountToAdd);
+    setPickaxes(newTotal);
   };
   
-  const updateJackpotPoolInFirestore = async (amount: number, resetToDefault: boolean = false) => {
-      const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
-      try {
-          await runTransaction(db, async (transaction) => {
-              const jackpotDoc = await transaction.get(jackpotDocRef); let newJackpotPool;
-              if (!jackpotDoc.exists()) {
-                  newJackpotPool = resetToDefault ? 200 : 200 + amount;
-                  transaction.set(jackpotDocRef, { poolAmount: newJackpotPool, lastUpdated: new Date() });
-              } else {
-                  let currentPool = jackpotDoc.data().poolAmount || 200;
-                  newJackpotPool = resetToDefault ? 200 : currentPool + amount;
-                  transaction.update(jackpotDocRef, { poolAmount: newJackpotPool, lastUpdated: new Date() });
-              }
-              setJackpotPool(newJackpotPool);
-          });
-      } catch (error) { console.error("Firestore Transaction failed for jackpot pool: ", error); }
+  const handleUpdateJackpotPool = async (amount: number, reset: boolean = false) => {
+      const newPool = await updateJackpotPool(amount, reset);
+      setJackpotPool(newPool);
   };
     
-  const handleConfirmStatUpgrade = async (
-    userId: string,
-    upgradeCost: number,
-    newStats: { hp: number; atk: number; def: number; }
-  ) => {
-    if (!userId) {
-      console.error("Không thể nâng cấp: Người dùng chưa xác thực.");
-      throw new Error("Người dùng chưa xác thực"); 
-    }
-    const userDocRef = doc(db, 'users', userId);
+  const handleConfirmStatUpgrade = async (cost: number, newStats: { hp: number; atk: number; def: number; }) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) throw new Error("Người dùng chưa xác thực");
+
     setIsSyncingData(true);
     try {
-      await runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) {
-          throw "Tài liệu người dùng không tồn tại!";
-        }
-        const currentCoins = userDoc.data().coins || 0;
-        if (currentCoins < upgradeCost) {
-          throw new Error("Không đủ vàng trên server."); 
-        }
-        const newCoins = currentCoins - upgradeCost;
-        transaction.update(userDocRef, {
-          coins: newCoins,
-          stats: newStats,
-        });
-      });
-      console.log(`Nâng cấp chỉ số thành công cho user ${userId}. Dữ liệu đã nhất quán.`);
-      setCoins(prevCoins => prevCoins - upgradeCost);
+      const { newCoins } = await upgradeUserStats(userId, cost, newStats);
+      setCoins(newCoins);
       setUserStats(newStats);
+      console.log(`Nâng cấp chỉ số thành công cho user ${userId} via service.`);
     } catch (error) {
-      console.error("Giao dịch Firestore cho việc nâng cấp chỉ số thất bại: ", error);
+      console.error("Giao dịch nâng cấp chỉ số thất bại: ", error);
       throw error;
     } finally {
       setIsSyncingData(false);
     }
   };
 
-  const handleSkillsUpdate = async (updates: {
-      newOwned: OwnedSkill[];
-      newEquippedIds: (string | null)[];
-      goldChange: number;
-      booksChange: number;
-  }) => {
+  const handleSkillsUpdate = async (updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
       const userId = auth.currentUser?.uid;
       if (!userId) { throw new Error("User not authenticated for skill update."); }
 
-      const userDocRef = doc(db, 'users', userId);
       setIsSyncingData(true);
-
       try {
-          await runTransaction(db, async (transaction) => {
-              const userDoc = await transaction.get(userDocRef);
-              if (!userDoc.exists()) { throw new Error("User document does not exist!"); }
-
-              const currentCoins = userDoc.data().coins || 0;
-              const currentBooks = userDoc.data().ancientBooks || 0;
-
-              const newCoins = currentCoins + updates.goldChange;
-              const newBooks = currentBooks + updates.booksChange;
-
-              if (newCoins < 0) { throw new Error("Không đủ vàng."); }
-              if (newBooks < 0) { throw new Error("Không đủ Sách Cổ."); }
-
-              transaction.update(userDocRef, {
-                  coins: newCoins,
-                  ancientBooks: newBooks,
-                  skills: {
-                      owned: updates.newOwned,
-                      equipped: updates.newEquippedIds
-                  }
-              });
-          });
-
-          // Update local state upon successful transaction
-          setCoins(prev => prev + updates.goldChange);
-          setAncientBooks(prev => prev + updates.booksChange);
+          const { newCoins, newBooks } = await updateUserSkills(userId, updates);
+          setCoins(newCoins);
+          setAncientBooks(newBooks);
           setOwnedSkills(updates.newOwned);
           setEquippedSkillIds(updates.newEquippedIds);
-          
-          console.log("Skill data and resources updated successfully in Firestore.");
-
+          console.log("Skill data and resources updated successfully via service.");
       } catch (error) {
           console.error("Firestore transaction for skill update failed:", error);
           throw error;
@@ -479,51 +294,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
     
-  const handleInventoryUpdate = async (updates: {
-      newOwned: OwnedItem[];
-      newEquipped: EquippedItems;
-      goldChange: number;
-      piecesChange: number; 
-  }) => {
+  const handleInventoryUpdate = async (updates: { newOwned: OwnedItem[]; newEquipped: EquippedItems; goldChange: number; piecesChange: number; }) => {
       const userId = auth.currentUser?.uid;
       if (!userId) { throw new Error("User not authenticated for inventory update."); }
   
-      const userDocRef = doc(db, 'users', userId);
       setIsSyncingData(true);
-  
       try {
-          await runTransaction(db, async (transaction) => {
-              const userDoc = await transaction.get(userDocRef);
-              if (!userDoc.exists()) { throw new Error("User document does not exist!"); }
-  
-              const currentCoins = userDoc.data().coins || 0;
-              const currentEquipment = userDoc.data().equipment || { pieces: 0, owned: [], equipped: { weapon: null, armor: null, accessory: null } };
-              const currentPieces = currentEquipment.pieces || 0;
-  
-              const newCoins = currentCoins + updates.goldChange;
-              const newPieces = currentPieces + updates.piecesChange;
-  
-              if (newCoins < 0) { throw new Error("Không đủ vàng."); }
-              if (newPieces < 0) { throw new Error("Không đủ Mảnh trang bị."); }
-  
-              transaction.update(userDocRef, {
-                  coins: newCoins,
-                  equipment: { 
-                      ...currentEquipment,
-                      pieces: newPieces, 
-                      owned: updates.newOwned, 
-                      equipped: updates.newEquipped 
-                  }
-              });
-          });
-  
-          setCoins(prev => prev + updates.goldChange);
-          setEquipmentPieces(prev => prev + updates.piecesChange);
+          const { newCoins, newPieces } = await updateUserInventory(userId, updates);
+          setCoins(newCoins);
+          setEquipmentPieces(newPieces);
           setOwnedItems(updates.newOwned);
           setEquippedItems(updates.newEquipped);
-          
-          console.log("Equipment data and resources updated successfully in Firestore.");
-  
+          console.log("Equipment data and resources updated successfully via service.");
       } catch (error) {
           console.error("Firestore transaction for equipment update failed:", error);
           throw error;
@@ -534,53 +316,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
-    if (!userId) {
-      console.error("Cannot purchase item: User not authenticated.");
-      throw new Error("Người dùng chưa được xác thực.");
-    }
+    if (!userId) { throw new Error("Người dùng chưa được xác thực."); }
     if (!item || typeof item.price !== 'number' || !item.id || typeof quantity !== 'number' || quantity <= 0) {
-      console.error("Invalid item data for purchase:", item);
       throw new Error("Dữ liệu vật phẩm hoặc số lượng không hợp lệ.");
     }
 
-    const userDocRef = doc(db, 'users', userId);
-    const totalCost = item.price * quantity;
     setIsSyncingData(true);
-
     try {
-      await runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) { throw new Error("Tài liệu người dùng không tồn tại!"); }
-
-        const currentCoins = userDoc.data().coins || 0;
-        if (currentCoins < totalCost) { throw new Error("Không đủ vàng."); }
-
-        const updates: { [key: string]: any } = { coins: currentCoins - totalCost, };
-
-        if (item.id === 1009) { // Sách Cổ
-          const currentBooks = userDoc.data().ancientBooks || 0;
-          updates.ancientBooks = currentBooks + quantity;
-        } else if (item.id === 2001) { // Nâng Cấp Sức Chứa Thẻ
-          const currentCapacity = userDoc.data().cardCapacity || 100;
-          updates.cardCapacity = currentCapacity + quantity;
-        } else {
-           console.warn(`Purchase logic might not be fully implemented for item ID: ${item.id}`);
-        }
-
-        transaction.update(userDocRef, updates);
-      });
-
-      // Update local state after successful transaction
-      setCoins(prev => prev - totalCost);
+      const { newCoins, newBooks, newCapacity } = await processShopPurchase(userId, item, quantity);
+      setCoins(newCoins);
       if (item.id === 1009) {
-        setAncientBooks(prev => prev + quantity);
+        setAncientBooks(newBooks);
       } else if (item.id === 2001) {
-        setCardCapacity(prev => prev + quantity);
+        setCardCapacity(newCapacity);
       }
-
       console.log(`Purchase successful for ${quantity}x ${item.name}.`);
       alert(`Mua thành công x${quantity} ${item.name}!`);
-
     } catch (error) {
       console.error("Shop purchase transaction failed:", error);
       alert(`Mua thất bại: ${error instanceof Error ? error.message : String(error)}`);
@@ -591,14 +342,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => { // Make async
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setIsLoadingUserData(true);
         try {
-          // TÁI CẤU TRÚC: Gọi hàm từ gameDataService.ts
-          const gameData = await fetchOrCreateUserGameData(user.uid);
+          const [gameData, jackpotData] = await Promise.all([
+             fetchOrCreateUserGameData(user.uid),
+             fetchJackpotPool()
+          ]);
           
-          // Cập nhật tất cả state từ dữ liệu nhận được
           setCoins(gameData.coins);
           setDisplayedCoins(gameData.coins);
           setGems(gameData.gems);
@@ -615,19 +367,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           setEquipmentPieces(gameData.equipment.pieces);
           setOwnedItems(gameData.equipment.owned);
           setEquippedItems(gameData.equipment.equipped);
-          
-          // Các hàm fetch khác
-          fetchJackpotPool();
+          setJackpotPool(jackpotData);
+
         } catch (error) {
-          console.error("Error fetching user game data:", error);
+          console.error("Error fetching initial user/app data:", error);
         } finally {
           setIsLoadingUserData(false);
         }
       } else {
-        setIsRankOpen(false); 
-        setIsPvpArenaOpen(false);
-        setIsLuckyGameOpen(false);
-        setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
+        setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false);
         setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 });
@@ -644,7 +392,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
     });
     return () => unsubscribe();
-  }, [auth, db]);
+  }, []);
 
   useEffect(() => {
       const handleVisibilityChange = () => {
@@ -673,7 +421,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     );
   };
 
-  const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>, ...otherSetters: React.Dispatch<React.SetStateAction<boolean>>[]) => {
+  const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
     return () => {
         if (isLoading) return;
         if (isSyncingData) {
@@ -714,15 +462,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
   const getPlayerBattleStats = () => {
-      const BASE_HP = 0; const BASE_ATK = 0; const BASE_DEF = 0;
+      const BASE_HP = 0, BASE_ATK = 0, BASE_DEF = 0;
       const bonusHp = calculateTotalStatValue(userStats.hp, statConfig.hp.baseUpgradeBonus);
       const bonusAtk = calculateTotalStatValue(userStats.atk, statConfig.atk.baseUpgradeBonus);
       const bonusDef = calculateTotalStatValue(userStats.def, statConfig.def.baseUpgradeBonus);
       
-      let itemHpBonus = 0;
-      let itemAtkBonus = 0;
-      let itemDefBonus = 0;
-
+      let itemHpBonus = 0, itemAtkBonus = 0, itemDefBonus = 0;
       Object.values(equippedItems).forEach(item => {
           if (item) {
               itemHpBonus += item.stats.hp || 0;
@@ -743,7 +488,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const getEquippedSkillsDetails = () => {
       if (!ownedSkills || !equippedSkillIds) return [];
       
-      const equippedDetails = equippedSkillIds
+      return equippedSkillIds
           .map(equippedId => {
               if (!equippedId) return null;
               const owned = ownedSkills.find(s => s.id === equippedId);
@@ -755,52 +500,28 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
               return { ...owned, ...blueprint };
           })
           .filter((skill): skill is OwnedSkill & SkillBlueprint => skill !== null);
-
-      return equippedDetails;
   };
 
-  // --- REFACTORED: New callback handler for VocabularyChestScreen ---
-  const handleDataChangedFromChest = (updates: { 
-      coinsChange?: number; 
-      gemsChange?: number; 
-      vocabAdded?: number 
-  }) => {
-      if (updates.coinsChange) {
-          setCoins(prev => prev + updates.coinsChange);
-      }
-      if (updates.gemsChange) {
-          setGems(prev => prev + updates.gemsChange);
-      }
-      if (updates.vocabAdded) {
-          setTotalVocabCollected(prev => prev + updates.vocabAdded);
-      }
+  const handleDataChangedFromChest = (updates: { coinsChange?: number; gemsChange?: number; vocabAdded?: number }) => {
+      if (updates.coinsChange) setCoins(prev => prev + updates.coinsChange);
+      if (updates.gemsChange) setGems(prev => prev + updates.gemsChange);
+      if (updates.vocabAdded) setTotalVocabCollected(prev => prev + updates.vocabAdded);
   };
 
-  // <<<--- BƯỚC 1: TẠO HÀM CALLBACK ĐỂ NHẬN DỮ LIỆU TỪ ACHIEVEMENTS SCREEN ---
   const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => {
-    if (updates.coins !== undefined) {
-      setCoins(updates.coins);
-    }
-    if (updates.masteryCards !== undefined) {
-      setMasteryCards(updates.masteryCards);
-    }
+    if (updates.coins !== undefined) setCoins(updates.coins);
+    if (updates.masteryCards !== undefined) setMasteryCards(updates.masteryCards);
     console.log("Main game state updated from achievements:", updates);
   };
 
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
-      <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank}
-          onShowLuckyGame={toggleLuckyGame} onShowMinerChallenge={toggleMinerChallenge}
-          onShowAchievements={toggleAchievements} onShowUpgrade={toggleUpgradeScreen}
-          onShowBaseBuilding={toggleBaseBuilding} onShowAdmin={isAdmin ? toggleAdminPanel : undefined}
-      >
+      <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank} onShowLuckyGame={toggleLuckyGame} onShowMinerChallenge={toggleMinerChallenge} onShowAchievements={toggleAchievements} onShowUpgrade={toggleUpgradeScreen} onShowBaseBuilding={toggleBaseBuilding} onShowAdmin={isAdmin ? toggleAdminPanel : undefined}>
         <DungeonCanvasBackground isPaused={isGamePaused} />
         <div style={{ display: isAnyOverlayOpen ? 'none' : 'block', visibility: isLoading ? 'hidden' : 'visible' }} className="w-full h-full">
           <div className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-transparent`} onClick={handleTap}>
             {renderCharacter()}
-            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden
-                        rounded-b-lg shadow-2xl bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950
-                        border-b border-l border-r border-slate-700/50">
+            <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden rounded-b-lg shadow-2xl bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950 border-b border-l border-r border-slate-700/50">
                 <HeaderBackground />
                 <button onClick={() => sidebarToggleRef.current?.()} className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20" aria-label="Mở sidebar" title="Mở sidebar">
                      <img src={uiAssets.menuIcon} alt="Menu Icon" className="w-5 h-5 object-contain" />
@@ -811,187 +532,49 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                 </div>
             </div>
-
             <RateLimitToast show={showRateLimitToast} />
-
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle },
-                 { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop },
-                 { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena }
-              ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
+              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest },
-                 { icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen },
-                 { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen },
-              ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
+              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Mission Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
           </div>
         </div>
 
         {/* --- Overlays / Modals --- */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary> </div>
-        
-        {/* PVP ARENA BLOCK */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isPvpArenaOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isPvpArenaOpen && auth.currentUser && (
-                    <PvpArena
-                        onClose={togglePvpArena}
-                        userId={auth.currentUser.uid}
-                        player1={{
-                            name: auth.currentUser.displayName || "You",
-                            avatarUrl: auth.currentUser.photoURL || "",
-                            coins: coins,
-                            initialStats: getPlayerBattleStats(),
-                            equippedSkills: getEquippedSkillsDetails()
-                        }}
-                        player2={{
-                            name: "Shadow Fiend",
-                            avatarUrl: "https://i.imgur.com/kQoG2Yd.png",
-                            initialStats: { maxHp: 1500, hp: 1500, atk: 120, def: 55 },
-                            equippedSkills: []
-                        }}
-                        onCoinChange={setCoins}
-                        onMatchEnd={(result) => {
-                            console.log(`Match ended. Winner: ${result.winner}`);
-                        }}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{isPvpArenaOpen && auth.currentUser && (<PvpArena onClose={togglePvpArena} userId={auth.currentUser.uid} player1={{ name: auth.currentUser.displayName || "You", avatarUrl: auth.currentUser.photoURL || "", coins: coins, initialStats: getPlayerBattleStats(), equippedSkills: getEquippedSkillsDetails() }} player2={{ name: "Shadow Fiend", avatarUrl: "https://i.imgur.com/kQoG2Yd.png", initialStats: { maxHp: 1500, hp: 1500, atk: 120, def: 55 }, equippedSkills: [] }} onCoinChange={async (amount) => setCoins(await updateUserCoins(auth.currentUser!.uid, amount))} onMatchEnd={(result) => console.log(`Match ended. Winner: ${result.winner}`)} /> )}</ErrorBoundary>
         </div>
-
-        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(auth.currentUser!.uid, amount))} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={(amount, reset) => updateJackpotPoolInFirestore(amount, reset)} />)}</ErrorBoundary> </div>
+        <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> <ErrorBoundary>{auth.currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(auth.currentUser!.uid, amount))} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={handleUpdateJackpotPool} />)}</ErrorBoundary> </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isMinerChallengeOpen && auth.currentUser && (
-                <MinerChallenge
-                    onClose={toggleMinerChallenge}
-                    initialDisplayedCoins={displayedCoins}
-                    masteryCards={masteryCards}
-                    initialPickaxes={pickaxes}
-                    initialHighestFloor={minerChallengeHighestFloor}
-                    onGameEnd={handleMinerChallengeEnd}
-                />)}</ErrorBoundary>
+            <ErrorBoundary>{isMinerChallengeOpen && auth.currentUser && (<MinerChallenge onClose={toggleMinerChallenge} initialDisplayedCoins={displayedCoins} masteryCards={masteryCards} initialPickaxes={pickaxes} initialHighestFloor={minerChallengeHighestFloor} onGameEnd={handleMinerChallengeEnd} />)}</ErrorBoundary>
         </div>
-
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBossBattleOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isBossBattleOpen && auth.currentUser && (
-                    <BossBattle
-                        onClose={toggleBossBattle}
-                        playerInitialStats={getPlayerBattleStats()}
-                        onBattleEnd={async (result, rewards) => {
-                            console.log(`Battle ended: ${result}, Rewards: ${rewards.coins} coins`);
-                            if (result === 'win' && auth.currentUser) {
-                                const newCoins = await updateUserCoins(auth.currentUser.uid, rewards.coins);
-                                setCoins(newCoins);
-                            }
-                        }}
-                        initialFloor={bossBattleHighestFloor}
-                        onFloorComplete={handleBossFloorUpdate}
-                        equippedSkills={getEquippedSkillsDetails()}
-                        displayedCoins={displayedCoins}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{isBossBattleOpen && auth.currentUser && (<BossBattle onClose={toggleBossBattle} playerInitialStats={getPlayerBattleStats()} onBattleEnd={async (result, rewards) => { if (result === 'win' && auth.currentUser) setCoins(await updateUserCoins(auth.currentUser.uid, rewards.coins)); }} initialFloor={bossBattleHighestFloor} onFloorComplete={handleBossFloorUpdate} equippedSkills={getEquippedSkillsDetails()} displayedCoins={displayedCoins} />)}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} onPurchase={handleShopPurchase} currentUser={auth.currentUser} />}</ErrorBoundary> </div>
-        
-        {/* --- REFACTORED: Updated call to VocabularyChestScreen --- */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> 
-            <ErrorBoundary>
-                {isVocabularyChestOpen && currentUser && ( 
-                    <VocabularyChestScreen 
-                        onClose={toggleVocabularyChest} 
-                        currentUserId={currentUser.uid} 
-                        
-                        // Pass initial data down
-                        initialCoins={coins}
-                        initialGems={gems}
-                        initialTotalVocab={totalVocabCollected}
-                        initialCardCapacity={cardCapacity}
-                        
-                        // Pass the single callback for updates
-                        onDataChanged={handleDataChangedFromChest}
-                    /> 
-                )}
-            </ErrorBoundary> 
+            <ErrorBoundary>{isVocabularyChestOpen && currentUser && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} initialCoins={coins} initialGems={gems} initialTotalVocab={totalVocabCollected} initialCardCapacity={cardCapacity} onDataChanged={handleDataChangedFromChest} />)}</ErrorBoundary> 
         </div>
-        
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isAchievementsOpen && (
-                    <AchievementsScreen
-                        user={auth.currentUser}
-                        onClose={toggleAchievements}
-                        // <<<--- BƯỚC 1 (tt): TRUYỀN HÀM CALLBACK XUỐNG ---
-                        onDataUpdate={handleAchievementsDataUpdate}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{isAchievementsOpen && (<AchievementsScreen user={auth.currentUser} onClose={toggleAchievements} onDataUpdate={handleAchievementsDataUpdate} />)}</ErrorBoundary>
         </div>
-        
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isUpgradeScreenOpen && auth.currentUser && (
-                    <UpgradeStatsScreen
-                        onClose={toggleUpgradeScreen}
-                        initialGold={coins}
-                        initialStats={userStats}
-                        onConfirmUpgrade={(cost, newStats) =>
-                          handleConfirmStatUpgrade(auth.currentUser!.uid, cost, newStats)
-                        }
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{isUpgradeScreenOpen && auth.currentUser && (<UpgradeStatsScreen onClose={toggleUpgradeScreen} initialGold={coins} initialStats={userStats} onConfirmUpgrade={(cost, newStats) => handleConfirmStatUpgrade(cost, newStats)} />)}</ErrorBoundary>
         </div>
-        
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isBaseBuildingOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isBaseBuildingOpen && auth.currentUser && (
-                    <BaseBuildingScreen
-                        onClose={toggleBaseBuilding}
-                        coins={coins}
-                        gems={gems}
-                        onUpdateCoins={async (amount) => setCoins(await updateUserCoins(auth.currentUser!.uid, amount))}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{isBaseBuildingOpen && auth.currentUser && (<BaseBuildingScreen onClose={toggleBaseBuilding} coins={coins} gems={gems} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(auth.currentUser!.uid, amount))} />)}</ErrorBoundary>
         </div>
-
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isSkillScreenOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isSkillScreenOpen && auth.currentUser && (
-                    <SkillScreen 
-                        onClose={toggleSkillScreen} 
-                        gold={coins}
-                        ancientBooks={ancientBooks}
-                        ownedSkills={ownedSkills}
-                        equippedSkillIds={equippedSkillIds}
-                        onSkillsUpdate={handleSkillsUpdate}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{isSkillScreenOpen && auth.currentUser && (<SkillScreen onClose={toggleSkillScreen} gold={coins} ancientBooks={ancientBooks} ownedSkills={ownedSkills} equippedSkillIds={equippedSkillIds} onSkillsUpdate={handleSkillsUpdate} />)}</ErrorBoundary>
         </div>
-
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isEquipmentOpen && auth.currentUser && (
-                    <EquipmentScreen 
-                        onClose={toggleEquipmentScreen} 
-                        gold={coins}
-                        equipmentPieces={equipmentPieces}
-                        ownedItems={ownedItems}
-                        equippedItems={equippedItems}
-                        onInventoryUpdate={handleInventoryUpdate}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{isEquipmentOpen && auth.currentUser && (<EquipmentScreen onClose={toggleEquipmentScreen} gold={coins} equipmentPieces={equipmentPieces} ownedItems={ownedItems} equippedItems={equippedItems} onInventoryUpdate={handleInventoryUpdate} />)}</ErrorBoundary>
         </div>
-
         <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}> <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary> </div>
       </SidebarLayout>
-
       {isLoading && ( <div className="absolute inset-0 z-[100] flex items-center justify-center bg-gray-950/80 backdrop-blur-sm"> <LoadingSpinner /> </div> )}
     </div>
   );
