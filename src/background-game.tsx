@@ -776,6 +776,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
   };
 
+  // <<<--- BƯỚC 1: TẠO HÀM CALLBACK ĐỂ NHẬN DỮ LIỆU TỪ ACHIEVEMENTS SCREEN ---
+  const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => {
+    if (updates.coins !== undefined) {
+      setCoins(updates.coins);
+    }
+    if (updates.masteryCards !== undefined) {
+      setMasteryCards(updates.masteryCards);
+    }
+    console.log("Main game state updated from achievements:", updates);
+  };
+
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
       <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank}
@@ -913,6 +924,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                     <AchievementsScreen
                         user={auth.currentUser}
                         onClose={toggleAchievements}
+                        // <<<--- BƯỚC 1 (tt): TRUYỀN HÀM CALLBACK XUỐNG ---
+                        onDataUpdate={handleAchievementsDataUpdate}
                     />
                 )}
             </ErrorBoundary>
