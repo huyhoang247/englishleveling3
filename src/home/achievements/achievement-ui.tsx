@@ -1,10 +1,11 @@
-// --- START OF FILE thanh-tuu.tsx ---
+// --- START OF FILE achievement-ui.tsx ---
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react'; // <<<--- THAY ĐỔI: Thêm useCallback
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { useAchievements } from './achievement-context.tsx';
 import type { VocabularyItem } from '../../gameDataService.ts';
-import AchievementsLoadingSkeleton from './achievement-loading.tsx'; // <<<--- IMPORT COMPONENT SKELETON MỚI
+import AchievementsLoadingSkeleton from './achievement-loading.tsx';
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- Signature của Props ---
 interface AchievementsScreenProps {
@@ -22,19 +23,8 @@ const GiftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" /> </svg> );
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
-// Hook helper để lấy giá trị trước đó của một biến
-function usePrevious<T>(value: T): T | undefined {
-    const ref = useRef<T>();
-    useEffect(() => {
-      ref.current = value;
-    }, [value]);
-    return ref.current;
-}
-
-
 // --- Thành phần chính của ứng dụng ---
 export default function AchievementsScreen({ onClose }: AchievementsScreenProps) {
-  // Lấy toàn bộ dữ liệu và hàm từ context
   const {
     vocabulary,
     coins,
@@ -45,39 +35,10 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
     claimAllAchievements,
     totalClaimableRewards,
   } = useAchievements();
-  
-  // State cục bộ chỉ dành cho UI của component này
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [displayedCoins, setDisplayedCoins] = useState(0);
   const ITEMS_PER_PAGE = 30;
-
-  // Xử lý animation cho coin
-  const previousCoins = usePrevious(coins);
-  useEffect(() => {
-    // Nếu giá trị coin trước đó tồn tại và coin mới lớn hơn (có thưởng)
-    if (previousCoins !== undefined && coins > previousCoins) {
-        startCoinCountAnimation(previousCoins, coins);
-    } else {
-        // Ngược lại, chỉ cần cập nhật giá trị hiển thị (VD: lúc đầu, hoặc khi bị trừ tiền)
-        setDisplayedCoins(coins);
-    }
-  }, [coins]); // Phụ thuộc vào `coins` từ context
-
-  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
-    if (startValue === endValue) return;
-    const isCountingUp = endValue > startValue;
-    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
-    let current = startValue;
-    const interval = setInterval(() => {
-      if (isCountingUp) { current += step; } else { current -= step; }
-      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
-        setDisplayedCoins(endValue);
-        clearInterval(interval);
-      } else {
-        setDisplayedCoins(current);
-      }
-    }, 30);
-  }, []);
+  const displayedCoins = useAnimateValue(coins, 1000);
 
   const sortedVocabulary = useMemo(() => [...vocabulary].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
@@ -100,15 +61,13 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
     else if (totalPages === 0 && sortedVocabulary.length > 0) setCurrentPage(1);
   }, [currentPage, totalPages, sortedVocabulary.length]);
   
-  // --- THAY ĐỔI Ở ĐÂY ---
-  // Khi isInitialLoading là true, hiển thị component skeleton mới
   if (isInitialLoading) {
     return <AchievementsLoadingSkeleton />;
   }
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center">
-      <header className="w-full max-w-5xl flex items-center justify-between py-2.5 px-4 sticky top-0 z-20 bg-slate-900/50 backdrop-blur-sm border-b border-slate-700/50">
+       <header className="w-full max-w-5xl flex items-center justify-between py-2.5 px-4 sticky top-0 z-20 bg-slate-900/50 backdrop-blur-sm border-b border-slate-700/50">
         <button
           onClick={onClose}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
@@ -216,23 +175,24 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
                 onPageChange={setCurrentPage}
              />
         </div>
-        
       </div>
     </div>
   );
 }
 
-// --- Component con ---
-function VocabularyRow({ item, rank, onClaim, isAnyClaiming }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void, isAnyClaiming: boolean }) {
+// <<<--- THAY ĐỔI: Bọc component bằng React.memo để tránh re-render không cần thiết ---
+const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, isAnyClaiming }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void, isAnyClaiming: boolean }) {
   const { id, word, exp, level, maxExp } = item;
   const progressPercentage = maxExp > 0 ? Math.min((exp / maxExp) * 100, 100) : 0;
   const isClaimable = exp >= maxExp;
   const goldReward = 100 * level;
 
-  const handleClaimClick = () => {
+  // <<<--- THAY ĐỔI: Bọc hàm xử lý click trong useCallback ---
+  // Điều này đảm bảo hàm không bị tạo lại trên mỗi lần render, giúp React.memo hoạt động
+  const handleClaimClick = useCallback(() => {
     if (!isClaimable || isAnyClaiming) return;
     onClaim(id);
-  };
+  }, [id, isClaimable, isAnyClaiming, onClaim]);
   
   return (
     <div className="grid grid-cols-12 gap-x-4 gap-y-3 items-center p-4 bg-slate-800/70 rounded-xl border border-slate-700/80 hover:bg-slate-700/60 hover:border-cyan-500/50 transition-all duration-300">
@@ -247,9 +207,12 @@ function VocabularyRow({ item, rank, onClaim, isAnyClaiming }: { item: Vocabular
       <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isAnyClaiming ? 'Đang nhận...' : isClaimable ? 'Nhận' : 'Chưa Đạt'} </button> </div>
     </div>
   );
-}
+});
 
-// --- Component Phân Trang ---
+// Thêm display name để dễ debug trong React Dev Tools
+VocabularyRow.displayName = 'VocabularyRow';
+
+// --- Component Phân Trang (Không thay đổi) ---
 const PaginationControls = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void; }) => {
     const paginationRange = useMemo(() => {
         const siblingCount = 1;
