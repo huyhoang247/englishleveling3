@@ -4,6 +4,7 @@ import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import CoinDisplay from './ui/display/coin-display.tsx';
 import { useAchievements } from './contexts/AchievementsContext.tsx';
 import type { VocabularyItem } from './gameDataService.ts';
+import AchievementsLoadingSkeleton from './achievements-loading.tsx'; // <<<--- DÒNG IMPORT MỚI ĐÂY!
 
 // --- Signature của Props ---
 interface AchievementsScreenProps {
@@ -30,7 +31,6 @@ function usePrevious<T>(value: T): T | undefined {
     return ref.current;
 }
 
-
 // --- Thành phần chính của ứng dụng ---
 export default function AchievementsScreen({ onClose }: AchievementsScreenProps) {
   // Lấy toàn bộ dữ liệu và hàm từ context
@@ -53,14 +53,12 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
   // Xử lý animation cho coin
   const previousCoins = usePrevious(coins);
   useEffect(() => {
-    // Nếu giá trị coin trước đó tồn tại và coin mới lớn hơn (có thưởng)
     if (previousCoins !== undefined && coins > previousCoins) {
         startCoinCountAnimation(previousCoins, coins);
     } else {
-        // Ngược lại, chỉ cần cập nhật giá trị hiển thị (VD: lúc đầu, hoặc khi bị trừ tiền)
         setDisplayedCoins(coins);
     }
-  }, [coins]); // Phụ thuộc vào `coins` từ context
+  }, [coins]);
 
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
@@ -99,13 +97,9 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
     else if (totalPages === 0 && sortedVocabulary.length > 0) setCurrentPage(1);
   }, [currentPage, totalPages, sortedVocabulary.length]);
   
+  // Sử dụng component skeleton được import
   if (isInitialLoading) {
-    return (
-      <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-cyan-400"></div>
-        <p className="mt-4 text-lg font-semibold text-slate-300">Đang đồng bộ dữ liệu thành tựu...</p>
-      </div>
-    );
+    return <AchievementsLoadingSkeleton />;
   }
 
   return (
@@ -279,7 +273,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
             return [...leftRange, '...', totalPages];
         }
 
-        if (shouldShowLeftDots && !shouldShowRightDots) {
+        if (shouldShowLeftDots && !shouldShowRightdots) {
             let rightItemCount = 3 + 2 * siblingCount;
             let rightRange = range(totalPages - rightItemCount + 1, totalPages);
             return [firstPageIndex, '...', ...rightRange];
