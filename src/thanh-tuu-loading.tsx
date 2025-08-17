@@ -45,8 +45,8 @@ const AchievementsLoadingSkeleton: React.FC = () => {
         </div>
       </header>
 
-      {/* --- Skeleton cho Main Content --- */}
-      <div className="w-full max-w-4xl mx-auto p-4 sm:p-8 pt-6 overflow-y-auto">
+      {/* --- Skeleton cho Main Content (ĐÃ BỎ "overflow-y-auto") --- */}
+      <div className="w-full max-w-4xl mx-auto p-4 sm:p-8 pt-6">
         
         {/* Skeleton cho các thẻ Stats */}
         <section className="mb-6 flex flex-row justify-center items-center gap-4">
@@ -70,22 +70,15 @@ const AchievementsLoadingSkeleton: React.FC = () => {
             <div className="col-span-2 h-4 bg-slate-700 rounded-md animate-pulse"></div>
           </div>
 
-          {/* Các dòng skeleton */}
+          {/* Các dòng skeleton (ĐÃ GIẢM CÒN 2 DÒNG) */}
           <div className="flex flex-col gap-2 mt-0 md:mt-2">
-            {Array(5).fill(0).map((_, index) => (
+            {Array(2).fill(0).map((_, index) => (
                 <SkeletonRow key={index} />
             ))}
           </div>
         </main>
         
-        {/* Skeleton cho phân trang */}
-        <div className="mt-6 mb-4 flex items-center justify-center gap-2">
-            <div className="w-9 h-9 bg-slate-800 rounded-lg animate-pulse"></div>
-            <div className="w-9 h-9 bg-slate-800 rounded-lg animate-pulse"></div>
-            <div className="w-9 h-9 bg-slate-800 rounded-lg animate-pulse"></div>
-            <div className="w-9 h-9 bg-slate-800 rounded-lg animate-pulse"></div>
-            <div className="w-9 h-9 bg-slate-800 rounded-lg animate-pulse"></div>
-        </div>
+        {/* --- PHẦN SKELETON PHÂN TRANG ĐÃ BỊ XÓA --- */}
         
       </div>
     </div>
