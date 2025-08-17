@@ -1,10 +1,11 @@
 // --- START OF FILE thanh-tuu.tsx ---
 
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { useAchievements } from './achievement-context.tsx';
 import type { VocabularyItem } from '../../gameDataService.ts';
 import AchievementsLoadingSkeleton from './achievement-loading.tsx'; // <<<--- IMPORT COMPONENT SKELETON MỚI
+import { useAnimateValue } from '../../ui/useAnimateValue.ts'; // <<<--- IMPORT HOOK MỚI
 
 // --- Signature của Props ---
 interface AchievementsScreenProps {
@@ -22,16 +23,6 @@ const GiftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" /> </svg> );
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
-// Hook helper để lấy giá trị trước đó của một biến
-function usePrevious<T>(value: T): T | undefined {
-    const ref = useRef<T>();
-    useEffect(() => {
-      ref.current = value;
-    }, [value]);
-    return ref.current;
-}
-
-
 // --- Thành phần chính của ứng dụng ---
 export default function AchievementsScreen({ onClose }: AchievementsScreenProps) {
   // Lấy toàn bộ dữ liệu và hàm từ context
@@ -48,36 +39,11 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
   
   // State cục bộ chỉ dành cho UI của component này
   const [currentPage, setCurrentPage] = useState(1);
-  const [displayedCoins, setDisplayedCoins] = useState(0);
   const ITEMS_PER_PAGE = 30;
 
-  // Xử lý animation cho coin
-  const previousCoins = usePrevious(coins);
-  useEffect(() => {
-    // Nếu giá trị coin trước đó tồn tại và coin mới lớn hơn (có thưởng)
-    if (previousCoins !== undefined && coins > previousCoins) {
-        startCoinCountAnimation(previousCoins, coins);
-    } else {
-        // Ngược lại, chỉ cần cập nhật giá trị hiển thị (VD: lúc đầu, hoặc khi bị trừ tiền)
-        setDisplayedCoins(coins);
-    }
-  }, [coins]); // Phụ thuộc vào `coins` từ context
-
-  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
-    if (startValue === endValue) return;
-    const isCountingUp = endValue > startValue;
-    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
-    let current = startValue;
-    const interval = setInterval(() => {
-      if (isCountingUp) { current += step; } else { current -= step; }
-      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
-        setDisplayedCoins(endValue);
-        clearInterval(interval);
-      } else {
-        setDisplayedCoins(current);
-      }
-    }, 30);
-  }, []);
+  // --- THAY ĐỔI Ở ĐÂY ---
+  // Sử dụng hook useAnimateValue để tạo hiệu ứng số đếm cho coin
+  const displayedCoins = useAnimateValue(coins, 1000); // Animate trong 1 giây
 
   const sortedVocabulary = useMemo(() => [...vocabulary].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
