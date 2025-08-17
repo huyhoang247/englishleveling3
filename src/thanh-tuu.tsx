@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import CoinDisplay from './ui/display/coin-display.tsx';
 import { useAchievements } from './contexts/AchievementsContext.tsx';
 import type { VocabularyItem } from './gameDataService.ts';
-import AchievementsLoadingSkeleton from './achievements-loading.tsx'; // <<<--- DÒNG IMPORT MỚI ĐÂY!
+import AchievementsLoadingSkeleton from './thanh-tuu-loading.tsx'; // <<<--- IMPORT COMPONENT SKELETON MỚI
 
 // --- Signature của Props ---
 interface AchievementsScreenProps {
@@ -31,6 +31,7 @@ function usePrevious<T>(value: T): T | undefined {
     return ref.current;
 }
 
+
 // --- Thành phần chính của ứng dụng ---
 export default function AchievementsScreen({ onClose }: AchievementsScreenProps) {
   // Lấy toàn bộ dữ liệu và hàm từ context
@@ -53,12 +54,14 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
   // Xử lý animation cho coin
   const previousCoins = usePrevious(coins);
   useEffect(() => {
+    // Nếu giá trị coin trước đó tồn tại và coin mới lớn hơn (có thưởng)
     if (previousCoins !== undefined && coins > previousCoins) {
         startCoinCountAnimation(previousCoins, coins);
     } else {
+        // Ngược lại, chỉ cần cập nhật giá trị hiển thị (VD: lúc đầu, hoặc khi bị trừ tiền)
         setDisplayedCoins(coins);
     }
-  }, [coins]);
+  }, [coins]); // Phụ thuộc vào `coins` từ context
 
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
@@ -97,7 +100,8 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
     else if (totalPages === 0 && sortedVocabulary.length > 0) setCurrentPage(1);
   }, [currentPage, totalPages, sortedVocabulary.length]);
   
-  // Sử dụng component skeleton được import
+  // --- THAY ĐỔI Ở ĐÂY ---
+  // Khi isInitialLoading là true, hiển thị component skeleton mới
   if (isInitialLoading) {
     return <AchievementsLoadingSkeleton />;
   }
@@ -273,7 +277,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
             return [...leftRange, '...', totalPages];
         }
 
-        if (shouldShowLeftDots && !shouldShowRightdots) {
+        if (shouldShowLeftDots && !shouldShowRightDots) {
             let rightItemCount = 3 + 2 * siblingCount;
             let rightRange = range(totalPages - rightItemCount + 1, totalPages);
             return [firstPageIndex, '...', ...rightRange];
