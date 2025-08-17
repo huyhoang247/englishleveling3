@@ -20,6 +20,7 @@ import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
 import AchievementsScreen from './thanh-tuu.tsx';
+import { AchievementsProvider } from './contexts/AchievementsContext.tsx'; // THÊM IMPORT NÀY
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './skill.tsx';
@@ -31,7 +32,6 @@ import {
   fetchOrCreateUserGameData, 
   updateUserCoins, 
   updateUserGems,
-  fetchAndSyncVocabularyData,
   VocabularyItem
 } from './gameDataService.ts';
 
@@ -182,7 +182,6 @@ interface ObstacleRunnerGameProps {
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser, assetsLoaded }: ObstacleRunnerGameProps) {
 
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
-  const [vocabularyData, setVocabularyData] = useState<VocabularyItem[] | null>(null);
 
   // States for UI and User Data
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
@@ -252,19 +251,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return () => clearTimeout(timer);
     }
   }, [showRateLimitToast]);
-
-  const fetchVocabularyData = async (userId: string) => {
-    try {
-      // TÁI CẤU TRÚC: Gọi hàm từ service để lấy dữ liệu thành tựu
-      const syncedData = await fetchAndSyncVocabularyData(userId);
-      setVocabularyData(syncedData);
-      console.log("Vocabulary achievements data synced via service.");
-    } catch (error) {
-      console.error("Error fetching vocabulary data via service:", error);
-      // Giữ lại fallback để UI không bị crash
-      setVocabularyData([]); 
-    }
-  };
 
   const fetchJackpotPool = async () => {
     try {
@@ -652,7 +638,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           setEquippedItems(gameData.equipment.equipped);
           
           // Các hàm fetch khác
-          fetchVocabularyData(user.uid);
           fetchJackpotPool();
         } catch (error) {
           console.error("Error fetching user game data:", error);
@@ -676,7 +661,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         setOwnedItems([]);
         setEquippedItems({ weapon: null, armor: null, accessory: null });
         setCardCapacity(100);
-        setJackpotPool(0); setIsLoadingUserData(true); setVocabularyData(null);
+        setJackpotPool(0); setIsLoadingUserData(true);
       }
     });
     return () => unsubscribe();
@@ -692,7 +677,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   }, []);
 
   const handleTap = () => { };
-  const isLoading = isLoadingUserData || !assetsLoaded || vocabularyData === null;
+  const isLoading = isLoadingUserData || !assetsLoaded;
   useEffect(() => {
     if (displayedCoins === coins) return;
     const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100);
@@ -707,13 +692,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <DotLottieReact src={lottieAssets.characterRun} loop autoplay={!isPaused} className="w-full h-full" />
       </div>
     );
-  };
-
-  const handleAchievementsUpdate = (updates: { coins: number; masteryCards: number; vocabulary: VocabularyItem[] }) => {
-    console.log("Syncing state from AchievementsScreen. New coin count:", updates.coins);
-    setCoins(updates.coins);
-    setMasteryCards(updates.masteryCards);
-    setVocabularyData(updates.vocabulary);
   };
 
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>, ...otherSetters: React.Dispatch<React.SetStateAction<boolean>>[]) => {
@@ -940,11 +918,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isAchievementsOpen && auth.currentUser && (
-                    <AchievementsScreen
-                        onClose={toggleAchievements}
-                        userId={auth.currentUser.uid}
-                        onDataUpdated={handleAchievementsUpdate}
-                    />
+                    <AchievementsProvider user={auth.currentUser}>
+                        <AchievementsScreen
+                            onClose={toggleAchievements}
+                        />
+                    </AchievementsProvider>
                 )}
             </ErrorBoundary>
         </div>
