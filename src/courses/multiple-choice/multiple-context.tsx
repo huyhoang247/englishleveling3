@@ -7,7 +7,7 @@ import quizData from './multiple-data.ts';
 import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
 import { exampleData } from '../../voca-data/example-data.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
-import { generateAudioQuizQuestions } from '../../audio-quiz-generator.ts';
+import { generateAudioQuizQuestions } from '../../voca-data/audio-quiz-generator.ts';
 
 // --- CÁC HÀM TIỆN ÍCH VÀ INTERFACE ---
 const shuffleArray = (array: any[]) => {
