@@ -19,8 +19,8 @@ import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
-import AchievementsScreen from './home/achievement-ui.tsx';
-import { AchievementsProvider } from './home/achievement-context.tsx'; // THÊM IMPORT NÀY
+import AchievementsScreen from './home/achievements/achievement-ui.tsx';
+import { AchievementsProvider } from './home/achievements/achievement-context.tsx'; // THÊM IMPORT NÀY
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './skill.tsx';
