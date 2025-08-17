@@ -5,7 +5,7 @@ import { db, auth } from '../../firebase.js';
 import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../course-data-service.ts';
 import quizData from './multiple-data.ts';
 import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
-import { exampleData } from '../../example-data.ts';
+import { exampleData } from '../../voca-data/example-data.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
 import { generateAudioQuizQuestions } from '../../audio-quiz-generator.ts';
 
