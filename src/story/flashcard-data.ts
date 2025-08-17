@@ -3,7 +3,7 @@
 import { defaultImageUrls as initialDefaultImageUrls } from '../image-url.ts';
 import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
 import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
-import { exampleData } from '../example-data.ts';
+import { exampleData } from '../voca-data/example-data.ts';
 
 // --- Interfaces and Data ---
 // Các interface này được dùng chung bởi nhiều component
