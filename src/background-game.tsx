@@ -20,8 +20,7 @@ import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
-import AchievementsScreen from './home/achievements/achievement-ui.tsx'; // <<<--- IMPORT NÀY VẪN GIỮ NGUYÊN
-// import { AchievementsProvider } from './home/achievements/achievement-context.tsx'; // <<<--- XÓA DÒNG NÀY
+import AchievementsScreen from './home/achievements/achievement-ui.tsx'; 
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './skill.tsx';
@@ -61,57 +60,44 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
 // --- START of content from icon.tsx ---
 
 // --- Component Icon Gem ---
-// Định nghĩa props cho GemIcon
 interface GemIconProps {
-  size?: number; // Kích thước icon (mặc định 24)
-  color?: string; // Màu sắc icon (mặc định 'currentColor') - Lưu ý: SVG này dùng ảnh, màu sắc có thể không áp dụng trực tiếp
-  className?: string; // Các class CSS bổ sung
-  [key: string]: any; // Cho phép các props khác như onClick, style, v.v.
+  size?: number;
+  color?: string;
+  className?: string;
+  [key: string]: any;
 }
 
-// Component GemIcon: Hiển thị icon viên ngọc
 const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => {
-  // Lưu ý: Icon này sử dụng ảnh, nên thuộc tính 'color' sẽ không thay đổi màu của ảnh.
-  // Bạn có thể cần thay đổi ảnh hoặc sử dụng SVG gốc nếu muốn thay đổi màu sắc động.
   return (
     <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
       <img
-        // Sử dụng ảnh từ tệp tài nguyên tập trung
         src={uiAssets.gemIcon}
-        alt="Tourmaline Gem Icon" // Alt text cho khả năng tiếp cận
-        className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
+        alt="Tourmaline Gem Icon"
+        className="w-full h-full object-contain"
       />
     </div>
   );
 };
 
 // --- Component Stats Icon ---
-// Định nghĩa props cho StatsIcon
 interface StatsIconProps {
-  onClick: () => void; // Hàm được gọi khi icon được click
-  // Thêm các props khác nếu cần cho styling hoặc state
+  onClick: () => void;
 }
 
-// Component StatsIcon: Hiển thị icon mở màn hình chỉ số
 const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => {
   return (
-    // Container div cho icon
-    // Thêm relative và z-10 để đảm bảo nó nằm trên các lớp nền trong header
     <div className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-10"
-         onClick={onClick} // Gọi hàm onClick khi được click
-         title="Xem chỉ số nhân vật" // Tooltip cho khả năng tiếp cận
+         onClick={onClick}
+         title="Xem chỉ số nhân vật"
     >
-      {/* Thẻ img cho icon */}
       <img
-        src={uiAssets.statsIcon} // Sử dụng biến từ tệp tài nguyên
-        alt="Award Icon" // Alt text cho khả năng tiếp cận
-        className="w-full h-full object-contain" // Đảm bảo ảnh vừa với container
-        // Xử lý lỗi tải ảnh
+        src={uiAssets.statsIcon}
+        alt="Award Icon"
+        className="w-full h-full object-contain"
         onError={(e) => {
-          const target = e.target as HTMLImageElement; // Ép kiểu sang HTMLImageElement
-          target.onerror = null; // Ngăn chặn vòng lặp vô hạn nếu placeholder cũng lỗi
-          // Cập nhật placeholder hoặc xử lý lỗi tải ảnh từ đường dẫn local nếu cần
-          target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon"; // Hiển thị ảnh placeholder khi lỗi
+          const target = e.target as HTMLImageElement;
+          target.onerror = null;
+          target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon";
         }}
       />
     </div>
@@ -402,13 +388,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           });
       } catch (error) { console.error("Firestore Transaction failed for jackpot pool: ", error); }
   };
-
-  const handleGemReward = async (amount: number) => {
-    if (auth.currentUser) {
-      const newGems = await updateUserGems(auth.currentUser.uid, amount);
-      setGems(newGems);
-    }
-  };
     
   const handleConfirmStatUpgrade = async (
     userId: string,
@@ -494,7 +473,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
       } catch (error) {
           console.error("Firestore transaction for skill update failed:", error);
-          // Re-throw the error so the calling component (SkillScreen) can handle it
           throw error;
       } finally {
           setIsSyncingData(false);
@@ -781,6 +759,23 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return equippedDetails;
   };
 
+  // --- REFACTORED: New callback handler for VocabularyChestScreen ---
+  const handleDataChangedFromChest = (updates: { 
+      coinsChange?: number; 
+      gemsChange?: number; 
+      vocabAdded?: number 
+  }) => {
+      if (updates.coinsChange) {
+          setCoins(prev => prev + updates.coinsChange);
+      }
+      if (updates.gemsChange) {
+          setGems(prev => prev + updates.gemsChange);
+      }
+      if (updates.vocabAdded) {
+          setTotalVocabCollected(prev => prev + updates.vocabAdded);
+      }
+  };
+
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
       <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank}
@@ -849,7 +844,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                         onCoinChange={setCoins}
                         onMatchEnd={(result) => {
                             console.log(`Match ended. Winner: ${result.winner}`);
-                            // TODO: Implement logic for rank updates, rewards, etc.
                         }}
                     />
                 )}
@@ -891,26 +885,28 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             </ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} onPurchase={handleShopPurchase} currentUser={auth.currentUser} />}</ErrorBoundary> </div>
+        
+        {/* --- REFACTORED: Updated call to VocabularyChestScreen --- */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> 
             <ErrorBoundary>
                 {isVocabularyChestOpen && currentUser && ( 
                     <VocabularyChestScreen 
                         onClose={toggleVocabularyChest} 
                         currentUserId={currentUser.uid} 
-                        onUpdateCoins={async (amount) => setCoins(await updateUserCoins(currentUser.uid, amount))} 
-                        onUpdateGems={async (amount) => setGems(await updateUserGems(currentUser.uid, amount))}
-                        onGemReward={handleGemReward} 
-                        displayedCoins={displayedCoins} 
-                        gems={gems}
-                        totalVocabCollected={totalVocabCollected} 
-                        cardCapacity={cardCapacity} 
-                        onVocabUpdate={(count) => setTotalVocabCollected(prev => prev + count)} 
+                        
+                        // Pass initial data down
+                        initialCoins={coins}
+                        initialGems={gems}
+                        initialTotalVocab={totalVocabCollected}
+                        initialCardCapacity={cardCapacity}
+                        
+                        // Pass the single callback for updates
+                        onDataChanged={handleDataChangedFromChest}
                     /> 
                 )}
             </ErrorBoundary> 
         </div>
         
-        {/* --- ĐOẠN CODE ĐÃ ĐƯỢC CẬP NHẬT --- */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isAchievementsOpen && (
@@ -987,4 +983,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
-// --- END OF FILE background-game.tsx ---
