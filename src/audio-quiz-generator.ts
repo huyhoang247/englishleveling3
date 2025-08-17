@@ -1,6 +1,6 @@
 // --- START OF FILE: audio-quiz-generator.ts ---
 
-import { defaultVocabulary } from './list-vocabulary.ts';
+import { defaultVocabulary } from './voca-data/list-vocabulary.ts';
 
 // Định nghĩa cấu trúc cho một đối tượng câu hỏi audio.
 export interface AudioQuizQuestion {
