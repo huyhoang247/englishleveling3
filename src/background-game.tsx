@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './ui/display/coin-display.tsx';
+import GemDisplay from './ui/display/gem-display.tsx'; // Import the new GemDisplay component
 import { getFirestore, doc, getDoc, setDoc, runTransaction, collection, getDocs } from 'firebase/firestore';
 import { auth } from './firebase.js';
 import { User } from 'firebase/auth';
@@ -800,14 +801,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 </button>
                 <div className="flex-1"></div>
                 <div className="flex items-center space-x-1 currency-display-container relative z-10">
-                    <div className="bg-gradient-to-br from-purple-500 to-indigo-700 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-300 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-                        <div className="relative mr-0.5 flex items-center justify-center"><GemIcon size={16} color="#a78bfa" className="relative z-20" /></div>
-                        <div className="font-bold text-purple-200 text-xs tracking-wide">{gems.toLocaleString()}</div>
-                        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200 group-hover:add-button-pulse"><span className="text-white font-bold text-xs">+</span></div>
-                        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-                        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-purple-200 rounded-full animate-pulse-fast"></div>
-                    </div>
+                    <GemDisplay displayedGems={gems} />
                     <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                 </div>
             </div>
