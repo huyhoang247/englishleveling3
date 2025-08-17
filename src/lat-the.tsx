@@ -10,6 +10,7 @@ import { defaultImageUrls } from './voca-data/image-url.ts';
 import ImagePreloader from './ImagePreloader.tsx'; 
 import { defaultVocabulary } from './voca-data/list-vocabulary.ts';
 import CoinDisplay from './ui/display/coin-display.tsx';
+import CardCapacityDisplay from './ui/display/card-capacity-display.tsx'; // TÁCH COMPONENT
 // --- REFACTORED: Import service để tự quản lý logic ---
 import { processVocabularyChestOpening } from './gameDataService.ts'; 
 
@@ -231,22 +232,7 @@ const HomeIcon = ({ className = '' }: { className?: string }) => (
         <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
     </svg>
 );
-const CardCapacityDisplay = ({ current, max }: { current: number; max: number }) => (
-    <div 
-        className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg p-0.5 flex items-center shadow-lg border border-slate-600 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer"
-        title="Nâng cấp sức chứa thẻ"
-    >
-        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-blue-500/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-        <div className="relative mr-1 flex items-center justify-center"><img src={uiAssets.cardCapacityIcon} alt="Sức chứa thẻ" className="w-4 h-4" /></div>
-        <div className="font-bold text-white text-xs tracking-wide">
-            {current.toLocaleString()}
-            <span className="text-slate-400/80 font-medium opacity-90"> / {max.toLocaleString()}</span>
-        </div>
-        <div className="ml-1 w-3 h-3 bg-gradient-to-br from-slate-700 to-slate-800 rounded-full flex items-center justify-center cursor-pointer border border-slate-500 shadow-inner hover:shadow-blue-500/50 hover:scale-110 transition-all duration-200"><span className="text-white font-bold text-xs">+</span></div>
-        <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-        <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-blue-400 rounded-full animate-pulse-fast"></div>
-    </div>
-);
+// CardCapacityDisplay component has been moved to its own file.
 const LoadingOverlay = ({ isVisible }: { isVisible: boolean }) => {
     if (!isVisible) return null;
     return ( <div className="loading-spinner-container"><div className="loading-spinner"></div><p className="loading-text">Loading...</p></div> );
