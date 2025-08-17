@@ -1,14 +1,17 @@
-// --- START OF FILE gameDataService.ts ---
+// --- START OF FILE gameDataService.ts (FULL CODE - REFACTORED) ---
 
 import { db } from './firebase';
 import { 
   doc, getDoc, setDoc, runTransaction, 
-  collection, getDocs 
+  collection, getDocs, writeBatch
 } from 'firebase/firestore';
 
-/**
- * Interface cho dữ liệu game đầy đủ của người dùng.
- */
+// Các interface này nên được định nghĩa ở một nơi tập trung (ví dụ: types.ts) và import vào
+// Tuy nhiên, để file này tự chứa, tôi sẽ định nghĩa chúng ở đây.
+export interface OwnedSkill { id: string; skillId: string; level: number; }
+export interface OwnedItem { id: string; itemId: string; stats: { hp: number; atk: number; def: number; }; }
+export interface EquippedItems { weapon: OwnedItem | null; armor: OwnedItem | null; accessory: OwnedItem | null; }
+
 export interface UserGameData {
   coins: number;
   gems: number;
@@ -18,21 +21,18 @@ export interface UserGameData {
   stats: { hp: number; atk: number; def: number; };
   bossBattleHighestFloor: number;
   ancientBooks: number;
-  skills: { owned: any[]; equipped: (string | null)[] };
+  skills: { owned: OwnedSkill[]; equipped: (string | null)[] };
   totalVocabCollected: number;
   cardCapacity: number;
-  equipment: { pieces: number; owned: any[]; equipped: { weapon: null; armor: null; accessory: null } };
+  equipment: { pieces: number; owned: OwnedItem[]; equipped: EquippedItems };
 }
 
-/**
- * Interface cho một mục từ vựng trong dữ liệu thành tựu.
- */
-export interface VocabularyItem {
-  id: number;
-  word: string;
-  exp: number;
-  level: number;
-  maxExp: number;
+export interface VocabularyItem { 
+  id: number; 
+  word: string; 
+  exp: number; 
+  level: number; 
+  maxExp: number; 
 }
 
 
@@ -66,9 +66,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
     };
   } else {
     // Người dùng không tồn tại, tạo mới document với dữ liệu game mặc định
-    // Tạo thêm các trường từ userDataService để đảm bảo document hoàn chỉnh
-    const newUserData = {
-      // Dữ liệu game
+    const newUserData: UserGameData & { createdAt: Date; claimedDailyGoals: object; claimedVocabMilestones: any[], claimedQuizRewards: object; } = {
       coins: 0,
       gems: 0,
       masteryCards: 0,
@@ -81,8 +79,6 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       totalVocabCollected: 0,
       cardCapacity: 100,
       equipment: { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } },
-      
-      // Dữ liệu người dùng chung
       createdAt: new Date(),
       claimedDailyGoals: {},
       claimedVocabMilestones: [],
@@ -94,210 +90,288 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
 };
 
 /**
- * Cập nhật số coin của người dùng trên Firestore một cách an toàn bằng transaction.
- * Đảm bảo số coin không bao giờ bị âm.
+ * Cập nhật số coin của người dùng an toàn bằng transaction.
  * @param userId - ID của người dùng.
- * @param amount - Số coin cần thay đổi. Dùng số dương để cộng, số âm để trừ.
- * @returns {Promise<number>} Số coin mới sau khi cập nhật.
+ * @param amount - Số coin cần thay đổi (dương để cộng, âm để trừ).
+ * @returns {Promise<number>} Số coin mới.
  */
 export const updateUserCoins = async (userId: string, amount: number): Promise<number> => {
-  if (!userId) {
-     throw new Error("User ID is required for updating coins.");
-  }
+  if (!userId) throw new Error("User ID is required.");
   if (amount === 0) {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
+    const userDoc = await getDoc(doc(db, 'users', userId));
     return userDoc.exists() ? userDoc.data().coins || 0 : 0;
   }
-  
   const userDocRef = doc(db, 'users', userId);
-  try {
-    const newAmount = await runTransaction(db, async (transaction) => {
-      const userDoc = await transaction.get(userDocRef);
-      if (!userDoc.exists()) {
-        throw new Error("User document does not exist!");
-      }
-      const currentCoins = userDoc.data().coins || 0;
-      const newCoins = Math.max(0, currentCoins + amount); // Đảm bảo không âm
-      transaction.update(userDocRef, { coins: newCoins });
-      return newCoins;
-    });
-    return newAmount;
-  } catch (error) {
-    console.error(`Failed to run transaction to update coins for user ${userId}:`, error);
-    throw error;
-  }
+  return runTransaction(db, async (t) => {
+    const userDoc = await t.get(userDocRef);
+    if (!userDoc.exists()) throw new Error("User document does not exist!");
+    const newCoins = Math.max(0, (userDoc.data().coins || 0) + amount);
+    t.update(userDocRef, { coins: newCoins });
+    return newCoins;
+  });
 };
 
-
 /**
- * Cập nhật số gem của người dùng trên Firestore một cách an toàn bằng transaction.
- * Đảm bảo số gem không bao giờ bị âm.
+ * Cập nhật số gem của người dùng an toàn bằng transaction.
  * @param userId - ID của người dùng.
- * @param amount - Số gem cần thay đổi. Dùng số dương để cộng, số âm để trừ.
- * @returns {Promise<number>} Số gem mới sau khi cập nhật.
+ * @param amount - Số gem cần thay đổi.
+ * @returns {Promise<number>} Số gem mới.
  */
 export const updateUserGems = async (userId: string, amount: number): Promise<number> => {
-  if (!userId) {
-     throw new Error("User ID is required for updating gems.");
-  }
-  if (amount === 0) {
+    if (!userId) throw new Error("User ID is required.");
+    if (amount === 0) {
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        return userDoc.exists() ? userDoc.data().gems || 0 : 0;
+    }
     const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
-    return userDoc.exists() ? userDoc.data().gems || 0 : 0;
-  }
-
-  const userDocRef = doc(db, 'users', userId);
-  try {
-    const newAmount = await runTransaction(db, async (transaction) => {
-      const userDoc = await transaction.get(userDocRef);
-      if (!userDoc.exists()) {
-        throw new Error("User document does not exist!");
-      }
-      const currentGems = userDoc.data().gems || 0;
-      const newGems = Math.max(0, currentGems + amount); // Đảm bảo không âm
-      transaction.update(userDocRef, { gems: newGems });
-      return newGems;
+    return runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if (!userDoc.exists()) throw new Error("User document does not exist!");
+        const newGems = Math.max(0, (userDoc.data().gems || 0) + amount);
+        t.update(userDocRef, { gems: newGems });
+        return newGems;
     });
-    return newAmount;
-  } catch (error) {
-    console.error(`Failed to run transaction to update gems for user ${userId}:`, error);
-    throw error;
-  }
 };
 
 /**
- * Lấy và đồng bộ hóa dữ liệu thành tựu từ vựng của người dùng.
- * Hàm này hợp nhất dữ liệu từ `completedWords` (nguồn chính cho EXP)
- * và `gamedata/achievements` (nơi lưu trữ cấp độ và trạng thái).
- * @param userId - ID của người dùng.
- * @returns {Promise<VocabularyItem[]>} Một mảng dữ liệu thành tựu từ vựng đã được đồng bộ.
+ * Lấy hoặc tạo dữ liệu Jackpot Pool chung của ứng dụng.
+ * @returns {Promise<number>} Số tiền trong hũ Jackpot.
  */
-export const fetchAndSyncVocabularyData = async (userId: string): Promise<VocabularyItem[]> => {
-  if (!userId) throw new Error("User ID is required.");
+export const fetchJackpotPool = async (): Promise<number> => {
+    const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
+    const docSnap = await getDoc(jackpotDocRef);
+    if (docSnap.exists()) return docSnap.data().poolAmount || 200;
+    await setDoc(jackpotDocRef, { poolAmount: 200, lastUpdated: new Date() });
+    return 200;
+};
 
-  try {
-    const completedWordsCol = collection(db, 'users', userId, 'completedWords');
-    const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-
-    const [completedWordsSnap, achievementDocSnap] = await Promise.all([
-      getDocs(completedWordsCol),
-      getDoc(achievementDocRef),
-    ]);
-
-    const wordToExpMap = new Map<string, number>();
-    completedWordsSnap.forEach(wordDoc => {
-      const word = wordDoc.id;
-      const gameModes = wordDoc.data().gameModes || {};
-      let totalCorrectCount = 0;
-      Object.values(gameModes).forEach((mode: any) => {
-        totalCorrectCount += mode.correctCount || 0;
-      });
-      wordToExpMap.set(word, totalCorrectCount * 100);
+/**
+ * Cập nhật Jackpot Pool bằng transaction.
+ * @param amount - Số tiền cần thêm vào (dương) hoặc bớt đi (âm).
+ * @param reset - Nếu true, đặt lại hũ về 200.
+ * @returns {Promise<number>} Số tiền mới trong hũ.
+ */
+export const updateJackpotPool = async (amount: number, reset: boolean = false): Promise<number> => {
+    const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
+    return runTransaction(db, async (t) => {
+        const docSnap = await t.get(jackpotDocRef);
+        const currentPool = docSnap.exists() ? docSnap.data().poolAmount || 200 : 200;
+        const newPool = reset ? 200 : currentPool + amount;
+        t.set(jackpotDocRef, { poolAmount: newPool, lastUpdated: new Date() }, { merge: true });
+        return newPool;
     });
+};
 
-    const existingAchievements: VocabularyItem[] = achievementDocSnap.exists()
-      ? achievementDocSnap.data().vocabulary || []
-      : [];
+/**
+ * Cập nhật tầng boss cao nhất của người dùng.
+ * @param userId - ID người dùng.
+ * @param newFloor - Tầng mới đã hoàn thành.
+ * @param currentHighest - Tầng cao nhất hiện tại của người chơi (để tránh ghi không cần thiết).
+ */
+export const updateUserBossFloor = async (userId: string, newFloor: number, currentHighest: number): Promise<void> => {
+    if (newFloor <= currentHighest) return;
+    await setDoc(doc(db, 'users', userId), { bossBattleHighestFloor: newFloor }, { merge: true });
+};
 
-    const finalVocabularyData: VocabularyItem[] = [];
-    const processedWords = new Set<string>();
-    let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map(i => i.id)) : 0) + 1;
+/**
+ * Cập nhật Cuốc (Pickaxes).
+ * @param userId - ID người dùng.
+ * @param newTotal - Tổng số cuốc mới.
+ * @returns {Promise<number>} Số cuốc mới.
+ */
+export const updateUserPickaxes = async (userId: string, newTotal: number): Promise<number> => {
+    const finalAmount = Math.max(0, newTotal);
+    await setDoc(doc(db, 'users', userId), { pickaxes: finalAmount }, { merge: true });
+    return finalAmount;
+};
 
-    wordToExpMap.forEach((totalExp, word) => {
-      const existingItem = existingAchievements.find(item => item.word === word);
-      if (existingItem) {
-        let expSpentToReachCurrentLevel = 0;
-        for (let i = 1; i < existingItem.level; i++) {
-          expSpentToReachCurrentLevel += i * 100;
+/**
+ * Xử lý kết quả sau khi kết thúc Miner Challenge.
+ * @param userId - ID người dùng.
+ * @param result - Dữ liệu kết quả từ game.
+ * @returns Dữ liệu mới sau khi cập nhật.
+ */
+export const processMinerChallengeResult = async (userId: string, result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
+    const userDocRef = doc(db, 'users', userId);
+    return runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if (!userDoc.exists()) throw new Error("User document does not exist!");
+        const data = userDoc.data();
+        const newCoins = (data.coins || 0) + result.coinsEarned;
+        const newHighestFloor = Math.max(data.minerChallengeHighestFloor || 0, result.highestFloorCompleted);
+        t.update(userDocRef, { coins: newCoins, pickaxes: result.finalPickaxes, minerChallengeHighestFloor: newHighestFloor });
+        return { newCoins, newPickaxes: result.finalPickaxes, newHighestFloor };
+    });
+};
+
+/**
+ * Xử lý việc nâng cấp chỉ số cho người dùng.
+ * @param userId - ID người dùng.
+ * @param cost - Chi phí nâng cấp.
+ * @param newStats - Các chỉ số mới.
+ * @returns Dữ liệu mới sau khi nâng cấp.
+ */
+export const upgradeUserStats = async (userId: string, cost: number, newStats: { hp: number; atk: number; def: number; }) => {
+    const userDocRef = doc(db, 'users', userId);
+    return runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if (!userDoc.exists()) throw new Error("User document does not exist!");
+        const currentCoins = userDoc.data().coins || 0;
+        if (currentCoins < cost) throw new Error("Không đủ vàng trên server.");
+        const newCoins = currentCoins - cost;
+        t.update(userDocRef, { coins: newCoins, stats: newStats });
+        return { newCoins, newStats };
+    });
+};
+
+/**
+ * Xử lý cập nhật kỹ năng cho người dùng.
+ * @param userId - ID người dùng.
+ * @param updates - Các thay đổi về kỹ năng và tài nguyên.
+ * @returns Dữ liệu tài nguyên mới.
+ */
+export const updateUserSkills = async (userId: string, updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
+    const userDocRef = doc(db, 'users', userId);
+    return runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if (!userDoc.exists()) throw new Error("User document does not exist!");
+        const data = userDoc.data();
+        const newCoins = (data.coins || 0) + updates.goldChange;
+        const newBooks = (data.ancientBooks || 0) + updates.booksChange;
+        if (newCoins < 0) throw new Error("Không đủ vàng.");
+        if (newBooks < 0) throw new Error("Không đủ Sách Cổ.");
+        t.update(userDocRef, {
+            coins: newCoins,
+            ancientBooks: newBooks,
+            skills: { owned: updates.newOwned, equipped: updates.newEquippedIds }
+        });
+        return { newCoins, newBooks };
+    });
+};
+
+/**
+ * Xử lý cập nhật trang bị cho người dùng.
+ * @param userId - ID người dùng.
+ * @param updates - Các thay đổi về trang bị và tài nguyên.
+ * @returns Dữ liệu tài nguyên mới.
+ */
+export const updateUserInventory = async (userId: string, updates: { newOwned: OwnedItem[]; newEquipped: EquippedItems; goldChange: number; piecesChange: number; }) => {
+    const userDocRef = doc(db, 'users', userId);
+    return runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if (!userDoc.exists()) throw new Error("User document does not exist!");
+        const data = userDoc.data();
+        const currentEquipment = data.equipment || { pieces: 0, owned: [], equipped: { weapon: null, armor: null, accessory: null } };
+        const newCoins = (data.coins || 0) + updates.goldChange;
+        const newPieces = (currentEquipment.pieces || 0) + updates.piecesChange;
+        if (newCoins < 0) throw new Error("Không đủ vàng.");
+        if (newPieces < 0) throw new Error("Không đủ Mảnh trang bị.");
+        t.update(userDocRef, {
+            coins: newCoins,
+            equipment: { ...currentEquipment, pieces: newPieces, owned: updates.newOwned, equipped: updates.newEquipped }
+        });
+        return { newCoins, newPieces };
+    });
+};
+
+/**
+ * Xử lý logic mua sắm.
+ * @param userId - ID người dùng.
+ * @param item - Vật phẩm cần mua.
+ * @param quantity - Số lượng.
+ * @returns Dữ liệu tài nguyên mới sau khi mua.
+ */
+export const processShopPurchase = async (userId: string, item: any, quantity: number) => {
+    const userDocRef = doc(db, 'users', userId);
+    const totalCost = item.price * quantity;
+    return runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if (!userDoc.exists()) throw new Error("User document does not exist!");
+        const data = userDoc.data();
+        const currentCoins = data.coins || 0;
+        if (currentCoins < totalCost) throw new Error("Không đủ vàng.");
+        
+        const updates: { [key: string]: any } = { coins: currentCoins - totalCost };
+        let newBooks = data.ancientBooks || 0;
+        let newCapacity = data.cardCapacity || 100;
+
+        if (item.id === 1009) { // Sách Cổ
+            newBooks += quantity;
+            updates.ancientBooks = newBooks;
+        } else if (item.id === 2001) { // Nâng Cấp Sức Chứa Thẻ
+            newCapacity += quantity;
+            updates.cardCapacity = newCapacity;
         }
-        const currentProgressExp = totalExp - expSpentToReachCurrentLevel;
-        finalVocabularyData.push({
-          ...existingItem,
-          exp: currentProgressExp,
-          maxExp: existingItem.level * 100,
-        });
-      } else {
-        finalVocabularyData.push({
-          id: idCounter++,
-          word: word,
-          exp: totalExp,
-          level: 1,
-          maxExp: 100,
-        });
-      }
-      processedWords.add(word);
+        
+        t.update(userDocRef, updates);
+        return { newCoins: updates.coins, newBooks, newCapacity };
     });
-
-    existingAchievements.forEach(item => {
-      if (!processedWords.has(item.word)) {
-        finalVocabularyData.push(item);
-      }
-    });
-    
-    return finalVocabularyData;
-  } catch (error) {
-    console.error("Error fetching and syncing vocabulary achievements data in service:", error);
-    throw error;
-  }
 };
-
 
 /**
- * Cập nhật dữ liệu thành tựu và phần thưởng cho người dùng một cách an toàn.
- * Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu.
- * @param userId - ID của người dùng.
- * @param updates - Một object chứa các thay đổi cần áp dụng.
- * @param updates.coinsToAdd - Số coin cần cộng thêm.
- * @param updates.cardsToAdd - Số thẻ mastery cần cộng thêm.
- * @param updates.newVocabularyData - Mảng dữ liệu thành tựu từ vựng mới để ghi đè.
- * @returns {Promise<{newCoins: number; newMasteryCards: number}>} Số dư coin và thẻ mới.
+ * Ghi nhận các từ vựng mới người dùng đã mở vào sub-collection bằng Batch Write.
+ * @param userId - ID người dùng.
+ * @param newWordsData - Mảng các từ mới.
  */
-export const updateAchievementData = async (
-  userId: string,
-  updates: {
-    coinsToAdd: number;
-    cardsToAdd: number;
-    newVocabularyData: VocabularyItem[];
+const recordNewVocabUnlocks = async (userId: string, newWordsData: { id: number; word: string; chestType: string }[]) => {
+    if (newWordsData.length === 0) return;
+    const userOpenedVocabColRef = collection(db, 'users', userId, 'openedVocab');
+    const batch = writeBatch(db);
+    newWordsData.forEach(item => {
+        const newVocabDocRef = doc(userOpenedVocabColRef, String(item.id));
+        batch.set(newVocabDocRef, {
+            word: item.word,
+            collectedAt: new Date(),
+            chestType: item.chestType,
+        });
+    });
+    await batch.commit();
+};
+
+/**
+ * Xử lý toàn bộ logic mở rương từ vựng trong một transaction duy nhất.
+ * @param userId - ID người dùng.
+ * @param details - Chi tiết về việc mở rương.
+ * @returns Dữ liệu tài nguyên mới sau khi giao dịch thành công.
+ */
+export const processVocabularyChestOpening = async (
+  userId: string, 
+  details: {
+    currency: 'gold' | 'gem'; 
+    cost: number; 
+    gemReward: number;
+    newWordsData: { id: number; word: string; chestType: string }[];
   }
-): Promise<{ newCoins: number; newMasteryCards: number }> => {
-  if (!userId) throw new Error("User ID is required for updating achievements.");
+) => {
+    const userDocRef = doc(db, 'users', userId);
+    const { currency, cost, gemReward, newWordsData } = details;
 
-  const userDocRef = doc(db, 'users', userId);
-  const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-  const { coinsToAdd, cardsToAdd, newVocabularyData } = updates;
+    const { newCoins, newGems, newTotalVocab } = await runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if (!userDoc.exists()) throw new Error("User document does not exist!");
+        const data = userDoc.data();
 
-  try {
-    const { newCoins, newMasteryCards } = await runTransaction(db, async (transaction) => {
-      const userDoc = await transaction.get(userDocRef);
-      if (!userDoc.exists()) {
-        throw new Error("User document does not exist!");
-      }
+        // Kiểm tra điều kiện trên server một lần nữa
+        if (currency === 'gold' && (data.coins || 0) < cost) throw new Error("Không đủ vàng.");
+        if (currency === 'gem' && (data.gems || 0) < cost) throw new Error("Không đủ gem.");
+        if ((data.totalVocabCollected || 0) + newWordsData.length > (data.cardCapacity || 100)) {
+            throw new Error("Kho thẻ đã đầy.");
+        }
+        
+        const finalCoins = (data.coins || 0) - (currency === 'gold' ? cost : 0);
+        const finalGems = (data.gems || 0) - (currency === 'gem' ? cost : 0) + gemReward;
+        const finalTotalVocab = (data.totalVocabCollected || 0) + newWordsData.length;
 
-      const currentCoins = userDoc.data().coins || 0;
-      const currentCards = userDoc.data().masteryCards || 0;
-
-      const finalCoins = currentCoins + coinsToAdd;
-      const finalCards = currentCards + cardsToAdd;
-
-      transaction.update(userDocRef, {
-        coins: finalCoins,
-        masteryCards: finalCards,
-      });
-
-      transaction.set(achievementDocRef, {
-        vocabulary: newVocabularyData,
-        lastUpdated: new Date(),
-      });
-
-      return { newCoins: finalCoins, newMasteryCards: finalCards };
+        t.update(userDocRef, {
+            coins: finalCoins,
+            gems: finalGems,
+            totalVocabCollected: finalTotalVocab,
+        });
+        return { newCoins: finalCoins, newGems: finalGems, newTotalVocab: finalTotalVocab };
     });
 
-    console.log(`Achievements updated for user ${userId}.`);
-    return { newCoins, newMasteryCards };
-  } catch (error) {
-    console.error(`Failed to run transaction to update achievements for user ${userId}:`, error);
-    throw error;
-  }
+    // Sau khi transaction thành công, ghi log các thẻ đã mở
+    await recordNewVocabUnlocks(userId, newWordsData);
+
+    return { newCoins, newGems, newTotalVocab };
 };
-// --- END OF FILE gameDataService.ts ---
