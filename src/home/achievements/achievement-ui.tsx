@@ -1,16 +1,12 @@
-// --- START OF FILE achievement-ui.tsx ---
+// --- START OF FILE achievement-ui.tsx (ĐÃ CẬP NHẬT) ---
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react'; // <<<--- THAY ĐỔI: Thêm useCallback
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { User } from 'firebase/auth'; // <<<--- THÊM IMPORT
+import { AchievementsProvider, useAchievements } from './achievement-context.tsx'; // <<<--- THÊM IMPORT
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import { useAchievements } from './achievement-context.tsx';
 import type { VocabularyItem } from '../../gameDataService.ts';
 import AchievementsLoadingSkeleton from './achievement-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
-
-// --- Signature của Props ---
-interface AchievementsScreenProps {
-  onClose: () => void;
-}
 
 // --- Các component icon (Không thay đổi) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -23,8 +19,9 @@ const GiftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" /> </svg> );
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
-// --- Thành phần chính của ứng dụng ---
-export default function AchievementsScreen({ onClose }: AchievementsScreenProps) {
+// --- Component UI chính, nhưng không được export default nữa ---
+// Đây là component "câm", chỉ hiển thị giao diện.
+function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
   const {
     vocabulary,
     coins,
@@ -180,20 +177,15 @@ export default function AchievementsScreen({ onClose }: AchievementsScreenProps)
   );
 }
 
-// <<<--- THAY ĐỔI: Bọc component bằng React.memo để tránh re-render không cần thiết ---
 const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, isAnyClaiming }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void, isAnyClaiming: boolean }) {
   const { id, word, exp, level, maxExp } = item;
   const progressPercentage = maxExp > 0 ? Math.min((exp / maxExp) * 100, 100) : 0;
   const isClaimable = exp >= maxExp;
   const goldReward = 100 * level;
-
-  // <<<--- THAY ĐỔI: Bọc hàm xử lý click trong useCallback ---
-  // Điều này đảm bảo hàm không bị tạo lại trên mỗi lần render, giúp React.memo hoạt động
   const handleClaimClick = useCallback(() => {
     if (!isClaimable || isAnyClaiming) return;
     onClaim(id);
   }, [id, isClaimable, isAnyClaiming, onClaim]);
-  
   return (
     <div className="grid grid-cols-12 gap-x-4 gap-y-3 items-center p-4 bg-slate-800/70 rounded-xl border border-slate-700/80 hover:bg-slate-700/60 hover:border-cyan-500/50 transition-all duration-300">
       <div className="col-span-2 md:col-span-1 text-center flex items-center justify-center"> <span className="text-xl font-bold text-slate-500">{rank}</span> </div>
@@ -208,95 +200,48 @@ const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, i
     </div>
   );
 });
-
-// Thêm display name để dễ debug trong React Dev Tools
 VocabularyRow.displayName = 'VocabularyRow';
 
-// --- Component Phân Trang (Không thay đổi) ---
 const PaginationControls = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void; }) => {
     const paginationRange = useMemo(() => {
-        const siblingCount = 1;
-        const totalPageNumbers = siblingCount + 5;
-
-        if (totalPageNumbers >= totalPages) {
-            return Array.from({ length: totalPages }, (_, i) => i + 1);
-        }
-
-        const range = (start: number, end: number) => {
-            let length = end - start + 1;
-            return Array.from({ length }, (_, idx) => idx + start);
-        };
-
-        const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
-        const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
-        const shouldShowLeftDots = leftSiblingIndex > 2;
-        const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
-        const firstPageIndex = 1;
-        const lastPageIndex = totalPages;
-
-        if (!shouldShowLeftDots && shouldShowRightDots) {
-            let leftItemCount = 3 + 2 * siblingCount;
-            let leftRange = range(1, leftItemCount);
-            return [...leftRange, '...', totalPages];
-        }
-
-        if (shouldShowLeftDots && !shouldShowRightDots) {
-            let rightItemCount = 3 + 2 * siblingCount;
-            let rightRange = range(totalPages - rightItemCount + 1, totalPages);
-            return [firstPageIndex, '...', ...rightRange];
-        }
-        
-        if (shouldShowLeftDots && shouldShowRightDots) {
-            let middleRange = range(leftSiblingIndex, rightSiblingIndex);
-            return [firstPageIndex, '...', ...middleRange, '...', lastPageIndex];
-        }
-
+        const siblingCount = 1; const totalPageNumbers = siblingCount + 5;
+        if (totalPageNumbers >= totalPages) { return Array.from({ length: totalPages }, (_, i) => i + 1); }
+        const range = (start: number, end: number) => { let length = end - start + 1; return Array.from({ length }, (_, idx) => idx + start); };
+        const leftSiblingIndex = Math.max(currentPage - siblingCount, 1); const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
+        const shouldShowLeftDots = leftSiblingIndex > 2; const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
+        const firstPageIndex = 1; const lastPageIndex = totalPages;
+        if (!shouldShowLeftDots && shouldShowRightDots) { let leftItemCount = 3 + 2 * siblingCount; let leftRange = range(1, leftItemCount); return [...leftRange, '...', totalPages]; }
+        if (shouldShowLeftDots && !shouldShowRightDots) { let rightItemCount = 3 + 2 * siblingCount; let rightRange = range(totalPages - rightItemCount + 1, totalPages); return [firstPageIndex, '...', ...rightRange]; }
+        if (shouldShowLeftDots && shouldShowRightDots) { let middleRange = range(leftSiblingIndex, rightSiblingIndex); return [firstPageIndex, '...', ...middleRange, '...', lastPageIndex]; }
         return Array.from({ length: totalPages }, (_, i) => i + 1);
-
     }, [currentPage, totalPages]);
-
     if (totalPages <= 1) return null;
-
     return (
         <nav className="flex items-center justify-center gap-1 sm:gap-2" aria-label="Pagination">
-            <button 
-                onClick={() => onPageChange(currentPage - 1)} 
-                disabled={currentPage === 1} 
-                className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
-                aria-label="Previous Page"
-            >
-                <ChevronLeftIcon className="w-5 h-5" />
-            </button>
-
-            {paginationRange.map((page, index) => 
-                typeof page === 'number' ? ( 
-                    <button 
-                        key={index} 
-                        onClick={() => onPageChange(page)} 
-                        className={`w-9 h-9 sm:w-10 sm:h-10 text-sm font-semibold rounded-lg border border-slate-700 transition-colors flex items-center justify-center ${
-                            currentPage === page 
-                            ? 'bg-cyan-500 text-white border-cyan-400' 
-                            : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
-                        }`} 
-                        aria-current={currentPage === page ? 'page' : undefined}
-                    >
-                        {page}
-                    </button> 
-                ) : ( 
-                    <span key={index} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-sm text-slate-500" aria-hidden="true">
-                        {page}
-                    </span> 
-                )
-            )}
-
-            <button 
-                onClick={() => onPageChange(currentPage + 1)} 
-                disabled={currentPage === totalPages} 
-                className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" 
-                aria-label="Next Page"
-            >
-                <ChevronRightIcon className="w-5 h-5" />
-            </button>
+            <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" aria-label="Previous Page"> <ChevronLeftIcon className="w-5 h-5" /> </button>
+            {paginationRange.map((page, index) => typeof page === 'number' ? ( <button key={index} onClick={() => onPageChange(page)} className={`w-9 h-9 sm:w-10 sm:h-10 text-sm font-semibold rounded-lg border border-slate-700 transition-colors flex items-center justify-center ${ currentPage === page ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700' }`} aria-current={currentPage === page ? 'page' : undefined}> {page} </button> ) : ( <span key={index} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-sm text-slate-500" aria-hidden="true"> {page} </span> ) )}
+            <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" aria-label="Next Page"> <ChevronRightIcon className="w-5 h-5" /> </button>
         </nav>
     );
 };
+
+// --- Component "Lối vào" (Wrapper/Entry Point) ---
+// Đây là component được export default và sẽ được `background-game.tsx` sử dụng.
+interface AchievementsScreenProps {
+  user: User | null;
+  onClose: () => void;
+}
+
+export default function AchievementsScreen({ user, onClose }: AchievementsScreenProps) {
+  // Nếu không có user, không hiển thị gì để tránh lỗi
+  if (!user) {
+    return null;
+  }
+
+  // Nhiệm vụ của nó là "lắp ráp" Provider và UI lại với nhau.
+  return (
+    <AchievementsProvider user={user}>
+      <AchievementsScreenUI onClose={onClose} />
+    </AchievementsProvider>
+  );
+}
