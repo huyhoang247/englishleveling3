@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 import { User } from 'firebase/auth';
 import { fetchGameInitialData, recordGameSuccess } from '../course-data-service.ts';
-import { exampleData } from '../../example-data.ts';
+import { exampleData } from '../../voca-data/example-data.ts';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- HELPER FUNCTION (Giả sử bạn đã chuyển nó sang một file utils) ---
