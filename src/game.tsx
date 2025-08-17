@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Assuming this path is correct
 import { defaultVocabulary } from './voca-data/list-vocabulary.ts'; // Assuming this path is correct
-import { defaultImageUrls as gameImageUrls } from './image-url.ts'; // Assuming this path is correct
+import { defaultImageUrls as gameImageUrls } from './voca-data/image-url.ts'; // Assuming this path is correct
 import { Book, sampleBooks as initialSampleBooks } from './books-data.ts'; // Assuming this path is correct
 import { auth, db } from './firebase.js'; 
 import { User } from 'firebase/auth';
