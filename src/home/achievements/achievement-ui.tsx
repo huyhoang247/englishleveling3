@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import CoinDisplay from './ui/display/coin-display.tsx';
 import { useAchievements } from './achievement-context.tsx';
 import type { VocabularyItem } from './gameDataService.ts';
-import AchievementsLoadingSkeleton from './thanh-tuu-loading.tsx'; // <<<--- IMPORT COMPONENT SKELETON MỚI
+import AchievementsLoadingSkeleton from './achievement-loading.tsx'; // <<<--- IMPORT COMPONENT SKELETON MỚI
 
 // --- Signature của Props ---
 interface AchievementsScreenProps {
