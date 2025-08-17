@@ -1,8 +1,8 @@
-// --- START OF FILE achievement-ui.tsx (ĐÃ CẬP NHẬT) ---
+// --- START OF FILE achievement-ui.tsx (FULL CODE - UPDATED) ---
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { User } from 'firebase/auth'; // <<<--- THÊM IMPORT
-import { AchievementsProvider, useAchievements } from './achievement-context.tsx'; // <<<--- THÊM IMPORT
+import { User } from 'firebase/auth'; 
+import { AchievementsProvider, useAchievements } from './achievement-context.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import type { VocabularyItem } from '../../gameDataService.ts';
 import AchievementsLoadingSkeleton from './achievement-loading.tsx';
@@ -226,21 +226,25 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
 };
 
 // --- Component "Lối vào" (Wrapper/Entry Point) ---
-// Đây là component được export default và sẽ được `background-game.tsx` sử dụng.
+// <<<--- BƯỚC 2: NHẬN VÀ TRUYỀN PROP `onDataUpdate` ---
+
+// Cập nhật interface props
 interface AchievementsScreenProps {
   user: User | null;
   onClose: () => void;
+  // <<<--- THAY ĐỔI: Thêm prop mới
+  onDataUpdate: (updates: { coins?: number, masteryCards?: number }) => void;
 }
 
-export default function AchievementsScreen({ user, onClose }: AchievementsScreenProps) {
-  // Nếu không có user, không hiển thị gì để tránh lỗi
+export default function AchievementsScreen({ user, onClose, onDataUpdate }: AchievementsScreenProps) {
   if (!user) {
     return null;
   }
 
   // Nhiệm vụ của nó là "lắp ráp" Provider và UI lại với nhau.
   return (
-    <AchievementsProvider user={user}>
+    // <<<--- THAY ĐỔI: Truyền prop onDataUpdate vào Provider
+    <AchievementsProvider user={user} onDataUpdate={onDataUpdate}>
       <AchievementsScreenUI onClose={onClose} />
     </AchievementsProvider>
   );
