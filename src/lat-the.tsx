@@ -1,4 +1,4 @@
-// --- START OF FILE: lat-the.tsx (FULL CODE - REFACTORED & SELF-CONTAINED) ---
+// --- START OF FILE: lat-the.tsx (FULL CODE - REFACTORED & UI CORRECTED) ---
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { db } from './firebase.js'; 
@@ -11,16 +11,15 @@ import ImagePreloader from './ImagePreloader.tsx';
 import { defaultVocabulary } from './voca-data/list-vocabulary.ts';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import CardCapacityDisplay from './ui/display/card-capacity-display.tsx';
-// --- NEW: Import GemDisplay mới để nhất quán giao diện ---
 import GemDisplay from './ui/display/gem-display.tsx'; 
-// --- REFACTORED: Import service để tự quản lý logic ---
 import { processVocabularyChestOpening } from './gameDataService.ts'; 
-// --- NEW: Import hook animate số đếm để dùng cho GemDisplay & CoinDisplay ---
 import { useAnimateValue } from './ui/useAnimateValue.ts';
 
 // ========================================================================
 // === 1. COMPONENT CSS ĐÃ ĐƯỢỢC ĐÓNG GÓI ================================
 // ========================================================================
+// --- KHÔI PHỤC GIAO DIỆN --- 
+// Đã thêm lại các style cho .chest-level-info, .chest-level-name, .chest-help-icon
 const ScopedStyles = () => (
     <style>{`
         /* --- LỚP GỐC: Thiết lập môi trường độc lập --- */
@@ -84,6 +83,10 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .chest-header { padding: 12px 20px; background-color: rgba(42, 49, 78, 0.7); font-size: 0.9rem; font-weight: 600; color: #c7d2fe; text-align: center; text-transform: uppercase; }
         .vocabulary-chest-root .chest-body { background: linear-gradient(170deg, #43335b, #2c2240); padding: 20px; flex-grow: 1; display: flex; flex-direction: column; align-items: center; }
         .vocabulary-chest-root .chest-top-section { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
+        .vocabulary-chest-root .chest-level-info { display: flex; align-items: center; gap: 8px; }
+        .vocabulary-chest-root .chest-level-name { background-color: rgba(0, 0, 0, 0.25); color: #c7d2fe; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(129, 140, 248, 0.4); }
+        .vocabulary-chest-root .chest-help-icon { width: 24px; height: 24px; background-color: rgba(0, 0, 0, 0.25); border: 1px solid rgba(129, 140, 248, 0.4); border-radius: 50%; color: #c7d2fe; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 0.85rem; transition: background-color 0.2s; padding: 0; }
+        .vocabulary-chest-root .chest-help-icon:hover { background-color: rgba(0, 0, 0, 0.4); }
         .vocabulary-chest-root .remaining-count-text { color: #c5b8d9; font-size: 0.85rem; margin: 0; }
         .vocabulary-chest-root .highlight-yellow { color: #facc15; font-weight: bold; }
         .vocabulary-chest-root .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px; }
@@ -127,6 +130,7 @@ const ScopedStyles = () => (
     </style>
 );
 
+
 // ========================================================================
 // === 2. CÁC COMPONENT CON VÀ DATA =======================================
 // ========================================================================
@@ -136,13 +140,41 @@ interface ImageCard { id: number; url: string; }
 const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, isFlipping: boolean, flipDelay: number }) => ( <div className={`card-container ${isFlipping ? 'is-flipping' : ''}`}> <div className="card-inner" style={{ animationDelay: `${flipDelay}ms` }}> <div className="card-face card-back"></div> <div className="card-face card-front"><img src={cardData.url} alt={`Revealed content ${cardData.id}`} className="card-image-in-card" /></div> </div> </div> ));
 const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => { const [isFlipping, setIsFlipping] = useState(false); const [isProcessing, setIsProcessing] = useState(true); useEffect(() => { const t1 = setTimeout(() => setIsFlipping(true), 300); const t2 = setTimeout(() => setIsProcessing(false), 1100); return () => { clearTimeout(t1); clearTimeout(t2); }; }, [card]); const handleOpenAgain = () => { if (isProcessing) return; setIsProcessing(true); setIsFlipping(false); setTimeout(onOpenAgain, 300); }; return ( <> <div style={{ textAlign: 'center' }}><div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw' }}><Card cardData={card} isFlipping={isFlipping} flipDelay={0} /></div></div> <div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>{isProcessing ? 'Đang mở...' : 'Mở Lại'}</button><button onClick={onClose} className="footer-btn">Đóng</button></div> </> ); };
 const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => { const [startFlipping, setStartFlipping] = useState(false); const [phase, setPhase] = useState('DEALING'); const startRound = useCallback(() => { setPhase('DEALING'); setStartFlipping(false); setTimeout(() => { setPhase('FLIPPING'); setStartFlipping(true); setTimeout(() => setPhase('REVEALED'), 800 + 200 * (cards.length - 1)); }, 500 + 80 * (cards.length - 1)); }, [cards.length]); useEffect(() => { if (cards.length > 0) startRound(); }, [cards, startRound]); const handleOpenAgain = () => { if (phase !== 'REVEALED') return; onOpenAgain(); }; const btnProps = (phase === 'REVEALED') ? { text: 'Mở Lại x4', disabled: false } : { text: 'Đang xử lý...', disabled: true }; return ( <> <div className="four-card-grid-container">{cards.map((card, index) => (<div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}><Card cardData={card} isFlipping={startFlipping} flipDelay={index * 200} /></div>))}</div> <div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button><button onClick={onClose} className="footer-btn">Đóng</button></div> </> ); };
-interface ChestUIProps { headerTitle: string; levelName: string; imageUrl: string; infoText: React.ReactNode; price1: number; price10: number | null; priceIconUrl: string; onOpen1: () => void; onOpen10: () => void; isComingSoon: boolean; remainingCount: number; }
-const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, imageUrl, infoText, price1, price10, priceIconUrl, onOpen1, onOpen10, isComingSoon, remainingCount }) => ( <div className={`chest-ui-container ${isComingSoon ? 'is-coming-soon' : ''}`}> <header className="chest-header">{headerTitle}</header> <main className="chest-body"> <div className="chest-top-section"><p className="remaining-count-text">{isComingSoon ? "Sắp ra mắt" : <>Còn lại: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> thẻ</>}</p></div> <div className="chest-visual-row"><img src={imageUrl} alt={headerTitle} className="chest-image" /><div className="info-bubble">{infoText}</div></div> <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '15px' }}> <button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}><span>Mở x1</span><span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price1.toLocaleString()}</span></button> {price10 !== null && (<button className="chest-button btn-get-10" onClick={onOpen10} disabled={isComingSoon || remainingCount < 4}><span>Mở x4</span><span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price10.toLocaleString()}</span></button>)} </div> </main> </div> );
+
+// --- KHÔI PHỤC GIAO DIỆN --- 
+// Thêm lại `levelName` vào props interface
+interface ChestUIProps { headerTitle: string; levelName: string | null; imageUrl: string; infoText: React.ReactNode; price1: number; price10: number | null; priceIconUrl: string; onOpen1: () => void; onOpen10: () => void; isComingSoon: boolean; remainingCount: number; }
+const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, infoText, price1, price10, priceIconUrl, onOpen1, onOpen10, isComingSoon, remainingCount }) => {
+    return (
+        <div className={`chest-ui-container ${isComingSoon ? 'is-coming-soon' : ''}`}>
+            <header className="chest-header">{headerTitle}</header>
+            <main className="chest-body">
+                {/* --- KHÔI PHỤC GIAO DIỆN --- */}
+                {/* Đây là phần JSX đã được thêm lại để hiển thị đúng như file gốc */}
+                <div className="chest-top-section">
+                    <div className="chest-level-info">
+                        {levelName && !isComingSoon && <button className="chest-help-icon" title="Thông tin">?</button>}
+                        {levelName && <span className="chest-level-name">{levelName}</span>}
+                    </div>
+                    <p className="remaining-count-text">{isComingSoon ? "Sắp ra mắt" : <>Còn lại: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> thẻ</>}</p>
+                </div>
+                {/* --- KẾT THÚC PHẦN KHÔI PHỤC --- */}
+
+                <div className="chest-visual-row"><img src={imageUrl} alt={headerTitle} className="chest-image" /><div className="info-bubble">{infoText}</div></div>
+                <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '15px' }}>
+                    <button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}><span>Mở x1</span><span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price1.toLocaleString()}</span></button>
+                    {price10 !== null && (<button className="chest-button btn-get-10" onClick={onOpen10} disabled={isComingSoon || remainingCount < 4}><span>Mở x4</span><span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price10.toLocaleString()}</span></button>)}
+                </div>
+            </main>
+        </div>
+    );
+};
+
 const CHEST_DEFINITIONS = { basic: { id: 'basic_vocab_chest', currency: 'gold' as const, chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: treasureAssets.chestBasic, infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 1200, isComingSoon: false, range: [0, 2399] as const, }, elementary: { id: 'elementary_vocab_chest', currency: 'gem' as const, chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: treasureAssets.chestElementary, infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2).", price1: 10, price10: 40, isComingSoon: false, range: [2400, 4099] as const, }, intermediate: { id: 'intermediate_vocab_chest', currency: 'gem' as const, chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: treasureAssets.chestIntermediate, infoText: "Mở rộng kiến thức chuyên sâu hơn.", price1: 10, price10: 40, isComingSoon: false, range: [4100, 6499] as const, }, advanced: { id: 'advanced_vocab_chest', currency: 'gem' as const, chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: treasureAssets.chestAdvanced, infoText: "Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.", price1: 10, price10: 40, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, }, master: { id: 'master_vocab_chest', currency: 'gem' as const, chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: treasureAssets.chestMaster, infoText: "Từ vựng chuyên ngành và thành ngữ phức tạp.", price1: 0, price10: 0, isComingSoon: true, range: [null, null] as const, }, };
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
 // ========================================================================
-// === 3. COMPONENT CHÍNH (ĐÃ TÁI CẤU TRÚC) ===============================
+// === 3. COMPONENT CHÍNH (LOGIC MỚI GIỮ NGUYÊN) ==========================
 // ========================================================================
 interface VocabularyChestScreenProps { onClose: () => void; currentUserId: string; initialCoins: number; initialGems: number; initialTotalVocab: number; initialCardCapacity: number; onDataChanged: (updates: { coinsChange: number; gemsChange: number; vocabAdded: number }) => void; }
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced' | 'master';
@@ -281,16 +313,20 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             )}
             {!showSingleOverlay && !showFourOverlay && !isLoading && (
                 <div className="chest-gallery-container">
-                    {CHEST_DATA.map((chest) => (
-                        <ChestUI
-                            key={chest.id}
-                            {...chest}
-                            priceIconUrl={chest.currency === 'gem' ? uiAssets.gemIcon : uiAssets.priceIcon}
-                            remainingCount={availableIndices[chest.chestType]?.length ?? 0}
-                            onOpen1={() => handleOpenCards(1, chest.chestType)}
-                            onOpen10={() => handleOpenCards(4, chest.chestType)}
-                        />
-                    ))}
+                    {CHEST_DATA.map((chest) => {
+                        const remainingCount = availableIndices[chest.chestType]?.length ?? 0;
+                        const priceIcon = chest.currency === 'gem' ? uiAssets.gemIcon : uiAssets.priceIcon;
+                        return (
+                            <ChestUI
+                                key={chest.id}
+                                {...chest}
+                                priceIconUrl={priceIcon}
+                                remainingCount={remainingCount}
+                                onOpen1={() => handleOpenCards(1, chest.chestType)}
+                                onOpen10={() => handleOpenCards(4, chest.chestType)}
+                            />
+                        );
+                    })}
                 </div>
             )}
             {showSingleOverlay && <div className="card-opening-overlay"><div className="overlay-content"><SingleCardOpener card={cardsForPopup[0]} onClose={handleCloseOverlay} onOpenAgain={handleOpenAgain} /></div></div>}
