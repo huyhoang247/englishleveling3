@@ -5,7 +5,7 @@ import {
 } from 'firebase/firestore';
 // Import các dữ liệu local cần thiết cho hàm mới
 import quizData from './multiple-choice/multiple-data.ts'; 
-import { exampleData } from '../example-data.ts';
+import { exampleData } from '../voca-data/example-data.ts';
 import { allWordPairs } from './voca-match/voca-match-data.ts'; // ADDED
 
 /**
