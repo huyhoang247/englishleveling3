@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx ---
+// --- START OF FILE background-game.tsx (FULL CODE - UPDATED) ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -20,8 +20,8 @@ import Shop from './shop.tsx';
 import VocabularyChestScreen from './lat-the.tsx';
 import MinerChallenge from './bomb.tsx';
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
-import AchievementsScreen from './home/achievements/achievement-ui.tsx';
-import { AchievementsProvider } from './home/achievements/achievement-context.tsx'; // THÊM IMPORT NÀY
+import AchievementsScreen from './home/achievements/achievement-ui.tsx'; // <<<--- IMPORT NÀY VẪN GIỮ NGUYÊN
+// import { AchievementsProvider } from './home/achievements/achievement-context.tsx'; // <<<--- XÓA DÒNG NÀY
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './skill.tsx';
@@ -909,14 +909,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
                 )}
             </ErrorBoundary> 
         </div>
+        
+        {/* --- ĐOẠN CODE ĐÃ ĐƯỢC CẬP NHẬT --- */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
-                {isAchievementsOpen && auth.currentUser && (
-                    <AchievementsProvider user={auth.currentUser}>
-                        <AchievementsScreen
-                            onClose={toggleAchievements}
-                        />
-                    </AchievementsProvider>
+                {isAchievementsOpen && (
+                    <AchievementsScreen
+                        user={auth.currentUser}
+                        onClose={toggleAchievements}
+                    />
                 )}
             </ErrorBoundary>
         </div>
