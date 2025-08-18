@@ -12,7 +12,6 @@ import { defaultVocabulary } from './voca-data/list-vocabulary.ts';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import CardCapacityDisplay from './ui/display/card-capacity-display.tsx';
 import GemDisplay from './ui/display/gem-display.tsx'; 
-// +++ THÊM VÀO: Import component skeleton mới +++
 import VocabularyChestLoadingSkeleton from './lat-the-loading.tsx';
 import { processVocabularyChestOpening, fetchVocabularyScreenData } from './gameDataService.ts'; 
 import { useAnimateValue } from './ui/useAnimateValue.ts';
@@ -40,23 +39,10 @@ const ScopedStyles = () => (
             z-index: 100; 
             overflow: hidden;
         }
-        .vocabulary-chest-root .main-header {
-            position: sticky;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 8px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: rgba(16, 22, 46, 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1010;
-            box-sizing: border-box;
-            flex-shrink: 0; 
-        }
+
+        /* +++ THAY ĐỔI 1: XÓA ĐỊNH NGHĨA CSS CHO .main-header +++ */
+        /* Lớp CSS .main-header đã được thay thế bằng các class tiện ích của Tailwind CSS trực tiếp trên thẻ <header> để đảm bảo tính nhất quán với file skeleton. */
+
         .vocabulary-chest-root .vocab-screen-home-btn {
             display: flex;
             align-items: center;
@@ -143,7 +129,6 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .button-price { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; color: white; font-weight: 600; background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px; text-shadow: none; }
         .vocabulary-chest-root .price-icon { width: 16px; height: 16px; }
         @keyframes vocabulary-chest-fade-in { from { opacity: 0; } to { opacity: 1; } }
-        /* --- XÓA ĐI: Keyframe spin không cần nữa --- */
         @keyframes vocabulary-chest-flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
         @keyframes vocabulary-chest-deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .vocabulary-chest-root .card-opening-overlay {
@@ -169,7 +154,6 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .card-image-in-card { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
         .vocabulary-chest-root .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
         .vocabulary-chest-root .card-wrapper.dealt-in { animation: vocabulary-chest-deal-in 0.5s ease-out forwards; }
-        /* --- XÓA ĐI: Các style của loading overlay cũ --- */
     `}
     </style>
 );
@@ -182,7 +166,6 @@ const HomeIcon = ({ className = '' }: { className?: string }) => (
         <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
     </svg>
 );
-// --- XÓA ĐI: Component LoadingOverlay không còn được sử dụng ---
 interface ImageCard { id: number; url: string; }
 const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, isFlipping: boolean, flipDelay: number }) => (
     <div className={`card-container ${isFlipping ? 'is-flipping' : ''}`}>
@@ -409,7 +392,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const handleCloseOverlay = () => { setShowSingleOverlay(false); setShowFourOverlay(false); setCardsForPopup([]); };
     const handleOpenAgain = () => { if (lastOpenedChest) { handleOpenCards(lastOpenedChest.count, lastOpenedChest.type); } };
     
-    // +++ THAY ĐỔI: Sử dụng skeleton loading khi isLoading=true +++
     if (isLoading) {
         return <VocabularyChestLoadingSkeleton />;
     }
@@ -419,7 +401,8 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             <ScopedStyles />
             <ImagePreloader imageUrls={urlsToPreload} />
             
-            <header className="main-header">
+            {/* +++ THAY ĐỔI 2: ÁP DỤNG CÁC CLASS TAILWIND ĐỂ ĐỒNG BỘ HEADER +++ */}
+            <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0">
                 <button onClick={onClose} className={`vocab-screen-home-btn ${showSingleOverlay || showFourOverlay ? 'is-hidden' : ''}`} title="Quay lại Trang Chính">
                     <HomeIcon /><span>Trang Chính</span>
                 </button>
