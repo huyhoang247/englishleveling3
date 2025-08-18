@@ -5,7 +5,7 @@ import { auth } from './firebase.js';
 import { fetchOrCreateUserGameData, upgradeUserStats } from './gameDataService.ts';
 
 // --- ICONS ---
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const icons = {
   coin: ( <img src={uiAssets.statCoinIcon} alt="Gold Coin Icon" /> ),
   heart: ( <img src={uiAssets.statHpIcon} alt="HP Icon" /> ),
@@ -24,7 +24,7 @@ export const getBonusForLevel = (level: number, baseBonus: number) => { if (leve
 export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => { if (currentLevel === 0) return 0; let totalValue = 0; const fullTiers = Math.floor(currentLevel / 10); const remainingLevelsInCurrentTier = currentLevel % 10; for (let i = 0; i < fullTiers; i++) { const bonusInTier = baseBonus * Math.pow(2, i); totalValue += 10 * bonusInTier; } const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers); totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier; return totalValue; };
 const formatNumber = (num: number) => { if (num < 1000) return num.toString(); if (num < 1000000) { const thousands = num / 1000; return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`; } if (num < 1000000000) { const millions = num / 1000000; return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`; } const billions = num / 1000000000; return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`; };
 
-// --- COMPONENT STAT CARD (UPDATED) ---
+// --- COMPONENT STAT CARD (UPDATED FOR RESPONSIVENESS) ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: string) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
   const upgradeCost = calculateUpgradeCost(level);
@@ -33,22 +33,27 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   return (
     <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
-      {/* Thay đổi chính: Tăng chiều rộng của card */}
-      <div className="relative bg-slate-900/95 rounded-[11px] p-4 h-full flex flex-col items-center justify-between gap-3 text-center text-white w-32 sm:w-36 md:w-40">
-        <div className="w-10 h-10">{icon}</div>
+      
+      {/* Thay đổi: Kích thước, padding linh hoạt theo màn hình */}
+      <div className="relative bg-slate-900/95 rounded-[11px] h-full flex flex-col items-center justify-between text-center text-white 
+                   w-28 sm:w-36 p-3 sm:p-4 gap-2 sm:gap-3">
+        <div className="w-8 h-8 sm:w-10 sm:h-10">{icon}</div>
         <div className="flex-grow flex flex-col items-center gap-1">
-          <p className="text-lg uppercase font-bold tracking-wider">{name}</p>
-          <p className="text-xl font-black text-shadow-cyan">+{formatNumber(bonusForNextLevel)}</p>
+          <p className="text-base sm:text-lg uppercase font-bold tracking-wider">{name}</p>
+          {/* Thay đổi: Cỡ chữ linh hoạt */}
+          <p className="text-lg sm:text-xl font-black text-shadow-cyan">+{formatNumber(bonusForNextLevel)}</p>
           <p className="text-xs text-slate-400">Level {level}</p>
         </div>
-        {/* Thay đổi chính: Thiết kế lại hoàn toàn nút nâng cấp */}
+        
+        {/* Thay đổi: Nút bấm có padding và cỡ chữ linh hoạt */}
         <button 
           onClick={() => onUpgrade(stat.id)} 
           disabled={isDisabled || isProcessing} 
-          className="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-2 flex items-center justify-center gap-2 shadow-lg transition-all duration-200 active:scale-95 hover:enabled:bg-slate-800 hover:enabled:border-yellow-500 hover:enabled:text-yellow-300 hover:enabled:shadow-lg hover:enabled:shadow-yellow-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full bg-slate-900 border border-slate-700 rounded-lg py-1.5 sm:py-2 px-2 flex items-center justify-center gap-1.5 sm:gap-2 shadow-lg transition-all duration-200 active:scale-95 hover:enabled:bg-slate-800 hover:enabled:border-yellow-500 hover:enabled:shadow-lg hover:enabled:shadow-yellow-500/20 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
-          <span className="text-base font-bold text-yellow-400 transition-colors duration-200">{formatNumber(upgradeCost)}</span>
+          {/* Thay đổi: Cỡ chữ linh hoạt */}
+          <span className="text-sm sm:text-base font-bold text-yellow-400 transition-colors duration-200">{formatNumber(upgradeCost)}</span>
         </button>
       </div>
     </div>
@@ -166,7 +171,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
       setDisplayedGold(newCoins);
       onDataUpdated(newCoins, newStatsForFirestore);
       console.log('Nâng cấp đã được xác nhận và lưu trên server.');
-    } catch (error) {
+    } catch (error)
       console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
       setMessage('Nâng cấp thất bại, vui lòng thử lại!');
       startCoinCountAnimation(newGoldValue, oldGold);
@@ -229,7 +234,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
                 </div>
             </div>
           </div>
-          <div className="flex flex-row justify-center items-stretch gap-3 sm:gap-4">
+          <div className="flex flex-row justify-center items-stretch gap-2 sm:gap-4">
             {stats.map(stat => (
               <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} isProcessing={upgradingId === stat.id} isDisabled={upgradingId !== null} />
             ))}
