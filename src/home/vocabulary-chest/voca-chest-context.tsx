@@ -1,13 +1,13 @@
 // --- START OF FILE lat-the-context.tsx (UPDATED IMPORT PATH) ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { db } from './firebase.js';
+import { db } from '../../firebase.js';
 import { collection, getDocs } from 'firebase/firestore';
-import { defaultImageUrls } from './voca-data/image-url.ts';
-import { defaultVocabulary } from './voca-data/list-vocabulary.ts';
-import { processVocabularyChestOpening, fetchVocabularyScreenData } from './gameDataService.ts';
+import { defaultImageUrls } from '../../voca-data/image-url.ts';
+import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
+import { processVocabularyChestOpening, fetchVocabularyScreenData } from '../../gameDataService.ts';
 // THAY ĐỔI: Import hằng số từ file UI chính thay vì file constants riêng
-import { CHEST_DEFINITIONS } from './lat-the.tsx';
+import { CHEST_DEFINITIONS } from './voca-chest-ui.tsx';
 
 // --- TYPE DEFINITIONS ---
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced' | 'master';
