@@ -126,7 +126,6 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .button-price { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; color: white; font-weight: 600; background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px; text-shadow: none; }
         .vocabulary-chest-root .price-icon { width: 16px; height: 16px; }
         
-        /* +++ THAY ĐỔI: HIỆU ỨNG MỚI - HẠT NĂNG LƯỢNG MA THUẬT +++ */
         @keyframes vocabulary-chest-processing-pulse {
             50% { transform: scale(1.02); }
         }
@@ -169,12 +168,20 @@ const ScopedStyles = () => (
             opacity: 1;
         }
         @keyframes vocabulary-chest-spinner-spin { to { transform: rotate(360deg); } }
+        /* +++ THAY ĐỔI: CSS CHO SPINNER MỚI - "VÒNG XOÁY NĂNG LƯỢNG" +++ */
         .vocabulary-chest-root .chest-spinner {
-            width: 48px; height: 48px;
-            border: 4px solid rgba(255, 255, 255, 0.2);
-            border-top-color: #c084fc;
+            position: relative;
+            width: 52px; height: 52px;
             border-radius: 50%;
-            animation: vocabulary-chest-spinner-spin 1s linear infinite;
+            background: conic-gradient(from 90deg, transparent 0%, #a78bfa, #c084fc 80%, transparent 100%);
+            animation: vocabulary-chest-spinner-spin 1.2s linear infinite;
+        }
+        .vocabulary-chest-root .chest-spinner::before {
+            content: '';
+            position: absolute;
+            inset: 5px; /* Độ dày của vòng xoáy */
+            background: #2c2240; /* Màu nền của chest-body để tạo lỗ hổng */
+            border-radius: 50%;
         }
 
         @keyframes vocabulary-chest-fade-in { from { opacity: 0; } to { opacity: 1; } }
