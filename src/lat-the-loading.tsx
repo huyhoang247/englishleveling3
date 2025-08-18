@@ -32,7 +32,8 @@ const VocabularyChestLoadingSkeleton: React.FC = () => {
         <div className="w-full max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
           {/* Tạo 4 skeleton card mẫu */}
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-slate-800/50 rounded-2xl overflow-hidden border border-white/10 flex flex-col h-[320px]">
+            // === THAY ĐỔI: Giảm chiều cao card từ 320px xuống 280px và điều chỉnh các thành phần bên trong cho cân đối ===
+            <div key={i} className="bg-slate-800/50 rounded-2xl overflow-hidden border border-white/10 flex flex-col h-[280px]">
               {/* Header của card */}
               <div className="h-9 bg-white/10 animate-pulse m-3 rounded-md"></div>
               
@@ -44,16 +45,16 @@ const VocabularyChestLoadingSkeleton: React.FC = () => {
                   <div className="h-5 w-28 bg-white/10 animate-pulse rounded-md"></div>
                 </div>
 
-                {/* Phần hình ảnh rương và ô thông tin */}
+                {/* Phần hình ảnh rương và ô thông tin (giảm kích thước) */}
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-24 h-24 bg-white/10 animate-pulse rounded-lg flex-shrink-0"></div>
-                  <div className="flex-1 h-24 bg-white/10 animate-pulse rounded-lg"></div>
+                  <div className="w-20 h-20 bg-white/10 animate-pulse rounded-lg flex-shrink-0"></div>
+                  <div className="flex-1 h-20 bg-white/10 animate-pulse rounded-lg"></div>
                 </div>
 
-                {/* Phần các nút bấm (dùng mt-auto để đẩy xuống dưới) */}
+                {/* Phần các nút bấm (giảm chiều cao, dùng mt-auto để đẩy xuống dưới) */}
                 <div className="flex items-center gap-2.5 mt-auto">
-                  <div className="flex-1 h-12 bg-white/10 animate-pulse rounded-lg"></div>
-                  <div className="flex-1 h-12 bg-white/10 animate-pulse rounded-lg"></div>
+                  <div className="flex-1 h-10 bg-white/10 animate-pulse rounded-lg"></div>
+                  <div className="flex-1 h-10 bg-white/10 animate-pulse rounded-lg"></div>
                 </div>
               </div>
             </div>
