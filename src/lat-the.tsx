@@ -167,22 +167,32 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .chest-ui-container.is-processing .chest-processing-overlay {
             opacity: 1;
         }
+        
+        /* +++ THAY ĐỔI: HIỆU ỨNG LOADING MỚI - VÒNG TRÒN CỔ NGỮ +++ */
         @keyframes vocabulary-chest-spinner-spin { to { transform: rotate(360deg); } }
-        /* +++ THAY ĐỔI: CSS CHO SPINNER MỚI - "VÒNG XOÁY NĂNG LƯỢNG" +++ */
+        @keyframes vocabulary-chest-rune-draw {
+            0% { stroke-dashoffset: 1000; opacity: 0; }
+            30% { opacity: 1; }
+            100% { stroke-dashoffset: 0; opacity: 1; }
+        }
+        @keyframes vocabulary-chest-rune-glow {
+            0%, 100% { filter: drop-shadow(0 0 2px currentColor); }
+            50% { filter: drop-shadow(0 0 5px currentColor); }
+        }
         .vocabulary-chest-root .chest-spinner {
-            position: relative;
-            width: 52px; height: 52px;
-            border-radius: 50%;
-            background: conic-gradient(from 90deg, transparent 0%, #a78bfa, #c084fc 80%, transparent 100%);
-            animation: vocabulary-chest-spinner-spin 1.2s linear infinite;
+            width: 64px; height: 64px;
+            color: #c084fc;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cstyle%3Epath%7Bfill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;%7D%3C/style%3E%3Cpath d='M50,6 a23,23 0 1,0 0,88 a23,23 0 1,0 0,-88 M20,25 l10,10 M70,25 l10,10 M20,75 l10,-10 M70,75 l10,-10 M50,20 l0,10 M50,70 l0,10 M25,40 l10,0 M65,40 l10,0'/%3E%3Cpath d='M50,25 a12,12 0 1,0 0,50 a12,12 0 1,0 0,-50 M40,50 l20,0 M50,40 l0,20'/%3E%3C/svg%3E");
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            stroke-dasharray: 1000; /* Approximate length of all paths */
+            animation: 
+                vocabulary-chest-spinner-spin 10s linear infinite,
+                vocabulary-chest-rune-draw 2.5s ease-out forwards,
+                vocabulary-chest-rune-glow 2s ease-in-out infinite;
         }
-        .vocabulary-chest-root .chest-spinner::before {
-            content: '';
-            position: absolute;
-            inset: 5px; /* Độ dày của vòng xoáy */
-            background: #2c2240; /* Màu nền của chest-body để tạo lỗ hổng */
-            border-radius: 50%;
-        }
+
 
         @keyframes vocabulary-chest-fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes vocabulary-chest-flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
