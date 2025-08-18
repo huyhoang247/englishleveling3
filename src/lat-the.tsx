@@ -1,23 +1,20 @@
-// --- START OF FILE lat-the.tsx (UPDATED) ---
+// --- START OF FILE lat-the.tsx ---
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
-import { db } from './firebase.js'; 
-import { collection, getDocs } from 'firebase/firestore';
 
-// -- BƯỚC 1: IMPORT TÀI NGUYÊN TẬP TRUNG --
-import { uiAssets, treasureAssets } from './game-assets.ts'; 
-import { defaultImageUrls } from './voca-data/image-url.ts'; 
-import ImagePreloader from './ImagePreloader.tsx'; 
+// -- BƯỚC 1: IMPORT CONTEXT VÀ CÁC COMPONENT GIAO DIỆN --
+import { VocabularyChestProvider, useVocabularyChest } from './lat-the-context.tsx';
+import { uiAssets, treasureAssets } from './game-assets.ts';
 import { defaultVocabulary } from './voca-data/list-vocabulary.ts';
+import ImagePreloader from './ImagePreloader.tsx';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import CardCapacityDisplay from './ui/display/card-capacity-display.tsx';
-import GemDisplay from './ui/display/gem-display.tsx'; 
+import GemDisplay from './ui/display/gem-display.tsx';
 import VocabularyChestLoadingSkeleton from './lat-the-loading.tsx';
-import { processVocabularyChestOpening, fetchVocabularyScreenData } from './gameDataService.ts'; 
 import { useAnimateValue } from './ui/useAnimateValue.ts';
 
 // ========================================================================
-// === 1. COMPONENT CSS ĐÃ ĐƯỢỢC ĐÓNG GÓI ================================
+// === 1. COMPONENT CSS & CÁC COMPONENT CON (GIỮ NGUYÊN) ==================
 // ========================================================================
 const ScopedStyles = () => (
     <style>{`
@@ -39,6 +36,8 @@ const ScopedStyles = () => (
             z-index: 100; 
             overflow: hidden;
         }
+        
+        .vocabulary-chest-root .header-right-group { display: flex; align-items: center; gap: 12px; }
 
         .vocabulary-chest-root .vocab-screen-home-btn {
             display: flex;
@@ -125,85 +124,16 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
         .vocabulary-chest-root .button-price { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; color: white; font-weight: 600; background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px; text-shadow: none; }
         .vocabulary-chest-root .price-icon { width: 16px; height: 16px; }
-        
-        @keyframes vocabulary-chest-processing-pulse {
-            50% { transform: scale(1.02); }
-        }
-        @keyframes vocabulary-chest-particles-rise {
-            from { transform: translateY(0); opacity: 1; }
-            to { transform: translateY(-150px); opacity: 0; }
-        }
-        .vocabulary-chest-root .chest-ui-container.is-processing {
-            animation: vocabulary-chest-processing-pulse 2.5s infinite ease-in-out;
-            pointer-events: none;
-        }
-        .vocabulary-chest-root .chest-ui-container.is-processing::before,
-        .vocabulary-chest-root .chest-ui-container.is-processing::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            height: 1px; width: 1px;
-            z-index: 0;
-            background: transparent;
-            color: rgba(224, 204, 255, 0.7); /* E0CCFF with alpha */
-            animation: vocabulary-chest-particles-rise 4s linear infinite;
-        }
-        .vocabulary-chest-root .chest-ui-container.is-processing::before {
-            box-shadow: 15% -60px 0, 25% -25px 0, 35% -80px 0, 45% -40px 0, 55% -70px 0, 65% -35px 0, 75% -75px 0, 85% -45px 0, 95% -15px 0, 5% -50px 0, 40% -10px 0, 80% -90px 0;
-        }
-        .vocabulary-chest-root .chest-ui-container.is-processing::after {
-            animation-delay: 2s;
-            box-shadow: 10% -20px 0, 20% -55px 0, 30% -30px 0, 40% -65px 0, 50% -25px 0, 60% -85px 0, 70% -50px 0, 80% -15px 0, 90% -60px 0, 5% -35px 0, 28% -95px 0, 98% -40px 0;
-        }
-
-        .vocabulary-chest-root .chest-processing-overlay {
-            position: absolute; inset: 0;
-            background-color: rgba(10, 10, 20, 0.7);
-            border-radius: 16px;
-            display: flex; justify-content: center; align-items: center;
-            z-index: 10; opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .vocabulary-chest-root .chest-ui-container.is-processing .chest-processing-overlay {
-            opacity: 1;
-        }
-        
-        /* +++ THAY ĐỔI: HIỆU ỨNG LOADING MỚI - VÒNG TRÒN CỔ NGỮ +++ */
+        @keyframes vocabulary-chest-processing-pulse { 50% { transform: scale(1.02); } }
+        .vocabulary-chest-root .chest-ui-container.is-processing { animation: vocabulary-chest-processing-pulse 2.5s infinite ease-in-out; pointer-events: none; }
+        .vocabulary-chest-root .chest-processing-overlay { position: absolute; inset: 0; background-color: rgba(10, 10, 20, 0.7); border-radius: 16px; display: flex; justify-content: center; align-items: center; z-index: 10; opacity: 0; transition: opacity 0.3s ease; }
+        .vocabulary-chest-root .chest-ui-container.is-processing .chest-processing-overlay { opacity: 1; }
         @keyframes vocabulary-chest-spinner-spin { to { transform: rotate(360deg); } }
-        @keyframes vocabulary-chest-rune-draw {
-            0% { stroke-dashoffset: 1000; opacity: 0; }
-            30% { opacity: 1; }
-            100% { stroke-dashoffset: 0; opacity: 1; }
-        }
-        @keyframes vocabulary-chest-rune-glow {
-            0%, 100% { filter: drop-shadow(0 0 2px currentColor); }
-            50% { filter: drop-shadow(0 0 5px currentColor); }
-        }
-        .vocabulary-chest-root .chest-spinner {
-            width: 64px; height: 64px;
-            color: #c084fc;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cstyle%3Epath%7Bfill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;%7D%3C/style%3E%3Cpath d='M50,6 a23,23 0 1,0 0,88 a23,23 0 1,0 0,-88 M20,25 l10,10 M70,25 l10,10 M20,75 l10,-10 M70,75 l10,-10 M50,20 l0,10 M50,70 l0,10 M25,40 l10,0 M65,40 l10,0'/%3E%3Cpath d='M50,25 a12,12 0 1,0 0,50 a12,12 0 1,0 0,-50 M40,50 l20,0 M50,40 l0,20'/%3E%3C/svg%3E");
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
-            stroke-dasharray: 1000; /* Approximate length of all paths */
-            animation: 
-                vocabulary-chest-spinner-spin 10s linear infinite,
-                vocabulary-chest-rune-draw 2.5s ease-out forwards,
-                vocabulary-chest-rune-glow 2s ease-in-out infinite;
-        }
-
-
+        .vocabulary-chest-root .chest-spinner { width: 64px; height: 64px; color: #c084fc; background-image: url("data:image/svg+xml,..."); background-size: contain; animation: vocabulary-chest-spinner-spin 10s linear infinite; }
         @keyframes vocabulary-chest-fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes vocabulary-chest-flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
         @keyframes vocabulary-chest-deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .vocabulary-chest-root .card-opening-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(10, 10, 20, 0.95); z-index: 1000;
-            display: flex; justify-content: center; align-items: center;
-            animation: vocabulary-chest-fade-in 0.5s ease;
-            overflow: hidden; padding: 70px 15px 80px; box-sizing: border-box;
-        }
+        .vocabulary-chest-root .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: vocabulary-chest-fade-in 0.5s ease; overflow: hidden; padding: 70px 15px 80px; box-sizing: border-box; }
         .vocabulary-chest-root .overlay-content { width: 100%; max-width: 900px; }
         .vocabulary-chest-root .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
         .vocabulary-chest-root .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
@@ -223,249 +153,47 @@ const ScopedStyles = () => (
     `}
     </style>
 );
-
-// ========================================================================
-// === 2. CÁC COMPONENT CON VÀ DATA =======================================
-// ========================================================================
-const HomeIcon = ({ className = '' }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
-        <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
-    </svg>
-);
+const HomeIcon = ({ className = '' }: { className?: string }) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /></svg>);
 interface ImageCard { id: number; url: string; }
-const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, isFlipping: boolean, flipDelay: number }) => (
-    <div className={`card-container ${isFlipping ? 'is-flipping' : ''}`}>
-        <div className="card-inner" style={{ animationDelay: `${flipDelay}ms` }}>
-            <div className="card-face card-back">?</div>
-            <div className="card-face card-front"><img src={cardData.url} alt={`Revealed content ${cardData.id}`} className="card-image-in-card" /></div>
-        </div>
-    </div>
-));
-const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => {
-    const [isFlipping, setIsFlipping] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(true);
-    useEffect(() => {
-        const t1 = setTimeout(() => setIsFlipping(true), 300);
-        const t2 = setTimeout(() => setIsProcessing(false), 300 + 800);
-        return () => { clearTimeout(t1); clearTimeout(t2); };
-    }, [card]);
-    const handleOpenAgain = () => { if (isProcessing) return; setIsProcessing(true); setIsFlipping(false); setTimeout(() => { onOpenAgain(); }, 300); }
-    return (
-        <>
-            <div style={{ textAlign: 'center' }}><div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw' }}><Card cardData={card} isFlipping={isFlipping} flipDelay={0} /></div></div>
-            <div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>{isProcessing ? 'Đang mở...' : 'Mở Lại'}</button><button onClick={onClose} className="footer-btn">Đóng</button></div>
-        </>
-    );
-};
-const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => {
-    const [startFlipping, setStartFlipping] = useState(false);
-    const [phase, setPhase] = useState('DEALING');
-    const startRound = useCallback(() => {
-        setPhase('DEALING');
-        setStartFlipping(false);
-        const totalDealTime = 500 + 80 * (cards.length - 1);
-        setTimeout(() => {
-            setPhase('FLIPPING');
-            setStartFlipping(true);
-            const totalFlipTime = 800 + 200 * (cards.length - 1);
-            setTimeout(() => setPhase('REVEALED'), totalFlipTime);
-        }, totalDealTime);
-    }, [cards.length]);
-    useEffect(() => { if (cards.length > 0) startRound(); }, [cards, startRound]);
-    const handleOpenAgain = () => { if (phase !== 'REVEALED') return; onOpenAgain(); };
-    const btnProps = (() => {
-        switch (phase) {
-            case 'DEALING': return { text: 'Đang chia bài...', disabled: true };
-            case 'FLIPPING': return { text: 'Đang lật...', disabled: true };
-            case 'REVEALED': return { text: 'Mở Lại x4', disabled: false };
-            default: return { text: '', disabled: true };
-        }
-    })();
-    return (
-        <>
-            <div style={{ textAlign: 'center' }}><div className="four-card-grid-container">{cards.map((card, index) => (<div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}><Card cardData={card} isFlipping={startFlipping} flipDelay={index * 200} /></div>))}</div></div>
-            <div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button><button onClick={onClose} className="footer-btn">Đóng</button></div>
-        </>
-    );
-};
+const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, isFlipping: boolean, flipDelay: number }) => (<div className={`card-container ${isFlipping ? 'is-flipping' : ''}`}><div className="card-inner" style={{ animationDelay: `${flipDelay}ms` }}><div className="card-face card-back">?</div><div className="card-face card-front"><img src={cardData.url} alt={`Revealed content ${cardData.id}`} className="card-image-in-card" /></div></div></div>));
+const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => { const [isFlipping, setIsFlipping] = useState(false); const [isProcessing, setIsProcessing] = useState(true); useEffect(() => { const t1 = setTimeout(() => setIsFlipping(true), 300); const t2 = setTimeout(() => setIsProcessing(false), 300 + 800); return () => { clearTimeout(t1); clearTimeout(t2); }; }, [card]); const handleOpenAgain = () => { if (isProcessing) return; setIsProcessing(true); setIsFlipping(false); setTimeout(() => { onOpenAgain(); }, 300); }; return (<><div style={{ textAlign: 'center' }}><div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw' }}><Card cardData={card} isFlipping={isFlipping} flipDelay={0} /></div></div><div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>{isProcessing ? 'Đang mở...' : 'Mở Lại'}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
+const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => { const [startFlipping, setStartFlipping] = useState(false); const [phase, setPhase] = useState('DEALING'); const startRound = useCallback(() => { setPhase('DEALING'); setStartFlipping(false); const totalDealTime = 500 + 80 * (cards.length - 1); setTimeout(() => { setPhase('FLIPPING'); setStartFlipping(true); const totalFlipTime = 800 + 200 * (cards.length - 1); setTimeout(() => setPhase('REVEALED'), totalFlipTime); }, totalDealTime); }, [cards.length]); useEffect(() => { if (cards.length > 0) startRound(); }, [cards, startRound]); const handleOpenAgain = () => { if (phase !== 'REVEALED') return; onOpenAgain(); }; const btnProps = (() => { switch (phase) { case 'DEALING': return { text: 'Đang chia bài...', disabled: true }; case 'FLIPPING': return { text: 'Đang lật...', disabled: true }; case 'REVEALED': return { text: 'Mở Lại x4', disabled: false }; default: return { text: '', disabled: true }; } })(); return (<><div style={{ textAlign: 'center' }}><div className="four-card-grid-container">{cards.map((card, index) => (<div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}><Card cardData={card} isFlipping={startFlipping} flipDelay={index * 200} /></div>))}</div></div><div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
 interface ChestUIProps { headerTitle: string; levelName: string | null; imageUrl: string; infoText: React.ReactNode; price1: number | string; price10: number | null; priceIconUrl: string; onOpen1: () => void; onOpen10: () => void; isComingSoon: boolean; remainingCount: number; isProcessing: boolean; }
-const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, infoText, price1, price10, priceIconUrl, onOpen1, onOpen10, isComingSoon, remainingCount, isProcessing }) => {
-    return (
-        <div className={`chest-ui-container ${isComingSoon ? 'is-coming-soon' : ''} ${isProcessing ? 'is-processing' : ''}`}>
-            {isProcessing && (
-                <div className="chest-processing-overlay">
-                    <div className="chest-spinner"></div>
-                </div>
-            )}
-            <header className="chest-header">{headerTitle}</header>
-            <main className="chest-body">
-                <div className="chest-top-section"><div className="chest-level-info">{levelName && !isComingSoon && <button className="chest-help-icon" title="Thông tin">?</button>}{levelName && <span className="chest-level-name">{levelName}</span>}</div><p className="remaining-count-text">{isComingSoon ? "Sắp ra mắt" : <>Còn lại: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> thẻ</>}</p></div>
-                <div className="chest-visual-row"><img src={imageUrl} alt={headerTitle} className="chest-image" /><div className="info-bubble">{infoText}</div></div>
-                <div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '15px' }}><button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}><span>Mở x1</span>{typeof price1 === 'number' && (<span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price1.toLocaleString()}</span>)}</button>{price10 !== null && (<button className="chest-button btn-get-10" onClick={onOpen10} disabled={isComingSoon || remainingCount < 4}><span>Mở x4</span><span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price10.toLocaleString()}</span></button>)}</div>
-            </main>
-        </div>
-    );
-};
-const CHEST_DEFINITIONS = { basic: { id: 'basic_vocab_chest', currency: 'gold' as const, chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: treasureAssets.chestBasic, infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 1200, isComingSoon: false, range: [0, 2399] as const, }, elementary: { id: 'elementary_vocab_chest', currency: 'gem' as const, chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: treasureAssets.chestElementary, infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 10, price10: 40, isComingSoon: false, range: [2400, 4099] as const, }, intermediate: { id: 'intermediate_vocab_chest', currency: 'gem' as const, chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: treasureAssets.chestIntermediate, infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 10, price10: 40, isComingSoon: false, range: [4100, 6499] as const, }, advanced: { id: 'advanced_vocab_chest', currency: 'gem' as const, chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: treasureAssets.chestAdvanced, infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 10, price10: 40, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, }, master: { id: 'master_vocab_chest', currency: 'gem' as const, chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: treasureAssets.chestMaster, infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, price1: 0, price10: 0, isComingSoon: true, range: [null, null] as const, }, };
+const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, infoText, price1, price10, priceIconUrl, onOpen1, onOpen10, isComingSoon, remainingCount, isProcessing }) => { return (<div className={`chest-ui-container ${isComingSoon ? 'is-coming-soon' : ''} ${isProcessing ? 'is-processing' : ''}`}>{isProcessing && (<div className="chest-processing-overlay"><div className="chest-spinner"></div></div>)}<header className="chest-header">{headerTitle}</header><main className="chest-body"><div className="chest-top-section"><div className="chest-level-info">{levelName && !isComingSoon && <button className="chest-help-icon" title="Thông tin">?</button>}{levelName && <span className="chest-level-name">{levelName}</span>}</div><p className="remaining-count-text">{isComingSoon ? "Sắp ra mắt" : <>Còn lại: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> thẻ</>}</p></div><div className="chest-visual-row"><img src={imageUrl} alt={headerTitle} className="chest-image" /><div className="info-bubble">{infoText}</div></div><div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '15px' }}><button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}><span>Mở x1</span>{typeof price1 === 'number' && (<span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price1.toLocaleString()}</span>)}</button>{price10 !== null && (<button className="chest-button btn-get-10" onClick={onOpen10} disabled={isComingSoon || remainingCount < 4}><span>Mở x4</span><span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price10.toLocaleString()}</span></button>)}</div></main></div>); };
+
+// -- ĐỊNH NGHĨA DỮ LIỆU RUƠNG (EXPORT để context có thể sử dụng) --
+export const CHEST_DEFINITIONS = { basic: { id: 'basic_vocab_chest', currency: 'gold' as const, chestType: 'basic' as const, headerTitle: "Basic Vocabulary", levelName: "Cơ Bản", imageUrl: treasureAssets.chestBasic, infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", price1: 320, price10: 1200, isComingSoon: false, range: [0, 2399] as const, }, elementary: { id: 'elementary_vocab_chest', currency: 'gem' as const, chestType: 'elementary' as const, headerTitle: "Elementary Vocabulary", levelName: "Sơ Cấp", imageUrl: treasureAssets.chestElementary, infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", price1: 10, price10: 40, isComingSoon: false, range: [2400, 4099] as const, }, intermediate: { id: 'intermediate_vocab_chest', currency: 'gem' as const, chestType: 'intermediate' as const, headerTitle: "Intermediate Vocabulary", levelName: "Trung Cấp", imageUrl: treasureAssets.chestIntermediate, infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, price1: 10, price10: 40, isComingSoon: false, range: [4100, 6499] as const, }, advanced: { id: 'advanced_vocab_chest', currency: 'gem' as const, chestType: 'advanced' as const, headerTitle: "Advanced Vocabulary", levelName: "Cao Cấp", imageUrl: treasureAssets.chestAdvanced, infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, price1: 10, price10: 40, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const, }, master: { id: 'master_vocab_chest', currency: 'gem' as const, chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: treasureAssets.chestMaster, infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, price1: 0, price10: 0, isComingSoon: true, range: [null, null] as const, }, };
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
 // ========================================================================
-// === 3. COMPONENT CHÍNH (ĐÃ TÁI CẤU TRÚC) ===============================
+// === 2. COMPONENT GIAO DIỆN CHÍNH (SỬ DỤNG CONTEXT) =====================
 // ========================================================================
-interface VocabularyChestScreenProps { 
-    onClose: () => void; 
-    currentUserId: string; 
-    onStateUpdate: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void; 
-}
-type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced' | 'master';
-const PRELOAD_POOL_SIZE = 20;
-const GEM_REWARD_PER_CARD = 1;
-
-const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onStateUpdate }) => {
-    const [isLoading, setIsLoading] = useState(true);
-    const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [], master: [] });
-    const [preloadPool, setPreloadPool] = useState<number[]>([]);
-    const [showSingleOverlay, setShowSingleOverlay] = useState(false);
-    const [showFourOverlay, setShowFourOverlay] = useState(false);
-    const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
-    const [isProcessingClick, setIsProcessingClick] = useState(false);
-    const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType } | null>(null);
-    const [processingChestId, setProcessingChestId] = useState<string | null>(null);
+const VocabularyChestScreenContent: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+    // Lấy toàn bộ state và actions từ context
+    const {
+        isLoading,
+        availableIndices,
+        cardsForPopup,
+        showSingleOverlay,
+        showFourOverlay,
+        processingChestId,
+        localCoins,
+        localGems,
+        localTotalVocab,
+        localCardCapacity,
+        openCards,
+        closeOverlay,
+        openAgain,
+        getUrlsToPreload,
+    } = useVocabularyChest();
     
-    const [localCoins, setLocalCoins] = useState(0);
-    const [localGems, setLocalGems] = useState(0);
-    const [localTotalVocab, setLocalTotalVocab] = useState(0);
-    const [localCardCapacity, setLocalCardCapacity] = useState(0);
-    
+    // Sử dụng hook animate cho các giá trị từ context
     const animatedCoins = useAnimateValue(localCoins, 500);
     const animatedGems = useAnimateValue(localGems, 500);
-
-    useEffect(() => {
-        const fetchAllInitialData = async () => {
-            if (!currentUserId) {
-                setIsLoading(false);
-                return;
-            }
-            setIsLoading(true);
-            try {
-                const [screenData, openedVocabSnapshot] = await Promise.all([
-                    fetchVocabularyScreenData(currentUserId),
-                    getDocs(collection(db, 'users', currentUserId, 'openedVocab'))
-                ]);
-
-                setLocalCoins(screenData.coins);
-                setLocalGems(screenData.gems);
-                setLocalTotalVocab(screenData.totalVocab);
-                setLocalCardCapacity(screenData.capacity);
-
-                const totalItems = Math.min(defaultVocabulary.length, defaultImageUrls.length);
-                const allIndices: Record<ChestType, number[]> = { basic: [], elementary: [], intermediate: [], advanced: [], master: [] };
-                for (const key in CHEST_DEFINITIONS) {
-                    const chest = CHEST_DEFINITIONS[key as ChestType];
-                    if (chest.isComingSoon || chest.range[0] === null) continue;
-                    const endRange = chest.range[1] ?? (totalItems - 1);
-                    for (let i = chest.range[0]!; i <= endRange && i < totalItems; i++) {
-                        allIndices[key as ChestType].push(i);
-                    }
-                }
-                
-                const openedIndices = new Set<number>();
-                openedVocabSnapshot.forEach(doc => { openedIndices.add(Number(doc.id) - 1); });
-
-                const remainingIndices: Record<ChestType, number[]> = { basic: [], elementary: [], intermediate: [], advanced: [], master: [] };
-                for (const key in allIndices) {
-                    const chestType = key as ChestType;
-                    remainingIndices[chestType] = allIndices[chestType].filter(index => !openedIndices.has(index));
-                }
-                setAvailableIndices(remainingIndices);
-
-            } catch (error) {
-                console.error("Error fetching initial data for Vocabulary Chest Screen:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchAllInitialData();
-    }, [currentUserId]);
-
-    useEffect(() => {
-        const allAvailable = Object.values(availableIndices).flat();
-        if (preloadPool.length < PRELOAD_POOL_SIZE && allAvailable.length > 0) {
-            const needed = PRELOAD_POOL_SIZE - preloadPool.length;
-            const indicesToAdd = allAvailable.filter(idx => !preloadPool.includes(idx)).slice(0, needed);
-            if (indicesToAdd.length > 0) {
-                setPreloadPool(prevPool => [...prevPool, ...indicesToAdd]);
-            }
-        }
-    }, [availableIndices, preloadPool]);
-
-    const urlsToPreload = useMemo(() => {
-        return preloadPool.map(index => defaultImageUrls[index]);
-    }, [preloadPool]);
-
-    const handleOpenCards = async (count: 1 | 4, chestType: ChestType) => {
-        if (isProcessingClick || !currentUserId) return;
-        const chestDef = CHEST_DEFINITIONS[chestType];
-        if (!chestDef || chestDef.isComingSoon) return;
-        
-        const price = count === 1 ? chestDef.price1 : (chestDef.price10 || 0);
-        if (localTotalVocab + count > localCardCapacity) { alert(`Kho thẻ đã đầy! (${localTotalVocab}/${localCardCapacity}).\nVui lòng nâng cấp sức chứa để tiếp tục.`); return; }
-        if (chestDef.currency === 'gold' && localCoins < price) { alert(`Bạn không đủ vàng! Cần ${price.toLocaleString()}, bạn đang có ${localCoins.toLocaleString()}.`); return; }
-        if (chestDef.currency === 'gem' && localGems < price) { alert(`Bạn không đủ gem! Cần ${price.toLocaleString()}, bạn đang có ${localGems.toLocaleString()}.`); return; }
-        
-        const targetPool = availableIndices[chestType];
-        if (targetPool.length < count) { alert(`Không đủ thẻ trong rương này để mở (cần ${count}, còn ${targetPool.length}).`); return; }
-
-        setIsProcessingClick(true);
-        setProcessingChestId(chestDef.id);
-        setLastOpenedChest({ count, type: chestType }); 
-        
-        try {
-            let tempPool = [...targetPool];
-            const selectedOriginalIndices: number[] = [];
-            const selectedCardsForPopup: ImageCard[] = [];
-            for (let i = 0; i < count; i++) {
-                const randomIndex = Math.floor(Math.random() * tempPool.length);
-                const originalImageIndex = tempPool[randomIndex];
-                selectedOriginalIndices.push(originalImageIndex);
-                selectedCardsForPopup.push({ id: originalImageIndex + 1, url: defaultImageUrls[originalImageIndex] });
-                tempPool.splice(randomIndex, 1);
-            }
-            const newWordsToSave = selectedOriginalIndices.map(index => ({ id: index + 1, word: defaultVocabulary[index], chestType: chestType }));
-
-            const { newCoins, newGems, newTotalVocab } = await processVocabularyChestOpening(
-                currentUserId, {
-                    currency: chestDef.currency,
-                    cost: price,
-                    gemReward: count * GEM_REWARD_PER_CARD,
-                    newWordsData: newWordsToSave,
-                }
-            );
-            
-            setLocalCoins(newCoins);
-            setLocalGems(newGems);
-            setLocalTotalVocab(newTotalVocab);
-            
-            onStateUpdate({ newCoins, newGems, newTotalVocab });
-
-            setAvailableIndices(prev => ({ ...prev, [chestType]: tempPool }));
-            setPreloadPool(prev => prev.filter(idx => !selectedOriginalIndices.includes(idx)));
-            setCardsForPopup(selectedCardsForPopup);
-            if (count === 1) setShowSingleOverlay(true); else setShowFourOverlay(true);
-
-        } catch (error) {
-            console.error("Lỗi khi xử lý mở thẻ qua service:", error);
-            alert(`Đã xảy ra lỗi. Giao dịch đã bị hủy.\nChi tiết: ${error instanceof Error ? error.message : String(error)}`);
-            setProcessingChestId(null);
-        } finally {
-            setTimeout(() => setIsProcessingClick(false), 500); 
-        }
-    };
     
-    const handleCloseOverlay = () => { setShowSingleOverlay(false); setShowFourOverlay(false); setCardsForPopup([]); setProcessingChestId(null); };
-    const handleOpenAgain = () => { if (lastOpenedChest) { handleOpenCards(lastOpenedChest.count, lastOpenedChest.type); } };
-    
+    // Lấy danh sách URL để preload
+    const urlsToPreload = useMemo(() => getUrlsToPreload(), [getUrlsToPreload]);
+
     if (isLoading) {
         return <VocabularyChestLoadingSkeleton />;
     }
@@ -479,7 +207,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 <button onClick={onClose} className={`vocab-screen-home-btn ${showSingleOverlay || showFourOverlay ? 'is-hidden' : ''}`} title="Quay lại Trang Chính">
                     <HomeIcon /><span>Trang Chính</span>
                 </button>
-                <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div className="header-right-group">
                     <CardCapacityDisplay current={localTotalVocab} max={localCardCapacity} />
                     <GemDisplay displayedGems={animatedGems} />
                     <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
@@ -497,8 +225,8 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                                 {...chest}
                                 priceIconUrl={priceIcon}
                                 remainingCount={remainingCount}
-                                onOpen1={() => handleOpenCards(1, chest.chestType)}
-                                onOpen10={() => handleOpenCards(4, chest.chestType)}
+                                onOpen1={() => openCards(1, chest.chestType)}
+                                onOpen10={() => openCards(4, chest.chestType)}
                                 isProcessing={processingChestId === chest.id}
                             />
                         );
@@ -508,18 +236,38 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             {showSingleOverlay && cardsForPopup.length > 0 && (
                 <div className="card-opening-overlay">
                     <div className="overlay-content">
-                        <SingleCardOpener card={cardsForPopup[0]} onClose={handleCloseOverlay} onOpenAgain={handleOpenAgain} />
+                        <SingleCardOpener card={cardsForPopup[0]} onClose={closeOverlay} onOpenAgain={openAgain} />
                     </div>
                 </div>
             )}
             {showFourOverlay && cardsForPopup.length > 0 && (
                 <div className="card-opening-overlay">
                     <div className="overlay-content">
-                        <FourCardsOpener cards={cardsForPopup} onClose={handleCloseOverlay} onOpenAgain={handleOpenAgain} />
+                        <FourCardsOpener cards={cardsForPopup} onClose={closeOverlay} onOpenAgain={openAgain} />
                     </div>
                 </div>
             )}
         </div>
+    );
+}
+
+// ========================================================================
+// === 3. COMPONENT CHA BAO GỒM PROVIDER =================================
+// ========================================================================
+interface VocabularyChestScreenProps { 
+    onClose: () => void; 
+    currentUserId: string; 
+    onStateUpdate: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void; 
+}
+
+const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = (props) => {
+    return (
+        <VocabularyChestProvider 
+            currentUserId={props.currentUserId} 
+            onStateUpdate={props.onStateUpdate}
+        >
+            <VocabularyChestScreenContent onClose={props.onClose} />
+        </VocabularyChestProvider>
     );
 }
 
