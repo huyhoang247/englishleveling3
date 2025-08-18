@@ -28,7 +28,7 @@ export const getBonusForLevel = (level: number, baseBonus: number) => { if (leve
 export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => { if (currentLevel === 0) return 0; let totalValue = 0; const fullTiers = Math.floor(currentLevel / 10); const remainingLevelsInCurrentTier = currentLevel % 10; for (let i = 0; i < fullTiers; i++) { const bonusInTier = baseBonus * Math.pow(2, i); totalValue += 10 * bonusInTier; } const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers); totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier; return totalValue; };
 const formatNumber = (num: number) => { if (num < 1000) return num.toString(); if (num < 1000000) { const thousands = num / 1000; return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`; } if (num < 1000000000) { const millions = num / 1000000; return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`; } const billions = num / 1000000000; return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`; };
 
-// --- COMPONENT STAT CARD (ĐÃ BỎ TOAST RA NGOÀI) ---
+// --- COMPONENT STAT CARD ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: string) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
   const upgradeCost = calculateUpgradeCost(level);
@@ -88,8 +88,6 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
   const [message, setMessage] = useState('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // STATE ĐỂ QUẢN LÝ TOAST
   const [toastData, setToastData] = useState<ToastData | null>(null);
 
   useEffect(() => {
@@ -153,28 +151,20 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
     setUpgradingId(statId);
     setMessage('');
     
-    // KÍCH HOẠT TOAST
     const bonusForThisLevel = getBonusForLevel(statToUpgrade.level + 1, statToUpgrade.baseUpgradeBonus);
     setToastData({
         icon: statToUpgrade.icon,
         bonus: bonusForThisLevel,
         colorClasses: statToUpgrade.toastColors,
     });
-    // Tự động ẩn toast sau 1.5s
-    setTimeout(() => {
-        setToastData(null);
-    }, 1500);
-
+    setTimeout(() => setToastData(null), 1500);
 
     const oldGold = displayedGold;
     const oldStats = JSON.parse(JSON.stringify(stats));
-
     const newGoldValue = oldGold - upgradeCost;
     startCoinCountAnimation(oldGold, newGoldValue);
     
-    const newStatsArray = stats.map(s =>
-      s.id === statId ? { ...s, level: s.level + 1 } : s
-    );
+    const newStatsArray = stats.map(s => s.id === statId ? { ...s, level: s.level + 1 } : s);
     setStats(newStatsArray);
 
     const newStatsForFirestore = {
@@ -195,9 +185,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
       setStats(oldStats);
       setTimeout(() => setMessage(''), 3000);
     } finally {
-      setTimeout(() => {
-        setUpgradingId(null);
-      }, 300); 
+      setTimeout(() => setUpgradingId(null), 300); 
     }
   }, [upgradingId, stats, displayedGold, startCoinCountAnimation, onDataUpdated]);
 
@@ -232,15 +220,15 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
           
-          {/* VỊ TRÍ MỚI CỦA TOAST: Nằm trong thẻ div này và sẽ được định vị so với nó */}
-          {toastData && (
+          {/* <<<--- THAY ĐỔI CHÍNH Ở ĐÂY: SỬ DỤNG TOÁN TỬ BA NGÔI ĐỂ AN TOÀN HƠN ---*/}
+          {toastData ? (
               <StatUpgradeToast
                   isVisible={true}
                   icon={toastData.icon}
                   bonus={toastData.bonus}
                   colorClasses={toastData.colorClasses}
               />
-          )}
+          ) : null}
 
           <div className="mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
             <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
