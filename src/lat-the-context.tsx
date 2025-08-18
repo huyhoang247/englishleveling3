@@ -1,69 +1,60 @@
-// --- START OF FILE VocabularyChestContext.tsx ---
+// --- START OF FILE lat-the-context.tsx ---
 
-import React, { createContext, useState, useEffect, useContext, useMemo, useCallback, ReactNode } from 'react';
-import { db } from './firebase.js'; 
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { db } from './firebase.js';
 import { collection, getDocs } from 'firebase/firestore';
 
-import { defaultImageUrls } from './voca-data/image-url.ts'; 
+// -- IMPORT TÀI NGUYÊN DỮ LIỆU VÀ SERVICE --
+import { defaultImageUrls } from './voca-data/image-url.ts';
 import { defaultVocabulary } from './voca-data/list-vocabulary.ts';
-import { processVocabularyChestOpening, fetchVocabularyScreenData } from './gameDataService.ts'; 
-import { useAnimateValue } from './ui/useAnimateValue.ts';
+import { processVocabularyChestOpening, fetchVocabularyScreenData } from './gameDataService.ts';
 import { CHEST_DEFINITIONS } from './lat-the.tsx'; // Import định nghĩa rương từ file UI
 
 // ========================================================================
-// === 1. TYPE DEFINITIONS & CONSTANTS ====================================
+// === 1. ĐỊNH NGHĨA CÁC TYPE CẦN THIẾT ===================================
 // ========================================================================
 
-export type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced' | 'master';
-export interface ImageCard { id: number; url: string; }
-
-const PRELOAD_POOL_SIZE = 20;
-const GEM_REWARD_PER_CARD = 1;
+type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced' | 'master';
+interface ImageCard { id: number; url: string; }
 
 interface VocabularyChestContextType {
-    // --- State ---
     isLoading: boolean;
     availableIndices: Record<ChestType, number[]>;
+    cardsForPopup: ImageCard[];
     showSingleOverlay: boolean;
     showFourOverlay: boolean;
-    cardsForPopup: ImageCard[];
-    isProcessingClick: boolean;
     processingChestId: string | null;
+    isProcessingClick: boolean;
+
+    // User Stats
     localCoins: number;
     localGems: number;
     localTotalVocab: number;
     localCardCapacity: number;
-    
-    // --- Animated Values (for UI convenience) ---
-    animatedCoins: number;
-    animatedGems: number;
 
-    // --- Actions ---
-    openChest: (count: 1 | 4, chestType: ChestType) => Promise<void>;
-    closeCardOverlay: () => void;
-    openLastChestAgain: () => void;
-    
-    // --- Preloading ---
-    urlsToPreload: string[];
+    // Actions
+    openCards: (count: 1 | 4, chestType: ChestType) => Promise<void>;
+    closeOverlay: () => void;
+    openAgain: () => void;
+    getUrlsToPreload: () => string[];
 }
 
 // ========================================================================
-// === 2. CONTEXT CREATION ================================================
+// === 2. TẠO CONTEXT VÀ PROVIDER ========================================
 // ========================================================================
 
-const VocabularyChestContext = createContext<VocabularyChestContextType | undefined>(undefined);
+const VocabularyChestContext = createContext<VocabularyChestContextType | null>(null);
 
-// ========================================================================
-// === 3. PROVIDER COMPONENT ==============================================
-// ========================================================================
+const PRELOAD_POOL_SIZE = 20;
+const GEM_REWARD_PER_CARD = 1;
 
 interface VocabularyChestProviderProps {
     children: ReactNode;
     currentUserId: string;
+    onStateUpdate: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
 }
 
-export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = ({ children, currentUserId }) => {
-    // --- Toàn bộ state được quản lý tại đây ---
+export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = ({ children, currentUserId, onStateUpdate }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [], master: [] });
     const [preloadPool, setPreloadPool] = useState<number[]>([]);
@@ -73,16 +64,13 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
     const [isProcessingClick, setIsProcessingClick] = useState(false);
     const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType } | null>(null);
     const [processingChestId, setProcessingChestId] = useState<string | null>(null);
-    
+
     const [localCoins, setLocalCoins] = useState(0);
     const [localGems, setLocalGems] = useState(0);
     const [localTotalVocab, setLocalTotalVocab] = useState(0);
     const [localCardCapacity, setLocalCardCapacity] = useState(0);
-    
-    const animatedCoins = useAnimateValue(localCoins, 500);
-    const animatedGems = useAnimateValue(localGems, 500);
 
-    // --- Logic lấy dữ liệu ban đầu ---
+    // --- LOGIC FETCH DỮ LIỆU BAN ĐẦU ---
     useEffect(() => {
         const fetchAllInitialData = async () => {
             if (!currentUserId) {
@@ -115,13 +103,14 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
                 openedVocabSnapshot.forEach(doc => { openedIndices.add(Number(doc.id) - 1); });
 
                 const remainingIndices: Record<ChestType, number[]> = { basic: [], elementary: [], intermediate: [], advanced: [], master: [] };
-                (Object.keys(allIndices) as ChestType[]).forEach(chestType => {
+                Object.keys(allIndices).forEach(key => {
+                    const chestType = key as ChestType;
                     remainingIndices[chestType] = allIndices[chestType].filter(index => !openedIndices.has(index));
                 });
                 setAvailableIndices(remainingIndices);
 
             } catch (error) {
-                console.error("Error fetching initial data for Vocabulary Chest Context:", error);
+                console.error("Error fetching initial data for Vocabulary Chest Screen:", error);
             } finally {
                 setIsLoading(false);
             }
@@ -129,25 +118,25 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
 
         fetchAllInitialData();
     }, [currentUserId]);
-
-    // --- Logic tải trước hình ảnh ---
+    
+    // --- LOGIC QUẢN LÝ PRELOAD ẢNH ---
     useEffect(() => {
         const allAvailable = Object.values(availableIndices).flat();
         if (preloadPool.length < PRELOAD_POOL_SIZE && allAvailable.length > 0) {
             const needed = PRELOAD_POOL_SIZE - preloadPool.length;
             const indicesToAdd = allAvailable.filter(idx => !preloadPool.includes(idx)).slice(0, needed);
             if (indicesToAdd.length > 0) {
-                setPreloadPool(prevPool => [...prevPool, ...indicesToAdd]);
+                setPreloadPool(prevPool => [...new Set([...prevPool, ...indicesToAdd])]);
             }
         }
     }, [availableIndices, preloadPool]);
 
-    const urlsToPreload = useMemo(() => {
+    const getUrlsToPreload = useCallback(() => {
         return preloadPool.map(index => defaultImageUrls[index]);
     }, [preloadPool]);
 
-    // --- Hành động chính: Mở rương ---
-    const openChest = useCallback(async (count: 1 | 4, chestType: ChestType) => {
+    // --- LOGIC CHÍNH: MỞ THẺ ---
+    const openCards = async (count: 1 | 4, chestType: ChestType) => {
         if (isProcessingClick || !currentUserId) return;
         const chestDef = CHEST_DEFINITIONS[chestType];
         if (!chestDef || chestDef.isComingSoon) return;
@@ -167,16 +156,14 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
         try {
             let tempPool = [...targetPool];
             const selectedOriginalIndices: number[] = [];
+            const selectedCardsForPopup: ImageCard[] = [];
             for (let i = 0; i < count; i++) {
                 const randomIndex = Math.floor(Math.random() * tempPool.length);
                 const originalImageIndex = tempPool[randomIndex];
                 selectedOriginalIndices.push(originalImageIndex);
+                selectedCardsForPopup.push({ id: originalImageIndex + 1, url: defaultImageUrls[originalImageIndex] });
                 tempPool.splice(randomIndex, 1);
             }
-            const selectedCardsForPopup: ImageCard[] = selectedOriginalIndices.map(index => ({
-                id: index + 1,
-                url: defaultImageUrls[index]
-            }));
             const newWordsToSave = selectedOriginalIndices.map(index => ({ id: index + 1, word: defaultVocabulary[index], chestType: chestType }));
 
             const { newCoins, newGems, newTotalVocab } = await processVocabularyChestOpening(
@@ -192,6 +179,8 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
             setLocalGems(newGems);
             setLocalTotalVocab(newTotalVocab);
             
+            onStateUpdate({ newCoins, newGems, newTotalVocab });
+
             setAvailableIndices(prev => ({ ...prev, [chestType]: tempPool }));
             setPreloadPool(prev => prev.filter(idx => !selectedOriginalIndices.includes(idx)));
             setCardsForPopup(selectedCardsForPopup);
@@ -204,27 +193,29 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
         } finally {
             setTimeout(() => setIsProcessingClick(false), 500); 
         }
-    }, [isProcessingClick, currentUserId, localTotalVocab, localCardCapacity, localCoins, localGems, availableIndices]);
+    };
     
-    // --- Các hành động điều khiển UI ---
-    const closeCardOverlay = useCallback(() => {
-        setShowSingleOverlay(false);
-        setShowFourOverlay(false);
-        setCardsForPopup([]);
-        setProcessingChestId(null);
-    }, []);
+    // --- CÁC HÀNH ĐỘNG PHỤ ---
+    const closeOverlay = () => { setShowSingleOverlay(false); setShowFourOverlay(false); setCardsForPopup([]); setProcessingChestId(null); };
+    const openAgain = () => { if (lastOpenedChest) { openCards(lastOpenedChest.count, lastOpenedChest.type); } };
 
-    const openLastChestAgain = useCallback(() => {
-        if (lastOpenedChest) {
-            openChest(lastOpenedChest.count, lastOpenedChest.type);
-        }
-    }, [lastOpenedChest, openChest]);
-
-    // --- Giá trị được cung cấp cho các component con ---
-    const value = {
-        isLoading, availableIndices, showSingleOverlay, showFourOverlay, cardsForPopup,
-        isProcessingClick, processingChestId, localCoins, localGems, localTotalVocab, localCardCapacity,
-        animatedCoins, animatedGems, openChest, closeCardOverlay, openLastChestAgain, urlsToPreload,
+    // --- CUNG CẤP GIÁ TRỊ CHO CONTEXT ---
+    const value: VocabularyChestContextType = {
+        isLoading,
+        availableIndices,
+        cardsForPopup,
+        showSingleOverlay,
+        showFourOverlay,
+        processingChestId,
+        isProcessingClick,
+        localCoins,
+        localGems,
+        localTotalVocab,
+        localCardCapacity,
+        openCards,
+        closeOverlay,
+        openAgain,
+        getUrlsToPreload,
     };
 
     return (
@@ -235,15 +226,13 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
 };
 
 // ========================================================================
-// === 4. CUSTOM HOOK ĐỂ SỬ DỤNG DỄ DÀNG ==================================
+// === 3. TẠO CUSTOM HOOK ĐỂ SỬ DỤNG CONTEXT =============================
 // ========================================================================
 
 export const useVocabularyChest = (): VocabularyChestContextType => {
     const context = useContext(VocabularyChestContext);
-    if (context === undefined) {
+    if (!context) {
         throw new Error('useVocabularyChest must be used within a VocabularyChestProvider');
     }
     return context;
 };
-
-// --- END OF FILE VocabularyChestContext.tsx ---
