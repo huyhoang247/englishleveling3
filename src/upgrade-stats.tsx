@@ -1,4 +1,4 @@
-// --- START OF FILE upgrade-stats.tsx (4).txt ---
+// --- START OF FILE upgrade-stats.tsx (5).txt ---
 
 import React, { useState, useEffect, useCallback } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
@@ -6,7 +6,7 @@ import { uiAssets } from './game-assets.ts';
 import { auth } from './firebase.js'; 
 import { fetchOrCreateUserGameData, upgradeUserStats } from './gameDataService.ts';
 import UpgradeStatsSkeleton from './upgrade-stats-loading.tsx';
-import UpgradeSuccessPopup from './UpgradeSuccessPopup.tsx'; // <<<--- DÒNG IMPORT MỚI
+import StatUpgradeToast from './StatUpgradeToast.tsx'; // <<<--- IMPORT TOAST MỚI
 
 // --- ICONS ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/2000/svg" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -19,23 +19,44 @@ const icons = {
 
 // --- CONFIG VÀ LOGIC TÍNH TOÁN ---
 export const statConfig = {
-  hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
-  atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
-  def: { name: 'DEF', icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
+  hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600", toastColors: { border: 'border-pink-500', text: 'text-pink-400' } },
+  atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500", toastColors: { border: 'border-cyan-400', text: 'text-cyan-300' } },
+  def: { name: 'DEF', icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500", toastColors: { border: 'border-blue-400', text: 'text-blue-300' } },
 };
 export const calculateUpgradeCost = (level: number) => { const baseCost = 100; const tier = Math.floor(level / 10); return baseCost * Math.pow(2, tier); };
 export const getBonusForLevel = (level: number, baseBonus: number) => { if (level === 0) return 0; const tier = Math.floor((level - 1) / 10); return baseBonus * Math.pow(2, tier); };
 export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => { if (currentLevel === 0) return 0; let totalValue = 0; const fullTiers = Math.floor(currentLevel / 10); const remainingLevelsInCurrentTier = currentLevel % 10; for (let i = 0; i < fullTiers; i++) { const bonusInTier = baseBonus * Math.pow(2, i); totalValue += 10 * bonusInTier; } const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers); totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier; return totalValue; };
 const formatNumber = (num: number) => { if (num < 1000) return num.toString(); if (num < 1000000) { const thousands = num / 1000; return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`; } if (num < 1000000000) { const millions = num / 1000000; return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`; } const billions = num / 1000000000; return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`; };
 
-// --- COMPONENT STAT CARD (UPDATED FOR RESPONSIVENESS) ---
+// --- COMPONENT STAT CARD (TÍCH HỢP TOAST) ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: string) => void, isProcessing: boolean, isDisabled: boolean }) => {
-  const { name, level, icon, baseUpgradeBonus, color } = stat;
+  const { name, level, icon, baseUpgradeBonus, color, toastColors } = stat;
+  const [showToast, setShowToast] = useState(false);
   const upgradeCost = calculateUpgradeCost(level);
   const bonusForNextLevel = getBonusForLevel(level + 1, baseUpgradeBonus);
 
+  // Kích hoạt toast khi component này đang được xử lý (isProcessing = true)
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isProcessing) {
+      setShowToast(true);
+      // Toast sẽ tự động ẩn sau khi animation kết thúc
+      timer = setTimeout(() => {
+        setShowToast(false);
+      }, 1500); // Thời gian animation là 1.5s
+    }
+    return () => clearTimeout(timer);
+  }, [isProcessing]);
+
   return (
+    // Thêm `relative` để định vị cho toast
     <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
+      <StatUpgradeToast 
+        isVisible={showToast}
+        icon={icon}
+        bonus={getBonusForLevel(level, baseUpgradeBonus)} // Lấy bonus của level hiện tại (vừa nâng cấp xong)
+        colorClasses={toastColors}
+      />
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
       
       <div className="relative bg-slate-900/95 rounded-[11px] h-full flex flex-col items-center justify-between text-center text-white 
@@ -60,22 +81,14 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   );
 };
 
+
 // INTERFACE ĐỊNH NGHĨA CÁC PROPS
 interface UpgradeStatsScreenProps {
   onClose: () => void;
   onDataUpdated: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
 }
 
-// <<<<<<<< THÊM STATE CHO POPUP >>>>>>>>>>
-interface PopupData {
-  icon: JSX.Element;
-  statName: string;
-  oldValue: number;
-  newValue: number;
-  bonus: number;
-}
-
-// --- COMPONENT CHÍNH ---
+// --- COMPONENT CHÍNH (ĐÃ DỌN DẸP STATE POPUP CŨ) ---
 export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeStatsScreenProps) {
   const [initialGold, setInitialGold] = useState(0);
   const [displayedGold, setDisplayedGold] = useState(0);
@@ -87,7 +100,8 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
   const [message, setMessage] = useState('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [popupData, setPopupData] = useState<PopupData | null>(null); // <<<--- STATE MỚI CHO POPUP
+
+  // Không cần state `popupData` nữa
 
   useEffect(() => {
     const fetchData = async () => {
@@ -153,23 +167,6 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
     const oldGold = displayedGold;
     const oldStats = JSON.parse(JSON.stringify(stats));
 
-    // <<<<<<<< LOGIC HIỂN THỊ POPUP >>>>>>>>>>
-    const oldLevel = statToUpgrade.level;
-    const newLevel = oldLevel + 1;
-    const bonus = getBonusForLevel(newLevel, statToUpgrade.baseUpgradeBonus);
-    const oldValue = calculateTotalStatValue(oldLevel, statToUpgrade.baseUpgradeBonus);
-    const newValue = oldValue + bonus;
-
-    setPopupData({
-      icon: statToUpgrade.icon,
-      statName: statToUpgrade.name,
-      oldValue,
-      newValue,
-      bonus,
-    });
-    setTimeout(() => setPopupData(null), 1200); // Popup sẽ tự ẩn sau 1.2 giây
-    // <<<<<<<< KẾT THÚC LOGIC POPUP >>>>>>>>>>
-
     const newGoldValue = oldGold - upgradeCost;
     startCoinCountAnimation(oldGold, newGoldValue);
     
@@ -197,9 +194,10 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
       setStats(oldStats);
       setTimeout(() => setMessage(''), 3000);
     } finally {
+      // Dùng timeout dài hơn để chờ animation của toast hoàn thành
       setTimeout(() => {
         setUpgradingId(null);
-      }, 200);
+      }, 300); 
     }
   }, [upgradingId, stats, displayedGold, startCoinCountAnimation, onDataUpdated]);
 
@@ -218,17 +216,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
 
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
-      {/* <<<<<<<< RENDER POPUP >>>>>>>>>> */}
-      {popupData && <UpgradeSuccessPopup isVisible={!!popupData} {...popupData} />}
-
-      <style>{`
-        @keyframes breathing-stone { 
-            0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 
-            50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } 
-        } 
-        .animate-breathing { animation: breathing-stone 4s ease-in-out infinite; }
-        .text-shadow-green { text-shadow: 0 0 12px rgba(74, 222, 128, 0.8); }
-      `}</style>
+      <style>{`@keyframes breathing-stone { 0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } } .animate-breathing { animation: breathing-stone 4s ease-in-out infinite; }`}</style>
       
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
         <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
@@ -265,7 +253,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
           </div>
           <div className="flex flex-row justify-center items-stretch gap-2 sm:gap-4">
             {stats.map(stat => (
-              <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} isProcessing={upgradingId === stat.id} isDisabled={upgradingId !== null} />
+              <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} isProcessing={upgradingId === stat.id} isDisabled={upgradingId !== null && upgradingId !== stat.id} />
             ))}
           </div>
         </div>
