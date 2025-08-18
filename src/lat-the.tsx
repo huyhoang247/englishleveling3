@@ -12,10 +12,8 @@ import { defaultVocabulary } from './voca-data/list-vocabulary.ts';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import CardCapacityDisplay from './ui/display/card-capacity-display.tsx';
 import GemDisplay from './ui/display/gem-display.tsx'; 
-// +++ THÊM VÀO: Import component Skeleton từ file riêng +++
+// +++ THÊM VÀO: Import component skeleton mới +++
 import VocabularyChestLoadingSkeleton from './lat-the-loading.tsx';
-// --- REFACTORED: Import service để tự quản lý logic ---
-// +++ THÊM VÀO: Hàm fetch data mới +++
 import { processVocabularyChestOpening, fetchVocabularyScreenData } from './gameDataService.ts'; 
 import { useAnimateValue } from './ui/useAnimateValue.ts';
 
@@ -145,7 +143,7 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .button-price { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; color: white; font-weight: 600; background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px; text-shadow: none; }
         .vocabulary-chest-root .price-icon { width: 16px; height: 16px; }
         @keyframes vocabulary-chest-fade-in { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes vocabulary-chest-spin { to { transform: rotate(360deg); } }
+        /* --- XÓA ĐI: Keyframe spin không cần nữa --- */
         @keyframes vocabulary-chest-flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
         @keyframes vocabulary-chest-deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .vocabulary-chest-root .card-opening-overlay {
@@ -171,6 +169,7 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .card-image-in-card { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
         .vocabulary-chest-root .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
         .vocabulary-chest-root .card-wrapper.dealt-in { animation: vocabulary-chest-deal-in 0.5s ease-out forwards; }
+        /* --- XÓA ĐI: Các style của loading overlay cũ --- */
     `}
     </style>
 );
@@ -183,9 +182,7 @@ const HomeIcon = ({ className = '' }: { className?: string }) => (
         <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
     </svg>
 );
-
-// --- BỎ ĐI: Component Skeleton đã được chuyển đi ---
-
+// --- XÓA ĐI: Component LoadingOverlay không còn được sử dụng ---
 interface ImageCard { id: number; url: string; }
 const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, isFlipping: boolean, flipDelay: number }) => (
     <div className={`card-container ${isFlipping ? 'is-flipping' : ''}`}>
@@ -261,11 +258,9 @@ const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 // ========================================================================
 // === 3. COMPONENT CHÍNH (ĐÃ TÁI CẤU TRÚC) ===============================
 // ========================================================================
-// --- BỎ ĐI CÁC PROPS KHỞI TẠO ---
 interface VocabularyChestScreenProps { 
     onClose: () => void; 
     currentUserId: string; 
-    // onDataChanged đã được đổi tên và thay đổi chức năng
     onStateUpdate: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void; 
 }
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced' | 'master';
@@ -273,7 +268,6 @@ const PRELOAD_POOL_SIZE = 20;
 const GEM_REWARD_PER_CARD = 1;
 
 const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onStateUpdate }) => {
-    // +++ THÊM VÀO: isLoading để quản lý cả việc fetch data ban đầu
     const [isLoading, setIsLoading] = useState(true);
     const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [], master: [] });
     const [preloadPool, setPreloadPool] = useState<number[]>([]);
@@ -283,7 +277,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [isProcessingClick, setIsProcessingClick] = useState(false);
     const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType } | null>(null);
     
-    // --- REFACTORED: State cục bộ bây giờ được khởi tạo là 0, và sẽ được cập nhật từ service ---
     const [localCoins, setLocalCoins] = useState(0);
     const [localGems, setLocalGems] = useState(0);
     const [localTotalVocab, setLocalTotalVocab] = useState(0);
@@ -292,28 +285,24 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const animatedCoins = useAnimateValue(localCoins, 500);
     const animatedGems = useAnimateValue(localGems, 500);
 
-    // --- REFACTORED: useEffect chính để fetch toàn bộ dữ liệu khi component được mở ---
     useEffect(() => {
         const fetchAllInitialData = async () => {
             if (!currentUserId) {
                 setIsLoading(false);
                 return;
             }
-            // Không set isLoading(true) ở đây nữa để tránh nháy khi currentUserId thay đổi nhanh
+            setIsLoading(true);
             try {
-                // Sử dụng Promise.all để fetch song song
                 const [screenData, openedVocabSnapshot] = await Promise.all([
                     fetchVocabularyScreenData(currentUserId),
                     getDocs(collection(db, 'users', currentUserId, 'openedVocab'))
                 ]);
 
-                // 1. Cập nhật state tài nguyên
                 setLocalCoins(screenData.coins);
                 setLocalGems(screenData.gems);
                 setLocalTotalVocab(screenData.totalVocab);
                 setLocalCardCapacity(screenData.capacity);
 
-                // 2. Xử lý logic tính toán các thẻ còn lại
                 const totalItems = Math.min(defaultVocabulary.length, defaultImageUrls.length);
                 const allIndices: Record<ChestType, number[]> = { basic: [], elementary: [], intermediate: [], advanced: [], master: [] };
                 for (const key in CHEST_DEFINITIONS) {
@@ -337,10 +326,8 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 
             } catch (error) {
                 console.error("Error fetching initial data for Vocabulary Chest Screen:", error);
-                // Có thể hiển thị thông báo lỗi cho người dùng ở đây
             } finally {
-                // Thêm một độ trễ nhỏ để skeleton hiển thị mượt hơn
-                setTimeout(() => setIsLoading(false), 300);
+                setIsLoading(false);
             }
         };
 
@@ -404,7 +391,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             setLocalGems(newGems);
             setLocalTotalVocab(newTotalVocab);
             
-            // --- REFACTORED: Gửi state tuyệt đối mới nhất về cho parent ---
             onStateUpdate({ newCoins, newGems, newTotalVocab });
 
             setAvailableIndices(prev => ({ ...prev, [chestType]: tempPool }));
@@ -423,11 +409,11 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const handleCloseOverlay = () => { setShowSingleOverlay(false); setShowFourOverlay(false); setCardsForPopup([]); };
     const handleOpenAgain = () => { if (lastOpenedChest) { handleOpenCards(lastOpenedChest.count, lastOpenedChest.type); } };
     
-    // --- Cập nhật: Thay thế spinner bằng skeleton loading từ file import ---
+    // +++ THAY ĐỔI: Sử dụng skeleton loading khi isLoading=true +++
     if (isLoading) {
         return <VocabularyChestLoadingSkeleton />;
     }
-    
+
     return (
         <div className="vocabulary-chest-root">
             <ScopedStyles />
@@ -443,7 +429,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                     <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
                 </div>
             </header>
-            
+
             {!showSingleOverlay && !showFourOverlay && (
                 <div className="chest-gallery-container">
                     {CHEST_DATA.map((chest) => {
@@ -462,7 +448,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                     })}
                 </div>
             )}
-
             {showSingleOverlay && cardsForPopup.length > 0 && (
                 <div className="card-opening-overlay">
                     <div className="overlay-content">
@@ -482,3 +467,4 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 }
 
 export default VocabularyChestScreen;
+// --- END OF FILE lat-the.tsx (UPDATED) ---
