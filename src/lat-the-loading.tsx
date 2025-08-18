@@ -8,14 +8,11 @@ const VocabularyChestLoadingSkeleton: React.FC = () => {
     <div className="w-full h-full absolute top-0 left-0 bg-gradient-to-br from-[#16213e] to-[#0a0a14] flex flex-col overflow-hidden">
       
       {/* --- Skeleton cho Header --- */}
-      {/* === THAY ĐỔI CUỐI CÙNG: Áp dụng chiều cao cố định 53px để khớp 100% === */}
       <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0">
         
-        {/* Nút Back/Home - Sửa lại để mô phỏng cấu trúc thật */}
+        {/* Nút Back/Home */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 animate-pulse">
-            {/* Skeleton cho Icon (20x20px) */}
             <div className="w-5 h-5 rounded-full bg-white/20"></div>
-            {/* Skeleton cho Text ("Trang Chính"), ẩn trên mobile */}
             <div className="hidden sm:block h-4 w-16 rounded-md bg-white/20"></div>
         </div>
 
@@ -30,9 +27,8 @@ const VocabularyChestLoadingSkeleton: React.FC = () => {
       {/* --- Skeleton cho Main Content (Gallery các rương) --- */}
       <main className="flex-grow overflow-y-hidden p-5">
         <div className="w-full max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
-          {/* Tạo 4 skeleton card mẫu */}
-          {[...Array(4)].map((_, i) => (
-            // === THAY ĐỔI: Giảm chiều cao card từ 320px xuống 280px và điều chỉnh các thành phần bên trong cho cân đối ===
+          {/* === THAY ĐỔI: Giảm số lượng skeleton từ 4 xuống còn 2 === */}
+          {[...Array(2)].map((_, i) => (
             <div key={i} className="bg-slate-800/50 rounded-2xl overflow-hidden border border-white/10 flex flex-col h-[280px]">
               {/* Header của card */}
               <div className="h-9 bg-white/10 animate-pulse m-3 rounded-md"></div>
@@ -45,13 +41,13 @@ const VocabularyChestLoadingSkeleton: React.FC = () => {
                   <div className="h-5 w-28 bg-white/10 animate-pulse rounded-md"></div>
                 </div>
 
-                {/* Phần hình ảnh rương và ô thông tin (giảm kích thước) */}
+                {/* Phần hình ảnh rương và ô thông tin */}
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-20 h-20 bg-white/10 animate-pulse rounded-lg flex-shrink-0"></div>
                   <div className="flex-1 h-20 bg-white/10 animate-pulse rounded-lg"></div>
                 </div>
 
-                {/* Phần các nút bấm (giảm chiều cao, dùng mt-auto để đẩy xuống dưới) */}
+                {/* Phần các nút bấm (dùng mt-auto để đẩy xuống dưới) */}
                 <div className="flex items-center gap-2.5 mt-auto">
                   <div className="flex-1 h-10 bg-white/10 animate-pulse rounded-lg"></div>
                   <div className="flex-1 h-10 bg-white/10 animate-pulse rounded-lg"></div>
