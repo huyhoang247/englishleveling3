@@ -81,6 +81,27 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
   }
 };
 
+// +++ START: HÀM MỚI ĐƯỢC THÊM VÀO +++
+/**
+ * Lấy dữ liệu cần thiết cho màn hình Lật Thẻ Từ Vựng.
+ * @param userId - ID của người dùng.
+ * @returns {Promise<{coins: number, gems: number, totalVocab: number, capacity: number}>} Dữ liệu cần thiết.
+ */
+export const fetchVocabularyScreenData = async (userId: string) => {
+  if (!userId) throw new Error("User ID is required.");
+  
+  // Chúng ta có thể dùng lại hàm fetchOrCreateUserGameData để đảm bảo người dùng mới cũng có dữ liệu
+  const gameData = await fetchOrCreateUserGameData(userId);
+  
+  return {
+    coins: gameData.coins,
+    gems: gameData.gems,
+    totalVocab: gameData.totalVocabCollected,
+    capacity: gameData.cardCapacity,
+  };
+};
+// +++ END: HÀM MỚI ĐƯỢC THÊM VÀO +++
+
 export const updateUserCoins = async (userId: string, amount: number): Promise<number> => {
   if (!userId) throw new Error("User ID is required.");
   if (amount === 0) {
