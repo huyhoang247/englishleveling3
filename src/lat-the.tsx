@@ -40,9 +40,6 @@ const ScopedStyles = () => (
             overflow: hidden;
         }
 
-        /* +++ THAY ĐỔI 1: XÓA ĐỊNH NGHĨA CSS CHO .main-header +++ */
-        /* Lớp CSS .main-header đã được thay thế bằng các class tiện ích của Tailwind CSS trực tiếp trên thẻ <header> để đảm bảo tính nhất quán với file skeleton. */
-
         .vocabulary-chest-root .vocab-screen-home-btn {
             display: flex;
             align-items: center;
@@ -129,16 +126,27 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .button-price { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; color: white; font-weight: 600; background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px; text-shadow: none; }
         .vocabulary-chest-root .price-icon { width: 16px; height: 16px; }
         
-        /* +++ THAY ĐỔI 2: CSS MỚI CHO HIỆU ỨNG MỞ RƯƠNG +++ */
-        @keyframes vocabulary-chest-processing-glow {
-            0%, 100% { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(192, 132, 252, 0.4); }
-            50% { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 35px rgba(192, 132, 252, 0.8); }
+        /* +++ THAY ĐỔI: HIỆU ỨNG MỞ RƯƠNG MỚI TINH TẾ HƠN +++ */
+        @keyframes vocabulary-chest-processing-pulse {
+            50% { transform: scale(1.02); }
+        }
+        @keyframes vocabulary-chest-sweep {
+            to { transform: rotate(360deg); }
         }
         .vocabulary-chest-root .chest-ui-container.is-processing {
-            transform: scale(1.03);
-            animation: vocabulary-chest-processing-glow 1.5s infinite ease-in-out;
+            animation: vocabulary-chest-processing-pulse 2.5s infinite ease-in-out;
             pointer-events: none;
         }
+        .vocabulary-chest-root .chest-ui-container.is-processing::after {
+            content: '';
+            position: absolute;
+            z-index: -1;
+            inset: -3px;
+            border-radius: inherit;
+            background: conic-gradient(from 180deg at 50% 50%, rgba(192, 132, 252, 0.8) 0%, rgba(129, 140, 248, 0.8) 30%, transparent 60%, transparent 100%);
+            animation: vocabulary-chest-sweep 2s linear infinite;
+        }
+        
         .vocabulary-chest-root .chest-processing-overlay {
             position: absolute; inset: 0;
             background-color: rgba(10, 10, 20, 0.7);
@@ -253,7 +261,6 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
         </>
     );
 };
-// +++ THAY ĐỔI 3: CẬP NHẬT PROPS CHO CHESTUI +++
 interface ChestUIProps { headerTitle: string; levelName: string | null; imageUrl: string; infoText: React.ReactNode; price1: number | string; price10: number | null; priceIconUrl: string; onOpen1: () => void; onOpen10: () => void; isComingSoon: boolean; remainingCount: number; isProcessing: boolean; }
 const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, infoText, price1, price10, priceIconUrl, onOpen1, onOpen10, isComingSoon, remainingCount, isProcessing }) => {
     return (
@@ -296,7 +303,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
     const [isProcessingClick, setIsProcessingClick] = useState(false);
     const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType } | null>(null);
-    const [processingChestId, setProcessingChestId] = useState<string | null>(null); // +++ THAY ĐỔI 4: STATE MỚI
+    const [processingChestId, setProcessingChestId] = useState<string | null>(null);
     
     const [localCoins, setLocalCoins] = useState(0);
     const [localGems, setLocalGems] = useState(0);
@@ -384,7 +391,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         if (targetPool.length < count) { alert(`Không đủ thẻ trong rương này để mở (cần ${count}, còn ${targetPool.length}).`); return; }
 
         setIsProcessingClick(true);
-        setProcessingChestId(chestDef.id); // Bắt đầu hiệu ứng
+        setProcessingChestId(chestDef.id);
         setLastOpenedChest({ count, type: chestType }); 
         
         try {
@@ -423,13 +430,13 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         } catch (error) {
             console.error("Lỗi khi xử lý mở thẻ qua service:", error);
             alert(`Đã xảy ra lỗi. Giao dịch đã bị hủy.\nChi tiết: ${error instanceof Error ? error.message : String(error)}`);
-            setProcessingChestId(null); // Tắt hiệu ứng nếu có lỗi
+            setProcessingChestId(null);
         } finally {
             setTimeout(() => setIsProcessingClick(false), 500); 
         }
     };
     
-    const handleCloseOverlay = () => { setShowSingleOverlay(false); setShowFourOverlay(false); setCardsForPopup([]); setProcessingChestId(null); }; // Tắt hiệu ứng khi đóng popup
+    const handleCloseOverlay = () => { setShowSingleOverlay(false); setShowFourOverlay(false); setCardsForPopup([]); setProcessingChestId(null); };
     const handleOpenAgain = () => { if (lastOpenedChest) { handleOpenCards(lastOpenedChest.count, lastOpenedChest.type); } };
     
     if (isLoading) {
