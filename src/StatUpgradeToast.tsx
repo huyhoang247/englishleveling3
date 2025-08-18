@@ -56,7 +56,7 @@ const StatUpgradeToast: React.FC<StatUpgradeToastProps> = ({
       <div
         // Pointer-events-none để không cản trở việc click vào các nút khác
         // THÊM "-ml-2" ĐỂ TINH CHỈNH VỊ TRÍ SANG TRÁI MỘT CHÚT
-        className={`absolute -top-4 left-1/2 -translate-x-1/2 -ml-10 z-50 pointer-events-none
+        className={`absolute -top-4 left-1/2 -translate-x-1/2 -ml-15 z-50 pointer-events-none
                     flex items-center justify-center gap-2 px-4 py-2 
                     rounded-full shadow-lg backdrop-blur-sm
                     bg-slate-900/80 border ${colorClasses.border}
