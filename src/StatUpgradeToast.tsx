@@ -17,7 +17,6 @@ const formatBonus = (num: number) => {
     return `+${(num / 1000000).toFixed(1).replace('.0', '')}M`;
 };
 
-// Đặt keyframes animation ngay trong file cho dễ quản lý
 const animationStyle = `
   @keyframes float-up-fade-out {
     0% {
@@ -54,8 +53,9 @@ const StatUpgradeToast: React.FC<StatUpgradeToastProps> = ({
     <>
       <style>{animationStyle}</style>
       <div
-        // Pointer-events-none để không cản trở việc click vào các nút khác
-        className={`absolute -top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none
+        // <<<--- THAY ĐỔI CHÍNH: Quay lại `absolute` và đặt `top-0`
+        // Toast sẽ bắt đầu ở trên cùng của thẻ div cha (có position: relative)
+        className={`absolute top-0 left-1/2 -translate-x-1/2 z-50 pointer-events-none
                     flex items-center justify-center gap-2 px-4 py-2 
                     rounded-full shadow-lg backdrop-blur-sm
                     bg-slate-900/80 border ${colorClasses.border}
