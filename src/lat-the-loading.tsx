@@ -8,8 +8,8 @@ const VocabularyChestLoadingSkeleton: React.FC = () => {
     <div className="w-full h-full absolute top-0 left-0 bg-gradient-to-br from-[#16213e] to-[#0a0a14] flex flex-col overflow-hidden">
       
       {/* --- Skeleton cho Header --- */}
-      {/* === THAY ĐỔI Ở ĐÂY: Bỏ h-[53px], thêm py-2 để khớp với padding của header thật === */}
-      <header className="sticky top-0 left-0 w-full flex items-center justify-between px-4 py-2 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0">
+      {/* === THAY ĐỔI CUỐI CÙNG: Áp dụng chiều cao cố định 53px để khớp 100% === */}
+      <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0">
         
         {/* Nút Back/Home - Sửa lại để mô phỏng cấu trúc thật */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 animate-pulse">
