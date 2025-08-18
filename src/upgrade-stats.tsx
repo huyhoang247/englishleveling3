@@ -3,9 +3,10 @@ import CoinDisplay from './ui/display/coin-display.tsx';
 import { uiAssets } from './game-assets.ts';
 import { auth } from './firebase.js'; 
 import { fetchOrCreateUserGameData, upgradeUserStats } from './gameDataService.ts';
+import UpgradeStatsSkeleton from './upgrade-stats-loading.tsx'; // <<<--- DÒNG IMPORT MỚI
 
 // --- ICONS ---
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/2000/svg" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const icons = {
   coin: ( <img src={uiAssets.statCoinIcon} alt="Gold Coin Icon" /> ),
   heart: ( <img src={uiAssets.statHpIcon} alt="HP Icon" /> ),
@@ -55,14 +56,6 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
     </div>
   );
 };
-
-// Loading Component
-const LoadingScreen = () => (
-  <div className="absolute inset-0 bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center justify-center text-white font-lilita">
-    <div className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-purple-400"></div>
-    <p className="mt-5 text-lg font-medium">Đang tải dữ liệu...</p>
-  </div>
-);
 
 // INTERFACE ĐỊNH NGHĨA CÁC PROPS
 interface UpgradeStatsScreenProps {
@@ -190,7 +183,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
   const progressPercent = (currentProgress / maxProgress) * 100;
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <UpgradeStatsSkeleton />;
   }
 
   return (
