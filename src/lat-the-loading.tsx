@@ -1,53 +1,61 @@
-// --- START OF FILE lat-the-loading.tsx (NEW) ---
+// --- START OF FILE vocabulary-chest-loading.tsx ---
 
 import React from 'react';
 
-const VocabularyChestLoadingSkeleton: React.FC = () => (
-    <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, backgroundColor: '#0a0a14', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <style>{`
-            @keyframes skeleton-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-            .skeleton-pulse { animation: skeleton-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-            .skeleton-bg { background-color: rgba(255, 255, 255, 0.1); }
-            .skeleton-card-bg { background-color: rgba(255, 255, 255, 0.05); }
-        `}</style>
-        {/* Skeleton Header */}
-        <header style={{ position: 'sticky', top: 0, left: 0, width: '100%', padding: '8px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(16, 22, 46, 0.7)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', zIndex: 10, boxSizing: 'border-box', flexShrink: 0 }}>
-            <div className="skeleton-bg skeleton-pulse" style={{ height: '32px', width: '110px', borderRadius: '8px' }}></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div className="skeleton-bg skeleton-pulse" style={{ height: '32px', width: '90px', borderRadius: '16px' }}></div>
-                <div className="skeleton-bg skeleton-pulse" style={{ height: '32px', width: '80px', borderRadius: '16px' }}></div>
-                <div className="skeleton-bg skeleton-pulse" style={{ height: '32px', width: '100px', borderRadius: '16px' }}></div>
-            </div>
-        </header>
-        {/* Skeleton Gallery */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '30px', width: '100%', maxWidth: '1300px', padding: '20px 20px 100px', boxSizing: 'border-box', flexGrow: 1, overflowY: 'auto' }}>
-            {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="skeleton-card-bg skeleton-pulse" style={{ width: '100%', maxWidth: '380px', minWidth: '300px', borderRadius: '16px', overflow: 'hidden', display: 'flex', flexDirection: 'column', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                    <div style={{ padding: '12px 20px', backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-                        <div className="skeleton-bg" style={{ height: '16px', width: '60%', margin: '0 auto', borderRadius: '4px' }}></div>
-                    </div>
-                    <div style={{ padding: '20px', flexGrow: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div className="skeleton-bg" style={{ height: '24px', width: '30%', borderRadius: '12px' }}></div>
-                            <div className="skeleton-bg" style={{ height: '14px', width: '40%', borderRadius: '4px' }}></div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <div className="skeleton-bg" style={{ flex: 1, aspectRatio: '1 / 1', borderRadius: '8px' }}></div>
-                            <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                <div className="skeleton-bg" style={{ height: '12px', width: '90%', borderRadius: '4px' }}></div>
-                                <div className="skeleton-bg" style={{ height: '12px', width: '100%', borderRadius: '4px' }}></div>
-                                <div className="skeleton-bg" style={{ height: '12px', width: '70%', borderRadius: '4px' }}></div>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '10px', marginTop: 'auto', paddingTop: '15px' }}>
-                            <div className="skeleton-bg" style={{ flex: 1, height: '48px', borderRadius: '10px' }}></div>
-                            <div className="skeleton-bg" style={{ flex: 1, height: '48px', borderRadius: '10px' }}></div>
-                        </div>
-                    </div>
-                </div>
-            ))}
+const VocabularyChestLoadingSkeleton: React.FC = () => {
+  return (
+    // Lớp vỏ ngoài cùng, giữ nguyên màu nền gradient tối của màn hình
+    <div className="w-full h-full absolute top-0 left-0 bg-gradient-to-br from-[#16213e] to-[#0a0a14] flex flex-col overflow-hidden">
+      
+      {/* --- Skeleton cho Header --- */}
+      <header className="sticky top-0 left-0 w-full h-[53px] flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0">
+        {/* Nút Back/Home */}
+        <div className="w-24 h-8 rounded-lg bg-white/10 animate-pulse"></div>
+        {/* Các chỉ số tài nguyên */}
+        <div className="flex items-center gap-3">
+          <div className="h-7 w-20 rounded-md bg-white/10 animate-pulse"></div>
+          <div className="h-7 w-20 rounded-md bg-white/10 animate-pulse"></div>
+          <div className="h-7 w-20 rounded-md bg-white/10 animate-pulse"></div>
         </div>
+      </header>
+
+      {/* --- Skeleton cho Main Content (Gallery các rương) --- */}
+      <main className="flex-grow overflow-y-auto p-5">
+        <div className="w-full max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
+          {/* Tạo 4 skeleton card mẫu */}
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-slate-800/50 rounded-2xl overflow-hidden border border-white/10 flex flex-col h-[320px]">
+              {/* Header của card */}
+              <div className="h-9 bg-white/10 animate-pulse m-3 rounded-md"></div>
+              
+              {/* Body của card */}
+              <div className="p-5 pt-0 flex flex-col flex-grow">
+                {/* Phần level và số lượng còn lại */}
+                <div className="flex justify-between items-center mb-4">
+                  <div className="h-6 w-24 bg-white/10 animate-pulse rounded-full"></div>
+                  <div className="h-5 w-28 bg-white/10 animate-pulse rounded-md"></div>
+                </div>
+
+                {/* Phần hình ảnh rương và ô thông tin */}
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-24 h-24 bg-white/10 animate-pulse rounded-lg flex-shrink-0"></div>
+                  <div className="flex-1 h-24 bg-white/10 animate-pulse rounded-lg"></div>
+                </div>
+
+                {/* Phần các nút bấm (dùng mt-auto để đẩy xuống dưới) */}
+                <div className="flex items-center gap-2.5 mt-auto">
+                  <div className="flex-1 h-12 bg-white/10 animate-pulse rounded-lg"></div>
+                  <div className="flex-1 h-12 bg-white/10 animate-pulse rounded-lg"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
-);
+  );
+};
 
 export default VocabularyChestLoadingSkeleton;
+
+// --- END OF FILE vocabulary-chest-loading.tsx ---
