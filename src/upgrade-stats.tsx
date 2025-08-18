@@ -1,4 +1,4 @@
-// --- START OF FILE upgrade-stats.tsx ---
+// src/components/upgrade-stats.tsx
 
 import React, { useState, useEffect, useCallback } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
@@ -6,7 +6,7 @@ import { uiAssets } from './game-assets.ts';
 import { auth } from './firebase.js'; 
 import { fetchOrCreateUserGameData, upgradeUserStats } from './gameDataService.ts';
 import UpgradeStatsSkeleton from './upgrade-stats-loading.tsx';
-import StatUpgradeToast from './StatUpgradeToast.tsx'; // <<<--- IMPORT TOAST MỚI
+import StatUpgradeToast from './StatUpgradeToast.tsx';
 
 // --- ICONS ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/2000/svg" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -49,15 +49,15 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   }, [isProcessing]);
 
   return (
-    // Div này chỉ để tạo viền gradient, toast không nên nằm ở đây
-    <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
+    // Thẻ bọc ngoài không cần `relative` nữa, vì `div` nội dung bên trong đã có rồi
+    <div className={`group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
       
-      {/* Div này chứa nội dung chính và là vị trí đúng để đặt toast */}
+      {/* Div này đã có `relative`, sẽ là "gốc tọa độ" cho Toast */}
       <div className="relative bg-slate-900/95 rounded-[11px] h-full flex flex-col items-center justify-between text-center text-white 
                    w-28 sm:w-36 p-3 sm:p-4 gap-2 sm:gap-3">
-        
-        {/* +++ TOAST ĐÃ ĐƯỢC DI CHUYỂN VÀO ĐÂY +++ */}
+
+        {/* >>> TOAST ĐÃ ĐƯỢC CHUYỂN VÀO ĐÂY ĐỂ ĐỊNH VỊ CHÍNH XÁC <<< */}
         <StatUpgradeToast 
           isVisible={showToast}
           icon={icon}
@@ -92,7 +92,7 @@ interface UpgradeStatsScreenProps {
   onDataUpdated: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
 }
 
-// --- COMPONENT CHÍNH (ĐÃ DỌN DẸP STATE POPUP CŨ) ---
+// --- COMPONENT CHÍNH ---
 export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeStatsScreenProps) {
   const [initialGold, setInitialGold] = useState(0);
   const [displayedGold, setDisplayedGold] = useState(0);
