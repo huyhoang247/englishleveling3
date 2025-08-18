@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx (MODIFIED) ---
+// --- START OF FILE background-game.tsx ---
 
 import React, { useState, useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -502,17 +502,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
           .filter((skill): skill is OwnedSkill & SkillBlueprint => skill !== null);
   };
 
-  const handleDataChangedFromChest = (updates: { coinsChange?: number; gemsChange?: number; vocabAdded?: number }) => {
-      if (updates.coinsChange) {
-          setCoins(prev => prev + (updates.coinsChange || 0));
-      }
-      if (updates.gemsChange) {
-          setGems(prev => prev + (updates.gemsChange || 0));
-      }
-      if (updates.vocabAdded) {
-          setTotalVocabCollected(prev => prev + (updates.vocabAdded || 0));
-      }
+  // +++ START: UPDATED HANDLER +++
+  // Hàm này bây giờ nhận giá trị tuyệt đối mới nhất từ server,
+  // giúp việc đồng bộ state trở nên đáng tin cậy hơn.
+  const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => {
+      setCoins(updates.newCoins);
+      setGems(updates.newGems);
+      setTotalVocabCollected(updates.newTotalVocab);
+      console.log("Main game state updated from vocabulary chest:", updates);
   };
+  // +++ END: UPDATED HANDLER +++
 
   const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => {
     if (updates.coins !== undefined) setCoins(updates.coins);
@@ -562,16 +561,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} onPurchase={handleShopPurchase} currentUser={auth.currentUser} />}</ErrorBoundary> </div>
         
-        {/* --- THAY ĐỔI: Xóa các props `initial...` khỏi đây. --- */}
+        {/* +++ START: UPDATED COMPONENT CALL +++ */}
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> 
             <ErrorBoundary>{isVocabularyChestOpen && currentUser && (
                 <VocabularyChestScreen 
                     onClose={toggleVocabularyChest} 
-                    currentUserId={currentUser.uid} 
-                    onDataChanged={handleDataChangedFromChest} 
+                    currentUserId={currentUser.uid}
+                    onStateUpdate={handleStateUpdateFromChest} 
                 />
             )}</ErrorBoundary> 
         </div>
+        {/* +++ END: UPDATED COMPONENT CALL +++ */}
 
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isAchievementsOpen && (<AchievementsScreen user={auth.currentUser} onClose={toggleAchievements} onDataUpdate={handleAchievementsDataUpdate} />)}</ErrorBoundary>
@@ -595,4 +595,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   );
 }
 
-// --- END OF FILE background-game.tsx (MODIFIED) ---
+// --- END OF FILE background-game.tsx ---
