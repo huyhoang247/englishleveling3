@@ -1,4 +1,4 @@
-// --- START OF FILE lat-the.tsx ---
+// --- START OF FILE lat-the.tsx (MODIFIED) ---
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { db } from './firebase.js'; 
@@ -13,7 +13,8 @@ import CoinDisplay from './ui/display/coin-display.tsx';
 import CardCapacityDisplay from './ui/display/card-capacity-display.tsx';
 import GemDisplay from './ui/display/gem-display.tsx'; 
 // --- REFACTORED: Import service để tự quản lý logic ---
-import { processVocabularyChestOpening } from './gameDataService.ts'; 
+// --- THAY ĐỔI 1: Import thêm hàm fetchOrCreateUserGameData ---
+import { processVocabularyChestOpening, fetchOrCreateUserGameData } from './gameDataService.ts'; 
 import { useAnimateValue } from './ui/useAnimateValue.ts';
 
 // ========================================================================
@@ -262,13 +263,21 @@ const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 // ========================================================================
 // === 3. COMPONENT CHÍNH (ĐÃ TÁI CẤU TRÚC) ===============================
 // ========================================================================
-interface VocabularyChestScreenProps { onClose: () => void; currentUserId: string; initialCoins: number; initialGems: number; initialTotalVocab: number; initialCardCapacity: number; onDataChanged: (updates: { coinsChange?: number; gemsChange?: number; vocabAdded?: number }) => void; }
+// --- THAY ĐỔI 2: Xóa các props `initial...` khỏi interface. Component sẽ tự lấy dữ liệu này.
+interface VocabularyChestScreenProps { 
+    onClose: () => void; 
+    currentUserId: string; 
+    onDataChanged: (updates: { coinsChange?: number; gemsChange?: number; vocabAdded?: number }) => void; 
+}
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced' | 'master';
 const PRELOAD_POOL_SIZE = 20;
 const GEM_REWARD_PER_CARD = 1;
 
-const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, initialCoins, initialGems, initialTotalVocab, initialCardCapacity, onDataChanged }) => {
-    const [isLoading, setIsLoading] = useState(true);
+const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, currentUserId, onDataChanged }) => {
+    // --- THAY ĐỔI 3: Thêm state loading cho dữ liệu game ban đầu.
+    const [isInitialDataLoading, setIsInitialDataLoading] = useState(true);
+    const [isLoadingAvailable, setIsLoadingAvailable] = useState(true);
+
     const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [], master: [] });
     const [preloadPool, setPreloadPool] = useState<number[]>([]);
     const [showSingleOverlay, setShowSingleOverlay] = useState(false);
@@ -277,27 +286,45 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const [isProcessingClick, setIsProcessingClick] = useState(false);
     const [lastOpenedChest, setLastOpenedChest] = useState<{ count: 1 | 4, type: ChestType } | null>(null);
     
-    // --- REFACTORED: Local state management ---
-    // Component này sẽ quản lý trạng thái tài nguyên của riêng nó trong suốt phiên hoạt động.
-    // Nó được khởi tạo từ props và sau đó tự cập nhật thông qua các lệnh gọi service.
-    const [localCoins, setLocalCoins] = useState(initialCoins);
-    const [localGems, setLocalGems] = useState(initialGems);
-    const [localTotalVocab, setLocalTotalVocab] = useState(initialTotalVocab);
+    // --- THAY ĐỔI 4: Khởi tạo state nội bộ với giá trị mặc định, sẽ được cập nhật sau khi fetch.
+    const [localCoins, setLocalCoins] = useState(0);
+    const [localGems, setLocalGems] = useState(0);
+    const [localTotalVocab, setLocalTotalVocab] = useState(0);
+    const [localCardCapacity, setLocalCardCapacity] = useState(100);
     
-    // Animate the local state for a smooth UI experience
     const animatedCoins = useAnimateValue(localCoins, 500);
     const animatedGems = useAnimateValue(localGems, 500);
 
-    // Đồng bộ hóa state nội bộ với props khi component được mở hoặc người dùng thay đổi.
+    // --- THAY ĐỔI 5: Thêm useEffect để fetch dữ liệu game khi component được mở. ---
     useEffect(() => {
-        setLocalCoins(initialCoins);
-        setLocalGems(initialGems);
-        setLocalTotalVocab(initialTotalVocab);
-    }, [initialCoins, initialGems, initialTotalVocab, currentUserId]);
+        if (!currentUserId) {
+            setIsInitialDataLoading(false);
+            return;
+        };
+
+        const fetchInitialData = async () => {
+            setIsInitialDataLoading(true);
+            try {
+                const gameData = await fetchOrCreateUserGameData(currentUserId);
+                setLocalCoins(gameData.coins);
+                setLocalGems(gameData.gems);
+                setLocalTotalVocab(gameData.totalVocabCollected);
+                setLocalCardCapacity(gameData.cardCapacity);
+            } catch (error) {
+                console.error("Error fetching initial game data in VocabularyChestScreen:", error);
+                alert("Không thể tải dữ liệu người dùng. Vui lòng thử lại.");
+                onClose(); // Đóng màn hình nếu có lỗi nghiêm trọng
+            } finally {
+                setIsInitialDataLoading(false);
+            }
+        };
+
+        fetchInitialData();
+    }, [currentUserId, onClose]);
 
     useEffect(() => {
         const fetchOpenedItems = async () => {
-            setIsLoading(true);
+            setIsLoadingAvailable(true);
             try {
                 const totalItems = Math.min(defaultVocabulary.length, defaultImageUrls.length);
                 const allIndices: Record<ChestType, number[]> = { basic: [], elementary: [], intermediate: [], advanced: [], master: [] };
@@ -326,7 +353,7 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             } catch (error) {
                 console.error("Error fetching user data from subcollection:", error);
             } finally {
-                setIsLoading(false);
+                setIsLoadingAvailable(false);
             }
         };
         fetchOpenedItems();
@@ -353,8 +380,8 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         if (!chestDef || chestDef.isComingSoon) return;
         
         const price = count === 1 ? chestDef.price1 : (chestDef.price10 || 0);
-        // --- REFACTORED: Use local state for checks ---
-        if (localTotalVocab + count > initialCardCapacity) { alert(`Kho thẻ đã đầy! (${localTotalVocab}/${initialCardCapacity}).\nVui lòng nâng cấp sức chứa để tiếp tục.`); return; }
+        // --- THAY ĐỔI 6: Sử dụng state nội bộ `localCardCapacity` để kiểm tra
+        if (localTotalVocab + count > localCardCapacity) { alert(`Kho thẻ đã đầy! (${localTotalVocab}/${localCardCapacity}).\nVui lòng nâng cấp sức chứa để tiếp tục.`); return; }
         if (chestDef.currency === 'gold' && localCoins < price) { alert(`Bạn không đủ vàng! Cần ${price.toLocaleString()}, bạn đang có ${localCoins.toLocaleString()}.`); return; }
         if (chestDef.currency === 'gem' && localGems < price) { alert(`Bạn không đủ gem! Cần ${price.toLocaleString()}, bạn đang có ${localGems.toLocaleString()}.`); return; }
         
@@ -364,7 +391,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
         setIsProcessingClick(true);
         setLastOpenedChest({ count, type: chestType }); 
 
-        // --- REFACTORED: Track state BEFORE the transaction to calculate delta ---
         const coinsBefore = localCoins;
         const gemsBefore = localGems;
         const vocabBefore = localTotalVocab;
@@ -382,7 +408,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             }
             const newWordsToSave = selectedOriginalIndices.map(index => ({ id: index + 1, word: defaultVocabulary[index], chestType: chestType }));
 
-            // Call the centralized service function for the transaction
             const { newCoins, newGems, newTotalVocab } = await processVocabularyChestOpening(
                 currentUserId, {
                     currency: chestDef.currency,
@@ -392,19 +417,16 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
                 }
             );
             
-            // --- REFACTORED: Update local state with the source of truth from the server ---
             setLocalCoins(newCoins);
             setLocalGems(newGems);
             setLocalTotalVocab(newTotalVocab);
             
-            // --- REFACTORED: Notify the parent component of the exact CHANGE that occurred ---
             onDataChanged({
                 coinsChange: newCoins - coinsBefore,
                 gemsChange: newGems - gemsBefore,
                 vocabAdded: newTotalVocab - vocabBefore
             });
 
-            // Update UI state
             setAvailableIndices(prev => ({ ...prev, [chestType]: tempPool }));
             setPreloadPool(prev => prev.filter(idx => !selectedOriginalIndices.includes(idx)));
             setCardsForPopup(selectedCardsForPopup);
@@ -421,24 +443,27 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
     const handleCloseOverlay = () => { setShowSingleOverlay(false); setShowFourOverlay(false); setCardsForPopup([]); };
     const handleOpenAgain = () => { if (lastOpenedChest) { handleOpenCards(lastOpenedChest.count, lastOpenedChest.type); } };
     
+    const isFullyLoading = isInitialDataLoading || isLoadingAvailable;
+
     return (
         <div className="vocabulary-chest-root">
             <ScopedStyles />
             <ImagePreloader imageUrls={urlsToPreload} />
-            {isLoading && <LoadingOverlay isVisible={true} />}
-            {!isLoading && (
+            {isFullyLoading && <LoadingOverlay isVisible={true} />}
+            {!isFullyLoading && (
                  <header className="main-header">
                     <button onClick={onClose} className={`vocab-screen-home-btn ${showSingleOverlay || showFourOverlay ? 'is-hidden' : ''}`} title="Quay lại Trang Chính">
                         <HomeIcon /><span>Trang Chính</span>
                     </button>
                     <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <CardCapacityDisplay current={localTotalVocab} max={initialCardCapacity} />
+                        {/* THAY ĐỔI 7: Sử dụng state nội bộ `localCardCapacity` cho display */}
+                        <CardCapacityDisplay current={localTotalVocab} max={localCardCapacity} />
                         <GemDisplay displayedGems={animatedGems} />
                         <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
                     </div>
                 </header>
             )}
-            {!showSingleOverlay && !showFourOverlay && !isLoading && (
+            {!showSingleOverlay && !showFourOverlay && !isFullyLoading && (
                 <div className="chest-gallery-container">
                     {CHEST_DATA.map((chest) => {
                         const remainingCount = availableIndices[chest.chestType]?.length ?? 0;
@@ -475,5 +500,4 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 }
 
 export default VocabularyChestScreen;
-
-// --- END OF FILE lat-the.tsx ---
+// --- END OF FILE lat-the.tsx (MODIFIED) ---
