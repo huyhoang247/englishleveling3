@@ -401,9 +401,8 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             <ScopedStyles />
             <ImagePreloader imageUrls={urlsToPreload} />
             
-            {/* +++ THAY ĐỔI 2: ÁP DỤNG CÁC CLASS TAILWIND ĐỂ ĐỒNG BỘ HEADER +++ */}
             <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0 z-[1100]">
-                <button onClick={onClose} className="vocab-screen-home-btn" title="Quay lại Trang Chính">
+                <button onClick={onClose} className={`vocab-screen-home-btn ${showSingleOverlay || showFourOverlay ? 'is-hidden' : ''}`} title="Quay lại Trang Chính">
                     <HomeIcon /><span>Trang Chính</span>
                 </button>
                 <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
