@@ -31,17 +31,27 @@ const UpgradeStatsSkeleton: React.FC = () => {
               </div>
           </div>
 
-          {/* --- Skeleton Stat Cards --- */}
+          {/* --- Skeleton Stat Cards (ĐÃ SỬA LỖI ĐỒNG BỘ) --- */}
           <div className="flex flex-row justify-center items-stretch gap-2 sm:gap-4">
               {[...Array(3)].map((_, index) => (
-                  <div key={index} className="bg-slate-900/95 border border-slate-800 rounded-xl w-28 sm:w-36 p-3 sm:p-4 flex flex-col items-center gap-3 animate-pulse">
-                      <div className="w-10 h-10 rounded-full bg-slate-700"></div>
-                      <div className="flex-grow w-full flex flex-col items-center gap-2">
-                          <div className="h-5 w-16 bg-slate-700 rounded-md"></div>
-                          <div className="h-6 w-12 bg-slate-700 rounded-md"></div>
-                          <div className="h-4 w-20 bg-slate-700 rounded-md"></div>
+                  // Container ngoài cùng của card, đồng bộ kích thước w-28 sm:w-36
+                  <div key={index} className="bg-slate-900/95 border border-slate-800 rounded-xl w-28 sm:w-36 p-3 sm:p-4 flex flex-col items-center justify-between animate-pulse">
+                      
+                      {/* Container nội dung bên trong, đồng bộ gap-2 sm:gap-3 */}
+                      <div className="w-full flex flex-col items-center flex-grow gap-2 sm:gap-3">
+                          {/* 1. Icon: Đồng bộ kích thước w-8 h-8 sm:w-10 sm:h-10 */}
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-700"></div>
+                          
+                          {/* Text container, đồng bộ gap */}
+                          <div className="w-full flex flex-col items-center gap-1">
+                              <div className="h-5 w-16 bg-slate-700 rounded-md"></div>
+                              <div className="h-6 w-12 bg-slate-700 rounded-md"></div>
+                              <div className="h-4 w-20 bg-slate-700 rounded-md"></div>
+                          </div>
                       </div>
-                      <div className="w-full h-9 bg-slate-700 rounded-lg mt-1"></div>
+                      
+                      {/* 2. Nút bấm: Đồng bộ chiều cao py-1.5 sm:py-2 (tương đương h-9 sm:h-10) */}
+                      <div className="w-full h-9 sm:h-10 bg-slate-700 rounded-lg mt-2 sm:mt-3"></div>
                   </div>
               ))}
           </div>
