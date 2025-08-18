@@ -126,27 +126,37 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .button-price { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; color: white; font-weight: 600; background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px; text-shadow: none; }
         .vocabulary-chest-root .price-icon { width: 16px; height: 16px; }
         
-        /* +++ THAY ĐỔI: HIỆU ỨNG MỞ RƯƠNG MỚI TINH TẾ HƠN +++ */
+        /* +++ THAY ĐỔI: HIỆU ỨNG MỚI - HẠT NĂNG LƯỢNG MA THUẬT +++ */
         @keyframes vocabulary-chest-processing-pulse {
             50% { transform: scale(1.02); }
         }
-        @keyframes vocabulary-chest-sweep {
-            to { transform: rotate(360deg); }
+        @keyframes vocabulary-chest-particles-rise {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-150px); opacity: 0; }
         }
         .vocabulary-chest-root .chest-ui-container.is-processing {
             animation: vocabulary-chest-processing-pulse 2.5s infinite ease-in-out;
             pointer-events: none;
         }
+        .vocabulary-chest-root .chest-ui-container.is-processing::before,
         .vocabulary-chest-root .chest-ui-container.is-processing::after {
             content: '';
             position: absolute;
-            z-index: -1;
-            inset: -3px;
-            border-radius: inherit;
-            background: conic-gradient(from 180deg at 50% 50%, rgba(192, 132, 252, 0.8) 0%, rgba(129, 140, 248, 0.8) 30%, transparent 60%, transparent 100%);
-            animation: vocabulary-chest-sweep 2s linear infinite;
+            bottom: 0; left: 0; right: 0;
+            height: 1px; width: 1px;
+            z-index: 0;
+            background: transparent;
+            color: rgba(224, 204, 255, 0.7); /* E0CCFF with alpha */
+            animation: vocabulary-chest-particles-rise 4s linear infinite;
         }
-        
+        .vocabulary-chest-root .chest-ui-container.is-processing::before {
+            box-shadow: 15% -60px 0, 25% -25px 0, 35% -80px 0, 45% -40px 0, 55% -70px 0, 65% -35px 0, 75% -75px 0, 85% -45px 0, 95% -15px 0, 5% -50px 0, 40% -10px 0, 80% -90px 0;
+        }
+        .vocabulary-chest-root .chest-ui-container.is-processing::after {
+            animation-delay: 2s;
+            box-shadow: 10% -20px 0, 20% -55px 0, 30% -30px 0, 40% -65px 0, 50% -25px 0, 60% -85px 0, 70% -50px 0, 80% -15px 0, 90% -60px 0, 5% -35px 0, 28% -95px 0, 98% -40px 0;
+        }
+
         .vocabulary-chest-root .chest-processing-overlay {
             position: absolute; inset: 0;
             background-color: rgba(10, 10, 20, 0.7);
