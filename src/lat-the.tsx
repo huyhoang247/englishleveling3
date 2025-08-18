@@ -1,4 +1,4 @@
-// --- START OF FILE lat-the.tsx (UPDATED & HEIGHT-ALIGNED) ---
+// --- START OF FILE lat-the.tsx (UPDATED) ---
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { db } from './firebase.js'; 
@@ -79,16 +79,10 @@ const ScopedStyles = () => (
                 gap: 8px;
             }
         }
-
-        /* --- THAY ĐỔI: Chuyển từ Flexbox sang Grid để đồng bộ chiều cao rương --- */
         .vocabulary-chest-root .chest-gallery-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px; 
-            width: 100%; 
-            max-width: 1300px; 
-            padding: 20px 20px 100px; 
-            box-sizing: border-box;
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 30px; width: 100%; max-width: 1300px; 
+            padding: 20px 20px 100px; box-sizing: border-box;
             flex-grow: 1;
             overflow-y: auto;
         }
@@ -97,8 +91,7 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-thumb { background-color: #4a5588; border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
         .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-thumb:hover { background-color: #6366f1; }
         .vocabulary-chest-root .chest-ui-container {
-            width: 100%; /* Đã có trong grid, nhưng để 100% là tốt */
-            /* min-width, max-width không còn cần thiết vì grid-template-columns đã xử lý */
+            width: 100%; max-width: 380px; min-width: 300px;
             background-color: #1a1f36; border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(76, 89, 186, 0.2);
             overflow: hidden; display: flex; flex-direction: column;
@@ -457,4 +450,4 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 }
 
 export default VocabularyChestScreen;
-// --- END OF FILE lat-the.tsx (UPDATED & HEIGHT-ALIGNED) ---
+// --- END OF FILE lat-the.tsx (UPDATED) ---
