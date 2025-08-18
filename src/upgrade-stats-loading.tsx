@@ -3,10 +3,10 @@ import React from 'react';
 const UpgradeStatsSkeleton: React.FC = () => {
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
-      {/* --- Skeleton Header (ĐÃ SỬA LỖI ĐỒNG BỘ) --- */}
+      {/* --- Skeleton Header (ĐÃ SỬA LỖI NÚT HOME) --- */}
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
-        {/* Sửa h-9 thành h-8 để khớp với chiều cao thực tế (py-1.5 + icon h-5) */}
-        <div className="h-8 w-28 sm:w-32 rounded-lg bg-slate-800/80 animate-pulse"></div>
+        {/* Sửa w-28 thành w-11 để khớp với nút chỉ có icon trên mobile */}
+        <div className="h-8 w-11 sm:w-32 rounded-lg bg-slate-800/80 animate-pulse"></div>
         <div className="h-8 w-24 sm:w-28 rounded-lg bg-slate-800/80 animate-pulse"></div>
       </header>
 
@@ -37,7 +37,7 @@ const UpgradeStatsSkeleton: React.FC = () => {
               {[...Array(3)].map((_, index) => (
                   <div key={index} className="bg-slate-900/95 border border-slate-800 rounded-xl w-28 sm:w-36 p-3 sm:p-4 flex flex-col items-center justify-between animate-pulse">
                       <div className="w-full flex flex-col items-center flex-grow gap-2 sm:gap-3">
-                          <div className="w-8 h-8 sm:w-10 sm-h-10 rounded-full bg-slate-700"></div>
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-700"></div>
                           <div className="w-full flex flex-col items-center gap-1">
                               <div className="h-5 w-16 bg-slate-700 rounded-md"></div>
                               <div className="h-6 w-12 bg-slate-700 rounded-md"></div>
