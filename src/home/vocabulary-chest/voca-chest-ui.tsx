@@ -3,15 +3,15 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 
 // -- BƯỚC 1: IMPORT TÀI NGUYÊN TẬP TRUNG --
-import { uiAssets, treasureAssets } from './game-assets.ts';
-import { defaultVocabulary } from './voca-data/list-vocabulary.ts';
-import ImagePreloader from './ImagePreloader.tsx';
-import CoinDisplay from './ui/display/coin-display.tsx';
-import CardCapacityDisplay from './ui/display/card-capacity-display.tsx';
-import GemDisplay from './ui/display/gem-display.tsx';
-import VocabularyChestLoadingSkeleton from './lat-the-loading.tsx';
-import { useAnimateValue } from './ui/useAnimateValue.ts';
-import { VocabularyChestProvider, useVocabularyChest } from './lat-the-context.tsx';
+import { uiAssets, treasureAssets } from '../../game-assets.ts';
+import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
+import ImagePreloader from '../../ImagePreloader.tsx';
+import CoinDisplay from '../../ui/display/coin-display.tsx';
+import CardCapacityDisplay from '../../ui/display/card-capacity-display.tsx';
+import GemDisplay from '../../ui/display/gem-display.tsx';
+import VocabularyChestLoadingSkeleton from './voca-chest-loading.tsx';
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
+import { VocabularyChestProvider, useVocabularyChest } from './voca-chest-context.tsx';
 
 // ========================================================================
 // === 0. CÁC HẰNG SỐ (ĐÃ GỘP TỪ FILE CONSTANTS) =========================
