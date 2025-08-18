@@ -10,16 +10,13 @@ const VocabularyChestLoadingSkeleton: React.FC = () => {
       {/* --- Skeleton cho Header --- */}
       <header className="sticky top-0 left-0 w-full h-[53px] flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0">
         
-        {/* === START: THAY ĐỔI Ở ĐÂY === */}
         {/* Nút Back/Home - Sửa lại để mô phỏng cấu trúc thật */}
-        {/* Cấu trúc này có padding, gap, và một phần tử text ẩn đi trên mobile (sm) */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 animate-pulse">
             {/* Skeleton cho Icon (20x20px) */}
             <div className="w-5 h-5 rounded-full bg-white/20"></div>
             {/* Skeleton cho Text ("Trang Chính"), ẩn trên mobile */}
             <div className="hidden sm:block h-4 w-16 rounded-md bg-white/20"></div>
         </div>
-        {/* === END: THAY ĐỔI Ở ĐÂY === */}
 
         {/* Các chỉ số tài nguyên */}
         <div className="flex items-center gap-3">
@@ -30,7 +27,8 @@ const VocabularyChestLoadingSkeleton: React.FC = () => {
       </header>
 
       {/* --- Skeleton cho Main Content (Gallery các rương) --- */}
-      <main className="flex-grow overflow-y-auto p-5">
+      {/* === THAY ĐỔI Ở ĐÂY: overflow-y-auto -> overflow-y-hidden === */}
+      <main className="flex-grow overflow-y-hidden p-5">
         <div className="w-full max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
           {/* Tạo 4 skeleton card mẫu */}
           {[...Array(4)].map((_, i) => (
