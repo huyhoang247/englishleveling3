@@ -34,10 +34,7 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   const upgradeCost = calculateUpgradeCost(level);
   const bonusForNextLevel = getBonusForLevel(level + 1, baseUpgradeBonus);
 
-  // Xóa bỏ hoàn toàn state và useEffect của toast ở đây
-
   return (
-    // Bỏ `relative` vì không cần định vị cho toast nữa
     <div className={`group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
       
@@ -69,7 +66,7 @@ interface UpgradeStatsScreenProps {
   onDataUpdated: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
 }
 
-// <<<--- THÊM INTERFACE CHO DỮ LIỆU TOAST
+// INTERFACE CHO DỮ LIỆU TOAST
 interface ToastData {
   icon: JSX.Element;
   bonus: number;
@@ -92,7 +89,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // <<<--- TẠO STATE MỚI ĐỂ QUẢN LÝ TOAST
+  // STATE ĐỂ QUẢN LÝ TOAST
   const [toastData, setToastData] = useState<ToastData | null>(null);
 
   useEffect(() => {
@@ -156,14 +153,14 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
     setUpgradingId(statId);
     setMessage('');
     
-    // <<<--- KÍCH HOẠT TOAST TẠI ĐÂY
+    // KÍCH HOẠT TOAST
     const bonusForThisLevel = getBonusForLevel(statToUpgrade.level + 1, statToUpgrade.baseUpgradeBonus);
     setToastData({
         icon: statToUpgrade.icon,
         bonus: bonusForThisLevel,
         colorClasses: statToUpgrade.toastColors,
     });
-    // Tự động ẩn toast sau 1.5s (thời gian animation)
+    // Tự động ẩn toast sau 1.5s
     setTimeout(() => {
         setToastData(null);
     }, 1500);
@@ -191,7 +188,6 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
       setInitialGold(newCoins);
       setDisplayedGold(newCoins);
       onDataUpdated(newCoins, newStatsForFirestore);
-      console.log('Nâng cấp đã được xác nhận và lưu trên server.');
     } catch (error) {
       console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
       setMessage('Nâng cấp thất bại, vui lòng thử lại!');
@@ -199,7 +195,6 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
       setStats(oldStats);
       setTimeout(() => setMessage(''), 3000);
     } finally {
-      // Dùng timeout ngắn hơn để mở khóa các nút khác
       setTimeout(() => {
         setUpgradingId(null);
       }, 300); 
@@ -236,6 +231,17 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
       {message && (<div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">{message}</div>)}
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
+          
+          {/* VỊ TRÍ MỚI CỦA TOAST: Nằm trong thẻ div này và sẽ được định vị so với nó */}
+          {toastData && (
+              <StatUpgradeToast
+                  isVisible={true}
+                  icon={toastData.icon}
+                  bonus={toastData.bonus}
+                  colorClasses={toastData.colorClasses}
+              />
+          )}
+
           <div className="mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
             <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
           </div>
@@ -256,17 +262,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
                 </div>
             </div>
           </div>
-          {/* <<<--- THÊM `relative` VÀO ĐÂY ĐỂ TOAST CĂN GIỮA CHÍNH XÁC */}
-          <div className="relative flex flex-row justify-center items-stretch gap-2 sm:gap-4">
-            {/* <<<--- RENDER TOAST Ở ĐÂY */}
-            {toastData && (
-                <StatUpgradeToast
-                    isVisible={true} // Luôn true vì chúng ta điều khiển bằng sự tồn tại của toastData
-                    icon={toastData.icon}
-                    bonus={toastData.bonus}
-                    colorClasses={toastData.colorClasses}
-                />
-            )}
+          <div className="flex flex-row justify-center items-stretch gap-2 sm:gap-4">
             {stats.map(stat => (
               <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} isProcessing={upgradingId === stat.id} isDisabled={upgradingId !== null && upgradingId !== stat.id} />
             ))}
