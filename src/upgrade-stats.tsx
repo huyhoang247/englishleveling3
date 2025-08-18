@@ -1,5 +1,3 @@
-// --- START OF FILE upgrade-stats.tsx (FULL CODE) ---
-
 import React, { useState, useEffect, useCallback } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import { uiAssets } from './game-assets.ts';
@@ -26,7 +24,7 @@ export const getBonusForLevel = (level: number, baseBonus: number) => { if (leve
 export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => { if (currentLevel === 0) return 0; let totalValue = 0; const fullTiers = Math.floor(currentLevel / 10); const remainingLevelsInCurrentTier = currentLevel % 10; for (let i = 0; i < fullTiers; i++) { const bonusInTier = baseBonus * Math.pow(2, i); totalValue += 10 * bonusInTier; } const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers); totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier; return totalValue; };
 const formatNumber = (num: number) => { if (num < 1000) return num.toString(); if (num < 1000000) { const thousands = num / 1000; return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`; } if (num < 1000000000) { const millions = num / 1000000; return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`; } const billions = num / 1000000000; return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`; };
 
-// --- COMPONENT STAT CARD ---
+// --- COMPONENT STAT CARD (UPDATED) ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: string) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
   const upgradeCost = calculateUpgradeCost(level);
@@ -35,16 +33,22 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   return (
     <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
-      <div className="relative bg-slate-900/95 rounded-[11px] p-4 h-full flex flex-col items-center justify-between gap-3 text-center text-white w-28 sm:w-32 md:w-36">
+      {/* Thay đổi chính: Tăng chiều rộng của card */}
+      <div className="relative bg-slate-900/95 rounded-[11px] p-4 h-full flex flex-col items-center justify-between gap-3 text-center text-white w-32 sm:w-36 md:w-40">
         <div className="w-10 h-10">{icon}</div>
         <div className="flex-grow flex flex-col items-center gap-1">
           <p className="text-lg uppercase font-bold tracking-wider">{name}</p>
           <p className="text-xl font-black text-shadow-cyan">+{formatNumber(bonusForNextLevel)}</p>
           <p className="text-xs text-slate-400">Level {level}</p>
         </div>
-        <button onClick={() => onUpgrade(stat.id)} disabled={isDisabled || isProcessing} className="w-full bg-slate-800 border-2 border-cyan-400/50 rounded-lg py-2 px-1 flex items-center justify-center gap-1 shadow-lg transition-all duration-200 active:scale-95 hover:enabled:bg-slate-700 hover:enabled:border-cyan-400 disabled:cursor-not-allowed disabled:opacity-70">
+        {/* Thay đổi chính: Thiết kế lại hoàn toàn nút nâng cấp */}
+        <button 
+          onClick={() => onUpgrade(stat.id)} 
+          disabled={isDisabled || isProcessing} 
+          className="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-2 flex items-center justify-center gap-2 shadow-lg transition-all duration-200 active:scale-95 hover:enabled:bg-slate-800 hover:enabled:border-yellow-500 hover:enabled:text-yellow-300 hover:enabled:shadow-lg hover:enabled:shadow-yellow-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+        >
           <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
-          <span className="text-base font-bold text-yellow-300">{formatNumber(upgradeCost)}</span>
+          <span className="text-base font-bold text-yellow-400 transition-colors duration-200">{formatNumber(upgradeCost)}</span>
         </button>
       </div>
     </div>
@@ -234,4 +238,3 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
     </div>
   );
 }
-// --- END OF FILE upgrade-stats.tsx ---
