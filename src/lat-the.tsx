@@ -1,4 +1,4 @@
-// --- START OF FILE lat-the.tsx (UPDATED) ---
+// --- START OF FILE lat-the.tsx (FULL CODE - SYNCED) ---
 
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { db } from './firebase.js'; 
@@ -23,73 +23,29 @@ const ScopedStyles = () => (
     <style>{`
         /* --- LỚP GỐC: Thiết lập môi trường độc lập --- */
         .vocabulary-chest-root {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
+            width: 100%; height: 100%; position: absolute; top: 0; left: 0;
             background-color: #0a0a14;
             background-image: radial-gradient(circle at center, #16213e, #0a0a14);
-            color: #e0e0e0;
-            font-family: 'Roboto', sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            z-index: 100; 
-            overflow: hidden;
+            color: #e0e0e0; font-family: 'Roboto', sans-serif;
+            display: flex; flex-direction: column;
+            justify-content: flex-start; align-items: center;
+            z-index: 100; overflow: hidden;
         }
-
-        /* +++ THAY ĐỔI 1: XÓA ĐỊNH NGHĨA CSS CHO .main-header +++ */
-        /* Lớp CSS .main-header đã được thay thế bằng các class tiện ích của Tailwind CSS trực tiếp trên thẻ <header> để đảm bảo tính nhất quán với file skeleton. */
-
         .vocabulary-chest-root .vocab-screen-home-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            background-color: rgba(30, 41, 59, 0.8);
+            display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+            border-radius: 8px; background-color: rgba(30, 41, 59, 0.8);
             border: 1px solid rgb(51, 65, 85);
             transition: background-color 0.2s ease, opacity 0.3s ease, visibility 0.3s;
-            cursor: pointer;
-            color: #cbd5e1;
+            cursor: pointer; color: #cbd5e1;
         }
-        .vocabulary-chest-root .vocab-screen-home-btn:hover {
-            background-color: rgb(51, 65, 85);
-        }
-        .vocabulary-chest-root .vocab-screen-home-btn.is-hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        .vocabulary-chest-root .vocab-screen-home-btn svg {
-            width: 20px;
-            height: 20px;
-        }
-        .vocabulary-chest-root .vocab-screen-home-btn span {
-            font-size: 0.875rem;
-            font-weight: 600;
-        }
+        .vocabulary-chest-root .vocab-screen-home-btn:hover { background-color: rgb(51, 65, 85); }
+        .vocabulary-chest-root .vocab-screen-home-btn.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .vocabulary-chest-root .vocab-screen-home-btn svg { width: 20px; height: 20px; }
+        .vocabulary-chest-root .vocab-screen-home-btn span { font-size: 0.875rem; font-weight: 600; }
         @media (max-width: 640px) {
-            .vocabulary-chest-root .vocab-screen-home-btn span {
-                display: none;
-            }
-            .vocabulary-chest-root .header-right-group {
-                gap: 8px;
-            }
+            .vocabulary-chest-root .vocab-screen-home-btn span { display: none; }
+            .vocabulary-chest-root .header-right-group { gap: 8px; }
         }
-        .vocabulary-chest-root .chest-gallery-container {
-            display: flex; flex-wrap: wrap; justify-content: center;
-            gap: 30px; width: 100%; max-width: 1300px; 
-            padding: 20px 20px 100px; box-sizing: border-box;
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar { width: 8px; }
-        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-track { background: rgba(10, 10, 20, 0.5); border-radius: 4px; }
-        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-thumb { background-color: #4a5588; border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
-        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-thumb:hover { background-color: #6366f1; }
         .vocabulary-chest-root .chest-ui-container {
             width: 100%; max-width: 380px; min-width: 300px;
             background-color: #1a1f36; border-radius: 16px;
@@ -401,7 +357,6 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             <ScopedStyles />
             <ImagePreloader imageUrls={urlsToPreload} />
             
-            {/* +++ THAY ĐỔI 2: ÁP DỤNG CÁC CLASS TAILWIND ĐỂ ĐỒNG BỘ HEADER +++ */}
             <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0">
                 <button onClick={onClose} className={`vocab-screen-home-btn ${showSingleOverlay || showFourOverlay ? 'is-hidden' : ''}`} title="Quay lại Trang Chính">
                     <HomeIcon /><span>Trang Chính</span>
@@ -414,23 +369,26 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
             </header>
 
             {!showSingleOverlay && !showFourOverlay && (
-                <div className="chest-gallery-container">
-                    {CHEST_DATA.map((chest) => {
-                        const remainingCount = availableIndices[chest.chestType]?.length ?? 0;
-                        const priceIcon = chest.currency === 'gem' ? uiAssets.gemIcon : uiAssets.priceIcon;
-                        return (
-                            <ChestUI
-                                key={chest.id}
-                                {...chest}
-                                priceIconUrl={priceIcon}
-                                remainingCount={remainingCount}
-                                onOpen1={() => handleOpenCards(1, chest.chestType)}
-                                onOpen10={() => handleOpenCards(4, chest.chestType)}
-                            />
-                        );
-                    })}
-                </div>
+                <main className="flex-grow overflow-y-auto px-5 pt-5 pb-[100px]">
+                    <div className="w-full max-w-[1300px] mx-auto flex flex-wrap justify-center gap-[30px]">
+                        {CHEST_DATA.map((chest) => {
+                            const remainingCount = availableIndices[chest.chestType]?.length ?? 0;
+                            const priceIcon = chest.currency === 'gem' ? uiAssets.gemIcon : uiAssets.priceIcon;
+                            return (
+                                <ChestUI
+                                    key={chest.id}
+                                    {...chest}
+                                    priceIconUrl={priceIcon}
+                                    remainingCount={remainingCount}
+                                    onOpen1={() => handleOpenCards(1, chest.chestType)}
+                                    onOpen10={() => handleOpenCards(4, chest.chestType)}
+                                />
+                            );
+                        })}
+                    </div>
+                </main>
             )}
+            
             {showSingleOverlay && cardsForPopup.length > 0 && (
                 <div className="card-opening-overlay">
                     <div className="overlay-content">
@@ -450,4 +408,4 @@ const VocabularyChestScreen: React.FC<VocabularyChestScreenProps> = ({ onClose, 
 }
 
 export default VocabularyChestScreen;
-// --- END OF FILE lat-the.tsx (UPDATED) ---
+// --- END OF FILE lat-the.tsx (FULL CODE - SYNCED) ---
