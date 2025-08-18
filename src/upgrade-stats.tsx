@@ -1,4 +1,4 @@
-// --- START OF FILE upgrade-stats.tsx (đã chỉnh sửa) ---
+// --- START OF FILE upgrade-stats.tsx (4).txt ---
 
 import React, { useState, useEffect, useCallback } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
@@ -6,10 +6,9 @@ import { uiAssets } from './game-assets.ts';
 import { auth } from './firebase.js'; 
 import { fetchOrCreateUserGameData, upgradeUserStats } from './gameDataService.ts';
 import UpgradeStatsSkeleton from './upgrade-stats-loading.tsx';
-import UpgradeSuccessPopup from './UpgradeSuccessPopup.tsx'; // <<<--- IMPORT POPUP MỚI
+import UpgradeSuccessPopup from './UpgradeSuccessPopup.tsx'; // <<<--- DÒNG IMPORT MỚI
 
 // --- ICONS ---
-// (Giữ nguyên phần icons)
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/2000/svg" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const icons = {
   coin: ( <img src={uiAssets.statCoinIcon} alt="Gold Coin Icon" /> ),
@@ -19,7 +18,6 @@ const icons = {
 };
 
 // --- CONFIG VÀ LOGIC TÍNH TOÁN ---
-// (Giữ nguyên các hàm config và tính toán)
 export const statConfig = {
   hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600" },
   atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
@@ -28,39 +26,38 @@ export const statConfig = {
 export const calculateUpgradeCost = (level: number) => { const baseCost = 100; const tier = Math.floor(level / 10); return baseCost * Math.pow(2, tier); };
 export const getBonusForLevel = (level: number, baseBonus: number) => { if (level === 0) return 0; const tier = Math.floor((level - 1) / 10); return baseBonus * Math.pow(2, tier); };
 export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => { if (currentLevel === 0) return 0; let totalValue = 0; const fullTiers = Math.floor(currentLevel / 10); const remainingLevelsInCurrentTier = currentLevel % 10; for (let i = 0; i < fullTiers; i++) { const bonusInTier = baseBonus * Math.pow(2, i); totalValue += 10 * bonusInTier; } const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers); totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier; return totalValue; };
-export const formatNumber = (num: number) => { if (num < 1000) return num.toString(); if (num < 1000000) { const thousands = num / 1000; return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`; } if (num < 1000000000) { const millions = num / 1000000; return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`; } const billions = num / 1000000000; return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`; };
+const formatNumber = (num: number) => { if (num < 1000) return num.toString(); if (num < 1000000) { const thousands = num / 1000; return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`; } if (num < 1000000000) { const millions = num / 1000000; return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`; } const billions = num / 1000000000; return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`; };
 
-// --- COMPONENT STAT CARD ---
-// (Giữ nguyên component StatCard)
+// --- COMPONENT STAT CARD (UPDATED FOR RESPONSIVENESS) ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: string) => void, isProcessing: boolean, isDisabled: boolean }) => {
-    const { name, level, icon, baseUpgradeBonus, color } = stat;
-    const upgradeCost = calculateUpgradeCost(level);
-    const bonusForNextLevel = getBonusForLevel(level + 1, baseUpgradeBonus);
-  
-    return (
-      <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
-        
-        <div className="relative bg-slate-900/95 rounded-[11px] h-full flex flex-col items-center justify-between text-center text-white 
-                     w-28 sm:w-36 p-3 sm:p-4 gap-2 sm:gap-3">
-          <div className="w-8 h-8 sm:w-10 sm:h-10">{icon}</div>
-          <div className="flex-grow flex flex-col items-center gap-1">
-            <p className="text-base sm:text-lg uppercase font-bold tracking-wider">{name}</p>
-            <p className="text-lg sm:text-xl font-black text-shadow-cyan">+{formatNumber(bonusForNextLevel)}</p>
-            <p className="text-xs text-slate-400">Level {level}</p>
-          </div>
-          
-          <button 
-            onClick={() => onUpgrade(stat.id)} 
-            disabled={isDisabled || isProcessing} 
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg py-1.5 sm:py-2 px-2 flex items-center justify-center gap-1.5 sm:gap-2 shadow-lg transition-all duration-200 active:scale-95 hover:enabled:bg-slate-800 hover:enabled:border-yellow-500 hover:enabled:shadow-lg hover:enabled:shadow-yellow-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
-            <span className="text-sm sm:text-base font-bold text-yellow-400 transition-colors duration-200">{formatNumber(upgradeCost)}</span>
-          </button>
+  const { name, level, icon, baseUpgradeBonus, color } = stat;
+  const upgradeCost = calculateUpgradeCost(level);
+  const bonusForNextLevel = getBonusForLevel(level + 1, baseUpgradeBonus);
+
+  return (
+    <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
+      
+      <div className="relative bg-slate-900/95 rounded-[11px] h-full flex flex-col items-center justify-between text-center text-white 
+                   w-28 sm:w-36 p-3 sm:p-4 gap-2 sm:gap-3">
+        <div className="w-8 h-8 sm:w-10 sm:h-10">{icon}</div>
+        <div className="flex-grow flex flex-col items-center gap-1">
+          <p className="text-base sm:text-lg uppercase font-bold tracking-wider">{name}</p>
+          <p className="text-lg sm:text-xl font-black text-shadow-cyan">+{formatNumber(bonusForNextLevel)}</p>
+          <p className="text-xs text-slate-400">Level {level}</p>
         </div>
+        
+        <button 
+          onClick={() => onUpgrade(stat.id)} 
+          disabled={isDisabled || isProcessing} 
+          className="w-full bg-slate-900 border border-slate-700 rounded-lg py-1.5 sm:py-2 px-2 flex items-center justify-center gap-1.5 sm:gap-2 shadow-lg transition-all duration-200 active:scale-95 hover:enabled:bg-slate-800 hover:enabled:border-yellow-500 hover:enabled:shadow-lg hover:enabled:shadow-yellow-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
+          <span className="text-sm sm:text-base font-bold text-yellow-400 transition-colors duration-200">{formatNumber(upgradeCost)}</span>
+        </button>
       </div>
-    );
+    </div>
+  );
 };
 
 // INTERFACE ĐỊNH NGHĨA CÁC PROPS
@@ -69,14 +66,13 @@ interface UpgradeStatsScreenProps {
   onDataUpdated: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
 }
 
-// <<< --- THÊM INTERFACE CHO DỮ LIỆU POPUP --- >>>
+// <<<<<<<< THÊM STATE CHO POPUP >>>>>>>>>>
 interface PopupData {
+  icon: JSX.Element;
   statName: string;
-  statIcon: JSX.Element;
-  oldLevel: number;
-  newLevel: number;
-  bonusValue: number;
-  colorClass: string;
+  oldValue: number;
+  newValue: number;
+  bonus: number;
 }
 
 // --- COMPONENT CHÍNH ---
@@ -91,9 +87,8 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
   const [message, setMessage] = useState('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [successPopupData, setSuccessPopupData] = useState<PopupData | null>(null); // <<<--- STATE MỚI CHO POPUP
+  const [popupData, setPopupData] = useState<PopupData | null>(null); // <<<--- STATE MỚI CHO POPUP
 
-  // ... (useEffect fetchData và startCoinCountAnimation giữ nguyên)
   useEffect(() => {
     const fetchData = async () => {
       const user = auth.currentUser;
@@ -137,7 +132,6 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
     }, 30);
   }, []);
 
-  // <<< --- CẬP NHẬT handleUpgrade --- >>>
   const handleUpgrade = useCallback(async (statId: string) => {
     const user = auth.currentUser;
     if (upgradingId || !user) return;
@@ -159,7 +153,23 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
     const oldGold = displayedGold;
     const oldStats = JSON.parse(JSON.stringify(stats));
 
-    // Cập nhật giao diện một cách lạc quan
+    // <<<<<<<< LOGIC HIỂN THỊ POPUP >>>>>>>>>>
+    const oldLevel = statToUpgrade.level;
+    const newLevel = oldLevel + 1;
+    const bonus = getBonusForLevel(newLevel, statToUpgrade.baseUpgradeBonus);
+    const oldValue = calculateTotalStatValue(oldLevel, statToUpgrade.baseUpgradeBonus);
+    const newValue = oldValue + bonus;
+
+    setPopupData({
+      icon: statToUpgrade.icon,
+      statName: statToUpgrade.name,
+      oldValue,
+      newValue,
+      bonus,
+    });
+    setTimeout(() => setPopupData(null), 1200); // Popup sẽ tự ẩn sau 1.2 giây
+    // <<<<<<<< KẾT THÚC LOGIC POPUP >>>>>>>>>>
+
     const newGoldValue = oldGold - upgradeCost;
     startCoinCountAnimation(oldGold, newGoldValue);
     
@@ -175,29 +185,11 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
     };
 
     try {
-      // Gọi API
       const { newCoins } = await upgradeUserStats(user.uid, upgradeCost, newStatsForFirestore);
-      
-      // Đồng bộ lại state với server
       setInitialGold(newCoins);
       setDisplayedGold(newCoins);
       onDataUpdated(newCoins, newStatsForFirestore);
-      
-      // <<<--- HIỂN THỊ POPUP THÀNH CÔNG --- >>>
-      const bonusValue = getBonusForLevel(statToUpgrade.level + 1, statToUpgrade.baseUpgradeBonus);
-      setSuccessPopupData({
-        statName: statToUpgrade.name,
-        statIcon: statToUpgrade.icon,
-        oldLevel: statToUpgrade.level,
-        newLevel: statToUpgrade.level + 1,
-        bonusValue: bonusValue,
-        colorClass: statToUpgrade.color,
-      });
-      // Giả sử có hiệu ứng âm thanh
-      // playUpgradeSuccessSound();
-
       console.log('Nâng cấp đã được xác nhận và lưu trên server.');
-
     } catch (error) {
       console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
       setMessage('Nâng cấp thất bại, vui lòng thử lại!');
@@ -205,14 +197,12 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
       setStats(oldStats);
       setTimeout(() => setMessage(''), 3000);
     } finally {
-      // Dừng trạng thái loading sớm hơn để người dùng có thể nâng cấp tiếp
       setTimeout(() => {
         setUpgradingId(null);
-      }, 200); 
+      }, 200);
     }
   }, [upgradingId, stats, displayedGold, startCoinCountAnimation, onDataUpdated]);
 
-  // (Các hàm tính toán total... và return JSX giữ nguyên phần lớn)
   const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp')!.level, statConfig.hp.baseUpgradeBonus);
   const totalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk')!.level, statConfig.atk.baseUpgradeBonus);
   const totalDef = calculateTotalStatValue(stats.find(s => s.id === 'def')!.level, statConfig.def.baseUpgradeBonus);
@@ -228,25 +218,17 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
 
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
-      {/* <<< --- THÊM CÁC KEYFRAMES ANIMATION --- >>> */}
+      {/* <<<<<<<< RENDER POPUP >>>>>>>>>> */}
+      {popupData && <UpgradeSuccessPopup isVisible={!!popupData} {...popupData} />}
+
       <style>{`
-        @keyframes breathing-stone { 0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } } 
+        @keyframes breathing-stone { 
+            0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 
+            50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } 
+        } 
         .animate-breathing { animation: breathing-stone 4s ease-in-out infinite; }
-        @keyframes scale-in { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes scale-out { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.8); opacity: 0; } }
-        .animate-scale-in { animation: scale-in 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-        .animate-scale-out { animation: scale-out 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards; }
-        .text-shadow-cyan { text-shadow: 0 0 8px rgba(0, 246, 255, 0.5); }
-        .text-shadow-green { text-shadow: 0 0 10px rgba(74, 222, 128, 0.6); }
+        .text-shadow-green { text-shadow: 0 0 12px rgba(74, 222, 128, 0.8); }
       `}</style>
-      
-      {/* <<<--- RENDER POPUP TẠI ĐÂY --- >>> */}
-      {successPopupData && (
-        <UpgradeSuccessPopup
-          {...successPopupData}
-          onClose={() => setSuccessPopupData(null)}
-        />
-      )}
       
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
         <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
@@ -260,7 +242,6 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
 
       {message && (<div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">{message}</div>)}
 
-      {/* ... (Phần còn lại của JSX giữ nguyên) ... */}
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
           <div className="mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
             <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
@@ -284,7 +265,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
           </div>
           <div className="flex flex-row justify-center items-stretch gap-2 sm:gap-4">
             {stats.map(stat => (
-              <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} isProcessing={upgradingId === stat.id} isDisabled={upgradingId !== null && upgradingId !== stat.id} />
+              <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} isProcessing={upgradingId === stat.id} isDisabled={upgradingId !== null} />
             ))}
           </div>
         </div>
