@@ -16,7 +16,7 @@ import LuckyChestGame from './lucky-game.tsx';
 import { uiAssets, lottieAssets } from './game-assets.ts';
 import BossBattle from './boss.tsx';
 import Shop from './shop.tsx';
-import VocabularyChestScreen from './vocabulary-chest/voca-chest-ui.tsx';
+import VocabularyChestScreen from './home/vocabulary-chest/voca-chest-ui.tsx';
 import MinerChallenge from './bomb.tsx';
 import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
 import AchievementsScreen from './home/achievements/achievement-ui.tsx'; 
