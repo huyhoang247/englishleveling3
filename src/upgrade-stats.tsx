@@ -1,35 +1,18 @@
+// --- START OF FILE upgrade-stats.tsx (FULL CODE) ---
+
 import React, { useState, useEffect, useCallback } from 'react';
-import CoinDisplay from './ui/display/coin-display.tsx'; // Import the CoinDisplay component
-import { uiAssets } from './game-assets.ts'; // IMPORT TÀI NGUYÊN TẬP TRUNG
+import CoinDisplay from './ui/display/coin-display.tsx';
+import { uiAssets } from './game-assets.ts';
+import { auth } from './firebase.js'; 
+import { fetchOrCreateUserGameData, upgradeUserStats } from './gameDataService.ts';
 
 // --- ICONS ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
-
 const icons = {
-  coin: (
-    <img
-      src={uiAssets.statCoinIcon} // SỬ DỤNG TỪ ASSETS
-      alt="Gold Coin Icon"
-    />
-  ),
-  heart: (
-    <img
-      src={uiAssets.statHpIcon} // SỬ DỤNG TỪ ASSETS
-      alt="HP Icon"
-    />
-  ),
-  sword: (
-    <img
-      src={uiAssets.statAtkIcon} // SỬ DỤNG TỪ ASSETS
-      alt="ATK Icon"
-    />
-  ),
-  shield: (
-    <img
-      src={uiAssets.statDefIcon} // SỬ DỤNG TỪ ASSETS
-      alt="DEF Icon"
-    />
-  )
+  coin: ( <img src={uiAssets.statCoinIcon} alt="Gold Coin Icon" /> ),
+  heart: ( <img src={uiAssets.statHpIcon} alt="HP Icon" /> ),
+  sword: ( <img src={uiAssets.statAtkIcon} alt="ATK Icon" /> ),
+  shield: ( <img src={uiAssets.statDefIcon} alt="DEF Icon" /> )
 };
 
 // --- CONFIG VÀ LOGIC TÍNH TOÁN ---
@@ -38,60 +21,20 @@ export const statConfig = {
   atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500" },
   def: { name: 'DEF', icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500" },
 };
+export const calculateUpgradeCost = (level: number) => { const baseCost = 100; const tier = Math.floor(level / 10); return baseCost * Math.pow(2, tier); };
+export const getBonusForLevel = (level: number, baseBonus: number) => { if (level === 0) return 0; const tier = Math.floor((level - 1) / 10); return baseBonus * Math.pow(2, tier); };
+export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => { if (currentLevel === 0) return 0; let totalValue = 0; const fullTiers = Math.floor(currentLevel / 10); const remainingLevelsInCurrentTier = currentLevel % 10; for (let i = 0; i < fullTiers; i++) { const bonusInTier = baseBonus * Math.pow(2, i); totalValue += 10 * bonusInTier; } const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers); totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier; return totalValue; };
+const formatNumber = (num: number) => { if (num < 1000) return num.toString(); if (num < 1000000) { const thousands = num / 1000; return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`; } if (num < 1000000000) { const millions = num / 1000000; return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`; } const billions = num / 1000000000; return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`; };
 
-export const calculateUpgradeCost = (level: number) => {
-  const baseCost = 100;
-  const tier = Math.floor(level / 10);
-  return baseCost * Math.pow(2, tier);
-};
-
-export const getBonusForLevel = (level: number, baseBonus: number) => {
-  if (level === 0) return 0;
-  const tier = Math.floor((level - 1) / 10);
-  return baseBonus * Math.pow(2, tier);
-};
-
-export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => {
-  if (currentLevel === 0) return 0;
-  let totalValue = 0;
-  const fullTiers = Math.floor(currentLevel / 10);
-  const remainingLevelsInCurrentTier = currentLevel % 10;
-  for (let i = 0; i < fullTiers; i++) {
-    const bonusInTier = baseBonus * Math.pow(2, i);
-    totalValue += 10 * bonusInTier;
-  }
-  const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers);
-  totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier;
-  return totalValue;
-};
-
-const formatNumber = (num: number) => {
-  if (num < 1000) return num.toString();
-  if (num < 1000000) {
-      const thousands = num / 1000;
-      return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`;
-  }
-  if (num < 1000000000) {
-      const millions = num / 1000000;
-      return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`;
-  }
-  const billions = num / 1000000000;
-  return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`;
-};
-
-
-// --- COMPONENT STAT CARD (Đã sửa logic hiển thị bonus) ---
+// --- COMPONENT STAT CARD ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: string) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
   const upgradeCost = calculateUpgradeCost(level);
   const bonusForNextLevel = getBonusForLevel(level + 1, baseUpgradeBonus);
 
   return (
-    <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px
-                    transition-all duration-300
-                    ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
+    <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
-
       <div className="relative bg-slate-900/95 rounded-[11px] p-4 h-full flex flex-col items-center justify-between gap-3 text-center text-white w-28 sm:w-32 md:w-36">
         <div className="w-10 h-10">{icon}</div>
         <div className="flex-grow flex flex-col items-center gap-1">
@@ -99,66 +42,76 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
           <p className="text-xl font-black text-shadow-cyan">+{formatNumber(bonusForNextLevel)}</p>
           <p className="text-xs text-slate-400">Level {level}</p>
         </div>
-        <button
-          onClick={() => onUpgrade(stat.id)}
-          disabled={isDisabled || isProcessing}
-          className="w-full bg-slate-800 border-2 border-cyan-400/50 rounded-lg py-2 px-1 flex items-center justify-center gap-1 shadow-lg transition-all duration-200 active:scale-95
-                     hover:enabled:bg-slate-700 hover:enabled:border-cyan-400
-                     disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          <>
-            <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
-            <span className="text-base font-bold text-yellow-300">{formatNumber(upgradeCost)}</span>
-          </>
+        <button onClick={() => onUpgrade(stat.id)} disabled={isDisabled || isProcessing} className="w-full bg-slate-800 border-2 border-cyan-400/50 rounded-lg py-2 px-1 flex items-center justify-center gap-1 shadow-lg transition-all duration-200 active:scale-95 hover:enabled:bg-slate-700 hover:enabled:border-cyan-400 disabled:cursor-not-allowed disabled:opacity-70">
+          <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
+          <span className="text-base font-bold text-yellow-300">{formatNumber(upgradeCost)}</span>
         </button>
       </div>
     </div>
   );
 };
 
+// Loading Component
+const LoadingScreen = () => (
+  <div className="absolute inset-0 bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center justify-center text-white font-lilita">
+    <div className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-purple-400"></div>
+    <p className="mt-5 text-lg font-medium">Đang tải dữ liệu...</p>
+  </div>
+);
+
 // INTERFACE ĐỊNH NGHĨA CÁC PROPS
 interface UpgradeStatsScreenProps {
   onClose: () => void;
-  initialGold: number;
-  initialStats: { hp: number; atk: number; def: number; };
-  onConfirmUpgrade: (cost: number, newStats: { hp: number; atk: number; def: number; }) => Promise<void>;
+  onDataUpdated: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
 }
 
-
 // --- COMPONENT CHÍNH ---
-export default function UpgradeStatsScreen({ onClose, initialGold, initialStats, onConfirmUpgrade }: UpgradeStatsScreenProps) {
-  const [displayedGold, setDisplayedGold] = useState(initialGold);
+export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeStatsScreenProps) {
+  const [initialGold, setInitialGold] = useState(0);
+  const [displayedGold, setDisplayedGold] = useState(0);
   const [stats, setStats] = useState([
-    { id: 'hp', level: initialStats.hp || 0, ...statConfig.hp },
-    { id: 'atk', level: initialStats.atk || 0, ...statConfig.atk },
-    { id: 'def', level: initialStats.def || 0, ...statConfig.def },
+    { id: 'hp', level: 0, ...statConfig.hp },
+    { id: 'atk', level: 0, ...statConfig.atk },
+    { id: 'def', level: 0, ...statConfig.def },
   ]);
   const [message, setMessage] = useState('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setDisplayedGold(initialGold);
-    setStats([
-        { id: 'hp', level: initialStats.hp || 0, ...statConfig.hp },
-        { id: 'atk', level: initialStats.atk || 0, ...statConfig.atk },
-        { id: 'def', level: initialStats.def || 0, ...statConfig.def },
-    ]);
-  }, [initialGold, initialStats]);
-
+    const fetchData = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        setMessage("Lỗi: Người dùng chưa đăng nhập.");
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const gameData = await fetchOrCreateUserGameData(user.uid);
+        setInitialGold(gameData.coins);
+        setDisplayedGold(gameData.coins);
+        setStats([
+          { id: 'hp', level: gameData.stats.hp || 0, ...statConfig.hp },
+          { id: 'atk', level: gameData.stats.atk || 0, ...statConfig.atk },
+          { id: 'def', level: gameData.stats.def || 0, ...statConfig.def },
+        ]);
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu người dùng:", error);
+        setMessage("Không thể tải dữ liệu.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
     const isCountingUp = endValue > startValue;
     const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
     let current = startValue;
-
     const interval = setInterval(() => {
-      if (isCountingUp) {
-        current += step;
-      } else {
-        current -= step;
-      }
-
+      if (isCountingUp) { current += step; } else { current -= step; }
       if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
         setDisplayedGold(endValue);
         clearInterval(interval);
@@ -168,10 +121,9 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
     }, 30);
   }, []);
 
-
-  // HÀM NÂNG CẤP ĐƯỢC TỐI ƯU VỚI useCallback ĐỂ TRÁNH RENDER LẠI KHÔNG CẦN THIẾT
   const handleUpgrade = useCallback(async (statId: string) => {
-    if (upgradingId) return;
+    const user = auth.currentUser;
+    if (upgradingId || !user) return;
 
     const statToUpgrade = stats.find(s => s.id === statId);
     if (!statToUpgrade) return;
@@ -205,7 +157,10 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
     };
 
     try {
-      await onConfirmUpgrade(upgradeCost, newStatsForFirestore);
+      const { newCoins } = await upgradeUserStats(user.uid, upgradeCost, newStatsForFirestore);
+      setInitialGold(newCoins);
+      setDisplayedGold(newCoins);
+      onDataUpdated(newCoins, newStatsForFirestore);
       console.log('Nâng cấp đã được xác nhận và lưu trên server.');
     } catch (error) {
       console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
@@ -218,36 +173,24 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
         setUpgradingId(null);
       }, 200);
     }
-  }, [upgradingId, stats, displayedGold, startCoinCountAnimation, onConfirmUpgrade]);
-
+  }, [upgradingId, stats, displayedGold, startCoinCountAnimation, onDataUpdated]);
 
   const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp')!.level, statConfig.hp.baseUpgradeBonus);
   const totalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk')!.level, statConfig.atk.baseUpgradeBonus);
   const totalDef = calculateTotalStatValue(stats.find(s => s.id === 'def')!.level, statConfig.def.baseUpgradeBonus);
-
   const totalLevels = stats.reduce((sum, stat) => sum + stat.level, 0);
   const maxProgress = 50;
   const prestigeLevel = Math.floor(totalLevels / maxProgress);
   const currentProgress = totalLevels % maxProgress;
   const progressPercent = (currentProgress / maxProgress) * 100;
 
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
-      <style>{`
-        @keyframes breathing-stone {
-          0%, 100% {
-            transform: scale(1) translateY(0);
-            filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1));
-          }
-          50% {
-            transform: scale(1.03) translateY(-6px);
-            filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18));
-          }
-        }
-        .animate-breathing {
-          animation: breathing-stone 4s ease-in-out infinite;
-        }
-      `}</style>
+      <style>{`@keyframes breathing-stone { 0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } } .animate-breathing { animation: breathing-stone 4s ease-in-out infinite; }`}</style>
       
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
         <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
@@ -259,23 +202,17 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
         </div>
       </header>
 
-      {message && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">
-          {message}
-        </div>
-      )}
+      {message && (<div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">{message}</div>)}
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
           <div className="mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
             <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
           </div>
-
           <div className="w-full max-w-xs bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center">
             <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.heart}</div> <span className="text-lg font-bold">{formatNumber(totalHp)}</span> </div>
             <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.sword}</div> <span className="text-lg font-bold">{formatNumber(totalAtk)}</span> </div>
             <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.shield}</div> <span className="text-lg font-bold">{formatNumber(totalDef)}</span> </div>
           </div>
-
           <div className="w-full px-2 mb-8">
             <div className="flex justify-between items-baseline mb-2 px-1">
               <span className="text-md font-bold text-slate-400 tracking-wide text-shadow-sm">Stage {prestigeLevel + 1}</span>
@@ -288,19 +225,13 @@ export default function UpgradeStatsScreen({ onClose, initialGold, initialStats,
                 </div>
             </div>
           </div>
-
           <div className="flex flex-row justify-center items-stretch gap-3 sm:gap-4">
             {stats.map(stat => (
-              <StatCard 
-                key={stat.id} 
-                stat={stat} 
-                onUpgrade={handleUpgrade} 
-                isProcessing={upgradingId === stat.id} 
-                isDisabled={upgradingId !== null}
-              />
+              <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} isProcessing={upgradingId === stat.id} isDisabled={upgradingId !== null} />
             ))}
           </div>
         </div>
     </div>
   );
 }
+// --- END OF FILE upgrade-stats.tsx ---
