@@ -1,5 +1,3 @@
-// src/screens/upgrade-stats.tsx
-
 import React, { useState, useEffect, useCallback } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import { uiAssets } from './game-assets.ts';
@@ -28,14 +26,14 @@ export const getBonusForLevel = (level: number, baseBonus: number) => { if (leve
 export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => { if (currentLevel === 0) return 0; let totalValue = 0; const fullTiers = Math.floor(currentLevel / 10); const remainingLevelsInCurrentTier = currentLevel % 10; for (let i = 0; i < fullTiers; i++) { const bonusInTier = baseBonus * Math.pow(2, i); totalValue += 10 * bonusInTier; } const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers); totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier; return totalValue; };
 const formatNumber = (num: number) => { if (num < 1000) return num.toString(); if (num < 1000000) { const thousands = num / 1000; return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`; } if (num < 1000000000) { const millions = num / 1000000; return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`; } const billions = num / 1000000000; return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`; };
 
-// --- COMPONENT STAT CARD ---
+// --- COMPONENT STAT CARD (ĐÃ ĐƯỢC DỌN DẸP, KHÔNG CÒN LOGIC TOAST) ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: string) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, baseUpgradeBonus, color } = stat;
   const upgradeCost = calculateUpgradeCost(level);
   const bonusForNextLevel = getBonusForLevel(level + 1, baseUpgradeBonus);
 
   return (
-    <div className={`group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
+    <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
       
       <div className="relative bg-slate-900/95 rounded-[11px] h-full flex flex-col items-center justify-between text-center text-white 
@@ -66,8 +64,9 @@ interface UpgradeStatsScreenProps {
   onDataUpdated: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
 }
 
-// INTERFACE CHO DỮ LIỆU TOAST
+// <<<--- THÊM INTERFACE CHO DỮ LIỆU TOAST
 interface ToastData {
+  isVisible: boolean;
   icon: JSX.Element;
   bonus: number;
   colorClasses: {
@@ -76,7 +75,7 @@ interface ToastData {
   };
 }
 
-// --- COMPONENT CHÍNH ---
+// --- COMPONENT CHÍNH (QUẢN LÝ TOAST TẬP TRUNG) ---
 export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeStatsScreenProps) {
   const [initialGold, setInitialGold] = useState(0);
   const [displayedGold, setDisplayedGold] = useState(0);
@@ -88,6 +87,8 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
   const [message, setMessage] = useState('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // <<<--- THÊM STATE ĐỂ QUẢN LÝ TOAST
   const [toastData, setToastData] = useState<ToastData | null>(null);
 
   useEffect(() => {
@@ -150,21 +151,30 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
 
     setUpgradingId(statId);
     setMessage('');
-    
-    const bonusForThisLevel = getBonusForLevel(statToUpgrade.level + 1, statToUpgrade.baseUpgradeBonus);
+
+    // <<<--- LOGIC KÍCH HOẠT TOAST TẠI ĐÂY
+    const bonusGained = getBonusForLevel(statToUpgrade.level + 1, statToUpgrade.baseUpgradeBonus);
     setToastData({
-        icon: statToUpgrade.icon,
-        bonus: bonusForThisLevel,
-        colorClasses: statToUpgrade.toastColors,
+      isVisible: true,
+      icon: statToUpgrade.icon,
+      bonus: bonusGained,
+      colorClasses: statToUpgrade.toastColors,
     });
-    setTimeout(() => setToastData(null), 1500);
+    // Tự động ẩn toast sau khi animation kết thúc
+    setTimeout(() => {
+      setToastData(null);
+    }, 1500);
+    // --- KẾT THÚC LOGIC TOAST ---
 
     const oldGold = displayedGold;
     const oldStats = JSON.parse(JSON.stringify(stats));
+
     const newGoldValue = oldGold - upgradeCost;
     startCoinCountAnimation(oldGold, newGoldValue);
     
-    const newStatsArray = stats.map(s => s.id === statId ? { ...s, level: s.level + 1 } : s);
+    const newStatsArray = stats.map(s =>
+      s.id === statId ? { ...s, level: s.level + 1 } : s
+    );
     setStats(newStatsArray);
 
     const newStatsForFirestore = {
@@ -178,6 +188,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
       setInitialGold(newCoins);
       setDisplayedGold(newCoins);
       onDataUpdated(newCoins, newStatsForFirestore);
+      console.log('Nâng cấp đã được xác nhận và lưu trên server.');
     } catch (error) {
       console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
       setMessage('Nâng cấp thất bại, vui lòng thử lại!');
@@ -185,7 +196,9 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
       setStats(oldStats);
       setTimeout(() => setMessage(''), 3000);
     } finally {
-      setTimeout(() => setUpgradingId(null), 300); 
+      setTimeout(() => {
+        setUpgradingId(null);
+      }, 300); 
     }
   }, [upgradingId, stats, displayedGold, startCoinCountAnimation, onDataUpdated]);
 
@@ -219,20 +232,22 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
       {message && (<div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">{message}</div>)}
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
-          
-          {/* <<<--- THAY ĐỔI CHÍNH Ở ĐÂY: SỬ DỤNG TOÁN TỬ BA NGÔI ĐỂ AN TOÀN HƠN ---*/}
-          {toastData ? (
+          {/* <<<--- THÊM 'relative' VÀO ĐÂY ĐỂ LÀM NEO CHO TOAST */}
+          <div className="relative mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
+            
+            {/* <<<--- ĐẶT TOAST VÀO ĐÚNG VỊ TRÍ TRUNG TÂM */}
+            {toastData && (
               <StatUpgradeToast
-                  isVisible={true}
-                  icon={toastData.icon}
-                  bonus={toastData.bonus}
-                  colorClasses={toastData.colorClasses}
+                isVisible={toastData.isVisible}
+                icon={toastData.icon}
+                bonus={toastData.bonus}
+                colorClasses={toastData.colorClasses}
               />
-          ) : null}
+            )}
 
-          <div className="mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
             <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
           </div>
+
           <div className="w-full max-w-xs bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center">
             <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.heart}</div> <span className="text-lg font-bold">{formatNumber(totalHp)}</span> </div>
             <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.sword}</div> <span className="text-lg font-bold">{formatNumber(totalAtk)}</span> </div>
