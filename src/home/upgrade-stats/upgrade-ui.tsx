@@ -4,7 +4,7 @@ import React from 'react';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets } from '../../game-assets.ts';
 import UpgradeStatsSkeleton from './upgrade-loading.tsx';
-import StatUpgradeToast from './StatUpgradeToast.tsx'; 
+import StatUpgradeToast from './upgrade-toast.tsx'; 
 // --- IMPORT CONTEXT VÀ PROVIDER ---
 import { UpgradeStatsProvider, useUpgradeStats } from './upgrade-context.tsx';
 
