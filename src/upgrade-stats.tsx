@@ -1,5 +1,8 @@
+// --- START OF FILE upgrade-stats.tsx ---
+
 import React, { useState, useEffect, useCallback, ReactNode } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
+import { useAnimateValue } from './ui/useAnimateValue.ts'; // <<<--- IMPORT HOOK MỚI
 import { uiAssets } from './game-assets.ts';
 import { auth } from './firebase.js'; 
 import { fetchOrCreateUserGameData, upgradeUserStats } from './gameDataService.ts';
@@ -77,8 +80,10 @@ interface ToastData {
 
 // --- COMPONENT CHÍNH (QUẢN LÝ TOAST TẬP TRUNG) ---
 export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeStatsScreenProps) {
-  const [initialGold, setInitialGold] = useState(0);
-  const [displayedGold, setDisplayedGold] = useState(0);
+  // <<<--- THAY ĐỔI CÁCH QUẢN LÝ STATE VÀNG
+  const [targetGold, setTargetGold] = useState(0); // Lưu giá trị vàng thực tế
+  const animatedGold = useAnimateValue(targetGold, 400); // Giá trị vàng hiển thị trên UI với hiệu ứng
+  
   const [stats, setStats] = useState([
     { id: 'hp', level: 0, ...statConfig.hp },
     { id: 'atk', level: 0, ...statConfig.atk },
@@ -101,8 +106,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
       }
       try {
         const gameData = await fetchOrCreateUserGameData(user.uid);
-        setInitialGold(gameData.coins);
-        setDisplayedGold(gameData.coins);
+        setTargetGold(gameData.coins); // <<<--- Set giá trị vàng ban đầu
         setStats([
           { id: 'hp', level: gameData.stats.hp || 0, ...statConfig.hp },
           { id: 'atk', level: gameData.stats.atk || 0, ...statConfig.atk },
@@ -118,21 +122,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
     fetchData();
   }, []);
 
-  const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
-    if (startValue === endValue) return;
-    const isCountingUp = endValue > startValue;
-    const step = Math.ceil(Math.abs(endValue - startValue) / 30) || 1;
-    let current = startValue;
-    const interval = setInterval(() => {
-      if (isCountingUp) { current += step; } else { current -= step; }
-      if ((isCountingUp && current >= endValue) || (!isCountingUp && current <= endValue)) {
-        setDisplayedGold(endValue);
-        clearInterval(interval);
-      } else {
-        setDisplayedGold(current);
-      }
-    }, 30);
-  }, []);
+  // <<<--- XÓA BỎ HÀM startCoinCountAnimation vì đã có useAnimateValue lo
 
   const handleUpgrade = useCallback(async (statId: string) => {
     const user = auth.currentUser;
@@ -143,7 +133,8 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
 
     const upgradeCost = calculateUpgradeCost(statToUpgrade.level);
 
-    if (displayedGold < upgradeCost) {
+    // <<<--- KIỂM TRA BẰNG targetGold
+    if (targetGold < upgradeCost) {
       setMessage(
         <div className="flex items-center justify-center gap-1.5">
             <span>Not enough</span>
@@ -157,7 +148,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
     setUpgradingId(statId);
     setMessage('');
 
-    // <<<--- LOGIC KÍCH HOẠT TOAST TẠI ĐÂY
+    // --- LOGIC KÍCH HOẠT TOAST TẠI ĐÂY ---
     const bonusGained = getBonusForLevel(statToUpgrade.level + 1, statToUpgrade.baseUpgradeBonus);
     setToastData({
       isVisible: true,
@@ -171,11 +162,11 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
     }, 1500);
     // --- KẾT THÚC LOGIC TOAST ---
 
-    const oldGold = displayedGold;
+    const oldGold = targetGold; // Lưu lại giá trị vàng cũ để rollback
     const oldStats = JSON.parse(JSON.stringify(stats));
 
-    const newGoldValue = oldGold - upgradeCost;
-    startCoinCountAnimation(oldGold, newGoldValue);
+    // <<<--- CẬP NHẬT UI LẠC QUAN -> KÍCH HOẠT ANIMATION
+    setTargetGold(prev => prev - upgradeCost);
     
     const newStatsArray = stats.map(s =>
       s.id === statId ? { ...s, level: s.level + 1 } : s
@@ -190,14 +181,13 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
 
     try {
       const { newCoins } = await upgradeUserStats(user.uid, upgradeCost, newStatsForFirestore);
-      setInitialGold(newCoins);
-      setDisplayedGold(newCoins);
+      setTargetGold(newCoins); // <<<--- Đồng bộ lại với giá trị chính xác từ server
       onDataUpdated(newCoins, newStatsForFirestore);
       console.log('Nâng cấp đã được xác nhận và lưu trên server.');
     } catch (error) {
       console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
       setMessage('Nâng cấp thất bại, vui lòng thử lại!');
-      startCoinCountAnimation(newGoldValue, oldGold);
+      setTargetGold(oldGold); // <<<--- Rollback -> trigger animation quay về
       setStats(oldStats);
       setTimeout(() => setMessage(''), 3000);
     } finally {
@@ -205,7 +195,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
         setUpgradingId(null);
       }, 300); 
     }
-  }, [upgradingId, stats, displayedGold, startCoinCountAnimation, onDataUpdated]);
+  }, [upgradingId, stats, targetGold, onDataUpdated]);
 
   const totalHp = calculateTotalStatValue(stats.find(s => s.id === 'hp')!.level, statConfig.hp.baseUpgradeBonus);
   const totalAtk = calculateTotalStatValue(stats.find(s => s.id === 'atk')!.level, statConfig.atk.baseUpgradeBonus);
@@ -230,17 +220,18 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
           <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
         </button>
         <div className="font-sans">
-            <CoinDisplay displayedCoins={displayedGold} isStatsFullscreen={false} />
+            {/* <<<--- SỬ DỤNG GIÁ TRỊ VÀNG ĐÃ CÓ HIỆU ỨNG */}
+            <CoinDisplay displayedCoins={animatedGold} isStatsFullscreen={false} />
         </div>
       </header>
 
       {message && (<div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">{message}</div>)}
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
-          {/* <<<--- THÊM 'relative' VÀO ĐÂY ĐỂ LÀM NEO CHO TOAST */}
+          {/* THÊM 'relative' VÀO ĐÂY ĐỂ LÀM NEO CHO TOAST */}
           <div className="relative mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
             
-            {/* <<<--- ĐẶT TOAST VÀO ĐÚNG VỊ TRÍ TRUNG TÂM */}
+            {/* ĐẶT TOAST VÀO ĐÚNG VỊ TRÍ TRUNG TÂM */}
             {toastData && (
               <StatUpgradeToast
                 isVisible={toastData.isVisible}
