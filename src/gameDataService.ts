@@ -8,7 +8,8 @@ import {
 
 // Các interface này nên được định nghĩa ở một nơi tập trung (ví dụ: types.ts) và import vào
 // Tuy nhiên, để file này tự chứa, tôi sẽ định nghĩa chúng ở đây.
-export interface OwnedSkill { id: string; skillId: string; level: number; }
+export type Rarity = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
+export interface OwnedSkill { id: string; skillId: string; level: number; rarity: Rarity; }
 export interface OwnedItem { id: string; itemId: string; stats: { hp: number; atk: number; def: number; }; }
 export interface EquippedItems { weapon: OwnedItem | null; armor: OwnedItem | null; accessory: OwnedItem | null; }
 
@@ -49,6 +50,12 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
 
   if (docSnap.exists()) {
     const data = docSnap.data();
+    // Đảm bảo dữ liệu skills có cấu trúc đúng
+    const skillsData = data.skills || { owned: [], equipped: [null, null, null] };
+    if (!Array.isArray(skillsData.equipped) || skillsData.equipped.length !== 3) {
+      skillsData.equipped = [null, null, null];
+    }
+
     return {
       coins: data.coins || 0,
       gems: data.gems || 0,
@@ -58,7 +65,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       stats: data.stats || { hp: 0, atk: 0, def: 0 },
       bossBattleHighestFloor: data.bossBattleHighestFloor || 0,
       ancientBooks: data.ancientBooks || 0,
-      skills: data.skills || { owned: [], equipped: [null, null, null] },
+      skills: skillsData,
       totalVocabCollected: data.totalVocabCollected || 0,
       cardCapacity: data.cardCapacity || 100,
       equipment: data.equipment || { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } },
@@ -83,16 +90,28 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
 
 // +++ START: HÀM MỚI ĐƯỢC THÊM VÀO +++
 /**
+ * Lấy dữ liệu cần thiết cho màn hình Kỹ năng.
+ * @param userId - ID của người dùng.
+ * @returns Dữ liệu cần thiết cho màn hình kỹ năng.
+ */
+export const fetchSkillScreenData = async (userId: string) => {
+  if (!userId) throw new Error("User ID is required.");
+  const gameData = await fetchOrCreateUserGameData(userId);
+  return {
+    coins: gameData.coins,
+    ancientBooks: gameData.ancientBooks,
+    skills: gameData.skills, // Gồm { owned, equipped }
+  };
+};
+
+/**
  * Lấy dữ liệu cần thiết cho màn hình Lật Thẻ Từ Vựng.
  * @param userId - ID của người dùng.
  * @returns {Promise<{coins: number, gems: number, totalVocab: number, capacity: number}>} Dữ liệu cần thiết.
  */
 export const fetchVocabularyScreenData = async (userId: string) => {
   if (!userId) throw new Error("User ID is required.");
-  
-  // Chúng ta có thể dùng lại hàm fetchOrCreateUserGameData để đảm bảo người dùng mới cũng có dữ liệu
   const gameData = await fetchOrCreateUserGameData(userId);
-  
   return {
     coins: gameData.coins,
     gems: gameData.gems,
@@ -311,7 +330,7 @@ export const processVocabularyChestOpening = async (
 };
 
 // ========================================================================
-// === HÀM BỊ THIẾU ĐÃ ĐƯỢC THÊM LẠI =======================================
+// === HÀM BỊ THIẾU ĐÃ ĐƯỢỢC THÊM LẠI =======================================
 // ========================================================================
 
 /**
@@ -402,3 +421,4 @@ export const updateAchievementData = async (
     throw error;
   }
 };
+// --- END OF FILE gameDataService.ts ---
