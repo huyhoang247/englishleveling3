@@ -116,7 +116,11 @@ export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsPr
     const upgradeCost = calculateUpgradeCost(statToUpgrade.level);
 
     if (targetGold < upgradeCost) {
-      setMessage(`Không đủ vàng!`);
+      // ==========================================================
+      // === THAY ĐỔI Ở ĐÂY: Đồng bộ chuỗi message với bên view ===
+      // Dòng cũ: setMessage(`Không đủ vàng!`);
+      setMessage('ko đủ vàng'); 
+      // ==========================================================
       setTimeout(() => setMessage(''), 2000);
       return;
     }
