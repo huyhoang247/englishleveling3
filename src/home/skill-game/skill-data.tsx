@@ -1,7 +1,7 @@
 // --- START OF FILE skill-data.tsx ---
 
 import React from 'react';
-import { skillAssets } from './game-assets.ts'; // Import tài nguyên tập trung
+import { skillAssets } from '../../game-assets.ts'; // Import tài nguyên tập trung
 
 // --- START: CÁC ICON CHO KỸ NĂNG ---
 // Các component Icon này giờ sử dụng URL từ skillAssets
