@@ -22,7 +22,7 @@ import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './home/
 import AchievementsScreen from './home/achievements/achievement-ui.tsx'; 
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
-import SkillScreen from './skill.tsx';
+import SkillScreen from './home/skill-game/skill-ui.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
 import RateLimitToast from './thong-bao.tsx';
