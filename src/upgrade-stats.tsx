@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, ReactNode } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import { uiAssets } from './game-assets.ts';
 import { auth } from './firebase.js'; 
@@ -84,7 +84,7 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
     { id: 'atk', level: 0, ...statConfig.atk },
     { id: 'def', level: 0, ...statConfig.def },
   ]);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<ReactNode>('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -144,7 +144,12 @@ export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeSt
     const upgradeCost = calculateUpgradeCost(statToUpgrade.level);
 
     if (displayedGold < upgradeCost) {
-      setMessage('Không đủ vàng!');
+      setMessage(
+        <div className="flex items-center justify-center gap-1.5">
+            <span>Not enough</span>
+            <div className="w-5 h-5">{icons.coin}</div>
+        </div>
+      );
       setTimeout(() => setMessage(''), 2000);
       return;
     }
