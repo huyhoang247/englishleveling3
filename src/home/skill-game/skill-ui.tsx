@@ -1,3 +1,4 @@
+// --- START OF FILE skill-ui.tsx.txt ---
 
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { SkillProvider, useSkillContext, MergeGroup } from './skill-context.tsx'; // Import context
@@ -285,6 +286,28 @@ function SkillScreenContent() {
         handleCraftSkill, handleSelectSkill, handleOpenMergeModal, MAX_SKILLS_IN_STORAGE
     } = useSkillContext();
 
+    // <<< THAY ĐỔI START >>>
+    // Sử dụng useMemo để chỉ render lại danh sách skill khi dữ liệu `unequippedSkillsSorted` thực sự thay đổi.
+    // Điều này ngăn việc re-render danh sách khi các state khác như `mergeToast`, `message`, etc. thay đổi.
+    const memoizedSkillList = useMemo(() => {
+        if (unequippedSkillsSorted.length > 0) {
+            return unequippedSkillsSorted.map(ownedSkill => (
+                <SkillCard
+                    key={ownedSkill.id}
+                    ownedSkill={ownedSkill}
+                    isEquipped={false}
+                />
+            ));
+        }
+        return (
+            <div className="col-span-full flex items-center justify-center h-full text-slate-500">
+                <p>Kho chứa trống hoặc tất cả kỹ năng đã được trang bị.</p>
+            </div>
+        );
+    }, [unequippedSkillsSorted]); // Phụ thuộc duy nhất vào danh sách skill
+    // <<< THAY ĐỔI END >>>
+
+
     if (isLoading) {
         return (
             <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52]">
@@ -331,15 +354,10 @@ function SkillScreenContent() {
                             <button onClick={handleOpenMergeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto hide-scrollbar">
-                            {unequippedSkillsSorted.length > 0 ? (
-                                unequippedSkillsSorted.map(ownedSkill => (
-                                    <SkillCard
-                                        key={ownedSkill.id}
-                                        ownedSkill={ownedSkill}
-                                        isEquipped={false}
-                                    />
-                                ))
-                            ) : (<div className="col-span-full flex items-center justify-center h-full text-slate-500"><p>Kho chứa trống hoặc tất cả kỹ năng đã được trang bị.</p></div>)}
+                           {/* <<< THAY ĐỔI START >>> */}
+                           {/* Thay vì map trực tiếp ở đây, chúng ta sử dụng biến đã được memoize */}
+                           {memoizedSkillList}
+                           {/* <<< THAY ĐỔI END >>> */}
                         </div>
                     </section>
                 </main>
@@ -362,5 +380,3 @@ export default function SkillScreen({ onClose, userId }: SkillScreenProps) {
         </SkillProvider>
     );
 }
-
-// --- END OF FILE skill.tsx ---
