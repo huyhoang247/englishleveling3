@@ -1,4 +1,4 @@
-// src/features/upgrade/upgrade-context.tsx
+// --- START OF FILE upgrade-stats-context.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
@@ -9,7 +9,7 @@ import { fetchOrCreateUserGameData, upgradeUserStats } from '../../gameDataServi
 import { statConfig, calculateUpgradeCost, getBonusForLevel, calculateTotalStatValue } from './upgrade-ui.tsx';
 
 // --- INTERFACES ---
-export interface Stat {
+interface Stat {
   id: 'hp' | 'atk' | 'def';
   level: number;
   name: string;
@@ -32,13 +32,6 @@ interface ToastData {
   };
 }
 
-// ==========================================================
-// === THAY ĐỔI 1: Định nghĩa kiểu dữ liệu cho message state ===
-// ==========================================================
-interface MessageState {
-  key: 'INSUFFICIENT_FUNDS' | 'UPGRADE_FAILED';
-}
-
 // --- ĐỊNH NGHĨA "HÌNH DẠNG" CỦA CONTEXT ---
 interface UpgradeStatsContextType {
   // State for UI
@@ -46,7 +39,7 @@ interface UpgradeStatsContextType {
   isUpgrading: boolean;
   animatedGold: number;
   stats: Stat[];
-  message: MessageState | null; // <-- THAY ĐỔI TỪ ReactNode
+  message: ReactNode;
   toastData: ToastData | null;
 
   // Calculated Values
@@ -80,10 +73,7 @@ export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsPr
     { id: 'def', level: 0, ...statConfig.def },
   ]);
 
-  // ==========================================================
-  // === THAY ĐỔI 2: Cập nhật state hook cho message        ===
-  // ==========================================================
-  const [message, setMessage] = useState<MessageState | null>(null);
+  const [message, setMessage] = useState<ReactNode>('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [toastData, setToastData] = useState<ToastData | null>(null);
@@ -93,8 +83,7 @@ export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsPr
     const fetchData = async () => {
       const user = auth.currentUser;
       if (!user) {
-        // Có thể tạo thêm key cho message này nếu muốn
-        // setMessage({ key: 'USER_NOT_LOGGED_IN' });
+        setMessage("Lỗi: Người dùng chưa đăng nhập.");
         setIsLoading(false);
         return;
       }
@@ -108,8 +97,7 @@ export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsPr
         ]);
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu người dùng:", error);
-        // Có thể tạo thêm key cho message này nếu muốn
-        // setMessage({ key: 'FETCH_DATA_FAILED' });
+        setMessage("Không thể tải dữ liệu.");
       } finally {
         setIsLoading(false);
       }
@@ -128,16 +116,17 @@ export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsPr
     const upgradeCost = calculateUpgradeCost(statToUpgrade.level);
 
     if (targetGold < upgradeCost) {
-      // =================================================================
-      // === THAY ĐỔI 3: Dùng key thay vì chuỗi văn bản cứng             ===
-      // =================================================================
-      setMessage({ key: 'INSUFFICIENT_FUNDS' });
-      setTimeout(() => setMessage(null), 2000);
+      // ==========================================================
+      // === THAY ĐỔI Ở ĐÂY: Đồng bộ chuỗi message với bên view ===
+      // Dòng cũ: setMessage(`Không đủ vàng!`);
+      setMessage('ko đủ vàng'); 
+      // ==========================================================
+      setTimeout(() => setMessage(''), 2000);
       return;
     }
 
     setUpgradingId(statId);
-    setMessage(null);
+    setMessage('');
 
     // Logic Toast
     const bonusGained = getBonusForLevel(statToUpgrade.level + 1, statToUpgrade.baseUpgradeBonus);
@@ -169,13 +158,10 @@ export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsPr
       onDataUpdated(newCoins, newStatsForFirestore);
     } catch (error) {
       console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
-      // =================================================================
-      // === THAY ĐỔI 4: Dùng key cho thông báo lỗi nâng cấp             ===
-      // =================================================================
-      setMessage({ key: 'UPGRADE_FAILED' });
+      setMessage('Nâng cấp thất bại, vui lòng thử lại!');
       setTargetGold(oldGold); // Rollback
       setStats(oldStats);
-      setTimeout(() => setMessage(null), 3000);
+      setTimeout(() => setMessage(''), 3000);
     } finally {
       setTimeout(() => setUpgradingId(null), 300);
     }
