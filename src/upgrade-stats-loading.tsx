@@ -3,19 +3,14 @@ import React from 'react';
 const UpgradeStatsSkeleton: React.FC = () => {
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
-      {/* --- Skeleton Header (ĐỒNG BỘ HOÀN TOÀN KÍCH THƯỚC) --- */}
+      {/* --- Skeleton Header (ĐÃ SỬA LỖI CHIỀU CAO) --- */}
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
-        {/* Placeholder cho nút Home, có cấu trúc padding và gap giống hệt nút thật */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 animate-pulse">
-          <div className="w-5 h-5 bg-slate-700 rounded"></div> {/* Placeholder cho icon */}
-          <div className="hidden sm:inline h-5 w-[88px] bg-slate-700 rounded-md"></div> {/* Placeholder cho chữ "Trang Chính" */}
-        </div>
+        {/* Placeholder cho nút Home. Dùng h-8 (32px) để khớp chính xác chiều cao của nút thật. */}
+        {/* w-11 (44px) cho mobile (chỉ icon) và sm:w-36 (144px) cho desktop (icon + text). */}
+        <div className="h-8 w-11 sm:w-36 rounded-lg bg-slate-800/80 animate-pulse"></div>
 
-        {/* Placeholder cho CoinDisplay, có cấu trúc tương tự để đảm bảo chiều cao đồng bộ */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 animate-pulse">
-            <div className="w-5 h-5 bg-slate-700 rounded-full"></div> {/* Placeholder cho icon coin */}
-            <div className="h-5 w-16 sm:w-20 bg-slate-700 rounded-md"></div> {/* Placeholder cho số vàng */}
-        </div>
+        {/* Placeholder cho CoinDisplay. Cũng dùng h-8 (32px) để đồng bộ chiều cao. */}
+        <div className="h-8 w-24 sm:w-28 rounded-lg bg-slate-800/80 animate-pulse"></div>
       </header>
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
