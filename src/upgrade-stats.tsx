@@ -97,7 +97,18 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
             </div>
         </header>
 
-        {message && (<div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce">{message}</div>)}
+        {message && (
+          <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce flex items-center gap-2">
+            {message === 'ko đủ vàng' ? (
+              <>
+                <span>Not enough</span>
+                <div className="w-5 h-5">{icons.coin}</div>
+              </>
+            ) : (
+              message
+            )}
+          </div>
+        )}
 
         <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
             <div className="relative mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
