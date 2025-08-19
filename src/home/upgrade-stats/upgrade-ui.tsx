@@ -1,4 +1,4 @@
-// src/components/UpgradeStats/upgrade-ui.tsx
+// --- START OF FILE upgrade-stats.tsx (đã refactor) ---
 
 import React from 'react';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
@@ -8,7 +8,7 @@ import StatUpgradeToast from './upgrade-toast.tsx';
 // --- IMPORT CONTEXT VÀ PROVIDER ---
 import { UpgradeStatsProvider, useUpgradeStats } from './upgrade-context.tsx';
 
-// --- ICONS ---
+// --- ICONS (giữ nguyên) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/2000/svg" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const icons = {
   coin: ( <img src={uiAssets.statCoinIcon} alt="Gold Coin Icon" /> ),
@@ -17,7 +17,8 @@ const icons = {
   sword: ( <img src={uiAssets.statAtkIcon} alt="ATK Icon" /> )
 };
 
-// --- CONFIG & LOGIC (có thể chuyển sang file utils riêng) ---
+// --- CONFIG & LOGIC (giữ nguyên hoặc chuyển sang file utils riêng) ---
+// Tạm thời giữ lại để context có thể import, lý tưởng nhất là chuyển sang file utils
 export const statConfig = {
   hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600", toastColors: { border: 'border-pink-500', text: 'text-pink-400' } },
   atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500", toastColors: { border: 'border-cyan-400', text: 'text-cyan-300' } },
@@ -28,7 +29,7 @@ export const getBonusForLevel = (level: number, baseBonus: number) => { if (leve
 export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => { if (currentLevel === 0) return 0; let totalValue = 0; const fullTiers = Math.floor(currentLevel / 10); const remainingLevelsInCurrentTier = currentLevel % 10; for (let i = 0; i < fullTiers; i++) { const bonusInTier = baseBonus * Math.pow(2, i); totalValue += 10 * bonusInTier; } const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers); totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier; return totalValue; };
 const formatNumber = (num: number) => { if (num < 1000) return num.toString(); if (num < 1000000) { const thousands = num / 1000; return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`; } if (num < 1000000000) { const millions = num / 1000000; return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`; } const billions = num / 1000000000; return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`; };
 
-// --- COMPONENT STAT CARD ---
+// --- COMPONENT STAT CARD (không đổi) ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: any) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, color } = stat;
   const upgradeCost = calculateUpgradeCost(level);
@@ -53,13 +54,16 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   );
 };
 
+// INTERFACE PROPS (không đổi)
 interface UpgradeStatsScreenProps {
   onClose: () => void;
   onDataUpdated: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
 }
 
 // --- COMPONENT HIỂN THỊ (VIEW) ---
+// Component này giờ đây chỉ nhận props và dữ liệu từ context để hiển thị
 function UpgradeStatsView({ onClose }: { onClose: () => void }) {
+  // Lấy toàn bộ state và actions từ context
   const {
     isLoading,
     isUpgrading,
@@ -79,44 +83,10 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
   if (isLoading) {
     return <UpgradeStatsSkeleton />;
   }
-  
-  const customAnimations = `
-    @keyframes breathing-stone { 
-      0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 
-      50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } 
-    } 
-    .animate-breathing { animation: breathing-stone 4s ease-in-out infinite; }
-
-    @keyframes shake-and-fade {
-      0% {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.9);
-      }
-      20% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-      25%, 35% { transform: translateX(-3px); }
-      30%, 40% { transform: translateX(3px); }
-      45% { transform: translateX(0); }
-      80% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(10px) scale(0.9);
-      }
-    }
-    .animate-shake-and-fade {
-      animation: shake-and-fade 2s ease-in-out forwards;
-    }
-  `;
 
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
-        <style>{customAnimations}</style>
-        
+        <style>{`@keyframes breathing-stone { 0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } } .animate-breathing { animation: breathing-stone 4s ease-in-out infinite; }`}</style>
         <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
             <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
                 <HomeIcon className="w-5 h-5 text-slate-300" />
@@ -127,22 +97,16 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
             </div>
         </header>
 
-        {message && message === 'ko đủ vàng' && (
-          <div 
-            className="fixed top-24 left-1/2 -translate-x-1/2 z-50 
-                       flex items-center gap-2 px-4 py-2 rounded-full font-bold
-                       bg-gradient-to-br from-red-800/90 to-red-950/90 backdrop-blur-sm
-                       border border-red-600/80 shadow-lg shadow-red-500/30
-                       animate-shake-and-fade"
-          >
-            <span>Not Enough</span>
-            <div className="w-5 h-5">{icons.coin}</div>
-          </div>
-        )}
-        
-        {message && typeof message === 'string' && message !== 'ko đủ vàng' && (
-          <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-yellow-600/90 border border-yellow-500 text-white py-2 px-6 rounded-lg shadow-lg z-50">
-            {message}
+        {message && (
+          <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce flex items-center gap-2">
+            {message === 'ko đủ vàng' ? (
+              <>
+                <span>Not enough</span>
+                <div className="w-5 h-5">{icons.coin}</div>
+              </>
+            ) : (
+              message
+            )}
           </div>
         )}
 
@@ -188,7 +152,9 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
   );
 }
 
+
 // --- COMPONENT CHÍNH (WRAPPER) ---
+// Component này là điểm truy cập, nó bao bọc View bằng Provider
 export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeStatsScreenProps) {
   return (
     <UpgradeStatsProvider onDataUpdated={onDataUpdated}>
