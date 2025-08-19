@@ -5,7 +5,7 @@ import VocabularyGame from './fill-in-the-blank/fill-blank-ui.tsx';
 import VocaMatchGame from './voca-match/voca-match-ui.tsx';
 import AnalysisDashboard from './analysis-dashboard/analysis-ui.tsx';
 import WordChainGame from './word-chain-game/word-chain-ui.tsx';
-import PracticeListLoadingSkeleton from './course-loading.tsx';
+import PracticeListLoadingSkeleton from './course-loading.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
 import { QuizAppProvider, useQuizApp } from './course-context.tsx';
@@ -264,8 +264,7 @@ const ReviewItem = memo(({ practiceNumber, previewLevel, isLocked, isCompleted, 
 });
 
 function PracticeList() {
-  // <<< THAY ĐỔI 1: Lấy `currentView` từ context để biết khi nào component này đang hiển thị
-  const { selectedType, user, currentView } = useQuizApp();
+  const { selectedType, user } = useQuizApp();
   const [progressData, setProgressData] = useState({});
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'main' | 'reviews'>('main');
@@ -275,31 +274,25 @@ function PracticeList() {
   const [claimedRewards, setClaimedRewards] = useState({});
   const MAX_PREVIEWS = 5;
 
-  // <<< THAY ĐỔI 2: Thêm `currentView` vào dependency array và thêm điều kiện kiểm tra
   useEffect(() => {
-    // Chỉ tải dữ liệu khi component `PracticeList` đang được hiển thị (`currentView === 'practices'`)
-    if (currentView === 'practices' && user && selectedType) {
-      const loadProgress = async () => {
-        setLoading(true);
-        try {
-          const { progressData: newProgressData, claimedRewards: newClaimedRewards } = await fetchPracticeListProgress(user.uid, selectedType as any);
-          setProgressData(newProgressData);
-          setClaimedRewards(newClaimedRewards);
-        } catch (error) { 
-          console.error("Lỗi khi tải tiến trình từ service:", error); 
-        } finally { 
-          setLoading(false); 
-        }
-      };
-      loadProgress();
-    }
-  }, [user, selectedType, currentView]); // <<< Thêm `currentView` vào đây
+    if (!user || !selectedType) { setLoading(false); return; }
+    const loadProgress = async () => {
+      setLoading(true);
+      try {
+        const { progressData: newProgressData, claimedRewards: newClaimedRewards } = await fetchPracticeListProgress(user.uid, selectedType as any);
+        setProgressData(newProgressData);
+        setClaimedRewards(newClaimedRewards);
+      } catch (error) { console.error("Lỗi khi tải tiến trình từ service:", error); } finally { setLoading(false); }
+    };
+    loadProgress();
+  }, [user, selectedType]);
   
   const practiceDetails = useMemo(() => ({ tracNghiem: { '1': { title: 'Practice 1', desc: ['Word Meaning'], color: 'indigo' }, '2': { title: 'Practice 2', desc: ['Gap Fill', 'EN-VI'], color: 'pink' }, '3': { title: 'Practice 3', desc: ['Gap Fill', 'EN'], color: 'teal' }, '4': { title: 'Practice 4', desc: ['Listening', 'Words'], color: 'orange' }, }, vocaMatch: { '1': { title: 'Practice 1', desc: ['Match Words'], color: 'green' }, }, dienTu: { '1': { title: 'Practice 1', desc: ['Type Word', 'Picture'], color: 'indigo' }, '2': { title: 'Practice 2', desc: ['Gap Fill', 'Hide 1'], color: 'pink' }, '3': { title: 'Practice 3', desc: ['Gap Fill', 'Hide 2'], color: 'teal' }, '4': { title: 'Practice 4', desc: ['Gap Fill', 'Hide 3'], color: 'orange' }, '5': { title: 'Practice 5', desc: ['Gap Fill', 'Hide 4'], color: 'purple' }, '6': { title: 'Practice 6', desc: ['Gap Fill', 'Hide 5'], color: 'yellow' }, '7': { title: 'Practice 7', desc: ['Gap Fill', 'Random Hide'], color: 'red' }, }, }), []);
   
   const handleReviewClick = useCallback((practiceNumber) => { setSelectedPracticeForReview(practiceNumber); setView('reviews'); }, []);
   const handleRewardsClick = useCallback((practiceNumber, practiceTitle) => { setSelectedPracticeForRewards({ number: practiceNumber, title: practiceTitle }); setIsRewardsPopupOpen(true); }, []);
 
+  // <<< THAY ĐỔI TẠI ĐÂY
   if (loading) {
     return <PracticeListLoadingSkeleton />;
   }
