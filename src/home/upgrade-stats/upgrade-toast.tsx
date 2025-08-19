@@ -57,13 +57,13 @@ const StatUpgradeToast: React.FC<StatUpgradeToastProps> = ({
         // Pointer-events-none để không cản trở việc click vào các nút khác
         // THÊM "-ml-2" ĐỂ TINH CHỈNH VỊ TRÍ SANG TRÁI MỘT CHÚT
         className={`absolute -top-4 left-1/2 -translate-x-1/2 -ml-12 z-50 pointer-events-none
-                    flex items-center justify-center gap-1.5 px-3 py-1.5
+                    flex items-center justify-center gap-1 px-2.5 py-1
                     rounded-full shadow-lg backdrop-blur-sm
                     bg-slate-900/80 border ${colorClasses.border}
                     animate-float-up`}
       >
-        <div className="w-5 h-5">{icon}</div>
-        <span className={`text-lg font-black ${colorClasses.text}`}>
+        <div className="w-4 h-4">{icon}</div>
+        <span className={`text-sm font-bold ${colorClasses.text}`}>
           +{formatBonus(bonus)}
         </span>
       </div>
