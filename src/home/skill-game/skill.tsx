@@ -1,6 +1,3 @@
-// --- START OF FILE skill.tsx (2).txt ---
-
-// --- START OF FILE skill.tsx ---
 
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { SkillProvider, useSkillContext, MergeGroup } from './skill-context.tsx'; // Import context
@@ -17,9 +14,9 @@ import {
     type OwnedSkill,
     type SkillBlueprint,
 } from './skill-data.tsx';
-import { uiAssets } from './game-assets.ts';
-import CoinDisplay from './ui/display/coin-display.tsx';
-import RateLimitToast from './thong-bao.tsx';
+import { uiAssets } from '../../game-assets.ts';
+import CoinDisplay from '../../ui/display/coin-display.tsx';
+import RateLimitToast from '../../thong-bao.tsx';
 // Xóa gameDataService imports vì đã chuyển sang context
 
 // --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
