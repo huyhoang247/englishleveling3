@@ -3,14 +3,15 @@ import React from 'react';
 const UpgradeStatsSkeleton: React.FC = () => {
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
-      {/* --- Skeleton Header (ĐÃ SỬA LỖI CHIỀU CAO) --- */}
+      {/* --- Skeleton Header (ĐỒNG BỘ CHIỀU CAO CUỐI CÙNG) --- */}
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
-        {/* Placeholder cho nút Home. Dùng h-8 (32px) để khớp chính xác chiều cao của nút thật. */}
-        {/* w-11 (44px) cho mobile (chỉ icon) và sm:w-36 (144px) cho desktop (icon + text). */}
-        <div className="h-8 w-11 sm:w-36 rounded-lg bg-slate-800/80 animate-pulse"></div>
-
-        {/* Placeholder cho CoinDisplay. Cũng dùng h-8 (32px) để đồng bộ chiều cao. */}
-        <div className="h-8 w-24 sm:w-28 rounded-lg bg-slate-800/80 animate-pulse"></div>
+        {/*
+          Sử dụng h-9 (36px).
+          Chiều cao của header thật được quyết định bởi phần tử cao nhất bên trong nó (thường là CoinDisplay).
+          Bằng cách đặt skeleton thành h-9, chúng ta đảm bảo chiều cao khớp 100%.
+        */}
+        <div className="h-9 w-11 sm:w-36 rounded-lg bg-slate-800/80 animate-pulse"></div>
+        <div className="h-9 w-24 sm:w-28 rounded-lg bg-slate-800/80 animate-pulse"></div>
       </header>
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
