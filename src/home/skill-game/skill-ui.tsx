@@ -1,4 +1,4 @@
-// --- START OF FILE skill-ui.tsx.txt ---
+// --- START OF FILE skill-ui.tsx ---
 
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { SkillProvider, useSkillContext, MergeGroup } from './skill-context.tsx'; // Import context
@@ -18,9 +18,8 @@ import {
 import { uiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import RateLimitToast from '../../thong-bao.tsx';
-// Xóa gameDataService imports vì đã chuyển sang context
 
-// --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
+// --- CÁC ICON GIAO DIỆN CHUNG ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}> <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l-2.72-2.72a1 1 0 010-1.414l4.243-4.243a1 1 0 011.414 0l2.72 2.72a4 4 0 011.343 2.863l3.155-1.262a1 1 0 011.23 1.23l-1.262 3.155a4 4 0 01-1.343 2.863l2.72 2.72a1 1 0 010 1.414l-4.243 4.243a1 1 0 01-1.414 0l-2.72-2.72a4 4 0 01-2.863-1.343L6.663 15.147a1 1 0 01-1.23-1.23z" /> <path d="M11.379 4.424a1 1 0 01-1.414 0L4.424 9.965a1 1 0 010 1.414l2.121 2.121a1 1 0 011.414 0l5.54-5.54a1 1 0 010-1.414l-2.121-2.121z" /> </svg>);
 
@@ -201,13 +200,11 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
     return ( <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={handleCloseCraftSuccessModal}></div> <div className="relative w-full max-w-sm"> <div className="absolute inset-0.5 animate-spin-slow-360"> <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(ownedSkill.rarity)} opacity-50 rounded-full blur-2xl`}></div> </div> <div className={`relative bg-gradient-to-b ${getRarityGradient(ownedSkill.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(ownedSkill.rarity)} text-center flex flex-col items-center gap-4`} style={shadowStyle}> <h2 className="text-2xl font-black tracking-widest uppercase text-white title-glow">Chế Tạo Thành Công</h2> <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}> <IconComponent className={`w-20 h-20 ${rarityTextColor}`} /> </div> <div className="flex flex-col"> <span className={`text-2xl font-bold ${rarityTextColor}`}>{skill.name}</span> <span className="font-semibold text-slate-300">{getRarityDisplayName(ownedSkill.rarity)}</span> </div> <p className="text-sm text-slate-400">{skill.description(1, ownedSkill.rarity)}</p> <button onClick={handleCloseCraftSuccessModal} className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"> Tuyệt vời! </button> </div> </div> </div> );
 });
 
-// --- MERGE MODAL --- (sử dụng context)
 const MergeModal = memo(() => {
     const { isMergeModalOpen, handleCloseMergeModal, ownedSkills, handleMergeSkills, isProcessing, equippedSkillIds } = useSkillContext();
 
     const mergeableGroups = useMemo<MergeGroup[]>(() => {
         if (!isMergeModalOpen) return [];
-        // Lấy logic từ context provider
         const unequippedSkills = ownedSkills.filter(s => !equippedSkillIds.includes(s.id));
         const groups: Record<string, OwnedSkill[]> = {};
         for (const skill of unequippedSkills) {
@@ -222,8 +219,10 @@ const MergeModal = memo(() => {
             const blueprint = ALL_SKILLS.find(s => s.id === firstSkill.skillId)!;
             const nextRarity = blueprint.nextRarity ? blueprint.nextRarity(firstSkill.rarity) : null;
             const sortedSkills = [...group].sort((a, b) => b.level - a.level);
-            // ... logic tính toán kết quả merge có thể chuyển vào context provider nếu phức tạp
-            return { skillId: firstSkill.skillId, rarity: firstSkill.rarity, skills: sortedSkills, blueprint, nextRarity /*, estimatedResult */ };
+            // This logic to calculate estimated result should ideally be in context or a helper function
+            // For now, it's simplified here. You might need to pass the calculation function from context.
+            const estimatedResult = { level: 1 }; // Placeholder
+            return { skillId: firstSkill.skillId, rarity: firstSkill.rarity, skills: sortedSkills, blueprint, nextRarity, estimatedResult };
           })
           .filter(group => group.nextRarity !== null)
           .sort((a,b) => a.blueprint.name.localeCompare(b.blueprint.name));
@@ -286,7 +285,6 @@ function SkillScreenContent() {
         handleCraftSkill, handleSelectSkill, handleOpenMergeModal, MAX_SKILLS_IN_STORAGE
     } = useSkillContext();
 
-    // <<< THAY ĐỔI START >>>
     // Sử dụng useMemo để chỉ render lại danh sách skill khi dữ liệu `unequippedSkillsSorted` thực sự thay đổi.
     // Điều này ngăn việc re-render danh sách khi các state khác như `mergeToast`, `message`, etc. thay đổi.
     const memoizedSkillList = useMemo(() => {
@@ -305,7 +303,6 @@ function SkillScreenContent() {
             </div>
         );
     }, [unequippedSkillsSorted]); // Phụ thuộc duy nhất vào danh sách skill
-    // <<< THAY ĐỔI END >>>
 
 
     if (isLoading) {
@@ -354,10 +351,8 @@ function SkillScreenContent() {
                             <button onClick={handleOpenMergeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto hide-scrollbar">
-                           {/* <<< THAY ĐỔI START >>> */}
                            {/* Thay vì map trực tiếp ở đây, chúng ta sử dụng biến đã được memoize */}
                            {memoizedSkillList}
-                           {/* <<< THAY ĐỔI END >>> */}
                         </div>
                     </section>
                 </main>
@@ -380,3 +375,5 @@ export default function SkillScreen({ onClose, userId }: SkillScreenProps) {
         </SkillProvider>
     );
 }
+
+// --- END OF FILE skill-ui.tsx ---
