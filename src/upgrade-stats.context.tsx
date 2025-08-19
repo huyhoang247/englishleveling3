@@ -1,7 +1,7 @@
 // --- START OF FILE upgrade-stats-context.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { useAnimateValue } from './ui/useAnimateValue';
+import { useAnimateValue } from './ui/useAnimateValue.ts';
 import { auth } from './firebase.js';
 import { fetchOrCreateUserGameData, upgradeUserStats } from './gameDataService.ts';
 
