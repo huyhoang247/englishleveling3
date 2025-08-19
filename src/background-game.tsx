@@ -1,6 +1,6 @@
 // --- START OF FILE background-game.tsx (FULL CODE) ---
 
-import React, { useState, useEffect, useRef, Component } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import GemDisplay from './ui/display/gem-display.tsx';
@@ -36,7 +36,6 @@ import {
   updateUserBossFloor,
   updateUserPickaxes,
   processMinerChallengeResult,
-  updateUserSkills,
   updateUserInventory,
   processShopPurchase
 } from './gameDataService.ts';
@@ -191,17 +190,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     console.log("Main game state updated from UpgradeStatsScreen.");
   };
 
-  const handleSkillsUpdate = async (updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
-      const userId = auth.currentUser?.uid;
-      if (!userId) { throw new Error("User not authenticated for skill update."); }
-      setIsSyncingData(true);
-      try {
-          const { newCoins, newBooks } = await updateUserSkills(userId, updates);
-          setCoins(newCoins); setAncientBooks(newBooks); setOwnedSkills(updates.newOwned); setEquippedSkillIds(updates.newEquippedIds);
-          console.log("Skill data and resources updated successfully via service.");
-      } catch (error) { console.error("Firestore transaction for skill update failed:", error); throw error; } finally { setIsSyncingData(false); }
-  };
-    
   const handleInventoryUpdate = async (updates: { newOwned: OwnedItem[]; newEquipped: EquippedItems; goldChange: number; piecesChange: number; }) => {
       const userId = auth.currentUser?.uid;
       if (!userId) { throw new Error("User not authenticated for inventory update."); }
@@ -230,20 +218,50 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       throw error;
     } finally { setIsSyncingData(false); }
   };
+    
+  const refreshUserData = useCallback(async () => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+    setIsLoadingUserData(true);
+    try {
+      const gameData = await fetchOrCreateUserGameData(userId);
+      setCoins(gameData.coins);
+      setDisplayedCoins(gameData.coins);
+      setGems(gameData.gems);
+      setMasteryCards(gameData.masteryCards);
+      setPickaxes(gameData.pickaxes);
+      setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor);
+      setUserStats(gameData.stats);
+      setBossBattleHighestFloor(gameData.bossBattleHighestFloor);
+      setAncientBooks(gameData.ancientBooks);
+      setOwnedSkills(gameData.skills.owned);
+      setEquippedSkillIds(gameData.skills.equipped);
+      setTotalVocabCollected(gameData.totalVocabCollected);
+      setCardCapacity(gameData.cardCapacity);
+      setEquipmentPieces(gameData.equipment.pieces);
+      setOwnedItems(gameData.equipment.owned);
+      setEquippedItems(gameData.equipment.equipped);
+    } catch (error) {
+      console.error("Error refreshing user data:", error);
+    } finally {
+      setIsLoadingUserData(false);
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setIsLoadingUserData(true);
         try {
-          const [gameData, jackpotData] = await Promise.all([ fetchOrCreateUserGameData(user.uid), fetchJackpotPool() ]);
-          setCoins(gameData.coins); setDisplayedCoins(gameData.coins); setGems(gameData.gems); setMasteryCards(gameData.masteryCards);
-          setPickaxes(gameData.pickaxes); setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor); setUserStats(gameData.stats);
-          setBossBattleHighestFloor(gameData.bossBattleHighestFloor); setAncientBooks(gameData.ancientBooks); setOwnedSkills(gameData.skills.owned);
-          setEquippedSkillIds(gameData.skills.equipped); setTotalVocabCollected(gameData.totalVocabCollected); setCardCapacity(gameData.cardCapacity);
-          setEquipmentPieces(gameData.equipment.pieces); setOwnedItems(gameData.equipment.owned); setEquippedItems(gameData.equipment.equipped);
-          setJackpotPool(jackpotData);
-        } catch (error) { console.error("Error fetching initial user/app data:", error); } finally { setIsLoadingUserData(false); }
+            const [_, jackpotData] = await Promise.all([
+                refreshUserData(),
+                fetchJackpotPool()
+            ]);
+            setJackpotPool(jackpotData);
+        } catch (error) { 
+            console.error("Error fetching initial user/app data:", error);
+            setIsLoadingUserData(false);
+        }
       } else {
         setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
@@ -253,7 +271,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [refreshUserData]);
 
   useEffect(() => {
       const handleVisibilityChange = () => { if (document.hidden) { setIsBackgroundPaused(true); } else { setIsBackgroundPaused(false); } };
@@ -299,6 +317,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const toggleSkillScreen = createToggleFunction(setIsSkillScreenOpen);
   const toggleEquipmentScreen = createToggleFunction(setIsEquipmentOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
+  
+  const handleSkillScreenClose = (dataUpdated: boolean) => {
+    toggleSkillScreen();
+    if (dataUpdated) {
+        console.log("Skill data changed. Refreshing main game data...");
+        refreshUserData();
+    }
+  };
+
   const handleSetToggleSidebar = (toggleFn: () => void) => { sidebarToggleRef.current = toggleFn; };
 
   const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen;
@@ -372,7 +399,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <ErrorBoundary>{isBaseBuildingOpen && auth.currentUser && (<BaseBuildingScreen onClose={toggleBaseBuilding} coins={coins} gems={gems} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(auth.currentUser!.uid, amount))} />)}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isSkillScreenOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isSkillScreenOpen && auth.currentUser && (<SkillScreen onClose={toggleSkillScreen} gold={coins} ancientBooks={ancientBooks} ownedSkills={ownedSkills} equippedSkillIds={equippedSkillIds} onSkillsUpdate={handleSkillsUpdate} />)}</ErrorBoundary>
+            <ErrorBoundary>{isSkillScreenOpen && auth.currentUser && (<SkillScreen onClose={handleSkillScreenClose} userId={auth.currentUser.uid} />)}</ErrorBoundary>
         </div>
         <div className="absolute inset-0 w-full h-full z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isEquipmentOpen && auth.currentUser && (<EquipmentScreen onClose={toggleEquipmentScreen} gold={coins} equipmentPieces={equipmentPieces} ownedItems={ownedItems} equippedItems={equippedItems} onInventoryUpdate={handleInventoryUpdate} />)}</ErrorBoundary>
