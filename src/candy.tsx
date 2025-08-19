@@ -22,6 +22,7 @@ export default function App() {
 
     // Kiểm tra cột có 4 kẹo giống nhau
     const checkForColumnOfFour = () => {
+        let changed = false;
         for (let i = 0; i <= 39; i++) {
             const columnOfFour = [i, i + width, i + width * 2, i + width * 3];
             const decidedColor = currentColorArrangement[i];
@@ -30,14 +31,15 @@ export default function App() {
             if (columnOfFour.every(square => currentColorArrangement[square] === decidedColor && !isBlank)) {
                 setScoreDisplay((score) => score + 4);
                 columnOfFour.forEach(square => currentColorArrangement[square] = ' ');
-                return true;
+                changed = true;
             }
         }
-        return false;
+        return changed;
     }
 
     // Kiểm tra cột có 3 kẹo giống nhau
     const checkForColumnOfThree = () => {
+        let changed = false;
         for (let i = 0; i <= 47; i++) {
             const columnOfThree = [i, i + width, i + width * 2];
             const decidedColor = currentColorArrangement[i];
@@ -46,14 +48,15 @@ export default function App() {
             if (columnOfThree.every(square => currentColorArrangement[square] === decidedColor && !isBlank)) {
                 setScoreDisplay((score) => score + 3);
                 columnOfThree.forEach(square => currentColorArrangement[square] = ' ');
-                return true;
+                changed = true;
             }
         }
-        return false;
+        return changed;
     }
 
     // Kiểm tra hàng có 4 kẹo giống nhau
     const checkForRowOfFour = () => {
+        let changed = false;
         for (let i = 0; i < 64; i++) {
             const rowOfFour = [i, i + 1, i + 2, i + 3];
             const decidedColor = currentColorArrangement[i];
@@ -65,14 +68,15 @@ export default function App() {
             if (rowOfFour.every(square => currentColorArrangement[square] === decidedColor && !isBlank)) {
                 setScoreDisplay((score) => score + 4);
                 rowOfFour.forEach(square => currentColorArrangement[square] = ' ');
-                return true;
+                changed = true;
             }
         }
-        return false;
+        return changed;
     }
 
     // Kiểm tra hàng có 3 kẹo giống nhau
     const checkForRowOfThree = () => {
+        let changed = false;
         for (let i = 0; i < 64; i++) {
             const rowOfThree = [i, i + 1, i + 2];
             const decidedColor = currentColorArrangement[i];
@@ -84,16 +88,17 @@ export default function App() {
             if (rowOfThree.every(square => currentColorArrangement[square] === decidedColor && !isBlank)) {
                 setScoreDisplay((score) => score + 3);
                 rowOfThree.forEach(square => currentColorArrangement[square] = ' ');
-                return true;
+                changed = true;
             }
         }
-        return false;
+        return changed;
     }
 
     // --- Hàm xử lý cơ chế game ---
 
     // Di chuyển kẹo xuống các ô trống bên dưới
     const moveIntoSquareBelow = () => {
+        let changed = false;
         for (let i = 0; i <= 55; i++) {
             const firstRow = [0, 1, 2, 3, 4, 5, 6, 7];
             const isFirstRow = firstRow.includes(i);
@@ -101,13 +106,16 @@ export default function App() {
             if (isFirstRow && currentColorArrangement[i] === ' ') {
                 let randomNumber = Math.floor(Math.random() * candyColors.length);
                 currentColorArrangement[i] = candyColors[randomNumber];
+                changed = true;
             }
 
             if ((currentColorArrangement[i + width]) === ' ') {
                 currentColorArrangement[i + width] = currentColorArrangement[i];
                 currentColorArrangement[i] = ' ';
+                changed = true;
             }
         }
+        return changed;
     }
 
     // --- Xử lý sự kiện kéo thả ---
@@ -120,8 +128,13 @@ export default function App() {
         setSquareBeingReplaced(e.target);
     }
 
+    // <<< SỬA LỖI: Toàn bộ hàm dragEnd được viết lại để xử lý logic đúng đắn.
     const dragEnd = () => {
-        if (!squareBeingDragged || !squareBeingReplaced) return;
+        if (!squareBeingDragged || !squareBeingReplaced) {
+            setSquareBeingDragged(null);
+            setSquareBeingReplaced(null);
+            return;
+        }
 
         const squareBeingDraggedId = parseInt(squareBeingDragged.getAttribute('data-id'));
         const squareBeingReplacedId = parseInt(squareBeingReplaced.getAttribute('data-id'));
@@ -135,30 +148,53 @@ export default function App() {
 
         const validMove = validMoves.includes(squareBeingReplacedId);
 
-        if (validMove) {
-            const newArrangement = [...currentColorArrangement];
-            const colorBeingDragged = newArrangement[squareBeingDraggedId];
-            newArrangement[squareBeingDraggedId] = newArrangement[squareBeingReplacedId];
-            newArrangement[squareBeingReplacedId] = colorBeingDragged;
-            
-            // Kiểm tra xem nước đi có tạo ra match không
-            const isAColumnOfFour = checkForColumnOfFour();
-            const isARowOfFour = checkForRowOfFour();
-            const isAColumnOfThree = checkForColumnOfThree();
-            const isARowOfThree = checkForRowOfThree();
-
-            // Nếu nước đi hợp lệ (tạo ra match), cập nhật bảng
-            if (squareBeingReplacedId && (isAColumnOfFour || isARowOfFour || isAColumnOfThree || isARowOfThree)) {
-                setCurrentColorArrangement(newArrangement);
-            } else {
-                 // Nếu không, hoàn tác lại nước đi
-                const revertedArrangement = [...newArrangement];
-                revertedArrangement[squareBeingReplacedId] = newArrangement[squareBeingDraggedId];
-                revertedArrangement[squareBeingDraggedId] = colorBeingDragged;
-                setCurrentColorArrangement(revertedArrangement);
+        // Tạo một bản sao của bàn cờ để kiểm tra nước đi "giả định"
+        const newArrangement = [...currentColorArrangement];
+        const colorBeingDragged = newArrangement[squareBeingDraggedId];
+        newArrangement[squareBeingDraggedId] = newArrangement[squareBeingReplacedId];
+        newArrangement[squareBeingReplacedId] = colorBeingDragged;
+        
+        // Hàm kiểm tra match trên một bàn cờ bất kỳ mà không thay đổi state
+        const checkArrangementForMatch = (board) => {
+            // Check for columns of four
+            for (let i = 0; i <= 39; i++) {
+                const columnOfFour = [i, i + width, i + width * 2, i + width * 3];
+                const decidedColor = board[i];
+                if (decidedColor && columnOfFour.every(square => board[square] === decidedColor)) return true;
             }
+            // Check for rows of four
+            for (let i = 0; i < 64; i++) {
+                const rowOfFour = [i, i + 1, i + 2, i + 3];
+                const decidedColor = board[i];
+                const notValid = [5, 6, 7, 13, 14, 15, 21, 22, 23, 29, 30, 31, 37, 38, 39, 45, 46, 47, 53, 54, 55, 61, 62, 63];
+                if (notValid.includes(i)) continue;
+                if (decidedColor && rowOfFour.every(square => board[square] === decidedColor)) return true;
+            }
+            // Check for columns of three
+            for (let i = 0; i <= 47; i++) {
+                const columnOfThree = [i, i + width, i + width * 2];
+                const decidedColor = board[i];
+                if (decidedColor && columnOfThree.every(square => board[square] === decidedColor)) return true;
+            }
+            // Check for rows of three
+             for (let i = 0; i < 64; i++) {
+                const rowOfThree = [i, i + 1, i + 2];
+                const decidedColor = board[i];
+                const notValid = [6, 7, 14, 15, 22, 23, 30, 31, 38, 39, 46, 47, 54, 55, 62, 63];
+                if (notValid.includes(i)) continue;
+                if (decidedColor && rowOfThree.every(square => board[square] === decidedColor)) return true;
+            }
+            return false;
+        }
+
+        const isAValidMove = checkArrangementForMatch(newArrangement);
+
+        // Chỉ cập nhật bàn cờ nếu nước đi là hợp lệ và tạo ra một match
+        if (validMove && isAValidMove) {
+            setCurrentColorArrangement(newArrangement);
         }
         
+        // Reset lại các state kéo thả
         setSquareBeingDragged(null);
         setSquareBeingReplaced(null);
     }
@@ -182,15 +218,19 @@ export default function App() {
     // Vòng lặp game, chạy mỗi 100ms
     useEffect(() => {
         const timer = setInterval(() => {
-            checkForColumnOfFour();
-            checkForRowOfFour();
-            checkForColumnOfThree();
-            checkForRowOfThree();
-            moveIntoSquareBelow();
-            setCurrentColorArrangement([...currentColorArrangement]);
+            const c4 = checkForColumnOfFour();
+            const r4 = checkForRowOfFour();
+            const c3 = checkForColumnOfThree();
+            const r3 = checkForRowOfThree();
+            const moved = moveIntoSquareBelow();
+            
+            // Chỉ cập nhật state nếu có sự thay đổi trên bàn cờ
+            if (c4 || r4 || c3 || r3 || moved) {
+                setCurrentColorArrangement([...currentColorArrangement]);
+            }
         }, 100);
         return () => clearInterval(timer);
-    }, [checkForColumnOfFour, checkForRowOfFour, checkForColumnOfThree, checkForRowOfThree, moveIntoSquareBelow, currentColorArrangement]);
+    }, [currentColorArrangement]);
 
 
     // --- Giao diện người dùng (UI) ---
