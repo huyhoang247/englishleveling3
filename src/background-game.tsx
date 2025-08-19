@@ -18,7 +18,7 @@ import BossBattle from './boss.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './home/vocabulary-chest/voca-chest-ui.tsx';
 import MinerChallenge from './bomb.tsx';
-import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './upgrade-stats.tsx';
+import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
 import AchievementsScreen from './home/achievements/achievement-ui.tsx'; 
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
