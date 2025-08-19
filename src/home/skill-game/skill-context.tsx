@@ -12,7 +12,7 @@ import {
     type SkillBlueprint,
     getNextRarity,
 } from './skill-data.tsx';
-import { fetchSkillScreenData, updateUserSkills } from './gameDataService.ts';
+import { fetchSkillScreenData, updateUserSkills } from '../../gameDataService.ts';
 
 // --- INTERFACES & TYPES ---
 interface MergeResult { level: number; refundGold: number; }
