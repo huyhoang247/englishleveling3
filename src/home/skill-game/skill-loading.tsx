@@ -29,10 +29,10 @@ const SkillScreenSkeleton = () => {
                 {/* Equipped Skills Skeleton */}
                 <section className="flex-shrink-0 py-4">
                     <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
-                        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl bg-slate-800/50"></div>
-                        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl bg-slate-800/50"></div>
-                        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl bg-slate-800/50"></div>
-                        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl bg-slate-800/50"></div>
+                        {/* SỬA ĐỔI: Giảm từ 4 ô xuống còn 3 ô để khớp với UI thật */}
+                        {Array.from({ length: 3 }).map((_, i) => (
+                           <div key={i} className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl bg-slate-800/50"></div>
+                        ))}
                     </div>
                 </section>
                 
