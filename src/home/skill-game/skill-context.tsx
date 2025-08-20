@@ -10,6 +10,7 @@ import {
     type OwnedSkill,
     type Rarity,
     type SkillBlueprint,
+    getNextRarity,
 } from './skill-data.tsx';
 import { fetchSkillScreenData, updateUserSkills } from '../../gameDataService.ts';
 
@@ -159,64 +160,52 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
             });
     }, [ownedSkills, equippedSkillIds]);
 
-    // --- CORE LOGIC FUNCTIONS (REFACTORED WITH OPTIMISTIC UPDATES) ---
+    // --- CORE LOGIC FUNCTIONS ---
+    const handleUpdateDatabase = useCallback(async (updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
+        if (!userId) return false;
+        setIsProcessing(true);
+        try {
+            const { newCoins, newBooks } = await updateUserSkills(userId, updates);
+            setGold(newCoins);
+            setAncientBooks(newBooks);
+            setOwnedSkills(updates.newOwned);
+            setEquippedSkillIds(updates.newEquippedIds);
+            setDataHasChanged(true);
+            return true;
+        } catch (error: any) {
+            showMessage(`Lỗi: ${error.message || 'Cập nhật thất bại'}`);
+            return false;
+        } finally {
+            setIsProcessing(false);
+        }
+    }, [userId, showMessage]);
+
     const handleEquipSkill = useCallback(async (skillToEquip: OwnedSkill) => {
         if (isProcessing) return;
-        const firstEmptySlotIndex = equippedSkillIds.findIndex(slot => slot === null);
+        const firstEmptySlotIndex = equippedSkills.findIndex(slot => slot === null);
         if (firstEmptySlotIndex === -1) {
             setEquipErrorToast({ show: true, message: 'Các ô kỹ năng đã đầy.' });
             setTimeout(() => setEquipErrorToast(prev => ({ ...prev, show: false })), 4000);
             return;
         }
-
-        const oldEquippedIds = [...equippedSkillIds];
         const newEquippedIds = [...equippedSkillIds];
         newEquippedIds[firstEmptySlotIndex] = skillToEquip.id;
-        
-        // Optimistic Update
-        setEquippedSkillIds(newEquippedIds);
-        setSelectedSkill(null);
-        setIsProcessing(true);
-        setDataHasChanged(true);
 
-        try {
-            await updateUserSkills(userId, { newOwned: ownedSkills, newEquippedIds, goldChange: 0, booksChange: 0 });
-        } catch (error) {
-            console.error("Equip skill failed, rolling back UI:", error);
-            showMessage("Lỗi: Trang bị kỹ năng thất bại.");
-            setEquippedSkillIds(oldEquippedIds); // Rollback
-            setSelectedSkill(skillToEquip);      // Rollback
-        } finally {
-            setIsProcessing(false);
-        }
-    }, [isProcessing, equippedSkillIds, ownedSkills, userId, showMessage]);
+        const success = await handleUpdateDatabase({ newOwned: ownedSkills, newEquippedIds: newEquippedIds, goldChange: 0, booksChange: 0 });
+        if (success) setSelectedSkill(null);
+    }, [isProcessing, equippedSkills, equippedSkillIds, ownedSkills, handleUpdateDatabase]);
 
     const handleUnequipSkill = useCallback(async (skillToUnequip: OwnedSkill) => {
         if (isProcessing) return;
         const slotIndex = equippedSkillIds.findIndex(id => id === skillToUnequip.id);
         if (slotIndex === -1) return;
 
-        const oldEquippedIds = [...equippedSkillIds];
         const newEquippedIds = [...equippedSkillIds];
         newEquippedIds[slotIndex] = null;
-        
-        // Optimistic Update
-        setEquippedSkillIds(newEquippedIds);
-        setSelectedSkill(null);
-        setIsProcessing(true);
-        setDataHasChanged(true);
 
-        try {
-            await updateUserSkills(userId, { newOwned: ownedSkills, newEquippedIds, goldChange: 0, booksChange: 0 });
-        } catch (error) {
-            console.error("Unequip skill failed, rolling back UI:", error);
-            showMessage("Lỗi: Gỡ kỹ năng thất bại.");
-            setEquippedSkillIds(oldEquippedIds); // Rollback
-            setSelectedSkill(skillToUnequip);    // Rollback
-        } finally {
-            setIsProcessing(false);
-        }
-    }, [isProcessing, equippedSkillIds, ownedSkills, userId, showMessage]);
+        const success = await handleUpdateDatabase({ newOwned: ownedSkills, newEquippedIds: newEquippedIds, goldChange: 0, booksChange: 0 });
+        if (success) setSelectedSkill(null);
+    }, [isProcessing, equippedSkillIds, ownedSkills, handleUpdateDatabase]);
 
     const handleCraftSkill = useCallback(async () => {
         if (isProcessing) return;
@@ -227,71 +216,30 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
             return;
         }
 
-        const oldBooks = ancientBooks;
-        const oldOwnedSkills = ownedSkills;
-
         const newSkillBlueprint = ALL_SKILLS[Math.floor(Math.random() * ALL_SKILLS.length)];
         const newRarity = getRandomRarity();
         const newOwnedSkill: OwnedSkill = { id: `owned-${Date.now()}-${newSkillBlueprint.id}-${Math.random()}`, skillId: newSkillBlueprint.id, level: 1, rarity: newRarity };
         const newOwnedList = [...ownedSkills, newOwnedSkill];
-        
-        // Optimistic Update
-        setAncientBooks(prev => prev - CRAFTING_COST);
-        setOwnedSkills(newOwnedList);
-        setIsProcessing(true);
-        setDataHasChanged(true);
-        
-        try {
-            const { newBooks } = await updateUserSkills(userId, { newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: 0, booksChange: -CRAFTING_COST });
-            setAncientBooks(newBooks); // Sync with server
-            setNewlyCraftedSkill(newOwnedSkill);
-        } catch (error) {
-            console.error("Craft skill failed, rolling back UI:", error);
-            showMessage("Lỗi: Chế tạo kỹ năng thất bại.");
-            setAncientBooks(oldBooks); // Rollback
-            setOwnedSkills(oldOwnedSkills); // Rollback
-        } finally {
-            setIsProcessing(false);
-        }
-    }, [isProcessing, ancientBooks, ownedSkills, equippedSkillIds, userId, showMessage]);
+
+        const success = await handleUpdateDatabase({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: 0, booksChange: -CRAFTING_COST });
+        if (success) setNewlyCraftedSkill(newOwnedSkill);
+    }, [isProcessing, ancientBooks, ownedSkills, equippedSkillIds, handleUpdateDatabase, showMessage]);
 
     const handleDisenchantSkill = useCallback(async (skillToDisenchant: OwnedSkill) => {
-        if (isProcessing || equippedSkillIds.includes(skillToDisenchant.id)) return;
+        if (isProcessing || equippedSkills.some(s => s?.id === skillToDisenchant.id)) return;
 
         const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToDisenchant.skillId)!;
         const booksToReturn = Math.floor(CRAFTING_COST / 2);
         const goldToReturn = getTotalUpgradeCost(skillBlueprint, skillToDisenchant.level);
-        
-        const oldGold = gold;
-        const oldBooks = ancientBooks;
-        const oldOwnedSkills = ownedSkills;
         const newOwnedList = ownedSkills.filter(s => s.id !== skillToDisenchant.id);
 
-        // Optimistic Update
-        setGold(prev => prev + goldToReturn);
-        setAncientBooks(prev => prev + booksToReturn);
-        setOwnedSkills(newOwnedList);
-        setSelectedSkill(null);
-        setIsProcessing(true);
-        setDataHasChanged(true);
-
-        try {
-            const { newCoins, newBooks } = await updateUserSkills(userId, { newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: goldToReturn, booksChange: booksToReturn });
-            setGold(newCoins); // Sync
-            setAncientBooks(newBooks); // Sync
+        const success = await handleUpdateDatabase({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: goldToReturn, booksChange: booksToReturn });
+        if (success) {
+            setSelectedSkill(null);
             setDisenchantSuccessToast({ show: true, message: 'Đã tái chế thành công.' });
             setTimeout(() => setDisenchantSuccessToast(prev => ({ ...prev, show: false })), 4000);
-        } catch(error) {
-            console.error("Disenchant skill failed, rolling back UI:", error);
-            showMessage("Lỗi: Tái chế kỹ năng thất bại.");
-            setGold(oldGold); // Rollback
-            setAncientBooks(oldBooks); // Rollback
-            setOwnedSkills(oldOwnedSkills); // Rollback
-            setSelectedSkill(skillToDisenchant); // Rollback
-        } finally {
-            setIsProcessing(false);
         }
-    }, [isProcessing, equippedSkillIds, ownedSkills, gold, ancientBooks, userId, showMessage]);
+    }, [isProcessing, equippedSkills, ownedSkills, equippedSkillIds, handleUpdateDatabase]);
 
     const handleUpgradeSkill = useCallback(async (skillToUpgrade: OwnedSkill) => {
         if (isProcessing) return;
@@ -300,67 +248,29 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
         const cost = getUpgradeCost(skillBlueprint.upgradeCost, skillToUpgrade.level);
         if (gold < cost) { showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); return; }
 
-        const oldGold = gold;
-        const oldOwnedSkills = [...ownedSkills];
-
         const updatedSkill = { ...skillToUpgrade, level: skillToUpgrade.level + 1 };
         const newOwnedList = ownedSkills.map(s => s.id === skillToUpgrade.id ? updatedSkill : s);
 
-        // Optimistic Update
-        setGold(prev => prev - cost);
-        setOwnedSkills(newOwnedList);
-        setSelectedSkill(updatedSkill);
-        setIsProcessing(true);
-        setDataHasChanged(true);
-
-        try {
-            const { newCoins } = await updateUserSkills(userId, { newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: -cost, booksChange: 0 });
-            setGold(newCoins); // Sync with server state
-        } catch (error) {
-            console.error("Upgrade skill failed, rolling back UI:", error);
-            showMessage("Lỗi: Nâng cấp thất bại.");
-            setGold(oldGold); // Rollback
-            setOwnedSkills(oldOwnedSkills); // Rollback
-            setSelectedSkill(skillToUpgrade); // Rollback
-        } finally {
-            setIsProcessing(false);
-        }
-    }, [isProcessing, gold, ownedSkills, equippedSkillIds, userId, showMessage]);
+        const success = await handleUpdateDatabase({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: -cost, booksChange: 0 });
+        if (success) setSelectedSkill(updatedSkill);
+    }, [isProcessing, gold, ownedSkills, equippedSkillIds, handleUpdateDatabase, showMessage]);
     
     const handleMergeSkills = useCallback(async (group: MergeGroup) => {
         if (isProcessing || group.skills.length < 3 || !group.nextRarity) return;
         
-        const oldGold = gold;
-        const oldOwnedSkills = ownedSkills;
-
         const skillsToConsume = group.skills.slice(0, 3);
         const skillIdsToConsume = skillsToConsume.map(s => s.id);
         const { level: finalLevel, refundGold } = calculateMergeResult(skillsToConsume, group.blueprint);
         const newUpgradedSkill: OwnedSkill = { id: `owned-${Date.now()}-${group.skillId}-${Math.random()}`, skillId: group.skillId, level: finalLevel, rarity: group.nextRarity };
         const newOwnedList = ownedSkills.filter(s => !skillIdsToConsume.includes(s.id)).concat(newUpgradedSkill);
 
-        // Optimistic Update
-        setGold(prev => prev + refundGold);
-        setOwnedSkills(newOwnedList);
-        setIsMergeModalOpen(false);
-        setIsProcessing(true);
-        setDataHasChanged(true);
-
-        try {
-            const { newCoins } = await updateUserSkills(userId, { newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: refundGold, booksChange: 0 });
-            setGold(newCoins); // Sync
+        const success = await handleUpdateDatabase({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: refundGold, booksChange: 0 });
+        if (success) {
             setMergeToast({ show: true, message: 'Hợp nhất thành công!' });
             setTimeout(() => setMergeToast(prev => ({...prev, show: false})), 4000);
-        } catch (error) {
-            console.error("Merge skills failed, rolling back UI:", error);
-            showMessage("Lỗi: Hợp nhất thất bại.");
-            setGold(oldGold); // Rollback
-            setOwnedSkills(oldOwnedSkills); // Rollback
-            setIsMergeModalOpen(true); // Re-open modal
-        } finally {
-            setIsProcessing(false);
+            setIsMergeModalOpen(false);
         }
-    }, [isProcessing, ownedSkills, equippedSkillIds, gold, userId, showMessage]);
+    }, [isProcessing, ownedSkills, equippedSkillIds, handleUpdateDatabase]);
 
     // --- UI HANDLERS ---
     const handleClose = useCallback(() => onClose(dataHasChanged), [onClose, dataHasChanged]);
@@ -386,5 +296,3 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
         </SkillContext.Provider>
     );
 };
-
-// --- END OF FILE skill-context.tsx ---
