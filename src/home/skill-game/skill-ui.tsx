@@ -1,6 +1,6 @@
 // --- START OF FILE skill-ui.tsx ---
 
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import { SkillProvider, useSkillContext, MergeGroup } from './skill-context.tsx';
 import {
     ALL_SKILLS,
@@ -17,8 +17,9 @@ import { uiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import RateLimitToast from '../../thong-bao.tsx';
 import SkillStorageList from './skill-storage-list.tsx';
-import { useAnimateValue } from '../../ui/useAnimateValue.ts'; // <<<--- IMPORT MỚI
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import SkillScreenSkeleton from './skill-loading.tsx';
+import UpgradeEffectToast from './upgrade-effect-toast.tsx'; // <<<--- IMPORT TOAST MỚI
 
 // --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -27,7 +28,7 @@ const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http:/
 // --- CÁC COMPONENT CON (ĐÃ BỌC TRONG React.memo) ---
 const Header = memo(() => {
     const { gold, handleClose } = useSkillContext();
-    const animatedGold = useAnimateValue(gold); // <<<--- SỬ DỤNG HOOK ANIMATE
+    const animatedGold = useAnimateValue(gold);
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
@@ -103,6 +104,30 @@ export const SkillCard = memo(({ ownedSkill, isEquipped, onSelect }: { ownedSkil
 const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const { handleCloseDetailModal, handleEquipSkill, handleUnequipSkill, handleDisenchantSkill, handleUpgradeSkill, equippedSkills, gold, isProcessing } = useSkillContext();
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
+    
+    // <<<--- START: LOGIC CHO TOAST HIỆU ỨNG ---
+    const [upgradeToast, setUpgradeToast] = useState({ show: false, oldValue: 0, newValue: 0 });
+    const prevLevelRef = useRef(ownedSkill.level);
+
+    const calculateEffectValue = (level: number) => {
+        if (!skill || skill.baseEffectValue === undefined || skill.effectValuePerLevel === undefined) return 0;
+        return skill.baseEffectValue + (level - 1) * skill.effectValuePerLevel;
+    };
+    
+    useEffect(() => {
+        if (skill && skill.upgradeCost && ownedSkill.level > prevLevelRef.current) {
+            const oldValue = calculateEffectValue(prevLevelRef.current);
+            const newValue = calculateEffectValue(ownedSkill.level);
+
+            setUpgradeToast({ show: true, oldValue, newValue });
+            setTimeout(() => {
+                setUpgradeToast({ show: false, oldValue: 0, newValue: 0 });
+            }, 1600); // Tăng thời gian khớp với animation
+        }
+        prevLevelRef.current = ownedSkill.level;
+    }, [ownedSkill.level, skill]);
+    // <<<--- END: LOGIC CHO TOAST HIỆU ỨNG ---
+
     if (!skill) return null;
 
     const isEquipped = equippedSkills.some(s => s?.id === ownedSkill.id);
@@ -111,10 +136,7 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(skill.upgradeCost!, ownedSkill.level) : 0;
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
 
-    const getCurrentEffectValue = () => {
-        if (skill.baseEffectValue === undefined || skill.effectValuePerLevel === undefined) return 0;
-        return skill.baseEffectValue + (ownedSkill.level - 1) * skill.effectValuePerLevel;
-    };
+    const currentEffectValue = calculateEffectValue(ownedSkill.level);
 
     const actionDisabled = isProcessing;
     const mainActionText = isEquipped ? 'Remove' : 'Equip';
@@ -150,13 +172,14 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
                 {skill.baseEffectValue !== undefined && ( <div className="w-full text-left text-sm p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
                 {isUpgradable && (
                     <div className="w-full mb-4 space-y-2">
-                        <div className="w-full relative p-3 rounded-lg transition-colors duration-300 text-left flex items-center justify-between bg-black/20 border border-slate-700/80">
+                        <div className="relative w-full p-3 rounded-lg transition-colors duration-300 text-left flex items-center justify-between bg-black/20 border border-slate-700/80">
+                            <UpgradeEffectToast isVisible={upgradeToast.show} oldValue={upgradeToast.oldValue} newValue={upgradeToast.newValue} />
                             <div className="flex flex-col">
                                 <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
                                 <div className="flex items-center gap-2 font-bold text-lg mt-1">
-                                    <span className="text-slate-300">{getCurrentEffectValue()}%</span>
+                                    <span className="text-slate-300">{currentEffectValue}%</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                                    <span className="text-green-400">{getCurrentEffectValue() + skill.effectValuePerLevel!}%</span>
+                                    <span className="text-green-400">{currentEffectValue + skill.effectValuePerLevel!}%</span>
                                 </div>
                             </div>
                             <button 
@@ -189,6 +212,9 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
         </div>
     );
 });
+
+
+// Các component còn lại (CraftingSuccessModal, MergeModal, SkillScreenContent, etc.) giữ nguyên
 
 const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const { handleCloseCraftSuccessModal } = useSkillContext();
