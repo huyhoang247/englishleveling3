@@ -784,16 +784,22 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
                             <button onClick={handleOpenForgeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
                         </div>
                         <div className="flex-grow min-h-0 overflow-y-auto hide-scrollbar -m-1 p-1">
-                             <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                                {unequippedItemsSorted.map(ownedItem => (
-                                    <InventorySlot
-                                        key={ownedItem.id}
-                                        ownedItem={ownedItem}
-                                        onClick={handleSelectItem}
-                                        isProcessing={isProcessing}
-                                    />
-                                ))}
-                            </div>
+                            {unequippedItemsSorted.length > 0 ? (
+                                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                                    {unequippedItemsSorted.map((ownedItem) => (
+                                        <InventorySlot
+                                            key={ownedItem.id}
+                                            ownedItem={ownedItem}
+                                            onClick={handleSelectItem}
+                                            isProcessing={isProcessing}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-slate-500">
+                                    <p>Kho chứa trống.</p>
+                                </div>
+                            )}
                         </div>
                     </section>
                 </main>
