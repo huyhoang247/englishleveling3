@@ -1,6 +1,6 @@
 // --- START OF FILE equipment.tsx ---
 
-import React, { useState, useMemo, useCallback, memo } from 'react';
+import React, { useState, useMemo, useCallback, memo, useEffect, useRef } from 'react';
 // THAY ĐỔI: Import các hàm và cấu trúc mới từ item-database
 import { 
     getItemDefinition, 
@@ -17,6 +17,9 @@ import { uiAssets, equipmentUiAssets } from './game-assets.ts';
 
 // *** THAY ĐỔI QUAN TRỌNG: Import trực tiếp CoinDisplay từ file của nó ***
 import CoinDisplay from './ui/display/coin-display.tsx'; 
+
+// THÊM: Import StatUpgradeToast. Chỉnh lại đường dẫn nếu cần.
+import StatUpgradeToast from './ui/display/upgrade-toast.tsx'; 
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
@@ -113,9 +116,7 @@ const getTotalUpgradeCost = (itemDef: ItemDefinition, level: number): number => 
 const CloseIcon = ({ className = '' }: { className?: string }) => ( <img src={uiAssets.closeIcon} alt="Đóng" className={className} /> );
 const GoldIcon = ({ className = '' }: { className?: string }) => ( <img src={equipmentUiAssets.goldIcon} alt="Vàng" className={className} /> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
-// THAY ĐỔI: Icon Rèn được thay bằng MergeIcon mới
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4c-1.1 0-2 .9-2 2v4h1.5c1.93 0 3.5 1.57 3.5 3.5S5.43 20 3.5 20H2v-4c0-1.1.9-2 2-2h4v1.5a2.5 2.5 0 0 0 5 0V13h4c1.1 0 2-.9 2 2v4h-1.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5H22v-4c0-1.1-.9-2-2-2z"/> </svg>);
-// THAY ĐỔI: Icon mới cho Mảnh trang bị
 const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => ( <img src={equipmentUiAssets.equipmentPieceIcon} alt="Mảnh Trang Bị" className={className} /> );
 
 // --- CÁC COMPONENT CON ---
@@ -129,7 +130,6 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
                     <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
                 </button>
                 <div className="flex items-center gap-4 sm:gap-6">
-                    {/* *** THAY ĐỔI: Sử dụng CoinDisplay đã import *** */}
                     <CoinDisplay displayedCoins={gold} isStatsFullscreen={false} />
                 </div>
             </div>
@@ -171,13 +171,9 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
     );
 });
 
-// --- THAY ĐỔI LỚN: TẠO COMPONENT `InventorySlot` MỚI THAY THẾ CHO `ItemCard` ---
 const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: OwnedItem | undefined; onClick: (item: OwnedItem) => void; isProcessing: boolean; }) => {
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
-
     const baseClasses = "relative aspect-square rounded-lg border-2 transition-all duration-200 flex items-center justify-center group";
-    
-    // Logic cho style và tương tác
     const interactivity = isProcessing ? 'cursor-wait' : (ownedItem ? 'cursor-pointer hover:scale-105 hover:shadow-lg' : 'cursor-default');
     const borderStyle = itemDef ? getRarityColor(itemDef.rarity) : 'border-slate-800 border-dashed';
     const backgroundStyle = itemDef ? 'bg-slate-900/80' : 'bg-slate-900/30';
@@ -193,15 +189,8 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
         >
             {ownedItem && itemDef ? (
                 <>
-                    <img 
-                        src={itemDef.icon} 
-                        alt={itemDef.name} 
-                        className="w-3/4 h-3/4 object-contain transition-transform duration-200 group-hover:scale-110"
-                        title={`${itemDef.name} - Lv.${ownedItem.level}`}
-                    />
-                    <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">
-                        Lv.{ownedItem.level}
-                    </span>
+                    <img src={itemDef.icon} alt={itemDef.name} className="w-3/4 h-3/4 object-contain transition-transform duration-200 group-hover:scale-110" title={`${itemDef.name} - Lv.${ownedItem.level}`}/>
+                    <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">Lv.{ownedItem.level}</span>
                 </>
             ) : (
                 <div className="w-2 h-2 bg-slate-700 rounded-full" />
@@ -209,7 +198,6 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
         </div>
     );
 });
-
 
 // --- Icons và Cấu hình Chỉ số ---
 const HpIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/> </svg> );
@@ -221,6 +209,7 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
+
 // ==================================================================
 // ============ START OF UPDATED ItemDetailModal COMPONENT ==========
 // ==================================================================
@@ -228,6 +217,37 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     const [activeTab, setActiveTab] = useState<'stats' | 'upgrade'>('stats');
+    
+    // THÊM: State và Ref để quản lý toast nâng cấp
+    const [toastInfo, setToastInfo] = useState<{ stat: string; bonus: number; key: number } | null>(null);
+    const prevOwnedItemRef = useRef<OwnedItem>();
+
+    useEffect(() => {
+        const prevItem = prevOwnedItemRef.current;
+        // Kiểm tra nếu có vật phẩm cũ và level của vật phẩm mới cao hơn -> đã có nâng cấp
+        if (prevItem && ownedItem.level > prevItem.level) {
+            const prevStats = prevItem.stats;
+            const newStats = ownedItem.stats;
+
+            // Tìm chỉ số đã thay đổi
+            for (const key in newStats) {
+                if (newStats[key] !== prevStats[key] && typeof newStats[key] === 'number') {
+                    const bonus = newStats[key] - prevStats[key];
+                    setToastInfo({ stat: key, bonus, key: Date.now() });
+                    
+                    // Tự động ẩn toast sau khi animation kết thúc
+                    setTimeout(() => {
+                        setToastInfo(null);
+                    }, 1500); // 1.5s là thời gian animation
+
+                    break; // Chỉ cần tìm một chỉ số là đủ
+                }
+            }
+        }
+        // Cập nhật ref với vật phẩm hiện tại cho lần render tiếp theo
+        prevOwnedItemRef.current = ownedItem;
+    }, [ownedItem]); // Chạy effect mỗi khi ownedItem thay đổi
+
 
     const sortedStats = useMemo(() => {
         const order = ['hp', 'atk', 'def'];
@@ -352,6 +372,10 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
 
                                     {activeTab === 'upgrade' && isUpgradable && (
                                         <div className="w-full">
+                                            {/* THAY ĐỔI: Thêm mô tả về nâng cấp ngẫu nhiên */}
+                                            <p className="text-center text-xs text-slate-400 mb-4 px-4 py-2 bg-slate-900/50 rounded-lg border border-slate-700">
+                                                Nâng cấp sẽ <span className="font-bold text-purple-300">ngẫu nhiên</span> tăng một trong các chỉ số bên dưới.
+                                            </p>
                                             <div className="space-y-2 mb-4">
                                                 {sortedStats.map(([key, value]) => {
                                                     if (typeof value !== 'number') return null;
@@ -374,7 +398,29 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                 })}
                                             </div>
 
-                                            <div className="mt-4 flex items-center justify-between">
+                                            {/* THAY ĐỔI: Thêm `relative` để định vị Toast */}
+                                            <div className="relative mt-4 flex items-center justify-between">
+                                                {/* THÊM: Component Toast */}
+                                                {toastInfo && (() => {
+                                                    const statConfig = STAT_CONFIG[toastInfo.stat.toLowerCase()];
+                                                    const colors = statConfig?.color.match(/(\w+)-(\d+)/);
+                                                    const colorName = colors ? colors[1] : 'gray';
+                                                    const colorValue = colors ? parseInt(colors[2], 10) : 400;
+
+                                                    return (
+                                                        <StatUpgradeToast
+                                                            key={toastInfo.key}
+                                                            isVisible={true}
+                                                            icon={<statConfig.Icon />}
+                                                            bonus={toastInfo.bonus}
+                                                            colorClasses={{
+                                                                border: `border-${colorName}-${colorValue}`,
+                                                                text: `text-${colorName}-${colorValue > 300 ? colorValue - 100 : colorValue}`
+                                                            }}
+                                                        />
+                                                    );
+                                                })()}
+
                                                 <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-1.5 font-bold text-sm">
                                                     <span className="text-slate-300">Lv. {ownedItem.level}</span>
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
@@ -424,9 +470,11 @@ const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedIte
     
     const rarityTextColor = getRarityTextColor(itemDef.rarity);
     const rarityColorVal = getRarityColor(itemDef.rarity).replace('border-', ''); 
-    const shadowStyle = { boxShadow: `0 0 25px -5px ${rarityColorVal}, 0 0 15px -10px ${rarityColorVal}` };
+    const shadowStyle = { boxShadow: `0 0 25px -5px var(--tw-color-${rarityColorVal}), 0 0 15px -10px var(--tw-color-${rarityColorVal})` };
+    const cssVars = { '--tw-color-red-500': '#ef4444', '--tw-color-orange-400': '#fb923c', '--tw-color-yellow-400': '#facc15', '--tw-color-purple-500': '#a855f7', '--tw-color-blue-500': '#3b82f6', '--tw-color-green-500': '#22c55e', '--tw-color-gray-500': '#6b7280' } as React.CSSProperties;
 
-    return ( <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div> <div className="relative w-full max-w-sm"> <div className="absolute inset-0.5 animate-spin-slow-360"> <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(itemDef.rarity)} opacity-50 rounded-full blur-2xl`}></div> </div> <div className={`relative bg-gradient-to-b ${getRarityGradient(itemDef.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(itemDef.rarity)} text-center flex flex-col items-center gap-4`} style={shadowStyle}> <h2 className="text-2xl font-black tracking-widest uppercase text-white title-glow">Chế Tạo Thành Công</h2> <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}> <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" /> </div> <div className="flex flex-col"> <span className={`text-2xl font-bold ${rarityTextColor}`}>{itemDef.name}</span> <span className="font-semibold text-slate-300">{itemDef.rarity}</span> </div> <p className="text-sm text-slate-400">{itemDef.description}</p> <button onClick={onClose} className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"> Tuyệt vời! </button> </div> </div> </div> );
+
+    return ( <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div> <div className="relative w-full max-w-sm"> <div className="absolute inset-0.5 animate-spin-slow-360"> <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(itemDef.rarity)} opacity-50 rounded-full blur-2xl`}></div> </div> <div style={{...shadowStyle, ...cssVars}} className={`relative bg-gradient-to-b ${getRarityGradient(itemDef.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(itemDef.rarity)} text-center flex flex-col items-center gap-4`}> <h2 className="text-2xl font-black tracking-widest uppercase text-white title-glow">Chế Tạo Thành Công</h2> <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}> <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" /> </div> <div className="flex flex-col"> <span className={`text-2xl font-bold ${rarityTextColor}`}>{itemDef.name}</span> <span className="font-semibold text-slate-300">{itemDef.rarity}</span> </div> <p className="text-sm text-slate-400">{itemDef.description}</p> <button onClick={onClose} className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"> Tuyệt vời! </button> </div> </div> </div> );
 });
 
 // --- FORGE MODAL (Hợp nhất/Rèn) ---
@@ -503,12 +551,12 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
                             <div key={`${group.blueprint.baseId}-${group.rarity}`} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 flex items-center justify-between gap-4">
                                 <div className="flex flex-1 items-center justify-center gap-4 sm:gap-6">
                                     <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.rarity)} bg-black/30`}>
-                                        <img src={group.blueprint.icon} className="w-12 h-12 object-contain" />
+                                        <img src={group.blueprint.icon} className="w-12 h-12 object-contain" alt={group.blueprint.name} />
                                         <span className="absolute -top-2 -right-2 bg-cyan-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">3/{group.items.length}</span>
                                     </div>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                                     <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.nextRank!)} bg-black/30`}>
-                                        <img src={group.blueprint.icon} className="w-12 h-12 object-contain" />
+                                        <img src={group.blueprint.icon} className="w-12 h-12 object-contain" alt={group.blueprint.name} />
                                         <span className="absolute -top-2 -right-2 bg-slate-800 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">Lv.{group.estimatedResult.level}</span>
                                     </div>
                                 </div>
@@ -545,7 +593,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
     const [message, setMessage] = useState('');
     const [messageKey, setMessageKey] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
-    const MAX_ITEMS_IN_STORAGE = 50; // THAY ĐỔI: Tăng lên để vừa với lưới 8 cột x 7 hàng
+    const MAX_ITEMS_IN_STORAGE = 50; 
 
     const equippedItemsMap = useMemo(() => {
         const map: { [key in EquipmentSlotType]: OwnedItem | null } = { weapon: null, armor: null, accessory: null };
@@ -565,10 +613,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
             .sort((a, b) => {
                 const itemDefA = getItemDefinition(a.itemId);
                 const itemDefB = getItemDefinition(b.itemId);
-
-                if (!itemDefA) return 1;
-                if (!itemDefB) return -1;
-
+                if (!itemDefA) return 1; if (!itemDefB) return -1;
                 const rarityIndexA = RARITY_ORDER.indexOf(itemDefA.rarity);
                 const rarityIndexB = RARITY_ORDER.indexOf(itemDefB.rarity);
                 if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
@@ -604,7 +649,6 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
         if (isProcessing) return;
         const itemDef = getItemDefinition(itemToUnequip.itemId);
         if (!itemDef) return;
-
         const slotType = itemDef.type as EquipmentSlotType;
         if (equippedItems[slotType] !== itemToUnequip.id) { showMessage("Lỗi: Không tìm thấy trang bị."); return; }
         
@@ -618,24 +662,14 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
   
     const handleCraftItem = useCallback(async () => {
         if (isProcessing) return;
-        if (equipmentPieces < CRAFTING_COST) { 
-            showMessage(`Không đủ Mảnh Trang Bị. Cần ${CRAFTING_COST}.`); 
-            return; 
-        }
-        // THAY ĐỔI: Kiểm tra số lượng vật phẩm CHƯA TRANG BỊ
-        if (unequippedItemsSorted.length >= MAX_ITEMS_IN_STORAGE) { 
-            showMessage(`Kho chứa đã đầy.`); 
-            return; 
-        }
+        if (equipmentPieces < CRAFTING_COST) { showMessage(`Không đủ Mảnh Trang Bị. Cần ${CRAFTING_COST}.`); return; }
+        if (unequippedItemsSorted.length >= MAX_ITEMS_IN_STORAGE) { showMessage(`Kho chứa đã đầy.`); return; }
         
         setIsProcessing(true);
-
         try {
             const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
             const targetRank = getRandomRank();
-            
             const finalItemDef = generateItemDefinition(randomBlueprint, targetRank, true);
-            
             const newOwnedItem: OwnedItem = { 
                 id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, 
                 itemId: finalItemDef.id, 
@@ -643,15 +677,9 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
                 stats: finalItemDef.stats || {}
             };
             const newOwnedList = [...ownedItems, newOwnedItem];
-            
             await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: -CRAFTING_COST });
             setNewlyCraftedItem(newOwnedItem);
-
-        } catch(error: any) { 
-            showMessage(`Lỗi: ${error.message || 'Chế tạo thất bại'}`); 
-        } finally { 
-            setIsProcessing(false); 
-        }
+        } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Chế tạo thất bại'}`); } finally { setIsProcessing(false); }
     }, [isProcessing, equipmentPieces, ownedItems, equippedItems, onInventoryUpdate, showMessage, unequippedItemsSorted.length]);
 
     const handleDismantleItem = useCallback(async (itemToDismantle: OwnedItem) => {
@@ -681,13 +709,17 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
         
         setIsProcessing(true);
 
-        const newStats = { ...itemToUpgrade.stats };
-        for (const key in newStats) {
-            if (typeof newStats[key] === 'number') {
-                const increase = Math.max(1, Math.round(newStats[key] * 0.01));
-                newStats[key] = newStats[key] + increase;
-            }
+        const originalStats = itemToUpgrade.stats;
+        const newStats = { ...originalStats };
+        const upgradableStats = Object.keys(originalStats).filter(key => typeof originalStats[key] === 'number');
+
+        if (upgradableStats.length > 0) {
+            const statToUpgrade = upgradableStats[Math.floor(Math.random() * upgradableStats.length)];
+            const currentValue = newStats[statToUpgrade];
+            const increase = Math.max(1, Math.round(currentValue * 0.01));
+            newStats[statToUpgrade] = currentValue + increase;
         }
+
         const updatedItem = { 
             ...itemToUpgrade, 
             level: itemToUpgrade.level + 1,
@@ -711,7 +743,6 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
         try {
             const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
             const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
-            
             const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank, true);
 
             const newForgedItem: OwnedItem = { 
@@ -728,18 +759,10 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
             if (refundGold > 0) successMsg += ` Hoàn lại ${refundGold.toLocaleString()} vàng.`;
             showMessage(successMsg);
             setIsForgeModalOpen(false);
-        } catch (error: any) { 
-            showMessage(`Lỗi: ${error.message || 'Hợp nhất thất bại'}`); 
-        } finally { 
-            setIsProcessing(false); 
-        }
+        } catch (error: any) { showMessage(`Lỗi: ${error.message || 'Hợp nhất thất bại'}`); } finally { setIsProcessing(false); }
     }, [isProcessing, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
 
-    const handleSelectSlot = useCallback((slotType: EquipmentSlotType) => {
-        const item = equippedItemsMap[slotType];
-        if (item) setSelectedItem(item);
-    }, [equippedItemsMap]);
-    
+    const handleSelectSlot = useCallback((slotType: EquipmentSlotType) => { const item = equippedItemsMap[slotType]; if (item) setSelectedItem(item); }, [equippedItemsMap]);
     const handleSelectItem = useCallback((item: OwnedItem) => setSelectedItem(item), []);
     const handleCloseDetailModal = useCallback(() => setSelectedItem(null), []);
     const handleCloseCraftSuccessModal = useCallback(() => setNewlyCraftedItem(null), []);
@@ -774,7 +797,6 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
                         <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing}>Craft</button>
                     </section>
                     
-                    {/* --- THAY ĐỔI LỚN: GIAO DIỆN KHO CHỨA ĐỒ MỚI --- */}
                     <section className="w-full p-4 bg-black/30 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <div className="flex items-baseline gap-2">
