@@ -113,7 +113,9 @@ const getTotalUpgradeCost = (itemDef: ItemDefinition, level: number): number => 
 const CloseIcon = ({ className = '' }: { className?: string }) => ( <img src={uiAssets.closeIcon} alt="Đóng" className={className} /> );
 const GoldIcon = ({ className = '' }: { className?: string }) => ( <img src={equipmentUiAssets.goldIcon} alt="Vàng" className={className} /> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+// THAY ĐỔI: Icon Rèn được thay bằng MergeIcon mới
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4c-1.1 0-2 .9-2 2v4h1.5c1.93 0 3.5 1.57 3.5 3.5S5.43 20 3.5 20H2v-4c0-1.1.9-2 2-2h4v1.5a2.5 2.5 0 0 0 5 0V13h4c1.1 0 2-.9 2 2v4h-1.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5H22v-4c0-1.1-.9-2-2-2z"/> </svg>);
+// THAY ĐỔI: Icon mới cho Mảnh trang bị
 const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => ( <img src={equipmentUiAssets.equipmentPieceIcon} alt="Mảnh Trang Bị" className={className} /> );
 
 // --- CÁC COMPONENT CON ---
@@ -127,6 +129,7 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
                     <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
                 </button>
                 <div className="flex items-center gap-4 sm:gap-6">
+                    {/* *** THAY ĐỔI: Sử dụng CoinDisplay đã import *** */}
                     <CoinDisplay displayedCoins={gold} isStatsFullscreen={false} />
                 </div>
             </div>
@@ -168,11 +171,13 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
     );
 });
 
+// --- THAY ĐỔI LỚN: TẠO COMPONENT `InventorySlot` MỚI THAY THẾ CHO `ItemCard` ---
 const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: OwnedItem | undefined; onClick: (item: OwnedItem) => void; isProcessing: boolean; }) => {
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
 
     const baseClasses = "relative aspect-square rounded-lg border-2 transition-all duration-200 flex items-center justify-center group";
     
+    // Logic cho style và tương tác
     const interactivity = isProcessing ? 'cursor-wait' : (ownedItem ? 'cursor-pointer hover:scale-105 hover:shadow-lg' : 'cursor-default');
     const borderStyle = itemDef ? getRarityColor(itemDef.rarity) : 'border-slate-800 border-dashed';
     const backgroundStyle = itemDef ? 'bg-slate-900/80' : 'bg-slate-900/30';
@@ -216,65 +221,60 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
+// ==================================================================
+// ============ START OF UPDATED ItemDetailModal COMPONENT ==========
+// ==================================================================
+
+// --- Tiện ích và Component Toast được tích hợp ---
 const formatBonus = (num: number) => {
     if (num < 1000) return num.toString();
     if (num < 1000000) return `${(num / 1000).toFixed(1).replace('.0', '')}K`;
     return `${(num / 1000000).toFixed(1).replace('.0', '')}M`;
 };
 
-const UpgradeStatToast = ({ icon, bonus, colorClasses }: { icon: JSX.Element; bonus: number; colorClasses: { border: string; text: string; }}) => {
-    return (
-      <div
-        className={`absolute -top-4 left-1/2 -translate-x-1/2 -ml-10 z-50 pointer-events-none
-                    flex items-center justify-center gap-1 px-2.5 py-1
-                    rounded-full shadow-lg backdrop-blur-sm
-                    bg-slate-900/80 border ${colorClasses.border}
-                    animate-float-up`}
-      >
-        <div className="w-4 h-4">{icon}</div>
-        <span className={`text-sm font-bold ${colorClasses.text}`}>
-          +{formatBonus(bonus)}
-        </span>
-      </div>
-    );
-};
+const animationStyle = `
+  @keyframes float-up-fade-out {
+    0% { opacity: 0; transform: translateY(0) scale(0.7); }
+    20% { opacity: 1; transform: translateY(-25px) scale(1.1); }
+    85% { opacity: 1; transform: translateY(-65px) scale(1); }
+    100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
+  }
+  .animate-float-up { animation: float-up-fade-out 1.5s ease-out forwards; }
+`;
 
-// ==================================================================
-// ============ START OF UPDATED ItemDetailModal COMPONENT ==========
-// ==================================================================
-
-// --- SỬA LỖI: Sửa lại định nghĩa props cho ItemDetailModal ---
-interface ItemDetailModalProps {
-    ownedItem: OwnedItem;
-    onClose: () => void;
-    onEquip: (item: OwnedItem) => void;
-    onUnequip: (item: OwnedItem) => void;
-    onDismantle: (item: OwnedItem) => void;
-    onUpgrade: (item: OwnedItem) => void; // <--- SỬA LỖI: Chữ ký hàm đã đúng
-    isEquipped: boolean;
-    gold: number;
-    isProcessing: boolean;
+interface UpgradeStatToastProps {
+  isVisible: boolean;
+  icon: JSX.Element;
+  bonus: number;
+  colorClasses: { border: string; text: string; };
 }
 
-const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: ItemDetailModalProps) => {
+const UpgradeStatToast: React.FC<UpgradeStatToastProps> = ({ isVisible, icon, bonus, colorClasses }) => {
+  if (!isVisible) return null;
+  return (
+    <>
+      <style>{animationStyle}</style>
+      <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none flex items-center justify-center gap-1 px-2.5 py-1 rounded-full shadow-lg backdrop-blur-sm bg-slate-900/80 border ${colorClasses.border} animate-float-up`}>
+        <div className="w-4 h-4">{icon}</div>
+        <span className={`text-sm font-bold ${colorClasses.text}`}>+{formatBonus(bonus)}</span>
+      </div>
+    </>
+  );
+};
+
+// --- Component Modal Chính ---
+const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem, statKey: string, increase: number) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     const [activeTab, setActiveTab] = useState<'stats' | 'upgrade'>('stats');
-    const [upgradeToast, setUpgradeToast] = useState<{ key: number; statKey: string; bonus: number } | null>(null);
-
-    const triggerUpgradeToast = (statKey: string, bonus: number) => {
-        setUpgradeToast({ key: Date.now(), statKey, bonus });
-    };
-
-    const handleUpgradeClick = () => {
-        onUpgrade(ownedItem); // <--- SỬA LỖI: Gọi hàm với đúng tham số
-    };
+    
+    // State cho toast animation
+    const [toastInfo, setToastInfo] = useState<{ key: number; isVisible: boolean; icon: JSX.Element; bonus: number; colorClasses: { border: string; text: string; } } | null>(null);
 
     const sortedStats = useMemo(() => {
         const order = ['hp', 'atk', 'def'];
         const stats = ownedItem.stats || {};
         const orderedEntries: [string, any][] = [];
         const remainingEntries = { ...stats };
-
         for (const key of order) {
             if (stats.hasOwnProperty(key)) {
                 orderedEntries.push([key, stats[key]]);
@@ -286,8 +286,37 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     }, [ownedItem.stats]);
 
     if (!itemDef) return null;
+    
+    // THAY ĐỔI: Hàm xử lý nâng cấp được gọi từ modal
+    const handleUpgradeClick = () => {
+        const upgradableStats = sortedStats.filter(([_, value]) => typeof value === 'number').map(([key]) => key);
+        if (upgradableStats.length === 0) return;
 
-    const isUpgradable = !!itemDef.stats;
+        // Chọn ngẫu nhiên 1 chỉ số để nâng cấp
+        const statToUpgrade = upgradableStats[Math.floor(Math.random() * upgradableStats.length)];
+        const currentValue = ownedItem.stats[statToUpgrade];
+        const increase = Math.max(1, Math.round(currentValue * 0.01));
+        
+        onUpgrade(ownedItem, statToUpgrade, increase);
+
+        // Kích hoạt toast
+        const config = STAT_CONFIG[statToUpgrade.toLowerCase()];
+        if (config) {
+            setToastInfo({
+                key: Date.now(), // Key duy nhất để re-render và chạy lại animation
+                isVisible: true,
+                icon: <config.Icon className="w-full h-full" />,
+                bonus: increase,
+                colorClasses: { border: config.color.replace('text-', 'border-'), text: config.color.replace('border-','text-') }
+            });
+            setTimeout(() => {
+                setToastInfo(prev => prev ? { ...prev, isVisible: false } : null);
+            }, 1400); // Ẩn toast trước khi animation kết thúc
+        }
+    };
+
+
+    const isUpgradable = !!itemDef.stats && sortedStats.some(([_, value]) => typeof value === 'number');
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(itemDef, ownedItem.level) : 0;
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
     const hasStats = sortedStats.length > 0;
@@ -299,10 +328,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
         ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-orange-500/25 active:scale-100'
         : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100';
     const mainActionDisabledStyle = 'bg-slate-700 text-slate-500 cursor-not-allowed';
-    
-    React.useEffect(() => {
-        (onUpgrade as any).triggerToast = triggerUpgradeToast;
-    }, [onUpgrade]);
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
@@ -334,101 +359,58 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                             <div className="w-full bg-black/20 rounded-lg">
                                 {/* Tab Buttons */}
                                 <div className="flex border-b border-slate-700/50">
-                                    <button 
-                                        onClick={() => setActiveTab('stats')}
-                                        className={`relative px-4 py-2 text-sm font-bold transition-colors ${
-                                            activeTab === 'stats' ? 'text-cyan-300' : 'text-slate-500 hover:text-slate-300'
-                                        }`}
-                                    >
-                                        Chỉ Số
-                                        {activeTab === 'stats' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-cyan-400"></div>}
-                                    </button>
-                                    {isUpgradable && (
-                                        <button 
-                                            onClick={() => setActiveTab('upgrade')}
-                                            className={`relative px-4 py-2 text-sm font-bold transition-colors ${
-                                                activeTab === 'upgrade' ? 'text-purple-300' : 'text-slate-500 hover:text-slate-300'
-                                            }`}
-                                        >
-                                            Nâng Cấp
-                                            {activeTab === 'upgrade' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-purple-400"></div>}
-                                        </button>
-                                    )}
+                                    <button onClick={() => setActiveTab('stats')} className={`relative px-4 py-2 text-sm font-bold transition-colors ${activeTab === 'stats' ? 'text-cyan-300' : 'text-slate-500 hover:text-slate-300'}`}>Chỉ Số{activeTab === 'stats' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-cyan-400"></div>}</button>
+                                    {isUpgradable && (<button onClick={() => setActiveTab('upgrade')} className={`relative px-4 py-2 text-sm font-bold transition-colors ${activeTab === 'upgrade' ? 'text-purple-300' : 'text-slate-500 hover:text-slate-300'}`}>Nâng Cấp{activeTab === 'upgrade' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-purple-400"></div>}</button>)}
                                 </div>
                                 
                                 <div className="p-4">
                                     {activeTab === 'stats' && (
-                                        <div className="space-y-1">
-                                            {hasStats ? sortedStats.map(([key, value]) => {
-                                                const config = STAT_CONFIG[key.toLowerCase()];
-                                                const baseStat = itemDef.stats?.[key];
-                                                let bonus = 0;
-                                                if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) {
-                                                    bonus = value - baseStat;
-                                                }
-
-                                                return (
-                                                    <div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">
-                                                        {config?.Icon && (
-                                                            <div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}>
-                                                                <config.Icon className="w-4 h-4" />
-                                                            </div>
-                                                        )}
-                                                        <div className="flex flex-1 items-center justify-between">
-                                                            <span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span>
-                                                            <span className="font-bold text-sm text-white">
-                                                                {typeof value === 'number' ? value.toLocaleString() : value}
-                                                                {bonus > 0 && (
-                                                                    <span className="text-green-400 ml-2 font-normal text-xs">
-                                                                        (+{bonus.toLocaleString()})
-                                                                    </span>
-                                                                )}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            }) : (
-                                                <p className="text-sm text-slate-500 text-center py-4">Vật phẩm này không có chỉ số.</p>
-                                            )}
-                                        </div>
+                                        <div className="space-y-1">{hasStats ? sortedStats.map(([key, value]) => { const config = STAT_CONFIG[key.toLowerCase()]; const baseStat = itemDef.stats?.[key]; let bonus = 0; if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) { bonus = value - baseStat; } return (<div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">{config?.Icon && (<div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-4 h-4" /></div>)}<div className="flex flex-1 items-center justify-between"><span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span><span className="font-bold text-sm text-white">{typeof value === 'number' ? value.toLocaleString() : value}{bonus > 0 && (<span className="text-green-400 ml-2 font-normal text-xs">(+{bonus.toLocaleString()})</span>)}</span></div></div>); }) : (<p className="text-sm text-slate-500 text-center py-4">Vật phẩm này không có chỉ số.</p>)}</div>
                                     )}
 
                                     {activeTab === 'upgrade' && isUpgradable && (
                                         <div className="w-full">
-                                            <div className="text-center p-4 mb-4 bg-slate-900/50 rounded-lg border border-slate-700">
-                                                <p className="text-sm text-slate-300">Nâng cấp sẽ tiêu tốn vàng để tăng ngẫu nhiên một trong các chỉ số cơ bản của vật phẩm.</p>
+                                            {/* THAY ĐỔI GIAO DIỆN NÂNG CẤP */}
+                                            <p className="text-center text-xs text-slate-400 mb-4 italic">Một chỉ số ngẫu nhiên sẽ được tăng.</p>
+                                            <div className="space-y-2 mb-4">
+                                                {sortedStats.map(([key, value]) => {
+                                                    if (typeof value !== 'number') return null;
+                                                    const config = STAT_CONFIG[key.toLowerCase()];
+                                                    const potentialIncrease = Math.max(1, Math.round(value * 0.01));
+                                                    
+                                                    return (
+                                                        <div key={key} className="flex items-center gap-3 bg-slate-900/50 p-2 rounded-md">
+                                                            {config?.Icon && <div className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-3.5 h-3.5" /></div>}
+                                                            <span className="w-12 font-semibold text-slate-300 text-xs">{config?.name || key}</span>
+                                                            <div className="flex flex-1 items-center justify-end gap-2 font-mono text-sm">
+                                                                <span className="text-slate-300">{value.toLocaleString()}</span>
+                                                                <span className="text-green-500 text-xs font-sans">(+{potentialIncrease.toLocaleString()})</span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
-                                            
-                                            <div className="relative mt-4 flex items-center justify-between">
-                                                {upgradeToast && (
-                                                    <UpgradeStatToast
-                                                        key={upgradeToast.key}
-                                                        icon={<STAT_CONFIG[upgradeToast.statKey]?.Icon className="w-full h-full" />}
-                                                        bonus={upgradeToast.bonus}
-                                                        colorClasses={{
-                                                            border: STAT_CONFIG[upgradeToast.statKey]?.color.replace('text-', 'border-') || 'border-slate-400',
-                                                            text: STAT_CONFIG[upgradeToast.statKey]?.color || 'text-slate-300',
-                                                        }}
-                                                    />
-                                                )}
 
+                                            <div className="mt-4 flex items-center justify-between">
                                                 <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-1.5 font-bold text-sm">
                                                     <span className="text-slate-300">Lv. {ownedItem.level}</span>
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                                                     <span className="text-green-400">Lv. {ownedItem.level + 1}</span>
                                                 </div>
 
-                                                <button 
-                                                    onClick={handleUpgradeClick}
-                                                    disabled={!canAffordUpgrade || actionDisabled} 
-                                                    className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 transform 
-                                                    ${!canAffordUpgrade || actionDisabled 
-                                                        ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' 
-                                                        : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border border-purple-500 hover:scale-105 active:scale-100'}`}
-                                                >
-                                                    <GoldIcon className="w-5 h-5"/> 
-                                                    <span>{currentUpgradeCost.toLocaleString()}</span>
-                                                </button>
+                                                {/* THAY ĐỔI: Thêm container relative cho toast */}
+                                                <div className="relative">
+                                                    <button 
+                                                        onClick={handleUpgradeClick} 
+                                                        disabled={!canAffordUpgrade || actionDisabled} 
+                                                        className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 transform 
+                                                        ${!canAffordUpgrade || actionDisabled ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 active:scale-100'}`}
+                                                    >
+                                                        <GoldIcon className="w-5 h-5"/> 
+                                                        <span>{currentUpgradeCost.toLocaleString()}</span>
+                                                    </button>
+                                                    {toastInfo && <UpgradeStatToast key={toastInfo.key} {...toastInfo} />}
+                                                </div>
                                             </div>
                                             {!canAffordUpgrade && !actionDisabled && <p className="text-right text-xs text-red-400 mt-2">Không đủ vàng</p>}
                                         </div>
@@ -451,6 +433,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     );
 });
 
+
 // ================================================================
 // ============ END OF UPDATED ItemDetailModal COMPONENT ==========
 // ================================================================
@@ -466,6 +449,7 @@ const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedIte
     return ( <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div> <div className="relative w-full max-w-sm"> <div className="absolute inset-0.5 animate-spin-slow-360"> <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(itemDef.rarity)} opacity-50 rounded-full blur-2xl`}></div> </div> <div className={`relative bg-gradient-to-b ${getRarityGradient(itemDef.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(itemDef.rarity)} text-center flex flex-col items-center gap-4`} style={shadowStyle}> <h2 className="text-2xl font-black tracking-widest uppercase text-white title-glow">Chế Tạo Thành Công</h2> <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}> <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" /> </div> <div className="flex flex-col"> <span className={`text-2xl font-bold ${rarityTextColor}`}>{itemDef.name}</span> <span className="font-semibold text-slate-300">{itemDef.rarity}</span> </div> <p className="text-sm text-slate-400">{itemDef.description}</p> <button onClick={onClose} className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"> Tuyệt vời! </button> </div> </div> </div> );
 });
 
+// --- FORGE MODAL (Hợp nhất/Rèn) ---
 interface ForgeResult { level: number; refundGold: number; }
 interface ForgeGroup { 
     blueprint: ItemBlueprint;
@@ -581,7 +565,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
     const [message, setMessage] = useState('');
     const [messageKey, setMessageKey] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
-    const MAX_ITEMS_IN_STORAGE = 50;
+    const MAX_ITEMS_IN_STORAGE = 50; // THAY ĐỔI: Tăng lên để vừa với lưới 8 cột x 7 hàng
 
     const equippedItemsMap = useMemo(() => {
         const map: { [key in EquipmentSlotType]: OwnedItem | null } = { weapon: null, armor: null, accessory: null };
@@ -658,6 +642,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
             showMessage(`Không đủ Mảnh Trang Bị. Cần ${CRAFTING_COST}.`); 
             return; 
         }
+        // THAY ĐỔI: Kiểm tra số lượng vật phẩm CHƯA TRANG BỊ
         if (unequippedItemsSorted.length >= MAX_ITEMS_IN_STORAGE) { 
             showMessage(`Kho chứa đã đầy.`); 
             return; 
@@ -707,34 +692,28 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
         } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Phân rã thất bại'}`); } finally { setIsProcessing(false); }
     }, [isProcessing, equippedItems, ownedItems, onInventoryUpdate, showMessage]);
 
-    const handleUpgradeItem = useCallback(async (itemToUpgrade: OwnedItem) => {
+    const handleUpgradeItem = useCallback(async (itemToUpgrade: OwnedItem, statKey: string, increase: number) => {
         if (isProcessing) return;
         const itemDef = getItemDefinition(itemToUpgrade.itemId)!;
         
         const cost = getUpgradeCost(itemDef, itemToUpgrade.level);
-        if (gold < cost) {
-            showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`);
-            return;
-        }
-
-        const upgradableStats = Object.keys(itemToUpgrade.stats)
-            .filter(key => typeof itemToUpgrade.stats[key] === 'number');
-
-        if (upgradableStats.length === 0) {
-            showMessage("Vật phẩm này không có chỉ số để nâng cấp.");
-            return;
+        if (gold < cost) { 
+            showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); 
+            return; 
         }
         
         setIsProcessing(true);
 
-        const statToUpgrade = upgradableStats[Math.floor(Math.random() * upgradableStats.length)];
-        const currentValue = itemToUpgrade.stats[statToUpgrade];
-        const increase = Math.max(1, Math.round(currentValue * 0.01));
-
-        const newStats = {
-            ...itemToUpgrade.stats,
-            [statToUpgrade]: currentValue + increase,
-        };
+        // THAY ĐỔI: Chỉ nâng cấp chỉ số được chọn ngẫu nhiên
+        const newStats = { ...itemToUpgrade.stats };
+        if (newStats.hasOwnProperty(statKey) && typeof newStats[statKey] === 'number') {
+            newStats[statKey] = newStats[statKey] + increase;
+        } else {
+            // Trường hợp hiếm gặp, hủy bỏ và báo lỗi
+            setIsProcessing(false);
+            showMessage("Lỗi: Không thể nâng cấp chỉ số không tồn tại.");
+            return;
+        }
 
         const updatedItem = { 
             ...itemToUpgrade, 
@@ -743,13 +722,9 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
         };
 
         const newOwnedList = ownedItems.map(s => s.id === itemToUpgrade.id ? updatedItem : s);
-        
         try {
             await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: -cost, piecesChange: 0 });
-            setSelectedItem(updatedItem);
-            if ((handleUpgradeItem as any).triggerToast) {
-                (handleUpgradeItem as any).triggerToast(statToUpgrade, increase);
-            }
+            setSelectedItem(updatedItem); // Cập nhật item đang được chọn để hiển thị chỉ số mới
         } catch(error: any) { 
             showMessage(`Lỗi: ${error.message || 'Nâng cấp thất bại'}`); 
         } finally { 
@@ -804,28 +779,10 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
 
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
-            <style>{`
-                .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } 
-                .animate-spin-slow-360 { animation: spin 20s linear infinite; } 
-                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } 
-                .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } 
-                @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } 
-                .hide-scrollbar::-webkit-scrollbar { display: none; } 
-                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-                @keyframes float-up-fade-out {
-                    0% { opacity: 0; transform: translateY(0) scale(0.7); }
-                    20% { opacity: 1; transform: translateY(-25px) scale(1.1); }
-                    85% { opacity: 1; transform: translateY(-65px) scale(1); }
-                    100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
-                }
-                .animate-float-up { animation: float-up-fade-out 1.5s ease-out forwards; }
-            `}</style>
+            <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
             
             {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[101]">{message}</div>}
-            
-            {/* --- SỬA LỖI: Bỏ `as any` vì type đã khớp --- */}
             {selectedItem && <ItemDetailModal ownedItem={selectedItem} onClose={handleCloseDetailModal} onEquip={handleEquipItem} onUnequip={handleUnequipItem} onDismantle={handleDismantleItem} onUpgrade={handleUpgradeItem} isEquipped={Object.values(equippedItems).includes(selectedItem.id)} gold={gold} isProcessing={isProcessing}/>}
-            
             {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
             <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
 
@@ -848,6 +805,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
                         <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing}>Craft</button>
                     </section>
                     
+                    {/* --- THAY ĐỔI LỚN: GIAO DIỆN KHO CHỨA ĐỒ MỚI --- */}
                     <section className="w-full p-4 bg-black/30 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <div className="flex items-baseline gap-2">
