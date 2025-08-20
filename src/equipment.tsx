@@ -545,7 +545,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
     const [message, setMessage] = useState('');
     const [messageKey, setMessageKey] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
-    const MAX_ITEMS_IN_STORAGE = 56; // THAY ĐỔI: Tăng lên để vừa với lưới 8 cột x 7 hàng
+    const MAX_ITEMS_IN_STORAGE = 50; // THAY ĐỔI: Tăng lên để vừa với lưới 8 cột x 7 hàng
 
     const equippedItemsMap = useMemo(() => {
         const map: { [key in EquipmentSlotType]: OwnedItem | null } = { weapon: null, armor: null, accessory: null };
