@@ -5,16 +5,21 @@ const UpgradeStatsSkeleton: React.FC = () => {
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
       {/*
         --- Skeleton Header (Final Version) ---
-        Lý do sử dụng h-8 (32px):
-        1. Header thật có padding p-2.5 (10px top/bottom).
-        2. Nút Home thật có padding py-1.5 (6px top/bottom) và icon h-5 (20px).
-        3. Tổng chiều cao nội dung của nút thật = 6 + 20 + 6 = 32px.
-        4. Vì vậy, placeholder bên trong header cũng phải cao 32px (tức là h-8) để khớp.
-        5. Tổng chiều cao cuối cùng của cả 2 header sẽ là 32px (nội dung) + 20px (padding) = 52px.
+        SỬA ĐỔI: Thay vì dùng các khối div `h-8` đơn giản, ta tái tạo lại cấu trúc HTML và các lớp padding của component thật để đảm bảo sự tương đồng 100% về chiều cao và cả hình dáng.
       */}
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
-        <div className="h-8 w-11 sm:w-36 rounded-lg bg-slate-800/80 animate-pulse"></div>
-        <div className="h-8 w-24 sm:w-28 rounded-lg bg-slate-800/80 animate-pulse"></div>
+        {/* Skeleton cho button "Home", sao chép chính xác padding và kích thước icon. */}
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 animate-pulse">
+          <div className="w-5 h-5 bg-slate-700/80 rounded-sm"></div>
+          <div className="hidden sm:inline h-4 w-20 bg-slate-700/80 rounded-sm"></div>
+        </div>
+        
+        {/* Skeleton cho CoinDisplay, sao chép cấu trúc bên trong của nó. */}
+        <div className="bg-slate-800/80 rounded-lg p-0.5 flex items-center border border-slate-700/60 animate-pulse">
+          <div className="w-4 h-4 rounded-full bg-slate-700/80 mr-1"></div>
+          <div className="h-4 w-12 sm:w-16 bg-slate-700/80 rounded-sm"></div>
+          <div className="ml-0.5 w-3 h-3 bg-slate-700/80 rounded-full"></div>
+        </div>
       </header>
 
       <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
