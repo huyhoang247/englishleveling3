@@ -16,10 +16,10 @@ import {
 import { uiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import RateLimitToast from '../../thong-bao.tsx';
-import SkillStorageList from './skill-storage-list.tsx';
+// BỎ ĐI: import SkillStorageList from './skill-storage-list.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import SkillScreenSkeleton from './skill-loading.tsx';
-import UpgradeEffectToast from './upgrade-effect-toast.tsx'; // <<<--- IMPORT TOAST MỚI
+import UpgradeEffectToast from './upgrade-effect-toast.tsx';
 
 // --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -73,39 +73,45 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
   );
 });
 
-export const SkillCard = memo(({ ownedSkill, isEquipped, onSelect }: { ownedSkill: OwnedSkill, isEquipped: boolean, onSelect: (skill: OwnedSkill) => void }) => {
-  const { isProcessing } = useSkillContext();
-  const skillBlueprint = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
-  if (!skillBlueprint) return null;
+// THÊM MỚI: Component SkillInventorySlot tương tự InventorySlot của trang bị
+const SkillInventorySlot = memo(({ ownedSkill, onClick, isProcessing }: { ownedSkill: OwnedSkill; onClick: (skill: OwnedSkill) => void; isProcessing: boolean; }) => {
+    const skillBlueprint = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
+    if (!skillBlueprint) return null;
+    const IconComponent = skillBlueprint.icon;
 
-  const baseClasses = "relative w-full p-3 rounded-lg border-2 flex items-center gap-4 transition-all duration-200";
-  const interactivity = isEquipped ? 'opacity-50 cursor-not-allowed' : (isProcessing ? 'cursor-wait' : `cursor-pointer hover:border-slate-600 hover:bg-slate-800/50 hover:shadow-lg hover:shadow-cyan-500/10`);
-  const IconComponent = skillBlueprint.icon;
-  
-  return (
-    <div className={`${baseClasses} border-slate-700 bg-slate-900/70 ${interactivity}`} onClick={!isEquipped && !isProcessing ? () => onSelect(ownedSkill) : undefined}>
-      {isEquipped && <div className="absolute inset-0 bg-black/40 rounded-lg z-10 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-cyan-400">Equipped</div>}
-      <div className={`flex-shrink-0 w-14 h-14 flex items-center justify-center rounded-md border ${getRarityColor(ownedSkill.rarity)} bg-black/20`}>
-        <IconComponent className={`w-9 h-9 ${getRarityTextColor(ownedSkill.rarity)}`} />
-      </div>
-      <div className="flex-grow flex flex-col justify-center">
-        <div className="flex justify-between items-center">
-          <h3 className={`text-base font-bold ${getRarityTextColor(ownedSkill.rarity)}`}>{skillBlueprint.name}</h3>
-          <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(ownedSkill.rarity)} ${getRarityTextColor(ownedSkill.rarity)}`}>{ownedSkill.rarity}</span>
+    const baseClasses = "relative aspect-square rounded-lg border-2 transition-all duration-200 flex items-center justify-center group";
+    
+    // Logic cho style và tương tác
+    const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer hover:scale-105 hover:shadow-lg';
+    const borderStyle = getRarityColor(ownedSkill.rarity);
+    const backgroundStyle = 'bg-slate-900/80';
+    const shadowRarity = getRarityColor(ownedSkill.rarity).replace('border-', '');
+    const shadowColorStyle = { '--tw-shadow-color': `var(--tw-color-${shadowRarity})` } as React.CSSProperties;
+    
+    return (
+        <div 
+            className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} 
+            onClick={!isProcessing ? () => onClick(ownedSkill) : undefined}
+            style={shadowColorStyle}
+            title={`${skillBlueprint.name} - Lv.${ownedSkill.level}`}
+        >
+            <>
+                <IconComponent 
+                    className={`w-3/4 h-3/4 object-contain transition-transform duration-200 group-hover:scale-110 ${getRarityTextColor(ownedSkill.rarity)}`}
+                />
+                <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">
+                    Lv.{ownedSkill.level}
+                </span>
+            </>
         </div>
-        <div className="mt-1">
-          <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">Level {ownedSkill.level}</span>
-        </div>
-      </div>
-    </div>
-  );
+    );
 });
+
 
 const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const { handleCloseDetailModal, handleEquipSkill, handleUnequipSkill, handleDisenchantSkill, handleUpgradeSkill, equippedSkills, gold, isProcessing } = useSkillContext();
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
     
-    // <<<--- START: LOGIC CHO TOAST HIỆU ỨNG ---
     const [upgradeToast, setUpgradeToast] = useState({ show: false, oldValue: 0, newValue: 0 });
     const prevLevelRef = useRef(ownedSkill.level);
 
@@ -122,11 +128,10 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
             setUpgradeToast({ show: true, oldValue, newValue });
             setTimeout(() => {
                 setUpgradeToast({ show: false, oldValue: 0, newValue: 0 });
-            }, 1600); // Tăng thời gian khớp với animation
+            }, 1600);
         }
         prevLevelRef.current = ownedSkill.level;
     }, [ownedSkill.level, skill]);
-    // <<<--- END: LOGIC CHO TOAST HIỆU ỨNG ---
 
     if (!skill) return null;
 
@@ -213,8 +218,6 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     );
 });
 
-
-// Các component còn lại (CraftingSuccessModal, MergeModal, SkillScreenContent, etc.) giữ nguyên
 
 const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const { handleCloseCraftSuccessModal } = useSkillContext();
@@ -338,11 +341,29 @@ function SkillScreenContent() {
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <div className="flex items-baseline gap-2">
                                 <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
-                                <span className="text-sm font-semibold text-slate-300">{ownedSkills.length}<span className="text-xs text-slate-500"> / {MAX_SKILLS_IN_STORAGE}</span></span>
+                                <span className="text-sm font-semibold text-slate-300">{unequippedSkillsSorted.length}<span className="text-xs text-slate-500"> / {MAX_SKILLS_IN_STORAGE}</span></span>
                             </div>
                             <button onClick={handleOpenMergeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
                         </div>
-                        <SkillStorageList skills={unequippedSkillsSorted} />
+                        {/* --- THAY ĐỔI LỚN: GIAO DIỆN KHO CHỨA ĐỒ MỚI --- */}
+                        <div className="flex-grow min-h-0 overflow-y-auto hide-scrollbar -m-1 p-1">
+                            {unequippedSkillsSorted.length > 0 ? (
+                                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                                    {unequippedSkillsSorted.map((ownedSkill) => (
+                                        <SkillInventorySlot
+                                            key={ownedSkill.id}
+                                            ownedSkill={ownedSkill}
+                                            onClick={handleSelectSkill}
+                                            isProcessing={isProcessing}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-slate-500">
+                                    <p>Kho chứa trống.</p>
+                                </div>
+                            )}
+                        </div>
                     </section>
                 </main>
             </div>
