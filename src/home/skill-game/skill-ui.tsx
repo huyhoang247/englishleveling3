@@ -16,7 +16,8 @@ import {
 import { uiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import RateLimitToast from '../../thong-bao.tsx';
-import SkillStorageList from './skill-storage-list.tsx'; // Import component mới
+import SkillStorageList from './skill-storage-list.tsx';
+import SkillScreenSkeleton from './skill-loading.tsx'; // <<<--- IMPORT MỚI
 
 // --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -263,11 +264,6 @@ const MergeModal = memo(() => {
     );
 });
 
-const LoadingOverlay = () => (
-    <div className="absolute inset-0 z-[200] flex items-center justify-center bg-gray-900/80 backdrop-blur-sm">
-        <div className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-purple-400"></div>
-    </div>
-);
 
 function SkillScreenContent() {
     const {
@@ -278,11 +274,7 @@ function SkillScreenContent() {
     } = useSkillContext();
 
     if (isLoading) {
-        return (
-            <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52]">
-                <LoadingOverlay />
-            </div>
-        );
+        return <SkillScreenSkeleton />;
     }
 
     return (
