@@ -785,17 +785,14 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
                         </div>
                         <div className="flex-grow min-h-0 overflow-y-auto hide-scrollbar -m-1 p-1">
                              <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                                {Array.from({ length: MAX_ITEMS_IN_STORAGE }).map((_, index) => {
-                                    const ownedItem = unequippedItemsSorted[index];
-                                    return (
-                                        <InventorySlot
-                                            key={ownedItem ? ownedItem.id : `empty-${index}`}
-                                            ownedItem={ownedItem}
-                                            onClick={handleSelectItem}
-                                            isProcessing={isProcessing}
-                                        />
-                                    );
-                                })}
+                                {unequippedItemsSorted.map(ownedItem => (
+                                    <InventorySlot
+                                        key={ownedItem.id}
+                                        ownedItem={ownedItem}
+                                        onClick={handleSelectItem}
+                                        isProcessing={isProcessing}
+                                    />
+                                ))}
                             </div>
                         </div>
                     </section>
