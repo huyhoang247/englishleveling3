@@ -144,10 +144,10 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
     const borderStyle = itemDef ? `${getRarityColor(itemDef.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
     const backgroundStyle = itemDef ? 'bg-slate-900/80' : 'bg-slate-900/50';
 
-    // THAY ĐỔI: Icon placeholder được thay bằng dấu cộng (+) nhất quán và được căn giữa để trông đẹp và logic hơn. Icon cũ bị méo và không đồng nhất.
+    // THAY ĐỔI (FIX): Cập nhật lại path data của SVG để đảm bảo dấu cộng được căn giữa hoàn hảo trên mọi trình duyệt.
     const getPlaceholderIcon = () => {
-        return <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
+        return <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
         </svg>;
     };
 
