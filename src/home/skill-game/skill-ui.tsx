@@ -16,9 +16,9 @@ import {
 import { uiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import RateLimitToast from '../../thong-bao.tsx';
-import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import SkillStorageList from './skill-storage-list.tsx';
-import SkillScreenSkeleton from './skill-loading.tsx'; // <<<--- IMPORT MỚI
+import { useAnimateValue } from '../../ui/useAnimateValue.ts'; // <<<--- IMPORT MỚI
+import SkillScreenSkeleton from './skill-loading.tsx';
 
 // --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -27,7 +27,7 @@ const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http:/
 // --- CÁC COMPONENT CON (ĐÃ BỌC TRONG React.memo) ---
 const Header = memo(() => {
     const { gold, handleClose } = useSkillContext();
-    const animatedGold = useAnimateValue(gold, 500);
+    const animatedGold = useAnimateValue(gold); // <<<--- SỬ DỤNG HOOK ANIMATE
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
