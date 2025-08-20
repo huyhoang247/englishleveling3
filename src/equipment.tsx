@@ -284,7 +284,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
         const statToUpgrade = upgradableStats[Math.floor(Math.random() * upgradableStats.length)];
         const currentValue = ownedItem.stats[statToUpgrade];
         
-        // THAY ĐỔI: Tăng ngẫu nhiên từ 1% đến 5%
         const randomPercent = 0.01 + Math.random() * 0.04; // Random float between 0.01 and 0.05
         const increase = Math.max(1, Math.round(currentValue * randomPercent));
         
@@ -353,9 +352,14 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
 
                                     {activeTab === 'upgrade' && isUpgradable && (
                                         <div className="w-full flex flex-col items-center justify-center py-6 space-y-6">
-                                            <p className="text-center text-sm text-slate-300">
-                                                Một chỉ số ngẫu nhiên sẽ được tăng.
-                                            </p>
+                                            <div className="text-center">
+                                                <p className="text-sm text-slate-300">
+                                                    Một chỉ số ngẫu nhiên sẽ được tăng.
+                                                </p>
+                                                <p className="text-xs text-purple-300 font-semibold mt-1">
+                                                    Tăng ngẫu nhiên 1% - 5% chỉ số cơ bản
+                                                </p>
+                                            </div>
                                             
                                             <div className="w-full max-w-xs flex items-center justify-between">
                                                 <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-1.5 font-bold text-sm">
