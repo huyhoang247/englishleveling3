@@ -110,7 +110,9 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
     const [craftErrorToast, setCraftErrorToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     const [equipErrorToast, setEquipErrorToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     const [disenchantSuccessToast, setDisenchantSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
-    const MAX_SKILLS_IN_STORAGE = 20;
+    
+    // *** THAY ĐỔI TẠI ĐÂY ***
+    const MAX_SKILLS_IN_STORAGE = 50;
 
     const showMessage = useCallback((text: string) => {
         setMessage(text);
@@ -223,7 +225,7 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
 
         const success = await handleUpdateDatabase({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: 0, booksChange: -CRAFTING_COST });
         if (success) setNewlyCraftedSkill(newOwnedSkill);
-    }, [isProcessing, ancientBooks, ownedSkills, equippedSkillIds, handleUpdateDatabase, showMessage]);
+    }, [isProcessing, ancientBooks, ownedSkills, equippedSkillIds, handleUpdateDatabase, showMessage, MAX_SKILLS_IN_STORAGE]);
 
     const handleDisenchantSkill = useCallback(async (skillToDisenchant: OwnedSkill) => {
         if (isProcessing || equippedSkills.some(s => s?.id === skillToDisenchant.id)) return;
