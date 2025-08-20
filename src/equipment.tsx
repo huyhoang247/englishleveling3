@@ -144,7 +144,6 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
     const borderStyle = itemDef ? `${getRarityColor(itemDef.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
     const backgroundStyle = itemDef ? 'bg-slate-900/80' : 'bg-slate-900/50';
 
-    // THAY ĐỔI (FIX): Cập nhật lại path data của SVG để đảm bảo dấu cộng được căn giữa hoàn hảo trên mọi trình duyệt.
     const getPlaceholderIcon = () => {
         return <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
@@ -172,31 +171,45 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
     );
 });
 
-const ItemCard = memo(({ ownedItem, onClick, isEquipped, isProcessing }: { ownedItem: OwnedItem, onClick: (item: OwnedItem) => void, isEquipped: boolean, isProcessing: boolean }) => {
-    const itemDef = getItemDefinition(ownedItem.itemId);
-    if (!itemDef) return null;
+// --- THAY ĐỔI LỚN: TẠO COMPONENT `InventorySlot` MỚI THAY THẾ CHO `ItemCard` ---
+const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: OwnedItem | undefined; onClick: (item: OwnedItem) => void; isProcessing: boolean; }) => {
+    const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
 
-    const baseClasses = "relative w-full p-3 rounded-lg border-2 flex items-center gap-4 transition-all duration-200";
-    const interactivity = isEquipped ? 'opacity-50 cursor-not-allowed' : (isProcessing ? 'cursor-wait' : `cursor-pointer hover:border-slate-600 hover:bg-slate-800/50 hover:shadow-lg hover:shadow-cyan-500/10`);
-
+    const baseClasses = "relative aspect-square rounded-lg border-2 transition-all duration-200 flex items-center justify-center group";
+    
+    // Logic cho style và tương tác
+    const interactivity = isProcessing ? 'cursor-wait' : (ownedItem ? 'cursor-pointer hover:scale-105 hover:shadow-lg' : 'cursor-default');
+    const borderStyle = itemDef ? getRarityColor(itemDef.rarity) : 'border-slate-800 border-dashed';
+    const backgroundStyle = itemDef ? 'bg-slate-900/80' : 'bg-slate-900/30';
+    const shadowRarity = itemDef ? getRarityColor(itemDef.rarity).replace('border-', '') : 'transparent';
+    const shadowStyle = itemDef ? { boxShadow: `0 0 12px -2px var(--tw-shadow-color)` } : {};
+    const shadowColorStyle = itemDef ? { '--tw-shadow-color': `var(--tw-color-${shadowRarity})` } as React.CSSProperties : {};
+    
     return (
-        <div className={`${baseClasses} border-slate-700 bg-slate-900/70 ${interactivity}`} onClick={!isEquipped && !isProcessing ? () => onClick(ownedItem) : undefined}>
-            {isEquipped && <div className="absolute inset-0 bg-black/40 rounded-lg z-10 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-cyan-400">Đang Trang Bị</div>}
-            <div className={`flex-shrink-0 w-14 h-14 flex items-center justify-center rounded-md border ${getRarityColor(itemDef.rarity)} bg-black/20`}>
-                <img src={itemDef.icon} alt={itemDef.name} className="w-10 h-10 object-contain" />
-            </div>
-            <div className="flex-grow flex flex-col justify-center">
-                <div className="flex justify-between items-center">
-                    <h3 className={`text-base font-bold ${getRarityTextColor(itemDef.rarity)}`}>{itemDef.name}</h3>
-                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full bg-slate-800 border ${getRarityColor(itemDef.rarity)} ${getRarityTextColor(itemDef.rarity)}`}>{itemDef.rarity}</span>
-                </div>
-                <div className="mt-1">
-                    <span className="text-xs font-bold text-white bg-slate-700/80 px-2 py-0.5 rounded-full border border-slate-600">Level {ownedItem.level}</span>
-                </div>
-            </div>
+        <div 
+            className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} 
+            onClick={ownedItem && !isProcessing ? () => onClick(ownedItem) : undefined}
+            style={shadowColorStyle}
+        >
+            {ownedItem && itemDef ? (
+                <>
+                    <img 
+                        src={itemDef.icon} 
+                        alt={itemDef.name} 
+                        className="w-3/4 h-3/4 object-contain transition-transform duration-200 group-hover:scale-110"
+                        title={`${itemDef.name} - Lv.${ownedItem.level}`}
+                    />
+                    <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">
+                        Lv.{ownedItem.level}
+                    </span>
+                </>
+            ) : (
+                <div className="w-2 h-2 bg-slate-700 rounded-full" />
+            )}
         </div>
     );
 });
+
 
 // --- Icons và Cấu hình Chỉ số ---
 const HpIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/> </svg> );
@@ -216,7 +229,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     const itemDef = getItemDefinition(ownedItem.itemId);
     const [activeTab, setActiveTab] = useState<'stats' | 'upgrade'>('stats');
 
-    // Sắp xếp các chỉ số theo thứ tự HP, ATK, DEF
     const sortedStats = useMemo(() => {
         const order = ['hp', 'atk', 'def'];
         const stats = ownedItem.stats || {};
@@ -362,7 +374,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                 })}
                                             </div>
 
-                                            {/* THAY ĐỔI: Giao diện nâng cấp Lv được làm tinh tế hơn */}
                                             <div className="mt-4 flex items-center justify-between">
                                                 <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-1.5 font-bold text-sm">
                                                     <span className="text-slate-300">Lv. {ownedItem.level}</span>
@@ -513,7 +524,6 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 
 
 // --- COMPONENT CHÍNH ---
-// THAY ĐỔI: Cập nhật Props để sử dụng Mảnh trang bị
 interface EquipmentScreenProps {
     onClose: () => void;
     gold: number;
@@ -524,7 +534,7 @@ interface EquipmentScreenProps {
         newOwned: OwnedItem[]; 
         newEquipped: EquippedItems; 
         goldChange: number; 
-        piecesChange: number; // <-- Đổi từ booksChange
+        piecesChange: number;
     }) => Promise<void>;
 }
 
@@ -535,7 +545,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
     const [message, setMessage] = useState('');
     const [messageKey, setMessageKey] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
-    const MAX_ITEMS_IN_STORAGE = 50;
+    const MAX_ITEMS_IN_STORAGE = 56; // THAY ĐỔI: Tăng lên để vừa với lưới 8 cột x 7 hàng
 
     const equippedItemsMap = useMemo(() => {
         const map: { [key in EquipmentSlotType]: OwnedItem | null } = { weapon: null, armor: null, accessory: null };
@@ -608,12 +618,12 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
   
     const handleCraftItem = useCallback(async () => {
         if (isProcessing) return;
-        // THAY ĐỔI: Kiểm tra Mảnh trang bị
         if (equipmentPieces < CRAFTING_COST) { 
             showMessage(`Không đủ Mảnh Trang Bị. Cần ${CRAFTING_COST}.`); 
             return; 
         }
-        if (ownedItems.length >= MAX_ITEMS_IN_STORAGE) { 
+        // THAY ĐỔI: Kiểm tra số lượng vật phẩm CHƯA TRANG BỊ
+        if (unequippedItemsSorted.length >= MAX_ITEMS_IN_STORAGE) { 
             showMessage(`Kho chứa đã đầy.`); 
             return; 
         }
@@ -634,7 +644,6 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
             };
             const newOwnedList = [...ownedItems, newOwnedItem];
             
-            // THAY ĐỔI: Trừ Mảnh trang bị
             await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: -CRAFTING_COST });
             setNewlyCraftedItem(newOwnedItem);
 
@@ -643,7 +652,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
         } finally { 
             setIsProcessing(false); 
         }
-    }, [isProcessing, equipmentPieces, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
+    }, [isProcessing, equipmentPieces, ownedItems, equippedItems, onInventoryUpdate, showMessage, unequippedItemsSorted.length]);
 
     const handleDismantleItem = useCallback(async (itemToDismantle: OwnedItem) => {
         if (isProcessing) return;
@@ -655,7 +664,6 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
         const newOwnedList = ownedItems.filter(s => s.id !== itemToDismantle.id);
         
         try {
-            // THAY ĐỔI: Hoàn trả Mảnh trang bị
             await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: goldToReturn, piecesChange: DISMANTLE_RETURN_PIECES });
             setSelectedItem(null);
             let dismantleMsg = `Đã phân rã ${itemDef.name}, nhận lại ${DISMANTLE_RETURN_PIECES} Mảnh Trang Bị.`;
@@ -755,7 +763,6 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
                             {EQUIPMENT_SLOT_TYPES.map(slotType => <EquipmentSlot key={slotType} slotType={slotType} ownedItem={equippedItemsMap[slotType]} onClick={() => handleSelectSlot(slotType)} isProcessing={isProcessing} />)}
                         </div>
                     </section>
-                    {/* THAY ĐỔI: Giao diện chế tạo dùng Mảnh trang bị */}
                     <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <EquipmentPieceIcon className="w-10 h-10" />
@@ -766,20 +773,30 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
                         </div>
                         <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing}>Craft</button>
                     </section>
-                    <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
+                    
+                    {/* --- THAY ĐỔI LỚN: GIAO DIỆN KHO CHỨA ĐỒ MỚI --- */}
+                    <section className="w-full p-4 bg-black/30 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <div className="flex items-baseline gap-2">
                                 <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
-                                <span className="text-sm font-semibold text-slate-300">{ownedItems.length}<span className="text-xs text-slate-500"> / {MAX_ITEMS_IN_STORAGE}</span></span>
+                                <span className="text-sm font-semibold text-slate-300">{unequippedItemsSorted.length}<span className="text-xs text-slate-500"> / {MAX_ITEMS_IN_STORAGE}</span></span>
                             </div>
                             <button onClick={handleOpenForgeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto hide-scrollbar">
-                            {unequippedItemsSorted.length > 0 ? (
-                                unequippedItemsSorted.map(ownedItem => (
-                                    <ItemCard key={ownedItem.id} ownedItem={ownedItem} onClick={handleSelectItem} isEquipped={false} isProcessing={isProcessing} />
-                                ))
-                            ) : ( <div className="col-span-full flex items-center justify-center h-full text-slate-500"><p>Kho chứa trống.</p></div> )}
+                        <div className="flex-grow min-h-0 overflow-y-auto hide-scrollbar -m-1 p-1">
+                             <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                                {Array.from({ length: MAX_ITEMS_IN_STORAGE }).map((_, index) => {
+                                    const ownedItem = unequippedItemsSorted[index];
+                                    return (
+                                        <InventorySlot
+                                            key={ownedItem ? ownedItem.id : `empty-${index}`}
+                                            ownedItem={ownedItem}
+                                            onClick={handleSelectItem}
+                                            isProcessing={isProcessing}
+                                        />
+                                    );
+                                })}
+                            </div>
                         </div>
                     </section>
                 </main>
