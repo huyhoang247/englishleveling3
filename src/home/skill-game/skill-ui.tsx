@@ -19,7 +19,7 @@ import RateLimitToast from '../../thong-bao.tsx';
 import SkillStorageList from './skill-storage-list.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import SkillScreenSkeleton from './skill-loading.tsx';
-import UpgradeOnIconToast from './upgrade-effect-toast.tsx'; // <<<--- IMPORT TOAST MỚI
+import UpgradeEffectToast from './upgrade-effect-toast.tsx'; // <<<--- IMPORT TOAST MỚI
 
 // --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -105,7 +105,7 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const { handleCloseDetailModal, handleEquipSkill, handleUnequipSkill, handleDisenchantSkill, handleUpgradeSkill, equippedSkills, gold, isProcessing } = useSkillContext();
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
     
-    // --- LOGIC CHO TOAST (GIỮ NGUYÊN) ---
+    // <<<--- START: LOGIC CHO TOAST HIỆU ỨNG ---
     const [upgradeToast, setUpgradeToast] = useState({ show: false, oldValue: 0, newValue: 0 });
     const prevLevelRef = useRef(ownedSkill.level);
 
@@ -122,11 +122,11 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
             setUpgradeToast({ show: true, oldValue, newValue });
             setTimeout(() => {
                 setUpgradeToast({ show: false, oldValue: 0, newValue: 0 });
-            }, 1600);
+            }, 1600); // Tăng thời gian khớp với animation
         }
         prevLevelRef.current = ownedSkill.level;
     }, [ownedSkill.level, skill]);
-    // --- KẾT THÚC LOGIC CHO TOAST ---
+    // <<<--- END: LOGIC CHO TOAST HIỆU ỨNG ---
 
     if (!skill) return null;
 
@@ -135,7 +135,9 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const isUpgradable = skill.upgradeCost !== undefined;
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(skill.upgradeCost!, ownedSkill.level) : 0;
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
+
     const currentEffectValue = calculateEffectValue(ownedSkill.level);
+
     const actionDisabled = isProcessing;
     const mainActionText = isEquipped ? 'Remove' : 'Equip';
     const mainActionHandler = () => isEquipped ? handleUnequipSkill(ownedSkill) : handleEquipSkill(ownedSkill);
@@ -163,20 +165,15 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
             {/* Content */}
             <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2">
               <div className="flex flex-col items-center text-center gap-4">
-                {/* <<<--- THAY ĐỔI TẠI ĐÂY: THÊM `relative` VÀ ĐẶT TOAST VÀO BÊN TRONG --- */}
-                <div className={`relative w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}>
-                    <IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)}`} />
-                    <UpgradeOnIconToast isVisible={upgradeToast.show} oldValue={upgradeToast.oldValue} newValue={upgradeToast.newValue} />
-                </div>
-                {/* <<<--- KẾT THÚC THAY ĐỔI --- */}
-
+                <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)}`} /></div>
                 <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50 text-left">
                     <p className="text-slate-300 text-sm leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
                 </div>
                 {skill.baseEffectValue !== undefined && ( <div className="w-full text-left text-sm p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
                 {isUpgradable && (
                     <div className="w-full mb-4 space-y-2">
-                        <div className="w-full relative p-3 rounded-lg transition-colors duration-300 text-left flex items-center justify-between bg-black/20 border border-slate-700/80">
+                        <div className="relative w-full p-3 rounded-lg transition-colors duration-300 text-left flex items-center justify-between bg-black/20 border border-slate-700/80">
+                            <UpgradeEffectToast isVisible={upgradeToast.show} oldValue={upgradeToast.oldValue} newValue={upgradeToast.newValue} />
                             <div className="flex flex-col">
                                 <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
                                 <div className="flex items-center gap-2 font-bold text-lg mt-1">
@@ -216,7 +213,9 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     );
 });
 
+
 // Các component còn lại (CraftingSuccessModal, MergeModal, SkillScreenContent, etc.) giữ nguyên
+
 const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const { handleCloseCraftSuccessModal } = useSkillContext();
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
