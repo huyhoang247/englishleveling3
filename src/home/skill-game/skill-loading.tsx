@@ -6,12 +6,21 @@ const SkillScreenSkeleton = () => {
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
              {/* --- Skeleton Header --- */}
+            {/* SỬA ĐỔI: Header skeleton được tái cấu trúc để sao chép chính xác cấu trúc và padding của các component con (Button, CoinDisplay) nhằm đảm bảo chiều cao khớp 100% với header thật. */}
             <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50">
                 <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
-                    {/* THAY ĐỔI: h-9 (36px) thành h-8 (32px) để khớp với chiều cao thật của button */}
-                    <div className="h-8 w-28 bg-slate-800/60 rounded-lg animate-pulse"></div>
-                    {/* THAY ĐỔI: h-9 (36px) thành h-8 (32px) để khớp với chiều cao thật của CoinDisplay */}
-                    <div className="h-8 w-32 bg-slate-800/60 rounded-lg animate-pulse"></div>
+                    {/* Skeleton cho button "Trang Chính", mô phỏng padding và kích thước icon để có chiều cao chính xác. */}
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/60 animate-pulse">
+                        <div className="w-5 h-5 bg-slate-700/80 rounded-sm" />
+                        <div className="hidden sm:inline h-4 w-20 bg-slate-700/80 rounded-sm" />
+                    </div>
+
+                    {/* Skeleton cho CoinDisplay, mô phỏng cấu trúc bên trong (icon, text, nút plus) để có chiều cao chính xác. */}
+                    <div className="bg-slate-800/60 rounded-lg p-0.5 flex items-center border border-slate-700/60 animate-pulse">
+                        <div className="w-4 h-4 rounded-full bg-slate-700/80 mr-1"></div>
+                        <div className="h-4 w-16 bg-slate-700/80 rounded-sm"></div>
+                        <div className="ml-0.5 w-3 h-3 bg-slate-700/80 rounded-full border border-slate-700/60"></div>
+                    </div>
                 </div>
             </header>
 
