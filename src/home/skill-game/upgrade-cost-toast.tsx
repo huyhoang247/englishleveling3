@@ -1,16 +1,16 @@
-// --- START OF FILE upgrade-cost-toast.tsx ---
+// --- START OF FILE upgrade-effect-toast.tsx ---
 
 import React from 'react';
-import { uiAssets } from '../../game-assets.ts'; // Đảm bảo đường dẫn này đúng
 
-interface UpgradeCostToastProps {
+interface UpgradeEffectToastProps {
   isVisible: boolean;
-  cost: number;
+  oldValue: number;
+  newValue: number;
 }
 
-// Keyframes animation, tương tự file gốc
+// Keyframes animation
 const animationStyle = `
-  @keyframes float-up-fade-out-cost {
+  @keyframes float-up-fade-out-effect {
     0% {
       opacity: 0;
       transform: translateY(0) scale(0.8);
@@ -28,36 +28,47 @@ const animationStyle = `
       transform: translateY(-70px) scale(0.9);
     }
   }
-  .animate-float-up-cost {
-    animation: float-up-fade-out-cost 1.5s ease-out forwards;
+  .animate-float-up-effect {
+    animation: float-up-fade-out-effect 1.6s ease-out forwards;
   }
 `;
 
-const UpgradeCostToast: React.FC<UpgradeCostToastProps> = ({
+// Một icon mũi tên đơn giản
+const RightArrowIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+);
+
+
+const UpgradeEffectToast: React.FC<UpgradeEffectToastProps> = ({
   isVisible,
-  cost,
+  oldValue,
+  newValue,
 }) => {
-  if (!isVisible || cost <= 0) return null;
+  if (!isVisible) return null;
 
   return (
     <>
       <style>{animationStyle}</style>
       <div
-        // Đặt toast ở trên nút Nâng Cấp
-        className={`absolute -top-6 right-0 z-50 pointer-events-none
+        className={`absolute -top-8 left-4 z-50 pointer-events-none
                     flex items-center justify-center gap-1.5 px-3 py-1.5
                     rounded-full shadow-lg backdrop-blur-sm
-                    bg-slate-900/80 border border-yellow-500
-                    animate-float-up-cost`}
+                    bg-slate-900/80 border border-green-500
+                    animate-float-up-effect`}
       >
-        <img src={uiAssets.goldIcon} alt="Vàng" className="w-4 h-4" />
-        <span className={`text-sm font-bold text-yellow-300`}>
-          -{cost.toLocaleString()}
+        <span className={`text-sm font-bold text-slate-300`}>
+          {oldValue}%
+        </span>
+        <RightArrowIcon />
+        <span className={`text-sm font-bold text-green-400`}>
+          {newValue}%
         </span>
       </div>
     </>
   );
 };
 
-export default UpgradeCostToast;
-// --- END OF FILE upgrade-cost-toast.tsx ---
+export default UpgradeEffectToast;
+// --- END OF FILE upgrade-effect-toast.tsx ---
