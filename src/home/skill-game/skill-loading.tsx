@@ -8,8 +8,10 @@ const SkillScreenSkeleton = () => {
              {/* --- Skeleton Header --- */}
             <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50">
                 <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
-                    <div className="h-9 w-28 bg-slate-800/60 rounded-lg animate-pulse"></div>
-                    <div className="h-9 w-32 bg-slate-800/60 rounded-lg animate-pulse"></div>
+                    {/* THAY ĐỔI: h-9 (36px) thành h-8 (32px) để khớp với chiều cao thật của button */}
+                    <div className="h-8 w-28 bg-slate-800/60 rounded-lg animate-pulse"></div>
+                    {/* THAY ĐỔI: h-9 (36px) thành h-8 (32px) để khớp với chiều cao thật của CoinDisplay */}
+                    <div className="h-8 w-32 bg-slate-800/60 rounded-lg animate-pulse"></div>
                 </div>
             </header>
 
