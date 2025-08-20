@@ -351,7 +351,8 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                     )}
 
                                     {activeTab === 'upgrade' && isUpgradable && (
-                                        <div className="w-full flex flex-col items-center justify-center py-6 space-y-6">
+                                        // *** THAY ĐỔI Ở ĐÂY: Giảm padding và space-y ***
+                                        <div className="w-full flex flex-col items-center justify-center py-4 space-y-4">
                                             <div className="text-center">
                                                 <p className="text-sm text-slate-300">
                                                     Một chỉ số ngẫu nhiên sẽ được tăng.
@@ -380,7 +381,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                                     {toastInfo && <UpgradeStatToast key={toastInfo.key} {...toastInfo} />}
                                                 </div>
                                             </div>
-                                            {!canAffordUpgrade && !actionDisabled && <p className="text-center text-xs text-red-400 -mt-4">Không đủ vàng</p>}
+                                            {!canAffordUpgrade && !actionDisabled && <p className="text-center text-xs text-red-400 -mt-2">Không đủ vàng</p>}
                                         </div>
                                     )}
                                 </div>
