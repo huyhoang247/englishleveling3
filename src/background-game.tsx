@@ -1,4 +1,4 @@
-// --- START OF FILE background-game.tsx (FULL CODE) ---
+// --- START OF FILE src/background-game.tsx ---
 
 import React, { useState, useEffect, useRef, useCallback, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -26,6 +26,7 @@ import SkillScreen from './home/skill-game/skill-ui.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
 import RateLimitToast from './thong-bao.tsx';
+import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 
 import { 
   fetchOrCreateUserGameData, 
@@ -68,13 +69,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) { console.error("Uncaught error in component:", error, errorInfo); }
   render() { if (this.state.hasError) { return this.props.fallback || ( <div className="text-red-500 p-4 bg-red-100 border border-red-400 rounded"> <p>Có lỗi xảy ra khi hiển thị nội dung.</p> <p>Chi tiết lỗi: {this.state.error?.message}</p> <p>(Kiểm tra Console để biết thêm thêm thông tin)</p> </div> ); } return this.props.children; }
 }
-
-const LoadingSpinner = () => (
-  <div className="flex flex-col items-center justify-center text-center">
-    <div className="h-12 w-12 animate-spin rounded-full border-[5px] border-slate-700 border-t-purple-400"></div>
-    <p className="mt-5 text-lg font-medium text-gray-300">Loading...</p>
-  </div>
-);
 
 interface ObstacleRunnerGameProps {
   className?: string;
@@ -406,8 +400,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
         <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}> <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary> </div>
       </SidebarLayout>
-      {isLoading && ( <div className="absolute inset-0 z-[100] flex items-center justify-center bg-gray-950/80 backdrop-blur-sm"> <LoadingSpinner /> </div> )}
+      <GameSkeletonLoader show={isLoading} />
     </div>
   );
 }
-// --- END OF FILE background-game.tsx ---
+
+// --- END OF FILE src/background-game.tsx ---
