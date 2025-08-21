@@ -17,7 +17,8 @@ import { allImageUrls } from './game-assets.ts';
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
 type DisplayMode = 'fullscreen' | 'normal';
 // Định nghĩa các bước của quá trình tải
-type LoadingStep = 'authenticating' | 'downloading' | 'selecting_mode' | 'ready';
+// ===> BƯỚC 1: Thêm trạng thái 'launching'
+type LoadingStep = 'authenticating' | 'downloading' | 'selecting_mode' | 'launching' | 'ready';
 
 // ==================================================================
 // HÀM HELPER (Không thay đổi)
@@ -126,7 +127,7 @@ const App: React.FC = () => {
       if (!isCancelled) {
         const savedMode = localStorage.getItem('displayMode') as DisplayMode | null;
         if (savedMode) {
-          startGame(savedMode, false); // Tự động bắt đầu game nếu đã lưu lựa chọn
+          await startGame(savedMode, false); // Tự động bắt đầu game nếu đã lưu lựa chọn
         } else {
           setLoadingStep('selecting_mode'); // Chuyển sang bước chọn mode
         }
@@ -142,27 +143,24 @@ const App: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // ==================================================================
-  // HÀM ĐÃ TỐI ƯU HÓA
-  // ==================================================================
-  const startGame = (mode: DisplayMode, savePreference: boolean) => {
-    // 1. Cập nhật state ngay lập tức để React bắt đầu render App chính.
-    //    Việc này giúp màn hình loading biến mất ngay, tạo cảm giác phản hồi nhanh.
-    setLoadingStep('ready');
+  // ===> BƯỚC 3: Thêm useEffect để xử lý chuyển tiếp từ 'launching' sang 'ready'
+  useEffect(() => {
+    if (loadingStep === 'launching') {
+      // Delay này cho phép trình duyệt hoàn thành việc chuyển sang full-screen
+      // và render skeleton UI mượt mà trước khi tải component Home nặng.
+      const timer = setTimeout(() => {
+        setLoadingStep('ready');
+      }, 500); // Có thể điều chỉnh thời gian này
+      return () => clearTimeout(timer);
+    }
+  }, [loadingStep]);
 
-    // 2. Sử dụng setTimeout để đẩy các tác vụ phụ (như vào fullscreen)
-    //    ra khỏi luồng render chính. Điều này cho phép trình duyệt có thời gian
-    //    để xử lý việc render component Home trước khi bị chặn bởi yêu cầu fullscreen.
-    setTimeout(() => {
-      if (savePreference) {
-        localStorage.setItem('displayMode', mode);
-      }
-      if (mode === 'fullscreen') {
-        // Chúng ta gọi hàm async, nhưng không `await` nó ở đây
-        // vì nó không chặn luồng chính của hàm startGame nữa.
-        enterFullScreen();
-      }
-    }, 50); // Một khoảng trễ nhỏ (50ms) là đủ để đảm bảo UI đã bắt đầu cập nhật.
+
+  const startGame = async (mode: DisplayMode, savePreference: boolean) => {
+    if (savePreference) localStorage.setItem('displayMode', mode);
+    if (mode === 'fullscreen') await enterFullScreen();
+    // ===> BƯỚC 2: Chuyển sang trạng thái 'launching' thay vì 'ready'
+    setLoadingStep('launching'); 
   };
 
   const handleTabChange = (tab: TabType) => { setActiveTab(tab); setIsNavBarVisible(true); };
@@ -245,6 +243,30 @@ const App: React.FC = () => {
           <button onClick={() => startGame(selectedMode, rememberChoice)} className="mt-5 w-full max-w-xs py-3 bg-cyan-600/90 border border-cyan-400 rounded-lg text-white font-bold tracking-widest hover:bg-cyan-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/20 focus:outline-none focus:ring-4 focus:ring-cyan-300">LAUNCH</button>
         </div>
         <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">Version {appVersion}</p>
+      </div>
+    );
+  }
+
+  // ===> BƯỚC 4: Render màn hình skeleton 'launching'
+  if (loadingStep === 'launching') {
+    return (
+      <div className="w-full h-screen bg-slate-950 flex flex-col justify-between animate-pulse">
+        {/* Placeholder cho nội dung chính */}
+        <div className="flex-grow flex items-center justify-center">
+          <svg className="animate-spin h-10 w-10 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+        {/* Skeleton cho thanh Navigation Bar */}
+        <div className="w-full h-[60px] md:h-[70px] bg-black/30 backdrop-blur-sm border-t border-gray-700/50 flex justify-around items-center p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex flex-col items-center justify-center w-12 h-12">
+              <div className="w-6 h-6 bg-gray-600 rounded-md"></div>
+              <div className="w-8 h-2 mt-2 bg-gray-600 rounded"></div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
