@@ -176,7 +176,7 @@ const App: React.FC = () => {
 
         <div className="flex-grow" />
 
-        <div className="w-full flex flex-col items-center px-4 pb-40">
+        <div className="w-full flex flex-col items-center px-4 pb-56">
             <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">
                 Authenticating...
             </p>
@@ -227,7 +227,7 @@ const App: React.FC = () => {
 
         <div className="flex-grow" />
 
-        <div className="w-full flex flex-col items-center px-4 pb-40">
+        <div className="w-full flex flex-col items-center px-4 pb-56">
             <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">
                 Downloading assets…
             </p>
