@@ -81,9 +81,6 @@ const App: React.FC = () => {
   const [selectedMode, setSelectedMode] = useState<DisplayMode>('normal');
   const [rememberChoice, setRememberChoice] = useState(true);
   const [isModeModalOpen, setIsModeModalOpen] = useState(false);
-  
-  // --- THAY ĐỔI: Thêm state để theo dõi loading của component Home (background-game) ---
-  const [isGameLoading, setIsGameLoading] = useState(true);
 
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
   useEffect(() => { const i = setInterval(() => setEllipsis(p => (p === '...' ? '.' : p + '.')), 500); return () => clearInterval(i); }, []);
@@ -138,13 +135,6 @@ const App: React.FC = () => {
     if (savePreference) localStorage.setItem('displayMode', mode);
     if (mode === 'fullscreen') await enterFullScreen();
     setLoadingStep('launching'); 
-  };
-  
-  // --- THAY ĐỔI: Thêm hàm callback để nhận trạng thái từ component con ---
-  const handleGameLoadingStateChange = (isLoading: boolean) => {
-    if (isLoading !== isGameLoading) {
-      setIsGameLoading(isLoading);
-    }
   };
 
   const handleTabChange = (tab: TabType) => { setActiveTab(tab); setIsNavBarVisible(true); };
@@ -226,21 +216,18 @@ const App: React.FC = () => {
     );
   }
 
-  // --- THAY ĐỔI: Cập nhật logic hiển thị cho GameSkeletonLoader ---
-  const showSkeleton = loadingStep === 'launching' || (loadingStep === 'ready' && isGameLoading);
+  if (loadingStep === 'launching') {
+    return <GameSkeletonLoader show={true} />;
+  }
 
   return (
     <div className="app-container">
-      {/* --- THAY ĐỔI: Truyền hàm callback và props cập nhật xuống cho component Home --- */}
-      {activeTab === 'home' && <Home hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} assetsLoaded={loadingStep !== 'downloading'} onLoadingStateChange={handleGameLoadingStateChange} />}
+      {activeTab === 'home' && <Home hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} assetsLoaded={true} />}
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'story' && <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />}
       {activeTab === 'quiz' && <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />}
       {activeTab === 'game' && <GameBrowser hideNavBar={hideNavBar} showNavBar={showNavBar} />}
       {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
-      
-      {/* GameSkeletonLoader duy nhất, được quản lý ở đây */}
-      <GameSkeletonLoader show={showSkeleton} />
     </div>
   );
 };
