@@ -1,5 +1,5 @@
 // src/index.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import Home from './background-game.tsx'; // Component chính của màn hình 'home'
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
@@ -76,6 +76,25 @@ const ensureUserDocumentExists = async (user: User) => {
 
 const appVersion = "1.0.1"; // VERSION CỦA ỨNG DỤNG
 
+// ==================================================================
+// START: CÁC COMPONENT ICON CHO NÚT FULLSCREEN
+// ==================================================================
+const ExpandIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9.75 9.75m10.5-6v4.5m0-4.5h-4.5m4.5 0L14.25 9.75M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9.75 14.25m10.5 6v-4.5m0 4.5h-4.5m4.5 0L14.25 14.25" />
+  </svg>
+);
+
+const CompressIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L4.5 4.5M9 15v4.5M9 15H4.5M9 15l-4.5 4.5M15 9V4.5M15 9h4.5M15 9l4.5-4.5M15 15v4.5M15 15h4.5M15 15l4.5 4.5" />
+  </svg>
+);
+// ==================================================================
+// END: CÁC COMPONENT ICON CHO NÚT FULLSCREEN
+// ==================================================================
+
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isNavBarVisible, setIsNavBarVisible] = useState(true);
@@ -86,6 +105,46 @@ const App: React.FC = () => {
   const [logoFloating, setLogoFloating] = useState(true);
   const [authLoadProgress, setAuthLoadProgress] = useState(0);
   const [ellipsis, setEllipsis] = useState('.');
+  // ==================================================================
+  // START: STATE VÀ LOGIC CHO TÍNH NĂNG FULLSCREEN
+  // ==================================================================
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const hideNavBar = useCallback(() => setIsNavBarVisible(false), []);
+  const showNavBar = useCallback(() => setIsNavBarVisible(true), []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = document.fullscreenElement != null;
+      setIsFullscreen(isCurrentlyFullscreen);
+      if (isCurrentlyFullscreen) {
+        hideNavBar();
+      } else {
+        showNavBar();
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [hideNavBar, showNavBar]);
+  
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement) {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch (err) {
+        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+      }
+    } else {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+    }
+  };
+  // ==================================================================
+  // END: STATE VÀ LOGIC CHO TÍNH NĂNG FULLSCREEN
+  // ==================================================================
+
 
   // Effect để tạo animation "float" cho logo trên màn hình loading
   useEffect(() => {
@@ -165,11 +224,11 @@ const App: React.FC = () => {
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    setIsNavBarVisible(true);
+    // Đảm bảo thanh điều hướng hiện lại khi chuyển tab nếu đang không ở chế độ fullscreen
+    if (!isFullscreen) {
+      setIsNavBarVisible(true);
+    }
   };
-
-  const hideNavBar = () => setIsNavBarVisible(false);
-  const showNavBar = () => setIsNavBarVisible(true);
 
   // Giai đoạn 1: Chờ kiểm tra trạng thái đăng nhập ban đầu
   if (loadingAuth) {
@@ -275,6 +334,27 @@ const App: React.FC = () => {
   // Giai đoạn 4: Mọi thứ đã sẵn sàng, hiển thị ứng dụng
   return (
     <div className="app-container">
+      {/* ================================================================== */}
+      {/* START: NÚT BẤM FULLSCREEN */}
+      {/* ================================================================== */}
+      <button
+        onClick={toggleFullscreen}
+        className="fixed top-4 right-4 z-50 p-2.5 bg-slate-900/60 border border-cyan-500/30 rounded-full
+                   text-cyan-400 backdrop-blur-sm shadow-lg
+                   hover:bg-cyan-900/50 hover:border-cyan-400/50 transition-all duration-200
+                   focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-cyan-500"
+        aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+      >
+        {isFullscreen ? (
+          <CompressIcon className="w-5 h-5" />
+        ) : (
+          <ExpandIcon className="w-5 h-5" />
+        )}
+      </button>
+      {/* ================================================================== */}
+      {/* END: NÚT BẤM FULLSCREEN */}
+      {/* ================================================================== */}
+
       {activeTab === 'home' && (
         <Home
           hideNavBar={hideNavBar}
