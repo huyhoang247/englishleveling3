@@ -82,7 +82,7 @@ const App: React.FC = () => {
   const [rememberChoice, setRememberChoice] = useState(true);
   const [isModeModalOpen, setIsModeModalOpen] = useState(false);
   
-  // --- THAY ĐỔI 1: Thêm state để theo dõi loading của component Home (background-game) ---
+  // --- THAY ĐỔI: Thêm state để theo dõi loading của component Home (background-game) ---
   const [isGameLoading, setIsGameLoading] = useState(true);
 
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
@@ -140,7 +140,7 @@ const App: React.FC = () => {
     setLoadingStep('launching'); 
   };
   
-  // --- THAY ĐỔI 2: Thêm hàm callback để nhận trạng thái từ component con ---
+  // --- THAY ĐỔI: Thêm hàm callback để nhận trạng thái từ component con ---
   const handleGameLoadingStateChange = (isLoading: boolean) => {
     if (isLoading !== isGameLoading) {
       setIsGameLoading(isLoading);
@@ -226,13 +226,12 @@ const App: React.FC = () => {
     );
   }
 
-  // --- THAY ĐỔI 3: Cập nhật logic hiển thị cho GameSkeletonLoader ---
-  // Loader sẽ hiển thị khi đang 'launching' HOẶC khi component game đang loading dữ liệu
+  // --- THAY ĐỔI: Cập nhật logic hiển thị cho GameSkeletonLoader ---
   const showSkeleton = loadingStep === 'launching' || (loadingStep === 'ready' && isGameLoading);
 
   return (
     <div className="app-container">
-      {/* --- THAY ĐỔI 4: Truyền hàm callback và props cập nhật xuống cho component Home --- */}
+      {/* --- THAY ĐỔI: Truyền hàm callback và props cập nhật xuống cho component Home --- */}
       {activeTab === 'home' && <Home hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} assetsLoaded={loadingStep !== 'downloading'} onLoadingStateChange={handleGameLoadingStateChange} />}
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'story' && <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />}
