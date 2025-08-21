@@ -113,13 +113,16 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
     
     const [upgradeToast, setUpgradeToast] = useState({ show: false, oldValue: 0, newValue: 0 });
-    const prevLevelRef = useRef(ownedSkill.level);
+    // --- THAY ĐỔI: BỎ ĐI CÁC DÒNG NÀY ---
+    // const prevLevelRef = useRef(ownedSkill.level);
 
     const calculateEffectValue = (level: number) => {
         if (!skill || skill.baseEffectValue === undefined || skill.effectValuePerLevel === undefined) return 0;
         return skill.baseEffectValue + (level - 1) * skill.effectValuePerLevel;
     };
     
+    // --- THAY ĐỔI: BỎ ĐI HOÀN TOÀN KHỐI useEffect THEO DÕI LEVEL ---
+    /*
     useEffect(() => {
         if (skill && skill.upgradeCost && ownedSkill.level > prevLevelRef.current) {
             const oldValue = calculateEffectValue(prevLevelRef.current);
@@ -132,6 +135,7 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
         }
         prevLevelRef.current = ownedSkill.level;
     }, [ownedSkill.level, skill]);
+    */
 
     if (!skill) return null;
 
@@ -150,6 +154,23 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
         ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-orange-500/25 active:scale-100'
         : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100';
     const mainActionDisabledStyle = 'bg-slate-700 text-slate-500 cursor-not-allowed';
+
+    // --- THAY ĐỔI: THÊM HÀM XỬ LÝ CLICK MỚI ---
+    const handleLocalUpgradeClick = () => {
+        if (!canAffordUpgrade || actionDisabled) return;
+
+        // 1. Kích hoạt toast ngay lập tức với giá trị *sắp có*
+        const oldValue = currentEffectValue;
+        const newValue = currentEffectValue + skill.effectValuePerLevel!;
+
+        setUpgradeToast({ show: true, oldValue, newValue });
+        setTimeout(() => {
+            setUpgradeToast({ show: false, oldValue: 0, newValue: 0 });
+        }, 1600);
+        
+        // 2. Gọi hàm nâng cấp từ context để bắt đầu cập nhật lên server
+        handleUpgradeSkill(ownedSkill);
+    };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
@@ -188,7 +209,8 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
                                 </div>
                             </div>
                             <button 
-                                onClick={() => handleUpgradeSkill(ownedSkill)} 
+                                // --- THAY ĐỔI: SỬ DỤNG HÀM MỚI ---
+                                onClick={handleLocalUpgradeClick} 
                                 disabled={!canAffordUpgrade || actionDisabled} 
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-200 transform
                                 ${!canAffordUpgrade || actionDisabled ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 active:scale-100'}`} >
