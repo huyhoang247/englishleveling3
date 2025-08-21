@@ -72,8 +72,10 @@ const App: React.FC = () => {
   const [isNavBarVisible, setIsNavBarVisible] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   
+  // State chính để quản lý luồng
   const [loadingStep, setLoadingStep] = useState<LoadingStep>('authenticating');
 
+  // States phụ cho các màn hình loading
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [logoFloating, setLogoFloating] = useState(true);
   const [authLoadProgress, setAuthLoadProgress] = useState(0);
@@ -86,6 +88,7 @@ const App: React.FC = () => {
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
   useEffect(() => { const i = setInterval(() => setEllipsis(p => (p === '...' ? '.' : p + '.')), 500); return () => clearInterval(i); }, []);
   
+  // Effect cho progress bar giả của màn hình authenticating
   useEffect(() => {
     if (loadingStep === 'authenticating') {
       const i = setInterval(() => { setAuthLoadProgress(p => (p >= 95 ? 95 : p + Math.floor(Math.random() * 5) + 2)); }, 120);
@@ -93,23 +96,20 @@ const App: React.FC = () => {
     }
   }, [loadingStep]);
 
+  // Effect quản lý luồng chính: Auth -> Download -> Select Mode
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       setTimeout(async () => {
         setCurrentUser(user);
         if (user) {
           await ensureUserDocumentExists(user);
-          setLoadingStep('downloading'); 
-        } else if (loadingStep === 'authenticating') {
-          // Nếu không có user và vẫn đang ở bước auth, thì cần phải dừng lại
-          // để màn hình login (AuthComponent) được render.
-          // Nếu không có dòng if này, currentUser sẽ là null nhưng step có thể đã nhảy
-          // sang downloading, gây ra logic sai.
+          setLoadingStep('downloading'); // Chuyển sang bước downloading
         }
+        // Nếu không có user, component AuthComponent sẽ được render (ở cuối)
       }, 1500);
     });
     return () => unsub();
-  }, [loadingStep]); // Thêm loadingStep vào dependency array để đảm bảo logic auth không chạy lại không cần thiết
+  }, []);
 
   useEffect(() => {
     if (loadingStep !== 'downloading' || !currentUser) return;
@@ -126,9 +126,9 @@ const App: React.FC = () => {
       if (!isCancelled) {
         const savedMode = localStorage.getItem('displayMode') as DisplayMode | null;
         if (savedMode) {
-          await startGame(savedMode, false);
+          await startGame(savedMode, false); // Tự động bắt đầu game nếu đã lưu lựa chọn
         } else {
-          setLoadingStep('selecting_mode');
+          setLoadingStep('selecting_mode'); // Chuyển sang bước chọn mode
         }
       }
     }
@@ -145,7 +145,7 @@ const App: React.FC = () => {
   const startGame = async (mode: DisplayMode, savePreference: boolean) => {
     if (savePreference) localStorage.setItem('displayMode', mode);
     if (mode === 'fullscreen') await enterFullScreen();
-    setLoadingStep('ready');
+    setLoadingStep('ready'); // Hoàn tất, sẵn sàng vào app
   };
 
   const handleTabChange = (tab: TabType) => { setActiveTab(tab); setIsNavBarVisible(true); };
@@ -176,8 +176,7 @@ const App: React.FC = () => {
     );
   }
 
-  // Nếu quá trình xác thực hoàn tất nhưng không có user, hiển thị màn hình login
-  if (!currentUser) { 
+  if (!currentUser) { // Nếu xác thực thất bại, hiển thị màn hình login
     return <AuthComponent appVersion={appVersion} />;
   }
 
@@ -238,8 +237,7 @@ const App: React.FC = () => {
   // ==================================================================
   return (
     <div className="app-container">
-      {/* SỬA LỖI Ở ĐÂY */}
-      {activeTab === 'home' && <Home hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} assetsLoaded={loadingStep === 'ready'} />}
+      {activeTab === 'home' && <Home hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} assetsLoaded={true} />}
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'story' && <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />}
       {activeTab === 'quiz' && <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />}
