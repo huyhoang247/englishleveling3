@@ -183,13 +183,13 @@ const App: React.FC = () => {
         </p>
         <div className="w-80 lg:w-96 relative">
           <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
-               style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 20px rgba(0, 255, 255, 0.1)' }}>
+               style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}> // ĐÃ GIẢM SHADOW
             <div
               className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
               style={{
                 width: `${progress}%`,
                 // THÊM HIỆU ỨNG TỎA SÁNG
-                boxShadow: `0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 200, 255, 0.3)`
+                boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` // ĐÃ GIẢM SHADOW
               }} >
                 {/* THÊM CHẤM TRÒN NHẤP NHÁY */}
                 {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
@@ -234,12 +234,12 @@ const App: React.FC = () => {
         </p>
         <div className="w-80 lg:w-96 relative">
           <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
-               style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 20px rgba(0, 255, 255, 0.1)' }}>
+               style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}> // ĐÃ GIẢM SHADOW
             <div
               className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
               style={{
                 width: `${loadingProgress}%`,
-                boxShadow: `0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 200, 255, 0.3)`
+                boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` // ĐÃ GIẢM SHADOW
               }}
             >
                 {loadingProgress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
