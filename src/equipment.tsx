@@ -19,7 +19,7 @@ import { uiAssets, equipmentUiAssets } from './game-assets.ts';
 import CoinDisplay from './ui/display/coin-display.tsx'; 
 
 // *** THAY ĐỔI MỚI: Import Toast component ***
-import RateLimitToast from '../../thong-bao.tsx';
+import RateLimitToast from './thong-bao.tsx';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
