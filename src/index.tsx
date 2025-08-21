@@ -126,7 +126,7 @@ const App: React.FC = () => {
       if (!isCancelled) {
         const savedMode = localStorage.getItem('displayMode') as DisplayMode | null;
         if (savedMode) {
-          await startGame(savedMode, false); // Tự động bắt đầu game nếu đã lưu lựa chọn
+          startGame(savedMode, false); // Tự động bắt đầu game nếu đã lưu lựa chọn
         } else {
           setLoadingStep('selecting_mode'); // Chuyển sang bước chọn mode
         }
@@ -142,10 +142,27 @@ const App: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const startGame = async (mode: DisplayMode, savePreference: boolean) => {
-    if (savePreference) localStorage.setItem('displayMode', mode);
-    if (mode === 'fullscreen') await enterFullScreen();
-    setLoadingStep('ready'); // Hoàn tất, sẵn sàng vào app
+  // ==================================================================
+  // HÀM ĐÃ TỐI ƯU HÓA
+  // ==================================================================
+  const startGame = (mode: DisplayMode, savePreference: boolean) => {
+    // 1. Cập nhật state ngay lập tức để React bắt đầu render App chính.
+    //    Việc này giúp màn hình loading biến mất ngay, tạo cảm giác phản hồi nhanh.
+    setLoadingStep('ready');
+
+    // 2. Sử dụng setTimeout để đẩy các tác vụ phụ (như vào fullscreen)
+    //    ra khỏi luồng render chính. Điều này cho phép trình duyệt có thời gian
+    //    để xử lý việc render component Home trước khi bị chặn bởi yêu cầu fullscreen.
+    setTimeout(() => {
+      if (savePreference) {
+        localStorage.setItem('displayMode', mode);
+      }
+      if (mode === 'fullscreen') {
+        // Chúng ta gọi hàm async, nhưng không `await` nó ở đây
+        // vì nó không chặn luồng chính của hàm startGame nữa.
+        enterFullScreen();
+      }
+    }, 50); // Một khoảng trễ nhỏ (50ms) là đủ để đảm bảo UI đã bắt đầu cập nhật.
   };
 
   const handleTabChange = (tab: TabType) => { setActiveTab(tab); setIsNavBarVisible(true); };
