@@ -1,5 +1,5 @@
 // src/GameSkeletonLoader.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DungeonCanvasBackground from './background-canvas.tsx';
 
 interface GameSkeletonLoaderProps {
@@ -7,20 +7,46 @@ interface GameSkeletonLoaderProps {
 }
 
 const GameSkeletonLoader: React.FC<GameSkeletonLoaderProps> = ({ show }) => {
+  const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const showTimeRef = useRef<number>(0);
 
   useEffect(() => {
+    let hideTimer: NodeJS.Timeout;
+    let unmountTimer: NodeJS.Timeout;
+
+    const minDisplayTime = 700; // Thời gian hiển thị tối thiểu là 0.7 giây
+
     if (show) {
-      // Bật visibility sau một tick để trình duyệt có thể áp dụng transition
-      const timer = setTimeout(() => setIsVisible(true), 10);
-      return () => clearTimeout(timer);
-    } else {
-      setIsVisible(false);
+      // Bắt đầu chu trình hiển thị
+      showTimeRef.current = Date.now();
+      setIsMounted(true);
+      // Một tick nhỏ để DOM cập nhật trước khi chạy transition
+      const visibleTimer = setTimeout(() => setIsVisible(true), 10);
+      return () => clearTimeout(visibleTimer);
+    } else if (isMounted) {
+      // Bắt đầu chu trình ẩn đi
+      const elapsedTime = Date.now() - showTimeRef.current;
+      const delay = Math.max(0, minDisplayTime - elapsedTime);
+
+      hideTimer = setTimeout(() => {
+        setIsVisible(false); // Bắt đầu animation mờ dần
+        // Đợi animation hoàn thành rồi mới gỡ component khỏi DOM
+        unmountTimer = setTimeout(() => {
+          setIsMounted(false);
+        }, 300); // 300ms này phải khớp với duration của transition-opacity
+      }, delay);
     }
-  }, [show]);
-  
-  // Không render gì nếu không được yêu cầu hiển thị
-  if (!show) {
+
+    // Dọn dẹp tất cả các timer khi component unmount hoặc prop `show` thay đổi
+    return () => {
+      clearTimeout(hideTimer);
+      clearTimeout(unmountTimer);
+    };
+  }, [show, isMounted]);
+
+  // Không render gì nếu component không được yêu cầu mount
+  if (!isMounted) {
     return null;
   }
 
