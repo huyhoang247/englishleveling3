@@ -77,15 +77,27 @@ const GameSkeletonLoader: React.FC<GameSkeletonLoaderProps> = ({ show }) => {
           {[...Array(3)].map((_, i) => (<div key={i} className="w-14 h-14 bg-slate-800/50 rounded-lg animate-pulse"></div>))}
         </div>
         
-        {/* Skeleton Thanh điều hướng dưới */}
-        <div className="w-full h-[60px] md:h-[70px] bg-black/30 backdrop-blur-sm border-t border-gray-700/50 flex justify-around items-center p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex flex-col items-center justify-center w-12 h-12 animate-pulse">
-              <div className="w-7 h-7 bg-slate-700/60 rounded-md"></div>
-              <div className="w-10 h-2 mt-2 bg-slate-700/60 rounded"></div>
-            </div>
-          ))}
+        {/* ========== START: PHẦN ĐƯỢC CẬP NHẬT ========== */}
+        {/* Skeleton Thanh điều hướng dưới - ĐÃ ĐƯỢC CẬP NHẬT ĐỂ GIỐNG COMPONENT THẬT */}
+        <div className="bg-black/85 backdrop-blur-md shadow-2xl rounded-t-2xl border-t border-gray-800 w-full">
+          <div className="mx-2 my-2 flex justify-between items-center">
+            {[...Array(5)].map((_, index) => (
+              <div key={index} className="flex-1 relative flex justify-center items-center h-[44px]"> {/* Đặt chiều cao cố định */}
+                <div className="w-10 h-10 bg-slate-700/60 rounded-full animate-pulse"></div>
+                
+                {/* Đường kẻ phân cách, không hiển thị cho item cuối cùng */}
+                {index < 4 && (
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-px bg-gray-800"></div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Thanh ngang nhỏ ở dưới cùng */}
+          <div className="h-1 w-full bg-gray-900"></div>
         </div>
+        {/* ========== END: PHẦN ĐƯỢC CẬP NHẬT ========== */}
+        
       </div>
     </div>
   );
