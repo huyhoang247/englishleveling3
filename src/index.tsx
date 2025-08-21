@@ -12,7 +12,6 @@ import { auth, db } from './firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { allImageUrls } from './game-assets.ts';
-// KHÔNG CÒN IMPORT AchievementsProvider Ở ĐÂY
 
 // Định nghĩa các loại tab có thể có
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
@@ -183,15 +182,13 @@ const App: React.FC = () => {
         </p>
         <div className="w-80 lg:w-96 relative">
           <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
-               style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}> // ĐÃ GIẢM SHADOW
+               style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
             <div
               className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
               style={{
                 width: `${progress}%`,
-                // THÊM HIỆU ỨNG TỎA SÁNG
-                boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` // ĐÃ GIẢM SHADOW
+                boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)`
               }} >
-                {/* THÊM CHẤM TRÒN NHẤP NHÁY */}
                 {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
             </div>
           </div>
@@ -234,12 +231,12 @@ const App: React.FC = () => {
         </p>
         <div className="w-80 lg:w-96 relative">
           <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
-               style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}> // ĐÃ GIẢM SHADOW
+               style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
             <div
               className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
               style={{
                 width: `${loadingProgress}%`,
-                boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` // ĐÃ GIẢM SHADOW
+                boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)`
               }}
             >
                 {loadingProgress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
