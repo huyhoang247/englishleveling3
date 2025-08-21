@@ -173,12 +173,8 @@ const App: React.FC = () => {
               filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))',
           }}
         />
-        <h1 className="text-xl font-bold tracking-wider text-gray-200 uppercase"
-            style={{ textShadow: '0 0 8px rgba(0, 255, 255, 0.3)' }}>
-            ĐANG TẢI
-        </h1>
-        <p className="mt-1 mb-5 text-sm text-cyan-400/70 tracking-wide">
-            Xác thực người dùng...
+        <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">
+            Authenticating...
         </p>
         <div className="w-80 lg:w-96 relative">
           <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
@@ -222,12 +218,8 @@ const App: React.FC = () => {
               filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))',
           }}
         />
-        <h1 className="text-xl font-bold tracking-wider text-gray-200 uppercase"
-            style={{ textShadow: '0 0 8px rgba(0, 255, 255, 0.3)' }}>
-            ĐANG TẢI
-        </h1>
-        <p className="mt-1 mb-5 text-sm text-cyan-400/70 tracking-wide">
-            Chuẩn bị tài nguyên...
+        <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">
+            Downloading assets…
         </p>
         <div className="w-80 lg:w-96 relative">
           <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
