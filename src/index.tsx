@@ -174,7 +174,6 @@ const App: React.FC = () => {
               filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))',
           }}
         />
-        {/* SỬA ĐỔI: Đồng bộ giao diện */}
         <h1 className="text-xl font-bold tracking-wider text-gray-200 uppercase"
             style={{ textShadow: '0 0 8px rgba(0, 255, 255, 0.3)' }}>
             ĐANG TẢI
@@ -182,12 +181,18 @@ const App: React.FC = () => {
         <p className="mt-1 mb-5 text-sm text-cyan-400/70 tracking-wide">
             Xác thực người dùng...
         </p>
-        <div className="w-80 lg:w-96 relative"> {/* SỬA ĐỔI: Bỏ mt-5 */}
+        <div className="w-80 lg:w-96 relative">
           <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
                style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 20px rgba(0, 255, 255, 0.1)' }}>
             <div
               className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
-              style={{ width: `${progress}%` }} >
+              style={{
+                width: `${progress}%`,
+                // THÊM HIỆU ỨNG TỎA SÁNG
+                boxShadow: `0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 200, 255, 0.3)`
+              }} >
+                {/* THÊM CHẤM TRÒN NHẤP NHÁY */}
+                {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
             </div>
           </div>
           <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white"
