@@ -22,7 +22,7 @@ type DisplayMode = 'fullscreen' | 'normal';
 type LoadingStep = 'authenticating' | 'downloading' | 'selecting_mode' | 'launching' | 'ready';
 
 // ==================================================================
-// HÀM HELPER (Không thay đổi)
+// HÀM HELPER
 // ==================================================================
 function preloadImage(src: string): Promise<void> {
   return new Promise((resolve) => {
@@ -52,14 +52,24 @@ const ensureUserDocumentExists = async (user: User) => {
   } catch (error) { console.error("Error ensuring user document exists:", error); }
 };
 
+// ===> THAY ĐỔI DUY NHẤT NẰM Ở ĐÂY
 const enterFullScreen = async () => {
   const element = document.documentElement;
+  // Thêm tùy chọn để yêu cầu trình duyệt ẩn giao diện điều hướng (thông báo thoát full screen)
+  const options = { navigationUI: "hide" } as const;
   try {
-    if (element.requestFullscreen) { await element.requestFullscreen(); } 
-    else if ((element as any).mozRequestFullScreen) { await (element as any).mozRequestFullScreen(); } 
-    else if ((element as any).webkitRequestFullscreen) { await (element as any).webkitRequestFullscreen(); } 
-    else if ((element as any).msRequestFullscreen) { await (element as any).msRequestFullscreen(); }
-  } catch (error) { console.warn("Failed to enter full-screen mode:", error); }
+    if (element.requestFullscreen) {
+      await element.requestFullscreen(options);
+    } else if ((element as any).mozRequestFullScreen) { // Firefox
+      await (element as any).mozRequestFullScreen(options);
+    } else if ((element as any).webkitRequestFullscreen) { // Chrome, Safari, Opera
+      await (element as any).webkitRequestFullscreen(options);
+    } else if ((element as any).msRequestFullscreen) { // IE/Edge (cũ)
+      await (element as any).msRequestFullscreen(); // Phiên bản này có thể không hỗ trợ options
+    }
+  } catch (error) {
+    console.warn("Failed to enter full-screen mode:", error);
+  }
 };
 
 const appVersion = "1.0.1";
