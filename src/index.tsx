@@ -163,7 +163,7 @@ const App: React.FC = () => {
   if (loadingAuth) {
     const progress = authLoadProgress;
     return (
-      <div className="relative flex flex-col items-center justify-start pt-20 w-full h-screen bg-slate-950 text-white font-sans
+      <div className="relative flex flex-col items-center justify-start pt-28 w-full h-screen bg-slate-950 text-white font-sans
                       bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
         <img
           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp"
@@ -214,7 +214,7 @@ const App: React.FC = () => {
   // Giai đoạn 3: Đã đăng nhập, nhưng đang chờ tải tài nguyên game
   if (!assetsLoaded) {
     return (
-      <div className="relative flex flex-col items-center justify-start pt-20 w-full h-screen bg-slate-950 text-white font-sans
+      <div className="relative flex flex-col items-center justify-start pt-28 w-full h-screen bg-slate-950 text-white font-sans
                       bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
         <img
           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp"
