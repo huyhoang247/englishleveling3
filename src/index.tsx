@@ -1,5 +1,5 @@
 // src/index.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import Home from './background-game.tsx'; // Component chính của màn hình 'home'
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
@@ -15,6 +15,8 @@ import { allImageUrls } from './game-assets.ts';
 
 // Định nghĩa các loại tab có thể có
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
+// Định nghĩa các chế độ hiển thị
+type DisplayMode = 'fullscreen' | 'normal';
 
 // ==================================================================
 // HÀM HELPER ĐỂ TẢI TRƯỚC HÌNH ẢNH
@@ -73,27 +75,28 @@ const ensureUserDocumentExists = async (user: User) => {
   }
 };
 
+// ==================================================================
+// HÀM HELPER CHO CHẾ ĐỘ TOÀN MÀN HÌNH
+// ==================================================================
+const enterFullScreen = async () => {
+  const element = document.documentElement;
+  try {
+    if (element.requestFullscreen) {
+      await element.requestFullscreen();
+    } else if ((element as any).mozRequestFullScreen) { // Firefox
+      await (element as any).mozRequestFullScreen();
+    } else if ((element as any).webkitRequestFullscreen) { // Chrome, Safari and Opera
+      await (element as any).webkitRequestFullscreen();
+    } else if ((element as any).msRequestFullscreen) { // IE/Edge
+      await (element as any).msRequestFullscreen();
+    }
+  } catch (error) {
+    console.warn("Failed to enter full-screen mode:", error);
+  }
+};
+
 
 const appVersion = "1.0.1"; // VERSION CỦA ỨNG DỤNG
-
-// ==================================================================
-// START: CÁC COMPONENT ICON CHO NÚT FULLSCREEN
-// ==================================================================
-const ExpandIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9.75 9.75m10.5-6v4.5m0-4.5h-4.5m4.5 0L14.25 9.75M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9.75 14.25m10.5 6v-4.5m0 4.5h-4.5m4.5 0L14.25 14.25" />
-  </svg>
-);
-
-const CompressIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L4.5 4.5M9 15v4.5M9 15H4.5M9 15l-4.5 4.5M15 9V4.5M15 9h4.5M15 9l4.5-4.5M15 15v4.5M15 15h4.5M15 15l4.5 4.5" />
-  </svg>
-);
-// ==================================================================
-// END: CÁC COMPONENT ICON CHO NÚT FULLSCREEN
-// ==================================================================
-
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
@@ -105,46 +108,10 @@ const App: React.FC = () => {
   const [logoFloating, setLogoFloating] = useState(true);
   const [authLoadProgress, setAuthLoadProgress] = useState(0);
   const [ellipsis, setEllipsis] = useState('.');
-  // ==================================================================
-  // START: STATE VÀ LOGIC CHO TÍNH NĂNG FULLSCREEN
-  // ==================================================================
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const hideNavBar = useCallback(() => setIsNavBarVisible(false), []);
-  const showNavBar = useCallback(() => setIsNavBarVisible(true), []);
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isCurrentlyFullscreen = document.fullscreenElement != null;
-      setIsFullscreen(isCurrentlyFullscreen);
-      if (isCurrentlyFullscreen) {
-        hideNavBar();
-      } else {
-        showNavBar();
-      }
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, [hideNavBar, showNavBar]);
-  
-  const toggleFullscreen = async () => {
-    if (!document.fullscreenElement) {
-      try {
-        await document.documentElement.requestFullscreen();
-      } catch (err) {
-        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-      }
-    } else {
-      if (document.exitFullscreen) {
-        await document.exitFullscreen();
-      }
-    }
-  };
-  // ==================================================================
-  // END: STATE VÀ LOGIC CHO TÍNH NĂNG FULLSCREEN
-  // ==================================================================
-
+  // State mới cho tính năng lựa chọn chế độ
+  const [showModeSelector, setShowModeSelector] = useState(false);
+  const [rememberChoice, setRememberChoice] = useState(true);
 
   // Effect để tạo animation "float" cho logo trên màn hình loading
   useEffect(() => {
@@ -197,9 +164,18 @@ const App: React.FC = () => {
       
       if (!isCancelled) {
         console.log("All game assets preloaded and cached.");
-        setTimeout(() => {
-            if (!isCancelled) setAssetsLoaded(true);
-        }, 300);
+        // Logic mới sau khi tải xong
+        const savedMode = localStorage.getItem('displayMode') as DisplayMode | null;
+        if (savedMode) {
+            // Nếu đã có lựa chọn được lưu, tự động áp dụng và vào game
+            console.log(`Applying saved display mode: ${savedMode}`);
+            await handleModeSelection(savedMode, false); // false để không lưu lại lần nữa
+        } else {
+            // Nếu chưa có, hiển thị màn hình lựa chọn
+            setTimeout(() => {
+                if (!isCancelled) setShowModeSelector(true);
+            }, 500); // Đợi 0.5s để tạo hiệu ứng chuyển tiếp
+        }
       }
     }
     if (currentUser && !assetsLoaded) {
@@ -222,13 +198,30 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
+  // Hàm xử lý lựa chọn chế độ
+  const handleModeSelection = async (mode: DisplayMode, savePreference: boolean = true) => {
+    console.log(`Mode selected: ${mode}, Remember: ${rememberChoice && savePreference}`);
+    if (rememberChoice && savePreference) {
+      localStorage.setItem('displayMode', mode);
+    }
+
+    if (mode === 'fullscreen') {
+      await enterFullScreen();
+    }
+
+    // Đợi một chút để trình duyệt có thời gian chuyển sang toàn màn hình
+    setTimeout(() => {
+      setAssetsLoaded(true);
+    }, 150);
+  };
+
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    // Đảm bảo thanh điều hướng hiện lại khi chuyển tab nếu đang không ở chế độ fullscreen
-    if (!isFullscreen) {
-      setIsNavBarVisible(true);
-    }
+    setIsNavBarVisible(true);
   };
+
+  const hideNavBar = () => setIsNavBarVisible(false);
+  const showNavBar = () => setIsNavBarVisible(true);
 
   // Giai đoạn 1: Chờ kiểm tra trạng thái đăng nhập ban đầu
   if (loadingAuth) {
@@ -291,7 +284,7 @@ const App: React.FC = () => {
         <img
           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp"
           alt="Loading Logo"
-          className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`}
+          className={`w-48 h-48 object-contain transition-all ease-in-out duration-1000 ${logoFloating ? '-translate-y-3' : 'translate-y-0'} ${showModeSelector ? 'scale-90 -translate-y-5' : ''}`}
           style={{
               filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))',
           }}
@@ -299,7 +292,45 @@ const App: React.FC = () => {
 
         <div className="flex-grow" />
 
-        <div className="w-full flex flex-col items-center px-4 pb-56">
+        {/* Giao diện lựa chọn chế độ */}
+        <div className="w-full flex flex-col items-center px-4 pb-40 transition-opacity duration-500"
+             style={{ opacity: showModeSelector ? 1 : 0, visibility: showModeSelector ? 'visible' : 'hidden' }}>
+            <h2 className="mb-4 text-xl text-cyan-200 tracking-wider font-lilita" style={{ textShadow: '0 0 8px rgba(0, 255, 255, 0.5)' }}>
+                CHOOSE YOUR EXPERIENCE
+            </h2>
+            <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+                <button 
+                    onClick={() => handleModeSelection('fullscreen')}
+                    className="flex-1 py-4 px-6 bg-cyan-600/80 border-2 border-cyan-400 rounded-lg text-white font-bold tracking-widest
+                               hover:bg-cyan-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/20
+                               focus:outline-none focus:ring-4 focus:ring-cyan-300">
+                    FULL SCREEN
+                </button>
+                <button 
+                    onClick={() => handleModeSelection('normal')}
+                    className="flex-1 py-4 px-6 bg-slate-700/80 border-2 border-slate-500 rounded-lg text-white font-bold tracking-widest
+                               hover:bg-slate-600 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-slate-500/20
+                               focus:outline-none focus:ring-4 focus:ring-slate-400">
+                    NORMAL
+                </button>
+            </div>
+            <div className="mt-6 flex items-center">
+                <input
+                    id="rememberChoice"
+                    type="checkbox"
+                    checked={rememberChoice}
+                    onChange={(e) => setRememberChoice(e.target.checked)}
+                    className="w-5 h-5 accent-cyan-400 bg-gray-700 border-gray-600 rounded focus:ring-cyan-500 cursor-pointer"
+                />
+                <label htmlFor="rememberChoice" className="ml-3 text-sm font-medium text-gray-300 cursor-pointer">
+                    Remember my choice
+                </label>
+            </div>
+        </div>
+
+        {/* Thanh tiến trình tải, sẽ bị ẩn đi khi lựa chọn hiện ra */}
+        <div className="w-full flex flex-col items-center px-4 pb-56 transition-opacity duration-500"
+             style={{ opacity: !showModeSelector ? 1 : 0, visibility: !showModeSelector ? 'visible' : 'hidden', position: 'absolute', bottom: 0 }}>
             <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">
                 Downloading assets
                 <span className="inline-block w-3 text-left">{ellipsis}</span>
@@ -334,27 +365,6 @@ const App: React.FC = () => {
   // Giai đoạn 4: Mọi thứ đã sẵn sàng, hiển thị ứng dụng
   return (
     <div className="app-container">
-      {/* ================================================================== */}
-      {/* START: NÚT BẤM FULLSCREEN */}
-      {/* ================================================================== */}
-      <button
-        onClick={toggleFullscreen}
-        className="fixed top-4 right-4 z-50 p-2.5 bg-slate-900/60 border border-cyan-500/30 rounded-full
-                   text-cyan-400 backdrop-blur-sm shadow-lg
-                   hover:bg-cyan-900/50 hover:border-cyan-400/50 transition-all duration-200
-                   focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-cyan-500"
-        aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-      >
-        {isFullscreen ? (
-          <CompressIcon className="w-5 h-5" />
-        ) : (
-          <ExpandIcon className="w-5 h-5" />
-        )}
-      </button>
-      {/* ================================================================== */}
-      {/* END: NÚT BẤM FULLSCREEN */}
-      {/* ================================================================== */}
-
       {activeTab === 'home' && (
         <Home
           hideNavBar={hideNavBar}
