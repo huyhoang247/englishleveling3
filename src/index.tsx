@@ -16,9 +16,11 @@ import { allImageUrls } from './game-assets.ts';
 // Định nghĩa các loại tab và chế độ hiển thị
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
 type DisplayMode = 'fullscreen' | 'normal';
+// Định nghĩa các bước của quá trình tải
+type LoadingStep = 'authenticating' | 'downloading' | 'selecting_mode' | 'ready';
 
 // ==================================================================
-// HÀM HELPER
+// HÀM HELPER (Không thay đổi)
 // ==================================================================
 function preloadImage(src: string): Promise<void> {
   return new Promise((resolve) => {
@@ -33,38 +35,19 @@ function preloadImage(src: string): Promise<void> {
 }
 
 const ensureUserDocumentExists = async (user: User) => {
-  if (!user || !user.uid) {
-    console.error("User object or UID is missing.");
-    return;
-  }
+  if (!user || !user.uid) { console.error("User object or UID is missing."); return; }
   const userDocRef = doc(db, 'users', user.uid);
   try {
     const userDocSnap = await getDoc(userDocRef);
     if (!userDocSnap.exists()) {
-      await setDoc(userDocRef, {
-        email: user.email,
-        username: user.displayName || null,
-        createdAt: new Date(),
-        coins: 0,
-        gems: 0,
-        keys: 0,
-        openedImageIds: []
-      });
+      await setDoc(userDocRef, { email: user.email, username: user.displayName || null, createdAt: new Date(), coins: 0, gems: 0, keys: 0, openedImageIds: [] });
     } else {
       const userData = userDocSnap.data();
-      if (userData?.email !== user.email) {
-          await setDoc(userDocRef, { email: user.email }, { merge: true });
-      }
-       if (!userData?.openedImageIds) {
-           await setDoc(userDocRef, { openedImageIds: [] }, { merge: true });
-       }
-       if (!userData?.username) {
-           await setDoc(userDocRef, { username: null }, { merge: true });
-       }
+      if (userData?.email !== user.email) { await setDoc(userDocRef, { email: user.email }, { merge: true }); }
+      if (!userData?.openedImageIds) { await setDoc(userDocRef, { openedImageIds: [] }, { merge: true }); }
+      if (!userData?.username) { await setDoc(userDocRef, { username: null }, { merge: true }); }
     }
-  } catch (error) {
-    console.error("Error ensuring user document exists:", error);
-  }
+  } catch (error) { console.error("Error ensuring user document exists:", error); }
 };
 
 const enterFullScreen = async () => {
@@ -74,36 +57,29 @@ const enterFullScreen = async () => {
     else if ((element as any).mozRequestFullScreen) { await (element as any).mozRequestFullScreen(); } 
     else if ((element as any).webkitRequestFullscreen) { await (element as any).webkitRequestFullscreen(); } 
     else if ((element as any).msRequestFullscreen) { await (element as any).msRequestFullscreen(); }
-  } catch (error) {
-    console.warn("Failed to enter full-screen mode:", error);
-  }
+  } catch (error) { console.warn("Failed to enter full-screen mode:", error); }
 };
 
 const appVersion = "1.0.1";
 
-// Component Icon cho dropdown
 const ModeIcon: React.FC<{ mode: DisplayMode; className?: string }> = ({ mode, className }) => {
-  if (mode === 'fullscreen') {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" /></svg>
-    );
-  }
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
-  );
+  if (mode === 'fullscreen') { return (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" /></svg>); }
+  return (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>);
 };
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isNavBarVisible, setIsNavBarVisible] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [loadingAuth, setLoadingAuth] = useState(true);
-  const [assetsLoaded, setAssetsLoaded] = useState(false);
+  
+  // State chính để quản lý luồng
+  const [loadingStep, setLoadingStep] = useState<LoadingStep>('authenticating');
+
+  // States phụ cho các màn hình loading
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [logoFloating, setLogoFloating] = useState(true);
   const [authLoadProgress, setAuthLoadProgress] = useState(0);
   const [ellipsis, setEllipsis] = useState('.');
-  const [showModeSelector, setShowModeSelector] = useState(false);
   const [selectedMode, setSelectedMode] = useState<DisplayMode>('normal');
   const [rememberChoice, setRememberChoice] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -111,20 +87,33 @@ const App: React.FC = () => {
 
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
   useEffect(() => { const i = setInterval(() => setEllipsis(p => (p === '...' ? '.' : p + '.')), 500); return () => clearInterval(i); }, []);
+  
+  // Effect cho progress bar giả của màn hình authenticating
   useEffect(() => {
-    if (loadingAuth) {
+    if (loadingStep === 'authenticating') {
       const i = setInterval(() => { setAuthLoadProgress(p => (p >= 95 ? 95 : p + Math.floor(Math.random() * 5) + 2)); }, 120);
       return () => clearInterval(i);
     }
-  }, [loadingAuth]);
+  }, [loadingStep]);
 
-  const startGame = async (mode: DisplayMode, savePreference: boolean) => {
-    if (savePreference) localStorage.setItem('displayMode', mode);
-    if (mode === 'fullscreen') await enterFullScreen();
-    setTimeout(() => setAssetsLoaded(true), 150);
-  };
+  // Effect quản lý luồng chính: Auth -> Download -> Select Mode
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      setTimeout(async () => {
+        setCurrentUser(user);
+        if (user) {
+          await ensureUserDocumentExists(user);
+          setLoadingStep('downloading'); // Chuyển sang bước downloading
+        }
+        // Nếu không có user, component AuthComponent sẽ được render (ở cuối)
+      }, 1500);
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
+    if (loadingStep !== 'downloading' || !currentUser) return;
+    
     let isCancelled = false;
     async function preloadAssets() {
       const totalAssets = allImageUrls.length;
@@ -136,24 +125,16 @@ const App: React.FC = () => {
       }
       if (!isCancelled) {
         const savedMode = localStorage.getItem('displayMode') as DisplayMode | null;
-        if (savedMode) { await startGame(savedMode, false); }
-        else { setTimeout(() => { if (!isCancelled) setShowModeSelector(true); }, 500); }
+        if (savedMode) {
+          await startGame(savedMode, false); // Tự động bắt đầu game nếu đã lưu lựa chọn
+        } else {
+          setLoadingStep('selecting_mode'); // Chuyển sang bước chọn mode
+        }
       }
     }
-    if (currentUser && !assetsLoaded) preloadAssets();
+    preloadAssets();
     return () => { isCancelled = true; };
-  }, [currentUser, assetsLoaded]);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      setTimeout(async () => {
-        setCurrentUser(user);
-        if (user) await ensureUserDocumentExists(user);
-        setLoadingAuth(false);
-      }, 1500);
-    });
-    return () => unsub();
-  }, []);
+  }, [loadingStep, currentUser]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => { if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) setIsDropdownOpen(false); };
@@ -161,19 +142,24 @@ const App: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const startGame = async (mode: DisplayMode, savePreference: boolean) => {
+    if (savePreference) localStorage.setItem('displayMode', mode);
+    if (mode === 'fullscreen') await enterFullScreen();
+    setLoadingStep('ready'); // Hoàn tất, sẵn sàng vào app
+  };
+
   const handleTabChange = (tab: TabType) => { setActiveTab(tab); setIsNavBarVisible(true); };
   const hideNavBar = () => setIsNavBarVisible(false);
   const showNavBar = () => setIsNavBarVisible(true);
-
-  if (loadingAuth) {
+  
+  // ==================================================================
+  // RENDER CÁC MÀN HÌNH LOADING
+  // ==================================================================
+  
+  if (loadingStep === 'authenticating') {
     return (
-      // Thay đổi ở đây: 1. Đổi justify-start -> justify-between. 2. Thêm pb-56
       <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Loading Logo" className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`} style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
-        
-        {/* Thay đổi ở đây: 3. Xóa <div className="flex-grow" /> */}
-        
-        {/* Thay đổi ở đây: 4. Xóa pb-56 khỏi div này */}
         <div className="w-full flex flex-col items-center px-4">
           <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">Authenticating<span className="inline-block w-3 text-left">{ellipsis}</span></p>
           <div className="w-80 lg:w-96 relative">
@@ -190,57 +176,23 @@ const App: React.FC = () => {
     );
   }
 
-  if (!currentUser) {
+  if (!currentUser) { // Nếu xác thực thất bại, hiển thị màn hình login
     return <AuthComponent appVersion={appVersion} />;
   }
 
-  if (!assetsLoaded) {
+  if (loadingStep === 'downloading') {
     return (
-      // Thay đổi ở đây: 1. Đổi justify-start -> justify-between. 2. Thêm pb-56
       <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden">
-        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Loading Logo" className={`w-48 h-48 object-contain transition-all ease-in-out duration-1000 ${logoFloating ? '-translate-y-3' : 'translate-y-0'} ${showModeSelector ? 'scale-90 -translate-y-4' : ''}`} style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
-        
-        {/* Thay đổi ở đây: 3. Xóa <div className="flex-grow" /> */}
-
-        {/* Thay đổi ở đây: 4. Xóa pb-56 khỏi div này */}
+        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Loading Logo" className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`} style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
         <div className="w-full flex flex-col items-center px-4">
-          <div className="grid place-items-center w-full">
-            {/* --- Giao diện Progress Bar --- */}
-            <div className={`col-start-1 row-start-1 w-full flex flex-col items-center transition-opacity duration-300 ${!showModeSelector ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-              <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">Downloading assets<span className="inline-block w-3 text-left">{ellipsis}</span></p>
-              <div className="w-80 lg:w-96 relative">
-                <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
-                  <div className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end" style={{ width: `${loadingProgress}%`, boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` }}>
-                    {loadingProgress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
-                  </div>
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>{Math.round(loadingProgress)}%</div>
+          <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">Downloading assets<span className="inline-block w-3 text-left">{ellipsis}</span></p>
+          <div className="w-80 lg:w-96 relative">
+            <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
+              <div className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end" style={{ width: `${loadingProgress}%`, boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` }}>
+                {loadingProgress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
               </div>
             </div>
-            {/* --- Giao diện Dropdown --- */}
-            <div className={`col-start-1 row-start-1 w-full flex flex-col items-center transition-opacity duration-300 ${showModeSelector ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-              <h2 className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">CHOOSE DISPLAY MODE</h2>
-              <div className="relative w-full max-w-xs" ref={dropdownRef}>
-                <button onClick={() => setIsDropdownOpen(p => !p)} className="w-full flex items-center justify-between p-3 bg-black/40 border-2 border-gray-600 rounded-lg text-white hover:border-cyan-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-colors duration-300">
-                  <span className="flex items-center"><ModeIcon mode={selectedMode} className="w-5 h-5 mr-3 text-cyan-300" /><span className="font-semibold tracking-wide">{selectedMode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span></span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-                </button>
-                {isDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-gray-600 rounded-lg shadow-xl z-10 overflow-hidden">
-                    {(['fullscreen', 'normal'] as DisplayMode[]).map(mode => (
-                      <button key={mode} onClick={() => { setSelectedMode(mode); setIsDropdownOpen(false); }} className="w-full text-left flex items-center p-3 text-white/90 hover:bg-cyan-500/20 transition-colors duration-200">
-                        <ModeIcon mode={mode} className="w-5 h-5 mr-3 text-cyan-300" /><span className="font-semibold tracking-wide">{mode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div onClick={() => setRememberChoice(p => !p)} className="mt-4 flex items-center cursor-pointer p-2 rounded-md hover:bg-white/10 transition-colors">
-                {rememberChoice ? (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>)}
-                <span className="ml-2 text-sm text-gray-300">Remember choice</span>
-              </div>
-              <button onClick={() => startGame(selectedMode, rememberChoice)} className="mt-5 w-full max-w-xs py-3 bg-cyan-600/90 border border-cyan-400 rounded-lg text-white font-bold tracking-widest hover:bg-cyan-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/20 focus:outline-none focus:ring-4 focus:ring-cyan-300">LAUNCH</button>
-            </div>
+            <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>{Math.round(loadingProgress)}%</div>
           </div>
         </div>
         <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">Version {appVersion}</p>
@@ -248,9 +200,44 @@ const App: React.FC = () => {
     );
   }
 
+  if (loadingStep === 'selecting_mode') {
+    return (
+      <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden">
+        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Logo" className="w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms]" style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
+        <div className="w-full flex flex-col items-center px-4">
+          <h2 className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">CHOOSE DISPLAY MODE</h2>
+          <div className="relative w-full max-w-xs" ref={dropdownRef}>
+             <button onClick={() => setIsDropdownOpen(p => !p)} className="w-full flex items-center justify-between p-3 bg-black/40 border-2 border-gray-600 rounded-lg text-white hover:border-cyan-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-colors duration-300">
+               <span className="flex items-center"><ModeIcon mode={selectedMode} className="w-5 h-5 mr-3 text-cyan-300" /><span className="font-semibold tracking-wide">{selectedMode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span></span>
+               <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+             </button>
+             {isDropdownOpen && (
+               <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-gray-600 rounded-lg shadow-xl z-10 overflow-hidden">
+                 {(['fullscreen', 'normal'] as DisplayMode[]).map(mode => (
+                   <button key={mode} onClick={() => { setSelectedMode(mode); setIsDropdownOpen(false); }} className="w-full text-left flex items-center p-3 text-white/90 hover:bg-cyan-500/20 transition-colors duration-200">
+                     <ModeIcon mode={mode} className="w-5 h-5 mr-3 text-cyan-300" /><span className="font-semibold tracking-wide">{mode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span>
+                   </button>
+                 ))}
+               </div>
+             )}
+          </div>
+          <div onClick={() => setRememberChoice(p => !p)} className="mt-4 flex items-center cursor-pointer p-2 rounded-md hover:bg-white/10 transition-colors">
+            {rememberChoice ? (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>)}
+            <span className="ml-2 text-sm text-gray-300">Remember choice</span>
+          </div>
+          <button onClick={() => startGame(selectedMode, rememberChoice)} className="mt-5 w-full max-w-xs py-3 bg-cyan-600/90 border border-cyan-400 rounded-lg text-white font-bold tracking-widest hover:bg-cyan-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/20 focus:outline-none focus:ring-4 focus:ring-cyan-300">LAUNCH</button>
+        </div>
+        <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">Version {appVersion}</p>
+      </div>
+    );
+  }
+
+  // ==================================================================
+  // RENDER APP CHÍNH KHI ĐÃ SẴN SÀNG
+  // ==================================================================
   return (
     <div className="app-container">
-      {activeTab === 'home' && <Home hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} assetsLoaded={assetsLoaded} />}
+      {activeTab === 'home' && <Home hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} assetsLoaded={true} />}
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'story' && <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />}
       {activeTab === 'quiz' && <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />}
