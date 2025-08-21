@@ -246,7 +246,7 @@ const UpgradeStatToast: React.FC<UpgradeStatToastProps> = ({ isVisible, icon, bo
   return (
     <>
       <style>{animationStyle}</style>
-      <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none flex items-center justify-center gap-1 px-2.5 py-1 rounded-full shadow-lg backdrop-blur-sm bg-slate-900/80 border ${colorClasses.border} animate-float-up`}>
+      <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 -ml-10 z-50 pointer-events-none flex items-center justify-center gap-1 px-2.5 py-1 rounded-full shadow-lg backdrop-blur-sm bg-slate-900/80 border ${colorClasses.border} animate-float-up`}>
         <div className="w-4 h-4">{icon}</div>
         <span className={`text-sm font-bold ${colorClasses.text}`}>+{formatBonus(bonus)}</span>
       </div>
