@@ -1,4 +1,5 @@
-// src/index.tsx
+// --- START OF FILE src/index.tsx ---
+
 import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import Home from './background-game.tsx';
@@ -12,10 +13,12 @@ import { auth, db } from './firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { allImageUrls } from './game-assets.ts';
-import DungeonCanvasBackground from './background-canvas.tsx';
+import GameSkeletonLoader from './GameSkeletonLoader.tsx';
 
+// Định nghĩa các loại tab và chế độ hiển thị
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
 type DisplayMode = 'fullscreen' | 'normal';
+// Định nghĩa các bước của quá trình tải
 type LoadingStep = 'authenticating' | 'downloading' | 'selecting_mode' | 'launching' | 'ready';
 
 // ==================================================================
@@ -79,7 +82,6 @@ const App: React.FC = () => {
   const [rememberChoice, setRememberChoice] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [showSkeleton, setShowSkeleton] = useState(false);
 
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
   useEffect(() => { const i = setInterval(() => setEllipsis(p => (p === '...' ? '.' : p + '.')), 500); return () => clearInterval(i); }, []);
@@ -131,9 +133,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (loadingStep === 'launching') {
-      const showTimer = setTimeout(() => setShowSkeleton(true), 10);
       const stepTimer = setTimeout(() => setLoadingStep('ready'), 800);
-      return () => { clearTimeout(showTimer); clearTimeout(stepTimer); setShowSkeleton(false); };
+      return () => { clearTimeout(stepTimer); };
     }
   }, [loadingStep]);
 
@@ -170,43 +171,36 @@ const App: React.FC = () => {
 
   if (!currentUser) { return <AuthComponent appVersion={appVersion} />; }
 
-  if (loadingStep === 'selecting_mode') { return ( <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden"> <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Logo" className="w-48 h-48 object-contain" style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} /> <div className="w-full flex flex-col items-center px-4"> <h2 className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">CHOOSE DISPLAY MODE</h2> <div className="relative w-full max-w-xs" ref={dropdownRef}> <button onClick={() => setIsDropdownOpen(p => !p)} className="w-full flex items-center justify-between p-3 bg-black/40 border-2 border-gray-600 rounded-lg text-white hover:border-cyan-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-colors duration-300"> <span className="flex items-center"><ModeIcon mode={selectedMode} className="w-5 h-5 mr-3 text-cyan-300" /><span className="font-semibold tracking-wide">{selectedMode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span></span> <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg> </button> {isDropdownOpen && ( <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-gray-600 rounded-lg shadow-xl z-10 overflow-hidden"> {(['fullscreen', 'normal'] as DisplayMode[]).map(mode => ( <button key={mode} onClick={() => { setSelectedMode(mode); setIsDropdownOpen(false); }} className="w-full text-left flex items-center p-3 text-white/90 hover:bg-cyan-500/20 transition-colors duration-200"> <ModeIcon mode={mode} className="w-5 h-5 mr-3 text-cyan-300" /><span className="font-semibold tracking-wide">{mode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span> </button> ))} </div> )} </div> <div onClick={() => setRememberChoice(p => !p)} className="mt-4 flex items-center cursor-pointer p-2 rounded-md hover:bg-white/10 transition-colors"> {rememberChoice ? (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>)} <span className="ml-2 text-sm text-gray-300">Remember choice</span> </div> <button onClick={() => startGame(selectedMode, rememberChoice)} className="mt-5 w-full max-w-xs py-3 bg-cyan-600/90 border border-cyan-400 rounded-lg text-white font-bold tracking-widest hover:bg-cyan-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/20 focus:outline-none focus:ring-4 focus:ring-cyan-300">LAUNCH</button> </div> <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">Version {appVersion}</p> </div> ); }
-
-  if (loadingStep === 'launching') {
+  if (loadingStep === 'selecting_mode') {
     return (
-      <div className="w-screen h-screen relative overflow-hidden bg-slate-950">
-        {/* Lớp 1: Background động */}
-        <DungeonCanvasBackground isPaused={false} />
-
-        {/* ===> THÊM MỚI: Lớp phủ làm mờ background */}
-        <div className={`absolute inset-0 z-5 bg-slate-950/60 transition-opacity duration-500 ease-in-out ${showSkeleton ? 'opacity-100' : 'opacity-0'}`}></div>
-
-        {/* Lớp 3: Giao diện Skeleton */}
-        <div className={`absolute inset-0 z-10 flex flex-col justify-between transition-opacity duration-500 ease-in-out ${showSkeleton ? 'opacity-100' : 'opacity-0'}`}>
-          <div className="w-full h-12 flex justify-between items-center px-3 bg-slate-900/20 backdrop-blur-sm border-b border-slate-700/30">
-            <div className="w-7 h-7 bg-slate-800/50 rounded-lg animate-pulse"></div>
-            <div className="flex items-center space-x-2">
-              <div className="w-24 h-7 bg-slate-800/50 rounded-lg animate-pulse"></div>
-              <div className="w-32 h-7 bg-slate-800/50 rounded-lg animate-pulse"></div>
-            </div>
+      <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden">
+        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Logo" className="w-48 h-48 object-contain" style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
+        <div className="w-full flex flex-col items-center px-4">
+          <h2 className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">CHOOSE DISPLAY MODE</h2>
+          <div className="relative w-full max-w-xs" ref={dropdownRef}>
+             <button onClick={() => setIsDropdownOpen(p => !p)} className="w-full flex items-center justify-between p-3 bg-black/40 border-2 border-gray-600 rounded-lg text-white hover:border-cyan-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-colors duration-300">
+               <span className="flex items-center"><ModeIcon mode={selectedMode} className="w-5 h-5 mr-3 text-cyan-300" /><span className="font-semibold tracking-wide">{selectedMode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span></span>
+               <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+             </button>
+             {isDropdownOpen && (
+               <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-gray-600 rounded-lg shadow-xl z-10 overflow-hidden">
+                 {(['fullscreen', 'normal'] as DisplayMode[]).map(mode => ( <button key={mode} onClick={() => { setSelectedMode(mode); setIsDropdownOpen(false); }} className="w-full text-left flex items-center p-3 text-white/90 hover:bg-cyan-500/20 transition-colors duration-200"> <ModeIcon mode={mode} className="w-5 h-5 mr-3 text-cyan-300" /><span className="font-semibold tracking-wide">{mode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span> </button> ))}
+               </div>
+             )}
           </div>
-          <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-            {[...Array(3)].map((_, i) => (<div key={i} className="w-14 h-14 bg-slate-800/50 rounded-lg animate-pulse"></div>))}
+          <div onClick={() => setRememberChoice(p => !p)} className="mt-4 flex items-center cursor-pointer p-2 rounded-md hover:bg-white/10 transition-colors">
+            {rememberChoice ? (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>)}
+            <span className="ml-2 text-sm text-gray-300">Remember choice</span>
           </div>
-          <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-            {[...Array(3)].map((_, i) => (<div key={i} className="w-14 h-14 bg-slate-800/50 rounded-lg animate-pulse"></div>))}
-          </div>
-          <div className="w-full h-[60px] md:h-[70px] bg-black/30 backdrop-blur-sm border-t border-gray-700/50 flex justify-around items-center p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex flex-col items-center justify-center w-12 h-12 animate-pulse">
-                <div className="w-7 h-7 bg-slate-700/60 rounded-md"></div>
-                <div className="w-10 h-2 mt-2 bg-slate-700/60 rounded"></div>
-              </div>
-            ))}
-          </div>
+          <button onClick={() => startGame(selectedMode, rememberChoice)} className="mt-5 w-full max-w-xs py-3 bg-cyan-600/90 border border-cyan-400 rounded-lg text-white font-bold tracking-widest hover:bg-cyan-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/20 focus:outline-none focus:ring-4 focus:ring-cyan-300">LAUNCH</button>
         </div>
+        <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">Version {appVersion}</p>
       </div>
     );
+  }
+
+  if (loadingStep === 'launching') {
+    return <GameSkeletonLoader show={true} />;
   }
 
   return (
@@ -223,8 +217,9 @@ const App: React.FC = () => {
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Root element with ID "root" not found in the document.');
-
 const root = createRoot(container);
 root.render(<App />);
 
-export default App; 
+export default App;
+
+// --- END OF FILE src/index.tsx ---
