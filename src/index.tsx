@@ -85,6 +85,7 @@ const App: React.FC = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [logoFloating, setLogoFloating] = useState(true);
   const [authLoadProgress, setAuthLoadProgress] = useState(0);
+  const [ellipsis, setEllipsis] = useState('.');
 
   // Effect để tạo animation "float" cho logo trên màn hình loading
   useEffect(() => {
@@ -92,6 +93,17 @@ const App: React.FC = () => {
       setLogoFloating(prev => !prev);
     }, 2500);
     return () => clearInterval(interval);
+  }, []);
+  
+  // Effect để tạo animation cho dấu chấm ...
+  useEffect(() => {
+    const ellipsisInterval = setInterval(() => {
+      setEllipsis(prev => {
+        if (prev === '...') return '.';
+        return prev + '.';
+      });
+    }, 500);
+    return () => clearInterval(ellipsisInterval);
   }, []);
 
   // Effect để tạo hiệu ứng tải cho màn hình xác thực
@@ -178,7 +190,8 @@ const App: React.FC = () => {
 
         <div className="w-full flex flex-col items-center px-4 pb-56">
             <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">
-                Authenticating...
+                Authenticating
+                <span className="inline-block w-3 text-left">{ellipsis}</span>
             </p>
             <div className="w-80 lg:w-96 relative">
               <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
@@ -229,7 +242,8 @@ const App: React.FC = () => {
 
         <div className="w-full flex flex-col items-center px-4 pb-56">
             <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">
-                Downloading assets…
+                Downloading assets
+                <span className="inline-block w-3 text-left">{ellipsis}</span>
             </p>
             <div className="w-80 lg:w-96 relative">
               <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
