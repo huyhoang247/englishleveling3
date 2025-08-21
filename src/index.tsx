@@ -103,7 +103,7 @@ const App: React.FC = () => {
             clearInterval(interval);
             return 95;
           }
-          return prev + Math.floor(Math.random() * 5) + 2; 
+          return prev + Math.floor(Math.random() * 5) + 2;
         });
       }, 120);
       return () => clearInterval(interval);
@@ -163,36 +163,42 @@ const App: React.FC = () => {
   if (loadingAuth) {
     const progress = authLoadProgress;
     return (
-      <div className="relative flex flex-col items-center justify-start pt-40 w-full h-screen bg-slate-950 text-white font-sans
+      <div className="relative flex flex-col items-center justify-start pt-20 w-full h-screen bg-slate-950 text-white font-sans
                       bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
         <img
           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp"
           alt="Loading Logo"
-          className={`w-48 h-48 object-contain mb-8 transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`}
+          className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`}
           style={{
               filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))',
           }}
         />
-        <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">
-            Authenticating...
-        </p>
-        <div className="w-80 lg:w-96 relative">
-          <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
-               style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
-            <div
-              className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
-              style={{
-                width: `${progress}%`,
-                boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)`
-              }} >
-                {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
+
+        <div className="flex-grow" />
+
+        <div className="w-full flex flex-col items-center px-4 pb-24">
+            <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">
+                Authenticating...
+            </p>
+            <div className="w-80 lg:w-96 relative">
+              <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
+                   style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
+                <div
+                  className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
+                  style={{
+                    width: `${progress}%`,
+                    boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)`
+                  }} >
+                    {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
+                </div>
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white"
+                   style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
+                 {Math.min(100, Math.round(progress))}%
+              </div>
             </div>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white"
-               style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
-             {Math.min(100, Math.round(progress))}%
-          </div>
         </div>
+        
         <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
           Version {appVersion}
         </p>
@@ -208,37 +214,43 @@ const App: React.FC = () => {
   // Giai đoạn 3: Đã đăng nhập, nhưng đang chờ tải tài nguyên game
   if (!assetsLoaded) {
     return (
-      <div className="relative flex flex-col items-center justify-start pt-40 w-full h-screen bg-slate-950 text-white font-sans
+      <div className="relative flex flex-col items-center justify-start pt-20 w-full h-screen bg-slate-950 text-white font-sans
                       bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
         <img
           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp"
           alt="Loading Logo"
-          className={`w-48 h-48 object-contain mb-8 transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`}
+          className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`}
           style={{
               filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))',
           }}
         />
-        <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">
-            Downloading assets…
-        </p>
-        <div className="w-80 lg:w-96 relative">
-          <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
-               style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
-            <div
-              className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
-              style={{
-                width: `${loadingProgress}%`,
-                boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)`
-              }}
-            >
-                {loadingProgress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
+
+        <div className="flex-grow" />
+
+        <div className="w-full flex flex-col items-center px-4 pb-24">
+            <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">
+                Downloading assets…
+            </p>
+            <div className="w-80 lg:w-96 relative">
+              <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1"
+                   style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
+                <div
+                  className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
+                  style={{
+                    width: `${loadingProgress}%`,
+                    boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)`
+                  }}
+                >
+                    {loadingProgress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
+                </div>
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white"
+                   style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
+                 {Math.round(loadingProgress)}%
+              </div>
             </div>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white"
-               style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
-             {Math.round(loadingProgress)}%
-          </div>
         </div>
+
         <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
           Version {appVersion}
         </p>
