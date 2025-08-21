@@ -18,6 +18,9 @@ import { uiAssets, equipmentUiAssets } from './game-assets.ts';
 // *** THAY ĐỔI QUAN TRỌNG: Import trực tiếp CoinDisplay từ file của nó ***
 import CoinDisplay from './ui/display/coin-display.tsx'; 
 
+// *** THAY ĐỔI MỚI: Import Toast component ***
+import RateLimitToast from '../../thong-bao.tsx';
+
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
 // THAY ĐỔI: Thêm thuộc tính `stats` để mỗi vật phẩm có chỉ số riêng
@@ -309,7 +312,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
     const hasStats = sortedStats.length > 0;
     const actionDisabled = isProcessing;
-    const mainActionText = isEquipped ? 'Tháo Ra' : 'Trang Bị';
+    const mainActionText = isEquipped ? 'Unequip' : 'Equip';
     const mainActionHandler = () => isEquipped ? onUnequip(ownedItem) : onEquip(ownedItem);
     const mainActionStyle = isEquipped ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:scale-105' : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105';
     const mainActionDisabledStyle = 'bg-slate-700 text-slate-500 cursor-not-allowed';
@@ -393,7 +396,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                 <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
                     <div className="flex items-center gap-3">
                         <button onClick={mainActionHandler} disabled={actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${actionDisabled ? mainActionDisabledStyle : mainActionStyle}`}>{mainActionText}</button>
-                        <button onClick={() => onDismantle(ownedItem)} disabled={isEquipped || actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-100'}`}>Phân Rã</button>
+                        <button onClick={() => onDismantle(ownedItem)} disabled={isEquipped || actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-100'}`}>Recycle</button>
                     </div>
                 </div>
             </div>
@@ -533,6 +536,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
     const [message, setMessage] = useState('');
     const [messageKey, setMessageKey] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [dismantleSuccessToast, setDismantleSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     const MAX_ITEMS_IN_STORAGE = 50;
 
     const equippedItemsMap = useMemo(() => {
@@ -653,10 +657,9 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
         try {
             await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: goldToReturn, piecesChange: DISMANTLE_RETURN_PIECES });
             setSelectedItem(null);
-            let dismantleMsg = `Đã phân rã ${itemDef.name}, nhận lại ${DISMANTLE_RETURN_PIECES} Mảnh Trang Bị.`;
-            if (goldToReturn > 0) dismantleMsg += ` Hoàn lại ${goldToReturn.toLocaleString()} vàng.`;
-            showMessage(dismantleMsg);
-        } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Phân rã thất bại'}`); } finally { setIsProcessing(false); }
+            setDismantleSuccessToast({ show: true, message: 'Đã tái chế thành công.' });
+            setTimeout(() => setDismantleSuccessToast(prev => ({ ...prev, show: false })), 4000);
+        } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Tái chế thất bại'}`); } finally { setIsProcessing(false); }
     }, [isProcessing, equippedItems, ownedItems, onInventoryUpdate, showMessage]);
 
     const handleUpgradeItem = useCallback(async (itemToUpgrade: OwnedItem, statKey: string, increase: number) => {
@@ -747,6 +750,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
             <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
             
             {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[101]">{message}</div>}
+            <RateLimitToast show={dismantleSuccessToast.show} message={dismantleSuccessToast.message} showIcon={false} />
             {selectedItem && <ItemDetailModal ownedItem={selectedItem} onClose={handleCloseDetailModal} onEquip={handleEquipItem} onUnequip={handleUnequipItem} onDismantle={handleDismantleItem} onUpgrade={handleUpgradeItem} isEquipped={Object.values(equippedItems).includes(selectedItem.id)} gold={gold} isProcessing={isProcessing}/>}
             {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
             <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
