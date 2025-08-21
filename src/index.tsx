@@ -167,10 +167,14 @@ const App: React.FC = () => {
 
   if (loadingAuth) {
     return (
-      <div className="relative flex flex-col items-center justify-start pt-28 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
+      // Thay đổi ở đây: 1. Đổi justify-start -> justify-between. 2. Thêm pb-56
+      <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Loading Logo" className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`} style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
-        <div className="flex-grow" />
-        <div className="w-full flex flex-col items-center px-4 pb-56">
+        
+        {/* Thay đổi ở đây: 3. Xóa <div className="flex-grow" /> */}
+        
+        {/* Thay đổi ở đây: 4. Xóa pb-56 khỏi div này */}
+        <div className="w-full flex flex-col items-center px-4">
           <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">Authenticating<span className="inline-block w-3 text-left">{ellipsis}</span></p>
           <div className="w-80 lg:w-96 relative">
             <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
@@ -192,10 +196,14 @@ const App: React.FC = () => {
 
   if (!assetsLoaded) {
     return (
-      <div className="relative flex flex-col items-center justify-start pt-28 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden">
+      // Thay đổi ở đây: 1. Đổi justify-start -> justify-between. 2. Thêm pb-56
+      <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden">
         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Loading Logo" className={`w-48 h-48 object-contain transition-all ease-in-out duration-1000 ${logoFloating ? '-translate-y-3' : 'translate-y-0'} ${showModeSelector ? 'scale-90 -translate-y-4' : ''}`} style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
-        <div className="flex-grow" />
-        <div className="w-full flex flex-col items-center px-4 pb-56">
+        
+        {/* Thay đổi ở đây: 3. Xóa <div className="flex-grow" /> */}
+
+        {/* Thay đổi ở đây: 4. Xóa pb-56 khỏi div này */}
+        <div className="w-full flex flex-col items-center px-4">
           <div className="grid place-items-center w-full">
             {/* --- Giao diện Progress Bar --- */}
             <div className={`col-start-1 row-start-1 w-full flex flex-col items-center transition-opacity duration-300 ${!showModeSelector ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
