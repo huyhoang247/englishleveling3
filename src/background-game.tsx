@@ -26,9 +26,7 @@ import SkillScreen from './home/skill-game/skill-ui.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
 import RateLimitToast from './thong-bao.tsx';
-
-// --- THAY ĐỔI: Xóa import GameSkeletonLoader không cần thiết ---
-// import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
+import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 
 import { 
   fetchOrCreateUserGameData, 
@@ -78,11 +76,9 @@ interface ObstacleRunnerGameProps {
   showNavBar: () => void;
   currentUser: User | null;
   assetsLoaded: boolean;
-  // --- THAY ĐỔI: Thêm prop callback vào interface ---
-  onLoadingStateChange: (isLoading: boolean) => void;
 }
 
-export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser, assetsLoaded, onLoadingStateChange }: ObstacleRunnerGameProps) {
+export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser, assetsLoaded }: ObstacleRunnerGameProps) {
 
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
 
@@ -279,17 +275,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   const handleTap = () => { };
   const isLoading = isLoadingUserData || !assetsLoaded;
-
-  // --- THAY ĐỔI: Dùng useEffect để báo cáo trạng thái loading về cho component cha ---
-  useEffect(() => {
-    onLoadingStateChange(isLoading);
-  }, [isLoading, onLoadingStateChange]);
-
   useEffect(() => { if (displayedCoins === coins) return; const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100); return () => clearTimeout(timeoutId); }, [coins]);
 
   const renderCharacter = () => {
     const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
-    const isPaused = isAnyOverlayOpen || isBackgroundPaused;
+    const isPaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
     return (<div className="character-container absolute w-28 h-28 left-1/2 -translate-x-1/2 bottom-40 z-20"><DotLottieReact src={lottieAssets.characterRun} loop autoplay={!isPaused} className="w-full h-full" /></div>);
   };
 
@@ -333,7 +323,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const handleSetToggleSidebar = (toggleFn: () => void) => { sidebarToggleRef.current = toggleFn; };
 
   const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen;
-  const isGamePaused = isAnyOverlayOpen || isBackgroundPaused;
+  const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
   const isAdmin = auth.currentUser?.email === 'vanlongt309@gmail.com';
 
   const getPlayerBattleStats = () => {
@@ -358,12 +348,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
       <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank} onShowLuckyGame={toggleLuckyGame} onShowMinerChallenge={toggleMinerChallenge} onShowAchievements={toggleAchievements} onShowUpgrade={toggleUpgradeScreen} onShowBaseBuilding={toggleBaseBuilding} onShowAdmin={isAdmin ? toggleAdminPanel : undefined}>
         <DungeonCanvasBackground isPaused={isGamePaused} />
-        {/*
-          --- THAY ĐỔI:
-          Ẩn giao diện game chính bằng CSS visibility thay vì gỡ khỏi DOM.
-          Điều này cho phép game tiếp tục tải dữ liệu trong nền trong khi skeleton đang hiển thị.
-        */}
-        <div style={{ visibility: isLoading ? 'hidden' : 'visible' }} className="w-full h-full">
+        <div style={{ display: isAnyOverlayOpen ? 'none' : 'block', visibility: isLoading ? 'hidden' : 'visible' }} className="w-full h-full">
           <div className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-transparent`} onClick={handleTap}>
             {renderCharacter()}
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden rounded-b-lg shadow-2xl bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950 border-b border-l border-r border-slate-700/50">
@@ -415,8 +400,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
         <div className="absolute inset-0 w-full h-full z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}> <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary> </div>
       </SidebarLayout>
-      
-      {/* --- THAY ĐỔI: XÓA HOÀN TOÀN DÒNG NÀY --- */}
+      <GameSkeletonLoader show={isLoading} />
     </div>
   );
 }
