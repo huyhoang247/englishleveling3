@@ -55,9 +55,9 @@ const ensureUserDocumentExists = async (user: User) => {
 const enterFullScreen = async () => {
   const element = document.documentElement;
   try {
-    if (element.requestFullscreen) { await element.requestFullscreen(); } 
-    else if ((element as any).mozRequestFullScreen) { await (element as any).mozRequestFullScreen(); } 
-    else if ((element as any).webkitRequestFullscreen) { await (element as any).webkitRequestFullscreen(); } 
+    if (element.requestFullscreen) { await element.requestFullscreen(); }
+    else if ((element as any).mozRequestFullScreen) { await (element as any).mozRequestFullScreen(); }
+    else if ((element as any).webkitRequestFullscreen) { await (element as any).webkitRequestFullscreen(); }
     else if ((element as any).msRequestFullscreen) { await (element as any).msRequestFullscreen(); }
   } catch (error) { console.warn("Failed to enter full-screen mode:", error); }
 };
@@ -102,9 +102,10 @@ const App: React.FC = () => {
   const [rememberChoice, setRememberChoice] = useState(true);
   const [isModeModalOpen, setIsModeModalOpen] = useState(false);
 
+  const isInitialAuthCheck = useRef(true);
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
   useEffect(() => { const i = setInterval(() => setEllipsis(p => (p === '...' ? '.' : p + '.')), 500); return () => clearInterval(i); }, []);
-  
+
   useEffect(() => {
     if (loadingStep === 'authenticating') {
       const i = setInterval(() => { setAuthLoadProgress(p => (p >= 95 ? 95 : p + Math.floor(Math.random() * 5) + 2)); }, 120);
@@ -112,18 +113,27 @@ const App: React.FC = () => {
     }
   }, [loadingStep]);
 
+  // Tách logic xử lý auth ra một hàm riêng để tái sử dụng
+  const handleAuthChange = async (user: User | null) => {
+    setCurrentUser(user);
+    if (user) {
+      await ensureUserDocumentExists(user);
+      setLoadingStep('downloading');
+    } else {
+      setLoadingStep('ready');
+    }
+  };
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
-      setTimeout(async () => {
-        setCurrentUser(user);
-        if (user) {
-          await ensureUserDocumentExists(user);
-          setLoadingStep('downloading');
-        } else {
-          // QUAN TRỌNG: Nếu không có user, dừng màn hình loading và chuẩn bị hiển thị form đăng nhập.
-          setLoadingStep('ready');
-        }
-      }, 1500);
+      if (isInitialAuthCheck.current) {
+        // Chỉ delay cho lần kiểm tra đầu tiên khi tải app
+        isInitialAuthCheck.current = false;
+        setTimeout(() => handleAuthChange(user), 1500);
+      } else {
+        // Các lần sau (login/logout) thì cập nhật ngay lập tức
+        handleAuthChange(user);
+      }
     });
     return () => unsub();
   }, []);
@@ -157,13 +167,13 @@ const App: React.FC = () => {
   const startGame = async (mode: DisplayMode, savePreference: boolean) => {
     if (savePreference) localStorage.setItem('displayMode', mode);
     if (mode === 'fullscreen') await enterFullScreen();
-    setLoadingStep('launching'); 
+    setLoadingStep('launching');
   };
 
   const handleTabChange = (tab: TabType) => { setActiveTab(tab); setIsNavBarVisible(true); };
   const hideNavBar = () => setIsNavBarVisible(false);
   const showNavBar = () => setIsNavBarVisible(true);
-  
+
   if (loadingStep === 'authenticating' || loadingStep === 'downloading') {
     const isAuthenticating = loadingStep === 'authenticating';
     const progress = isAuthenticating ? authLoadProgress : loadingProgress;
@@ -174,7 +184,7 @@ const App: React.FC = () => {
           <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">{text}<span className="inline-block w-3 text-left">{ellipsis}</span></p>
           <div className="w-80 lg:w-96 relative">
             <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
                 style={{ width: `${progress}%`, boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` }}>
                 {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
