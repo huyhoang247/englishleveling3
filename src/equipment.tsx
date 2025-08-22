@@ -746,13 +746,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
     const handleOpenForgeModal = useCallback(() => setIsForgeModalOpen(true), []);
 
     return (
-        // ==================================================================
-        // ====================== ✨ SỬA LỖI TẠI ĐÂY ✨ ======================
-        // ==================================================================
-        // 1. Thay "relative" bằng "fixed inset-0" để component trở thành một lớp phủ toàn màn hình.
-        // 2. Thay "min-h-screen" bằng "h-full" (hoặc xóa đi) vì kích thước giờ được kiểm soát bởi "inset-0".
-        // 3. Thêm "z-[60]" để đảm bảo nó hiển thị đúng trên các lớp khác, khớp với z-index trong background-game.tsx.
-        <div className="main-bg fixed inset-0 z-[60] w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
+        <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
             <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
             
             {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[101]">{message}</div>}
@@ -761,8 +755,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
             {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
             <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
 
-            {/* Div con này bây giờ sẽ chiếm toàn bộ chiều cao của div cha (là toàn màn hình) */}
-            <div className="relative z-10 flex flex-col w-full h-full">
+            <div className="relative z-10 flex flex-col w-full h-screen">
                 <Header gold={gold} onClose={onClose} />
                 <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
                     <section className="flex-shrink-0 py-4">
