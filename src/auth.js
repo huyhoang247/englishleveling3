@@ -1,14 +1,12 @@
 // --- START OF FILE src/auth.js ---
 
-// src/auth.js - Đã được cập nhật để đồng bộ layout và animation
-import React, { useState, useEffect } from 'react';
+// src/auth.js - Phiên bản cuối cùng: Giữ lại giao diện form gốc, loại bỏ loading thừa.
+import React, { useState } from 'react';
 import { auth, googleProvider } from './firebase.js';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
-  signOut,
-  onAuthStateChanged
 } from 'firebase/auth';
 import { db } from './firebase.js';
 import { doc, setDoc } from 'firebase/firestore';
@@ -38,17 +36,19 @@ const GoogleIcon = () => (
   </svg>
 );
 
-// Component đã được cập nhật để nhận prop `logoFloating`
-export default function Auth({ appVersion, logoFloating }) {
+
+// Component này không cần prop `logoFloating` nữa
+export default function Auth({ appVersion }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const [loading, setLoading] = useState(false); // Đặt loading mặc định là false
+  // `loading` giờ chỉ dành cho các hành động submit form, không phải loading ban đầu
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
-  
-  // onAuthStateChanged đã được xử lý ở App.tsx, ở đây chỉ cần logic cho form
-  
+
+  // XÓA BỎ useEffect và onAuthStateChanged VÌ App.tsx đã xử lý
+
   const handleRegister = async (e) => {
     e.preventDefault();
     if (password.length < 6) {
@@ -71,9 +71,9 @@ export default function Auth({ appVersion, logoFloating }) {
       }
     } catch (err) {
       setError(err.code === 'auth/email-already-in-use' ? 'Email này đã được sử dụng.' : 'Đăng ký thất bại. Vui lòng thử lại.');
-      console.error('Đăng ký lỗi:', err);
+    } finally {
+        setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleLogin = async (e) => {
@@ -84,9 +84,9 @@ export default function Auth({ appVersion, logoFloating }) {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
       setError('Email hoặc mật khẩu không đúng.');
-      console.error('Đăng nhập lỗi:', err);
+    } finally {
+        setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleGoogle = async () => {
@@ -96,9 +96,9 @@ export default function Auth({ appVersion, logoFloating }) {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
       setError('Đăng nhập với Google thất bại.');
-      console.error('Google Sign‑in lỗi:', err);
+    } finally {
+        setLoading(false);
     }
-    setLoading(false);
   };
 
   const toggleForm = () => {
@@ -109,21 +109,20 @@ export default function Auth({ appVersion, logoFloating }) {
     setUsername('');
   };
   
+  // XÓA BỎ MÀN HÌNH LOADING RIÊNG BIỆT (`if (loading && !user)`)
+
   return (
-    // Sử dụng layout nền và logo giống hệt các màn hình chờ khác
-    <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden">
-      
-      {/* Logo trôi nổi đồng bộ */}
-      <img
-        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp"
-        alt="App Logo"
-        className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`}
-        style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }}
-      />
-      
-      {/* Form đăng nhập/đăng ký được đặt bên dưới logo */}
-      <div className="w-full max-w-md px-4 mt-5">
-          <div className="bg-gray-800/60 p-8 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up border border-gray-700/50 backdrop-blur-sm">
+    // Trả về giao diện form nguyên bản của bạn
+    <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4 font-sans relative">
+      <div className="w-full max-w-md">
+          {/* Xóa bỏ logic `user ? ... : ...` vì component này chỉ render khi không có user */}
+          <div className="relative bg-gray-800 p-8 pt-20 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up border border-gray-700">
+            <img
+              src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets/images/logo.webp"
+              alt="App Logo"
+              className="w-32 h-32 absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            />
+            
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 mb-5 rounded-lg text-center" role="alert">
                 <p className="font-medium text-sm">{error}</p>
@@ -131,7 +130,6 @@ export default function Auth({ appVersion, logoFloating }) {
             )}
 
             <form onSubmit={isRegistering ? handleRegister : handleLogin} className="space-y-6">
-              {/* Ô nhập Email */}
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3"><MailIcon /></span>
                 <input
@@ -142,7 +140,6 @@ export default function Auth({ appVersion, logoFloating }) {
                 />
               </div>
 
-              {/* Ô nhập Username (chỉ khi đăng ký) */}
               {isRegistering && (
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3"><UserIcon /></span>
@@ -155,7 +152,6 @@ export default function Auth({ appVersion, logoFloating }) {
                 </div>
               )}
               
-              {/* Ô nhập Mật khẩu */}
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3"><LockIcon /></span>
                 <input
@@ -166,7 +162,6 @@ export default function Auth({ appVersion, logoFloating }) {
                 />
               </div>
 
-              {/* Nút Submit chính */}
               <button type="submit" disabled={loading} className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center">
                 {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : (isRegistering ? 'Đăng ký' : 'Đăng nhập')}
               </button>
@@ -174,7 +169,7 @@ export default function Auth({ appVersion, logoFloating }) {
             
             <div className="my-6 flex items-center">
                 <div className="flex-grow border-t border-gray-700"></div>
-                <span className="flex-shrink mx-4 text-gray-500 text-sm">hoặc</span>
+                <span className="flex-shrink mx-4 text-gray-500 text-sm">hoặc tiếp tục với</span>
                 <div className="flex-grow border-t border-gray-700"></div>
             </div>
 
@@ -191,13 +186,9 @@ export default function Auth({ appVersion, logoFloating }) {
             </p>
           </div>
       </div>
-       
-      {/* Version number được đặt cố định ở góc dưới */}
-      <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
-        Version {appVersion}
+      <p className="absolute right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
+          Version {appVersion}
       </p>
     </div>
   );
 }
-
-// --- END OF FILE src/auth.js ---
