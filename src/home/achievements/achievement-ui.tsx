@@ -1,9 +1,9 @@
-// --- START OF FILE achievement-ui.tsx (FULL CODE - REFACTORED WITH ZUSTAND) ---
+// --- START OF FILE achievement-ui.tsx (FULL CODE - FIXED) ---
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User } from 'firebase/auth';
-import { shallow } from 'zustand/shallow'; // Import shallow for performance
-import { useAchievementStore } from './achievement-store.ts'; // Import a store mới
+import { shallow } from 'zustand/shallow';
+import { useAchievementStore } from './achievement-store.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import type { VocabularyItem } from '../../gameDataService.ts';
 import AchievementsLoadingSkeleton from './achievement-loading.tsx';
@@ -251,8 +251,7 @@ interface AchievementsScreenProps {
 }
 
 export default function AchievementsScreen({ user, onClose, onDataUpdate }: AchievementsScreenProps) {
-  // Lấy state từ store. Dùng shallow để tránh re-render không cần thiết khi
-  // state thay đổi nhưng các giá trị component này cần không đổi.
+  // Lấy state từ store. Dùng shallow để tối ưu.
   const { vocabulary, coins, masteryCards, isInitialLoading, isUpdating } = useAchievementStore(
     (state) => ({
       vocabulary: state.vocabulary,
@@ -264,8 +263,12 @@ export default function AchievementsScreen({ user, onClose, onDataUpdate }: Achi
     shallow
   );
 
-  // Lấy actions từ store. getState() không gây re-render.
-  const { initialize, claimAchievement, claimAllAchievements, reset } = useAchievementStore.getState();
+  // <<<--- SỬA LỖI Ở ĐÂY ---
+  // Lấy các actions bằng cách dùng selector. Cách này đảm bảo hàm có tham chiếu ổn định.
+  const initialize = useAchievementStore((state) => state.initialize);
+  const reset = useAchievementStore((state) => state.reset);
+  const claimAchievement = useAchievementStore((state) => state.claimAchievement);
+  const claimAllAchievements = useAchievementStore((state) => state.claimAllAchievements);
 
   // useEffect để khởi tạo và dọn dẹp state của store
   useEffect(() => {
@@ -276,7 +279,7 @@ export default function AchievementsScreen({ user, onClose, onDataUpdate }: Achi
     return () => {
       reset();
     };
-  }, [user, initialize, reset]);
+  }, [user, initialize, reset]); // Bây giờ initialize và reset đã ổn định, không gây lặp vô hạn
 
   // Tạo các hàm xử lý để gọi actions từ store và sau đó gọi onDataUpdate
   const handleClaim = useCallback(async (id: number) => {
