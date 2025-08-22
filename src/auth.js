@@ -1,4 +1,6 @@
-// src/Auth.js - Dark Mode Version
+// --- START OF FILE src/auth.js ---
+
+// src/auth.js - Đã được cập nhật để đồng bộ layout và animation
 import React, { useState, useEffect } from 'react';
 import { auth, googleProvider } from './firebase.js';
 import {
@@ -36,24 +38,17 @@ const GoogleIcon = () => (
   </svg>
 );
 
-
-export default function Auth({ appVersion }) {
+// Component đã được cập nhật để nhận prop `logoFloating`
+export default function Auth({ appVersion, logoFloating }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Đặt loading mặc định là false
   const [error, setError] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, u => {
-      setUser(u);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
+  
+  // onAuthStateChanged đã được xử lý ở App.tsx, ở đây chỉ cần logic cho form
+  
   const handleRegister = async (e) => {
     e.preventDefault();
     if (password.length < 6) {
@@ -106,17 +101,6 @@ export default function Auth({ appVersion }) {
     setLoading(false);
   };
 
-  const handleSignOut = async () => {
-    setLoading(true);
-    try {
-      await signOut(auth);
-    } catch (err) {
-      setError('Đăng xuất lỗi. Vui lòng thử lại.');
-      console.error('Đăng xuất lỗi:', err);
-    }
-    setLoading(false);
-  };
-
   const toggleForm = () => {
     setIsRegistering(!isRegistering);
     setError('');
@@ -125,47 +109,21 @@ export default function Auth({ appVersion }) {
     setUsername('');
   };
   
-  if (loading && !user) {
-    return (
-      <div className="bg-gray-900 min-h-screen flex items-center justify-center p-4">
-          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="ml-4 text-gray-300">Đang tải dữ liệu...</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4 font-sans relative">
-      <div className="w-full max-w-md">
-        {user ? (
-          // Giao diện khi đã đăng nhập (Không thay đổi)
-          <div className="bg-gray-800 p-8 rounded-xl shadow-lg shadow-blue-500/10 text-center animate-fade-in border border-gray-700">
-            <img 
-                src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}&background=0D8ABC&color=fff&size=128`} 
-                alt="User Avatar"
-                className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-blue-500"
-            />
-            <h2 className="text-2xl font-bold text-white">Chào mừng trở lại!</h2>
-            <p className="text-gray-300 mt-2 mb-6">{user.displayName || user.email}</p>
-            {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
-            <button
-              onClick={handleSignOut}
-              disabled={loading}
-              className="w-full px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-red-500 transition-colors duration-300 disabled:opacity-50 flex items-center justify-center"
-            >
-              {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : 'Đăng xuất'}
-            </button>
-          </div>
-        ) : (
-          // --- Giao diện đăng nhập/đăng ký ĐÃ ĐƯỢC THIẾT KẾ LẠI ---
-          <div className="relative bg-gray-800 p-8 pt-20 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up border border-gray-700">
-            {/* Logo được đặt bên trong và định vị tuyệt đối so với khung */}
-            <img
-              src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets/images/logo.webp"
-              alt="App Logo"
-              className="w-32 h-32 absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
-            />
-            
+    // Sử dụng layout nền và logo giống hệt các màn hình chờ khác
+    <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden">
+      
+      {/* Logo trôi nổi đồng bộ */}
+      <img
+        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp"
+        alt="App Logo"
+        className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`}
+        style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }}
+      />
+      
+      {/* Form đăng nhập/đăng ký được đặt bên dưới logo */}
+      <div className="w-full max-w-md px-4 mt-5">
+          <div className="bg-gray-800/60 p-8 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up border border-gray-700/50 backdrop-blur-sm">
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 mb-5 rounded-lg text-center" role="alert">
                 <p className="font-medium text-sm">{error}</p>
@@ -216,7 +174,7 @@ export default function Auth({ appVersion }) {
             
             <div className="my-6 flex items-center">
                 <div className="flex-grow border-t border-gray-700"></div>
-                <span className="flex-shrink mx-4 text-gray-500 text-sm">hoặc tiếp tục với</span>
+                <span className="flex-shrink mx-4 text-gray-500 text-sm">hoặc</span>
                 <div className="flex-grow border-t border-gray-700"></div>
             </div>
 
@@ -232,14 +190,14 @@ export default function Auth({ appVersion }) {
               </button>
             </p>
           </div>
-        )}
       </div>
-       {/* --- Version --- */}
-      {!user && (
-         <p className="absolute right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
-          Version {appVersion}
-        </p>
-      )}
+       
+      {/* Version number được đặt cố định ở góc dưới */}
+      <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
+        Version {appVersion}
+      </p>
     </div>
   );
 }
+
+// --- END OF FILE src/auth.js ---
