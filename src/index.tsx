@@ -69,6 +69,26 @@ const ModeIcon: React.FC<{ mode: DisplayMode; className?: string }> = ({ mode, c
   return (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>);
 };
 
+// ==================================================================
+// COMPONENT LAYOUT CHUNG CHO MÀN HÌNH LOADING
+// ==================================================================
+interface LoadingScreenLayoutProps {
+  logoFloating: boolean;
+  appVersion: string;
+  children: React.ReactNode;
+}
+
+const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ logoFloating, appVersion, children }) => {
+  return (
+    <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden">
+      <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Loading Logo" className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`} style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
+      {children}
+      <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">Version {appVersion}</p>
+    </div>
+  );
+};
+
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isNavBarVisible, setIsNavBarVisible] = useState(true);
@@ -146,8 +166,7 @@ const App: React.FC = () => {
     const progress = isAuthenticating ? authLoadProgress : loadingProgress;
     const text = isAuthenticating ? 'Authenticating' : 'Downloading assets';
     return (
-      <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black">
-        <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Loading Logo" className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`} style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
+      <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
         <div className="w-full flex flex-col items-center px-4">
           <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">{text}<span className="inline-block w-3 text-left">{ellipsis}</span></p>
           <div className="w-80 lg:w-96 relative">
@@ -164,8 +183,7 @@ const App: React.FC = () => {
             <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>{Math.round(progress)}%</div>
           </div>
         </div>
-        <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">Version {appVersion}</p>
-      </div>
+      </LoadingScreenLayout>
     );
   }
 
@@ -202,8 +220,7 @@ const App: React.FC = () => {
     return (
       <>
         {isModeModalOpen && <ModeSelectionModal onSelect={handleModeSelect} onClose={() => setIsModeModalOpen(false)} currentMode={selectedMode} />}
-        <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden">
-          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Logo" className="w-48 h-48 object-contain" style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
+        <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
           <div className="w-full flex flex-col items-center px-4 mt-5">
             <div className="relative w-full max-w-xs">
               <button onClick={() => setIsModeModalOpen(true)} className="w-full flex items-center justify-between p-3 bg-black/40 border-2 border-gray-600 rounded-lg text-white hover:border-cyan-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-colors duration-300">
@@ -217,8 +234,7 @@ const App: React.FC = () => {
             </div>
             <button onClick={() => startGame(selectedMode, rememberChoice)} className="mt-5 w-full max-w-xs py-3 bg-cyan-600/90 border border-cyan-400 rounded-lg text-white font-bold tracking-widest hover:bg-cyan-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/20 focus:outline-none focus:ring-4 focus:ring-cyan-300">LAUNCH</button>
           </div>
-          <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">Version {appVersion}</p>
-        </div>
+        </LoadingScreenLayout>
       </>
     );
   }
