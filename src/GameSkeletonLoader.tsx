@@ -51,7 +51,7 @@ const GameSkeletonLoader: React.FC<GameSkeletonLoaderProps> = ({ show }) => {
   }
 
   return (
-    <div className={`absolute inset-0 w-full h-[var(--app-height)] overflow-hidden bg-slate-950 z-[100] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`absolute inset-0 w-full h-full overflow-hidden bg-slate-950 z-[100] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
       {/* Lớp 1: Background động */}
       <DungeonCanvasBackground isPaused={false} />
 
