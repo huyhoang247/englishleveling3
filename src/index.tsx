@@ -119,6 +119,9 @@ const App: React.FC = () => {
         if (user) {
           await ensureUserDocumentExists(user);
           setLoadingStep('downloading');
+        } else {
+          // QUAN TRỌNG: Nếu không có user, dừng màn hình loading và chuẩn bị hiển thị form đăng nhập.
+          setLoadingStep('ready');
         }
       }, 1500);
     });
