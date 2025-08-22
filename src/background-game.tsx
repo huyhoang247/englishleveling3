@@ -28,7 +28,7 @@ import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 
-import { useGameDataStore, initialState } from './home/achievements/game-data-store.ts';
+import { useGameDataStore, initialState } from './game-data-store.ts';
 import { shallow } from 'zustand/shallow';
 
 import { 
