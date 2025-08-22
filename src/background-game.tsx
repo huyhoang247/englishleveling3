@@ -28,7 +28,7 @@ import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 
-import { GameDataProvider, useGameData } from './contexts/GameDataContext.tsx';
+import { GameDataProvider, useGameData } from './GameDataContext.tsx';
 
 import { 
   updateJackpotPool,
