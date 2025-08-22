@@ -1,184 +1,163 @@
-// --- START OF FILE src/contexts/GameDataContext.tsx (PHIÊN BẢN HOÀN CHỈNH) ---
+// --- START OF FILE src/game-data-context.tsx ---
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { User } from 'firebase/auth';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { auth } from './firebase.js';
-import { 
-  fetchOrCreateUserGameData, 
-  upgradeUserStats,
-  updateUserCoins,
-  updateUserGems,
-  updateUserBossFloor,
-  processShopPurchase,
-  processMinerChallengeResult,
-  // Thêm các service khác khi cần
-} from './gameDataService.ts';
-import { calculateUpgradeCost } from './home/upgrade-stats/upgrade-ui.tsx';
+import { fetchOrCreateUserGameData } from './gameDataService.ts';
+// Giả sử bạn có các type này định nghĩa ở đâu đó, nếu không có thể định nghĩa trực tiếp ở đây
+import { OwnedSkill, OwnedItem, EquippedItems } from './equipment.tsx'; 
 
-// --- Định nghĩa "hình dạng" của tất cả dữ liệu game (giữ nguyên) ---
-interface GameDataState {
-  coins: number; gems: number; masteryCards: number; pickaxes: number; ancientBooks: number;
-  equipmentPieces: number; cardCapacity: number; userStats: { hp: number; atk: number; def: number; };
-  minerChallengeHighestFloor: number; bossBattleHighestFloor: number; totalVocabCollected: number;
-  ownedSkills: any[]; equippedSkillIds: (string | null)[]; ownedItems: any[];
-  equippedItems: { weapon: any; armor: any; accessory: any; };
+// --- INTERFACES ---
+interface UserStats {
+  hp: number;
+  atk: number;
+  def: number;
 }
 
-// --- Định nghĩa "hình dạng" của Context ---
-interface GameDataContextType extends GameDataState {
-  isGlobalLoading: boolean; isSyncing: boolean;
-  loadInitialData: (user: User) => Promise<void>;
-  resetGameData: () => void;
-  refreshGameData: () => Promise<void>;
+interface GameDataContextType {
+  // States
+  isLoadingData: boolean;
+  coins: number;
+  gems: number;
+  masteryCards: number;
+  pickaxes: number;
+  minerChallengeHighestFloor: number;
+  userStats: UserStats;
+  bossBattleHighestFloor: number;
+  ancientBooks: number;
+  ownedSkills: OwnedSkill[];
+  equippedSkillIds: (string | null)[];
+  totalVocabCollected: number;
+  cardCapacity: number;
+  equipmentPieces: number;
+  ownedItems: OwnedItem[];
+  equippedItems: EquippedItems;
   
-  // --- ACTIONS CHI TIẾT ---
-  upgradeStat: (statId: 'hp' | 'atk' | 'def') => Promise<void>;
-  setCoins: (newAmount: number) => Promise<void>;
-  setGems: (newAmount: number) => Promise<void>;
-  handleBossFloorUpdate: (newFloor: number) => Promise<void>;
-  handleShopPurchase: (item: any, quantity: number) => Promise<void>;
-  handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => Promise<void>;
-  // ... Thêm các actions khác ở đây
+  // Actions
+  refreshUserData: () => Promise<void>;
+  setCoins: React.Dispatch<React.SetStateAction<number>>;
+  setGems: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const GameDataContext = createContext<GameDataContextType | undefined>(undefined);
 
-export const GameDataProvider = ({ children }: { children: ReactNode }) => {
-  const [isGlobalLoading, setIsGlobalLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const initialGameState: GameDataState = {
-    coins: 0, gems: 0, masteryCards: 0, pickaxes: 0, ancientBooks: 0,
-    equipmentPieces: 0, cardCapacity: 100, userStats: { hp: 0, atk: 0, def: 0 },
-    minerChallengeHighestFloor: 0, bossBattleHighestFloor: 0, totalVocabCollected: 0,
-    ownedSkills: [], equippedSkillIds: [null, null, null], ownedItems: [],
-    equippedItems: { weapon: null, armor: null, accessory: null },
-  };
-  const [gameState, setGameState] = useState<GameDataState>(initialGameState);
-
-  // --- ACTIONS ---
-  const loadInitialData = useCallback(async (user: User) => {
-    setIsGlobalLoading(true);
-    try {
-      const data = await fetchOrCreateUserGameData(user.uid);
-      setGameState({
-        coins: data.coins, gems: data.gems, masteryCards: data.masteryCards, pickaxes: data.pickaxes,
-        userStats: data.stats, bossBattleHighestFloor: data.bossBattleHighestFloor,
-        minerChallengeHighestFloor: data.minerChallengeHighestFloor, ancientBooks: data.ancientBooks,
-        ownedSkills: data.skills.owned, equippedSkillIds: data.skills.equipped,
-        totalVocabCollected: data.totalVocabCollected, cardCapacity: data.cardCapacity,
-        equipmentPieces: data.equipment.pieces, ownedItems: data.equipment.owned,
-        equippedItems: data.equipment.equipped,
-      });
-    } catch (error) { console.error("Lỗi khi tải dữ liệu game:", error); } 
-    finally { setIsGlobalLoading(false); }
-  }, []);
-
-  const refreshGameData = useCallback(async () => {
-      const user = auth.currentUser;
-      if (user) {
-          await loadInitialData(user);
-      }
-  }, [loadInitialData]);
-
-  const resetGameData = useCallback(() => { setGameState(initialGameState); setIsGlobalLoading(true); }, []);
-
-  const setCoins = useCallback(async (newAmount: number) => {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Chưa đăng nhập");
-    const updatedCoins = await updateUserCoins(user.uid, newAmount - gameState.coins);
-    setGameState(prev => ({ ...prev, coins: updatedCoins }));
-  }, [gameState.coins]);
-  
-  const setGems = useCallback(async (newAmount: number) => {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Chưa đăng nhập");
-    const updatedGems = await updateUserGems(user.uid, newAmount - gameState.gems);
-    setGameState(prev => ({ ...prev, gems: updatedGems }));
-  }, [gameState.gems]);
-
-  const upgradeStat = useCallback(async (statId: 'hp' | 'atk' | 'def') => {
-    // Logic upgradeStat đã đúng từ trước, giữ nguyên
-    const user = auth.currentUser;
-    if (!user) throw new Error("Người dùng chưa đăng nhập.");
-    if (isSyncing) throw new Error("Hành động khác đang xử lý.");
-    const currentLevel = gameState.userStats[statId];
-    const cost = calculateUpgradeCost(currentLevel);
-    if (gameState.coins < cost) throw new Error("Không đủ vàng");
-    setIsSyncing(true);
-    const oldState = { ...gameState };
-    const newStats = { ...gameState.userStats, [statId]: currentLevel + 1 };
-    setGameState(prev => ({ ...prev, coins: prev.coins - cost, userStats: newStats }));
-    try {
-      const { newCoins } = await upgradeUserStats(user.uid, cost, newStats);
-      setGameState(prev => ({ ...prev, coins: newCoins }));
-    } catch (error) { setGameState(oldState); throw error; } 
-    finally { setIsSyncing(false); }
-  }, [gameState, isSyncing]);
-
-  const handleBossFloorUpdate = useCallback(async (newFloor: number) => {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Chưa đăng nhập");
-    await updateUserBossFloor(user.uid, newFloor, gameState.bossBattleHighestFloor);
-    if (newFloor > gameState.bossBattleHighestFloor) {
-      setGameState(prev => ({ ...prev, bossBattleHighestFloor: newFloor }));
-    }
-  }, [gameState.bossBattleHighestFloor]);
-
-  const handleShopPurchase = useCallback(async (item: any, quantity: number) => {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Chưa đăng nhập");
-    if (isSyncing) throw new Error("Hành động khác đang xử lý.");
-    setIsSyncing(true);
-    try {
-      const { newCoins, newBooks, newCapacity } = await processShopPurchase(user.uid, item, quantity);
-      setGameState(prev => ({
-        ...prev,
-        coins: newCoins,
-        ancientBooks: newBooks !== undefined ? newBooks : prev.ancientBooks,
-        cardCapacity: newCapacity !== undefined ? newCapacity : prev.cardCapacity
-      }));
-       alert(`Mua thành công x${quantity} ${item.name}!`);
-    } catch (error) {
-       alert(`Mua thất bại: ${error instanceof Error ? error.message : String(error)}`);
-       throw error;
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isSyncing]);
-  
-  const handleMinerChallengeEnd = useCallback(async (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Chưa đăng nhập");
-    setIsSyncing(true);
-    try {
-        const { newCoins, newPickaxes, newHighestFloor } = await processMinerChallengeResult(user.uid, result);
-        setGameState(prev => ({
-            ...prev,
-            coins: newCoins,
-            pickaxes: newPickaxes,
-            minerChallengeHighestFloor: newHighestFloor
-        }));
-    } catch (error) {
-        console.error("Lỗi xử lý kết quả Miner Challenge:", error);
-        throw error;
-    } finally {
-        setIsSyncing(false);
-    }
-  }, []);
-
-  const value: GameDataContextType = {
-    ...gameState, isGlobalLoading, isSyncing,
-    loadInitialData, resetGameData, refreshGameData,
-    upgradeStat, setCoins, setGems, handleBossFloorUpdate, handleShopPurchase, handleMinerChallengeEnd
-  };
-
-  return <GameDataContext.Provider value={value}>{children}</GameDataContext.Provider>;
-};
-
 export const useGameData = () => {
   const context = useContext(GameDataContext);
-  if (context === undefined) throw new Error('useGameData must be used within a GameDataProvider');
+  if (!context) {
+    throw new Error('useGameData must be used within a GameDataProvider');
+  }
   return context;
 };
 
-// --- END OF FILE src/contexts/GameDataContext.tsx ---
+// --- PROVIDER COMPONENT ---
+export function GameDataProvider({ children }: { children: ReactNode }) {
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  
+  // Toàn bộ state của game được quản lý tại đây
+  const [coins, setCoins] = useState(0);
+  const [gems, setGems] = useState(0);
+  const [masteryCards, setMasteryCards] = useState(0);
+  const [pickaxes, setPickaxes] = useState(0);
+  const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
+  const [userStats, setUserStats] = useState<UserStats>({ hp: 0, atk: 0, def: 0 });
+  const [bossBattleHighestFloor, setBossBattleHighestFloor] = useState(0);
+  const [ancientBooks, setAncientBooks] = useState(0);
+  const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([]);
+  const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([null, null, null]);
+  const [totalVocabCollected, setTotalVocabCollected] = useState(0);
+  const [cardCapacity, setCardCapacity] = useState(100);
+  const [equipmentPieces, setEquipmentPieces] = useState(0);
+  const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
+  const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, accessory: null });
+
+  const refreshUserData = useCallback(async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      console.log("No user found, skipping data refresh.");
+      setIsLoadingData(false);
+      return;
+    }
+    
+    setIsLoadingData(true);
+    try {
+      console.log("GameDataProvider: Refreshing user data...");
+      const gameData = await fetchOrCreateUserGameData(user.uid);
+      
+      setCoins(gameData.coins);
+      setGems(gameData.gems);
+      setMasteryCards(gameData.masteryCards);
+      setPickaxes(gameData.pickaxes);
+      setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor);
+      setUserStats(gameData.stats);
+      setBossBattleHighestFloor(gameData.bossBattleHighestFloor);
+      setAncientBooks(gameData.ancientBooks);
+      setOwnedSkills(gameData.skills.owned);
+      setEquippedSkillIds(gameData.skills.equipped);
+      setTotalVocabCollected(gameData.totalVocabCollected);
+      setCardCapacity(gameData.cardCapacity);
+      setEquipmentPieces(gameData.equipment.pieces);
+      setOwnedItems(gameData.equipment.owned);
+      setEquippedItems(gameData.equipment.equipped);
+
+    } catch (error) {
+      console.error("Error refreshing user data in GameDataContext:", error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, []);
+
+  useEffect(() => {
+      const unsubscribe = auth.onAuthStateChanged((user) => {
+          if (user) {
+              refreshUserData();
+          } else {
+              // Reset state khi người dùng logout
+              setIsLoadingData(false);
+              setCoins(0);
+              setGems(0);
+              setMasteryCards(0);
+              setPickaxes(0);
+              setMinerChallengeHighestFloor(0);
+              setUserStats({ hp: 0, atk: 0, def: 0 });
+              setBossBattleHighestFloor(0);
+              setAncientBooks(0);
+              setOwnedSkills([]);
+              setEquippedSkillIds([null, null, null]);
+              setTotalVocabCollected(0);
+              setCardCapacity(100);
+              setEquipmentPieces(0);
+              setOwnedItems([]);
+              setEquippedItems({ weapon: null, armor: null, accessory: null });
+          }
+      });
+      return () => unsubscribe();
+  }, [refreshUserData]);
+
+  const value: GameDataContextType = {
+    isLoadingData,
+    coins,
+    gems,
+    masteryCards,
+    pickaxes,
+    minerChallengeHighestFloor,
+    userStats,
+    bossBattleHighestFloor,
+    ancientBooks,
+    ownedSkills,
+    equippedSkillIds,
+    totalVocabCollected,
+    cardCapacity,
+    equipmentPieces,
+    ownedItems,
+    equippedItems,
+    refreshUserData,
+    setCoins,
+    setGems,
+  };
+
+  return (
+    <GameDataContext.Provider value={value}>
+      {children}
+    </GameDataContext.Provider>
+  );
+}
+// --- END OF FILE src/game-data-context.tsx ---
