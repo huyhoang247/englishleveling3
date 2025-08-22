@@ -37,7 +37,8 @@ import {
   updateUserBossFloor,
   updateUserPickaxes,
   processMinerChallengeResult,
-  updateUserInventory,
+  // --- THAY ĐỔI: Không cần import updateUserInventory nữa ---
+  // updateUserInventory, 
   processShopPurchase
 } from './gameDataService.ts';
 
@@ -184,16 +185,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     console.log("Main game state updated from UpgradeStatsScreen.");
   };
 
-  const handleInventoryUpdate = async (updates: { newOwned: OwnedItem[]; newEquipped: EquippedItems; goldChange: number; piecesChange: number; }) => {
-      const userId = auth.currentUser?.uid;
-      if (!userId) { throw new Error("User not authenticated for inventory update."); }
-      setIsSyncingData(true);
-      try {
-          const { newCoins, newPieces } = await updateUserInventory(userId, updates);
-          setCoins(newCoins); setEquipmentPieces(newPieces); setOwnedItems(updates.newOwned); setEquippedItems(updates.newEquipped);
-          console.log("Equipment data and resources updated successfully via service.");
-      } catch (error) { console.error("Firestore transaction for equipment update failed:", error); throw error; } finally { setIsSyncingData(false); }
-  };    
+  // --- THAY ĐỔI: Xóa bỏ hàm handleInventoryUpdate ---
+  // Logic này đã được chuyển vào trong EquipmentScreen.tsx
 
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
@@ -216,6 +209,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const refreshUserData = useCallback(async () => {
     const userId = auth.currentUser?.uid;
     if (!userId) return;
+    console.log("Refreshing all user data triggered..."); // Thêm log để biết khi nào hàm được gọi
     setIsLoadingUserData(true);
     try {
       const gameData = await fetchOrCreateUserGameData(userId);
@@ -368,7 +362,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
 
         {/* --- Overlays / Modals --- */}
-        {/* ✨ SỬA LỖI TẠI ĐÂY: Thay "absolute" và "w-full h-full" bằng "fixed" để đảm bảo full screen */}
         <div className="fixed inset-0 z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary> </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isPvpArenaOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isPvpArenaOpen && auth.currentUser && (<PvpArena onClose={togglePvpArena} userId={auth.currentUser.uid} player1={{ name: auth.currentUser.displayName || "You", avatarUrl: auth.currentUser.photoURL || "", coins: coins, initialStats: getPlayerBattleStats(), equippedSkills: getEquippedSkillsDetails() }} player2={{ name: "Shadow Fiend", avatarUrl: "https://i.imgur.com/kQoG2Yd.png", initialStats: { maxHp: 1500, hp: 1500, atk: 120, def: 55 }, equippedSkills: [] }} onCoinChange={async (amount) => setCoins(await updateUserCoins(auth.currentUser!.uid, amount))} onMatchEnd={(result) => console.log(`Match ended. Winner: ${result.winner}`)} /> )}</ErrorBoundary>
@@ -396,9 +389,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         <div className="fixed inset-0 z-[60]" style={{ display: isSkillScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isSkillScreenOpen && auth.currentUser && (<SkillScreen onClose={handleSkillScreenClose} userId={auth.currentUser.uid} />)}</ErrorBoundary>
         </div>
+        
+        {/* --- THAY ĐỔI: Cập nhật cách gọi EquipmentScreen --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isEquipmentOpen && auth.currentUser && (<EquipmentScreen onClose={toggleEquipmentScreen} gold={coins} equipmentPieces={equipmentPieces} ownedItems={ownedItems} equippedItems={equippedItems} onInventoryUpdate={handleInventoryUpdate} />)}</ErrorBoundary>
+            <ErrorBoundary>
+                {isEquipmentOpen && auth.currentUser && (
+                    <EquipmentScreen 
+                        onClose={toggleEquipmentScreen} 
+                        userId={auth.currentUser.uid}
+                        initialGold={coins} 
+                        initialEquipmentPieces={equipmentPieces} 
+                        initialOwnedItems={ownedItems} 
+                        initialEquippedItems={equippedItems} 
+                        onDataChange={refreshUserData}
+                    />
+                )}
+            </ErrorBoundary>
         </div>
+
         <div className="fixed inset-0 z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}> <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary> </div>
       </SidebarLayout>
       <GameSkeletonLoader show={isLoading} />
