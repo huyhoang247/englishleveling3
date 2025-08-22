@@ -4,8 +4,8 @@ import React from 'react';
 
 const VocabularyChestLoadingSkeleton: React.FC = () => {
   return (
-    // ✨ SỬA LỖI TẠI ĐÂY: Thay "absolute" bằng "fixed" và "inset-0" để đảm bảo full screen
-    <div className="fixed inset-0 bg-gradient-to-br from-[#16213e] to-[#0a0a14] flex flex-col overflow-hidden">
+    // Lớp vỏ ngoài cùng, giữ nguyên màu nền gradient tối của màn hình
+    <div className="w-full h-full absolute top-0 left-0 bg-gradient-to-br from-[#16213e] to-[#0a0a14] flex flex-col overflow-hidden">
       
       {/* --- Skeleton cho Header --- */}
       <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0">
