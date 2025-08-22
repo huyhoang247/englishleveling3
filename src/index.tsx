@@ -205,17 +205,19 @@ const App: React.FC = () => {
         return (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
             <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
-              <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
-              <div className="p-5 pt-8">
+              <div className="p-6">
                 <h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-6 uppercase">Choose Display Mode</h3>
-                <div className="flex flex-col gap-3">
+                <div className="flex justify-center gap-4">
                   {modes.map(mode => {
                     const isSelected = currentMode === mode;
                     return (
-                      <button key={mode} onClick={() => onSelect(mode)} className={`w-full text-left flex items-center p-4 rounded-lg border-2 transition-all duration-200 ${isSelected ? 'bg-cyan-500/20 border-cyan-400 ring-2 ring-cyan-500/50' : 'bg-slate-800/50 border-slate-700 hover:bg-slate-700/70 hover:border-slate-500'}`}>
-                        <ModeIcon mode={mode} className="w-6 h-6 mr-4 text-cyan-300" />
-                        <span className="font-semibold tracking-wide text-lg">{mode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span>
-                        {isSelected && (<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 ml-auto text-cyan-300" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>)}
+                      <button
+                        key={mode}
+                        onClick={() => onSelect(mode)}
+                        className={`w-32 h-32 flex flex-col items-center justify-center p-3 rounded-lg border-2 transform transition-all duration-200 hover:scale-105 ${isSelected ? 'bg-cyan-500/20 border-cyan-400 ring-2 ring-cyan-500/50' : 'bg-slate-800/50 border-slate-700 hover:bg-slate-700/70 hover:border-slate-500'}`}
+                      >
+                        <ModeIcon mode={mode} className="w-10 h-10 mb-2 text-cyan-300" />
+                        <span className="font-semibold tracking-wide text-base">{mode === 'fullscreen' ? 'Full Screen' : 'Normal'}</span>
                       </button>
                     );
                   })}
