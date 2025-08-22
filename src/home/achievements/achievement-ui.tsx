@@ -1,15 +1,15 @@
-// --- START OF FILE: src/home/achievements/achievement-ui.tsx ---
+// --- START OF FILE achievement-ui.tsx (FULL CODE - REFACTORED WITH ZUSTAND) ---
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { User } from 'firebase/auth'; 
-import { useGameDataStore } from '../../game-data-store.ts'; 
-import { shallow } from 'zustand/shallow';
+import { User } from 'firebase/auth';
+import { shallow } from 'zustand/shallow'; // Import shallow for performance
+import { useAchievementStore } from './achievement-store.ts'; // Import a store mới
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import type { VocabularyItem } from '../../gameDataService.ts';
 import AchievementsLoadingSkeleton from './achievement-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
-// --- Các component icon (Không thay đổi) ---
+// --- Các component icon (Không thay đổi, giữ nguyên) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const XIcon = ({ className = '', ...props }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
 const TrophyIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}> <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /> </svg> );
@@ -20,32 +20,32 @@ const GiftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" /> </svg> );
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
-function AchievementsScreenUI({ onClose, user }: { onClose: () => void, user: User }) {
-  const {
-    vocabulary,
-    coins,
-    masteryCards,
-    isInitialLoading,
-    isUpdating,
-    claimAchievement,
-    claimAllAchievements,
-  } = useGameDataStore(
-    (state) => ({
-      vocabulary: state.vocabulary,
-      coins: state.coins,
-      masteryCards: state.masteryCards,
-      isInitialLoading: state.isInitialLoading,
-      isUpdating: state.isUpdating,
-      claimAchievement: state.claimAchievement,
-      claimAllAchievements: state.claimAllAchievements,
-    }),
-    shallow
-  );
 
+// Component UI "câm", chỉ nhận props và hiển thị
+function AchievementsScreenUI({
+  onClose,
+  vocabulary,
+  coins,
+  masteryCards,
+  isInitialLoading,
+  isUpdating,
+  onClaim,
+  onClaimAll,
+}: {
+  onClose: () => void;
+  vocabulary: VocabularyItem[];
+  coins: number;
+  masteryCards: number;
+  isInitialLoading: boolean;
+  isUpdating: boolean;
+  onClaim: (id: number) => void;
+  onClaimAll: () => void;
+}) {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 30;
   const displayedCoins = useAnimateValue(coins, 1000);
 
+  // Tính toán các giá trị dẫn xuất (derived values)
   const totalClaimableRewards = useMemo(() => {
     const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
     const gold = claimableItems.reduce((sum, item) => sum + (item.level * 100), 0);
@@ -73,14 +73,6 @@ function AchievementsScreenUI({ onClose, user }: { onClose: () => void, user: Us
     if(currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
     else if (totalPages === 0 && sortedVocabulary.length > 0) setCurrentPage(1);
   }, [currentPage, totalPages, sortedVocabulary.length]);
-
-  const handleClaim = useCallback((achievementId: number) => {
-    claimAchievement(user.uid, achievementId);
-  }, [claimAchievement, user.uid]);
-  
-  const handleClaimAll = useCallback(() => {
-    claimAllAchievements(user.uid);
-  }, [claimAllAchievements, user.uid]);
   
   if (isInitialLoading) {
     return <AchievementsLoadingSkeleton />;
@@ -123,7 +115,7 @@ function AchievementsScreenUI({ onClose, user }: { onClose: () => void, user: Us
 
         <div className="mb-6 flex justify-center">
             <button
-                onClick={handleClaimAll}
+                onClick={onClaimAll}
                 disabled={totalClaimableRewards.masteryCards === 0 || isUpdating}
                 className={`
                     w-full max-w-md rounded-xl transition-all duration-300
@@ -177,7 +169,7 @@ function AchievementsScreenUI({ onClose, user }: { onClose: () => void, user: Us
                 key={`${item.id}-${item.level}`}
                 item={item}
                 rank={(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
-                onClaim={handleClaim}
+                onClaim={onClaim}
                 isAnyClaiming={isUpdating}
               />
             ))}
@@ -201,6 +193,7 @@ function AchievementsScreenUI({ onClose, user }: { onClose: () => void, user: Us
   );
 }
 
+// --- Component VocabularyRow và PaginationControls (Không thay đổi, giữ nguyên) ---
 const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, isAnyClaiming }: { item: VocabularyItem, rank: number, onClaim: (id: number) => void, isAnyClaiming: boolean }) {
   const { id, word, exp, level, maxExp } = item;
   const progressPercentage = maxExp > 0 ? Math.min((exp / maxExp) * 100, 100) : 0;
@@ -249,16 +242,74 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
     );
 };
 
+
+// Component "Lối vào" (Wrapper/Entry Point) - Component thông minh (Smart Component)
 interface AchievementsScreenProps {
   user: User | null;
   onClose: () => void;
+  onDataUpdate: (updates: { coins?: number, masteryCards?: number }) => void;
 }
 
-export default function AchievementsScreen({ user, onClose }: AchievementsScreenProps) {
+export default function AchievementsScreen({ user, onClose, onDataUpdate }: AchievementsScreenProps) {
+  // Lấy state từ store. Dùng shallow để tránh re-render không cần thiết khi
+  // state thay đổi nhưng các giá trị component này cần không đổi.
+  const { vocabulary, coins, masteryCards, isInitialLoading, isUpdating } = useAchievementStore(
+    (state) => ({
+      vocabulary: state.vocabulary,
+      coins: state.coins,
+      masteryCards: state.masteryCards,
+      isInitialLoading: state.isInitialLoading,
+      isUpdating: state.isUpdating,
+    }),
+    shallow
+  );
+
+  // Lấy actions từ store. getState() không gây re-render.
+  const { initialize, claimAchievement, claimAllAchievements, reset } = useAchievementStore.getState();
+
+  // useEffect để khởi tạo và dọn dẹp state của store
+  useEffect(() => {
+    if (user) {
+      initialize(user);
+    }
+    // Khi component unmount hoặc user thay đổi, reset state
+    return () => {
+      reset();
+    };
+  }, [user, initialize, reset]);
+
+  // Tạo các hàm xử lý để gọi actions từ store và sau đó gọi onDataUpdate
+  const handleClaim = useCallback(async (id: number) => {
+    if (!user) return;
+    const result = await claimAchievement(id, user);
+    if (result) {
+      onDataUpdate({ coins: result.newCoins, masteryCards: result.newMasteryCards });
+    }
+  }, [user, claimAchievement, onDataUpdate]);
+
+  const handleClaimAll = useCallback(async () => {
+    if (!user) return;
+    const result = await claimAllAchievements(user);
+    if (result) {
+      onDataUpdate({ coins: result.newCoins, masteryCards: result.newMasteryCards });
+    }
+  }, [user, claimAllAchievements, onDataUpdate]);
+  
   if (!user) {
-    return null;
+    return null; // Hoặc một màn hình yêu cầu đăng nhập
   }
-  return <AchievementsScreenUI onClose={onClose} user={user} />;
+  
+  // Truyền tất cả state và handlers xuống cho component UI
+  return (
+    <AchievementsScreenUI
+      onClose={onClose}
+      vocabulary={vocabulary}
+      coins={coins}
+      masteryCards={masteryCards}
+      isInitialLoading={isInitialLoading}
+      isUpdating={isUpdating}
+      onClaim={handleClaim}
+      onClaimAll={handleClaimAll}
+    />
+  );
 }
-
-// --- END OF FILE: src/home/achievements/achievement-ui.tsx ---
