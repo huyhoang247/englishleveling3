@@ -31,8 +31,8 @@ export interface OwnedItem {
     stats: { [key: string]: any }; // <-- THAY ĐỔI QUAN TRỌNG
 }
 
-export type EquipmentSlotType = 'weapon' | 'armor' | 'accessory';
-export const EQUIPMENT_SLOT_TYPES: EquipmentSlotType[] = ['weapon', 'armor', 'accessory'];
+export type EquipmentSlotType = 'weapon' | 'armor' | 'Helmet';
+export const EQUIPMENT_SLOT_TYPES: EquipmentSlotType[] = ['weapon', 'armor', 'Helmet'];
 
 export type EquippedItems = {
     [key in EquipmentSlotType]: string | null;
@@ -540,7 +540,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
     const MAX_ITEMS_IN_STORAGE = 50;
 
     const equippedItemsMap = useMemo(() => {
-        const map: { [key in EquipmentSlotType]: OwnedItem | null } = { weapon: null, armor: null, accessory: null };
+        const map: { [key in EquipmentSlotType]: OwnedItem | null } = { weapon: null, armor: null, Helmet: null };
         for (const slotType of EQUIPMENT_SLOT_TYPES) {
             const itemId = equippedItems[slotType];
             if (itemId) {
