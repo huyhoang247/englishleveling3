@@ -7,7 +7,7 @@ import {
   updateAchievementData,
   UserGameData,
   VocabularyItem
-} from '../../gameDataService';
+} from './gameDataService.ts';
 
 // Interface của store giờ sẽ chứa toàn bộ UserGameData và các state khác
 interface GameDataState extends UserGameData {
