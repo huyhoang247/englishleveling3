@@ -82,8 +82,10 @@ const GameSkeletonLoader: React.FC<GameSkeletonLoaderProps> = ({ show }) => {
         <div className="bg-black/85 backdrop-blur-md shadow-2xl rounded-t-2xl border-t border-gray-800 w-full">
           <div className="mx-2 my-2 flex justify-between items-center">
             {[...Array(5)].map((_, index) => (
-              <div key={index} className="flex-1 relative flex justify-center items-center h-[44px]"> {/* Đặt chiều cao cố định */}
-                <div className="w-10 h-10 bg-slate-700/60 rounded-full animate-pulse"></div>
+              // Bỏ chiều cao cố định h-[44px] để chiều cao được quyết định bởi nội dung bên trong, tương tự component thật
+              <div key={index} className="flex-1 relative flex justify-center items-center">
+                {/* Đổi w-10 h-10 (40px) thành w-9 h-9 (36px) để khớp với kích thước icon thật (20px icon + p-2 padding) */}
+                <div className="w-9 h-9 bg-slate-700/60 rounded-full animate-pulse"></div>
                 
                 {/* Đường kẻ phân cách, không hiển thị cho item cuối cùng */}
                 {index < 4 && (
