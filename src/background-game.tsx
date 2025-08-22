@@ -1,4 +1,4 @@
-// --- START OF FILE src/background-game.tsx ---
+// --- START OF FILE src/background-game.tsx (REFACTORED) ---
 
 import React, { useState, useEffect, useRef, useCallback, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -24,7 +24,8 @@ import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './home/skill-game/skill-ui.tsx';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
-import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
+// THAY ĐỔI: Import EquipmentScreen nhưng không cần các type chi tiết nữa
+import EquipmentScreen from './equipment.tsx';
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 
@@ -37,7 +38,7 @@ import {
   updateUserBossFloor,
   updateUserPickaxes,
   processMinerChallengeResult,
-  updateUserInventory,
+  // THAY ĐỔI: updateUserInventory không còn cần thiết ở đây
   processShopPurchase
 } from './gameDataService.ts';
 
@@ -98,9 +99,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([null, null, null]);
   const [totalVocabCollected, setTotalVocabCollected] = useState(0);
   const [cardCapacity, setCardCapacity] = useState(100);
+  // THAY ĐỔI: Các state này vẫn cần thiết để tính toán chỉ số và cho các màn hình khác
+  // nhưng không cần truyền xuống EquipmentScreen nữa.
   const [equipmentPieces, setEquipmentPieces] = useState(0);
-  const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
-  const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, accessory: null });
+  const [ownedItems, setOwnedItems] = useState<any[]>([]); // Sử dụng any hoặc type gốc
+  const [equippedItems, setEquippedItems] = useState<any>({ weapon: null, armor: null, accessory: null });
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
@@ -184,17 +187,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     console.log("Main game state updated from UpgradeStatsScreen.");
   };
 
-  const handleInventoryUpdate = async (updates: { newOwned: OwnedItem[]; newEquipped: EquippedItems; goldChange: number; piecesChange: number; }) => {
-      const userId = auth.currentUser?.uid;
-      if (!userId) { throw new Error("User not authenticated for inventory update."); }
-      setIsSyncingData(true);
-      try {
-          const { newCoins, newPieces } = await updateUserInventory(userId, updates);
-          setCoins(newCoins); setEquipmentPieces(newPieces); setOwnedItems(updates.newOwned); setEquippedItems(updates.newEquipped);
-          console.log("Equipment data and resources updated successfully via service.");
-      } catch (error) { console.error("Firestore transaction for equipment update failed:", error); throw error; } finally { setIsSyncingData(false); }
-  };    
-
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) { throw new Error("Người dùng chưa được xác thực."); }
@@ -232,6 +224,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       setEquippedSkillIds(gameData.skills.equipped);
       setTotalVocabCollected(gameData.totalVocabCollected);
       setCardCapacity(gameData.cardCapacity);
+      // Cập nhật state trang bị cho các component khác (ví dụ: tính chỉ số)
       setEquipmentPieces(gameData.equipment.pieces);
       setOwnedItems(gameData.equipment.owned);
       setEquippedItems(gameData.equipment.equipped);
@@ -368,7 +361,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         </div>
 
         {/* --- Overlays / Modals --- */}
-        {/* ✨ SỬA LỖI TẠI ĐÂY: Thay "absolute" và "w-full h-full" bằng "fixed" để đảm bảo full screen */}
         <div className="fixed inset-0 z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> <ErrorBoundary><EnhancedLeaderboard onClose={toggleRank} /></ErrorBoundary> </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isPvpArenaOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isPvpArenaOpen && auth.currentUser && (<PvpArena onClose={togglePvpArena} userId={auth.currentUser.uid} player1={{ name: auth.currentUser.displayName || "You", avatarUrl: auth.currentUser.photoURL || "", coins: coins, initialStats: getPlayerBattleStats(), equippedSkills: getEquippedSkillsDetails() }} player2={{ name: "Shadow Fiend", avatarUrl: "https://i.imgur.com/kQoG2Yd.png", initialStats: { maxHp: 1500, hp: 1500, atk: 120, def: 55 }, equippedSkills: [] }} onCoinChange={async (amount) => setCoins(await updateUserCoins(auth.currentUser!.uid, amount))} onMatchEnd={(result) => console.log(`Match ended. Winner: ${result.winner}`)} /> )}</ErrorBoundary>
@@ -397,7 +389,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <ErrorBoundary>{isSkillScreenOpen && auth.currentUser && (<SkillScreen onClose={handleSkillScreenClose} userId={auth.currentUser.uid} />)}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isEquipmentOpen && auth.currentUser && (<EquipmentScreen onClose={toggleEquipmentScreen} gold={coins} equipmentPieces={equipmentPieces} ownedItems={ownedItems} equippedItems={equippedItems} onInventoryUpdate={handleInventoryUpdate} />)}</ErrorBoundary>
+            <ErrorBoundary>{isEquipmentOpen && auth.currentUser && (
+                <EquipmentScreen 
+                    onClose={toggleEquipmentScreen} 
+                    userId={auth.currentUser.uid}
+                    onDataChanged={refreshUserData} 
+                />
+            )}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}> <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary> </div>
       </SidebarLayout>
