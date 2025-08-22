@@ -7,7 +7,7 @@ import UpgradeStatsSkeleton from './upgrade-loading.tsx';
 import StatUpgradeToast from './upgrade-toast.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 // --- THAY ĐỔI: Import context toàn cục ---
-import { useGameData } from '../../contexts/GameDataContext.tsx';
+import { useGameData } from '../../GameDataContext.tsx';
 
 // --- ICONS (giữ nguyên) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/2000/svg" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
