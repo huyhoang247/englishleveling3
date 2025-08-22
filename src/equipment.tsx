@@ -746,7 +746,10 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
     const handleOpenForgeModal = useCallback(() => setIsForgeModalOpen(true), []);
 
     return (
-        <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
+        // --- THAY ĐỔI BẮT ĐẦU ---
+        // Thay thế min-h-screen bằng h-[var(--app-height)]
+        <div className="main-bg relative w-full h-[var(--app-height)] bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
+        // --- THAY ĐỔI KẾT THÚC ---
             <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
             
             {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[101]">{message}</div>}
