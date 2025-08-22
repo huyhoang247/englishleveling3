@@ -1,7 +1,6 @@
-// --- START OF FILE equipment.tsx ---
+// --- START OF FILE equipment.tsx (REFACTORED & COMPLETE) ---
 
-import React, { useState, useMemo, useCallback, memo } from 'react';
-// THAY ĐỔI: Import các hàm và cấu trúc mới từ item-database
+import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { 
     getItemDefinition, 
     itemBlueprints, 
@@ -12,28 +11,21 @@ import {
     type ItemRank, 
     RARITY_ORDER 
 } from './inventory/item-database.ts';
-// THAY ĐỔI: Import tài nguyên hình ảnh tập trung
 import { uiAssets, equipmentUiAssets } from './game-assets.ts';
-
-// *** THAY ĐỔI QUAN TRỌNG: Import trực tiếp CoinDisplay từ file của nó ***
 import CoinDisplay from './ui/display/coin-display.tsx'; 
-
-// *** THAY ĐỔI MỚI: Import Toast component ***
 import RateLimitToast from './thong-bao.tsx';
+// THAY ĐỔI: Import các service để tự fetch và update dữ liệu
+import { fetchEquipmentScreenData, updateUserInventory } from './gameDataService.ts';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
-
-// THAY ĐỔI: Thêm thuộc tính `stats` để mỗi vật phẩm có chỉ số riêng
 export interface OwnedItem {
     id: string;
     itemId: number;
     level: number;
-    stats: { [key: string]: any }; // <-- THAY ĐỔI QUAN TRỌNG
+    stats: { [key: string]: any };
 }
-
 export type EquipmentSlotType = 'weapon' | 'armor' | 'Helmet';
 export const EQUIPMENT_SLOT_TYPES: EquipmentSlotType[] = ['weapon', 'armor', 'Helmet'];
-
 export type EquippedItems = {
     [key in EquipmentSlotType]: string | null;
 };
@@ -96,7 +88,7 @@ const getRandomRank = (): ItemRank => {
 
 // 6. Logic chi phí
 const CRAFTING_COST = 50;
-const DISMANTLE_RETURN_PIECES = 25; // THAY ĐỔI: Từ Sách thành Mảnh
+const DISMANTLE_RETURN_PIECES = 25;
 
 const getUpgradeCost = (itemDef: ItemDefinition, level: number): number => {
     const rarityMultiplier = { E: 1, D: 1.5, B: 2.5, A: 4, S: 7, SR: 12, SSR: 20 };
@@ -217,7 +209,7 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps
 };
 
 // ==================================================================
-// ============ START OF UPDATED ItemDetailModal COMPONENT ==========
+// ============ START OF ItemDetailModal COMPONENT ==================
 // ==================================================================
 
 // --- Tiện ích và Component Toast được tích hợp ---
@@ -354,7 +346,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                     )}
 
                                     {activeTab === 'upgrade' && isUpgradable && (
-                                        // *** THAY ĐỔI Ở ĐÂY: Giảm padding và space-y ***
                                         <div className="w-full flex flex-col items-center justify-center py-4 space-y-4">
                                             <div className="text-center">
                                                 <p className="text-sm text-slate-300">
@@ -406,7 +397,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
 
 
 // ================================================================
-// ============ END OF UPDATED ItemDetailModal COMPONENT ==========
+// ============ END OF ItemDetailModal COMPONENT ==================
 // ================================================================
 
 const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedItem, onClose: () => void }) => {
@@ -494,12 +485,12 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
                             <div key={`${group.blueprint.baseId}-${group.rarity}`} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 flex items-center justify-between gap-4">
                                 <div className="flex flex-1 items-center justify-center gap-4 sm:gap-6">
                                     <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.rarity)} bg-black/30`}>
-                                        <img src={group.blueprint.icon} className="w-12 h-12 object-contain" />
+                                        <img src={group.blueprint.icon} className="w-12 h-12 object-contain" alt={group.blueprint.name}/>
                                         <span className="absolute -top-2 -right-2 bg-cyan-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">3/{group.items.length}</span>
                                     </div>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                                     <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.nextRank!)} bg-black/30`}>
-                                        <img src={group.blueprint.icon} className="w-12 h-12 object-contain" />
+                                        <img src={group.blueprint.icon} className="w-12 h-12 object-contain" alt={group.blueprint.name}/>
                                         <span className="absolute -top-2 -right-2 bg-slate-800 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">Lv.{group.estimatedResult.level}</span>
                                     </div>
                                 </div>
@@ -514,22 +505,25 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 });
 
 
-// --- COMPONENT CHÍNH ---
+// ===============================================
+// ============ BẮT ĐẦU PHẦN LOGIC CHÍNH ==========
+// ===============================================
+
 interface EquipmentScreenProps {
     onClose: () => void;
-    gold: number;
-    equipmentPieces: number;
-    ownedItems: OwnedItem[];
-    equippedItems: EquippedItems;
-    onInventoryUpdate: (updates: { 
-        newOwned: OwnedItem[]; 
-        newEquipped: EquippedItems; 
-        goldChange: number; 
-        piecesChange: number;
-    }) => Promise<void>;
+    userId: string;
+    onDataChanged: () => void;
 }
 
-export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedItems, equippedItems, onInventoryUpdate }: EquipmentScreenProps) {
+export default function EquipmentScreen({ onClose, userId, onDataChanged }: EquipmentScreenProps) {
+    // --- STATE QUẢN LÝ CỤC BỘ ---
+    const [isLoading, setIsLoading] = useState(true);
+    const [gold, setGold] = useState(0);
+    const [equipmentPieces, setEquipmentPieces] = useState(0);
+    const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
+    const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
+    
+    // --- STATE CHO UI ---
     const [selectedItem, setSelectedItem] = useState<OwnedItem | null>(null);
     const [newlyCraftedItem, setNewlyCraftedItem] = useState<OwnedItem | null>(null);
     const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
@@ -539,6 +533,51 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
     const [dismantleSuccessToast, setDismantleSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     const MAX_ITEMS_IN_STORAGE = 50;
 
+    // --- HÀM TƯƠNG TÁC DỮ LIỆU ---
+    const showMessage = useCallback((text: string) => {
+        setMessage(text); setMessageKey(prev => prev + 1);
+        const timer = setTimeout(() => setMessage(''), 4000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    const fetchData = useCallback(async () => {
+        if (!userId) return;
+        try {
+            const data = await fetchEquipmentScreenData(userId);
+            setGold(data.coins);
+            setEquipmentPieces(data.equipment.pieces);
+            setOwnedItems(data.equipment.owned);
+            setEquippedItems(data.equipment.equipped || { weapon: null, armor: null, Helmet: null });
+        } catch (error) {
+            console.error("Failed to fetch equipment data:", error);
+            showMessage("Lỗi: Không thể tải dữ liệu trang bị.");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [userId, showMessage]);
+
+    useEffect(() => {
+        setIsLoading(true);
+        fetchData();
+    }, [fetchData]);
+
+    const handleInventoryUpdate = async (updates: { newOwned: OwnedItem[]; newEquipped: EquippedItems; goldChange: number; piecesChange: number; }) => {
+        setIsProcessing(true);
+        try {
+            await updateUserInventory(userId, updates);
+            await fetchData();
+            onDataChanged();
+            return true;
+        } catch (error: any) {
+            showMessage(`Lỗi: ${error.message || 'Cập nhật thất bại'}`);
+            await fetchData();
+            return false;
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // --- CÁC MEMO TÍNH TOÁN DỮ LIỆU ---
     const equippedItemsMap = useMemo(() => {
         const map: { [key in EquipmentSlotType]: OwnedItem | null } = { weapon: null, armor: null, Helmet: null };
         for (const slotType of EQUIPMENT_SLOT_TYPES) {
@@ -557,10 +596,7 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
             .sort((a, b) => {
                 const itemDefA = getItemDefinition(a.itemId);
                 const itemDefB = getItemDefinition(b.itemId);
-
-                if (!itemDefA) return 1;
-                if (!itemDefB) return -1;
-
+                if (!itemDefA) return 1; if (!itemDefB) return -1;
                 const rarityIndexA = RARITY_ORDER.indexOf(itemDefA.rarity);
                 const rarityIndexB = RARITY_ORDER.indexOf(itemDefB.rarity);
                 if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
@@ -568,183 +604,106 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
                 return itemDefA.name.localeCompare(itemDefB.name);
             });
     }, [ownedItems, equippedItems]);
-
-    const showMessage = useCallback((text: string) => {
-        setMessage(text); setMessageKey(prev => prev + 1);
-        const timer = setTimeout(() => setMessage(''), 4000);
-        return () => clearTimeout(timer);
-    }, []);
     
+    // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
     const handleEquipItem = useCallback(async (itemToEquip: OwnedItem) => {
         if (isProcessing) return;
         const itemDef = getItemDefinition(itemToEquip.itemId);
-        if (!itemDef || !EQUIPMENT_SLOT_TYPES.includes(itemDef.type as any)) {
-            showMessage("Vật phẩm này không thể trang bị."); return;
-        }
+        if (!itemDef || !EQUIPMENT_SLOT_TYPES.includes(itemDef.type as any)) { showMessage("Vật phẩm này không thể trang bị."); return; }
         const slotType = itemDef.type as EquipmentSlotType;
         if (equippedItems[slotType] === itemToEquip.id) { showMessage("Trang bị đã được mặc."); return; }
-        
-        setIsProcessing(true);
         const newEquipped = { ...equippedItems, [slotType]: itemToEquip.id };
-        try {
-            await onInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
-            setSelectedItem(null);
-        } catch (error: any) { showMessage(`Lỗi: ${error.message || 'Không thể trang bị'}`); } finally { setIsProcessing(false); }
-    }, [isProcessing, equippedItems, ownedItems, onInventoryUpdate, showMessage]);
+        const success = await handleInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
+        if (success) setSelectedItem(null);
+    }, [isProcessing, equippedItems, ownedItems, handleInventoryUpdate, showMessage]);
 
     const handleUnequipItem = useCallback(async (itemToUnequip: OwnedItem) => {
         if (isProcessing) return;
-        const itemDef = getItemDefinition(itemToUnequip.itemId);
-        if (!itemDef) return;
-
+        const itemDef = getItemDefinition(itemToUnequip.itemId); if (!itemDef) return;
         const slotType = itemDef.type as EquipmentSlotType;
         if (equippedItems[slotType] !== itemToUnequip.id) { showMessage("Lỗi: Không tìm thấy trang bị."); return; }
-        
-        setIsProcessing(true);
         const newEquipped = { ...equippedItems, [slotType]: null };
-        try {
-            await onInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
-            setSelectedItem(null);
-        } catch (error: any) { showMessage(`Lỗi: ${error.message || 'Không thể tháo'}`); } finally { setIsProcessing(false); }
-    }, [isProcessing, equippedItems, ownedItems, onInventoryUpdate, showMessage]);
+        const success = await handleInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
+        if (success) setSelectedItem(null);
+    }, [isProcessing, equippedItems, ownedItems, handleInventoryUpdate, showMessage]);
   
     const handleCraftItem = useCallback(async () => {
         if (isProcessing) return;
-        if (equipmentPieces < CRAFTING_COST) { 
-            showMessage(`Không đủ Mảnh Trang Bị. Cần ${CRAFTING_COST}.`); 
-            return; 
-        }
-        if (unequippedItemsSorted.length >= MAX_ITEMS_IN_STORAGE) { 
-            showMessage(`Kho chứa đã đầy.`); 
-            return; 
-        }
+        if (equipmentPieces < CRAFTING_COST) { showMessage(`Không đủ Mảnh Trang Bị. Cần ${CRAFTING_COST}.`); return; }
+        if (unequippedItemsSorted.length >= MAX_ITEMS_IN_STORAGE) { showMessage(`Kho chứa đã đầy.`); return; }
         
-        setIsProcessing(true);
-
-        try {
-            const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
-            const targetRank = getRandomRank();
-            
-            const finalItemDef = generateItemDefinition(randomBlueprint, targetRank, true);
-            
-            const newOwnedItem: OwnedItem = { 
-                id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, 
-                itemId: finalItemDef.id, 
-                level: 1,
-                stats: finalItemDef.stats || {}
-            };
-            const newOwnedList = [...ownedItems, newOwnedItem];
-            
-            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: -CRAFTING_COST });
-            setNewlyCraftedItem(newOwnedItem);
-
-        } catch(error: any) { 
-            showMessage(`Lỗi: ${error.message || 'Chế tạo thất bại'}`); 
-        } finally { 
-            setIsProcessing(false); 
-        }
-    }, [isProcessing, equipmentPieces, ownedItems, equippedItems, onInventoryUpdate, showMessage, unequippedItemsSorted.length]);
+        const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
+        const targetRank = getRandomRank();
+        const finalItemDef = generateItemDefinition(randomBlueprint, targetRank, true);
+        const newOwnedItem: OwnedItem = { id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, itemId: finalItemDef.id, level: 1, stats: finalItemDef.stats || {} };
+        const newOwnedList = [...ownedItems, newOwnedItem];
+        
+        const success = await handleInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: -CRAFTING_COST });
+        if(success) setNewlyCraftedItem(newOwnedItem);
+    }, [isProcessing, equipmentPieces, ownedItems, equippedItems, handleInventoryUpdate, showMessage, unequippedItemsSorted.length]);
 
     const handleDismantleItem = useCallback(async (itemToDismantle: OwnedItem) => {
         if (isProcessing) return;
         if (Object.values(equippedItems).includes(itemToDismantle.id)) { showMessage("Không thể phân rã trang bị đang mặc."); return; }
-        
-        setIsProcessing(true);
         const itemDef = getItemDefinition(itemToDismantle.itemId)!;
         const goldToReturn = getTotalUpgradeCost(itemDef, itemToDismantle.level);
         const newOwnedList = ownedItems.filter(s => s.id !== itemToDismantle.id);
-        
-        try {
-            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: goldToReturn, piecesChange: DISMANTLE_RETURN_PIECES });
+        const success = await handleInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: goldToReturn, piecesChange: DISMANTLE_RETURN_PIECES });
+        if(success) {
             setSelectedItem(null);
             setDismantleSuccessToast({ show: true, message: 'Đã tái chế thành công.' });
             setTimeout(() => setDismantleSuccessToast(prev => ({ ...prev, show: false })), 4000);
-        } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Tái chế thất bại'}`); } finally { setIsProcessing(false); }
-    }, [isProcessing, equippedItems, ownedItems, onInventoryUpdate, showMessage]);
+        }
+    }, [isProcessing, equippedItems, ownedItems, handleInventoryUpdate, showMessage]);
 
     const handleUpgradeItem = useCallback(async (itemToUpgrade: OwnedItem, statKey: string, increase: number) => {
         if (isProcessing) return;
         const itemDef = getItemDefinition(itemToUpgrade.itemId)!;
-        
         const cost = getUpgradeCost(itemDef, itemToUpgrade.level);
-        if (gold < cost) { 
-            showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); 
-            return; 
-        }
-        
-        setIsProcessing(true);
-
+        if (gold < cost) { showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); return; }
         const newStats = { ...itemToUpgrade.stats };
-        if (newStats.hasOwnProperty(statKey) && typeof newStats[statKey] === 'number') {
-            newStats[statKey] = newStats[statKey] + increase;
-        } else {
-            setIsProcessing(false);
-            showMessage("Lỗi: Không thể nâng cấp chỉ số không tồn tại.");
-            return;
-        }
-
-        const updatedItem = { 
-            ...itemToUpgrade, 
-            level: itemToUpgrade.level + 1,
-            stats: newStats
-        };
-
+        if (newStats.hasOwnProperty(statKey) && typeof newStats[statKey] === 'number') { newStats[statKey] += increase; } 
+        else { showMessage("Lỗi: Không thể nâng cấp chỉ số không tồn tại."); return; }
+        const updatedItem = { ...itemToUpgrade, level: itemToUpgrade.level + 1, stats: newStats };
         const newOwnedList = ownedItems.map(s => s.id === itemToUpgrade.id ? updatedItem : s);
-        try {
-            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: -cost, piecesChange: 0 });
-            setSelectedItem(updatedItem);
-        } catch(error: any) { 
-            showMessage(`Lỗi: ${error.message || 'Nâng cấp thất bại'}`); 
-        } finally { 
-            setIsProcessing(false); 
-        }
-    }, [isProcessing, gold, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
+        const success = await handleInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: -cost, piecesChange: 0 });
+        if(success) setSelectedItem(updatedItem);
+    }, [isProcessing, gold, ownedItems, equippedItems, handleInventoryUpdate, showMessage]);
 
     const handleForgeItems = useCallback(async (group: ForgeGroup) => {
         if (isProcessing || group.items.length < 3 || !group.nextRank) { showMessage("Không đủ điều kiện để hợp nhất."); return; }
-        
-        setIsProcessing(true);
         const itemsToConsume = group.items.slice(0, 3);
         const itemIdsToConsume = itemsToConsume.map(s => s.id);
-        
-        try {
-            const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
-            const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
-            
-            const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank, true);
-
-            const newForgedItem: OwnedItem = { 
-                id: `owned-${Date.now()}-${upgradedItemDef.id}`, 
-                itemId: upgradedItemDef.id, 
-                level: finalLevel,
-                stats: upgradedItemDef.stats || {}
-            };
-            const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
-            
-            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: refundGold, piecesChange: 0 });
-            
+        const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
+        const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
+        const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank, true);
+        const newForgedItem: OwnedItem = { id: `owned-${Date.now()}-${upgradedItemDef.id}`, itemId: upgradedItemDef.id, level: finalLevel, stats: upgradedItemDef.stats || {} };
+        const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
+        const success = await handleInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: refundGold, piecesChange: 0 });
+        if(success) {
             let successMsg = `Hợp nhất thành công ${upgradedItemDef.name} [${group.nextRank}] - Đạt Lv. ${finalLevel}!`;
             if (refundGold > 0) successMsg += ` Hoàn lại ${refundGold.toLocaleString()} vàng.`;
             showMessage(successMsg);
             setIsForgeModalOpen(false);
-        } catch (error: any) { 
-            showMessage(`Lỗi: ${error.message || 'Hợp nhất thất bại'}`); 
-        } finally { 
-            setIsProcessing(false); 
         }
-    }, [isProcessing, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
+    }, [isProcessing, ownedItems, equippedItems, handleInventoryUpdate, showMessage]);
 
-    const handleSelectSlot = useCallback((slotType: EquipmentSlotType) => {
-        const item = equippedItemsMap[slotType];
-        if (item) setSelectedItem(item);
-    }, [equippedItemsMap]);
-    
+    const handleSelectSlot = useCallback((slotType: EquipmentSlotType) => { const item = equippedItemsMap[slotType]; if (item) setSelectedItem(item); }, [equippedItemsMap]);
     const handleSelectItem = useCallback((item: OwnedItem) => setSelectedItem(item), []);
     const handleCloseDetailModal = useCallback(() => setSelectedItem(null), []);
     const handleCloseCraftSuccessModal = useCallback(() => setNewlyCraftedItem(null), []);
     const handleCloseForgeModal = useCallback(() => setIsForgeModalOpen(false), []);
     const handleOpenForgeModal = useCallback(() => setIsForgeModalOpen(true), []);
 
+    // --- RENDER ---
+    if (isLoading) {
+        return (
+            <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex items-center justify-center">
+                <p className="text-xl text-white animate-pulse">Đang tải dữ liệu trang bị...</p>
+            </div>
+        );
+    }
+    
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
             <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
