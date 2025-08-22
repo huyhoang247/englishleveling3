@@ -244,7 +244,15 @@ const App: React.FC = () => {
               {rememberChoice ? (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>)}
               <span className="ml-2 text-sm text-gray-300">Remember choice</span>
             </div>
-            <button onClick={() => startGame(selectedMode, rememberChoice)} className="mt-5 w-full max-w-xs py-3 bg-cyan-600/90 border border-cyan-400 rounded-lg text-white font-bold tracking-widest hover:bg-cyan-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/20 focus:outline-none focus:ring-4 focus:ring-cyan-300">LAUNCH</button>
+            <button
+              onClick={() => startGame(selectedMode, rememberChoice)}
+              className="mt-6 w-48 mx-auto flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full text-white font-semibold text-lg tracking-wide hover:from-cyan-400 hover:to-blue-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-400/40 focus:outline-none focus:ring-4 focus:ring-cyan-300/50"
+            >
+              Start
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+              </svg>
+            </button>
           </div>
         </LoadingScreenLayout>
       </>
