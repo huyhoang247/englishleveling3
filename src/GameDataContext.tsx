@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import { auth } from '../firebase.js';
+import { auth } from './firebase.js';
 import { 
   fetchOrCreateUserGameData, 
   upgradeUserStats,
@@ -12,8 +12,8 @@ import {
   processShopPurchase,
   processMinerChallengeResult,
   // Thêm các service khác khi cần
-} from '../gameDataService.ts';
-import { calculateUpgradeCost } from '../home/upgrade-stats/upgrade-ui.tsx';
+} from './gameDataService.ts';
+import { calculateUpgradeCost } from './home/upgrade-stats/upgrade-ui.tsx';
 
 // --- Định nghĩa "hình dạng" của tất cả dữ liệu game (giữ nguyên) ---
 interface GameDataState {
