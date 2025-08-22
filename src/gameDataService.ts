@@ -1,4 +1,4 @@
-// --- START OF FILE gameDataService.ts (FULL CODE - UPDATED) ---
+// --- START OF FILE gameDataService.ts (FULL CODE - CORRECTED & COMPLETE) ---
 
 import { db } from './firebase';
 import { 
@@ -10,8 +10,8 @@ import {
 // Tuy nhiên, để file này tự chứa, tôi sẽ định nghĩa chúng ở đây.
 export type Rarity = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
 export interface OwnedSkill { id: string; skillId: string; level: number; rarity: Rarity; }
-export interface OwnedItem { id: string; itemId: number; level: number; stats: { [key: string]: any }; }
-export interface EquippedItems { weapon: string | null; armor: string | null; Helmet: string | null; }
+export interface OwnedItem { id: string; itemId: string; stats: { hp: number; atk: number; def: number; }; }
+export interface EquippedItems { weapon: OwnedItem | null; armor: OwnedItem | null; accessory: OwnedItem | null; }
 
 export interface UserGameData {
   coins: number;
@@ -55,12 +55,6 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
     if (!Array.isArray(skillsData.equipped) || skillsData.equipped.length !== 3) {
       skillsData.equipped = [null, null, null];
     }
-    // Đảm bảo equipment có cấu trúc đúng
-    const equipmentData = data.equipment || { pieces: 100, owned: [], equipped: { weapon: null, armor: null, Helmet: null } };
-    if (!equipmentData.equipped) {
-       equipmentData.equipped = { weapon: null, armor: null, Helmet: null };
-    }
-
 
     return {
       coins: data.coins || 0,
@@ -74,7 +68,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       skills: skillsData,
       totalVocabCollected: data.totalVocabCollected || 0,
       cardCapacity: data.cardCapacity || 100,
-      equipment: equipmentData,
+      equipment: data.equipment || { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } },
     };
   } else {
     const newUserData: UserGameData & { createdAt: Date; claimedDailyGoals: object; claimedVocabMilestones: any[], claimedQuizRewards: object; } = {
@@ -83,7 +77,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       bossBattleHighestFloor: 0, ancientBooks: 0,
       skills: { owned: [], equipped: [null, null, null] },
       totalVocabCollected: 0, cardCapacity: 100,
-      equipment: { pieces: 100, owned: [], equipped: { weapon: null, armor: null, Helmet: null } },
+      equipment: { pieces: 100, owned: [], equipped: { weapon: null, armor: null, accessory: null } },
       createdAt: new Date(),
       claimedDailyGoals: {},
       claimedVocabMilestones: [],
@@ -94,6 +88,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
   }
 };
 
+// +++ START: HÀM MỚI ĐƯỢC THÊM VÀO +++
 /**
  * Lấy dữ liệu cần thiết cho màn hình Kỹ năng.
  * @param userId - ID của người dùng.
@@ -122,23 +117,6 @@ export const fetchVocabularyScreenData = async (userId: string) => {
     gems: gameData.gems,
     totalVocab: gameData.totalVocabCollected,
     capacity: gameData.cardCapacity,
-  };
-};
-
-// +++ START: HÀM MỚI ĐƯỢC THÊM VÀO +++
-/**
- * Lấy dữ liệu cần thiết cho màn hình Trang bị.
- * @param userId - ID của người dùng.
- * @returns Dữ liệu cần thiết cho màn hình trang bị.
- */
-export const fetchEquipmentScreenData = async (userId: string) => {
-  if (!userId) throw new Error("User ID is required.");
-  const gameData = await fetchOrCreateUserGameData(userId);
-  return {
-    gold: gameData.coins,
-    equipmentPieces: gameData.equipment.pieces,
-    ownedItems: gameData.equipment.owned,
-    equippedItems: gameData.equipment.equipped,
   };
 };
 // +++ END: HÀM MỚI ĐƯỢC THÊM VÀO +++
@@ -256,7 +234,7 @@ export const updateUserInventory = async (userId: string, updates: { newOwned: O
         const userDoc = await t.get(userDocRef);
         if (!userDoc.exists()) throw new Error("User document does not exist!");
         const data = userDoc.data();
-        const currentEquipment = data.equipment || { pieces: 0, owned: [], equipped: { weapon: null, armor: null, Helmet: null } };
+        const currentEquipment = data.equipment || { pieces: 0, owned: [], equipped: { weapon: null, armor: null, accessory: null } };
         const newCoins = (data.coins || 0) + updates.goldChange;
         const newPieces = (currentEquipment.pieces || 0) + updates.piecesChange;
         if (newCoins < 0) throw new Error("Không đủ vàng.");
@@ -351,6 +329,15 @@ export const processVocabularyChestOpening = async (
     return { newCoins, newGems, newTotalVocab };
 };
 
+// ========================================================================
+// === HÀM BỊ THIẾU ĐÃ ĐƯỢỢC THÊM LẠI =======================================
+// ========================================================================
+
+/**
+ * Lấy và đồng bộ hóa dữ liệu thành tựu từ vựng của người dùng.
+ * @param userId - ID của người dùng.
+ * @returns {Promise<VocabularyItem[]>} Một mảng dữ liệu thành tựu từ vựng đã được đồng bộ.
+ */
 export const fetchAndSyncVocabularyData = async (userId: string): Promise<VocabularyItem[]> => {
   if (!userId) throw new Error("User ID is required.");
   try {
@@ -401,6 +388,12 @@ export const fetchAndSyncVocabularyData = async (userId: string): Promise<Vocabu
   }
 };
 
+/**
+ * Cập nhật dữ liệu thành tựu và phần thưởng cho người dùng một cách an toàn.
+ * @param userId - ID của người dùng.
+ * @param updates - Một object chứa các thay đổi cần áp dụng.
+ * @returns Số dư coin và thẻ mới.
+ */
 export const updateAchievementData = async (
   userId: string,
   updates: { coinsToAdd: number; cardsToAdd: number; newVocabularyData: VocabularyItem[]; }
