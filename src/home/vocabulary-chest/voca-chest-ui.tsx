@@ -25,19 +25,29 @@ export const CHEST_DEFINITIONS = {
     master: { id: 'master_vocab_chest', currency: 'gem' as const, chestType: 'master' as const, headerTitle: "Master Vocabulary", levelName: "Thông Thạo", imageUrl: treasureAssets.chestMaster, infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, price1: 0, price10: 0, isComingSoon: true, range: [null, null] as const, },
 };
 
-const CHEST_DATA = Object.values(CHST_DEFINITIONS);
+const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
 
 // ========================================================================
-// === 1. COMPONENT CSS (SỬA LỖI TẠI ĐÂY) ================================
+// === 1. COMPONENT CSS (Đã sửa lỗi) ======================
 // ========================================================================
 const ScopedStyles = () => (
     <style>{`
         /* --- LỚP GỐC: Thiết lập môi trường độc lập --- */
+        /* ✨ SỬA LỖI TẠI ĐÂY ✨ */
         .vocabulary-chest-root { 
-            position: fixed; /* ✨ SỬA LỖI: Đổi từ absolute sang fixed */
-            inset: 0; /* ✨ SỬA LỖI: Thay thế cho top, left, width, height để chiếm toàn màn hình */
-            background-color: #0a0a14; background-image: radial-gradient(circle at center, #16213e, #0a0a14); color: #e0e0e0; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; z-index: 100; overflow: hidden; 
+            position: fixed; /* THAY ĐỔI: Đảm bảo component được định vị so với khung nhìn */
+            inset: 0; /* THAY ĐỔI: Kéo dãn component ra toàn bộ màn hình (thay cho top, left, width, height) */
+            background-color: #0a0a14; 
+            background-image: radial-gradient(circle at center, #16213e, #0a0a14); 
+            color: #e0e0e0; 
+            font-family: 'Roboto', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-start; 
+            align-items: center; 
+            z-index: 100; 
+            overflow: hidden; 
         }
         .vocabulary-chest-root .vocab-screen-home-btn { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; background-color: rgba(30, 41, 59, 0.8); border: 1px solid rgb(51, 65, 85); transition: background-color 0.2s ease, opacity 0.3s ease, visibility 0.3s; cursor: pointer; color: #cbd5e1; }
         .vocabulary-chest-root .vocab-screen-home-btn:hover { background-color: rgb(51, 65, 85); }
