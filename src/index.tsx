@@ -204,9 +204,9 @@ const App: React.FC = () => {
         const modes: DisplayMode[] = ['fullscreen', 'normal'];
         return (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
-            <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-6 uppercase">Choose Display Mode</h3>
+            <div className="relative w-72 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
+              <div className="p-5">
+                <h3 className="text-lg font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-5 uppercase">Display Mode</h3>
                 <div className="flex justify-center gap-4">
                   {modes.map(mode => {
                     const isSelected = currentMode === mode;
@@ -214,10 +214,10 @@ const App: React.FC = () => {
                       <button
                         key={mode}
                         onClick={() => onSelect(mode)}
-                        className={`w-32 h-32 flex flex-col items-center justify-center p-3 rounded-lg border-2 transform transition-all duration-200 hover:scale-105 ${isSelected ? 'bg-cyan-500/20 border-cyan-400 ring-2 ring-cyan-500/50' : 'bg-slate-800/50 border-slate-700 hover:bg-slate-700/70 hover:border-slate-500'}`}
+                        className={`w-28 h-28 flex flex-col items-center justify-center p-2 rounded-lg border-2 transform transition-all duration-200 hover:scale-105 ${isSelected ? 'bg-cyan-500/20 border-cyan-400 ring-2 ring-cyan-500/50' : 'bg-slate-800/50 border-slate-700 hover:bg-slate-700/70 hover:border-slate-500'}`}
                       >
-                        <ModeIcon mode={mode} className="w-10 h-10 mb-2 text-cyan-300" />
-                        <span className="font-semibold tracking-wide text-base">{mode === 'fullscreen' ? 'Full Screen' : 'Normal'}</span>
+                        <ModeIcon mode={mode} className="w-8 h-8 mb-2 text-cyan-300" />
+                        <span className="font-semibold tracking-wide text-sm">{mode === 'fullscreen' ? 'Full Screen' : 'Normal'}</span>
                       </button>
                     );
                   })}
