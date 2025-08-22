@@ -1,35 +1,27 @@
-// --- START OF FILE upgrade-stats.tsx (đã refactor) ---
+// --- START OF FILE upgrade-ui.tsx (Refactored with Zustand) ---
 
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets } from '../../game-assets.ts';
 import UpgradeStatsSkeleton from './upgrade-loading.tsx';
-import StatUpgradeToast from './upgrade-toast.tsx'; 
-// --- IMPORT CONTEXT VÀ PROVIDER ---
-import { UpgradeStatsProvider, useUpgradeStats } from './upgrade-context.tsx';
+import StatUpgradeToast from './upgrade-toast.tsx';
 
-// --- ICONS (giữ nguyên) ---
+// --- IMPORT STORE CỦA ZUSTAND ---
+import { useUpgradeStore } from './upgrade-store.ts';
+
+// --- ICONS ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/2000/svg" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
-const icons = {
-  coin: ( <img src={uiAssets.statCoinIcon} alt="Gold Coin Icon" /> ),
-  heart: ( <img src={uiAssets.statHpIcon} alt="HP Icon" /> ),
-  shield: ( <img src={uiAssets.statDefIcon} alt="DEF Icon" /> ),
-  sword: ( <img src={uiAssets.statAtkIcon} alt="ATK Icon" /> )
-};
+const icons = { coin: ( <img src={uiAssets.statCoinIcon} alt="Gold Coin Icon" /> ), heart: ( <img src={uiAssets.statHpIcon} alt="HP Icon" /> ), shield: ( <img src={uiAssets.statDefIcon} alt="DEF Icon" /> ), sword: ( <img src={uiAssets.statAtkIcon} alt="ATK Icon" /> ) };
 
-// --- CONFIG & LOGIC (giữ nguyên hoặc chuyển sang file utils riêng) ---
-// Tạm thời giữ lại để context có thể import, lý tưởng nhất là chuyển sang file utils
-export const statConfig = {
-  hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600", toastColors: { border: 'border-pink-500', text: 'text-pink-400' } },
-  atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500", toastColors: { border: 'border-cyan-400', text: 'text-cyan-300' } },
-  def: { name: 'DEF', icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500", toastColors: { border: 'border-blue-400', text: 'text-blue-300' } },
-};
+// --- CONFIG & LOGIC (có thể chuyển sang file utils chung) ---
+export const statConfig = { hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600", toastColors: { border: 'border-pink-500', text: 'text-pink-400' } }, atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500", toastColors: { border: 'border-cyan-400', text: 'text-cyan-300' } }, def: { name: 'DEF', icon: icons.shield, baseUpgradeBonus: 5, color: "from-blue-500 to-indigo-500", toastColors: { border: 'border-blue-400', text: 'text-blue-300' } }, };
 export const calculateUpgradeCost = (level: number) => { const baseCost = 100; const tier = Math.floor(level / 10); return baseCost * Math.pow(2, tier); };
 export const getBonusForLevel = (level: number, baseBonus: number) => { if (level === 0) return 0; const tier = Math.floor((level - 1) / 10); return baseBonus * Math.pow(2, tier); };
 export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => { if (currentLevel === 0) return 0; let totalValue = 0; const fullTiers = Math.floor(currentLevel / 10); const remainingLevelsInCurrentTier = currentLevel % 10; for (let i = 0; i < fullTiers; i++) { const bonusInTier = baseBonus * Math.pow(2, i); totalValue += 10 * bonusInTier; } const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers); totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier; return totalValue; };
 const formatNumber = (num: number) => { if (num < 1000) return num.toString(); if (num < 1000000) { const thousands = num / 1000; return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`; } if (num < 1000000000) { const millions = num / 1000000; return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`; } const billions = num / 1000000000; return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`; };
 
-// --- COMPONENT STAT CARD (không đổi) ---
+// --- COMPONENT STAT CARD (Không thay đổi) ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: any) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, color } = stat;
   const upgradeCost = calculateUpgradeCost(level);
@@ -54,31 +46,43 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   );
 };
 
-// INTERFACE PROPS (không đổi)
+// --- INTERFACE PROPS MỚI (đã bỏ onDataUpdated) ---
 interface UpgradeStatsScreenProps {
   onClose: () => void;
-  onDataUpdated: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
 }
 
-// --- COMPONENT HIỂN THỊ (VIEW) ---
-// Component này giờ đây chỉ nhận props và dữ liệu từ context để hiển thị
-function UpgradeStatsView({ onClose }: { onClose: () => void }) {
-  // Lấy toàn bộ state và actions từ context
-  const {
-    isLoading,
-    isUpgrading,
-    animatedGold,
-    stats,
-    message,
-    toastData,
-    totalHp,
-    totalAtk,
-    totalDef,
-    totalLevels,
-    prestigeLevel,
-    progressPercent,
-    handleUpgrade
-  } = useUpgradeStats();
+// --- COMPONENT CHÍNH ---
+export default function UpgradeStatsScreen({ onClose }: UpgradeStatsScreenProps) {
+  // Lấy state và actions từ store.
+  const { isLoading, gold, stats, message, toastData, upgradingId, fetchInitialData, handleUpgrade } = useUpgradeStore();
+  
+  const animatedGold = useAnimateValue(gold, 400);
+
+  // Gọi action để fetch dữ liệu khi component được mount lần đầu
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
+  // Dữ liệu được tính toán từ state (giữ ở component với useMemo để tối ưu)
+  const { totalHp, totalAtk, totalDef, totalLevels, prestigeLevel, progressPercent } = useMemo(() => {
+    const hpStat = stats.find(s => s.id === 'hp');
+    const atkStat = stats.find(s => s.id === 'atk');
+    const defStat = stats.find(s => s.id === 'def');
+
+    const totalHp = hpStat ? calculateTotalStatValue(hpStat.level, statConfig.hp.baseUpgradeBonus) : 0;
+    const totalAtk = atkStat ? calculateTotalStatValue(atkStat.level, statConfig.atk.baseUpgradeBonus) : 0;
+    const totalDef = defStat ? calculateTotalStatValue(defStat.level, statConfig.def.baseUpgradeBonus) : 0;
+    
+    const totalLevels = stats.reduce((sum, stat) => sum + stat.level, 0);
+    const maxProgress = 50;
+    const prestigeLevel = Math.floor(totalLevels / maxProgress);
+    const currentProgress = totalLevels % maxProgress;
+    const progressPercent = (currentProgress / maxProgress) * 100;
+    
+    return { totalHp, totalAtk, totalDef, totalLevels, prestigeLevel, progressPercent };
+  }, [stats]);
+  
+  const isUpgrading = upgradingId !== null;
 
   if (isLoading) {
     return <UpgradeStatsSkeleton />;
@@ -149,16 +153,5 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
             </div>
         </div>
     </div>
-  );
-}
-
-
-// --- COMPONENT CHÍNH (WRAPPER) ---
-// Component này là điểm truy cập, nó bao bọc View bằng Provider
-export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeStatsScreenProps) {
-  return (
-    <UpgradeStatsProvider onDataUpdated={onDataUpdated}>
-      <UpgradeStatsView onClose={onClose} />
-    </UpgradeStatsProvider>
   );
 }
