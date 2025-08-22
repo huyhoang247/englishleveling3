@@ -1,6 +1,6 @@
 // --- START OF FILE equipment.tsx ---
 
-import React, { useState, useMemo, useCallback, memo } from 'react';
+import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 // THAY ĐỔI: Import các hàm và cấu trúc mới từ item-database
 import { 
     getItemDefinition, 
@@ -20,6 +20,9 @@ import CoinDisplay from './ui/display/coin-display.tsx';
 
 // *** THAY ĐỔI MỚI: Import Toast component ***
 import RateLimitToast from './thong-bao.tsx';
+
+// --- THAY ĐỔI: Import service để tự xử lý logic ---
+import { updateUserInventory } from './gameDataService.ts';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
@@ -119,8 +122,10 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4c-1.1 0-2 .9-2 2v4h1.5c1.93 0 3.5 1.57 3.5 3.5S5.43 20 3.5 20H2v-4c0-1.1.9-2 2-2h4v1.5a2.5 2.5 0 0 0 5 0V13h4c1.1 0 2-.9 2 2v4h-1.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5H22v-4c0-1.1-.9-2-2-2z"/> </svg>);
 const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => ( <img src={equipmentUiAssets.equipmentPieceIcon} alt="Mảnh Trang Bị" className={className} /> );
 
-// --- CÁC COMPONENT CON ---
-
+// --- CÁC COMPONENT CON (KHÔNG THAY ĐỔI) ---
+// Header, EquipmentSlot, InventorySlot, ItemDetailModal, CraftingSuccessModal, ForgeModal
+// Các component con này vẫn giữ nguyên, chúng chỉ nhận dữ liệu từ state cục bộ của EquipmentScreen
+// (Do mã nguồn dài nên tôi sẽ không lặp lại chúng ở đây, giả định chúng đã tồn tại như trong file gốc)
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
@@ -205,8 +210,6 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
     );
 });
 
-
-// --- Icons và Cấu hình Chỉ số ---
 const HpIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/> </svg> );
 const AtkIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M17.46,3.26a1.5,1.5,0,0,0-2.12,0L3.25,15.35a1.5,1.5,0,0,0,0,2.12l2.83,2.83a1.5,1.5,0,0,0,2.12,0L20.29,8.21a1.5,1.5,0,0,0,0-2.12Zm-11,14.31L4.6,15.71,15,5.34l1.83,1.83ZM18,7.5,16.5,6l1.41-1.41a.5.5,0,0,1,.71.71Z"/> </svg> );
 const DefIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12,1L3,5v6c0,5.55,3.84,10.74,9,12c5.16-1.26,9-6.45,9-12V5L12,1z"/> </svg> );
@@ -216,11 +219,6 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
-// ==================================================================
-// ============ START OF UPDATED ItemDetailModal COMPONENT ==========
-// ==================================================================
-
-// --- Tiện ích và Component Toast được tích hợp ---
 const formatBonus = (num: number) => {
     if (num < 1000) return num.toString();
     if (num < 1000000) return `${(num / 1000).toFixed(1).replace('.0', '')}K`;
@@ -257,7 +255,6 @@ const UpgradeStatToast: React.FC<UpgradeStatToastProps> = ({ isVisible, icon, bo
   );
 };
 
-// --- Component Modal Chính ---
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem, statKey: string, increase: number) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     const [activeTab, setActiveTab] = useState<'stats' | 'upgrade'>('stats');
@@ -354,7 +351,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                     )}
 
                                     {activeTab === 'upgrade' && isUpgradable && (
-                                        // *** THAY ĐỔI Ở ĐÂY: Giảm padding và space-y ***
                                         <div className="w-full flex flex-col items-center justify-center py-4 space-y-4">
                                             <div className="text-center">
                                                 <p className="text-sm text-slate-300">
@@ -404,11 +400,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     );
 });
 
-
-// ================================================================
-// ============ END OF UPDATED ItemDetailModal COMPONENT ==========
-// ================================================================
-
 const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedItem, onClose: () => void }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     if (!itemDef) return null;
@@ -420,7 +411,6 @@ const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedIte
     return ( <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div> <div className="relative w-full max-w-sm"> <div className="absolute inset-0.5 animate-spin-slow-360"> <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(itemDef.rarity)} opacity-50 rounded-full blur-2xl`}></div> </div> <div className={`relative bg-gradient-to-b ${getRarityGradient(itemDef.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(itemDef.rarity)} text-center flex flex-col items-center gap-4`} style={shadowStyle}> <h2 className="text-2xl font-black tracking-widest uppercase text-white title-glow">Chế Tạo Thành Công</h2> <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}> <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" /> </div> <div className="flex flex-col"> <span className={`text-2xl font-bold ${rarityTextColor}`}>{itemDef.name}</span> <span className="font-semibold text-slate-300">{itemDef.rarity}</span> </div> <p className="text-sm text-slate-400">{itemDef.description}</p> <button onClick={onClose} className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"> Tuyệt vời! </button> </div> </div> </div> );
 });
 
-// --- FORGE MODAL (Hợp nhất/Rèn) ---
 interface ForgeResult { level: number; refundGold: number; }
 interface ForgeGroup { 
     blueprint: ItemBlueprint;
@@ -515,21 +505,32 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 
 
 // --- COMPONENT CHÍNH ---
+// --- THAY ĐỔI: Cập nhật Props Interface ---
 interface EquipmentScreenProps {
     onClose: () => void;
-    gold: number;
-    equipmentPieces: number;
-    ownedItems: OwnedItem[];
-    equippedItems: EquippedItems;
-    onInventoryUpdate: (updates: { 
-        newOwned: OwnedItem[]; 
-        newEquipped: EquippedItems; 
-        goldChange: number; 
-        piecesChange: number;
-    }) => Promise<void>;
+    userId: string;
+    initialGold: number;
+    initialEquipmentPieces: number;
+    initialOwnedItems: OwnedItem[];
+    initialEquippedItems: EquippedItems;
+    onDataChange: () => void;
 }
 
-export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedItems, equippedItems, onInventoryUpdate }: EquipmentScreenProps) {
+export default function EquipmentScreen({ 
+    onClose, 
+    userId,
+    initialGold, 
+    initialEquipmentPieces, 
+    initialOwnedItems, 
+    initialEquippedItems,
+    onDataChange
+}: EquipmentScreenProps) {
+    // --- THAY ĐỔI: Component giờ sẽ tự quản lý state của chính nó ---
+    const [gold, setGold] = useState(initialGold);
+    const [equipmentPieces, setEquipmentPieces] = useState(initialEquipmentPieces);
+    const [ownedItems, setOwnedItems] = useState(initialOwnedItems);
+    const [equippedItems, setEquippedItems] = useState(initialEquippedItems);
+
     const [selectedItem, setSelectedItem] = useState<OwnedItem | null>(null);
     const [newlyCraftedItem, setNewlyCraftedItem] = useState<OwnedItem | null>(null);
     const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
@@ -538,6 +539,14 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
     const [isProcessing, setIsProcessing] = useState(false);
     const [dismantleSuccessToast, setDismantleSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     const MAX_ITEMS_IN_STORAGE = 50;
+
+    // --- THAY ĐỔI: Đồng bộ state cục bộ nếu props ban đầu thay đổi (quan trọng khi user thay đổi) ---
+    useEffect(() => {
+        setGold(initialGold);
+        setEquipmentPieces(initialEquipmentPieces);
+        setOwnedItems(initialOwnedItems);
+        setEquippedItems(initialEquippedItems);
+    }, [initialGold, initialEquipmentPieces, initialOwnedItems, initialEquippedItems]);
 
     const equippedItemsMap = useMemo(() => {
         const map: { [key in EquipmentSlotType]: OwnedItem | null } = { weapon: null, armor: null, Helmet: null };
@@ -557,10 +566,8 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
             .sort((a, b) => {
                 const itemDefA = getItemDefinition(a.itemId);
                 const itemDefB = getItemDefinition(b.itemId);
-
                 if (!itemDefA) return 1;
                 if (!itemDefB) return -1;
-
                 const rarityIndexA = RARITY_ORDER.indexOf(itemDefA.rarity);
                 const rarityIndexB = RARITY_ORDER.indexOf(itemDefB.rarity);
                 if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
@@ -575,56 +582,72 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
         return () => clearTimeout(timer);
     }, []);
     
-    const handleEquipItem = useCallback(async (itemToEquip: OwnedItem) => {
-        if (isProcessing) return;
-        const itemDef = getItemDefinition(itemToEquip.itemId);
-        if (!itemDef || !EQUIPMENT_SLOT_TYPES.includes(itemDef.type as any)) {
-            showMessage("Vật phẩm này không thể trang bị."); return;
+    // --- THAY ĐỔI LỚN: Hàm xử lý logic gọi service, giờ nằm hoàn toàn bên trong EquipmentScreen ---
+    const performInventoryUpdate = useCallback(async (updates: { 
+        newOwned: OwnedItem[]; 
+        newEquipped: EquippedItems; 
+        goldChange: number; 
+        piecesChange: number;
+    }) => {
+        if (isProcessing) {
+            showMessage("Thao tác trước đó đang được xử lý...");
+            return Promise.reject("Processing");
         }
+        setIsProcessing(true);
+        try {
+            // 1. Tự gọi service để cập nhật lên Firestore
+            await updateUserInventory(userId, updates);
+            
+            // 2. Cập nhật state cục bộ ngay lập tức để UI phản hồi nhanh
+            setOwnedItems(updates.newOwned);
+            setEquippedItems(updates.newEquipped);
+            setGold(prev => prev + updates.goldChange);
+            setEquipmentPieces(prev => prev + updates.piecesChange);
+            
+            // 3. Gọi callback để báo cho component cha tải lại state tổng thể
+            onDataChange();
+
+        } catch (error: any) { 
+            showMessage(`Lỗi: ${error.message || 'Cập nhật thất bại'}`); 
+            throw error;
+        } finally { 
+            setIsProcessing(false); 
+        }
+    }, [isProcessing, userId, onDataChange, showMessage]);
+
+    const handleEquipItem = useCallback(async (itemToEquip: OwnedItem) => {
+        const itemDef = getItemDefinition(itemToEquip.itemId);
+        if (!itemDef || !EQUIPMENT_SLOT_TYPES.includes(itemDef.type as any)) { showMessage("Vật phẩm này không thể trang bị."); return; }
         const slotType = itemDef.type as EquipmentSlotType;
         if (equippedItems[slotType] === itemToEquip.id) { showMessage("Trang bị đã được mặc."); return; }
         
-        setIsProcessing(true);
         const newEquipped = { ...equippedItems, [slotType]: itemToEquip.id };
         try {
-            await onInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
+            await performInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
             setSelectedItem(null);
-        } catch (error: any) { showMessage(`Lỗi: ${error.message || 'Không thể trang bị'}`); } finally { setIsProcessing(false); }
-    }, [isProcessing, equippedItems, ownedItems, onInventoryUpdate, showMessage]);
+        } catch (error) { console.error(`Equip failed:`, error); }
+    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage]);
 
     const handleUnequipItem = useCallback(async (itemToUnequip: OwnedItem) => {
-        if (isProcessing) return;
         const itemDef = getItemDefinition(itemToUnequip.itemId);
         if (!itemDef) return;
-
         const slotType = itemDef.type as EquipmentSlotType;
         if (equippedItems[slotType] !== itemToUnequip.id) { showMessage("Lỗi: Không tìm thấy trang bị."); return; }
         
-        setIsProcessing(true);
         const newEquipped = { ...equippedItems, [slotType]: null };
         try {
-            await onInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
+            await performInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
             setSelectedItem(null);
-        } catch (error: any) { showMessage(`Lỗi: ${error.message || 'Không thể tháo'}`); } finally { setIsProcessing(false); }
-    }, [isProcessing, equippedItems, ownedItems, onInventoryUpdate, showMessage]);
+        } catch (error) { console.error(`Unequip failed:`, error); }
+    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage]);
   
     const handleCraftItem = useCallback(async () => {
-        if (isProcessing) return;
-        if (equipmentPieces < CRAFTING_COST) { 
-            showMessage(`Không đủ Mảnh Trang Bị. Cần ${CRAFTING_COST}.`); 
-            return; 
-        }
-        if (unequippedItemsSorted.length >= MAX_ITEMS_IN_STORAGE) { 
-            showMessage(`Kho chứa đã đầy.`); 
-            return; 
-        }
+        if (equipmentPieces < CRAFTING_COST) { showMessage(`Không đủ Mảnh Trang Bị. Cần ${CRAFTING_COST}.`); return; }
+        if (unequippedItemsSorted.length >= MAX_ITEMS_IN_STORAGE) { showMessage(`Kho chứa đã đầy.`); return; }
         
-        setIsProcessing(true);
-
         try {
             const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
             const targetRank = getRandomRank();
-            
             const finalItemDef = generateItemDefinition(randomBlueprint, targetRank, true);
             
             const newOwnedItem: OwnedItem = { 
@@ -635,82 +658,56 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
             };
             const newOwnedList = [...ownedItems, newOwnedItem];
             
-            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: -CRAFTING_COST });
+            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: -CRAFTING_COST });
             setNewlyCraftedItem(newOwnedItem);
-
-        } catch(error: any) { 
-            showMessage(`Lỗi: ${error.message || 'Chế tạo thất bại'}`); 
-        } finally { 
-            setIsProcessing(false); 
-        }
-    }, [isProcessing, equipmentPieces, ownedItems, equippedItems, onInventoryUpdate, showMessage, unequippedItemsSorted.length]);
+        } catch(error) { console.error(`Craft failed:`, error); }
+    }, [equipmentPieces, ownedItems, equippedItems, performInventoryUpdate, showMessage, unequippedItemsSorted.length]);
 
     const handleDismantleItem = useCallback(async (itemToDismantle: OwnedItem) => {
-        if (isProcessing) return;
         if (Object.values(equippedItems).includes(itemToDismantle.id)) { showMessage("Không thể phân rã trang bị đang mặc."); return; }
         
-        setIsProcessing(true);
         const itemDef = getItemDefinition(itemToDismantle.itemId)!;
         const goldToReturn = getTotalUpgradeCost(itemDef, itemToDismantle.level);
         const newOwnedList = ownedItems.filter(s => s.id !== itemToDismantle.id);
         
         try {
-            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: goldToReturn, piecesChange: DISMANTLE_RETURN_PIECES });
+            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: goldToReturn, piecesChange: DISMANTLE_RETURN_PIECES });
             setSelectedItem(null);
             setDismantleSuccessToast({ show: true, message: 'Đã tái chế thành công.' });
             setTimeout(() => setDismantleSuccessToast(prev => ({ ...prev, show: false })), 4000);
-        } catch(error: any) { showMessage(`Lỗi: ${error.message || 'Tái chế thất bại'}`); } finally { setIsProcessing(false); }
-    }, [isProcessing, equippedItems, ownedItems, onInventoryUpdate, showMessage]);
+        } catch(error) { console.error(`Dismantle failed:`, error); }
+    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage]);
 
     const handleUpgradeItem = useCallback(async (itemToUpgrade: OwnedItem, statKey: string, increase: number) => {
-        if (isProcessing) return;
         const itemDef = getItemDefinition(itemToUpgrade.itemId)!;
-        
         const cost = getUpgradeCost(itemDef, itemToUpgrade.level);
-        if (gold < cost) { 
-            showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); 
-            return; 
-        }
+        if (gold < cost) { showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); return; }
         
-        setIsProcessing(true);
-
         const newStats = { ...itemToUpgrade.stats };
         if (newStats.hasOwnProperty(statKey) && typeof newStats[statKey] === 'number') {
             newStats[statKey] = newStats[statKey] + increase;
         } else {
-            setIsProcessing(false);
             showMessage("Lỗi: Không thể nâng cấp chỉ số không tồn tại.");
             return;
         }
 
-        const updatedItem = { 
-            ...itemToUpgrade, 
-            level: itemToUpgrade.level + 1,
-            stats: newStats
-        };
-
+        const updatedItem = { ...itemToUpgrade, level: itemToUpgrade.level + 1, stats: newStats };
         const newOwnedList = ownedItems.map(s => s.id === itemToUpgrade.id ? updatedItem : s);
         try {
-            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: -cost, piecesChange: 0 });
-            setSelectedItem(updatedItem);
-        } catch(error: any) { 
-            showMessage(`Lỗi: ${error.message || 'Nâng cấp thất bại'}`); 
-        } finally { 
-            setIsProcessing(false); 
-        }
-    }, [isProcessing, gold, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
+            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: -cost, piecesChange: 0 });
+            setSelectedItem(updatedItem); // Cập nhật item đang xem trong modal
+        } catch(error) { console.error(`Upgrade failed:`, error); }
+    }, [gold, ownedItems, equippedItems, performInventoryUpdate, showMessage]);
 
     const handleForgeItems = useCallback(async (group: ForgeGroup) => {
-        if (isProcessing || group.items.length < 3 || !group.nextRank) { showMessage("Không đủ điều kiện để hợp nhất."); return; }
+        if (group.items.length < 3 || !group.nextRank) { showMessage("Không đủ điều kiện để hợp nhất."); return; }
         
-        setIsProcessing(true);
         const itemsToConsume = group.items.slice(0, 3);
         const itemIdsToConsume = itemsToConsume.map(s => s.id);
         
         try {
             const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
             const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
-            
             const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank, true);
 
             const newForgedItem: OwnedItem = { 
@@ -721,18 +718,14 @@ export default function EquipmentScreen({ onClose, gold, equipmentPieces, ownedI
             };
             const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
             
-            await onInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: refundGold, piecesChange: 0 });
+            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: refundGold, piecesChange: 0 });
             
             let successMsg = `Hợp nhất thành công ${upgradedItemDef.name} [${group.nextRank}] - Đạt Lv. ${finalLevel}!`;
             if (refundGold > 0) successMsg += ` Hoàn lại ${refundGold.toLocaleString()} vàng.`;
             showMessage(successMsg);
             setIsForgeModalOpen(false);
-        } catch (error: any) { 
-            showMessage(`Lỗi: ${error.message || 'Hợp nhất thất bại'}`); 
-        } finally { 
-            setIsProcessing(false); 
-        }
-    }, [isProcessing, ownedItems, equippedItems, onInventoryUpdate, showMessage]);
+        } catch (error) { console.error(`Forge failed:`, error); }
+    }, [ownedItems, equippedItems, performInventoryUpdate, showMessage]);
 
     const handleSelectSlot = useCallback((slotType: EquipmentSlotType) => {
         const item = equippedItemsMap[slotType];
