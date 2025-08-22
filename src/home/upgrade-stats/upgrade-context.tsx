@@ -9,7 +9,7 @@ import { fetchOrCreateUserGameData, upgradeUserStats } from '../../gameDataServi
 import { statConfig, calculateUpgradeCost, getBonusForLevel, calculateTotalStatValue } from './upgrade-ui.tsx';
 
 // --- THAY ĐỔI: IMPORT CONTEXT TOÀN CỤC ---
-import { useGameData } from '../../game-data-context.tsx';
+import { useGameData } from '../../GameDataContext.tsx';
 
 // --- INTERFACES ---
 interface Stat {
