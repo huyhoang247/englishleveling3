@@ -106,6 +106,21 @@ const App: React.FC = () => {
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
   useEffect(() => { const i = setInterval(() => setEllipsis(p => (p === '...' ? '.' : p + '.')), 500); return () => clearInterval(i); }, []);
 
+  // --- THAY ĐỔI BẮT ĐẦU ---
+  // Thêm useEffect này để tính toán và đặt biến --app-height cho toàn bộ ứng dụng
+  useEffect(() => {
+    const setAppHeight = () => {
+      document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+    };
+    
+    window.addEventListener('resize', setAppHeight);
+    setAppHeight(); // Chạy lần đầu khi component mount
+    
+    // Dọn dẹp listener khi component unmount
+    return () => window.removeEventListener('resize', setAppHeight);
+  }, []);
+  // --- THAY ĐỔI KẾT THÚC ---
+
   useEffect(() => {
     if (loadingStep === 'authenticating') {
       const i = setInterval(() => { setAuthLoadProgress(p => (p >= 95 ? 95 : p + Math.floor(Math.random() * 5) + 2)); }, 120);
