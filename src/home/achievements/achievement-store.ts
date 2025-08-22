@@ -1,6 +1,6 @@
 // --- START OF FILE: src/home/achievements/achievement-store.ts ---
 
-import create from 'zustand';
+import { create } from 'zustand';
 import {
   fetchOrCreateUserGameData,
   fetchAndSyncVocabularyData,
