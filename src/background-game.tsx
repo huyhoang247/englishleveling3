@@ -1,5 +1,3 @@
-// --- START OF FILE src/background-game.tsx ---
-
 import React, { useState, useEffect, useRef, useCallback, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './ui/display/coin-display.tsx';
@@ -28,6 +26,10 @@ import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 
+// <<< THAY ĐỔI 1: Import store Zustand và shallow >>>
+import { useAchievementStore } from './home/achievements/achievement-store.ts';
+import { shallow } from 'zustand/shallow';
+
 import { 
   fetchOrCreateUserGameData, 
   updateUserCoins, 
@@ -37,12 +39,10 @@ import {
   updateUserBossFloor,
   updateUserPickaxes,
   processMinerChallengeResult,
-  // --- THAY ĐỔI: Không cần import updateUserInventory nữa ---
-  // updateUserInventory, 
   processShopPurchase
 } from './gameDataService.ts';
 
-// --- SVG Icon Components ---
+// --- SVG Icon Components --- (Không thay đổi)
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}>
     <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -61,7 +61,7 @@ const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => (
   </div>
 );
 
-// --- Error Boundary Component ---
+// --- Error Boundary Component --- (Không thay đổi)
 interface ErrorBoundaryProps { children: React.ReactNode; fallback?: React.ReactNode; }
 interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -81,14 +81,23 @@ interface ObstacleRunnerGameProps {
 
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser, assetsLoaded }: ObstacleRunnerGameProps) {
 
+  // <<< THAY ĐỔI 2: Lấy state và actions từ store Zustand >>>
+  const { coins, gems, masteryCards, setCoins, setGems } = useAchievementStore(
+    (state) => ({
+      coins: state.coins,
+      gems: state.gems,
+      masteryCards: state.masteryCards,
+      setCoins: state.setCoins,
+      setGems: state.setGems,
+    }),
+    shallow
+  );
+
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
 
-  // States for UI and User Data
+  // States for UI and User Data (Loại bỏ coins, gems, masteryCards)
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
-  const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
-  const [gems, setGems] = useState(0);
-  const [masteryCards, setMasteryCards] = useState(0);
   const [pickaxes, setPickaxes] = useState(0);
   const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
   const [userStats, setUserStats] = useState({ hp: 0, atk: 0, def: 0 });
@@ -162,7 +171,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setIsSyncingData(true);
     try {
       const { newCoins, newPickaxes, newHighestFloor } = await processMinerChallengeResult(userId, result);
-      setCoins(newCoins); setPickaxes(newPickaxes); setMinerChallengeHighestFloor(newHighestFloor);
+      setCoins(newCoins); // <<< THAY ĐỔI: Gọi action từ store
+      setPickaxes(newPickaxes); 
+      setMinerChallengeHighestFloor(newHighestFloor);
       console.log("Firestore updated successfully after Miner Challenge via service.");
     } catch (error) { console.error("Service call for Miner Challenge end failed: ", error); } finally { setIsSyncingData(false); }
   };
@@ -180,13 +191,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   };
   
   const handleStatsUpdate = (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => {
-    setCoins(newCoins);
+    setCoins(newCoins); // <<< THAY ĐỔI: Gọi action từ store
     setUserStats(newStats);
     console.log("Main game state updated from UpgradeStatsScreen.");
   };
-
-  // --- THAY ĐỔI: Xóa bỏ hàm handleInventoryUpdate ---
-  // Logic này đã được chuyển vào trong EquipmentScreen.tsx
 
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
@@ -195,7 +203,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     setIsSyncingData(true);
     try {
       const { newCoins, newBooks, newCapacity } = await processShopPurchase(userId, item, quantity);
-      setCoins(newCoins);
+      setCoins(newCoins); // <<< THAY ĐỔI: Gọi action từ store
       if (item.id === 1009) { setAncientBooks(newBooks); } else if (item.id === 2001) { setCardCapacity(newCapacity); }
       console.log(`Purchase successful for ${quantity}x ${item.name}.`);
       alert(`Mua thành công x${quantity} ${item.name}!`);
@@ -209,14 +217,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
   const refreshUserData = useCallback(async () => {
     const userId = auth.currentUser?.uid;
     if (!userId) return;
-    console.log("Refreshing all user data triggered..."); // Thêm log để biết khi nào hàm được gọi
+    console.log("Refreshing all user data triggered...");
     setIsLoadingUserData(true);
     try {
       const gameData = await fetchOrCreateUserGameData(userId);
-      setCoins(gameData.coins);
+      setCoins(gameData.coins); // <<< THAY ĐỔI: Gọi action từ store
       setDisplayedCoins(gameData.coins);
-      setGems(gameData.gems);
-      setMasteryCards(gameData.masteryCards);
+      setGems(gameData.gems); // <<< THAY ĐỔI: Gọi action từ store
+      
+      // Đồng bộ mastery cards từ DB vào store
+      useAchievementStore.getState()._setData({ masteryCards: gameData.masteryCards });
+
       setPickaxes(gameData.pickaxes);
       setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor);
       setUserStats(gameData.stats);
@@ -234,7 +245,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     } finally {
       setIsLoadingUserData(false);
     }
-  }, []);
+  }, [setCoins, setGems]); // <<< THAY ĐỔI: Thêm setters vào dependencies
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -252,14 +263,21 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
         }
       } else {
         setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
+        setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); 
+        
+        // <<< THAY ĐỔI: Reset state trong store khi logout >>>
+        setCoins(0); 
+        setGems(0);
+        useAchievementStore.getState().setMasteryCards(0);
+
+        setDisplayedCoins(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 }); setBossBattleHighestFloor(0); setAncientBooks(0);
         setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]);
         setEquippedItems({ weapon: null, armor: null, accessory: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
       }
     });
     return () => unsubscribe();
-  }, [refreshUserData]);
+  }, [refreshUserData, setCoins, setGems]); // <<< THAY ĐỔI: Thêm setters vào dependencies
 
   useEffect(() => {
       const handleVisibilityChange = () => { if (document.hidden) { setIsBackgroundPaused(true); } else { setIsBackgroundPaused(false); } };
@@ -335,8 +353,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
       return equippedSkillIds.map(equippedId => { if (!equippedId) return null; const owned = ownedSkills.find(s => s.id === equippedId); if (!owned) return null; const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId); if (!blueprint) return null; return { ...owned, ...blueprint }; }).filter((skill): skill is OwnedSkill & SkillBlueprint => skill !== null);
   };
 
-  const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => { setCoins(updates.newCoins); setGems(updates.newGems); setTotalVocabCollected(updates.newTotalVocab); console.log("Main game state updated from vocabulary chest:", updates); };
-  const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => { if (updates.coins !== undefined) setCoins(updates.coins); if (updates.masteryCards !== undefined) setMasteryCards(updates.masteryCards); console.log("Main game state updated from achievements:", updates); };
+  const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => { 
+    setCoins(updates.newCoins); // <<< THAY ĐỔI: Gọi action từ store
+    setGems(updates.newGems); // <<< THAY ĐỔI: Gọi action từ store
+    setTotalVocabCollected(updates.newTotalVocab); 
+    console.log("Main game state updated from vocabulary chest:", updates); 
+  };
+
+  // <<< THAY ĐỔI 3: Xóa bỏ hoàn toàn hàm handleAchievementsDataUpdate >>>
+  // const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => { ... };
 
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
@@ -378,7 +403,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <ErrorBoundary>{isVocabularyChestOpen && currentUser && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onStateUpdate={handleStateUpdateFromChest} />)}</ErrorBoundary> 
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isAchievementsOpen && (<AchievementsScreen user={auth.currentUser} onClose={toggleAchievements} onDataUpdate={handleAchievementsDataUpdate} />)}</ErrorBoundary>
+            <ErrorBoundary>{isAchievementsOpen && (
+                <AchievementsScreen 
+                    user={auth.currentUser} 
+                    onClose={toggleAchievements} 
+                    // <<< THAY ĐỔI 4: Xóa bỏ prop onDataUpdate >>>
+                />
+            )}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isUpgradeScreenOpen && auth.currentUser && (<UpgradeStatsScreen onClose={toggleUpgradeScreen} onDataUpdated={handleStatsUpdate} />)}</ErrorBoundary>
@@ -390,7 +421,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
             <ErrorBoundary>{isSkillScreenOpen && auth.currentUser && (<SkillScreen onClose={handleSkillScreenClose} userId={auth.currentUser.uid} />)}</ErrorBoundary>
         </div>
         
-        {/* --- THAY ĐỔI: Cập nhật cách gọi EquipmentScreen --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isEquipmentOpen && auth.currentUser && (
@@ -413,5 +443,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
     </div>
   );
 }
-
-// --- END OF FILE src/background-game.tsx ---
