@@ -123,20 +123,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, 
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
   
-  // --- THAY ĐỔI BẮT ĐẦU ---
-  // Xóa logic tính toán --app-height vì đã chuyển ra index.tsx
-  // Chỉ giữ lại logic xử lý overflow
   useEffect(() => {
     const originalHtmlOverflow = document.documentElement.style.overflow;
     const originalBodyOverflow = document.body.style.overflow;
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
+    const setAppHeight = () => { document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`); };
+    window.addEventListener('resize', setAppHeight); setAppHeight();
     return () => {
       document.documentElement.style.overflow = originalHtmlOverflow;
       document.body.style.overflow = originalBodyOverflow;
+      window.removeEventListener('resize', setAppHeight);
     };
   }, []);
-  // --- THAY ĐỔI KẾT THÚC ---
 
   useEffect(() => {
     if (showRateLimitToast) {
