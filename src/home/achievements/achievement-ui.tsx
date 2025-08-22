@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User } from 'firebase/auth'; 
-import { useAchievementStore } from './achievement-store'; 
+import { useAchievementStore } from './achievement-store.ts'; 
 import { shallow } from 'zustand/shallow';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import type { VocabularyItem } from '../../gameDataService.ts';
