@@ -88,7 +88,22 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
   }
 };
 
-// +++ START: HÀM MỚI ĐƯỢC THÊM VÀO +++
+// +++ START: HÀM MỚI ĐƯỢỢC THÊM VÀO +++
+/**
+ * Lấy dữ liệu cần thiết cho màn hình Trang bị.
+ * @param userId - ID của người dùng.
+ * @returns Dữ liệu cần thiết cho màn hình trang bị.
+ */
+export const fetchEquipmentScreenData = async (userId: string) => {
+  if (!userId) throw new Error("User ID is required.");
+  const gameData = await fetchOrCreateUserGameData(userId);
+  return {
+    coins: gameData.coins,
+    // Trả về toàn bộ object equipment
+    equipment: gameData.equipment || { pieces: 0, owned: [], equipped: { weapon: null, armor: null, accessory: null } },
+  };
+};
+
 /**
  * Lấy dữ liệu cần thiết cho màn hình Kỹ năng.
  * @param userId - ID của người dùng.
@@ -119,7 +134,7 @@ export const fetchVocabularyScreenData = async (userId: string) => {
     capacity: gameData.cardCapacity,
   };
 };
-// +++ END: HÀM MỚI ĐƯỢC THÊM VÀO +++
+// +++ END: HÀM MỚI ĐƯỢỢC THÊM VÀO +++
 
 export const updateUserCoins = async (userId: string, amount: number): Promise<number> => {
   if (!userId) throw new Error("User ID is required.");
@@ -329,15 +344,6 @@ export const processVocabularyChestOpening = async (
     return { newCoins, newGems, newTotalVocab };
 };
 
-// ========================================================================
-// === HÀM BỊ THIẾU ĐÃ ĐƯỢỢC THÊM LẠI =======================================
-// ========================================================================
-
-/**
- * Lấy và đồng bộ hóa dữ liệu thành tựu từ vựng của người dùng.
- * @param userId - ID của người dùng.
- * @returns {Promise<VocabularyItem[]>} Một mảng dữ liệu thành tựu từ vựng đã được đồng bộ.
- */
 export const fetchAndSyncVocabularyData = async (userId: string): Promise<VocabularyItem[]> => {
   if (!userId) throw new Error("User ID is required.");
   try {
@@ -388,12 +394,6 @@ export const fetchAndSyncVocabularyData = async (userId: string): Promise<Vocabu
   }
 };
 
-/**
- * Cập nhật dữ liệu thành tựu và phần thưởng cho người dùng một cách an toàn.
- * @param userId - ID của người dùng.
- * @param updates - Một object chứa các thay đổi cần áp dụng.
- * @returns Số dư coin và thẻ mới.
- */
 export const updateAchievementData = async (
   userId: string,
   updates: { coinsToAdd: number; cardsToAdd: number; newVocabularyData: VocabularyItem[]; }
