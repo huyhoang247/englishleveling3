@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User } from 'firebase/auth'; 
-import { useAchievementStore } from './achievement-store.ts'; 
+import { useGameDataStore } from '../../game-data-store.ts'; 
 import { shallow } from 'zustand/shallow';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import type { VocabularyItem } from '../../gameDataService.ts';
@@ -20,7 +20,6 @@ const GiftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" /> </svg> );
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
-// --- Component UI chính ---
 function AchievementsScreenUI({ onClose, user }: { onClose: () => void, user: User }) {
   const {
     vocabulary,
@@ -30,7 +29,7 @@ function AchievementsScreenUI({ onClose, user }: { onClose: () => void, user: Us
     isUpdating,
     claimAchievement,
     claimAllAchievements,
-  } = useAchievementStore(
+  } = useGameDataStore(
     (state) => ({
       vocabulary: state.vocabulary,
       coins: state.coins,
@@ -250,28 +249,16 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
     );
 };
 
-// --- Component "Lối vào" (Wrapper/Entry Point) ---
 interface AchievementsScreenProps {
   user: User | null;
   onClose: () => void;
 }
 
 export default function AchievementsScreen({ user, onClose }: AchievementsScreenProps) {
-  const loadInitialData = useAchievementStore(state => state.loadInitialData);
-  const _setData = useAchievementStore(state => state._setData);
-
-  useEffect(() => {
-    if (user?.uid) {
-      loadInitialData(user.uid);
-    }
-    return () => {
-      _setData({ vocabulary: [], isInitialLoading: true });
-    };
-  }, [user, loadInitialData, _setData]);
-
   if (!user) {
     return null;
   }
-
   return <AchievementsScreenUI onClose={onClose} user={user} />;
 }
+
+// --- END OF FILE: src/home/achievements/achievement-ui.tsx ---
