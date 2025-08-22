@@ -1,8 +1,9 @@
-// --- START OF FILE achievement-ui.tsx (FULL CODE - UPDATED) ---
+// --- START OF FILE: src/home/achievements/achievement-ui.tsx ---
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User } from 'firebase/auth'; 
-import { AchievementsProvider, useAchievements } from './achievement-context.tsx'; 
+import { useAchievementStore } from './achievement-store'; 
+import { shallow } from 'zustand/shallow';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import type { VocabularyItem } from '../../gameDataService.ts';
 import AchievementsLoadingSkeleton from './achievement-loading.tsx';
@@ -19,9 +20,8 @@ const GiftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" /> </svg> );
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
-// --- Component UI chính, nhưng không được export default nữa ---
-// Đây là component "câm", chỉ hiển thị giao diện.
-function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
+// --- Component UI chính ---
+function AchievementsScreenUI({ onClose, user }: { onClose: () => void, user: User }) {
   const {
     vocabulary,
     coins,
@@ -30,12 +30,29 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
     isUpdating,
     claimAchievement,
     claimAllAchievements,
-    totalClaimableRewards,
-  } = useAchievements();
+  } = useAchievementStore(
+    (state) => ({
+      vocabulary: state.vocabulary,
+      coins: state.coins,
+      masteryCards: state.masteryCards,
+      isInitialLoading: state.isInitialLoading,
+      isUpdating: state.isUpdating,
+      claimAchievement: state.claimAchievement,
+      claimAllAchievements: state.claimAllAchievements,
+    }),
+    shallow
+  );
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 30;
   const displayedCoins = useAnimateValue(coins, 1000);
+
+  const totalClaimableRewards = useMemo(() => {
+    const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
+    const gold = claimableItems.reduce((sum, item) => sum + (item.level * 100), 0);
+    const masteryCards = claimableItems.length;
+    return { gold, masteryCards };
+  }, [vocabulary]);
 
   const sortedVocabulary = useMemo(() => [...vocabulary].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
@@ -57,6 +74,14 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
     if(currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
     else if (totalPages === 0 && sortedVocabulary.length > 0) setCurrentPage(1);
   }, [currentPage, totalPages, sortedVocabulary.length]);
+
+  const handleClaim = useCallback((achievementId: number) => {
+    claimAchievement(user.uid, achievementId);
+  }, [claimAchievement, user.uid]);
+  
+  const handleClaimAll = useCallback(() => {
+    claimAllAchievements(user.uid);
+  }, [claimAllAchievements, user.uid]);
   
   if (isInitialLoading) {
     return <AchievementsLoadingSkeleton />;
@@ -99,7 +124,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
 
         <div className="mb-6 flex justify-center">
             <button
-                onClick={claimAllAchievements}
+                onClick={handleClaimAll}
                 disabled={totalClaimableRewards.masteryCards === 0 || isUpdating}
                 className={`
                     w-full max-w-md rounded-xl transition-all duration-300
@@ -153,7 +178,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                 key={`${item.id}-${item.level}`}
                 item={item}
                 rank={(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
-                onClaim={claimAchievement}
+                onClaim={handleClaim}
                 isAnyClaiming={isUpdating}
               />
             ))}
@@ -226,26 +251,27 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
 };
 
 // --- Component "Lối vào" (Wrapper/Entry Point) ---
-// <<<--- BƯỚC 2: NHẬN VÀ TRUYỀN PROP `onDataUpdate` ---
-
-// Cập nhật interface props
 interface AchievementsScreenProps {
   user: User | null;
   onClose: () => void;
-  // <<<--- THAY ĐỔI: Thêm prop mới
-  onDataUpdate: (updates: { coins?: number, masteryCards?: number }) => void;
 }
 
-export default function AchievementsScreen({ user, onClose, onDataUpdate }: AchievementsScreenProps) {
+export default function AchievementsScreen({ user, onClose }: AchievementsScreenProps) {
+  const loadInitialData = useAchievementStore(state => state.loadInitialData);
+  const _setData = useAchievementStore(state => state._setData);
+
+  useEffect(() => {
+    if (user?.uid) {
+      loadInitialData(user.uid);
+    }
+    return () => {
+      _setData({ vocabulary: [], isInitialLoading: true });
+    };
+  }, [user, loadInitialData, _setData]);
+
   if (!user) {
     return null;
   }
 
-  // Nhiệm vụ của nó là "lắp ráp" Provider và UI lại với nhau.
-  return (
-    // <<<--- THAY ĐỔI: Truyền prop onDataUpdate vào Provider
-    <AchievementsProvider user={user} onDataUpdate={onDataUpdate}>
-      <AchievementsScreenUI onClose={onClose} />
-    </AchievementsProvider>
-  );
+  return <AchievementsScreenUI onClose={onClose} user={user} />;
 }
