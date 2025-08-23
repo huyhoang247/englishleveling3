@@ -187,7 +187,8 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
   
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [currentPage, setCurrentPage] = useState(1);
-  const animatedCoins = useAnimateValue(userProgress.coins, 1000);
+  // <<<--- THAY ĐỔI TẠI ĐÂY ---
+  const animatedCoins = useAnimateValue(userProgress.coins, 500);
 
   const sortedWordMastery = useMemo(() => {
     if (!analysisData?.wordMastery) return [];
@@ -220,7 +221,6 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
     return null;
   };
   
-  // <<<--- THAY ĐỔI TẠI ĐÂY ---
   if (loading) return <AnalysisDashboardSkeleton />;
 
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 p-4">{error}</div>;
