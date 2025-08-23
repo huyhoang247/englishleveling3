@@ -7,51 +7,45 @@ interface GameSkeletonLoaderProps {
 }
 
 const GameSkeletonLoader: React.FC<GameSkeletonLoaderProps> = ({ show }) => {
-  const [isMounted, setIsMounted] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isHiding, setIsHiding] = useState(false);
+  const [shouldRender, setShouldRender] = useState(show);
   const showTimeRef = useRef<number>(0);
 
   useEffect(() => {
-    let hideTimer: NodeJS.Timeout;
-    let unmountTimer: NodeJS.Timeout;
-
-    const minDisplayTime = 700; // Thời gian hiển thị tối thiểu là 0.7 giây
-
     if (show) {
-      // Bắt đầu chu trình hiển thị
       showTimeRef.current = Date.now();
-      setIsMounted(true);
-      // Một tick nhỏ để DOM cập nhật trước khi chạy transition
-      const visibleTimer = setTimeout(() => setIsVisible(true), 10);
-      return () => clearTimeout(visibleTimer);
-    } else if (isMounted) {
-      // Bắt đầu chu trình ẩn đi
+      setIsHiding(false);
+      setShouldRender(true);
+    } else if (shouldRender) { // Chỉ chạy logic ẩn đi nếu đang được render
+      const minDisplayTime = 700;
       const elapsedTime = Date.now() - showTimeRef.current;
       const delay = Math.max(0, minDisplayTime - elapsedTime);
 
-      hideTimer = setTimeout(() => {
-        setIsVisible(false); // Bắt đầu animation mờ dần
-        // Đợi animation hoàn thành rồi mới gỡ component khỏi DOM
-        unmountTimer = setTimeout(() => {
-          setIsMounted(false);
-        }, 300); // 300ms này phải khớp với duration của transition-opacity
+      const hideTimer = setTimeout(() => {
+        setIsHiding(true); // Bắt đầu animation mờ dần
+
+        // Gỡ component sau khi animation hoàn thành
+        const unmountTimer = setTimeout(() => {
+          setShouldRender(false);
+        }, 300); // Khớp với duration của transition
+
+        return () => clearTimeout(unmountTimer);
       }, delay);
+
+      return () => clearTimeout(hideTimer);
     }
+  }, [show, shouldRender]);
 
-    // Dọn dẹp tất cả các timer khi component unmount hoặc prop `show` thay đổi
-    return () => {
-      clearTimeout(hideTimer);
-      clearTimeout(unmountTimer);
-    };
-  }, [show, isMounted]);
-
-  // Không render gì nếu component không được yêu cầu mount
-  if (!isMounted) {
+  if (!shouldRender) {
     return null;
   }
 
+  // Nếu `show` là true, opacity là 100 ngay lập tức.
+  // Nếu `isHiding` là true, opacity là 0 để bắt đầu mờ đi.
+  const opacityClass = show && !isHiding ? 'opacity-100' : 'opacity-0';
+
   return (
-    <div className={`absolute inset-0 w-full h-full overflow-hidden bg-slate-950 z-[100] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`absolute inset-0 w-full h-full overflow-hidden bg-slate-950 z-[100] transition-opacity duration-300 ${opacityClass}`}>
       {/* Lớp 1: Background động */}
       <DungeonCanvasBackground isPaused={false} />
 
@@ -69,29 +63,20 @@ const GameSkeletonLoader: React.FC<GameSkeletonLoaderProps> = ({ show }) => {
           </div>
         </div>
         
-        {/* ========== START: PHẦN ĐƯỢC CẬP NHẬT ========== */}
-        {/* Skeleton Thanh điều hướng dưới - ĐÃ ĐƯỢC CẬP NHẬT ĐỂ GIỐNG COMPONENT THẬT */}
+        {/* Skeleton Thanh điều hướng dưới */}
         <div className="bg-black/85 backdrop-blur-md shadow-2xl rounded-t-2xl border-t border-gray-800 w-full">
           <div className="mx-2 my-2 flex justify-between items-center">
             {[...Array(5)].map((_, index) => (
-              // Bỏ chiều cao cố định h-[44px] để chiều cao được quyết định bởi nội dung bên trong, tương tự component thật
               <div key={index} className="flex-1 relative flex justify-center items-center">
-                {/* Đổi w-10 h-10 (40px) thành w-9 h-9 (36px) để khớp với kích thước icon thật (20px icon + p-2 padding) */}
                 <div className="w-9 h-9 bg-slate-700/60 rounded-full animate-pulse"></div>
-                
-                {/* Đường kẻ phân cách, không hiển thị cho item cuối cùng */}
                 {index < 4 && (
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-px bg-gray-800"></div>
                 )}
               </div>
             ))}
           </div>
-
-          {/* Thanh ngang nhỏ ở dưới cùng */}
           <div className="h-1 w-full bg-gray-900"></div>
         </div>
-        {/* ========== END: PHẦN ĐƯỢC CẬP NHẬT ========== */}
-        
       </div>
     </div>
   );
