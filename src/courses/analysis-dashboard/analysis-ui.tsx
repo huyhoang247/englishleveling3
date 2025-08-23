@@ -17,24 +17,20 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 // --- ICONS (Grouped for better organization) ---
 const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
 
-// [MỚI] Dấu tích mới "mềm mại và có chiều sâu"
-const CheckIconSoft = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
-        {/* Lớp bóng đổ tạo chiều sâu */}
+// [MỚI] Icon hoàn thành hoạt động theo yêu cầu mới: dấu tích trong vòng tròn gradient
+const ActivityCompletedIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none">
+        <defs>
+            <linearGradient id="activityGradient" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#2DD4BF" /> {/* Tailwind teal-400 */}
+                <stop offset="100%" stopColor="#06B6D4" /> {/* Tailwind cyan-500 */}
+            </linearGradient>
+        </defs>
+        <circle cx="12" cy="12" r="12" fill="url(#activityGradient)" />
         <path 
-            d="M4.5 12.75l6 6 9-13.5" 
-            stroke="black" 
-            strokeOpacity="0.2" 
-            strokeWidth="3.5" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            transform="translate(0.5, 0.5)" 
-        />
-        {/* Lớp chính, dày và mềm mại */}
-        <path 
-            d="M4.5 12.75l6 6 9-13.5" 
+            d="M8 12.5l3 3 5-6" 
             stroke="white" 
-            strokeWidth="3" 
+            strokeWidth="2.5" 
             strokeLinecap="round" 
             strokeLinejoin="round" 
         />
@@ -153,6 +149,7 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     );
 });
 
+// --- [THAY ĐỔI] Toàn bộ component ActivityCalendar được cập nhật theo thiết kế mới ---
 const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     const formatDateForCalendar = (date: Date): string => {
         const year = date.getFullYear();
@@ -188,29 +185,35 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
                 {weekDayHeaders.map(day => <div key={day} className="text-xs font-semibold text-gray-500 mb-2">{day}</div>)}
                 {calendarData.map((day, index) => {
-                    const baseClass = "w-full aspect-square rounded-lg flex items-center justify-center text-xs font-semibold transition-all duration-200 ease-in-out";
+                    const baseClass = "w-full aspect-square rounded-lg flex items-center justify-center text-sm font-semibold transition-all duration-200 ease-in-out";
                     let dayClass = "";
                     if (day.isFuture) {
-                        dayClass = "bg-gray-100 text-gray-300 cursor-not-allowed";
-                    } else if (day.hasActivity) {
-                        dayClass = "bg-gradient-to-br from-teal-400 to-cyan-500 text-white shadow-sm hover:scale-105 hover:shadow-md";
+                        dayClass = "bg-gray-100 text-gray-400 cursor-not-allowed";
                     } else {
-                        dayClass = "bg-gray-200 text-gray-400 hover:bg-gray-300";
+                        // Nền của ô đã tick và chưa tick giờ là giống nhau
+                        dayClass = "bg-gray-200 text-gray-600 hover:bg-gray-300";
                     }
                     if (day.isToday) {
                         dayClass += " ring-2 ring-offset-2 ring-indigo-500";
                     }
                     return (
                         <div key={index} title={day.tooltip} className={`${baseClass} ${dayClass}`}>
-                            {/* [THAY ĐỔI] Sử dụng icon mới */}
-                            {(day.hasActivity && !day.isFuture) ? <CheckIconSoft /> : <span>{day.dayOfMonth}</span>}
+                            {/* Dùng icon mới cho ngày đã học, còn lại hiển thị số */}
+                            {(day.hasActivity && !day.isFuture) 
+                                ? <ActivityCompletedIcon /> 
+                                : <span>{day.dayOfMonth}</span>
+                            }
                         </div>
                     );
                 })}
             </div>
             <div className="flex items-center justify-center sm:justify-end gap-4 mt-4 text-xs text-gray-600">
                 <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-md bg-gray-200"></div><span>Chưa học</span></div>
-                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-md bg-gradient-to-br from-teal-400 to-cyan-500"></div><span>Đã học</span></div>
+                {/* Cập nhật legend để hiển thị icon mới */}
+                <div className="flex items-center gap-2">
+                    <ActivityCompletedIcon className="h-4 w-4" />
+                    <span>Đã học</span>
+                </div>
                 <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-md ring-2 ring-offset-1 ring-indigo-500"></div><span>Hôm nay</span></div>
             </div>
         </div>
@@ -376,6 +379,6 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
   return (
     <AnalysisDashboardProvider>
       <DashboardContent onGoBack={onGoBack} />
-    </AnalysisDashboardProvider>
+    </A>
   );
 }
