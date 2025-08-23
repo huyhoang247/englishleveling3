@@ -1,26 +1,19 @@
-// --- START OF FILE GameContext.tsx (1).txt ---
-
 // --- START OF FILE src/GameContext.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { auth } from './firebase.js';
-import { OwnedSkill, ALL_SKILLS, SkillBlueprint, CRAFTING_COST, getRandomRarity, getTotalUpgradeCost, getUpgradeCost, Rarity, getNextRarity } from './skill-data.tsx';
+import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 import { OwnedItem, EquippedItems } from './equipment.tsx';
+// --- THÊM IMPORT MỚI ---
 import { calculateTotalStatValue, statConfig, calculateUpgradeCost, getBonusForLevel } from './home/upgrade-stats/upgrade-ui.tsx';
 
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processShopPurchase,
-  upgradeUserStats,
   // --- THÊM IMPORT MỚI ---
-  updateUserSkills
+  upgradeUserStats
 } from './gameDataService.ts';
-
-// --- Thêm Type/Interface cần thiết từ skill-context ---
-interface MergeResult { level: number; refundGold: number; }
-export interface MergeGroup { skillId: string; rarity: Rarity; skills: OwnedSkill[]; blueprint: SkillBlueprint; nextRarity: Rarity | null; estimatedResult: MergeResult; }
-
 
 // --- Define the shape of the context ---
 interface IGameContext {
@@ -44,9 +37,6 @@ interface IGameContext {
     equipmentPieces: number;
     ownedItems: OwnedItem[];
     equippedItems: EquippedItems;
-    // --- THÊM STATE TỪ SKILL-CONTEXT ---
-    MAX_SKILLS_IN_STORAGE: number;
-
 
     // UI States
     isBackgroundPaused: boolean;
@@ -67,8 +57,15 @@ interface IGameContext {
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
-    // States for background processing
-    isProcessingSkillAction: boolean;
+    // --- THÊM STATE DÀNH RIÊNG CHO MÀN HÌNH UPGRADE ---
+    isUpgradingStats: boolean;
+    upgradeMessage: ReactNode;
+    upgradeToastData: {
+      isVisible: boolean;
+      icon: JSX.Element;
+      bonus: number;
+      colorClasses: { border: string; text: string; };
+    } | null;
 
     // Functions
     refreshUserData: () => Promise<void>;
@@ -82,15 +79,8 @@ interface IGameContext {
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
     handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
     handleSkillScreenClose: (dataUpdated: boolean) => void;
+    // --- THÊM HÀM MỚI CHO LOGIC UPGRADE ---
     handleStatUpgrade: (statId: 'hp' | 'atk' | 'def') => Promise<void>;
-
-    // --- CÁC HÀM LOGIC TỪ SKILL-CONTEXT ---
-    handleEquipSkill: (skillToEquip: OwnedSkill) => Promise<boolean>;
-    handleUnequipSkill: (skillToUnequip: OwnedSkill) => Promise<boolean>;
-    handleCraftSkill: () => Promise<{ success: boolean; newSkill: OwnedSkill | null; message: string }>;
-    handleDisenchantSkill: (skillToDisenchant: OwnedSkill) => Promise<boolean>;
-    handleUpgradeSkill: (skillToUpgrade: OwnedSkill) => Promise<{ success: boolean; updatedSkill: OwnedSkill | null }>;
-    handleMergeSkills: (group: MergeGroup) => Promise<boolean>;
 
 
     // Toggles
@@ -143,9 +133,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [equipmentPieces, setEquipmentPieces] = useState(0);
   const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
   const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, accessory: null });
-  // --- THÊM STATE TỪ SKILL-CONTEXT ---
-  const MAX_SKILLS_IN_STORAGE = 50; // Constant, doesn't need state
-  const [isProcessingSkillAction, setIsProcessingSkillAction] = useState(false);
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
@@ -165,6 +152,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
   const [showRateLimitToast, setShowRateLimitToast] = useState(false);
+
+  // --- THÊM STATE TỪ UPGRADE-CONTEXT VÀO ĐÂY ---
+  const [isUpgradingStats, setIsUpgradingStats] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState<ReactNode>('');
+  const [upgradeToastData, setUpgradeToastData] = useState<any | null>(null);
   
   const refreshUserData = useCallback(async () => {
     const userId = auth.currentUser?.uid;
@@ -266,149 +258,56 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       throw error;
     } finally { setIsSyncingData(false); }
   };
-  
+
+  // --- THÊM HÀM LOGIC NÂNG CẤP MỚI ---
   const handleStatUpgrade = useCallback(async (statId: 'hp' | 'atk' | 'def') => {
-    // This function is defined outside the main logic block. I'll move it here for consistency, but its logic remains the same.
     const user = auth.currentUser;
-    if (isSyncingData || !user) return; // Use a general syncing flag for simplicity
-    
+    if (isUpgradingStats || !user) return;
+
     const currentLevel = userStats[statId];
     const upgradeCost = calculateUpgradeCost(currentLevel);
+
     if (coins < upgradeCost) {
-      alert('Không đủ vàng');
+      setUpgradeMessage('ko đủ vàng');
+      setTimeout(() => setUpgradeMessage(''), 2000);
       return;
     }
-    setIsSyncingData(true);
+
+    setIsUpgradingStats(true);
+    setUpgradeMessage('');
+
+    // Logic Toast
+    const statDetails = statConfig[statId];
+    const bonusGained = getBonusForLevel(currentLevel + 1, statDetails.baseUpgradeBonus);
+    setUpgradeToastData({
+      isVisible: true,
+      icon: statDetails.icon,
+      bonus: bonusGained,
+      colorClasses: statDetails.toastColors,
+    });
+    setTimeout(() => setUpgradeToastData(null), 1500);
+
+    // Cập nhật UI lạc quan (Optimistic Update)
     const oldCoins = coins;
     const oldStats = { ...userStats };
     setCoins(prev => prev - upgradeCost);
     const newStats = { ...userStats, [statId]: currentLevel + 1 };
     setUserStats(newStats);
-    
+
+    // Gọi API
     try {
       const { newCoins: serverCoins } = await upgradeUserStats(user.uid, upgradeCost, newStats);
-      setCoins(serverCoins);
+      setCoins(serverCoins); // Đồng bộ lại với server
     } catch (error) {
-      console.error("Upgrade failed, rolling back UI.", error);
-      alert('Nâng cấp thất bại, vui lòng thử lại!');
-      setCoins(oldCoins);
+      console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
+      setUpgradeMessage('Nâng cấp thất bại, vui lòng thử lại!');
+      setCoins(oldCoins); // Rollback
       setUserStats(oldStats);
+      setTimeout(() => setUpgradeMessage(''), 3000);
     } finally {
-      setIsSyncingData(false);
+      setTimeout(() => setIsUpgradingStats(false), 300);
     }
-  }, [isSyncingData, userStats, coins]);
-
-
-  // --- LOGIC KỸ NĂNG (TỪ SKILL-CONTEXT) ---
-
-  const handleUpdateUserSkillsInternal = useCallback(async (updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
-      const userId = auth.currentUser?.uid;
-      if (!userId) return false;
-      setIsProcessingSkillAction(true);
-      try {
-          const { newCoins, newBooks } = await updateUserSkills(userId, updates);
-          setCoins(newCoins);
-          setAncientBooks(newBooks);
-          setOwnedSkills(updates.newOwned);
-          setEquippedSkillIds(updates.newEquippedIds);
-          return true;
-      } catch (error: any) {
-          alert(`Lỗi: ${error.message || 'Cập nhật kỹ năng thất bại'}`);
-          // Rollback could be implemented here if needed
-          await refreshUserData(); // Refresh data to ensure consistency after failure
-          return false;
-      } finally {
-          setIsProcessingSkillAction(false);
-      }
-  }, [refreshUserData]);
-  
-  const handleEquipSkill = useCallback(async (skillToEquip: OwnedSkill) => {
-      if (isProcessingSkillAction) return false;
-      const firstEmptySlotIndex = equippedSkillIds.findIndex(slot => slot === null);
-      if (firstEmptySlotIndex === -1) {
-          return false; // UI should handle message
-      }
-      const newEquippedIds = [...equippedSkillIds];
-      newEquippedIds[firstEmptySlotIndex] = skillToEquip.id;
-      return await handleUpdateUserSkillsInternal({ newOwned: ownedSkills, newEquippedIds: newEquippedIds, goldChange: 0, booksChange: 0 });
-  }, [isProcessingSkillAction, equippedSkillIds, ownedSkills, handleUpdateUserSkillsInternal]);
-
-  const handleUnequipSkill = useCallback(async (skillToUnequip: OwnedSkill) => {
-      if (isProcessingSkillAction) return false;
-      const slotIndex = equippedSkillIds.findIndex(id => id === skillToUnequip.id);
-      if (slotIndex === -1) return false;
-
-      const newEquippedIds = [...equippedSkillIds];
-      newEquippedIds[slotIndex] = null;
-      return await handleUpdateUserSkillsInternal({ newOwned: ownedSkills, newEquippedIds: newEquippedIds, goldChange: 0, booksChange: 0 });
-  }, [isProcessingSkillAction, equippedSkillIds, ownedSkills, handleUpdateUserSkillsInternal]);
-
-  const handleCraftSkill = useCallback(async (): Promise<{ success: boolean; newSkill: OwnedSkill | null; message: string }> => {
-      if (isProcessingSkillAction) return { success: false, newSkill: null, message: 'Processing...' };
-      if (ancientBooks < CRAFTING_COST) return { success: false, newSkill: null, message: `Không đủ Sách Cổ. Cần ${CRAFTING_COST}.` };
-      if (ownedSkills.length >= MAX_SKILLS_IN_STORAGE) return { success: false, newSkill: null, message: 'Kho kỹ năng đã đầy.' };
-
-      const newSkillBlueprint = ALL_SKILLS[Math.floor(Math.random() * ALL_SKILLS.length)];
-      const newRarity = getRandomRarity();
-      const newOwnedSkill: OwnedSkill = { id: `owned-${Date.now()}-${newSkillBlueprint.id}-${Math.random()}`, skillId: newSkillBlueprint.id, level: 1, rarity: newRarity };
-      const newOwnedList = [...ownedSkills, newOwnedSkill];
-
-      const success = await handleUpdateUserSkillsInternal({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: 0, booksChange: -CRAFTING_COST });
-      return { success, newSkill: success ? newOwnedSkill : null, message: success ? 'Success' : 'Failed' };
-  }, [isProcessingSkillAction, ancientBooks, ownedSkills, equippedSkillIds, handleUpdateUserSkillsInternal]);
-
-  const handleDisenchantSkill = useCallback(async (skillToDisenchant: OwnedSkill) => {
-      if (isProcessingSkillAction || equippedSkillIds.includes(skillToDisenchant.id)) return false;
-
-      const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToDisenchant.skillId)!;
-      const booksToReturn = Math.floor(CRAFTING_COST / 2);
-      const goldToReturn = getTotalUpgradeCost(skillBlueprint, skillToDisenchant.level);
-      const newOwnedList = ownedSkills.filter(s => s.id !== skillToDisenchant.id);
-
-      return await handleUpdateUserSkillsInternal({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: goldToReturn, booksChange: booksToReturn });
-  }, [isProcessingSkillAction, equippedSkillIds, ownedSkills, handleUpdateUserSkillsInternal]);
-
-  const handleUpgradeSkill = useCallback(async (skillToUpgrade: OwnedSkill): Promise<{ success: boolean; updatedSkill: OwnedSkill | null }> => {
-      if (isProcessingSkillAction) return { success: false, updatedSkill: null };
-      const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToUpgrade.skillId);
-      if (!skillBlueprint || skillBlueprint.upgradeCost === undefined) return { success: false, updatedSkill: null };
-      const cost = getUpgradeCost(skillBlueprint.upgradeCost, skillToUpgrade.level);
-      if (coins < cost) return { success: false, updatedSkill: null };
-
-      const updatedSkill = { ...skillToUpgrade, level: skillToUpgrade.level + 1 };
-      const newOwnedList = ownedSkills.map(s => s.id === skillToUpgrade.id ? updatedSkill : s);
-
-      const success = await handleUpdateUserSkillsInternal({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: -cost, booksChange: 0 });
-      if (success) {
-          return { success: true, updatedSkill: updatedSkill };
-      }
-      return { success: false, updatedSkill: null };
-  }, [isProcessingSkillAction, coins, ownedSkills, equippedSkillIds, handleUpdateUserSkillsInternal]);
-
-  const calculateMergeResult = (skillsToMerge: OwnedSkill[], blueprint: SkillBlueprint): MergeResult => {
-      if (skillsToMerge.length < 3 || !blueprint.upgradeCost) return { level: 1, refundGold: 0 };
-      const totalInvestedGold = skillsToMerge.reduce((total, skill) => total + getTotalUpgradeCost(blueprint, skill.level), 0);
-      let finalLevel = 1, remainingGold = totalInvestedGold;
-      while (true) {
-          const costForNextLevel = getUpgradeCost(blueprint.upgradeCost, finalLevel);
-          if (remainingGold >= costForNextLevel) { remainingGold -= costForNextLevel; finalLevel++; } else { break; }
-      }
-      return { level: finalLevel, refundGold: remainingGold };
-  };
-
-  const handleMergeSkills = useCallback(async (group: MergeGroup) => {
-      if (isProcessingSkillAction || group.skills.length < 3 || !group.nextRarity) return false;
-      
-      const skillsToConsume = group.skills.slice(0, 3);
-      const skillIdsToConsume = skillsToConsume.map(s => s.id);
-      const { level: finalLevel, refundGold } = calculateMergeResult(skillsToConsume, group.blueprint);
-      const newUpgradedSkill: OwnedSkill = { id: `owned-${Date.now()}-${group.skillId}-${Math.random()}`, skillId: group.skillId, level: finalLevel, rarity: group.nextRarity };
-      const newOwnedList = ownedSkills.filter(s => !skillIdsToConsume.includes(s.id)).concat(newUpgradedSkill);
-
-      return await handleUpdateUserSkillsInternal({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: refundGold, booksChange: 0 });
-  }, [isProcessingSkillAction, ownedSkills, equippedSkillIds, handleUpdateUserSkillsInternal]);
-  
-  // --- KẾT THÚC LOGIC KỸ NĂNG ---
+  }, [isUpgradingStats, userStats, coins]);
 
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
       const isLoading = isLoadingUserData || !assetsLoaded;
@@ -468,16 +367,17 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const value: IGameContext = {
     isLoadingUserData: isLoading, isSyncingData, coins, displayedCoins, gems, masteryCards, pickaxes, minerChallengeHighestFloor, userStats, jackpotPool,
     bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, equipmentPieces, ownedItems, equippedItems,
-    MAX_SKILLS_IN_STORAGE,
     isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen, isAnyOverlayOpen, isGamePaused,
-    isProcessingSkillAction,
     
+    // --- THÊM STATE VÀO VALUE CỦA PROVIDER ---
+    isUpgradingStats, upgradeMessage, upgradeToastData,
+
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool,
     handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose,
-    handleStatUpgrade,
+    
     // --- THÊM HÀM VÀO VALUE CỦA PROVIDER ---
-    handleEquipSkill, handleUnequipSkill, handleCraftSkill, handleDisenchantSkill, handleUpgradeSkill, handleMergeSkills,
+    handleStatUpgrade,
 
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding, setCoins
