@@ -1,4 +1,4 @@
-// --- START OF FILE upgrade-context.tsx (ĐÃ REFACTOR) ---
+// --- START OF FILE upgrade-stats-context.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
@@ -7,9 +7,6 @@ import { fetchOrCreateUserGameData, upgradeUserStats } from '../../gameDataServi
 
 // --- IMPORT CÁC LOGIC TÍNH TOÁN VÀ CONFIG TỪ FILE GỐC ---
 import { statConfig, calculateUpgradeCost, getBonusForLevel, calculateTotalStatValue } from './upgrade-ui.tsx';
-
-// --- THAY ĐỔI: IMPORT CONTEXT TOÀN CỤC ---
-import { useGameData } from '../../GameDataContext.tsx';
 
 // --- INTERFACES ---
 interface Stat {
@@ -61,36 +58,52 @@ interface UpgradeStatsContextType {
 const UpgradeStatsContext = createContext<UpgradeStatsContextType | undefined>(undefined);
 
 // --- TẠO PROVIDER COMPONENT (CHỨA TOÀN BỘ LOGIC) ---
-// --- THAY ĐỔI: Bỏ prop `onDataUpdated` ---
 interface UpgradeStatsProviderProps {
   children: ReactNode;
+  onDataUpdated: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
 }
 
-export function UpgradeStatsProvider({ children }: UpgradeStatsProviderProps) {
-  // --- THAY ĐỔI: Lấy dữ liệu và actions từ context toàn cục ---
-  const { coins: globalCoins, userStats: globalStats, refreshUserData } = useGameData();
-
-  // State cục bộ VẪN CẦN THIẾT cho UI và optimistic updates
+export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsProviderProps) {
   const [targetGold, setTargetGold] = useState(0);
   const animatedGold = useAnimateValue(targetGold, 400);
-  const [stats, setStats] = useState<Stat[]>([]);
-  
+
+  const [stats, setStats] = useState<Stat[]>([
+    { id: 'hp', level: 0, ...statConfig.hp },
+    { id: 'atk', level: 0, ...statConfig.atk },
+    { id: 'def', level: 0, ...statConfig.def },
+  ]);
+
   const [message, setMessage] = useState<ReactNode>('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Dùng để xử lý việc khởi tạo state cục bộ
+  const [isLoading, setIsLoading] = useState(true);
   const [toastData, setToastData] = useState<ToastData | null>(null);
 
-  // --- THAY ĐỔI: Bỏ useEffect fetch dữ liệu ban đầu. Thay bằng useEffect để đồng bộ từ global context. ---
+  // Effect fetch dữ liệu ban đầu
   useEffect(() => {
-    setIsLoading(true);
-    setTargetGold(globalCoins);
-    setStats([
-      { id: 'hp', level: globalStats.hp || 0, ...statConfig.hp },
-      { id: 'atk', level: globalStats.atk || 0, ...statConfig.atk },
-      { id: 'def', level: globalStats.def || 0, ...statConfig.def },
-    ]);
-    setIsLoading(false);
-  }, [globalCoins, globalStats]);
+    const fetchData = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        setMessage("Lỗi: Người dùng chưa đăng nhập.");
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const gameData = await fetchOrCreateUserGameData(user.uid);
+        setTargetGold(gameData.coins);
+        setStats([
+          { id: 'hp', level: gameData.stats.hp || 0, ...statConfig.hp },
+          { id: 'atk', level: gameData.stats.atk || 0, ...statConfig.atk },
+          { id: 'def', level: gameData.stats.def || 0, ...statConfig.def },
+        ]);
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu người dùng:", error);
+        setMessage("Không thể tải dữ liệu.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Hàm xử lý nâng cấp (logic chính)
   const handleUpgrade = useCallback(async (statId: 'hp' | 'atk' | 'def') => {
@@ -103,7 +116,11 @@ export function UpgradeStatsProvider({ children }: UpgradeStatsProviderProps) {
     const upgradeCost = calculateUpgradeCost(statToUpgrade.level);
 
     if (targetGold < upgradeCost) {
+      // ==========================================================
+      // === THAY ĐỔI Ở ĐÂY: Đồng bộ chuỗi message với bên view ===
+      // Dòng cũ: setMessage(`Không đủ vàng!`);
       setMessage('ko đủ vàng'); 
+      // ==========================================================
       setTimeout(() => setMessage(''), 2000);
       return;
     }
@@ -111,6 +128,7 @@ export function UpgradeStatsProvider({ children }: UpgradeStatsProviderProps) {
     setUpgradingId(statId);
     setMessage('');
 
+    // Logic Toast
     const bonusGained = getBonusForLevel(statToUpgrade.level + 1, statToUpgrade.baseUpgradeBonus);
     setToastData({
       isVisible: true,
@@ -120,6 +138,7 @@ export function UpgradeStatsProvider({ children }: UpgradeStatsProviderProps) {
     });
     setTimeout(() => setToastData(null), 1500);
 
+    // Cập nhật UI lạc quan (Optimistic Update)
     const oldGold = targetGold;
     const oldStats = JSON.parse(JSON.stringify(stats));
     setTargetGold(prev => prev - upgradeCost);
@@ -132,23 +151,23 @@ export function UpgradeStatsProvider({ children }: UpgradeStatsProviderProps) {
       def: newStatsArray.find(s => s.id === 'def')!.level,
     };
 
+    // Gọi API
     try {
-      await upgradeUserStats(user.uid, upgradeCost, newStatsForFirestore);
-      
-      // --- THAY ĐỔI LỚN: Gọi refreshUserData từ context toàn cục để cập nhật state ---
-      await refreshUserData();
-
+      const { newCoins } = await upgradeUserStats(user.uid, upgradeCost, newStatsForFirestore);
+      setTargetGold(newCoins); // Đồng bộ lại với server
+      onDataUpdated(newCoins, newStatsForFirestore);
     } catch (error) {
       console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
       setMessage('Nâng cấp thất bại, vui lòng thử lại!');
-      setTargetGold(oldGold);
+      setTargetGold(oldGold); // Rollback
       setStats(oldStats);
       setTimeout(() => setMessage(''), 3000);
     } finally {
       setTimeout(() => setUpgradingId(null), 300);
     }
-  }, [upgradingId, stats, targetGold, refreshUserData]);
+  }, [upgradingId, stats, targetGold, onDataUpdated]);
 
+  // Các giá trị được tính toán (dùng useMemo để tối ưu)
   const calculatedValues = useMemo(() => {
     const hpStat = stats.find(s => s.id === 'hp');
     const atkStat = stats.find(s => s.id === 'atk');
@@ -167,6 +186,8 @@ export function UpgradeStatsProvider({ children }: UpgradeStatsProviderProps) {
     return { totalHp, totalAtk, totalDef, totalLevels, prestigeLevel, progressPercent };
   }, [stats]);
 
+
+  // Giá trị cuối cùng mà Provider sẽ cung cấp
   const value: UpgradeStatsContextType = {
     isLoading,
     isUpgrading: upgradingId !== null,
@@ -181,6 +202,7 @@ export function UpgradeStatsProvider({ children }: UpgradeStatsProviderProps) {
   return <UpgradeStatsContext.Provider value={value}>{children}</UpgradeStatsContext.Provider>;
 }
 
+// --- TẠO CUSTOM HOOK ĐỂ DỄ DÀNG SỬ DỤNG ---
 export const useUpgradeStats = () => {
   const context = useContext(UpgradeStatsContext);
   if (context === undefined) {
@@ -188,4 +210,3 @@ export const useUpgradeStats = () => {
   }
   return context;
 };
-// --- END OF FILE upgrade-context.tsx (ĐÃ REFACTOR) ---
