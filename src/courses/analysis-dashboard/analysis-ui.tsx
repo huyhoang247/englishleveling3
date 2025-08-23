@@ -379,6 +379,6 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
   return (
     <AnalysisDashboardProvider>
       <DashboardContent onGoBack={onGoBack} />
-    </A>
+    </AnalysisDashboardProvider>
   );
 }
