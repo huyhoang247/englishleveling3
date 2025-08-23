@@ -26,10 +26,9 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}> <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l-2.72-2.72a1 1 0 010-1.414l4.243-4.243a1 1 0 011.414 0l2.72 2.72a4 4 0 011.343 2.863l3.155-1.262a1 1 0 011.23 1.23l-1.262 3.155a4 4 0 01-1.343 2.863l2.72 2.72a1 1 0 010 1.414l-4.243 4.243a1 1 0 01-1.414 0l-2.72-2.72a4 4 0 01-2.863-1.343L6.663 15.147a1 1 0 01-1.23-1.23z" /> <path d="M11.379 4.424a1 1 0 01-1.414 0L4.424 9.965a1 1 0 010 1.414l2.121 2.121a1 1 0 011.414 0l5.54-5.54a1 1 0 010-1.414l-2.121-2.121z" /> </svg>);
 
 // --- CÁC COMPONENT CON (ĐÃ BỌC TRONG React.memo) ---
-// SỬA ĐỔI: Header giờ nhận `goldValue` làm prop thay vì tự lấy từ context
 const Header = memo(({ goldValue }: { goldValue: number }) => {
-    const { handleClose } = useSkillContext(); // Chỉ lấy những gì cần thiết từ context
-    const animatedGold = useAnimateValue(goldValue); // Dùng giá trị được truyền vào
+    const { handleClose } = useSkillContext(); 
+    const animatedGold = useAnimateValue(goldValue);
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
@@ -45,13 +44,13 @@ const Header = memo(({ goldValue }: { goldValue: number }) => {
     );
 });
 
-// SỬA ĐỔI LỚN: Thiết kế lại SkillSlot với hiệu ứng nhẹ nhàng, tinh tế và hiệu năng cao
 const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onClick: () => void }) => {
     const { isProcessing } = useSkillContext();
     const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
-    const interactivity = isProcessing ? 'cursor-wait' : 'cursor-not-allowed' : 'cursor-pointer';
+    // SỬA LỖI CÚ PHÁP: Sửa lại toán tử ba ngôi (ternary operator) cho đúng
+    const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer';
 
-    // Thiết kế cho ô trống (không thay đổi)
+    // Thiết kế cho ô trống
     if (!ownedSkill || !skillBlueprint) {
         return (
             <div
@@ -89,14 +88,12 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
             title={`${skillBlueprint.name} - Lv.${ownedSkill.level}`}
             style={{ '--glow-color': glowColor } as React.CSSProperties}
         >
-            {/* Icon kỹ năng và các thành phần con */}
             <div className="relative z-10 transition-transform duration-300 group-hover:scale-110 flex items-center justify-center">
                 <IconComponent 
                     className={`w-12 h-12 sm:w-14 sm:h-14 ${rarityTextColorClass}`}
                 />
             </div>
             
-            {/* Level Badge */}
             <span className="absolute top-1 right-1.5 px-1.5 py-0.5 text-xs font-bold bg-black/70 text-white rounded-md border border-slate-600 z-10 shadow-lg">
                 Lv.{ownedSkill.level}
             </span>
@@ -335,7 +332,6 @@ function SkillScreenContent() {
 
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
-            {/* SỬA ĐỔI: Thêm định nghĩa animation và style mới cho hiệu ứng tinh tế */}
             <style>{`
               .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); }
               .animate-spin-slow-360 { animation: spin 20s linear infinite; }
@@ -345,13 +341,11 @@ function SkillScreenContent() {
               .hide-scrollbar::-webkit-scrollbar { display: none; }
               .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
               
-              /* Animation "thở" nhẹ nhàng cho viền sáng */
               @keyframes breathing-glow {
                 0%, 100% { opacity: 0.4; }
                 50% { opacity: 0.9; }
               }
 
-              /* Style cho skill được trang bị, sử dụng pseudo-elements để tối ưu hiệu năng */
               .equipped-skill-glow::before, .equipped-skill-glow::after {
                 content: '';
                 position: absolute;
@@ -359,17 +353,15 @@ function SkillScreenContent() {
                 top: 0;
                 width: 100%;
                 height: 100%;
-                pointer-events: none; /* Quan trọng: để không cản click */
-                border-radius: 10px; /* Bằng với border-radius của .equipped-skill-glow */
+                pointer-events: none;
+                border-radius: 10px;
               }
 
-              /* Lớp nền radial gradient mờ ảo */
               .equipped-skill-glow::before {
                 background: radial-gradient(circle, var(--glow-color) 0%, transparent 70%);
                 opacity: 0.2;
               }
 
-              /* Lớp viền sáng "thở" */
               .equipped-skill-glow::after {
                 box-shadow: 0 0 12px 1px var(--glow-color);
                 animation: breathing-glow 5s ease-in-out infinite;
