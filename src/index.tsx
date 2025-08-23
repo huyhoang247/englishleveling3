@@ -104,6 +104,9 @@ const App: React.FC = () => {
   const [rememberChoice, setRememberChoice] = useState(true);
   const [isModeModalOpen, setIsModeModalOpen] = useState(false);
   const [isAnimatingStart, setIsAnimatingStart] = useState(false);
+  // --- THAY ĐỔI 1: Thêm state để lưu chế độ hiển thị đang hoạt động ---
+  const [activeDisplayMode, setActiveDisplayMode] = useState<DisplayMode | null>(null);
+
 
   const isInitialAuthCheck = useRef(true);
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
@@ -150,6 +153,8 @@ const App: React.FC = () => {
   const handleStartClick = async (mode: DisplayMode, savePreference: boolean) => {
     if (isAnimatingStart) return;
     setIsAnimatingStart(true);
+    // --- THAY ĐỔI 2: Lưu chế độ đã chọn vào state để sử dụng cho layout chính ---
+    setActiveDisplayMode(mode);
     if (savePreference) localStorage.setItem('displayMode', mode);
     if (mode === 'fullscreen') await enterFullScreen();
   };
@@ -292,19 +297,19 @@ const App: React.FC = () => {
     );
   }
 
-  // --- THAY ĐỔI 1: Xóa bỏ block `if (loadingStep === 'launching')` ---
-  // Đoạn code này đã được xóa:
-  // if (loadingStep === 'launching') {
-  //   return <GameSkeletonLoader show={true} />;
-  // }
+  // --- THAY ĐỔI 3: Điều chỉnh layout chính dựa trên activeDisplayMode ---
+  const isFullScreen = activeDisplayMode === 'fullscreen';
 
-  // --- THAY ĐỔI 2: Cập nhật block return cuối cùng để render Game và Skeleton Loader đồng thời ---
-  // Cấu trúc này cho phép `background-game` (thông qua component Home) được render
-  // ngay khi `loadingStep` chuyển thành 'launching', với SkeletonLoader nằm ở trên.
+  // Class cho container ngoài cùng: h-screen cho fullscreen, min-h-screen cho normal
+  const mainContainerClasses = `relative w-screen ${isFullScreen ? 'h-screen overflow-hidden' : 'min-h-screen bg-slate-950'}`;
+
+  // Style cho container bên trong chứa app: chiều cao cố định cho fullscreen, tự động cho normal
+  const appContainerStyle = isFullScreen ? { height: 'var(--app-height, 100vh)' } : {};
+
   return (
-    <div className="relative w-screen h-screen">
-      {/* Lớp 1: Main App - Sẽ được render ngay khi 'launching', nhưng bị che bởi Skeleton */}
-      <div className="app-container" style={{ height: 'var(--app-height, 100vh)' }}>
+    <div className={mainContainerClasses}>
+      {/* Lớp 1: Main App */}
+      <div className="app-container" style={appContainerStyle}>
         {activeTab === 'home' && (
           <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
             <Home hideNavBar={hideNavBar} showNavBar={showNavBar} />
@@ -329,5 +334,4 @@ const root = createRoot(container);
 root.render(<App />);
 
 export default App;
-
 // --- END OF FILE src/index.tsx ---
