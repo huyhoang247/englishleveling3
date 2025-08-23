@@ -1,4 +1,4 @@
-// --- START OF FILE skill-context.tsx ---
+// --- START OF FILE src/home/skill-game/skill-context.tsx ---
 
 import React, { createContext, useState, useMemo, useCallback, useEffect, useContext, ReactNode } from 'react';
 import {
@@ -15,6 +15,15 @@ import {
 import { fetchSkillScreenData, updateUserSkills } from '../../gameDataService.ts';
 
 // --- INTERFACES & TYPES ---
+
+// THÊM MỚI: Định nghĩa và export cấu trúc dữ liệu trả về khi đóng màn hình
+export interface SkillScreenExitData {
+    gold: number;
+    ancientBooks: number;
+    ownedSkills: OwnedSkill[];
+    equippedSkillIds: (string | null)[];
+}
+
 interface MergeResult { level: number; refundGold: number; }
 export interface MergeGroup { skillId: string; rarity: Rarity; skills: OwnedSkill[]; blueprint: SkillBlueprint; nextRarity: Rarity | null; estimatedResult: MergeResult; }
 
@@ -85,7 +94,8 @@ const calculateMergeResult = (skillsToMerge: OwnedSkill[], blueprint: SkillBluep
 interface SkillProviderProps {
     children: ReactNode;
     userId: string;
-    onClose: (dataUpdated: boolean) => void;
+    // THAY ĐỔI: Cập nhật chữ ký của hàm onClose để nhận tham số thứ hai là dữ liệu
+    onClose: (dataUpdated: boolean, data?: SkillScreenExitData) => void;
 }
 
 export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps) => {
@@ -111,7 +121,6 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
     const [equipErrorToast, setEquipErrorToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     const [disenchantSuccessToast, setDisenchantSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     
-    // *** THAY ĐỔI TẠI ĐÂY ***
     const MAX_SKILLS_IN_STORAGE = 50;
 
     const showMessage = useCallback((text: string) => {
@@ -275,7 +284,23 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
     }, [isProcessing, ownedSkills, equippedSkillIds, handleUpdateDatabase]);
 
     // --- UI HANDLERS ---
-    const handleClose = useCallback(() => onClose(dataHasChanged), [onClose, dataHasChanged]);
+    // THAY ĐỔI LỚN: Cập nhật hàm handleClose để gửi lại dữ liệu nếu có thay đổi
+    const handleClose = useCallback(() => {
+        if (dataHasChanged) {
+            // Nếu có thay đổi, tạo object dữ liệu và gửi về
+            const exitData: SkillScreenExitData = {
+                gold,
+                ancientBooks,
+                ownedSkills,
+                equippedSkillIds,
+            };
+            onClose(true, exitData);
+        } else {
+            // Nếu không có gì thay đổi, chỉ gửi tín hiệu false
+            onClose(false);
+        }
+    }, [onClose, dataHasChanged, gold, ancientBooks, ownedSkills, equippedSkillIds]);
+
     const handleSelectSkill = useCallback((skill: OwnedSkill) => setSelectedSkill(skill), []);
     const handleCloseDetailModal = useCallback(() => setSelectedSkill(null), []);
     const handleCloseCraftSuccessModal = useCallback(() => setNewlyCraftedSkill(null), []);
@@ -298,3 +323,5 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
         </SkillContext.Provider>
     );
 };
+
+// --- END OF FILE src/home/skill-game/skill-context.tsx ---
