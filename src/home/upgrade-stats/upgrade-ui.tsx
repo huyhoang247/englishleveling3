@@ -99,7 +99,8 @@ export default function UpgradeStatsScreen({ onClose }: UpgradeStatsScreenProps)
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
         <style>{`@keyframes breathing-stone { 0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } } .animate-breathing { animation: breathing-stone 4s ease-in-out infinite; }`}</style>
-        <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
+        {/* === THAY ĐỔI 1: GIẢM z-index của header xuống 10 === */}
+        <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
             <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
                 <HomeIcon className="w-5 h-5 text-slate-300" />
                 <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
@@ -121,8 +122,9 @@ export default function UpgradeStatsScreen({ onClose }: UpgradeStatsScreenProps)
             )}
           </div>
         )}
-
-        <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
+        
+        {/* === THAY ĐỔI 2: TĂNG z-index của khối nội dung chính lên 20 === */}
+        <div className="relative z-20 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
             <div className="relative mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
                 {upgradeToastData && (
                     <StatUpgradeToast
