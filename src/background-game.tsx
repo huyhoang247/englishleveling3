@@ -24,6 +24,7 @@ import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './home/skill-game/skill-ui.tsx';
 import { SkillBlueprint } from './skill-data.tsx';
+import type { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 import EquipmentScreen from './equipment.tsx';
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
@@ -82,7 +83,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
     handleUpdateJackpotPool, handleStatsUpdate, handleShopPurchase, getPlayerBattleStats,
     getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
-    handleSkillScreenClose, setCoins,
+    setCoins, updateSkillsState,
     // Toggles
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge,
     toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
@@ -162,7 +163,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             <ErrorBoundary>{isBaseBuildingOpen && currentUser && (<BaseBuildingScreen onClose={toggleBaseBuilding} coins={coins} gems={gems} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(currentUser!.uid, amount))} />)}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isSkillScreenOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isSkillScreenOpen && currentUser && (<SkillScreen onClose={handleSkillScreenClose} userId={currentUser.uid} />)}</ErrorBoundary>
+            <ErrorBoundary>{isSkillScreenOpen && currentUser && (
+                <SkillScreen 
+                  onClose={(dataUpdated: boolean, data?: SkillScreenExitData) => {
+                    toggleSkillScreen(); // Luôn đóng giao diện ngay lập tức
+                    if (dataUpdated && data) {
+                      updateSkillsState(data); // Cập nhật trạng thái "êm ái" mà không cần loader
+                    }
+                  }} 
+                  userId={currentUser.uid} />)}</ErrorBoundary>
         </div>
         
         {/* --- THAY ĐỔI: Cập nhật cách gọi EquipmentScreen --- */}
