@@ -4,9 +4,11 @@ import React from 'react';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets } from '../../game-assets.ts';
 import UpgradeStatsSkeleton from './upgrade-loading.tsx';
-import StatUpgradeToast from './upgrade-toast.tsx'; 
+import StatUpgradeToast from './upgrade-toast.tsx';
 // --- IMPORT CONTEXT VÀ PROVIDER ---
 import { UpgradeStatsProvider, useUpgradeStats } from './upgrade-context.tsx';
+// SỬA ĐỔI: Import useAnimateValue vào đây
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- ICONS (giữ nguyên) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/2000/svg" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -17,8 +19,7 @@ const icons = {
   sword: ( <img src={uiAssets.statAtkIcon} alt="ATK Icon" /> )
 };
 
-// --- CONFIG & LOGIC (giữ nguyên hoặc chuyển sang file utils riêng) ---
-// Tạm thời giữ lại để context có thể import, lý tưởng nhất là chuyển sang file utils
+// --- CONFIG & LOGIC (giữ nguyên) ---
 export const statConfig = {
   hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600", toastColors: { border: 'border-pink-500', text: 'text-pink-400' } },
   atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500", toastColors: { border: 'border-cyan-400', text: 'text-cyan-300' } },
@@ -61,13 +62,11 @@ interface UpgradeStatsScreenProps {
 }
 
 // --- COMPONENT HIỂN THỊ (VIEW) ---
-// Component này giờ đây chỉ nhận props và dữ liệu từ context để hiển thị
 function UpgradeStatsView({ onClose }: { onClose: () => void }) {
-  // Lấy toàn bộ state và actions từ context
   const {
     isLoading,
     isUpgrading,
-    animatedGold,
+    gold,
     stats,
     message,
     toastData,
@@ -80,81 +79,88 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
     handleUpgrade
   } = useUpgradeStats();
 
-  if (isLoading) {
-    return <UpgradeStatsSkeleton />;
-  }
+  const displayGold = isLoading ? 0 : gold;
+  const animatedGold = useAnimateValue(displayGold);
 
   return (
-    <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
-        <style>{`@keyframes breathing-stone { 0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } } .animate-breathing { animation: breathing-stone 4s ease-in-out infinite; }`}</style>
-        <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
-            <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
-                <HomeIcon className="w-5 h-5 text-slate-300" />
-                <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
-            </button>
-            <div className="font-sans">
-                <CoinDisplay displayedCoins={animatedGold} isStatsFullscreen={false} />
-            </div>
-        </header>
+    <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-lilita text-white overflow-hidden">
+        {/* Lớp Skeleton */}
+        <div className={`absolute inset-0 z-30 ${isLoading ? '' : 'hidden'}`}>
+            <UpgradeStatsSkeleton />
+        </div>
 
-        {message && (
-          <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce flex items-center gap-2">
-            {message === 'ko đủ vàng' ? (
-              <>
-                <span>Not enough</span>
-                <div className="w-5 h-5">{icons.coin}</div>
-              </>
-            ) : (
-              message
-            )}
-          </div>
-        )}
-
-        <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
-            <div className="relative mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
-                {toastData && (
-                    <StatUpgradeToast
-                        isVisible={toastData.isVisible}
-                        icon={toastData.icon}
-                        bonus={toastData.bonus}
-                        colorClasses={toastData.colorClasses}
-                    />
-                )}
-                <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
-            </div>
-
-            <div className="w-full max-w-xs bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center">
-                <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.heart}</div> <span className="text-lg font-bold">{formatNumber(totalHp)}</span> </div>
-                <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.sword}</div> <span className="text-lg font-bold">{formatNumber(totalAtk)}</span> </div>
-                <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.shield}</div> <span className="text-lg font-bold">{formatNumber(totalDef)}</span> </div>
-            </div>
-
-            <div className="w-full px-2 mb-8">
-                <div className="flex justify-between items-baseline mb-2 px-1">
-                    <span className="text-md font-bold text-slate-400 tracking-wide text-shadow-sm">Stage {prestigeLevel + 1}</span>
-                    <span className="text-sm font-semibold text-slate-400">Lv. {totalLevels}</span>
+        {/* Lớp Nội dung chính */}
+        {/* SỬA ĐỔI: Loại bỏ `transition-opacity duration-300` */}
+        <div className={`w-full h-full p-4 flex flex-col items-center justify-center ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+            <style>{`@keyframes breathing-stone { 0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } } .animate-breathing { animation: breathing-stone 4s ease-in-out infinite; }`}</style>
+            
+            <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
+                <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
+                    <HomeIcon className="w-5 h-5 text-slate-300" />
+                    <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
+                </button>
+                <div className="font-sans">
+                    <CoinDisplay displayedCoins={animatedGold} isStatsFullscreen={false} />
                 </div>
-                <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
-                    <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-[0_0_8px_rgba(0,246,255,0.45)] transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }}></div>
-                    <div className="absolute inset-0 flex justify-end items-center px-4 text-sm text-white text-shadow-sm font-bold">
-                        <span>{totalLevels % 50}<span className="text-slate-300">/ 50</span></span>
+            </header>
+
+            {message && (
+              <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce flex items-center gap-2">
+                {message === 'ko đủ vàng' ? (
+                  <>
+                    <span>Not enough</span>
+                    <div className="w-5 h-5">{icons.coin}</div>
+                  </>
+                ) : (
+                  message
+                )}
+              </div>
+            )}
+
+            <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
+                <div className="relative mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
+                    {toastData && (
+                        <StatUpgradeToast
+                            isVisible={toastData.isVisible}
+                            icon={toastData.icon}
+                            bonus={toastData.bonus}
+                            colorClasses={toastData.colorClasses}
+                        />
+                    )}
+                    <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
+                </div>
+
+                <div className="w-full max-w-xs bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center">
+                    <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.heart}</div> <span className="text-lg font-bold">{formatNumber(totalHp)}</span> </div>
+                    <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.sword}</div> <span className="text-lg font-bold">{formatNumber(totalAtk)}</span> </div>
+                    <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.shield}</div> <span className="text-lg font-bold">{formatNumber(totalDef)}</span> </div>
+                </div>
+
+                <div className="w-full px-2 mb-8">
+                    <div className="flex justify-between items-baseline mb-2 px-1">
+                        <span className="text-md font-bold text-slate-400 tracking-wide text-shadow-sm">Stage {prestigeLevel + 1}</span>
+                        <span className="text-sm font-semibold text-slate-400">Lv. {totalLevels}</span>
+                    </div>
+                    <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
+                        <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-[0_0_8px_rgba(0,246,255,0.45)] transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }}></div>
+                        <div className="absolute inset-0 flex justify-end items-center px-4 text-sm text-white text-shadow-sm font-bold">
+                            <span>{totalLevels % 50}<span className="text-slate-300">/ 50</span></span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div className="flex flex-row justify-center items-stretch gap-2 sm:gap-4">
-                {stats.map(stat => (
-                    <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} isProcessing={isUpgrading} isDisabled={isUpgrading} />
-                ))}
+                <div className="flex flex-row justify-center items-stretch gap-2 sm:gap-4">
+                    {stats.map(stat => (
+                        <StatCard key={stat.id} stat={stat} onUpgrade={handleUpgrade} isProcessing={isUpgrading} isDisabled={isUpgrading} />
+                    ))}
+                </div>
             </div>
         </div>
     </div>
   );
 }
 
-
 // --- COMPONENT CHÍNH (WRAPPER) ---
-// Component này là điểm truy cập, nó bao bọc View bằng Provider
 export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeStatsScreenProps) {
   return (
     <UpgradeStatsProvider onDataUpdated={onDataUpdated}>
