@@ -17,6 +17,8 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- ICONS (Grouped for better organization) ---
 const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
+// [MỚI] Dấu tích được thiết kế lại, mảnh và tinh tế hơn
+const CheckIconRefined = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>;
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
 const ChevronRightIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>;
@@ -130,7 +132,7 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     );
 });
 
-// [ĐÃ CẬP NHẬT] - Component ActivityCalendar với thiết kế tối giản, tinh tế
+// --- [THAY ĐỔI] Toàn bộ component ActivityCalendar được cập nhật ---
 const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     const formatDateForCalendar = (date: Date): string => {
         const year = date.getFullYear();
@@ -161,55 +163,42 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-lg shadow-md">
                     <CalendarIcon />
                 </div>
-                <h3 className="text-lg font-bold text-gray-800">Activity Calendar</h3>
+                <h3 className="text-lg font-bold text-gray-800">Activity</h3>
             </div>
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
                 {weekDayHeaders.map(day => <div key={day} className="text-xs font-semibold text-gray-500 mb-2">{day}</div>)}
-                
                 {calendarData.map((day, index) => {
-                    const baseClass = "w-full aspect-square rounded-lg flex items-center justify-center transition-all duration-300 ease-in-out relative";
+                    const baseClass = "w-full aspect-square rounded-lg flex items-center justify-center text-xs font-semibold transition-all duration-200 ease-in-out";
                     let dayClass = "";
-                    let textClass = "";
-
                     if (day.isFuture) {
-                        dayClass = "bg-gray-50 cursor-not-allowed";
-                        textClass = "text-gray-300";
+                        dayClass = "bg-gray-100 text-gray-300 cursor-not-allowed";
                     } else if (day.hasActivity) {
-                        dayClass = "bg-white hover:bg-gray-100";
-                        textClass = "font-bold text-gray-800";
+                        // Nền gradient tinh tế và đẹp hơn
+                        dayClass = "bg-gradient-to-br from-teal-400 to-cyan-500 text-white shadow-sm hover:scale-105 hover:shadow-md";
                     } else {
-                        dayClass = "bg-white hover:bg-gray-100";
-                        textClass = "text-gray-400";
+                        dayClass = "bg-gray-200 text-gray-400 hover:bg-gray-300";
                     }
-
                     if (day.isToday) {
                         dayClass += " ring-2 ring-offset-2 ring-indigo-500";
                     }
-
                     return (
                         <div key={index} title={day.tooltip} className={`${baseClass} ${dayClass}`}>
-                            <span className={`text-sm ${textClass}`}>{day.dayOfMonth}</span>
-                            {day.hasActivity && !day.isFuture && (
-                                <div className="absolute bottom-1.5 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                            )}
+                            {/* Sử dụng icon mới, nhỏ gọn và đẹp hơn */}
+                            {(day.hasActivity && !day.isFuture) ? <CheckIconRefined /> : <span>{day.dayOfMonth}</span>}
                         </div>
                     );
                 })}
             </div>
             <div className="flex items-center justify-center sm:justify-end gap-4 mt-4 text-xs text-gray-600">
-                <div className="flex items-center gap-2"><span className="font-semibold text-gray-400">15</span><span>Chưa học</span></div>
-                <div className="flex items-center gap-2">
-                    <div className="relative"><span className="font-bold text-gray-800">16</span><div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-green-500 rounded-full"></div></div>
-                    <span>Đã học</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="relative p-1 rounded-full ring-2 ring-indigo-500"><span className="font-bold text-gray-800">17</span></div>
-                    <span>Hôm nay</span>
-                </div>
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-md bg-gray-200"></div><span>Chưa học</span></div>
+                {/* Cập nhật legend để khớp với màu mới */}
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-md bg-gradient-to-br from-teal-400 to-cyan-500"></div><span>Đã học</span></div>
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-md ring-2 ring-offset-1 ring-indigo-500"></div><span>Hôm nay</span></div>
             </div>
         </div>
     );
 });
+
 
 // --- MAIN DISPLAY COMPONENT ---
 const ITEMS_PER_PAGE = 10;
