@@ -157,7 +157,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
-                {/* --- THAY ĐỔI: Xóa prop `onDataUpdated` --- */}
                 {isUpgradeScreenOpen && currentUser && (<UpgradeStatsScreen onClose={toggleUpgradeScreen} />)}
             </ErrorBoundary>
         </div>
