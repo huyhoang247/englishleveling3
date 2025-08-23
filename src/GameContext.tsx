@@ -11,7 +11,6 @@ import {
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processShopPurchase
 } from './gameDataService.ts';
-// THAY ĐỔI: Đảm bảo import từ đúng file skill-context
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
 // --- Define the shape of the context ---
@@ -299,6 +298,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
   const updateSkillsState = (data: SkillScreenExitData) => {
     setCoins(data.gold);
+    setDisplayedCoins(data.gold); // THÊM MỚI: Cập nhật ngay lập tức `displayedCoins` để tránh độ trễ
     setAncientBooks(data.ancientBooks);
     setOwnedSkills(data.ownedSkills);
     setEquippedSkillIds(data.equippedSkillIds);
