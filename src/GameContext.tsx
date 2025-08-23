@@ -5,11 +5,14 @@ import { User } from 'firebase/auth';
 import { auth } from './firebase.js';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 import { OwnedItem, EquippedItems } from './equipment.tsx';
-import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
+// --- THÊM IMPORT MỚI ---
+import { calculateTotalStatValue, statConfig, calculateUpgradeCost, getBonusForLevel } from './home/upgrade-stats/upgrade-ui.tsx';
 
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
-  updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processShopPurchase
+  updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processShopPurchase,
+  // --- THÊM IMPORT MỚI ---
+  upgradeUserStats
 } from './gameDataService.ts';
 
 // --- Define the shape of the context ---
@@ -54,19 +57,31 @@ interface IGameContext {
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
+    // --- THÊM STATE DÀNH RIÊNG CHO MÀN HÌNH UPGRADE ---
+    isUpgradingStats: boolean;
+    upgradeMessage: ReactNode;
+    upgradeToastData: {
+      isVisible: boolean;
+      icon: JSX.Element;
+      bonus: number;
+      colorClasses: { border: string; text: string; };
+    } | null;
+
     // Functions
     refreshUserData: () => Promise<void>;
     handleBossFloorUpdate: (newFloor: number) => Promise<void>;
     handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => Promise<void>;
     handleUpdatePickaxes: (amountToAdd: number) => Promise<void>;
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
-    handleStatsUpdate: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
     handleShopPurchase: (item: any, quantity: number) => Promise<void>;
     getPlayerBattleStats: () => { maxHp: number; hp: number; atk: number; def: number; maxEnergy: number; energy: number; };
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
     handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
     handleSkillScreenClose: (dataUpdated: boolean) => void;
+    // --- THÊM HÀM MỚI CHO LOGIC UPGRADE ---
+    handleStatUpgrade: (statId: 'hp' | 'atk' | 'def') => Promise<void>;
+
 
     // Toggles
     toggleRank: () => void;
@@ -137,6 +152,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
   const [showRateLimitToast, setShowRateLimitToast] = useState(false);
+
+  // --- THÊM STATE TỪ UPGRADE-CONTEXT VÀO ĐÂY ---
+  const [isUpgradingStats, setIsUpgradingStats] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState<ReactNode>('');
+  const [upgradeToastData, setUpgradeToastData] = useState<any | null>(null);
   
   const refreshUserData = useCallback(async () => {
     const userId = auth.currentUser?.uid;
@@ -222,10 +242,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setJackpotPool(await updateJackpotPool(amount, reset));
   };
   
-  const handleStatsUpdate = (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => {
-    setCoins(newCoins); setUserStats(newStats);
-  };
-  
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) { throw new Error("Người dùng chưa được xác thực."); }
@@ -242,6 +258,56 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       throw error;
     } finally { setIsSyncingData(false); }
   };
+
+  // --- THÊM HÀM LOGIC NÂNG CẤP MỚI ---
+  const handleStatUpgrade = useCallback(async (statId: 'hp' | 'atk' | 'def') => {
+    const user = auth.currentUser;
+    if (isUpgradingStats || !user) return;
+
+    const currentLevel = userStats[statId];
+    const upgradeCost = calculateUpgradeCost(currentLevel);
+
+    if (coins < upgradeCost) {
+      setUpgradeMessage('ko đủ vàng');
+      setTimeout(() => setUpgradeMessage(''), 2000);
+      return;
+    }
+
+    setIsUpgradingStats(true);
+    setUpgradeMessage('');
+
+    // Logic Toast
+    const statDetails = statConfig[statId];
+    const bonusGained = getBonusForLevel(currentLevel + 1, statDetails.baseUpgradeBonus);
+    setUpgradeToastData({
+      isVisible: true,
+      icon: statDetails.icon,
+      bonus: bonusGained,
+      colorClasses: statDetails.toastColors,
+    });
+    setTimeout(() => setUpgradeToastData(null), 1500);
+
+    // Cập nhật UI lạc quan (Optimistic Update)
+    const oldCoins = coins;
+    const oldStats = { ...userStats };
+    setCoins(prev => prev - upgradeCost);
+    const newStats = { ...userStats, [statId]: currentLevel + 1 };
+    setUserStats(newStats);
+
+    // Gọi API
+    try {
+      const { newCoins: serverCoins } = await upgradeUserStats(user.uid, upgradeCost, newStats);
+      setCoins(serverCoins); // Đồng bộ lại với server
+    } catch (error) {
+      console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
+      setUpgradeMessage('Nâng cấp thất bại, vui lòng thử lại!');
+      setCoins(oldCoins); // Rollback
+      setUserStats(oldStats);
+      setTimeout(() => setUpgradeMessage(''), 3000);
+    } finally {
+      setTimeout(() => setIsUpgradingStats(false), 300);
+    }
+  }, [isUpgradingStats, userStats, coins]);
 
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
       const isLoading = isLoadingUserData || !assetsLoaded;
@@ -303,8 +369,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, equipmentPieces, ownedItems, equippedItems,
     isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen, isAnyOverlayOpen, isGamePaused,
-    refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, handleStatsUpdate,
+    
+    // --- THÊM STATE VÀO VALUE CỦA PROVIDER ---
+    isUpgradingStats, upgradeMessage, upgradeToastData,
+
+    refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool,
     handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose,
+    
+    // --- THÊM HÀM VÀO VALUE CỦA PROVIDER ---
+    handleStatUpgrade,
+
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding, setCoins
   };
