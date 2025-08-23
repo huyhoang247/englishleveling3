@@ -17,7 +17,6 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 // --- ICONS (Grouped for better organization) ---
 const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
 
-// [MỚI] Icon hoàn thành hoạt động theo yêu cầu mới: dấu tích trong vòng tròn gradient
 const ActivityCompletedIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none">
         <defs>
@@ -27,13 +26,7 @@ const ActivityCompletedIcon = ({ className = "h-6 w-6" }: { className?: string }
             </linearGradient>
         </defs>
         <circle cx="12" cy="12" r="12" fill="url(#activityGradient)" />
-        <path 
-            d="M8 12.5l3 3 5-6" 
-            stroke="white" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-        />
+        <path d="M8 12.5l3 3 5-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
 );
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
@@ -149,7 +142,6 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     );
 });
 
-// --- [THAY ĐỔI] Toàn bộ component ActivityCalendar được cập nhật theo thiết kế mới ---
 const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     const formatDateForCalendar = (date: Date): string => {
         const year = date.getFullYear();
@@ -190,7 +182,6 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
                     if (day.isFuture) {
                         dayClass = "bg-gray-100 text-gray-400 cursor-not-allowed";
                     } else {
-                        // Nền của ô đã tick và chưa tick giờ là giống nhau
                         dayClass = "bg-gray-200 text-gray-600 hover:bg-gray-300";
                     }
                     if (day.isToday) {
@@ -198,7 +189,6 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
                     }
                     return (
                         <div key={index} title={day.tooltip} className={`${baseClass} ${dayClass}`}>
-                            {/* Dùng icon mới cho ngày đã học, còn lại hiển thị số */}
                             {(day.hasActivity && !day.isFuture) 
                                 ? <ActivityCompletedIcon /> 
                                 : <span>{day.dayOfMonth}</span>
@@ -209,7 +199,6 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
             </div>
             <div className="flex items-center justify-center sm:justify-end gap-4 mt-4 text-xs text-gray-600">
                 <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-md bg-gray-200"></div><span>Chưa học</span></div>
-                {/* Cập nhật legend để hiển thị icon mới */}
                 <div className="flex items-center gap-2">
                     <ActivityCompletedIcon className="h-4 w-4" />
                     <span>Đã học</span>
@@ -223,6 +212,16 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
 
 // --- MAIN DISPLAY COMPONENT ---
 const ITEMS_PER_PAGE = 10;
+
+// [FIX] Khai báo các đối tượng style và config của chart ra ngoài component
+// để tránh việc tạo lại chúng trên mỗi lần render, gây ra flickering.
+const CHART_MARGIN_VOCAB = { top: 5, right: 20, left: -10, bottom: 5 };
+const CHART_MARGIN_ACTIVITY = { top: 20, right: 20, left: -20, bottom: 5 };
+const CHART_GRID_STYLE = { strokeDasharray: "3 3", stroke: "#e0e0e0" };
+const CHART_AXIS_STYLE = { fontSize: 12 };
+const CHART_CURSOR_STYLE = { fill: 'rgba(136, 132, 216, 0.1)' };
+const CHART_LEGEND_STYLE = { top: 0, left: 25 };
+
 
 function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
   const {
@@ -310,11 +309,35 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                 </div>
                 <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    <ChartCard title="Vocabulary Growth"><ResponsiveContainer><AreaChart data={vocabularyGrowth} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}><defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12} /><Tooltip content={<CustomTooltip />} /><Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" /></AreaChart></ResponsiveContainer></ChartCard>
-                    <ChartCard title="Study Activity" extra={<span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Last 30 Days</span>}>
+                    <ChartCard title="Vocabulary Growth">
+                        {/* [FIX] Sử dụng hằng số cho props để tránh re-render */}
                         <ResponsiveContainer>
-                            <BarChart data={learningActivity} margin={{ top: 20, right: 20, left: -20, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12}/><Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(136, 132, 216, 0.1)'}}/><Legend verticalAlign="top" wrapperStyle={{top: 0, left: 25}}/><Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" /><Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                            <AreaChart data={vocabularyGrowth} margin={CHART_MARGIN_VOCAB}>
+                                <defs>
+                                    <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid {...CHART_GRID_STYLE} />
+                                <XAxis dataKey="date" {...CHART_AXIS_STYLE} />
+                                <YAxis allowDecimals={false} {...CHART_AXIS_STYLE} />
+                                <Tooltip content={CustomTooltip} />
+                                <Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </ChartCard>
+                    <ChartCard title="Study Activity" extra={<span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Last 30 Days</span>}>
+                        {/* [FIX] Sử dụng hằng số cho props để tránh re-render */}
+                        <ResponsiveContainer>
+                            <BarChart data={learningActivity} margin={CHART_MARGIN_ACTIVITY}>
+                                <CartesianGrid {...CHART_GRID_STYLE} />
+                                <XAxis dataKey="date" {...CHART_AXIS_STYLE} />
+                                <YAxis allowDecimals={false} {...CHART_AXIS_STYLE}/>
+                                <Tooltip content={CustomTooltip} cursor={CHART_CURSOR_STYLE}/>
+                                <Legend verticalAlign="top" wrapperStyle={CHART_LEGEND_STYLE}/>
+                                <Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" />
+                                <Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </ChartCard>
