@@ -102,25 +102,24 @@ const App: React.FC = () => {
   const [selectedMode, setSelectedMode] = useState<DisplayMode>('normal');
   const [rememberChoice, setRememberChoice] = useState(true);
   const [isModeModalOpen, setIsModeModalOpen] = useState(false);
+  // --- THAY ĐỔI BẮT ĐẦU: Thêm state mới để quản lý transition ---
+  const [isStartingGame, setIsStartingGame] = useState(false);
+  // --- THAY ĐỔI KẾT THÚC ---
 
   const isInitialAuthCheck = useRef(true);
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
   useEffect(() => { const i = setInterval(() => setEllipsis(p => (p === '...' ? '.' : p + '.')), 500); return () => clearInterval(i); }, []);
 
-  // --- THAY ĐỔI BẮT ĐẦU ---
-  // Thêm useEffect này để tính toán và đặt biến --app-height cho toàn bộ ứng dụng
   useEffect(() => {
     const setAppHeight = () => {
       document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
     };
     
     window.addEventListener('resize', setAppHeight);
-    setAppHeight(); // Chạy lần đầu khi component mount
+    setAppHeight();
     
-    // Dọn dẹp listener khi component unmount
     return () => window.removeEventListener('resize', setAppHeight);
   }, []);
-  // --- THAY ĐỔI KẾT THÚC ---
 
   useEffect(() => {
     if (loadingStep === 'authenticating') {
@@ -129,7 +128,6 @@ const App: React.FC = () => {
     }
   }, [loadingStep]);
 
-  // Tách logic xử lý auth ra một hàm riêng để tái sử dụng
   const handleAuthChange = async (user: User | null) => {
     setCurrentUser(user);
     if (user) {
@@ -143,11 +141,9 @@ const App: React.FC = () => {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (isInitialAuthCheck.current) {
-        // Chỉ delay cho lần kiểm tra đầu tiên khi tải app
         isInitialAuthCheck.current = false;
         setTimeout(() => handleAuthChange(user), 1500);
       } else {
-        // Các lần sau (login/logout) thì cập nhật ngay lập tức
         handleAuthChange(user);
       }
     });
@@ -166,7 +162,7 @@ const App: React.FC = () => {
       }
       if (!isCancelled) {
         const savedMode = localStorage.getItem('displayMode') as DisplayMode | null;
-        if (savedMode) { await startGame(savedMode, false); } else { setLoadingStep('selecting_mode'); }
+        if (savedMode) { await launchGame(savedMode, false); } else { setLoadingStep('selecting_mode'); }
       }
     }
     preloadAssets();
@@ -180,11 +176,23 @@ const App: React.FC = () => {
     }
   }, [loadingStep]);
 
-  const startGame = async (mode: DisplayMode, savePreference: boolean) => {
+  // Đổi tên hàm `startGame` thành `launchGame` để tránh nhầm lẫn
+  const launchGame = async (mode: DisplayMode, savePreference: boolean) => {
     if (savePreference) localStorage.setItem('displayMode', mode);
     if (mode === 'fullscreen') await enterFullScreen();
     setLoadingStep('launching');
   };
+
+  // --- THAY ĐỔI BẮT ĐẦU: Tạo hàm xử lý click nút Start mới ---
+  const handleStartGameTransition = () => {
+    setIsStartingGame(true); // Bắt đầu animation và render SkeletonLoader
+    // Đặt timeout để khớp với thời gian transition (ví dụ 400ms)
+    // Sau khi animation chạy xong, chúng ta mới chính thức chuyển state
+    setTimeout(() => {
+      launchGame(selectedMode, rememberChoice);
+    }, 400); 
+  };
+  // --- THAY ĐỔI KẾT THÚC ---
 
   const handleTabChange = (tab: TabType) => { setActiveTab(tab); setIsNavBarVisible(true); };
   const hideNavBar = () => setIsNavBarVisible(false);
@@ -215,6 +223,7 @@ const App: React.FC = () => {
 
   if (!currentUser) { return <AuthComponent appVersion={appVersion} logoFloating={logoFloating} />; }
 
+  // --- THAY ĐỔI BẮT ĐẦU: Cập nhật logic render của bước 'selecting_mode' ---
   if (loadingStep === 'selecting_mode') {
     const ModeSelectionModal: React.FC<{ onSelect: (mode: DisplayMode) => void, onClose: () => void, currentMode: DisplayMode }> = ({ onSelect, onClose, currentMode }) => {
         const modes: DisplayMode[] = ['fullscreen', 'normal'];
@@ -246,34 +255,48 @@ const App: React.FC = () => {
     const handleModeSelect = (mode: DisplayMode) => { setSelectedMode(mode); setIsModeModalOpen(false); };
 
     return (
-      <>
-        {isModeModalOpen && <ModeSelectionModal onSelect={handleModeSelect} onClose={() => setIsModeModalOpen(false)} currentMode={selectedMode} />}
-        <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
-          <div className="w-full flex flex-col items-center px-4 mt-5">
-            <div className="relative w-full max-w-xs">
-              <button onClick={() => setIsModeModalOpen(true)} className="w-full flex items-center justify-between p-3 bg-black/40 border-2 border-gray-600 rounded-lg text-white hover:border-cyan-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-colors duration-300">
-                <span className="flex items-center"><ModeIcon mode={selectedMode} className="w-5 h-5 mr-3 text-cyan-300" /><span className="font-semibold tracking-wide">{selectedMode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span></span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+      <div className="relative w-full h-full">
+        {/* Render SkeletonLoader ở phía sau, nó sẽ tự động fade-in khi `show` là true */}
+        <GameSkeletonLoader show={isStartingGame} />
+
+        {/* Màn hình chọn chế độ sẽ fade-out khi isStartingGame là true */}
+        <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${isStartingGame ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
+            <div className="w-full flex flex-col items-center px-4 mt-5">
+              <div className="relative w-full max-w-xs">
+                <button onClick={() => setIsModeModalOpen(true)} className="w-full flex items-center justify-between p-3 bg-black/40 border-2 border-gray-600 rounded-lg text-white hover:border-cyan-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-colors duration-300">
+                  <span className="flex items-center"><ModeIcon mode={selectedMode} className="w-5 h-5 mr-3 text-cyan-300" /><span className="font-semibold tracking-wide">{selectedMode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span></span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                </button>
+              </div>
+              <div onClick={() => setRememberChoice(p => !p)} className="mt-4 flex items-center cursor-pointer p-2 rounded-md hover:bg-white/10 transition-colors">
+                {rememberChoice ? (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>)}
+                <span className="ml-2 text-sm text-gray-300">Remember choice</span>
+              </div>
+              <button
+                onClick={handleStartGameTransition}
+                className="mt-6 w-48 mx-auto flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full text-white font-semibold text-lg tracking-wide hover:from-cyan-400 hover:to-blue-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-400/40 focus:outline-none focus:ring-4 focus:ring-cyan-300/50"
+              >
+                Start
+                {/* Thêm class `group` vào button và `group-data-[starting=true]:animate-spin-fast` vào icon */}
+                <svg
+                  data-starting={isStartingGame}
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 transition-transform duration-300 data-[starting=true]:animate-spin-fast"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                </svg>
               </button>
             </div>
-            <div onClick={() => setRememberChoice(p => !p)} className="mt-4 flex items-center cursor-pointer p-2 rounded-md hover:bg-white/10 transition-colors">
-              {rememberChoice ? (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>)}
-              <span className="ml-2 text-sm text-gray-300">Remember choice</span>
-            </div>
-            <button
-              onClick={() => startGame(selectedMode, rememberChoice)}
-              className="mt-6 w-48 mx-auto flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full text-white font-semibold text-lg tracking-wide hover:from-cyan-400 hover:to-blue-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-400/40 focus:outline-none focus:ring-4 focus:ring-cyan-300/50"
-            >
-              Start
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        </LoadingScreenLayout>
-      </>
+          </LoadingScreenLayout>
+        </div>
+        {isModeModalOpen && <ModeSelectionModal onSelect={handleModeSelect} onClose={() => setIsModeModalOpen(false)} currentMode={selectedMode} />}
+      </div>
     );
   }
+  // --- THAY ĐỔI KẾT THÚC ---
 
   if (loadingStep === 'launching') {
     return <GameSkeletonLoader show={true} />;
@@ -301,5 +324,3 @@ const root = createRoot(container);
 root.render(<App />);
 
 export default App;
-
-// --- END OF FILE src/index.tsx ---
