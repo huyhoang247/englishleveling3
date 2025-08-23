@@ -157,7 +157,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
-                {/* --- THAY ĐỔI: Xóa prop `onDataUpdated` --- */}
                 {isUpgradeScreenOpen && currentUser && (<UpgradeStatsScreen onClose={toggleUpgradeScreen} />)}
             </ErrorBoundary>
         </div>
@@ -171,15 +170,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         <div className="fixed inset-0 z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isEquipmentOpen && currentUser && (
-                    <EquipmentScreen 
-                        onClose={toggleEquipmentScreen} 
-                        userId={currentUser.uid}
-                        initialGold={coins} 
-                        initialEquipmentPieces={equipmentPieces} 
-                        initialOwnedItems={ownedItems} 
-                        initialEquippedItems={equippedItems} 
-                        onDataChange={refreshUserData}
-                    />
+                    <EquipmentScreen onClose={toggleEquipmentScreen} />
                 )}
             </ErrorBoundary>
         </div>
