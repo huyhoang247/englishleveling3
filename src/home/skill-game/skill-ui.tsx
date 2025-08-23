@@ -44,6 +44,7 @@ const Header = memo(() => {
     );
 });
 
+// ... (Các component con khác giữ nguyên, không cần dán lại)
 const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onClick: () => void }) => {
   const { isProcessing } = useSkillContext();
   const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
@@ -300,11 +301,7 @@ function SkillScreenContent() {
         handleCraftSkill, handleSelectSkill, handleOpenMergeModal, MAX_SKILLS_IN_STORAGE
     } = useSkillContext();
 
-    // SỬA ĐỔI: Sử dụng `if/else` hoặc toán tử 3 ngôi để chuyển đổi hiển thị tức thì
-    if (isLoading) {
-        return <SkillScreenSkeleton />;
-    }
-
+    // SỬA ĐỔI LỚN: Quay lại cấu trúc render song song nhưng bỏ hiệu ứng transition
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
             <style>{` .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
@@ -314,12 +311,17 @@ function SkillScreenContent() {
             <RateLimitToast show={equipErrorToast.show} message={equipErrorToast.message} showIcon={false} />
             <RateLimitToast show={disenchantSuccessToast.show} message={disenchantSuccessToast.message} showIcon={false} />
             {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[101]">{message}</div>}
-
             {selectedSkill && <SkillDetailModal ownedSkill={selectedSkill} />}
             {newlyCraftedSkill && <CraftingSuccessModal ownedSkill={newlyCraftedSkill} />}
             <MergeModal />
             
-            <div className="relative z-10 flex flex-col w-full h-screen">
+            {/* Lớp phủ Skeleton: Hiển thị hoặc ẩn đi ngay lập tức */}
+            <div className={`absolute inset-0 z-20 ${isLoading ? '' : 'hidden'}`}>
+                <SkillScreenSkeleton />
+            </div>
+
+            {/* Nội dung chính: Luôn được render, ẩn đi khi isLoading=true */}
+            <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                 <Header />
                 <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
                     <section className="flex-shrink-0 py-4">
