@@ -1,5 +1,3 @@
-// --- START OF FILE background-game.tsx (20).txt ---
-
 // --- START OF FILE src/background-game.tsx ---
 
 import React, { useEffect, useRef, Component } from 'react';
@@ -20,7 +18,7 @@ import BossBattle from './boss.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './home/vocabulary-chest/voca-chest-ui.tsx';
 import MinerChallenge from './bomb.tsx';
-import UpgradeStatsScreen from './home/upgrade-stats/upgrade-ui.tsx';
+import UpgradeStatsScreen, { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
 import AchievementsScreen from './home/achievements/achievement-ui.tsx'; 
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
@@ -159,6 +157,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
+                {/* --- THAY ĐỔI: Xóa prop `onDataUpdated` --- */}
                 {isUpgradeScreenOpen && currentUser && (<UpgradeStatsScreen onClose={toggleUpgradeScreen} />)}
             </ErrorBoundary>
         </div>
@@ -166,7 +165,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             <ErrorBoundary>{isBaseBuildingOpen && currentUser && (<BaseBuildingScreen onClose={toggleBaseBuilding} coins={coins} gems={gems} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(currentUser!.uid, amount))} />)}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isSkillScreenOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isSkillScreenOpen && (<SkillScreen onClose={handleSkillScreenClose} />)}</ErrorBoundary>
+            <ErrorBoundary>{isSkillScreenOpen && currentUser && (<SkillScreen onClose={handleSkillScreenClose} userId={currentUser.uid} />)}</ErrorBoundary>
         </div>
         
         <div className="fixed inset-0 z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
