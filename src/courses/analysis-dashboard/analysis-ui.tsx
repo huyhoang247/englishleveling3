@@ -1,24 +1,45 @@
-// --- START OF FILE: AnalysisDashboard.tsx ---
+// --- START OF FILE: analysis-ui.tsx ---
 
 import React, { useState, useMemo, FC, ReactNode, useCallback, memo } from 'react';
 import { User } from 'firebase/auth';
-// [MỚI] Import Provider và custom hook
 import { AnalysisDashboardProvider, useAnalysisDashboard, WordMastery } from './analysis-context.tsx';
-import AnalysisDashboardSkeleton from './analysis-loading.tsx'; // <<<--- DÒNG IMPORT MỚI
+import AnalysisDashboardSkeleton from './analysis-loading.tsx'; 
 
 import { 
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
     Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import { uiAssets, dashboardAssets } from '../../game-assets.ts'; // Import assets
+import { uiAssets, dashboardAssets } from '../../game-assets.ts'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 import { useAnimateValue } from '../../ui/useAnimateValue.ts'; 
 
 // --- ICONS (Grouped for better organization) ---
 const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
-// [MỚI] Dấu tích được thiết kế lại, mảnh và tinh tế hơn
-const CheckIconRefined = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>;
+
+// [MỚI] Dấu tích mới "mềm mại và có chiều sâu"
+const CheckIconSoft = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+        {/* Lớp bóng đổ tạo chiều sâu */}
+        <path 
+            d="M4.5 12.75l6 6 9-13.5" 
+            stroke="black" 
+            strokeOpacity="0.2" 
+            strokeWidth="3.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            transform="translate(0.5, 0.5)" 
+        />
+        {/* Lớp chính, dày và mềm mại */}
+        <path 
+            d="M4.5 12.75l6 6 9-13.5" 
+            stroke="white" 
+            strokeWidth="3" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+        />
+    </svg>
+);
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
 const ChevronRightIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>;
@@ -132,7 +153,6 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     );
 });
 
-// --- [THAY ĐỔI] Toàn bộ component ActivityCalendar được cập nhật ---
 const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     const formatDateForCalendar = (date: Date): string => {
         const year = date.getFullYear();
@@ -173,7 +193,6 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
                     if (day.isFuture) {
                         dayClass = "bg-gray-100 text-gray-300 cursor-not-allowed";
                     } else if (day.hasActivity) {
-                        // Nền gradient tinh tế và đẹp hơn
                         dayClass = "bg-gradient-to-br from-teal-400 to-cyan-500 text-white shadow-sm hover:scale-105 hover:shadow-md";
                     } else {
                         dayClass = "bg-gray-200 text-gray-400 hover:bg-gray-300";
@@ -183,15 +202,14 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
                     }
                     return (
                         <div key={index} title={day.tooltip} className={`${baseClass} ${dayClass}`}>
-                            {/* Sử dụng icon mới, nhỏ gọn và đẹp hơn */}
-                            {(day.hasActivity && !day.isFuture) ? <CheckIconRefined /> : <span>{day.dayOfMonth}</span>}
+                            {/* [THAY ĐỔI] Sử dụng icon mới */}
+                            {(day.hasActivity && !day.isFuture) ? <CheckIconSoft /> : <span>{day.dayOfMonth}</span>}
                         </div>
                     );
                 })}
             </div>
             <div className="flex items-center justify-center sm:justify-end gap-4 mt-4 text-xs text-gray-600">
                 <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-md bg-gray-200"></div><span>Chưa học</span></div>
-                {/* Cập nhật legend để khớp với màu mới */}
                 <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-md bg-gradient-to-br from-teal-400 to-cyan-500"></div><span>Đã học</span></div>
                 <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded-md ring-2 ring-offset-1 ring-indigo-500"></div><span>Hôm nay</span></div>
             </div>
@@ -354,7 +372,6 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
   );
 }
 
-// [MỚI] Component export mặc định sẽ bọc logic hiển thị trong Provider
 export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) {
   return (
     <AnalysisDashboardProvider>
