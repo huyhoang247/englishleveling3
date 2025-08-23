@@ -1,7 +1,6 @@
 // --- START OF FILE src/index.tsx ---
 
 import React, { useState, useEffect, useRef } from 'react';
-import { GameProvider } from './GameContext.tsx'; // Import the new provider
 import { createRoot } from 'react-dom/client';
 import Home from './background-game.tsx';
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
@@ -281,11 +280,7 @@ const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      {activeTab === 'home' && (
-        <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
-          <Home hideNavBar={hideNavBar} showNavBar={showNavBar} />
-        </GameProvider>
-      )}
+      {activeTab === 'home' && <Home hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} assetsLoaded={true} />}
       {activeTab === 'profile' && <Profile />}
       {activeTab === 'story' && <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />}
       {activeTab === 'quiz' && <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />}
