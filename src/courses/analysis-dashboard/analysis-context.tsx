@@ -134,9 +134,7 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
         }));
     }, [user]);
 
-    // [SỬA ĐỔI] Bọc đối tượng `value` trong `useMemo` để ổn định tham chiếu.
-    // Đây là thay đổi quan trọng nhất để khắc phục lỗi nháy màn hình.
-    const value = useMemo(() => ({
+    const value = {
         user,
         loading,
         error,
@@ -146,17 +144,7 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
         wordsLearnedToday,
         claimDailyReward,
         claimVocabReward,
-    }), [
-        user,
-        loading,
-        error,
-        analysisData,
-        dailyActivityData,
-        userProgress,
-        wordsLearnedToday,
-        claimDailyReward,
-        claimVocabReward
-    ]);
+    };
 
     return (
         <AnalysisDashboardContext.Provider value={value}>
