@@ -1,12 +1,14 @@
-// --- START OF FILE upgrade-ui.tsx (ĐÃ REFACTOR) ---
+// --- START OF FILE upgrade-stats.tsx (đã refactor) ---
 
 import React from 'react';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets } from '../../game-assets.ts';
 import UpgradeStatsSkeleton from './upgrade-loading.tsx';
 import StatUpgradeToast from './upgrade-toast.tsx'; 
+// --- IMPORT CONTEXT VÀ PROVIDER ---
 import { UpgradeStatsProvider, useUpgradeStats } from './upgrade-context.tsx';
 
+// --- ICONS (giữ nguyên) ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/2000/svg" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const icons = {
   coin: ( <img src={uiAssets.statCoinIcon} alt="Gold Coin Icon" /> ),
@@ -15,6 +17,8 @@ const icons = {
   sword: ( <img src={uiAssets.statAtkIcon} alt="ATK Icon" /> )
 };
 
+// --- CONFIG & LOGIC (giữ nguyên hoặc chuyển sang file utils riêng) ---
+// Tạm thời giữ lại để context có thể import, lý tưởng nhất là chuyển sang file utils
 export const statConfig = {
   hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600", toastColors: { border: 'border-pink-500', text: 'text-pink-400' } },
   atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500", toastColors: { border: 'border-cyan-400', text: 'text-cyan-300' } },
@@ -25,6 +29,7 @@ export const getBonusForLevel = (level: number, baseBonus: number) => { if (leve
 export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => { if (currentLevel === 0) return 0; let totalValue = 0; const fullTiers = Math.floor(currentLevel / 10); const remainingLevelsInCurrentTier = currentLevel % 10; for (let i = 0; i < fullTiers; i++) { const bonusInTier = baseBonus * Math.pow(2, i); totalValue += 10 * bonusInTier; } const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers); totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier; return totalValue; };
 const formatNumber = (num: number) => { if (num < 1000) return num.toString(); if (num < 1000000) { const thousands = num / 1000; return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`; } if (num < 1000000000) { const millions = num / 1000000; return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`; } const billions = num / 1000000000; return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`; };
 
+// --- COMPONENT STAT CARD (không đổi) ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: any) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, color } = stat;
   const upgradeCost = calculateUpgradeCost(level);
@@ -49,15 +54,29 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   );
 };
 
-// --- THAY ĐỔI: Bỏ prop onDataUpdated ---
+// INTERFACE PROPS (không đổi)
 interface UpgradeStatsScreenProps {
   onClose: () => void;
+  onDataUpdated: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
 }
 
+// --- COMPONENT HIỂN THỊ (VIEW) ---
+// Component này giờ đây chỉ nhận props và dữ liệu từ context để hiển thị
 function UpgradeStatsView({ onClose }: { onClose: () => void }) {
+  // Lấy toàn bộ state và actions từ context
   const {
-    isLoading, isUpgrading, animatedGold, stats, message, toastData,
-    totalHp, totalAtk, totalDef, totalLevels, prestigeLevel, progressPercent,
+    isLoading,
+    isUpgrading,
+    animatedGold,
+    stats,
+    message,
+    toastData,
+    totalHp,
+    totalAtk,
+    totalDef,
+    totalLevels,
+    prestigeLevel,
+    progressPercent,
     handleUpgrade
   } = useUpgradeStats();
 
@@ -80,13 +99,27 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
 
         {message && (
           <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/90 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce flex items-center gap-2">
-            {message === 'ko đủ vàng' ? ( <> <span>Not enough</span> <div className="w-5 h-5">{icons.coin}</div> </> ) : ( message )}
+            {message === 'ko đủ vàng' ? (
+              <>
+                <span>Not enough</span>
+                <div className="w-5 h-5">{icons.coin}</div>
+              </>
+            ) : (
+              message
+            )}
           </div>
         )}
 
         <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
             <div className="relative mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
-                {toastData && ( <StatUpgradeToast isVisible={toastData.isVisible} icon={toastData.icon} bonus={toastData.bonus} colorClasses={toastData.colorClasses} /> )}
+                {toastData && (
+                    <StatUpgradeToast
+                        isVisible={toastData.isVisible}
+                        icon={toastData.icon}
+                        bonus={toastData.bonus}
+                        colorClasses={toastData.colorClasses}
+                    />
+                )}
                 <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
             </div>
 
@@ -120,12 +153,12 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
 }
 
 
-export default function UpgradeStatsScreen({ onClose }: UpgradeStatsScreenProps) {
+// --- COMPONENT CHÍNH (WRAPPER) ---
+// Component này là điểm truy cập, nó bao bọc View bằng Provider
+export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeStatsScreenProps) {
   return (
-    // --- THAY ĐỔI: Không cần truyền prop vào Provider nữa ---
-    <UpgradeStatsProvider>
+    <UpgradeStatsProvider onDataUpdated={onDataUpdated}>
       <UpgradeStatsView onClose={onClose} />
     </UpgradeStatsProvider>
   );
 }
-// --- END OF FILE upgrade-ui.tsx (ĐÃ REFACTOR) ---
