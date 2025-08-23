@@ -39,7 +39,7 @@ const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http:/
 
 // --- CÁC COMPONENT CON ---
 const Header = memo(({ goldValue }: { goldValue: number }) => {
-    const { handleClose } = useSkillContext();
+    const { handleClose } => useSkillContext();
     const animatedGold = useAnimateValue(goldValue);
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
@@ -75,8 +75,8 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
       onClick={!isProcessing ? onClick : undefined}
       title={skillBlueprint ? `${skillBlueprint.name} - Lv.${ownedSkill?.level}` : 'Ô trống'}
     >
-      {/* Div bên trong: Là phần nội dung chính */}
-      <div className="w-full h-full bg-slate-900/80 rounded-[10px] flex items-center justify-center">
+      {/* Div bên trong: Là phần nội dung chính (ĐÃ THAY ĐỔI: bg-slate-900) */}
+      <div className="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center">
         {isEquipped ? (
           <>
             <div className="transition-all duration-300 group-hover:scale-110">
