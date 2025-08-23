@@ -1,4 +1,4 @@
-// --- START OF FILE src/skill-data.tsx ---
+// --- START OF FILE skill-data.tsx ---
 
 import React from 'react';
 import { skillAssets } from '../../game-assets.ts'; // Import tài nguyên tập trung
@@ -70,8 +70,6 @@ export interface SkillBlueprint {
   baseEffectValue?: number;
   effectValuePerLevel?: number;
   upgradeCost?: number; // Chi phí CƠ BẢN (từ level 1 -> 2)
-  // --- ADDED FOR MERGE LOGIC ---
-  getNextRarity?: (currentRarity: Rarity) => Rarity | null;
 }
 
 export interface OwnedSkill {
@@ -95,7 +93,6 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    getNextRarity: getNextRarity,
   },
   {
     id: 'thorns',
@@ -105,7 +102,6 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    getNextRarity: getNextRarity,
   },
   {
     id: 'damage_boost',
@@ -115,7 +111,6 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    getNextRarity: getNextRarity,
   },
   {
     id: 'armor_penetration',
@@ -125,9 +120,8 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     baseEffectValue: 5,
     effectValuePerLevel: 1,
     upgradeCost: 200,
-    getNextRarity: getNextRarity,
   },
 ];
 // --- END: DANH SÁCH TẤT CẢ KỸ NĂNG TRONG GAME ---
 
-// --- END OF FILE src/skill-data.tsx ---
+// --- END OF FILE skill-data.tsx ---
