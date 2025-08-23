@@ -1,4 +1,4 @@
-// --- START OF FILE src/background-game.tsx (ĐÃ REFACTOR) ---
+// --- START OF FILE src/background-game.tsx ---
 
 import React, { useState, useEffect, useRef, useCallback, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -28,10 +28,8 @@ import EquipmentScreen, { OwnedItem, EquippedItems } from './equipment.tsx';
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 
-// --- THAY ĐỔI: IMPORT PROVIDER VÀ HOOK CỦA CONTEXT TOÀN CỤC ---
-import { GameDataProvider, useGameData } from './GameDataContext.tsx';
-
 import { 
+  fetchOrCreateUserGameData, 
   updateUserCoins, 
   updateUserGems,
   fetchJackpotPool,
@@ -39,18 +37,39 @@ import {
   updateUserBossFloor,
   updateUserPickaxes,
   processMinerChallengeResult,
+  // --- THAY ĐỔI: Không cần import updateUserInventory nữa ---
+  // updateUserInventory, 
   processShopPurchase
 } from './gameDataService.ts';
 
-// --- Các component Icon, ErrorBoundary không thay đổi ---
-const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}> <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /> </svg> );
+// --- SVG Icon Components ---
+const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}>
+    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
 interface GemIconProps { size?: number; color?: string; className?: string; [key: string]: any; }
-const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}> <img src={uiAssets.gemIcon} alt="Tourmaline Gem Icon" className="w-full h-full object-contain" /> </div> );
+const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+  <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
+    <img src={uiAssets.gemIcon} alt="Tourmaline Gem Icon" className="w-full h-full object-contain" />
+  </div>
+);
 interface StatsIconProps { onClick: () => void; }
-const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => ( <div className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-10" onClick={onClick} title="Xem chỉ số nhân vật"> <img src={uiAssets.statsIcon} alt="Award Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon"; }} /> </div> );
+const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => (
+  <div className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-10" onClick={onClick} title="Xem chỉ số nhân vật">
+    <img src={uiAssets.statsIcon} alt="Award Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon"; }} />
+  </div>
+);
+
+// --- Error Boundary Component ---
 interface ErrorBoundaryProps { children: React.ReactNode; fallback?: React.ReactNode; }
 interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> { constructor(props: ErrorBoundaryProps) { super(props); this.state = { hasError: false, error: null }; } static getDerivedStateFromError(error: Error): ErrorBoundaryState { return { hasError: true, error: error }; } componentDidCatch(error: Error, errorInfo: React.ErrorInfo) { console.error("Uncaught error in component:", error, errorInfo); } render() { if (this.state.hasError) { return this.props.fallback || ( <div className="text-red-500 p-4 bg-red-100 border border-red-400 rounded"> <p>Có lỗi xảy ra khi hiển thị nội dung.</p> <p>Chi tiết lỗi: {this.state.error?.message}</p> <p>(Kiểm tra Console để biết thêm thêm thông tin)</p> </div> ); } return this.props.children; } }
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState { return { hasError: true, error: error }; }
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) { console.error("Uncaught error in component:", error, errorInfo); }
+  render() { if (this.state.hasError) { return this.props.fallback || ( <div className="text-red-500 p-4 bg-red-100 border border-red-400 rounded"> <p>Có lỗi xảy ra khi hiển thị nội dung.</p> <p>Chi tiết lỗi: {this.state.error?.message}</p> <p>(Kiểm tra Console để biết thêm thêm thông tin)</p> </div> ); } return this.props.children; }
+}
 
 interface ObstacleRunnerGameProps {
   className?: string;
@@ -60,23 +79,31 @@ interface ObstacleRunnerGameProps {
   assetsLoaded: boolean;
 }
 
-// --- TÁCH RA COMPONENT CON ĐỂ SỬ DỤNG CONTEXT HIỆU QUẢ ---
-function GameContent({ className, hideNavBar, showNavBar, currentUser, assetsLoaded }: ObstacleRunnerGameProps) {
+export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar, currentUser, assetsLoaded }: ObstacleRunnerGameProps) {
 
-  // --- THAY ĐỔI: Lấy toàn bộ state và action từ context toàn cục ---
-  const {
-    isLoadingData, coins, gems, masteryCards, pickaxes, minerChallengeHighestFloor,
-    userStats, bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds,
-    totalVocabCollected, cardCapacity, equipmentPieces, ownedItems, equippedItems,
-    refreshUserData, setCoins, setGems
-  } = useGameData();
+  const [isLoadingUserData, setIsLoadingUserData] = useState(true);
 
-  // --- THAY ĐỔI: Bỏ đi hầu hết các useState, chỉ giữ lại những state dành cho UI ---
+  // States for UI and User Data
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
+  const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
+  const [gems, setGems] = useState(0);
+  const [masteryCards, setMasteryCards] = useState(0);
+  const [pickaxes, setPickaxes] = useState(0);
+  const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
+  const [userStats, setUserStats] = useState({ hp: 0, atk: 0, def: 0 });
   const [jackpotPool, setJackpotPool] = useState(0);
+  const [bossBattleHighestFloor, setBossBattleHighestFloor] = useState(0);
+  const [ancientBooks, setAncientBooks] = useState(0);
+  const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([]);
+  const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([null, null, null]);
+  const [totalVocabCollected, setTotalVocabCollected] = useState(0);
+  const [cardCapacity, setCardCapacity] = useState(100);
+  const [equipmentPieces, setEquipmentPieces] = useState(0);
+  const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
+  const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, accessory: null });
 
-  // States for managing overlay visibility (không đổi)
+  // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [isPvpArenaOpen, setIsPvpArenaOpen] = useState(false);
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
@@ -90,7 +117,8 @@ function GameContent({ className, hideNavBar, showNavBar, currentUser, assetsLoa
   const [isBaseBuildingOpen, setIsBaseBuildingOpen] = useState(false);
   const [isSkillScreenOpen, setIsSkillScreenOpen] = useState(false);
   const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
-  
+
+  // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
   const [showRateLimitToast, setShowRateLimitToast] = useState(false);
 
@@ -110,39 +138,40 @@ function GameContent({ className, hideNavBar, showNavBar, currentUser, assetsLoa
     };
   }, []);
 
-  // --- THAY ĐỔI: Bỏ đi useEffect fetch data chính, chỉ giữ lại fetch jackpot pool ---
   useEffect(() => {
-    fetchJackpotPool().then(setJackpotPool);
-  }, []);
-  
-  useEffect(() => { if (showRateLimitToast) { const timer = setTimeout(() => { setShowRateLimitToast(false); }, 2500); return () => clearTimeout(timer); } }, [showRateLimitToast]);
-  useEffect(() => { if (displayedCoins === coins) return; const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100); return () => clearTimeout(timeoutId); }, [coins]);
-  useEffect(() => { const handleVisibilityChange = () => { if (document.hidden) { setIsBackgroundPaused(true); } else { setIsBackgroundPaused(false); } }; document.addEventListener('visibilitychange', handleVisibilityChange); return () => document.removeEventListener('visibilitychange', handleVisibilityChange); }, []);
+    if (showRateLimitToast) {
+      const timer = setTimeout(() => { setShowRateLimitToast(false); }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [showRateLimitToast]);
   
   const handleBossFloorUpdate = async (newFloor: number) => {
     const userId = auth.currentUser?.uid;
-    if (!userId) return;
+    if (!userId) { console.error("Cannot update boss floor: User not authenticated."); return; }
     try {
         await updateUserBossFloor(userId, newFloor, bossBattleHighestFloor);
-        await refreshUserData(); // Refresh lại data
+        if (newFloor > bossBattleHighestFloor) { setBossBattleHighestFloor(newFloor); }
+        console.log(`Updated boss floor to ${newFloor} for user ${userId} via service.`);
     } catch (error) { console.error("Firestore update failed for boss floor via service: ", error); }
   };
   
   const handleMinerChallengeEnd = async (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
     const userId = auth.currentUser?.uid;
-    if (!userId) return;
+    if (!userId) { console.error("Cannot update game data: User not authenticated."); return; }
+    if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) { console.log("No changes to update from Miner Challenge."); return; }
     setIsSyncingData(true);
     try {
-      await processMinerChallengeResult(userId, result);
-      await refreshUserData(); // Refresh lại data
+      const { newCoins, newPickaxes, newHighestFloor } = await processMinerChallengeResult(userId, result);
+      setCoins(newCoins); setPickaxes(newPickaxes); setMinerChallengeHighestFloor(newHighestFloor);
+      console.log("Firestore updated successfully after Miner Challenge via service.");
     } catch (error) { console.error("Service call for Miner Challenge end failed: ", error); } finally { setIsSyncingData(false); }
   };
 
   const handleUpdatePickaxes = async (amountToAdd: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) return;
-    await updateUserPickaxes(userId, pickaxes + amountToAdd);
-    await refreshUserData(); // Refresh lại data
+    const newTotal = await updateUserPickaxes(userId, pickaxes + amountToAdd);
+    setPickaxes(newTotal);
   };
   
   const handleUpdateJackpotPool = async (amount: number, reset: boolean = false) => {
@@ -150,15 +179,25 @@ function GameContent({ className, hideNavBar, showNavBar, currentUser, assetsLoa
       setJackpotPool(newPool);
   };
   
-  // --- THAY ĐỔI: Bỏ hàm handleStatsUpdate ---
+  const handleStatsUpdate = (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => {
+    setCoins(newCoins);
+    setUserStats(newStats);
+    console.log("Main game state updated from UpgradeStatsScreen.");
+  };
+
+  // --- THAY ĐỔI: Xóa bỏ hàm handleInventoryUpdate ---
+  // Logic này đã được chuyển vào trong EquipmentScreen.tsx
 
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) { throw new Error("Người dùng chưa được xác thực."); }
+    if (!item || typeof item.price !== 'number' || !item.id || typeof quantity !== 'number' || quantity <= 0) { throw new Error("Dữ liệu vật phẩm hoặc số lượng không hợp lệ."); }
     setIsSyncingData(true);
     try {
-      await processShopPurchase(userId, item, quantity);
-      await refreshUserData(); // Refresh lại data
+      const { newCoins, newBooks, newCapacity } = await processShopPurchase(userId, item, quantity);
+      setCoins(newCoins);
+      if (item.id === 1009) { setAncientBooks(newBooks); } else if (item.id === 2001) { setCardCapacity(newCapacity); }
+      console.log(`Purchase successful for ${quantity}x ${item.name}.`);
       alert(`Mua thành công x${quantity} ${item.name}!`);
     } catch (error) {
       console.error("Shop purchase transaction failed:", error);
@@ -166,9 +205,71 @@ function GameContent({ className, hideNavBar, showNavBar, currentUser, assetsLoa
       throw error;
     } finally { setIsSyncingData(false); }
   };
+    
+  const refreshUserData = useCallback(async () => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+    console.log("Refreshing all user data triggered..."); // Thêm log để biết khi nào hàm được gọi
+    setIsLoadingUserData(true);
+    try {
+      const gameData = await fetchOrCreateUserGameData(userId);
+      setCoins(gameData.coins);
+      setDisplayedCoins(gameData.coins);
+      setGems(gameData.gems);
+      setMasteryCards(gameData.masteryCards);
+      setPickaxes(gameData.pickaxes);
+      setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor);
+      setUserStats(gameData.stats);
+      setBossBattleHighestFloor(gameData.bossBattleHighestFloor);
+      setAncientBooks(gameData.ancientBooks);
+      setOwnedSkills(gameData.skills.owned);
+      setEquippedSkillIds(gameData.skills.equipped);
+      setTotalVocabCollected(gameData.totalVocabCollected);
+      setCardCapacity(gameData.cardCapacity);
+      setEquipmentPieces(gameData.equipment.pieces);
+      setOwnedItems(gameData.equipment.owned);
+      setEquippedItems(gameData.equipment.equipped);
+    } catch (error) {
+      console.error("Error refreshing user data:", error);
+    } finally {
+      setIsLoadingUserData(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        setIsLoadingUserData(true);
+        try {
+            const [_, jackpotData] = await Promise.all([
+                refreshUserData(),
+                fetchJackpotPool()
+            ]);
+            setJackpotPool(jackpotData);
+        } catch (error) { 
+            console.error("Error fetching initial user/app data:", error);
+            setIsLoadingUserData(false);
+        }
+      } else {
+        setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
+        setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 }); setBossBattleHighestFloor(0); setAncientBooks(0);
+        setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]);
+        setEquippedItems({ weapon: null, armor: null, accessory: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
+      }
+    });
+    return () => unsubscribe();
+  }, [refreshUserData]);
+
+  useEffect(() => {
+      const handleVisibilityChange = () => { if (document.hidden) { setIsBackgroundPaused(true); } else { setIsBackgroundPaused(false); } };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   const handleTap = () => { };
-  const isLoading = isLoadingData || !assetsLoaded;
+  const isLoading = isLoadingUserData || !assetsLoaded;
+  useEffect(() => { if (displayedCoins === coins) return; const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100); return () => clearTimeout(timeoutId); }, [coins]);
 
   const renderCharacter = () => {
     const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen;
@@ -208,6 +309,7 @@ function GameContent({ className, hideNavBar, showNavBar, currentUser, assetsLoa
   const handleSkillScreenClose = (dataUpdated: boolean) => {
     toggleSkillScreen();
     if (dataUpdated) {
+        console.log("Skill data changed. Refreshing main game data...");
         refreshUserData();
     }
   };
@@ -232,9 +334,9 @@ function GameContent({ className, hideNavBar, showNavBar, currentUser, assetsLoa
       if (!ownedSkills || !equippedSkillIds) return [];
       return equippedSkillIds.map(equippedId => { if (!equippedId) return null; const owned = ownedSkills.find(s => s.id === equippedId); if (!owned) return null; const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId); if (!blueprint) return null; return { ...owned, ...blueprint }; }).filter((skill): skill is OwnedSkill & SkillBlueprint => skill !== null);
   };
-  
-  const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => { refreshUserData(); };
-  const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => { refreshUserData(); };
+
+  const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => { setCoins(updates.newCoins); setGems(updates.newGems); setTotalVocabCollected(updates.newTotalVocab); console.log("Main game state updated from vocabulary chest:", updates); };
+  const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => { if (updates.coins !== undefined) setCoins(updates.coins); if (updates.masteryCards !== undefined) setMasteryCards(updates.masteryCards); console.log("Main game state updated from achievements:", updates); };
 
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
@@ -279,7 +381,7 @@ function GameContent({ className, hideNavBar, showNavBar, currentUser, assetsLoa
             <ErrorBoundary>{isAchievementsOpen && (<AchievementsScreen user={auth.currentUser} onClose={toggleAchievements} onDataUpdate={handleAchievementsDataUpdate} />)}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isUpgradeScreenOpen && auth.currentUser && (<UpgradeStatsScreen onClose={toggleUpgradeScreen} />)}</ErrorBoundary>
+            <ErrorBoundary>{isUpgradeScreenOpen && auth.currentUser && (<UpgradeStatsScreen onClose={toggleUpgradeScreen} onDataUpdated={handleStatsUpdate} />)}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isBaseBuildingOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isBaseBuildingOpen && auth.currentUser && (<BaseBuildingScreen onClose={toggleBaseBuilding} coins={coins} gems={gems} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(auth.currentUser!.uid, amount))} />)}</ErrorBoundary>
@@ -288,13 +390,18 @@ function GameContent({ className, hideNavBar, showNavBar, currentUser, assetsLoa
             <ErrorBoundary>{isSkillScreenOpen && auth.currentUser && (<SkillScreen onClose={handleSkillScreenClose} userId={auth.currentUser.uid} />)}</ErrorBoundary>
         </div>
         
+        {/* --- THAY ĐỔI: Cập nhật cách gọi EquipmentScreen --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isEquipmentOpen && auth.currentUser && (
                     <EquipmentScreen 
                         onClose={toggleEquipmentScreen} 
                         userId={auth.currentUser.uid}
-                        onDataChange={refreshUserData} // Truyền hàm refreshUserData để EquipmentScreen có thể gọi sau khi thay đổi dữ liệu
+                        initialGold={coins} 
+                        initialEquipmentPieces={equipmentPieces} 
+                        initialOwnedItems={ownedItems} 
+                        initialEquippedItems={equippedItems} 
+                        onDataChange={refreshUserData}
                     />
                 )}
             </ErrorBoundary>
@@ -307,13 +414,4 @@ function GameContent({ className, hideNavBar, showNavBar, currentUser, assetsLoa
   );
 }
 
-// --- COMPONENT CHÍNH BỌC BỞI PROVIDER ---
-export default function ObstacleRunnerGame(props: ObstacleRunnerGameProps) {
-  return (
-    <GameDataProvider>
-      <GameContent {...props} />
-    </GameDataProvider>
-  );
-}
-
-// --- END OF FILE src/background-game.tsx (ĐÃ REFACTOR) ---
+// --- END OF FILE src/background-game.tsx ---
