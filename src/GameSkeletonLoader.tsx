@@ -68,14 +68,6 @@ const GameSkeletonLoader: React.FC<GameSkeletonLoaderProps> = ({ show }) => {
             <div className="w-32 h-7 bg-slate-800/50 rounded-lg animate-pulse"></div>
           </div>
         </div>
-
-        {/* Skeleton các nút hành động */}
-        <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-          {[...Array(3)].map((_, i) => (<div key={i} className="w-14 h-14 bg-slate-800/50 rounded-lg animate-pulse"></div>))}
-        </div>
-        <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-          {[...Array(3)].map((_, i) => (<div key={i} className="w-14 h-14 bg-slate-800/50 rounded-lg animate-pulse"></div>))}
-        </div>
         
         {/* ========== START: PHẦN ĐƯỢC CẬP NHẬT ========== */}
         {/* Skeleton Thanh điều hướng dưới - ĐÃ ĐƯỢC CẬP NHẬT ĐỂ GIỐNG COMPONENT THẬT */}
