@@ -80,7 +80,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
     // Functions
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
-    handleUpdateJackpotPool, handleStatsUpdate, handleShopPurchase, getPlayerBattleStats,
+    handleUpdateJackpotPool, handleShopPurchase, getPlayerBattleStats,
     getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
     handleSkillScreenClose, setCoins,
     // Toggles
@@ -156,7 +156,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             <ErrorBoundary>{isAchievementsOpen && (<AchievementsScreen user={currentUser} onClose={toggleAchievements} onDataUpdate={handleAchievementsDataUpdate} />)}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isUpgradeScreenOpen && currentUser && (<UpgradeStatsScreen onClose={toggleUpgradeScreen} onDataUpdated={handleStatsUpdate} />)}</ErrorBoundary>
+            <ErrorBoundary>
+                {/* --- THAY ĐỔI: Xóa prop `onDataUpdated` --- */}
+                {isUpgradeScreenOpen && currentUser && (<UpgradeStatsScreen onClose={toggleUpgradeScreen} />)}
+            </ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isBaseBuildingOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isBaseBuildingOpen && currentUser && (<BaseBuildingScreen onClose={toggleBaseBuilding} coins={coins} gems={gems} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(currentUser!.uid, amount))} />)}</ErrorBoundary>
@@ -165,7 +168,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             <ErrorBoundary>{isSkillScreenOpen && currentUser && (<SkillScreen onClose={handleSkillScreenClose} userId={currentUser.uid} />)}</ErrorBoundary>
         </div>
         
-        {/* --- THAY ĐỔI: Cập nhật cách gọi EquipmentScreen --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isEquipmentOpen && currentUser && (
@@ -188,5 +190,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
-
 // --- END OF FILE src/background-game.tsx ---
