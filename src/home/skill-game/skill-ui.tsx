@@ -1,7 +1,8 @@
-// --- START OF FILE skill-ui.tsx ---
+// --- START OF FILE src/home/skill-game/skill-ui.tsx ---
 
 import React, { memo, useState, useEffect, useRef } from 'react';
-import { SkillProvider, useSkillContext, MergeGroup } from './skill-context.tsx';
+// THAY ĐỔI: Import thêm SkillScreenExitData
+import { SkillProvider, useSkillContext, MergeGroup, SkillScreenExitData } from './skill-context.tsx';
 import {
     ALL_SKILLS,
     CRAFTING_COST,
@@ -16,7 +17,6 @@ import {
 import { uiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import RateLimitToast from '../../thong-bao.tsx';
-// BỎ ĐI: import SkillStorageList from './skill-storage-list.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import SkillScreenSkeleton from './skill-loading.tsx';
 import UpgradeEffectToast from './upgrade-effect-toast.tsx';
@@ -73,7 +73,6 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
   );
 });
 
-// THÊM MỚI: Component SkillInventorySlot tương tự InventorySlot của trang bị
 const SkillInventorySlot = memo(({ ownedSkill, onClick, isProcessing }: { ownedSkill: OwnedSkill; onClick: (skill: OwnedSkill) => void; isProcessing: boolean; }) => {
     const skillBlueprint = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
     if (!skillBlueprint) return null;
@@ -81,7 +80,6 @@ const SkillInventorySlot = memo(({ ownedSkill, onClick, isProcessing }: { ownedS
 
     const baseClasses = "relative aspect-square rounded-lg border-2 transition-all duration-200 flex items-center justify-center group";
     
-    // Logic cho style và tương tác
     const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer hover:scale-105 hover:shadow-lg';
     const borderStyle = getRarityColor(ownedSkill.rarity);
     const backgroundStyle = 'bg-slate-900/80';
@@ -107,35 +105,16 @@ const SkillInventorySlot = memo(({ ownedSkill, onClick, isProcessing }: { ownedS
     );
 });
 
-
 const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const { handleCloseDetailModal, handleEquipSkill, handleUnequipSkill, handleDisenchantSkill, handleUpgradeSkill, equippedSkills, gold, isProcessing } = useSkillContext();
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
     
     const [upgradeToast, setUpgradeToast] = useState({ show: false, oldValue: 0, newValue: 0 });
-    // --- THAY ĐỔI: BỎ ĐI CÁC DÒNG NÀY ---
-    // const prevLevelRef = useRef(ownedSkill.level);
 
     const calculateEffectValue = (level: number) => {
         if (!skill || skill.baseEffectValue === undefined || skill.effectValuePerLevel === undefined) return 0;
         return skill.baseEffectValue + (level - 1) * skill.effectValuePerLevel;
     };
-    
-    // --- THAY ĐỔI: BỎ ĐI HOÀN TOÀN KHỐI useEffect THEO DÕI LEVEL ---
-    /*
-    useEffect(() => {
-        if (skill && skill.upgradeCost && ownedSkill.level > prevLevelRef.current) {
-            const oldValue = calculateEffectValue(prevLevelRef.current);
-            const newValue = calculateEffectValue(ownedSkill.level);
-
-            setUpgradeToast({ show: true, oldValue, newValue });
-            setTimeout(() => {
-                setUpgradeToast({ show: false, oldValue: 0, newValue: 0 });
-            }, 1600);
-        }
-        prevLevelRef.current = ownedSkill.level;
-    }, [ownedSkill.level, skill]);
-    */
 
     if (!skill) return null;
 
@@ -155,11 +134,9 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
         : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100';
     const mainActionDisabledStyle = 'bg-slate-700 text-slate-500 cursor-not-allowed';
 
-    // --- THAY ĐỔI: THÊM HÀM XỬ LÝ CLICK MỚI ---
     const handleLocalUpgradeClick = () => {
         if (!canAffordUpgrade || actionDisabled) return;
 
-        // 1. Kích hoạt toast ngay lập tức với giá trị *sắp có*
         const oldValue = currentEffectValue;
         const newValue = currentEffectValue + skill.effectValuePerLevel!;
 
@@ -168,7 +145,6 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
             setUpgradeToast({ show: false, oldValue: 0, newValue: 0 });
         }, 1600);
         
-        // 2. Gọi hàm nâng cấp từ context để bắt đầu cập nhật lên server
         handleUpgradeSkill(ownedSkill);
     };
 
@@ -209,7 +185,6 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
                                 </div>
                             </div>
                             <button 
-                                // --- THAY ĐỔI: SỬ DỤNG HÀM MỚI ---
                                 onClick={handleLocalUpgradeClick} 
                                 disabled={!canAffordUpgrade || actionDisabled} 
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-200 transform
@@ -239,7 +214,6 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
         </div>
     );
 });
-
 
 const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const { handleCloseCraftSuccessModal } = useSkillContext();
@@ -367,7 +341,6 @@ function SkillScreenContent() {
                             </div>
                             <button onClick={handleOpenMergeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
                         </div>
-                        {/* --- THAY ĐỔI LỚN: GIAO DIỆN KHO CHỨA ĐỒ MỚI --- */}
                         <div className="flex-grow min-h-0 overflow-y-auto hide-scrollbar -m-1 p-1">
                             {unequippedSkillsSorted.length > 0 ? (
                                 <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
@@ -394,7 +367,8 @@ function SkillScreenContent() {
 }
 
 interface SkillScreenProps {
-  onClose: (dataUpdated: boolean) => void;
+  // THAY ĐỔI: Cập nhật chữ ký của onClose để khớp với định nghĩa mới
+  onClose: (dataUpdated: boolean, data?: SkillScreenExitData) => void;
   userId: string;
 }
 
@@ -405,5 +379,4 @@ export default function SkillScreen({ onClose, userId }: SkillScreenProps) {
         </SkillProvider>
     );
 }
-
-// --- END OF FILE skill-ui.tsx ---
+// --- END OF FILE src/home/skill-game/skill-ui.tsx ---
