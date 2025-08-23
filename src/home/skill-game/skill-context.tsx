@@ -15,6 +15,8 @@ import {
 import { fetchSkillScreenData, updateUserSkills } from '../../gameDataService.ts';
 
 // --- INTERFACES & TYPES ---
+
+// THÊM MỚI: Định nghĩa và export cấu trúc dữ liệu trả về khi đóng màn hình
 export interface SkillScreenExitData {
     gold: number;
     ancientBooks: number;
@@ -92,12 +94,12 @@ const calculateMergeResult = (skillsToMerge: OwnedSkill[], blueprint: SkillBluep
 interface SkillProviderProps {
     children: ReactNode;
     userId: string;
+    // THAY ĐỔI: Cập nhật chữ ký của hàm onClose để nhận tham số thứ hai là dữ liệu
     onClose: (dataUpdated: boolean, data?: SkillScreenExitData) => void;
 }
 
 export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps) => {
     // --- STATE QUẢN LÝ DỮ LIỆU ---
-    // THAY ĐỔI: Luôn khởi tạo giá trị hiển thị ban đầu là 0 để tạo hiệu ứng
     const [gold, setGold] = useState(0);
     const [ancientBooks, setAncientBooks] = useState(0);
     const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([]);
@@ -133,24 +135,17 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
         const fetchData = async () => {
             if (!userId) return;
             try {
-                // Không set isLoading(true) ở đây nữa, để giá trị khởi tạo quản lý
+                setIsLoading(true);
                 const data = await fetchSkillScreenData(userId);
-                
-                // THAY ĐỔI LỚN: Sử dụng setTimeout để tách biệt việc render
-                // Điều này đảm bảo giao diện chính hiện ra với giá trị 0,
-                // sau đó mới cập nhật giá trị thực để kích hoạt animation.
-                setTimeout(() => {
-                    setGold(data.coins);
-                    setAncientBooks(data.ancientBooks);
-                    setOwnedSkills(data.skills.owned);
-                    setEquippedSkillIds(data.skills.equipped);
-                    setIsLoading(false); // Kết thúc loading sau khi dữ liệu đã sẵn sàng để animate
-                }, 0);
-
+                setGold(data.coins);
+                setAncientBooks(data.ancientBooks);
+                setOwnedSkills(data.skills.owned);
+                setEquippedSkillIds(data.skills.equipped);
             } catch (error) {
                 console.error("Failed to fetch skill screen data:", error);
                 showMessage("Lỗi: Không thể tải dữ liệu kỹ năng.");
-                setIsLoading(false); // Vẫn phải tắt loading nếu có lỗi
+            } finally {
+                setIsLoading(false);
             }
         };
         fetchData();
@@ -177,7 +172,6 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
     }, [ownedSkills, equippedSkillIds]);
 
     // --- CORE LOGIC FUNCTIONS ---
-    // (Toàn bộ các hàm logic bên dưới không cần thay đổi)
     const handleUpdateDatabase = useCallback(async (updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
         if (!userId) return false;
         setIsProcessing(true);
@@ -290,11 +284,19 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
     }, [isProcessing, ownedSkills, equippedSkillIds, handleUpdateDatabase]);
 
     // --- UI HANDLERS ---
+    // THAY ĐỔI LỚN: Cập nhật hàm handleClose để gửi lại dữ liệu nếu có thay đổi
     const handleClose = useCallback(() => {
         if (dataHasChanged) {
-            const exitData: SkillScreenExitData = { gold, ancientBooks, ownedSkills, equippedSkillIds, };
+            // Nếu có thay đổi, tạo object dữ liệu và gửi về
+            const exitData: SkillScreenExitData = {
+                gold,
+                ancientBooks,
+                ownedSkills,
+                equippedSkillIds,
+            };
             onClose(true, exitData);
         } else {
+            // Nếu không có gì thay đổi, chỉ gửi tín hiệu false
             onClose(false);
         }
     }, [onClose, dataHasChanged, gold, ancientBooks, ownedSkills, equippedSkillIds]);
