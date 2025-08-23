@@ -1,7 +1,7 @@
 // --- START OF FILE src/index.tsx ---
 
 import React, { useState, useEffect, useRef } from 'react';
-import { GameProvider } from './GameContext.tsx'; // Import the new provider
+import { GameProvider } from './GameContext.tsx';
 import { createRoot } from 'react-dom/client';
 import Home from './background-game.tsx';
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
@@ -77,11 +77,12 @@ interface LoadingScreenLayoutProps {
   logoFloating: boolean;
   appVersion: string;
   children: React.ReactNode;
+  className?: string;
 }
 
-const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ logoFloating, appVersion, children }) => {
+const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ logoFloating, appVersion, children, className }) => {
   return (
-    <div className="relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden">
+    <div className={`relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden ${className}`}>
       <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Loading Logo" className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`} style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
       {children}
       <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">Version {appVersion}</p>
@@ -102,7 +103,8 @@ const App: React.FC = () => {
   const [selectedMode, setSelectedMode] = useState<DisplayMode>('normal');
   const [rememberChoice, setRememberChoice] = useState(true);
   const [isModeModalOpen, setIsModeModalOpen] = useState(false);
-  const [isStartingGame, setIsStartingGame] = useState(false); // State mới để quản lý transition
+  // --- THAY ĐỔI: State mới để quản lý chuỗi animation phức tạp ---
+  const [isAnimatingStart, setIsAnimatingStart] = useState(false);
 
   const isInitialAuthCheck = useRef(true);
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
@@ -145,17 +147,13 @@ const App: React.FC = () => {
     });
     return () => unsub();
   }, []);
-
-  // Tách logic xử lý khi nhấn nút Start ra một hàm riêng
+  
+  // --- THAY ĐỔI: Logic xử lý khi nhấn nút "Start" ---
   const handleStartClick = async (mode: DisplayMode, savePreference: boolean) => {
-    setIsStartingGame(true); // Kích hoạt animation
+    if (isAnimatingStart) return; // Chặn click liên tục
+    setIsAnimatingStart(true);
     if (savePreference) localStorage.setItem('displayMode', mode);
     if (mode === 'fullscreen') await enterFullScreen();
-    
-    // Đợi animation fade-out của màn hình chọn chế độ hoàn tất (500ms) rồi mới chuyển step
-    setTimeout(() => {
-        setLoadingStep('launching');
-    }, 500); 
   };
 
   useEffect(() => {
@@ -171,7 +169,6 @@ const App: React.FC = () => {
       if (!isCancelled) {
         const savedMode = localStorage.getItem('displayMode') as DisplayMode | null;
          if (savedMode) {
-            // Tự động bắt đầu game nếu đã lưu lựa chọn, sử dụng hàm chuyển cảnh mới
             handleStartClick(savedMode, false); 
          } else {
             setLoadingStep('selecting_mode');
@@ -181,14 +178,32 @@ const App: React.FC = () => {
     preloadAssets();
     return () => { isCancelled = true; };
   }, [loadingStep, currentUser]);
+  
+  // --- THAY ĐỔI: useEffect để quản lý chuỗi thời gian của animation ---
+  useEffect(() => {
+    if (!isAnimatingStart) return;
+    
+    // TIMELINE:
+    // T=0s: Animation icon bắt đầu. GameSkeletonLoader render & fade-in ở nền.
+    // T=2s: Màn hình chọn chế độ bắt đầu fade-out. Đồng thời, chuyển sang bước "launching".
+    const transitionTimer = setTimeout(() => {
+        setLoadingStep('launching');
+    }, 2000); // 2 giây
+
+    return () => clearTimeout(transitionTimer);
+  }, [isAnimatingStart]);
+
 
   useEffect(() => {
     if (loadingStep === 'launching') {
-      // Thời gian GameSkeletonLoader hiển thị trong bước này là 2 giây
-      const stepTimer = setTimeout(() => setLoadingStep('ready'), 2000); 
+      // GameSkeletonLoader sẽ hiển thị thêm 2 giây trong bước này
+      const stepTimer = setTimeout(() => {
+          setLoadingStep('ready');
+      }, 2000); // 2 giây
       return () => { clearTimeout(stepTimer); };
     }
   }, [loadingStep]);
+
 
   const handleTabChange = (tab: TabType) => { setActiveTab(tab); setIsNavBarVisible(true); };
   const hideNavBar = () => setIsNavBarVisible(false);
@@ -219,7 +234,7 @@ const App: React.FC = () => {
 
   if (!currentUser) { return <AuthComponent appVersion={appVersion} logoFloating={logoFloating} />; }
 
-  if (loadingStep === 'selecting_mode') {
+  if (loadingStep === 'selecting_mode' || (loadingStep === 'launching' && isAnimatingStart)) {
     const ModeSelectionModal: React.FC<{ onSelect: (mode: DisplayMode) => void, onClose: () => void, currentMode: DisplayMode }> = ({ onSelect, onClose, currentMode }) => {
         const modes: DisplayMode[] = ['fullscreen', 'normal'];
         return (
@@ -250,33 +265,35 @@ const App: React.FC = () => {
     const handleModeSelect = (mode: DisplayMode) => { setSelectedMode(mode); setIsModeModalOpen(false); };
 
     return (
+      // --- THAY ĐỔI: Cấu trúc render để chồng lớp các màn hình ---
       <div className="relative w-full h-screen">
-        {/* GameSkeletonLoader được render sẵn ở dưới, và sẽ hiện ra khi isStartingGame=true */}
-        <GameSkeletonLoader show={isStartingGame} />
+        {/* Lớp dưới cùng: Skeleton Loader, chỉ render và hiển thị khi animation bắt đầu */}
+        <GameSkeletonLoader show={isAnimatingStart} />
         
-        {/* Màn hình chọn chế độ sẽ mờ đi khi isStartingGame=true */}
-        <div className={`transition-opacity duration-500 ${isStartingGame ? 'opacity-0' : 'opacity-100'}`}>
+        {/* Lớp trên cùng: Màn hình chọn chế độ. Sẽ không bị gỡ khỏi DOM ngay. */}
+        {/* Nó sẽ mờ đi sau 2s nhờ transition-delay */}
+        <div className={`absolute inset-0 transition-opacity duration-500 ${isAnimatingStart ? 'opacity-0 delay-[2000ms]' : 'opacity-100'}`}>
             <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
             {isModeModalOpen && <ModeSelectionModal onSelect={handleModeSelect} onClose={() => setIsModeModalOpen(false)} currentMode={selectedMode} />}
             <div className="w-full flex flex-col items-center px-4 mt-5">
                 <div className="relative w-full max-w-xs">
-                <button onClick={() => !isStartingGame && setIsModeModalOpen(true)} className="w-full flex items-center justify-between p-3 bg-black/40 border-2 border-gray-600 rounded-lg text-white hover:border-cyan-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-colors duration-300">
+                <button onClick={() => !isAnimatingStart && setIsModeModalOpen(true)} className="w-full flex items-center justify-between p-3 bg-black/40 border-2 border-gray-600 rounded-lg text-white hover:border-cyan-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-colors duration-300">
                     <span className="flex items-center"><ModeIcon mode={selectedMode} className="w-5 h-5 mr-3 text-cyan-300" /><span className="font-semibold tracking-wide">{selectedMode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span></span>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                 </button>
                 </div>
-                <div onClick={() => !isStartingGame && setRememberChoice(p => !p)} className="mt-4 flex items-center cursor-pointer p-2 rounded-md hover:bg-white/10 transition-colors">
+                <div onClick={() => !isAnimatingStart && setRememberChoice(p => !p)} className="mt-4 flex items-center cursor-pointer p-2 rounded-md hover:bg-white/10 transition-colors">
                 {rememberChoice ? (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>)}
                 <span className="ml-2 text-sm text-gray-300">Remember choice</span>
                 </div>
                 <button
                   onClick={() => handleStartClick(selectedMode, rememberChoice)}
-                  disabled={isStartingGame} // Vô hiệu hóa nút khi đang chuyển cảnh
+                  disabled={isAnimatingStart}
                   className="mt-6 w-48 mx-auto flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full text-white font-semibold text-lg tracking-wide hover:from-cyan-400 hover:to-blue-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-400/40 focus:outline-none focus:ring-4 focus:ring-cyan-300/50"
                 >
                   Start
-                  {/* Icon sẽ có animation khi isStartingGame là true */}
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transform transition-all duration-500 ease-in-out ${isStartingGame ? 'scale-150 rotate-90 opacity-0' : 'scale-100 rotate-0 opacity-100'}`} viewBox="0 0 20 20" fill="currentColor">
+                  {/* Icon có animation kéo dài 2 giây */}
+                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transform transition-all ease-in-out ${isAnimatingStart ? 'duration-[2000ms] scale-[2.5] rotate-[360deg] opacity-0' : 'duration-300 scale-100 rotate-0 opacity-100'}`} viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                   </svg>
                 </button>
@@ -288,7 +305,7 @@ const App: React.FC = () => {
   }
 
   if (loadingStep === 'launching') {
-    // Bây giờ, GameSkeletonLoader sẽ hiển thị liền mạch mà không bị thay đổi
+    // Giai đoạn này chỉ để đảm bảo SkeletonLoader hiển thị đủ lâu
     return <GameSkeletonLoader show={true} />;
   }
 
