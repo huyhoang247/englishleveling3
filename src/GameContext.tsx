@@ -3,16 +3,20 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { auth } from './firebase.js';
-import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
+import { 
+    OwnedSkill, ALL_SKILLS, SkillBlueprint, Rarity,
+    CRAFTING_COST, getRandomRarity, getNextRarity
+} from './skill-data.tsx';
 import { OwnedItem, EquippedItems } from './equipment.tsx';
 // --- THÊM IMPORT MỚI ---
 import { calculateTotalStatValue, statConfig, calculateUpgradeCost, getBonusForLevel } from './home/upgrade-stats/upgrade-ui.tsx';
 
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
-  updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processShopPurchase,
-  // --- THÊM IMPORT MỚI ---
-  upgradeUserStats
+  updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processShopPurchase, 
+  // --- THÊM IMPORT MỚI --- 
+  upgradeUserStats, 
+  updateUserSkills 
 } from './gameDataService.ts';
 
 // --- Define the shape of the context ---
@@ -79,6 +83,12 @@ interface IGameContext {
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
     handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
     handleSkillScreenClose: (dataUpdated: boolean) => void;
+    handleEquipSkill: (skillToEquip: OwnedSkill) => Promise<boolean>;
+    handleUnequipSkill: (skillToUnequip: OwnedSkill) => Promise<boolean>;
+    handleCraftSkill: () => Promise<OwnedSkill | null>;
+    handleDisenchantSkill: (skillToDisenchant: OwnedSkill) => Promise<boolean>;
+    handleUpgradeSkill: (skillToUpgrade: OwnedSkill, cost: number) => Promise<OwnedSkill | null>;
+    handleMergeSkills: (skillsToConsume: OwnedSkill[], newSkill: OwnedSkill, refundGold: number) => Promise<boolean>;
     // --- THÊM HÀM MỚI CHO LOGIC UPGRADE ---
     handleStatUpgrade: (statId: 'hp' | 'atk' | 'def') => Promise<void>;
 
@@ -125,7 +135,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [userStats, setUserStats] = useState({ hp: 0, atk: 0, def: 0 });
   const [jackpotPool, setJackpotPool] = useState(0);
   const [bossBattleHighestFloor, setBossBattleHighestFloor] = useState(0);
-  const [ancientBooks, setAncientBooks] = useState(0);
+  const [ancientBooks, setAncientBooks] = useState(0); 
   const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([]);
   const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([null, null, null]);
   const [totalVocabCollected, setTotalVocabCollected] = useState(0);
@@ -233,6 +243,84 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     } catch (error) { console.error("Service call for Miner Challenge end failed: ", error); } finally { setIsSyncingData(false); }
   };
 
+  // --- START: LOGIC TỪ SKILL_CONTEXT CHUYỂN VÀO ---
+
+  const _updateUserSkillsData = useCallback(async (updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) {
+          console.error("User not authenticated for skill update.");
+          return { success: false, finalCoins: coins, finalBooks: ancientBooks };
+      }
+      setIsSyncingData(true);
+      try {
+          const { newCoins, newBooks } = await updateUserSkills(userId, updates);
+          setCoins(newCoins);
+          setAncientBooks(newBooks);
+          setOwnedSkills(updates.newOwned);
+          setEquippedSkillIds(updates.newEquippedIds);
+          return { success: true, finalCoins: newCoins, finalBooks: newBooks };
+      } catch (error) {
+          console.error("Failed to update user skills:", error);
+          // Note: No rollback on UI here, assuming parent component will show error message.
+          // A more robust system might refetch data on failure.
+          return { success: false, finalCoins: coins, finalBooks: ancientBooks };
+      } finally {
+          setIsSyncingData(false);
+      }
+  }, [coins, ancientBooks]);
+
+  const handleEquipSkill = useCallback(async (skillToEquip: OwnedSkill): Promise<boolean> => {
+      const firstEmptySlotIndex = equippedSkillIds.findIndex(slot => slot === null);
+      if (firstEmptySlotIndex === -1) return false;
+      
+      const newEquippedIds = [...equippedSkillIds];
+      newEquippedIds[firstEmptySlotIndex] = skillToEquip.id;
+      const { success } = await _updateUserSkillsData({ newOwned: ownedSkills, newEquippedIds, goldChange: 0, booksChange: 0 });
+      return success;
+  }, [equippedSkillIds, ownedSkills, _updateUserSkillsData]);
+
+  const handleUnequipSkill = useCallback(async (skillToUnequip: OwnedSkill): Promise<boolean> => {
+      const slotIndex = equippedSkillIds.findIndex(id => id === skillToUnequip.id);
+      if (slotIndex === -1) return false;
+
+      const newEquippedIds = [...equippedSkillIds];
+      newEquippedIds[slotIndex] = null;
+      const { success } = await _updateUserSkillsData({ newOwned: ownedSkills, newEquippedIds, goldChange: 0, booksChange: 0 });
+      return success;
+  }, [equippedSkillIds, ownedSkills, _updateUserSkillsData]);
+
+  const handleCraftSkill = useCallback(async (): Promise<OwnedSkill | null> => {
+      const newSkillBlueprint = ALL_SKILLS[Math.floor(Math.random() * ALL_SKILLS.length)];
+      const newRarity = getRandomRarity();
+      const newOwnedSkill: OwnedSkill = { id: `owned-${Date.now()}-${newSkillBlueprint.id}-${Math.random()}`, skillId: newSkillBlueprint.id, level: 1, rarity: newRarity };
+      const newOwnedList = [...ownedSkills, newOwnedSkill];
+
+      const { success } = await _updateUserSkillsData({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: 0, booksChange: -CRAFTING_COST });
+      return success ? newOwnedSkill : null;
+  }, [ownedSkills, equippedSkillIds, _updateUserSkillsData]);
+
+  const handleDisenchantSkill = useCallback(async (skillToDisenchant: OwnedSkill): Promise<boolean> => {
+      const newOwnedList = ownedSkills.filter(s => s.id !== skillToDisenchant.id);
+      const { success } = await _updateUserSkillsData({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: skillToDisenchant.refundGold ?? 0, booksChange: skillToDisenchant.refundBooks ?? 0 });
+      return success;
+  }, [ownedSkills, equippedSkillIds, _updateUserSkillsData]);
+  
+  const handleUpgradeSkill = useCallback(async (skillToUpgrade: OwnedSkill, cost: number): Promise<OwnedSkill | null> => {
+      const updatedSkill = { ...skillToUpgrade, level: skillToUpgrade.level + 1 };
+      const newOwnedList = ownedSkills.map(s => s.id === skillToUpgrade.id ? updatedSkill : s);
+      const { success } = await _updateUserSkillsData({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: -cost, booksChange: 0 });
+      return success ? updatedSkill : null;
+  }, [ownedSkills, equippedSkillIds, _updateUserSkillsData]);
+
+  const handleMergeSkills = useCallback(async (skillsToConsume: OwnedSkill[], newSkill: OwnedSkill, refundGold: number): Promise<boolean> => {
+      const skillIdsToConsume = skillsToConsume.map(s => s.id);
+      const newOwnedList = ownedSkills.filter(s => !skillIdsToConsume.includes(s.id)).concat(newSkill);
+      const { success } = await _updateUserSkillsData({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: refundGold, booksChange: 0 });
+      return success;
+  }, [ownedSkills, equippedSkillIds, _updateUserSkillsData]);
+
+  // --- END: SKILL LOGIC ---
+
   const handleUpdatePickaxes = async (amountToAdd: number) => {
     const userId = auth.currentUser?.uid; if (!userId) return;
     setPickaxes(await updateUserPickaxes(userId, pickaxes + amountToAdd));
@@ -338,7 +426,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     return equippedSkillIds.map(equippedId => { if (!equippedId) return null; const owned = ownedSkills.find(s => s.id === equippedId); if (!owned) return null; const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId); if (!blueprint) return null; return { ...owned, ...blueprint }; }).filter((skill): skill is OwnedSkill & SkillBlueprint => skill !== null);
   };
   
-  const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => { setCoins(updates.newCoins); setGems(updates.newGems); setTotalVocabCollected(updates.newTotalVocab); };
+  const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => { setCoins(updates.newCoins); setGems(updates.newGems); setTotalVocabCollected(updates.totalVocab); };
   const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => { if (updates.coins !== undefined) setCoins(updates.coins); if (updates.masteryCards !== undefined) setMasteryCards(updates.masteryCards); };
   
   const toggleRank = createToggleFunction(setIsRankOpen);
@@ -374,7 +462,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isUpgradingStats, upgradeMessage, upgradeToastData,
 
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool,
-    handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose,
+    handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, 
+    handleSkillScreenClose, handleEquipSkill, handleUnequipSkill, handleCraftSkill, handleDisenchantSkill, handleUpgradeSkill, handleMergeSkills,
     
     // --- THÊM HÀM VÀO VALUE CỦA PROVIDER ---
     handleStatUpgrade,
