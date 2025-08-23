@@ -22,13 +22,14 @@ import SkillScreenSkeleton from './skill-loading.tsx';
 import UpgradeEffectToast from './upgrade-effect-toast.tsx';
 
 // --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 SỬA ĐỔI01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}> <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l-2.72-2.72a1 1 0 010-1.414l4.243-4.243a1 1 0 011.414 0l2.72 2.72a4 4 0 011.343 2.863l3.155-1.262a1 1 0 011.23 1.23l-1.262 3.155a4 4 0 01-1.343 2.863l2.72 2.72a1 1 0 010 1.414l-4.243 4.243a1 1 0 01-1.414 0l-2.72-2.72a4 4 0 01-2.863-1.343L6.663 15.147a1 1 0 01-1.23-1.23z" /> <path d="M11.379 4.424a1 1 0 01-1.414 0L4.424 9.965a1 1 0 010 1.414l2.121 2.121a1 1 0 011.414 0l5.54-5.54a1 1 0 010-1.414l-2.121-2.121z" /> </svg>);
 
 // --- CÁC COMPONENT CON (ĐÃ BỌC TRONG React.memo) ---
-const Header = memo(() => {
-    const { gold, handleClose } = useSkillContext();
-    const animatedGold = useAnimateValue(gold);
+// SỬA ĐỔI: Header giờ nhận `goldValue` làm prop thay vì tự lấy từ context
+const Header = memo(({ goldValue }: { goldValue: number }) => {
+    const { handleClose } = useSkillContext(); // Chỉ lấy những gì cần thiết từ context
+    const animatedGold = useAnimateValue(goldValue); // Dùng giá trị được truyền vào
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
@@ -44,7 +45,7 @@ const Header = memo(() => {
     );
 });
 
-// ... (Các component con khác giữ nguyên, không cần dán lại)
+// ... (Các component con khác giữ nguyên, không cần thay đổi)
 const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onClick: () => void }) => {
   const { isProcessing } = useSkillContext();
   const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
@@ -295,13 +296,15 @@ const MergeModal = memo(() => {
 
 function SkillScreenContent() {
     const {
-        isLoading, isProcessing, ancientBooks, ownedSkills,
+        isLoading, gold, isProcessing, ancientBooks, ownedSkills,
         equippedSkills, unequippedSkillsSorted, selectedSkill, newlyCraftedSkill,
         message, messageKey, mergeToast, craftErrorToast, equipErrorToast, disenchantSuccessToast,
         handleCraftSkill, handleSelectSkill, handleOpenMergeModal, MAX_SKILLS_IN_STORAGE
     } = useSkillContext();
+    
+    // SỬA ĐỔI: Tạo biến để kiểm soát giá trị gold gửi xuống Header
+    const displayGold = isLoading ? 0 : gold;
 
-    // SỬA ĐỔI LỚN: Quay lại cấu trúc render song song nhưng bỏ hiệu ứng transition
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
             <style>{` .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
@@ -315,14 +318,13 @@ function SkillScreenContent() {
             {newlyCraftedSkill && <CraftingSuccessModal ownedSkill={newlyCraftedSkill} />}
             <MergeModal />
             
-            {/* Lớp phủ Skeleton: Hiển thị hoặc ẩn đi ngay lập tức */}
             <div className={`absolute inset-0 z-20 ${isLoading ? '' : 'hidden'}`}>
                 <SkillScreenSkeleton />
             </div>
-
-            {/* Nội dung chính: Luôn được render, ẩn đi khi isLoading=true */}
+            
             <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-                <Header />
+                {/* SỬA ĐỔI: Truyền `displayGold` vào Header */}
+                <Header goldValue={displayGold} />
                 <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
                     <section className="flex-shrink-0 py-4">
                         <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
@@ -370,7 +372,6 @@ function SkillScreenContent() {
 }
 
 interface SkillScreenProps {
-  // THAY ĐỔI: Cập nhật chữ ký của onClose để khớp với định nghĩa mới
   onClose: (dataUpdated: boolean, data?: SkillScreenExitData) => void;
   userId: string;
 }
