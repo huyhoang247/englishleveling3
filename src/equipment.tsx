@@ -1,6 +1,7 @@
-// --- START OF FILE equipment.tsx ---
+// --- START OF FILE src/equipment.tsx ---
 
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
+import { useGame, ForgeGroup } from './GameContext.tsx'; // *** THAY ĐỔI QUAN TRỌNG: Import useGame hook ***
 // THAY ĐỔI: Import các hàm và cấu trúc mới từ item-database
 import { 
     getItemDefinition, 
@@ -10,7 +11,10 @@ import {
     type ItemBlueprint,
     type ItemDefinition, 
     type ItemRank, 
-    RARITY_ORDER 
+    RARITY_ORDER,
+    CRAFTING_COST, // *** THAY ĐỔI: Import hằng số từ file tập trung
+    DISMANTLE_RETURN_PIECES,
+    MAX_ITEMS_IN_STORAGE
 } from './inventory/item-database.ts';
 // THAY ĐỔI: Import tài nguyên hình ảnh tập trung
 import { uiAssets, equipmentUiAssets } from './game-assets.ts';
@@ -21,8 +25,6 @@ import CoinDisplay from './ui/display/coin-display.tsx';
 // *** THAY ĐỔI MỚI: Import Toast component ***
 import RateLimitToast from './thong-bao.tsx';
 
-// --- THAY ĐỔI: Import service để tự xử lý logic ---
-import { updateUserInventory } from './gameDataService.ts';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
@@ -87,32 +89,10 @@ const getNextRank = (rank: ItemRank): ItemRank | null => {
     return RARITY_ORDER[currentIndex + 1];
 };
 
-const getRandomRank = (): ItemRank => {
-    const rand = Math.random() * 100;
-    if (rand < 0.1) return 'SR';
-    if (rand < 1) return 'S';
-    if (rand < 5) return 'A';
-    if (rand < 20) return 'B';
-    if (rand < 50) return 'D';
-    return 'E';
-};
-
-// 6. Logic chi phí
-const CRAFTING_COST = 50;
-const DISMANTLE_RETURN_PIECES = 25; // THAY ĐỔI: Từ Sách thành Mảnh
-
 const getUpgradeCost = (itemDef: ItemDefinition, level: number): number => {
     const rarityMultiplier = { E: 1, D: 1.5, B: 2.5, A: 4, S: 7, SR: 12, SSR: 20 };
     const baseCost = 50;
     return Math.floor(baseCost * Math.pow(level, 1.2) * rarityMultiplier[itemDef.rarity]);
-};
-
-const getTotalUpgradeCost = (itemDef: ItemDefinition, level: number): number => {
-    let total = 0;
-    for (let i = 1; i < level; i++) {
-        total += getUpgradeCost(itemDef, i);
-    }
-    return total;
 };
 
 // --- Các Icon Giao Diện ---
@@ -125,7 +105,6 @@ const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => ( <im
 // --- CÁC COMPONENT CON (KHÔNG THAY ĐỔI) ---
 // Header, EquipmentSlot, InventorySlot, ItemDetailModal, CraftingSuccessModal, ForgeModal
 // Các component con này vẫn giữ nguyên, chúng chỉ nhận dữ liệu từ state cục bộ của EquipmentScreen
-// (Do mã nguồn dài nên tôi sẽ không lặp lại chúng ở đây, giả định chúng đã tồn tại như trong file gốc)
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
@@ -412,17 +391,18 @@ const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedIte
 });
 
 interface ForgeResult { level: number; refundGold: number; }
-interface ForgeGroup { 
-    blueprint: ItemBlueprint;
-    rarity: ItemRank; 
-    items: OwnedItem[]; 
-    nextRank: ItemRank | null; 
-    estimatedResult: ForgeResult; 
-}
 
 const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinition): ForgeResult => {
     if (itemsToForge.length < 3) return { level: 1, refundGold: 0 };
-    const totalInvestedGold = itemsToForge.reduce((total, item) => total + getTotalUpgradeCost(definition, item.level), 0);
+    // This needs to import getTotalUpgradeCost, which isn't exported from item-database, so we define a local version
+    const getTotalUpgradeCostForForge = (itemDef: ItemDefinition, level: number): number => {
+        let total = 0;
+        for (let i = 1; i < level; i++) {
+            total += getUpgradeCost(itemDef, i);
+        }
+        return total;
+    };
+    const totalInvestedGold = itemsToForge.reduce((total, item) => total + getTotalUpgradeCostForForge(definition, item.level), 0);
     let finalLevel = 1, remainingGold = totalInvestedGold;
     while (true) {
         const costForNextLevel = getUpgradeCost(definition, finalLevel);
@@ -431,11 +411,10 @@ const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinit
     return { level: finalLevel, refundGold: remainingGold };
 };
 
-const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, equippedItemIds }: { isOpen: boolean; onClose: () => void; ownedItems: OwnedItem[]; onForge: (group: ForgeGroup) => void; isProcessing: boolean; equippedItemIds: (string | null)[] }) => {
-    const forgeableGroups = useMemo<ForgeGroup[]>(() => {
+const useForgeableGroups = (isOpen: boolean, ownedItems: OwnedItem[], equippedItemIds: (string | null)[]) => {
+    return useMemo<ForgeGroup[]>(() => {
         if (!isOpen) return [];
         const unequippedItems = ownedItems.filter(s => !equippedItemIds.includes(s.id));
-        
         const groups: Record<string, OwnedItem[]> = {};
         for (const item of unequippedItems) {
             const definition = getItemDefinition(item.itemId);
@@ -445,7 +424,6 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
             if (!groups[key]) groups[key] = [];
             groups[key].push(item);
         }
-
         return Object.values(groups)
             .filter(group => group.length >= 3)
             .map(group => {
@@ -458,10 +436,13 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
                 
                 return { blueprint, rarity: firstItemDef.rarity, items: sortedItems, nextRank, estimatedResult };
             })
-            .filter(group => group.nextRank !== null)
+            .filter((group): group is ForgeGroup => group.nextRank !== null) // Type guard
             .sort((a, b) => a.blueprint.name.localeCompare(b.blueprint.name));
     }, [isOpen, ownedItems, equippedItemIds]);
+};
 
+const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, equippedItemIds }: { isOpen: boolean; onClose: () => void; ownedItems: OwnedItem[]; onForge: (group: ForgeGroup) => void; isProcessing: boolean; equippedItemIds: (string | null)[] }) => {
+    const forgeableGroups = useForgeableGroups(isOpen, ownedItems, equippedItemIds);
     if (!isOpen) return null;
 
     return (
@@ -483,12 +464,12 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
                         forgeableGroups.map(group => (
                             <div key={`${group.blueprint.baseId}-${group.rarity}`} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 flex items-center justify-between gap-4">
                                 <div className="flex flex-1 items-center justify-center gap-4 sm:gap-6">
-                                    <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.rarity)} bg-black/30`}>
+                                    <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.rarity as ItemRank)} bg-black/30`}>
                                         <img src={group.blueprint.icon} className="w-12 h-12 object-contain" />
                                         <span className="absolute -top-2 -right-2 bg-cyan-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">3/{group.items.length}</span>
                                     </div>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                                    <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.nextRank!)} bg-black/30`}>
+                                    <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.nextRank! as ItemRank)} bg-black/30`}>
                                         <img src={group.blueprint.icon} className="w-12 h-12 object-contain" />
                                         <span className="absolute -top-2 -right-2 bg-slate-800 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">Lv.{group.estimatedResult.level}</span>
                                     </div>
@@ -508,45 +489,31 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 // --- THAY ĐỔI: Cập nhật Props Interface ---
 interface EquipmentScreenProps {
     onClose: () => void;
-    userId: string;
-    initialGold: number;
-    initialEquipmentPieces: number;
-    initialOwnedItems: OwnedItem[];
-    initialEquippedItems: EquippedItems;
-    onDataChange: () => void;
 }
 
-export default function EquipmentScreen({ 
-    onClose, 
-    userId,
-    initialGold, 
-    initialEquipmentPieces, 
-    initialOwnedItems, 
-    initialEquippedItems,
-    onDataChange
-}: EquipmentScreenProps) {
-    // --- THAY ĐỔI: Component giờ sẽ tự quản lý state của chính nó ---
-    const [gold, setGold] = useState(initialGold);
-    const [equipmentPieces, setEquipmentPieces] = useState(initialEquipmentPieces);
-    const [ownedItems, setOwnedItems] = useState(initialOwnedItems);
-    const [equippedItems, setEquippedItems] = useState(initialEquippedItems);
+export default function EquipmentScreen({ onClose }: EquipmentScreenProps) {
+    // --- THAY ĐỔI LỚN: Lấy toàn bộ state và hàm xử lý từ GameContext ---
+    const {
+        coins,
+        equipmentPieces,
+        ownedItems,
+        equippedItems,
+        isSyncingData,
+        handleEquipItem: contextHandleEquipItem,
+        handleUnequipItem: contextHandleUnequipItem,
+        handleCraftItem: contextHandleCraftItem,
+        handleDismantleItem: contextHandleDismantleItem,
+        handleUpgradeItem: contextHandleUpgradeItem,
+        handleForgeItems: contextHandleForgeItems,
+    } = useGame();
 
+    // --- State cục bộ chỉ dành cho UI, không phải dữ liệu game ---
     const [selectedItem, setSelectedItem] = useState<OwnedItem | null>(null);
     const [newlyCraftedItem, setNewlyCraftedItem] = useState<OwnedItem | null>(null);
     const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [messageKey, setMessageKey] = useState(0);
-    const [isProcessing, setIsProcessing] = useState(false);
     const [dismantleSuccessToast, setDismantleSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
-    const MAX_ITEMS_IN_STORAGE = 50;
-
-    // --- THAY ĐỔI: Đồng bộ state cục bộ nếu props ban đầu thay đổi (quan trọng khi user thay đổi) ---
-    useEffect(() => {
-        setGold(initialGold);
-        setEquipmentPieces(initialEquipmentPieces);
-        setOwnedItems(initialOwnedItems);
-        setEquippedItems(initialEquippedItems);
-    }, [initialGold, initialEquipmentPieces, initialOwnedItems, initialEquippedItems]);
 
     const equippedItemsMap = useMemo(() => {
         const map: { [key in EquipmentSlotType]: OwnedItem | null } = { weapon: null, armor: null, Helmet: null };
@@ -582,150 +549,59 @@ export default function EquipmentScreen({
         return () => clearTimeout(timer);
     }, []);
     
-    // --- THAY ĐỔI LỚN: Hàm xử lý logic gọi service, giờ nằm hoàn toàn bên trong EquipmentScreen ---
-    const performInventoryUpdate = useCallback(async (updates: { 
-        newOwned: OwnedItem[]; 
-        newEquipped: EquippedItems; 
-        goldChange: number; 
-        piecesChange: number;
-    }) => {
-        if (isProcessing) {
-            showMessage("Thao tác trước đó đang được xử lý...");
-            return Promise.reject("Processing");
-        }
-        setIsProcessing(true);
-        try {
-            // 1. Tự gọi service để cập nhật lên Firestore
-            await updateUserInventory(userId, updates);
-            
-            // 2. Cập nhật state cục bộ ngay lập tức để UI phản hồi nhanh
-            setOwnedItems(updates.newOwned);
-            setEquippedItems(updates.newEquipped);
-            setGold(prev => prev + updates.goldChange);
-            setEquipmentPieces(prev => prev + updates.piecesChange);
-            
-            // 3. Gọi callback để báo cho component cha tải lại state tổng thể
-            onDataChange();
-
-        } catch (error: any) { 
-            showMessage(`Lỗi: ${error.message || 'Cập nhật thất bại'}`); 
-            throw error;
-        } finally { 
-            setIsProcessing(false); 
-        }
-    }, [isProcessing, userId, onDataChange, showMessage]);
+    // --- THAY ĐỔI LỚN: Các hàm xử lý giờ chỉ gọi hàm từ context và xử lý UI (thông báo, modal) ---
 
     const handleEquipItem = useCallback(async (itemToEquip: OwnedItem) => {
-        const itemDef = getItemDefinition(itemToEquip.itemId);
-        if (!itemDef || !EQUIPMENT_SLOT_TYPES.includes(itemDef.type as any)) { showMessage("Vật phẩm này không thể trang bị."); return; }
-        const slotType = itemDef.type as EquipmentSlotType;
-        if (equippedItems[slotType] === itemToEquip.id) { showMessage("Trang bị đã được mặc."); return; }
-        
-        const newEquipped = { ...equippedItems, [slotType]: itemToEquip.id };
         try {
-            await performInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
+            await contextHandleEquipItem(itemToEquip);
             setSelectedItem(null);
-        } catch (error) { console.error(`Equip failed:`, error); }
-    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage]);
+        } catch (error: any) { showMessage(error.message || "Trang bị thất bại"); }
+    }, [contextHandleEquipItem, showMessage]);
 
     const handleUnequipItem = useCallback(async (itemToUnequip: OwnedItem) => {
-        const itemDef = getItemDefinition(itemToUnequip.itemId);
-        if (!itemDef) return;
-        const slotType = itemDef.type as EquipmentSlotType;
-        if (equippedItems[slotType] !== itemToUnequip.id) { showMessage("Lỗi: Không tìm thấy trang bị."); return; }
-        
-        const newEquipped = { ...equippedItems, [slotType]: null };
         try {
-            await performInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
+            await contextHandleUnequipItem(itemToUnequip);
             setSelectedItem(null);
-        } catch (error) { console.error(`Unequip failed:`, error); }
-    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage]);
+        } catch (error: any) { showMessage(error.message || "Gỡ trang bị thất bại"); }
+    }, [contextHandleUnequipItem, showMessage]);
   
     const handleCraftItem = useCallback(async () => {
-        if (equipmentPieces < CRAFTING_COST) { showMessage(`Không đủ Mảnh Trang Bị. Cần ${CRAFTING_COST}.`); return; }
-        if (unequippedItemsSorted.length >= MAX_ITEMS_IN_STORAGE) { showMessage(`Kho chứa đã đầy.`); return; }
-        
         try {
-            const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
-            const targetRank = getRandomRank();
-            const finalItemDef = generateItemDefinition(randomBlueprint, targetRank, true);
-            
-            const newOwnedItem: OwnedItem = { 
-                id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, 
-                itemId: finalItemDef.id, 
-                level: 1,
-                stats: finalItemDef.stats || {}
-            };
-            const newOwnedList = [...ownedItems, newOwnedItem];
-            
-            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: -CRAFTING_COST });
-            setNewlyCraftedItem(newOwnedItem);
-        } catch(error) { console.error(`Craft failed:`, error); }
-    }, [equipmentPieces, ownedItems, equippedItems, performInventoryUpdate, showMessage, unequippedItemsSorted.length]);
+            const newItem = await contextHandleCraftItem();
+            if (newItem) {
+                setNewlyCraftedItem(newItem);
+            }
+        } catch (error: any) { showMessage(error.message || "Chế tạo thất bại"); }
+    }, [contextHandleCraftItem, showMessage]);
 
     const handleDismantleItem = useCallback(async (itemToDismantle: OwnedItem) => {
-        if (Object.values(equippedItems).includes(itemToDismantle.id)) { showMessage("Không thể phân rã trang bị đang mặc."); return; }
-        
-        const itemDef = getItemDefinition(itemToDismantle.itemId)!;
-        const goldToReturn = getTotalUpgradeCost(itemDef, itemToDismantle.level);
-        const newOwnedList = ownedItems.filter(s => s.id !== itemToDismantle.id);
-        
         try {
-            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: goldToReturn, piecesChange: DISMANTLE_RETURN_PIECES });
+            await contextHandleDismantleItem(itemToDismantle);
             setSelectedItem(null);
             setDismantleSuccessToast({ show: true, message: 'Đã tái chế thành công.' });
             setTimeout(() => setDismantleSuccessToast(prev => ({ ...prev, show: false })), 4000);
-        } catch(error) { console.error(`Dismantle failed:`, error); }
-    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage]);
+        } catch (error: any) { showMessage(error.message || "Tái chế thất bại"); }
+    }, [contextHandleDismantleItem, showMessage]);
 
     const handleUpgradeItem = useCallback(async (itemToUpgrade: OwnedItem, statKey: string, increase: number) => {
-        const itemDef = getItemDefinition(itemToUpgrade.itemId)!;
-        const cost = getUpgradeCost(itemDef, itemToUpgrade.level);
-        if (gold < cost) { showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); return; }
-        
-        const newStats = { ...itemToUpgrade.stats };
-        if (newStats.hasOwnProperty(statKey) && typeof newStats[statKey] === 'number') {
-            newStats[statKey] = newStats[statKey] + increase;
-        } else {
-            showMessage("Lỗi: Không thể nâng cấp chỉ số không tồn tại.");
-            return;
-        }
-
-        const updatedItem = { ...itemToUpgrade, level: itemToUpgrade.level + 1, stats: newStats };
-        const newOwnedList = ownedItems.map(s => s.id === itemToUpgrade.id ? updatedItem : s);
         try {
-            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: -cost, piecesChange: 0 });
-            setSelectedItem(updatedItem); // Cập nhật item đang xem trong modal
-        } catch(error) { console.error(`Upgrade failed:`, error); }
-    }, [gold, ownedItems, equippedItems, performInventoryUpdate, showMessage]);
+            const updatedItem = await contextHandleUpgradeItem(itemToUpgrade, statKey, increase);
+            if (updatedItem) {
+                setSelectedItem(updatedItem); // Cập nhật item đang xem trong modal
+            }
+        } catch (error: any) { showMessage(error.message || "Nâng cấp thất bại"); }
+    }, [contextHandleUpgradeItem, showMessage]);
 
     const handleForgeItems = useCallback(async (group: ForgeGroup) => {
-        if (group.items.length < 3 || !group.nextRank) { showMessage("Không đủ điều kiện để hợp nhất."); return; }
-        
-        const itemsToConsume = group.items.slice(0, 3);
-        const itemIdsToConsume = itemsToConsume.map(s => s.id);
-        
         try {
-            const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
-            const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
-            const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank, true);
-
-            const newForgedItem: OwnedItem = { 
-                id: `owned-${Date.now()}-${upgradedItemDef.id}`, 
-                itemId: upgradedItemDef.id, 
-                level: finalLevel,
-                stats: upgradedItemDef.stats || {}
-            };
-            const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
-            
-            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: refundGold, piecesChange: 0 });
-            
-            let successMsg = `Hợp nhất thành công ${upgradedItemDef.name} [${group.nextRank}] - Đạt Lv. ${finalLevel}!`;
-            if (refundGold > 0) successMsg += ` Hoàn lại ${refundGold.toLocaleString()} vàng.`;
-            showMessage(successMsg);
+            const forgedItem = await contextHandleForgeItems(group);
+            if (forgedItem) {
+                const itemDef = getItemDefinition(forgedItem.itemId)!;
+                showMessage(`Hợp nhất thành công ${itemDef.name} [${itemDef.rarity}]!`);
+            }
             setIsForgeModalOpen(false);
-        } catch (error) { console.error(`Forge failed:`, error); }
-    }, [ownedItems, equippedItems, performInventoryUpdate, showMessage]);
+        } catch (error: any) { showMessage(error.message || "Hợp nhất thất bại"); }
+    }, [contextHandleForgeItems, showMessage]);
 
     const handleSelectSlot = useCallback((slotType: EquipmentSlotType) => {
         const item = equippedItemsMap[slotType];
@@ -744,16 +620,16 @@ export default function EquipmentScreen({
             
             {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[101]">{message}</div>}
             <RateLimitToast show={dismantleSuccessToast.show} message={dismantleSuccessToast.message} showIcon={false} />
-            {selectedItem && <ItemDetailModal ownedItem={selectedItem} onClose={handleCloseDetailModal} onEquip={handleEquipItem} onUnequip={handleUnequipItem} onDismantle={handleDismantleItem} onUpgrade={handleUpgradeItem} isEquipped={Object.values(equippedItems).includes(selectedItem.id)} gold={gold} isProcessing={isProcessing}/>}
+            {selectedItem && <ItemDetailModal ownedItem={selectedItem} onClose={handleCloseDetailModal} onEquip={handleEquipItem} onUnequip={handleUnequipItem} onDismantle={handleDismantleItem} onUpgrade={handleUpgradeItem} isEquipped={Object.values(equippedItems).includes(selectedItem.id)} gold={coins} isProcessing={isSyncingData}/>}
             {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
-            <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
+            <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isSyncingData} equippedItemIds={Object.values(equippedItems)} />
 
             <div className="relative z-10 flex flex-col w-full h-screen">
-                <Header gold={gold} onClose={onClose} />
+                <Header gold={coins} onClose={onClose} />
                 <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
                     <section className="flex-shrink-0 py-4">
                         <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
-                            {EQUIPMENT_SLOT_TYPES.map(slotType => <EquipmentSlot key={slotType} slotType={slotType} ownedItem={equippedItemsMap[slotType]} onClick={() => handleSelectSlot(slotType)} isProcessing={isProcessing} />)}
+                            {EQUIPMENT_SLOT_TYPES.map(slotType => <EquipmentSlot key={slotType} slotType={slotType} ownedItem={equippedItemsMap[slotType]} onClick={() => handleSelectSlot(slotType)} isProcessing={isSyncingData} />)}
                         </div>
                     </section>
                     <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
@@ -764,7 +640,7 @@ export default function EquipmentScreen({
                                 <span className="text-base text-slate-400">/ {CRAFTING_COST}</span>
                             </div>
                         </div>
-                        <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing}>Craft</button>
+                        <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isSyncingData}>Craft</button>
                     </section>
                     
                     <section className="w-full p-4 bg-black/30 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
@@ -773,7 +649,7 @@ export default function EquipmentScreen({
                                 <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
                                 <span className="text-sm font-semibold text-slate-300">{unequippedItemsSorted.length}<span className="text-xs text-slate-500"> / {MAX_ITEMS_IN_STORAGE}</span></span>
                             </div>
-                            <button onClick={handleOpenForgeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
+                            <button onClick={handleOpenForgeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isSyncingData}><MergeIcon className="w-4 h-4" />Merge</button>
                         </div>
                         <div className="flex-grow min-h-0 overflow-y-auto hide-scrollbar -m-1 p-1">
                             {unequippedItemsSorted.length > 0 ? (
@@ -783,7 +659,7 @@ export default function EquipmentScreen({
                                             key={ownedItem.id}
                                             ownedItem={ownedItem}
                                             onClick={handleSelectItem}
-                                            isProcessing={isProcessing}
+                                            isProcessing={isSyncingData}
                                         />
                                     ))}
                                 </div>
@@ -800,4 +676,4 @@ export default function EquipmentScreen({
     );
 }
 
-// --- END OF FILE equipment.tsx ---
+// --- END OF FILE src/equipment.tsx ---
