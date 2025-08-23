@@ -11,6 +11,7 @@ import {
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processShopPurchase
 } from './gameDataService.ts';
+// THAY ĐỔI: Đảm bảo import từ đúng file skill-context
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
 // --- Define the shape of the context ---
