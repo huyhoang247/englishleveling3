@@ -103,7 +103,6 @@ const App: React.FC = () => {
   const [selectedMode, setSelectedMode] = useState<DisplayMode>('normal');
   const [rememberChoice, setRememberChoice] = useState(true);
   const [isModeModalOpen, setIsModeModalOpen] = useState(false);
-  // --- THAY ĐỔI: State mới để quản lý chuỗi animation phức tạp ---
   const [isAnimatingStart, setIsAnimatingStart] = useState(false);
 
   const isInitialAuthCheck = useRef(true);
@@ -148,9 +147,8 @@ const App: React.FC = () => {
     return () => unsub();
   }, []);
   
-  // --- THAY ĐỔI: Logic xử lý khi nhấn nút "Start" ---
   const handleStartClick = async (mode: DisplayMode, savePreference: boolean) => {
-    if (isAnimatingStart) return; // Chặn click liên tục
+    if (isAnimatingStart) return;
     setIsAnimatingStart(true);
     if (savePreference) localStorage.setItem('displayMode', mode);
     if (mode === 'fullscreen') await enterFullScreen();
@@ -179,16 +177,12 @@ const App: React.FC = () => {
     return () => { isCancelled = true; };
   }, [loadingStep, currentUser]);
   
-  // --- THAY ĐỔI: useEffect để quản lý chuỗi thời gian của animation ---
   useEffect(() => {
     if (!isAnimatingStart) return;
     
-    // TIMELINE:
-    // T=0s: Animation icon bắt đầu. GameSkeletonLoader render & fade-in ở nền.
-    // T=2s: Màn hình chọn chế độ bắt đầu fade-out. Đồng thời, chuyển sang bước "launching".
     const transitionTimer = setTimeout(() => {
         setLoadingStep('launching');
-    }, 2000); // 2 giây
+    }, 2000);
 
     return () => clearTimeout(transitionTimer);
   }, [isAnimatingStart]);
@@ -196,10 +190,9 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (loadingStep === 'launching') {
-      // GameSkeletonLoader sẽ hiển thị thêm 2 giây trong bước này
       const stepTimer = setTimeout(() => {
           setLoadingStep('ready');
-      }, 2000); // 2 giây
+      }, 2000);
       return () => { clearTimeout(stepTimer); };
     }
   }, [loadingStep]);
@@ -265,13 +258,9 @@ const App: React.FC = () => {
     const handleModeSelect = (mode: DisplayMode) => { setSelectedMode(mode); setIsModeModalOpen(false); };
 
     return (
-      // --- THAY ĐỔI: Cấu trúc render để chồng lớp các màn hình ---
       <div className="relative w-full h-screen">
-        {/* Lớp dưới cùng: Skeleton Loader, chỉ render và hiển thị khi animation bắt đầu */}
         <GameSkeletonLoader show={isAnimatingStart} />
         
-        {/* Lớp trên cùng: Màn hình chọn chế độ. Sẽ không bị gỡ khỏi DOM ngay. */}
-        {/* Nó sẽ mờ đi sau 2s nhờ transition-delay */}
         <div className={`absolute inset-0 transition-opacity duration-500 ${isAnimatingStart ? 'opacity-0 delay-[2000ms]' : 'opacity-100'}`}>
             <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
             {isModeModalOpen && <ModeSelectionModal onSelect={handleModeSelect} onClose={() => setIsModeModalOpen(false)} currentMode={selectedMode} />}
@@ -292,7 +281,6 @@ const App: React.FC = () => {
                   className="mt-6 w-48 mx-auto flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full text-white font-semibold text-lg tracking-wide hover:from-cyan-400 hover:to-blue-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-400/40 focus:outline-none focus:ring-4 focus:ring-cyan-300/50"
                 >
                   Start
-                  {/* Icon có animation kéo dài 2 giây */}
                   <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transform transition-all ease-in-out ${isAnimatingStart ? 'duration-[2000ms] scale-[2.5] rotate-[360deg] opacity-0' : 'duration-300 scale-100 rotate-0 opacity-100'}`} viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                   </svg>
@@ -304,23 +292,33 @@ const App: React.FC = () => {
     );
   }
 
-  if (loadingStep === 'launching') {
-    // Giai đoạn này chỉ để đảm bảo SkeletonLoader hiển thị đủ lâu
-    return <GameSkeletonLoader show={true} />;
-  }
+  // --- THAY ĐỔI 1: Xóa bỏ block `if (loadingStep === 'launching')` ---
+  // Đoạn code này đã được xóa:
+  // if (loadingStep === 'launching') {
+  //   return <GameSkeletonLoader show={true} />;
+  // }
 
+  // --- THAY ĐỔI 2: Cập nhật block return cuối cùng để render Game và Skeleton Loader đồng thời ---
+  // Cấu trúc này cho phép `background-game` (thông qua component Home) được render
+  // ngay khi `loadingStep` chuyển thành 'launching', với SkeletonLoader nằm ở trên.
   return (
-    <div className="app-container" style={{ height: 'var(--app-height, 100vh)' }}>
-      {activeTab === 'home' && (
-        <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
-          <Home hideNavBar={hideNavBar} showNavBar={showNavBar} />
-        </GameProvider>
-      )}
-      {activeTab === 'profile' && <Profile />}
-      {activeTab === 'story' && <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />}
-      {activeTab === 'quiz' && <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />}
-      {activeTab === 'game' && <GameBrowser hideNavBar={hideNavBar} showNavBar={showNavBar} />}
-      {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
+    <div className="relative w-screen h-screen">
+      {/* Lớp 1: Main App - Sẽ được render ngay khi 'launching', nhưng bị che bởi Skeleton */}
+      <div className="app-container" style={{ height: 'var(--app-height, 100vh)' }}>
+        {activeTab === 'home' && (
+          <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
+            <Home hideNavBar={hideNavBar} showNavBar={showNavBar} />
+          </GameProvider>
+        )}
+        {activeTab === 'profile' && <Profile />}
+        {activeTab === 'story' && <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />}
+        {activeTab === 'quiz' && <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />}
+        {activeTab === 'game' && <GameBrowser hideNavBar={hideNavBar} showNavBar={showNavBar} />}
+        {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
+      </div>
+      
+      {/* Lớp 2: Skeleton Loader Overlay - Chỉ hiển thị trong giai đoạn 'launching' */}
+      <GameSkeletonLoader show={loadingStep === 'launching'} />
     </div>
   );
 };
