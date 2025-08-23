@@ -5,15 +5,38 @@ import { User } from 'firebase/auth';
 import { auth } from './firebase.js';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 import { OwnedItem, EquippedItems } from './equipment.tsx';
-// --- THÊM IMPORT MỚI ---
 import { calculateTotalStatValue, statConfig, calculateUpgradeCost, getBonusForLevel } from './home/upgrade-stats/upgrade-ui.tsx';
+// --- THÊM IMPORT MỚI TỪ EQUIPMENT VÀ ITEM-DATABASE ---
+import { 
+  getItemDefinition, 
+  itemBlueprints, 
+  generateItemDefinition, 
+  getRandomRank, 
+  getUpgradeCost as getEquipmentUpgradeCost,
+  getTotalUpgradeCost,
+  calculateForgeResult
+} from './inventory/item-database.ts';
+import { CRAFTING_COST, DISMANTLE_RETURN_PIECES, MAX_ITEMS_IN_STORAGE } from './inventory/item-database.ts';
+import { ItemBlueprint } from './inventory/item-database.ts';
+
 
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processShopPurchase,
   // --- THÊM IMPORT MỚI ---
-  upgradeUserStats
+  upgradeUserStats,
+  // --- THÊM IMPORT MỚI TỪ GAMEDATASERVICE ---
+  updateUserInventory
 } from './gameDataService.ts';
+
+// Định nghĩa lại ForgeGroup ở đây để tránh circular dependency
+export interface ForgeGroup { 
+    blueprint: ItemBlueprint;
+    rarity: string; 
+    items: OwnedItem[]; 
+    nextRank: string | null; 
+    estimatedResult: { level: number; refundGold: number; }; 
+}
 
 // --- Define the shape of the context ---
 interface IGameContext {
@@ -81,6 +104,13 @@ interface IGameContext {
     handleSkillScreenClose: (dataUpdated: boolean) => void;
     // --- THÊM HÀM MỚI CHO LOGIC UPGRADE ---
     handleStatUpgrade: (statId: 'hp' | 'atk' | 'def') => Promise<void>;
+    // --- THÊM CÁC HÀM XỬ LÝ LOGIC TRANG BỊ ---
+    handleEquipItem: (itemToEquip: OwnedItem) => Promise<void>;
+    handleUnequipItem: (itemToUnequip: OwnedItem) => Promise<void>;
+    handleCraftItem: () => Promise<OwnedItem | null>;
+    handleDismantleItem: (itemToDismantle: OwnedItem) => Promise<void>;
+    handleUpgradeItem: (itemToUpgrade: OwnedItem, statKey: string, increase: number) => Promise<OwnedItem | null>;
+    handleForgeItems: (group: ForgeGroup) => Promise<OwnedItem | null>;
 
 
     // Toggles
@@ -309,6 +339,163 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     }
   }, [isUpgradingStats, userStats, coins]);
 
+  // --- TOÀN BỘ LOGIC CỦA EQUIPMENT SCREEN ĐƯỢC CHUYỂN VÀO ĐÂY ---
+
+  const handleEquipItem = useCallback(async (itemToEquip: OwnedItem) => {
+    const user = auth.currentUser;
+    if (!user || isSyncingData) return;
+    
+    const itemDef = getItemDefinition(itemToEquip.itemId);
+    if (!itemDef || !['weapon', 'armor', 'Helmet'].includes(itemDef.type)) throw new Error("Vật phẩm không hợp lệ.");
+    const slotType = itemDef.type as 'weapon' | 'armor' | 'Helmet';
+
+    setIsSyncingData(true);
+    const newEquipped = { ...equippedItems, [slotType]: itemToEquip.id };
+    try {
+      await updateUserInventory(user.uid, { newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
+      setEquippedItems(newEquipped);
+    } catch (error) {
+      console.error("Lỗi khi trang bị vật phẩm:", error);
+      throw error;
+    } finally {
+      setIsSyncingData(false);
+    }
+  }, [isSyncingData, equippedItems, ownedItems]);
+
+  const handleUnequipItem = useCallback(async (itemToUnequip: OwnedItem) => {
+    const user = auth.currentUser;
+    if (!user || isSyncingData) return;
+
+    const itemDef = getItemDefinition(itemToUnequip.itemId);
+    if (!itemDef) throw new Error("Vật phẩm không tồn tại.");
+    const slotType = itemDef.type as 'weapon' | 'armor' | 'Helmet';
+
+    setIsSyncingData(true);
+    const newEquipped = { ...equippedItems, [slotType]: null };
+    try {
+      await updateUserInventory(user.uid, { newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
+      setEquippedItems(newEquipped);
+    } catch (error) {
+      console.error("Lỗi khi gỡ trang bị:", error);
+      throw error;
+    } finally {
+      setIsSyncingData(false);
+    }
+  }, [isSyncingData, equippedItems, ownedItems]);
+
+  const handleCraftItem = useCallback(async (): Promise<OwnedItem | null> => {
+    const user = auth.currentUser;
+    if (!user || isSyncingData) return null;
+    if (equipmentPieces < CRAFTING_COST) throw new Error(`Không đủ Mảnh. Cần ${CRAFTING_COST}.`);
+    const equippedIds = Object.values(equippedItems).filter(id => id !== null);
+    const unequippedCount = ownedItems.filter(item => !equippedIds.includes(item.id)).length;
+    if (unequippedCount >= MAX_ITEMS_IN_STORAGE) throw new Error("Kho chứa đã đầy.");
+
+    setIsSyncingData(true);
+    try {
+        const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
+        const targetRank = getRandomRank();
+        const finalItemDef = generateItemDefinition(randomBlueprint, targetRank, true);
+        const newOwnedItem: OwnedItem = { id: `owned-${Date.now()}-${finalItemDef.id}`, itemId: finalItemDef.id, level: 1, stats: finalItemDef.stats || {} };
+        
+        const newOwnedList = [...ownedItems, newOwnedItem];
+        await updateUserInventory(user.uid, { newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: -CRAFTING_COST });
+
+        setOwnedItems(newOwnedList);
+        setEquipmentPieces(prev => prev - CRAFTING_COST);
+        return newOwnedItem;
+    } catch (error) {
+      console.error("Lỗi khi chế tạo:", error);
+      throw error;
+    } finally {
+      setIsSyncingData(false);
+    }
+  }, [isSyncingData, equipmentPieces, ownedItems, equippedItems]);
+
+  const handleDismantleItem = useCallback(async (itemToDismantle: OwnedItem) => {
+      const user = auth.currentUser;
+      if (!user || isSyncingData) return;
+      
+      setIsSyncingData(true);
+      try {
+        const itemDef = getItemDefinition(itemToDismantle.itemId)!;
+        const goldToReturn = getTotalUpgradeCost(itemDef, itemToDismantle.level);
+        const newOwnedList = ownedItems.filter(s => s.id !== itemToDismantle.id);
+        
+        await updateUserInventory(user.uid, { newOwned: newOwnedList, newEquipped: equippedItems, goldChange: goldToReturn, piecesChange: DISMANTLE_RETURN_PIECES });
+        
+        setOwnedItems(newOwnedList);
+        setEquipmentPieces(prev => prev + DISMANTLE_RETURN_PIECES);
+        setCoins(prev => prev + goldToReturn);
+      } catch (error) {
+        console.error("Lỗi khi tái chế:", error);
+        throw error;
+      } finally {
+        setIsSyncingData(false);
+      }
+  }, [isSyncingData, ownedItems, equippedItems]);
+
+  const handleUpgradeItem = useCallback(async (itemToUpgrade: OwnedItem, statKey: string, increase: number): Promise<OwnedItem | null> => {
+      const user = auth.currentUser;
+      if (!user || isSyncingData) return null;
+      const itemDef = getItemDefinition(itemToUpgrade.itemId)!;
+      const cost = getEquipmentUpgradeCost(itemDef, itemToUpgrade.level);
+      if (coins < cost) throw new Error(`Không đủ vàng. Cần ${cost.toLocaleString()}.`);
+      
+      setIsSyncingData(true);
+      try {
+        const newStats = { ...itemToUpgrade.stats, [statKey]: (itemToUpgrade.stats[statKey] || 0) + increase };
+        const updatedItem = { ...itemToUpgrade, level: itemToUpgrade.level + 1, stats: newStats };
+        const newOwnedList = ownedItems.map(s => s.id === itemToUpgrade.id ? updatedItem : s);
+        
+        await updateUserInventory(user.uid, { newOwned: newOwnedList, newEquipped: equippedItems, goldChange: -cost, piecesChange: 0 });
+
+        setOwnedItems(newOwnedList);
+        setCoins(prev => prev - cost);
+        return updatedItem;
+      } catch (error) {
+        console.error("Lỗi khi nâng cấp:", error);
+        throw error;
+      } finally {
+        setIsSyncingData(false);
+      }
+  }, [isSyncingData, coins, ownedItems, equippedItems]);
+  
+  const handleForgeItems = useCallback(async (group: ForgeGroup): Promise<OwnedItem | null> => {
+    const user = auth.currentUser;
+    if (!user || isSyncingData) return null;
+    if (group.items.length < 3 || !group.nextRank) throw new Error("Không đủ điều kiện hợp nhất.");
+    
+    setIsSyncingData(true);
+    try {
+        const itemsToConsume = group.items.slice(0, 3);
+        const itemIdsToConsume = itemsToConsume.map(s => s.id);
+
+        const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
+        const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
+        const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank as any, true);
+
+        const newForgedItem: OwnedItem = { 
+            id: `owned-${Date.now()}-${upgradedItemDef.id}`, 
+            itemId: upgradedItemDef.id, 
+            level: finalLevel,
+            stats: upgradedItemDef.stats || {}
+        };
+        const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
+        
+        await updateUserInventory(user.uid, { newOwned: newOwnedList, newEquipped: equippedItems, goldChange: refundGold, piecesChange: 0 });
+
+        setOwnedItems(newOwnedList);
+        setCoins(prev => prev + refundGold);
+        return newForgedItem;
+    } catch (error) {
+        console.error("Lỗi khi hợp nhất:", error);
+        throw error;
+    } finally {
+        setIsSyncingData(false);
+    }
+  }, [isSyncingData, ownedItems, equippedItems, coins]);
+
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
       const isLoading = isLoadingUserData || !assetsLoaded;
       if (isLoading) return;
@@ -378,6 +565,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     
     // --- THÊM HÀM VÀO VALUE CỦA PROVIDER ---
     handleStatUpgrade,
+    // --- THÊM CÁC HÀM XỬ LÝ TRANG BỊ VÀO VALUE ---
+    handleEquipItem, handleUnequipItem, handleCraftItem, handleDismantleItem,
+    handleUpgradeItem, handleForgeItems,
 
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding, setCoins
