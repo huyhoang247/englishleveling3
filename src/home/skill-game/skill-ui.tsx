@@ -1,7 +1,4 @@
-// --- START OF FILE src/home/skill-game/skill-ui.tsx ---
-
 import React, { memo, useState, useEffect, useRef } from 'react';
-// THAY ĐỔI: Import thêm SkillScreenExitData
 import { SkillProvider, useSkillContext, MergeGroup, SkillScreenExitData } from './skill-context.tsx';
 import {
     ALL_SKILLS,
@@ -21,15 +18,29 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import SkillScreenSkeleton from './skill-loading.tsx';
 import UpgradeEffectToast from './upgrade-effect-toast.tsx';
 
+// --- HELPER MỚI CHO HIỆU ỨNG VIỀN ĐỘNG ---
+const RARITY_ANIMATED_GRADIENTS: Record<string, string> = {
+    'E': 'linear-gradient(60deg, #64748b, #cbd5e1, #94a3b8, #cbd5e1, #64748b)', // Slate
+    'D': 'linear-gradient(60deg, #3b82f6, #93c5fd, #60a5fa, #93c5fd, #3b82f6)', // Blue
+    'B': 'linear-gradient(60deg, #8b5cf6, #c4b5fd, #a78bfa, #c4b5fd, #8b5cf6)', // Violet
+    'A': 'linear-gradient(60deg, #ec4899, #f9a8d4, #f472b6, #f9a8d4, #ec4899)', // Pink
+    'S': 'linear-gradient(60deg, #06b6d4, #67e8f9, #22d3ee, #67e8f9, #06b6d4)', // Cyan
+    'SR': 'linear-gradient(60deg, #f59e0b, #fde047, #facc15, #fde047, #f59e0b)',// Yellow/Gold
+};
+
+const getRarityAnimatedGradient = (rarity: string): string => {
+    return RARITY_ANIMATED_GRADIENTS[rarity] || RARITY_ANIMATED_GRADIENTS['E'];
+};
+
+
 // --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 SỬA ĐỔI01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}> <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l-2.72-2.72a1 1 0 010-1.414l4.243-4.243a1 1 0 011.414 0l2.72 2.72a4 4 0 011.343 2.863l3.155-1.262a1 1 0 011.23 1.23l-1.262 3.155a4 4 0 01-1.343 2.863l2.72 2.72a1 1 0 010 1.414l-4.243 4.243a1 1 0 01-1.414 0l-2.72-2.72a4 4 0 01-2.863-1.343L6.663 15.147a1 1 0 01-1.23-1.23z" /> <path d="M11.379 4.424a1 1 0 01-1.414 0L4.424 9.965a1 1 0 010 1.414l2.121 2.121a1 1 0 011.414 0l5.54-5.54a1 1 0 010-1.414l-2.121-2.121z" /> </svg>);
 
-// --- CÁC COMPONENT CON (ĐÃ BỌC TRONG React.memo) ---
-// SỬA ĐỔI: Header giờ nhận `goldValue` làm prop thay vì tự lấy từ context
+// --- CÁC COMPONENT CON ---
 const Header = memo(({ goldValue }: { goldValue: number }) => {
-    const { handleClose } = useSkillContext(); // Chỉ lấy những gì cần thiết từ context
-    const animatedGold = useAnimateValue(goldValue); // Dùng giá trị được truyền vào
+    const { handleClose } = useSkillContext();
+    const animatedGold = useAnimateValue(goldValue);
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
@@ -45,32 +56,42 @@ const Header = memo(({ goldValue }: { goldValue: number }) => {
     );
 });
 
-// ... (Các component con khác giữ nguyên, không cần thay đổi)
 const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onClick: () => void }) => {
   const { isProcessing } = useSkillContext();
   const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
-  const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center group";
+
+  const isEquipped = !!(ownedSkill && skillBlueprint);
   const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer';
-  const borderStyle = ownedSkill && skillBlueprint ? `${getRarityColor(ownedSkill.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
-  const backgroundStyle = skillBlueprint ? 'bg-slate-900/80' : 'bg-slate-900/50';
-  const IconComponent = skillBlueprint?.icon;
+
+  // Logic cho hiệu ứng viền
+  const borderWrapperClass = isEquipped ? 'p-[2px] animated-border' : 'border-2 border-dashed border-slate-600 hover:border-slate-400';
+  const borderWrapperStyle = isEquipped ? { backgroundImage: getRarityAnimatedGradient(ownedSkill.rarity) } : {};
 
   return (
-    <div className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} onClick={!isProcessing ? onClick : undefined} title={skillBlueprint ? `${skillBlueprint.name} - Lv.${ownedSkill?.level}` : 'Ô trống'}>
-      {ownedSkill && skillBlueprint && IconComponent ? (
-        <>
-          <div className="transition-all duration-300 group-hover:scale-110">
-             <IconComponent className={`w-12 h-12 sm:w-14 sm:h-14 ${getRarityTextColor(ownedSkill.rarity)}`} />
+    // Div bên ngoài: Đóng vai trò là cái viền
+    <div
+      className={`relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl transition-all duration-300 group ${interactivity} ${borderWrapperClass}`}
+      style={borderWrapperStyle}
+      onClick={!isProcessing ? onClick : undefined}
+      title={skillBlueprint ? `${skillBlueprint.name} - Lv.${ownedSkill?.level}` : 'Ô trống'}
+    >
+      {/* Div bên trong: Là phần nội dung chính */}
+      <div className="w-full h-full bg-slate-900/80 rounded-[10px] flex items-center justify-center">
+        {isEquipped ? (
+          <>
+            <div className="transition-all duration-300 group-hover:scale-110">
+              <skillBlueprint.icon className={`w-12 h-12 sm:w-14 sm:h-14 ${getRarityTextColor(ownedSkill.rarity)}`} />
+            </div>
+            <span className="absolute top-1 right-1.5 px-1.5 py-0.5 text-xs font-bold bg-black/60 text-white rounded-md border border-slate-600">
+              Lv.{ownedSkill.level}
+            </span>
+          </>
+        ) : (
+          <div className="text-slate-600 group-hover:text-slate-400 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
           </div>
-          <span className="absolute top-1 right-1.5 px-1.5 py-0.5 text-xs font-bold bg-black/60 text-white rounded-md border border-slate-600">
-            Lv.{ownedSkill?.level}
-          </span>
-        </>
-      ) : (
-        <div className="text-slate-600 group-hover:text-slate-400 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 });
@@ -302,12 +323,30 @@ function SkillScreenContent() {
         handleCraftSkill, handleSelectSkill, handleOpenMergeModal, MAX_SKILLS_IN_STORAGE
     } = useSkillContext();
     
-    // SỬA ĐỔI: Tạo biến để kiểm soát giá trị gold gửi xuống Header
     const displayGold = isLoading ? 0 : gold;
 
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
-            <style>{` .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
+            <style>{`
+                .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); }
+                .animate-spin-slow-360 { animation: spin 20s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; }
+                @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } }
+                .hide-scrollbar::-webkit-scrollbar { display: none; }
+                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                
+                /* --- CSS MỚI CHO HIỆU ỨNG VIỀN --- */
+                @keyframes animated-gradient-border {
+                    0% { background-position: 0% 50%; }
+                    50% { background-position: 100% 50%; }
+                    100% { background-position: 0% 50%; }
+                }
+                .animated-border {
+                    background-size: 300% 300%;
+                    animation: animated-gradient-border 4s ease infinite;
+                }
+            `}</style>
 
             <RateLimitToast show={mergeToast.show} message={mergeToast.message} showIcon={false} />
             <RateLimitToast show={craftErrorToast.show} message={craftErrorToast.message} showIcon={false} />
@@ -323,7 +362,6 @@ function SkillScreenContent() {
             </div>
             
             <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-                {/* SỬA ĐỔI: Truyền `displayGold` vào Header */}
                 <Header goldValue={displayGold} />
                 <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
                     <section className="flex-shrink-0 py-4">
@@ -383,4 +421,3 @@ export default function SkillScreen({ onClose, userId }: SkillScreenProps) {
         </SkillProvider>
     );
 }
-// --- END OF FILE src/home/skill-game/skill-ui.tsx ---
