@@ -74,7 +74,7 @@ interface ForgeGroup {
 // Interface định nghĩa những gì Context sẽ cung cấp
 interface EquipmentContextType {
     // State
-    isLoading: boolean; // SỬA ĐỔI: Thêm isLoading vào đây
+    isLoading: boolean;
     gold: number;
     equipmentPieces: number;
     ownedItems: OwnedItem[];
@@ -135,19 +135,44 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
 
     useEffect(() => {
         const loadData = async () => {
-            if (!userId) return;
+            if (!userId) {
+                setIsLoading(false); // Thoát sớm nếu không có userId
+                return;
+            }
+
+            // Ghi lại thời điểm bắt đầu
+            const startTime = Date.now();
+            
+            // Đặt isLoading thành true để bắt đầu hiển thị màn hình loading
             setIsLoading(true);
+
             try {
+                // Bắt đầu fetch dữ liệu
                 const data = await fetchEquipmentScreenData(userId);
+                
+                // Cập nhật state sau khi có dữ liệu
                 setGold(data.gold);
                 setEquipmentPieces(data.equipmentPieces);
                 setOwnedItems(data.ownedItems);
                 setEquippedItems(data.equippedItems);
+
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu trang bị:", error);
                 showMessage("Không thể tải dữ liệu trang bị.");
             } finally {
-                setIsLoading(false);
+                // Tính toán thời gian đã trôi qua
+                const elapsedTime = Date.now() - startTime;
+                const minimumLoadingTime = 700; // 0.7 giây
+
+                if (elapsedTime < minimumLoadingTime) {
+                    // Nếu thời gian fetch quá nhanh, đợi thêm cho đủ 0.7s
+                    setTimeout(() => {
+                        setIsLoading(false);
+                    }, minimumLoadingTime - elapsedTime);
+                } else {
+                    // Nếu thời gian fetch đã đủ lâu, kết thúc loading ngay lập tức
+                    setIsLoading(false);
+                }
             }
         };
         loadData();
@@ -332,10 +357,8 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
     const handleCloseForgeModal = useCallback(() => setIsForgeModalOpen(false), []);
     const handleOpenForgeModal = useCallback(() => setIsForgeModalOpen(true), []);
     
-    // SỬA ĐỔI: Xóa bỏ khối `if (isLoading)` ở đây
-
     const value = {
-        isLoading, // SỬA ĐỔI: Truyền `isLoading` vào value
+        isLoading,
         gold, equipmentPieces, ownedItems, equippedItems, selectedItem, newlyCraftedItem, isForgeModalOpen, isProcessing, dismantleSuccessToast,
         equippedItemsMap, unequippedItemsSorted,
         handleEquipItem, handleUnequipItem, handleCraftItem, handleDismantleItem, handleUpgradeItem, handleForgeItems,
