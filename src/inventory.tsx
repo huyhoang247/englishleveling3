@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, memo, useRef, useMemo } from 'react';
 import ProfileTab from './ProfileTab.tsx'; 
 import { uiAssets } from './game-assets.ts'; 
-import { itemDatabase } from './inventory/item-database.ts'; 
+import { itemDatabase } from './home/equipment/item-database.ts'; 
 import { playerInventoryData } from './inventory/player-inventory-data.ts'; 
 
 // --- START: DỮ LIỆU VÀ CÁC LOẠI TRANG BỊ MỚI ---
