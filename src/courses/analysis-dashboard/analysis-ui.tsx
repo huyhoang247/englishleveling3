@@ -186,8 +186,6 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     );
 });
 
-
-// [SỬA] Di chuyển CustomTooltip ra ngoài DashboardContent.
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const finalLabel = payload[0].payload.game ? payload[0].payload.game : `Ngày: ${label}`;
@@ -203,15 +201,44 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+// [TỐI ƯU] Định nghĩa các hằng số cho props của biểu đồ để chúng không bị tạo lại trên mỗi lần render.
+const chartMargin = { top: 5, right: 20, left: -10, bottom: 5 };
+const barChartMargin = { top: 20, right: 20, left: -20, bottom: 5 };
+const legendWrapperStyle = { top: 0, left: 25 };
+const barChartCursorStyle = { fill: 'rgba(136, 132, 216, 0.1)' };
+
+// [TỐI ƯU] Tách biểu đồ thành các component riêng và memoize để ngăn re-render không cần thiết.
+const VocabularyGrowthChart = memo(({ data }: { data: any[] }) => {
+    return (
+        <ChartCard title="Vocabulary Growth">
+            <ResponsiveContainer>
+                <AreaChart data={data} margin={chartMargin}>
+                    <defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12} /><Tooltip content={<CustomTooltip />} /><Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" />
+                </AreaChart>
+            </ResponsiveContainer>
+        </ChartCard>
+    );
+});
+
+const StudyActivityChart = memo(({ data }: { data: any[] }) => {
+    return (
+        <ChartCard title="Study Activity" extra={<span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Last 30 Days</span>}>
+            <ResponsiveContainer>
+                <BarChart data={data} margin={barChartMargin}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12}/><Tooltip content={<CustomTooltip />} cursor={barChartCursorStyle}/><Legend verticalAlign="top" wrapperStyle={legendWrapperStyle}/><Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" /><Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                </BarChart>
+            </ResponsiveContainer>
+        </ChartCard>
+    );
+});
+
 
 // --- MAIN DISPLAY COMPONENT ---
 const ITEMS_PER_PAGE = 10;
 
 function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
-  const {
-    user, loading, error, analysisData, dailyActivityData, userProgress,
-    wordsLearnedToday, claimDailyReward, claimVocabReward
-  } = useAnalysisDashboard();
+  const { user, loading, error, analysisData, dailyActivityData, userProgress, wordsLearnedToday, claimDailyReward, claimVocabReward } = useAnalysisDashboard();
   
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [currentPage, setCurrentPage] = useState(1);
@@ -272,8 +299,10 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                             </div>
                             <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                                <ChartCard title="Vocabulary Growth"><ResponsiveContainer><AreaChart data={vocabularyGrowth} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}><defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12} /><Tooltip content={<CustomTooltip />} /><Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" /></AreaChart></ResponsiveContainer></ChartCard>
-                                <ChartCard title="Study Activity" extra={<span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Last 30 Days</span>}><ResponsiveContainer><BarChart data={learningActivity} margin={{ top: 20, right: 20, left: -20, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12}/><Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(136, 132, 216, 0.1)'}}/><Legend verticalAlign="top" wrapperStyle={{top: 0, left: 25}}/><Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" /><Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></ChartCard>
+                                
+                                <VocabularyGrowthChart data={vocabularyGrowth} />
+                                <StudyActivityChart data={learningActivity} />
+
                                 <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
                                     <h3 className="text-lg font-bold text-gray-800 mb-4">Vocabulary Mastery Analysis</h3>
                                     {sortedWordMastery.length > 0 ? (<>
