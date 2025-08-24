@@ -5,17 +5,17 @@ import React from 'react';
 const SkillScreenSkeleton = () => {
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
-             {/* --- Skeleton Header --- */}
-            {/* SỬA ĐỔI: Header skeleton được tái cấu trúc để sao chép chính xác cấu trúc và padding của các component con (Button, CoinDisplay) nhằm đảm bảo chiều cao khớp 100% với header thật. */}
+            {/* --- Skeleton Header --- */}
+            {/* Header skeleton được tái cấu trúc để sao chép chính xác cấu trúc và padding của các component con, đảm bảo chiều cao khớp 100% với header thật. */}
             <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50">
                 <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
-                    {/* Skeleton cho button "Trang Chính", mô phỏng padding và kích thước icon để có chiều cao chính xác. */}
+                    {/* Skeleton cho button "Trang Chính" */}
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/60 animate-pulse">
                         <div className="w-5 h-5 bg-slate-700/80 rounded-sm" />
                         <div className="hidden sm:inline h-4 w-20 bg-slate-700/80 rounded-sm" />
                     </div>
 
-                    {/* Skeleton cho CoinDisplay, mô phỏng cấu trúc bên trong (icon, text, nút plus) để có chiều cao chính xác. */}
+                    {/* Skeleton cho CoinDisplay */}
                     <div className="bg-slate-800/60 rounded-lg p-0.5 flex items-center border border-slate-700/60 animate-pulse">
                         <div className="w-4 h-4 rounded-full bg-slate-700/80 mr-1"></div>
                         <div className="h-4 w-16 bg-slate-700/80 rounded-sm"></div>
@@ -29,7 +29,7 @@ const SkillScreenSkeleton = () => {
                 {/* Equipped Skills Skeleton */}
                 <section className="flex-shrink-0 py-4">
                     <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
-                        {/* SỬA ĐỔI: Giảm từ 4 ô xuống còn 3 ô để khớp với UI thật */}
+                        {/* Khớp với 3 ô kỹ năng đã trang bị của UI thật */}
                         {Array.from({ length: 3 }).map((_, i) => (
                            <div key={i} className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl bg-slate-800/50"></div>
                         ))}
@@ -51,9 +51,11 @@ const SkillScreenSkeleton = () => {
                         <div className="h-6 w-40 bg-slate-800/50 rounded-md"></div>
                         <div className="h-9 w-24 bg-slate-700/80 rounded-lg"></div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                           <div key={i} className="w-full h-[88px] rounded-lg bg-slate-800/50"></div>
+                    {/* SỬA ĐỔI: Grid layout và item props được cập nhật để khớp chính xác với UI thật. */}
+                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                        {/* Tăng số lượng item để lấp đầy không gian tốt hơn, sử dụng aspect-square cho kích thước chính xác */}
+                        {Array.from({ length: 16 }).map((_, i) => (
+                           <div key={i} className="aspect-square rounded-lg bg-slate-800/50"></div>
                         ))}
                     </div>
                 </section>
@@ -63,5 +65,4 @@ const SkillScreenSkeleton = () => {
 };
 
 export default SkillScreenSkeleton;
-
 // --- END OF FILE skill-loading.tsx ---
