@@ -27,7 +27,7 @@ import { SkillBlueprint } from './skill-data.tsx';
 import type { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
 // --- THAY ĐỔI: Import EquipmentScreen và type mới ---
-import EquipmentScreen, { type EquipmentScreenExitData } from './equipment.tsx';
+import EquipmentScreen, { type EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
 
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
