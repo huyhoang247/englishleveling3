@@ -1,3 +1,5 @@
+// --- START OF FILE voca-chest-context.tsx ---
+
 // --- START OF FILE lat-the-context.tsx (UPDATED IMPORT PATH) ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
@@ -52,6 +54,8 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
     useEffect(() => {
         const fetchAllInitialData = async () => {
             if (!currentUserId) { setIsLoading(false); return; }
+            const MIN_LOADING_TIME_MS = 700; // Thêm thời gian chờ tối thiểu
+            const startTime = Date.now();
             setIsLoading(true);
             try {
                 const [screenData, openedVocabSnapshot] = await Promise.all([
@@ -84,7 +88,13 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
             } catch (error) {
                 console.error("Error fetching initial data:", error);
             } finally {
-                setIsLoading(false);
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = MIN_LOADING_TIME_MS - elapsedTime;
+                const delay = Math.max(0, remainingTime);
+
+                setTimeout(() => {
+                    setIsLoading(false);
+                }, delay);
             }
         };
         fetchAllInitialData();
@@ -167,3 +177,5 @@ export const useVocabularyChest = (): VocabularyChestContextType => {
     if (context === undefined) { throw new Error('useVocabularyChest must be used within a VocabularyChestProvider'); }
     return context;
 };
+
+// --- END OF FILE voca-chest-context.tsx ---
