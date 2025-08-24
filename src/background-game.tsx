@@ -25,7 +25,10 @@ import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './home/skill-game/skill-ui.tsx';
 import { SkillBlueprint } from './skill-data.tsx';
 import type { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
-import EquipmentScreen from './equipment.tsx';
+
+// --- THAY ĐỔI: Import EquipmentScreen và type mới ---
+import EquipmentScreen, { type EquipmentScreenExitData } from './equipment.tsx';
+
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 import { useGame } from './GameContext.tsx';
@@ -83,6 +86,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     handleUpdateJackpotPool, handleStatsUpdate, handleShopPurchase, getPlayerBattleStats,
     getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
     setCoins, updateSkillsState,
+    // --- THÊM MỚI: Lấy hàm updateEquipmentData từ context ---
+    updateEquipmentData,
     // Toggles
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge,
     toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
@@ -178,9 +183,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             <ErrorBoundary>
                 {isEquipmentOpen && currentUser && (
                     <EquipmentScreen 
-                        onClose={() => {
-                            toggleEquipmentScreen(); // 1. Đóng màn hình
-                            refreshUserData();      // 2. Đồng bộ lại GameContext để cập nhật coin, v.v.
+                        onClose={(exitData: EquipmentScreenExitData) => {
+                            // 1. Đóng màn hình ngay lập tức
+                            toggleEquipmentScreen(); 
+                            // 2. Cập nhật "êm ái" GameContext với dữ liệu trả về
+                            updateEquipmentData(exitData);
+                            // refreshUserData() đã được loại bỏ để tránh loading
                         }} 
                         userId={currentUser.uid}
                     />
