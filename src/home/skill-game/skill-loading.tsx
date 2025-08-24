@@ -5,8 +5,7 @@ import React from 'react';
 const SkillScreenSkeleton = () => {
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
-            {/* --- Skeleton Header --- */}
-            {/* Header skeleton được tái cấu trúc để sao chép chính xác cấu trúc và padding của các component con, đảm bảo chiều cao khớp 100% với header thật. */}
+             {/* --- Skeleton Header --- */}
             <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50">
                 <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
                     {/* Skeleton cho button "Trang Chính" */}
@@ -51,9 +50,13 @@ const SkillScreenSkeleton = () => {
                         <div className="h-6 w-40 bg-slate-800/50 rounded-md"></div>
                         <div className="h-9 w-24 bg-slate-700/80 rounded-lg"></div>
                     </div>
-                    {/* SỬA ĐỔI: Grid layout và item props được cập nhật để khớp chính xác với UI thật. */}
+                    {/* 
+                      SỬA ĐỔI: Grid layout và item props được cập nhật để khớp chính xác với UI thật.
+                      - Grid container sử dụng: grid-cols-5 sm:grid-cols-6 md:grid-cols-8
+                      - Item placeholder sử dụng: aspect-square để đảm bảo ô luôn là hình vuông.
+                    */}
                     <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                        {/* Tăng số lượng item để lấp đầy không gian tốt hơn, sử dụng aspect-square cho kích thước chính xác */}
+                        {/* Tăng số lượng item để lấp đầy không gian tốt hơn */}
                         {Array.from({ length: 16 }).map((_, i) => (
                            <div key={i} className="aspect-square rounded-lg bg-slate-800/50"></div>
                         ))}
@@ -65,4 +68,5 @@ const SkillScreenSkeleton = () => {
 };
 
 export default SkillScreenSkeleton;
+
 // --- END OF FILE skill-loading.tsx ---
