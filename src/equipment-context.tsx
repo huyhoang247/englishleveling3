@@ -11,7 +11,7 @@ import {
     type ItemRank, 
     RARITY_ORDER 
 } from './inventory/item-database.ts';
-import { updateUserInventory } from './gameDataService.ts';
+import { updateUserInventory, fetchEquipmentScreenData } from './gameDataService.ts';
 import type { OwnedItem, EquippedItems, EquipmentSlotType } from './equipment.tsx';
 
 // Định nghĩa các hằng số logic
@@ -35,11 +35,12 @@ const getTotalUpgradeCost = (itemDef: ItemDefinition, level: number): number => 
 
 const getRandomRank = (): ItemRank => {
     const rand = Math.random() * 100;
-    if (rand < 0.1) return 'SR';
-    if (rand < 1) return 'S';
-    if (rand < 5) return 'A';
-    if (rand < 20) return 'B';
-    if (rand < 50) return 'D';
+    if (rand < 0.1) return 'SSR';
+    if (rand < 1) return 'SR';
+    if (rand < 5) return 'S';
+    if (rand < 20) return 'A';
+    if (rand < 50) return 'B';
+    if (rand < 80) return 'D';
     return 'E';
 };
 
@@ -55,15 +56,10 @@ const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinit
 };
 
 
-// Interface cho các props của Provider
+// Interface cho các props của Provider (ĐÃ THAY ĐỔI)
 interface EquipmentProviderProps {
     children: ReactNode;
     userId: string;
-    initialGold: number;
-    initialEquipmentPieces: number;
-    initialOwnedItems: OwnedItem[];
-    initialEquippedItems: EquippedItems;
-    onDataChange: () => void;
 }
 
 // Interface định nghĩa ForgeGroup để dùng trong hàm handleForgeItems
@@ -116,20 +112,16 @@ interface EquipmentContextType {
 // Tạo Context
 const EquipmentContext = createContext<EquipmentContextType | undefined>(undefined);
 
-// Tạo Provider Component
+// Tạo Provider Component (ĐÃ THAY ĐỔI)
 export const EquipmentProvider: FC<EquipmentProviderProps> = ({ 
     children,
     userId,
-    initialGold, 
-    initialEquipmentPieces, 
-    initialOwnedItems, 
-    initialEquippedItems,
-    onDataChange
  }) => {
-    const [gold, setGold] = useState(initialGold);
-    const [equipmentPieces, setEquipmentPieces] = useState(initialEquipmentPieces);
-    const [ownedItems, setOwnedItems] = useState(initialOwnedItems);
-    const [equippedItems, setEquippedItems] = useState(initialEquippedItems);
+    const [isLoading, setIsLoading] = useState(true);
+    const [gold, setGold] = useState(0);
+    const [equipmentPieces, setEquipmentPieces] = useState(0);
+    const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
+    const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
 
     const [selectedItem, setSelectedItem] = useState<OwnedItem | null>(null);
     const [newlyCraftedItem, setNewlyCraftedItem] = useState<OwnedItem | null>(null);
@@ -141,11 +133,24 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
     const [messageKey, setMessageKey] = useState(0);
 
     useEffect(() => {
-        setGold(initialGold);
-        setEquipmentPieces(initialEquipmentPieces);
-        setOwnedItems(initialOwnedItems);
-        setEquippedItems(initialEquippedItems);
-    }, [initialGold, initialEquipmentPieces, initialOwnedItems, initialEquippedItems]);
+        const loadData = async () => {
+            if (!userId) return;
+            setIsLoading(true);
+            try {
+                const data = await fetchEquipmentScreenData(userId);
+                setGold(data.gold);
+                setEquipmentPieces(data.equipmentPieces);
+                setOwnedItems(data.ownedItems);
+                setEquippedItems(data.equippedItems);
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu trang bị:", error);
+                showMessage("Không thể tải dữ liệu trang bị.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadData();
+    }, [userId]);
 
     const showMessage = useCallback((text: string) => {
         setMessage(text); setMessageKey(prev => prev + 1);
@@ -170,14 +175,14 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
             setEquippedItems(updates.newEquipped);
             setGold(prev => prev + updates.goldChange);
             setEquipmentPieces(prev => prev + updates.piecesChange);
-            onDataChange();
+            // onDataChange() has been removed
         } catch (error: any) { 
             showMessage(`Lỗi: ${error.message || 'Cập nhật thất bại'}`); 
             throw error;
         } finally { 
             setIsProcessing(false); 
         }
-    }, [isProcessing, userId, onDataChange, showMessage]);
+    }, [isProcessing, userId, showMessage]);
 
     const unequippedItemsSorted = useMemo(() => {
         const equippedIds = Object.values(equippedItems).filter(id => id !== null);
@@ -186,12 +191,8 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
             .sort((a, b) => {
                 const itemDefA = getItemDefinition(a.itemId);
                 const itemDefB = getItemDefinition(b.itemId);
-
-                // *** SỬA LỖI: Thêm rào chắn để code an toàn hơn ***
-                // Nếu một trong hai không có định nghĩa, đẩy nó xuống cuối danh sách.
                 if (!itemDefA) return 1;
                 if (!itemDefB) return -1;
-                
                 const rarityIndexA = RARITY_ORDER.indexOf(itemDefA.rarity);
                 const rarityIndexB = RARITY_ORDER.indexOf(itemDefB.rarity);
                 if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
@@ -331,6 +332,15 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
     const handleCloseForgeModal = useCallback(() => setIsForgeModalOpen(false), []);
     const handleOpenForgeModal = useCallback(() => setIsForgeModalOpen(true), []);
     
+    if (isLoading) {
+        return (
+            <div className="fixed inset-0 bg-slate-900 flex flex-col items-center justify-center text-white z-[60]">
+                <svg className="animate-spin h-8 w-8 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <p className="mt-4 text-lg font-semibold">Đang tải dữ liệu trang bị...</p>
+            </div>
+        );
+    }
+
     const value = {
         gold, equipmentPieces, ownedItems, equippedItems, selectedItem, newlyCraftedItem, isForgeModalOpen, isProcessing, dismantleSuccessToast,
         equippedItemsMap, unequippedItemsSorted,
