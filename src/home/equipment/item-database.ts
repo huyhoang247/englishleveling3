@@ -1,6 +1,6 @@
 // --- START OF FILE item-database.ts (UPGRADED RANDOMNESS & NEW WEAPONS) ---
 
-import { itemAssets } from '../game-assets.ts';
+import { itemAssets } from '../../game-assets.ts';
 
 // --- CÁC ĐỊNH NGHĨA CỐT LÕI (Không đổi) ---
 export type ItemRank = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' | 'SSR';
