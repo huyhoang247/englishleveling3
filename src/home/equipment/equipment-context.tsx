@@ -140,26 +140,29 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
                 return;
             }
 
-            // Ghi lại thời điểm bắt đầu và bắt đầu loading
+            // Ghi lại thời điểm bắt đầu
             const startTime = Date.now();
+            
+            // Đặt isLoading thành true để bắt đầu hiển thị màn hình loading
             setIsLoading(true);
 
             try {
                 // Bắt đầu fetch dữ liệu
                 const data = await fetchEquipmentScreenData(userId);
-
+                
                 // Cập nhật state sau khi có dữ liệu
                 setGold(data.gold);
                 setEquipmentPieces(data.equipmentPieces);
                 setOwnedItems(data.ownedItems);
                 setEquippedItems(data.equippedItems);
+
             } catch (error) {
                 console.error("Lỗi khi tải dữ liệu trang bị:", error);
                 showMessage("Không thể tải dữ liệu trang bị.");
             } finally {
                 // Tính toán thời gian đã trôi qua
                 const elapsedTime = Date.now() - startTime;
-                const minimumLoadingTime = 700; // 0.7 giây, đảm bảo skeleton hiển thị đủ lâu
+                const minimumLoadingTime = 700; // 0.7 giây
 
                 if (elapsedTime < minimumLoadingTime) {
                     // Nếu thời gian fetch quá nhanh, đợi thêm cho đủ 0.7s
