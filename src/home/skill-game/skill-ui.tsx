@@ -1,7 +1,6 @@
 // --- START OF FILE src/home/skill-game/skill-ui.tsx ---
 
 import React, { memo, useState, useEffect, useRef } from 'react';
-// THAY ĐỔI: Import thêm SkillScreenExitData
 import { SkillProvider, useSkillContext, MergeGroup, SkillScreenExitData } from './skill-context.tsx';
 import {
     ALL_SKILLS,
@@ -22,14 +21,13 @@ import SkillScreenSkeleton from './skill-loading.tsx';
 import UpgradeEffectToast from './upgrade-effect-toast.tsx';
 
 // --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 SỬA ĐỔI01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}> <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l-2.72-2.72a1 1 0 010-1.414l4.243-4.243a1 1 0 011.414 0l2.72 2.72a4 4 0 011.343 2.863l3.155-1.262a1 1 0 011.23 1.23l-1.262 3.155a4 4 0 01-1.343 2.863l2.72 2.72a1 1 0 010 1.414l-4.243 4.243a1 1 0 01-1.414 0l-2.72-2.72a4 4 0 01-2.863-1.343L6.663 15.147a1 1 0 01-1.23-1.23z" /> <path d="M11.379 4.424a1 1 0 01-1.414 0L4.424 9.965a1 1 0 010 1.414l2.121 2.121a1 1 0 011.414 0l5.54-5.54a1 1 0 010-1.414l-2.121-2.121z" /> </svg>);
 
 // --- CÁC COMPONENT CON (ĐÃ BỌC TRONG React.memo) ---
-// SỬA ĐỔI: Header giờ nhận `goldValue` làm prop thay vì tự lấy từ context
 const Header = memo(({ goldValue }: { goldValue: number }) => {
-    const { handleClose } = useSkillContext(); // Chỉ lấy những gì cần thiết từ context
-    const animatedGold = useAnimateValue(goldValue); // Dùng giá trị được truyền vào
+    const { handleClose } = useSkillContext();
+    const animatedGold = useAnimateValue(goldValue);
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
@@ -45,7 +43,6 @@ const Header = memo(({ goldValue }: { goldValue: number }) => {
     );
 });
 
-// ... (Các component con khác giữ nguyên, không cần thay đổi)
 const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onClick: () => void }) => {
   const { isProcessing } = useSkillContext();
   const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
@@ -79,9 +76,7 @@ const SkillInventorySlot = memo(({ ownedSkill, onClick, isProcessing }: { ownedS
     const skillBlueprint = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
     if (!skillBlueprint) return null;
     const IconComponent = skillBlueprint.icon;
-
     const baseClasses = "relative aspect-square rounded-lg border-2 transition-all duration-200 flex items-center justify-center group";
-    
     const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer hover:scale-105 hover:shadow-lg';
     const borderStyle = getRarityColor(ownedSkill.rarity);
     const backgroundStyle = 'bg-slate-900/80';
@@ -125,9 +120,7 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const isUpgradable = skill.upgradeCost !== undefined;
     const currentUpgradeCost = isUpgradable ? getUpgradeCost(skill.upgradeCost!, ownedSkill.level) : 0;
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
-
     const currentEffectValue = calculateEffectValue(ownedSkill.level);
-
     const actionDisabled = isProcessing;
     const mainActionText = isEquipped ? 'Remove' : 'Equip';
     const mainActionHandler = () => isEquipped ? handleUnequipSkill(ownedSkill) : handleEquipSkill(ownedSkill);
@@ -138,15 +131,12 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
 
     const handleLocalUpgradeClick = () => {
         if (!canAffordUpgrade || actionDisabled) return;
-
         const oldValue = currentEffectValue;
         const newValue = currentEffectValue + skill.effectValuePerLevel!;
-
         setUpgradeToast({ show: true, oldValue, newValue });
         setTimeout(() => {
             setUpgradeToast({ show: false, oldValue: 0, newValue: 0 });
         }, 1600);
-        
         handleUpgradeSkill(ownedSkill);
     };
 
@@ -154,7 +144,6 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={handleCloseDetailModal} />
           <div className={`relative bg-gradient-to-br ${getRarityGradient(ownedSkill.rarity)} p-5 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
-            {/* Header */}
             <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
               <div className="flex justify-between items-start mb-2">
                 <h3 className={`text-2xl font-bold ${getRarityTextColor(ownedSkill.rarity)}`}>{skill.name}</h3>
@@ -165,8 +154,6 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
                 <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Level {ownedSkill.level}</span>
               </div>
             </div>
-
-            {/* Content */}
             <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2">
               <div className="flex flex-col items-center text-center gap-4">
                 <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)}`} /></div>
@@ -200,8 +187,6 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
                 )}
               </div>
             </div>
-            
-            {/* Actions */}
             <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
               <div className="flex items-center gap-3">
                 <button onClick={mainActionHandler} disabled={actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${actionDisabled ? mainActionDisabledStyle : mainActionStyle}`}>
@@ -229,29 +214,13 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
 });
 
 const MergeModal = memo(() => {
-    const { isMergeModalOpen, handleCloseMergeModal, ownedSkills, handleMergeSkills, isProcessing, equippedSkillIds } = useSkillContext();
-
-    const mergeableGroups = React.useMemo<MergeGroup[]>(() => {
-        if (!isMergeModalOpen) return [];
-        const unequippedSkills = ownedSkills.filter(s => !equippedSkillIds.includes(s.id));
-        const groups: Record<string, OwnedSkill[]> = {};
-        for (const skill of unequippedSkills) {
-          const key = `${skill.skillId}-${skill.rarity}`;
-          if (!groups[key]) groups[key] = [];
-          groups[key].push(skill);
-        }
-        return Object.values(groups)
-          .filter(group => group.length >= 3)
-          .map(group => {
-            const firstSkill = group[0];
-            const blueprint = ALL_SKILLS.find(s => s.id === firstSkill.skillId)!;
-            const nextRarity = blueprint.nextRarity ? blueprint.nextRarity(firstSkill.rarity) : null;
-            const sortedSkills = [...group].sort((a, b) => b.level - a.level);
-            return { skillId: firstSkill.skillId, rarity: firstSkill.rarity, skills: sortedSkills, blueprint, nextRarity, estimatedResult: { level: 1, refundGold: 0 } }; // Simplified estimatedResult, context has full logic
-          })
-          .filter(group => group.nextRarity !== null)
-          .sort((a,b) => a.blueprint.name.localeCompare(b.blueprint.name));
-      }, [isMergeModalOpen, ownedSkills, equippedSkillIds]);
+    const { 
+        isMergeModalOpen, 
+        handleCloseMergeModal, 
+        handleMergeSkills, 
+        isProcessing, 
+        mergeableGroups 
+    } = useSkillContext();
 
     if (!isMergeModalOpen) return null;
 
@@ -302,7 +271,6 @@ function SkillScreenContent() {
         handleCraftSkill, handleSelectSkill, handleOpenMergeModal, MAX_SKILLS_IN_STORAGE
     } = useSkillContext();
     
-    // SỬA ĐỔI: Tạo biến để kiểm soát giá trị gold gửi xuống Header
     const displayGold = isLoading ? 0 : gold;
 
     return (
@@ -323,7 +291,6 @@ function SkillScreenContent() {
             </div>
             
             <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-                {/* SỬA ĐỔI: Truyền `displayGold` vào Header */}
                 <Header goldValue={displayGold} />
                 <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
                     <section className="flex-shrink-0 py-4">
