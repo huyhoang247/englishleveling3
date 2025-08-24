@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 
 // --- START: DATA IMPORTS ---
 import { uiAssets, itemAssets } from './game-assets.ts';
-import { itemDatabase, ItemDefinition, ItemRank } from './inventory/item-database.ts';
+import { itemDatabase, ItemDefinition, ItemRank } from './home/equipment/item-database.ts';
 import { playerInventoryData, PlayerItem } from './inventory/player-inventory-data.ts';
 // --- END: DATA IMPORTS ---
 
