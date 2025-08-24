@@ -30,6 +30,14 @@ export type EquippedItems = {
     [key in EquipmentSlotType]: string | null;
 };
 
+// --- THÊM MỚI: Interface để trả dữ liệu về cho GameContext ---
+export interface EquipmentScreenExitData {
+    gold: number;
+    equipmentPieces: number;
+    ownedItems: OwnedItem[];
+    equippedItems: EquippedItems;
+}
+
 // 5. Các hàm tiện ích cho Rarity (ItemRank)
 const getRarityColor = (rank: ItemRank): string => {
     switch (rank) {
@@ -514,7 +522,7 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 
 
 // --- COMPONENT HIỂN THỊ CHÍNH (ĐÃ ĐƯỢC ĐƠN GIẢN HÓA) ---
-function EquipmentScreenContent({ onClose }: { onClose: () => void }) {
+function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenExitData) => void }) {
     // Lấy tất cả state và hàm xử lý từ context
     const {
         gold,
@@ -543,6 +551,16 @@ function EquipmentScreenContent({ onClose }: { onClose: () => void }) {
         MAX_ITEMS_IN_STORAGE,
         CRAFTING_COST
     } = useEquipment();
+    
+    // --- THAY ĐỔI: Tạo hàm đóng để thu thập dữ liệu và gọi lại prop onClose ---
+    const handleClose = useCallback(() => {
+        onClose({
+            gold,
+            equipmentPieces,
+            ownedItems,
+            equippedItems
+        });
+    }, [onClose, gold, equipmentPieces, ownedItems, equippedItems]);
 
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
@@ -554,7 +572,8 @@ function EquipmentScreenContent({ onClose }: { onClose: () => void }) {
             <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
 
             <div className="relative z-10 flex flex-col w-full h-screen">
-                <Header gold={gold} onClose={onClose} />
+                {/* --- THAY ĐỔI: Sử dụng handleClose mới --- */}
+                <Header gold={gold} onClose={handleClose} />
                 <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
                     <section className="flex-shrink-0 py-4">
                         <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
@@ -607,7 +626,8 @@ function EquipmentScreenContent({ onClose }: { onClose: () => void }) {
 
 // --- COMPONENT CHA WRAPPER (ĐÃ CẬP NHẬT)---
 interface EquipmentScreenProps {
-    onClose: () => void;
+    // --- THAY ĐỔI: Cập nhật chữ ký của onClose ---
+    onClose: (data: EquipmentScreenExitData) => void;
     userId: string;
 }
 
