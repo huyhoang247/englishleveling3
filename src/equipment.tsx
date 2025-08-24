@@ -149,9 +149,7 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
         <div className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} onClick={!isProcessing ? onClick : undefined} title={itemDef ? `${itemDef.name} - Lv.${ownedItem?.level}` : `Ô ${slotType}`}>
             {ownedItem && itemDef ? (
                 <>
-                    <div className="transition-all duration-300 group-hover:scale-110">
-                        <img src={itemDef.icon} alt={itemDef.name} className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
-                    </div>
+                    <img src={itemDef.icon} alt={itemDef.name} className="w-12 h-12 sm:w-14 sm:h-14 object-contain transition-all duration-300 group-hover:scale-110" />
                     <span className="absolute top-1 right-1.5 px-1.5 py-0.5 text-xs font-bold bg-black/60 text-white rounded-md border border-slate-600">
                         Lv.{ownedItem.level}
                     </span>
