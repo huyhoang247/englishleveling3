@@ -65,9 +65,9 @@ export const equipmentUiAssets = {
   goldIcon: require("./assets/images/coin.webp"),
   equipmentPieceIcon: require("./assets/images/equipment-piece.webp"),
   // *** THÊM MỚI: Icon cho các ô trang bị ***
-  weaponIcon: require("./assets/equipment/weapon.webp"),
-  armorIcon: require("./assets/equipment/armor.webp"),
-  helmetIcon: require("./assets/equipment/helmet.webp"),
+  weaponIcon: require("./assets/images/weapon.webp"),
+  armorIcon: require("./assets/images/armor.webp"),
+  helmetIcon: require("./assets/images/helmet.webp"),
 };
 
 
