@@ -12,8 +12,6 @@ import {
 import { uiAssets, equipmentUiAssets } from './game-assets.ts';
 import CoinDisplay from './ui/display/coin-display.tsx'; 
 import RateLimitToast from './thong-bao.tsx';
-
-// *** THAY ĐỔI QUAN TRỌNG: Import Provider và Hook từ file context mới ***
 import { EquipmentProvider, useEquipment } from './equipment-context.tsx';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
@@ -120,7 +118,6 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
         );
     }
 
-    // *** SỬA LỖI: Loại bỏ 'flex-col'. flex, items-center, justify-center là đủ để căn giữa. ***
     const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center group";
     const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer';
     const borderStyle = itemDef ? `${getRarityColor(itemDef.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
@@ -153,7 +150,6 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
                     </span>
                 </>
             ) : (
-                // *** SỬA LỖI: Bọc nội dung placeholder trong một div flex-col riêng để đảm bảo layout đúng. ***
                 <div className="flex flex-col items-center justify-center text-slate-600 group-hover:text-slate-400 transition-colors text-center">
                     {getPlaceholderIcon()}
                     <span className="text-xs font-semibold uppercase mt-1">{slotType}</span>
@@ -257,7 +253,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     const [activeTab, setActiveTab] = useState<'stats' | 'upgrade'>('stats');
     const [toastInfo, setToastInfo] = useState<{ key: number; isVisible: boolean; icon: JSX.Element; bonus: number; colorClasses: { border: string; text: string; } } | null>(null);
 
-    // *** SỬA LỖI: Thêm rào chắn ***
     useEffect(() => {
         if (!itemDef) {
             console.error(`Không thể mở modal chi tiết cho vật phẩm không tồn tại với ID: ${ownedItem.itemId}`);
@@ -610,21 +605,16 @@ function EquipmentScreenContent({ onClose }: { onClose: () => void }) {
     );
 }
 
-// --- COMPONENT CHA WRAPPER ---
+// --- COMPONENT CHA WRAPPER (ĐÃ CẬP NHẬT)---
 interface EquipmentScreenProps {
     onClose: () => void;
     userId: string;
-    initialGold: number;
-    initialEquipmentPieces: number;
-    initialOwnedItems: OwnedItem[];
-    initialEquippedItems: EquippedItems;
-    onDataChange: () => void;
 }
 
-export default function EquipmentScreen(props: EquipmentScreenProps) {
+export default function EquipmentScreen({ onClose, userId }: EquipmentScreenProps) {
     return (
-        <EquipmentProvider {...props}>
-            <EquipmentScreenContent onClose={props.onClose} />
+        <EquipmentProvider userId={userId}>
+            <EquipmentScreenContent onClose={onClose} />
         </EquipmentProvider>
     );
 }
