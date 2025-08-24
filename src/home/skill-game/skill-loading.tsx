@@ -44,10 +44,10 @@ const SkillScreenSkeleton = () => {
                 <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
                     <div className="flex justify-between items-center mb-4 flex-shrink-0">
                         <div className="h-6 w-40 bg-slate-800/50 rounded-md"></div>
-                        {/* SỬA ĐỔI: Tái tạo cấu trúc bên trong (icon + text) và padding để khớp kích thước nút thật. */}
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-700/80">
+                        {/* SỬA ĐỔI: Sử dụng cấu trúc thật (icon placeholder + text) với text-transparent để có kích thước pixel-perfect. */}
+                        <div className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-slate-700/80 text-transparent">
                             <div className="w-4 h-4 rounded-sm bg-slate-800/50" />
-                            <div className="h-4 w-12 rounded-sm bg-slate-800/50" />
+                            Merge
                         </div>
                     </div>
                     <div className="flex-grow min-h-0">
