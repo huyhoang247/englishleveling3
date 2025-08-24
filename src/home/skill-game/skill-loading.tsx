@@ -37,7 +37,6 @@ const SkillScreenSkeleton = () => {
                         <div className="w-10 h-10 rounded-md bg-slate-800/50"></div>
                         <div className="h-6 w-20 bg-slate-800/50 rounded-md"></div>
                     </div>
-                    {/* SỬA ĐỔI: Sử dụng font-bold, text-transparent và padding để kích thước khớp 100% với nút thật */}
                     <div className="font-bold py-3 px-8 rounded-lg bg-slate-700/80 text-transparent">Craft</div>
                 </section>
 
@@ -45,7 +44,11 @@ const SkillScreenSkeleton = () => {
                 <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
                     <div className="flex justify-between items-center mb-4 flex-shrink-0">
                         <div className="h-6 w-40 bg-slate-800/50 rounded-md"></div>
-                        <div className="h-9 w-24 bg-slate-700/80 rounded-lg"></div>
+                        {/* SỬA ĐỔI: Tái tạo cấu trúc bên trong (icon + text) và padding để khớp kích thước nút thật. */}
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-700/80">
+                            <div className="w-4 h-4 rounded-sm bg-slate-800/50" />
+                            <div className="h-4 w-12 rounded-sm bg-slate-800/50" />
+                        </div>
                     </div>
                     <div className="flex-grow min-h-0">
                         <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
@@ -61,5 +64,4 @@ const SkillScreenSkeleton = () => {
 };
 
 export default SkillScreenSkeleton;
-
 // --- END OF FILE skill-loading.tsx ---
