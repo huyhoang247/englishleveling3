@@ -184,8 +184,14 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
         return ownedItems
             .filter(item => !equippedIds.includes(item.id))
             .sort((a, b) => {
-                const itemDefA = getItemDefinition(a.itemId)!;
-                const itemDefB = getItemDefinition(b.itemId)!;
+                const itemDefA = getItemDefinition(a.itemId);
+                const itemDefB = getItemDefinition(b.itemId);
+
+                // *** SỬA LỖI: Thêm rào chắn để code an toàn hơn ***
+                // Nếu một trong hai không có định nghĩa, đẩy nó xuống cuối danh sách.
+                if (!itemDefA) return 1;
+                if (!itemDefB) return -1;
+                
                 const rarityIndexA = RARITY_ORDER.indexOf(itemDefA.rarity);
                 const rarityIndexB = RARITY_ORDER.indexOf(itemDefB.rarity);
                 if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
