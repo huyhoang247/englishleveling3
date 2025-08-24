@@ -4,7 +4,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { User } from 'firebase/auth';
 import { auth } from './firebase.js';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
-import { OwnedItem, EquippedItems } from './equipment.tsx';
+// --- THAY ĐỔI: Import các type cần thiết từ equipment.tsx ---
+import { OwnedItem, EquippedItems, EquipmentScreenExitData } from './equipment.tsx';
 import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
 
 import { 
@@ -69,6 +70,8 @@ interface IGameContext {
     handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
     handleSkillScreenClose: (dataUpdated: boolean) => void;
     updateSkillsState: (data: SkillScreenExitData) => void;
+    // --- THÊM MỚI: Hàm cập nhật cho Equipment ---
+    updateEquipmentData: (data: EquipmentScreenExitData) => void;
 
     // Toggles
     toggleRank: () => void;
@@ -119,7 +122,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [cardCapacity, setCardCapacity] = useState(100);
   const [equipmentPieces, setEquipmentPieces] = useState(0);
   const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
-  const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, accessory: null });
+  const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
@@ -180,7 +183,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 }); setBossBattleHighestFloor(0); setAncientBooks(0);
         setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]);
-        setEquippedItems({ weapon: null, armor: null, accessory: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
+        setEquippedItems({ weapon: null, armor: null, Helmet: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
       }
     });
     return () => unsubscribe();
@@ -265,7 +268,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     const bonusAtk = calculateTotalStatValue(userStats.atk, statConfig.atk.baseUpgradeBonus);
     const bonusDef = calculateTotalStatValue(userStats.def, statConfig.def.baseUpgradeBonus);
     let itemHpBonus = 0, itemAtkBonus = 0, itemDefBonus = 0;
-    Object.values(equippedItems).forEach(item => { if (item) { itemHpBonus += item.stats.hp || 0; itemAtkBonus += item.stats.atk || 0; itemDefBonus += item.stats.def || 0; } });
+    Object.values(equippedItems).forEach(itemId => { 
+        if(itemId){
+            const item = ownedItems.find(i => i.id === itemId);
+            if (item) { 
+                itemHpBonus += item.stats.hp || 0; 
+                itemAtkBonus += item.stats.atk || 0; 
+                itemDefBonus += item.stats.def || 0; 
+            }
+        }
+    });
     return { maxHp: BASE_HP + bonusHp + itemHpBonus, hp: BASE_HP + bonusHp + itemHpBonus, atk: BASE_ATK + bonusAtk + itemAtkBonus, def: BASE_DEF + bonusDef + itemDefBonus, maxEnergy: 50, energy: 50 };
   };
 
@@ -304,6 +316,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     setEquippedSkillIds(data.equippedSkillIds);
   };
 
+  // --- THÊM MỚI: Hàm cập nhật "êm ái" cho EquipmentScreen ---
+  const updateEquipmentData = (data: EquipmentScreenExitData) => {
+    setCoins(data.gold);
+    setDisplayedCoins(data.gold); // Cập nhật ngay để UI mượt
+    setEquipmentPieces(data.equipmentPieces);
+    setOwnedItems(data.ownedItems);
+    setEquippedItems(data.equippedItems);
+  };
+
   const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen;
   const isLoading = isLoadingUserData || !assetsLoaded;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
@@ -315,6 +336,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen, isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, handleStatsUpdate,
     handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
+    updateEquipmentData, // Thêm hàm mới vào context
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding, setCoins
   };
