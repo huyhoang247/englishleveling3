@@ -5,7 +5,7 @@ import { User } from 'firebase/auth';
 import { auth } from './firebase.js';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './skill-data.tsx';
 // --- THAY ĐỔI: Import các type cần thiết từ equipment.tsx ---
-import { OwnedItem, EquippedItems, EquipmentScreenExitData } from './equipment.tsx';
+import { OwnedItem, EquippedItems, EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
 import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
 
 import { 
