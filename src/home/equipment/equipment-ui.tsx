@@ -13,6 +13,7 @@ import { uiAssets, equipmentUiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import RateLimitToast from '../../thong-bao.tsx';
 import { EquipmentProvider, useEquipment } from './equipment-context.tsx';
+import EquipmentScreenSkeleton from './equipment-loading.tsx'; // SỬA ĐỔI: Import skeleton
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
@@ -521,10 +522,11 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 });
 
 
-// --- COMPONENT HIỂN THỊ CHÍNH (ĐÃ ĐƯỢC ĐƠN GIẢN HÓA) ---
+// --- COMPONENT HIỂN THỊ CHÍNH (ĐÃ CẬP NHẬT) ---
 function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenExitData) => void }) {
     // Lấy tất cả state và hàm xử lý từ context
     const {
+        isLoading, // SỬA ĐỔI: Thêm isLoading từ context
         gold,
         equipmentPieces,
         ownedItems,
@@ -552,6 +554,9 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         CRAFTING_COST
     } = useEquipment();
     
+    // SỬA ĐỔI: Thêm biến để tránh hiển thị giá trị cũ khi đang tải
+    const displayGold = isLoading ? 0 : gold;
+
     // --- THAY ĐỔI: Tạo hàm đóng để thu thập dữ liệu và gọi lại prop onClose ---
     const handleClose = useCallback(() => {
         onClose({
@@ -571,9 +576,15 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
             {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
             <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
 
-            <div className="relative z-10 flex flex-col w-full h-screen">
-                {/* --- THAY ĐỔI: Sử dụng handleClose mới --- */}
-                <Header gold={gold} onClose={handleClose} />
+            {/* SỬA ĐỔI: Thêm Skeleton Overlay */}
+            <div className={`absolute inset-0 z-20 ${isLoading ? '' : 'hidden'}`}>
+                <EquipmentScreenSkeleton />
+            </div>
+            
+            {/* SỬA ĐỔI: Thêm hiệu ứng opacity cho nội dung chính */}
+            <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-500'}`}>
+                {/* SỬA ĐỔI: Sử dụng displayGold và handleClose mới */}
+                <Header gold={displayGold} onClose={handleClose} />
                 <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
                     <section className="flex-shrink-0 py-4">
                         <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
@@ -626,7 +637,6 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
 
 // --- COMPONENT CHA WRAPPER (ĐÃ CẬP NHẬT)---
 interface EquipmentScreenProps {
-    // --- THAY ĐỔI: Cập nhật chữ ký của onClose ---
     onClose: (data: EquipmentScreenExitData) => void;
     userId: string;
 }
