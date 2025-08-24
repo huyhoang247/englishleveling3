@@ -8,10 +8,10 @@ import {
     type ItemDefinition, 
     type ItemRank, 
     RARITY_ORDER 
-} from './inventory/item-database.ts';
-import { uiAssets, equipmentUiAssets } from './game-assets.ts';
-import CoinDisplay from './ui/display/coin-display.tsx'; 
-import RateLimitToast from './thong-bao.tsx';
+} from './item-database.ts';
+import { uiAssets, equipmentUiAssets } from '../../game-assets.ts';
+import CoinDisplay from '../../ui/display/coin-display.tsx'; 
+import RateLimitToast from '../../thong-bao.tsx';
 import { EquipmentProvider, useEquipment } from './equipment-context.tsx';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
