@@ -13,7 +13,6 @@ import { uiAssets, equipmentUiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import RateLimitToast from '../../thong-bao.tsx';
 import { EquipmentProvider, useEquipment } from './equipment-context.tsx';
-import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import EquipmentScreenSkeleton from './equipment-loading.tsx';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
@@ -101,7 +100,6 @@ const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => ( <im
 
 // --- CÁC COMPONENT CON ---
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
-    const animatedGold = useAnimateValue(gold);
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
@@ -110,7 +108,7 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
                     <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
                 </button>
                 <div className="flex items-center gap-4 sm:gap-6">
-                    <CoinDisplay displayedCoins={animatedGold} isStatsFullscreen={false} />
+                    <CoinDisplay displayedCoins={gold} isStatsFullscreen={false} />
                 </div>
             </div>
         </header>
