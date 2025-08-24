@@ -111,7 +111,6 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
 const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { slotType: EquipmentSlotType, ownedItem: OwnedItem | null, onClick: () => void, isProcessing: boolean }) => {
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
 
-    // *** SỬA LỖI: Thêm rào chắn ***
     if (ownedItem && !itemDef) {
         console.error(`Không tìm thấy định nghĩa cho vật phẩm trang bị với ID: ${ownedItem.itemId}`, ownedItem);
         return (
@@ -121,12 +120,12 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
         );
     }
 
-    const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex flex-col items-center justify-center group";
+    // *** SỬA LỖI: Loại bỏ 'flex-col'. flex, items-center, justify-center là đủ để căn giữa. ***
+    const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center group";
     const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer';
     const borderStyle = itemDef ? `${getRarityColor(itemDef.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
     const backgroundStyle = itemDef ? 'bg-slate-900/80' : 'bg-slate-900/50';
 
-    // *** THAY ĐỔI: Sử dụng icon hình ảnh cho ô trang bị trống ***
     const getPlaceholderIcon = () => {
         const iconMap = {
             weapon: equipmentUiAssets.weaponIcon,
@@ -139,7 +138,6 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
             return <img src={iconSrc} alt={`${slotType} slot`} className="h-10 w-10 opacity-40 group-hover:opacity-60 transition-opacity" />;
         }
 
-        // Fallback về SVG cũ nếu không tìm thấy icon
         return <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
         </svg>;
@@ -155,7 +153,8 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
                     </span>
                 </>
             ) : (
-                <div className="text-slate-600 group-hover:text-slate-400 transition-colors text-center">
+                // *** SỬA LỖI: Bọc nội dung placeholder trong một div flex-col riêng để đảm bảo layout đúng. ***
+                <div className="flex flex-col items-center justify-center text-slate-600 group-hover:text-slate-400 transition-colors text-center">
                     {getPlaceholderIcon()}
                     <span className="text-xs font-semibold uppercase mt-1">{slotType}</span>
                 </div>
@@ -167,7 +166,6 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
 const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: OwnedItem | undefined; onClick: (item: OwnedItem) => void; isProcessing: boolean; }) => {
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
 
-    // *** SỬA LỖI: Thêm rào chắn ***
     if (ownedItem && !itemDef) {
         console.error(`Không tìm thấy định nghĩa cho vật phẩm trong kho với ID: ${ownedItem.itemId}`, ownedItem);
         return (
