@@ -16,19 +16,7 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- ICONS (Grouped for better organization) ---
 const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
-
-const ActivityCompletedIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none">
-        <defs>
-            <linearGradient id="activityGradient" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#2DD4BF" /> {/* Tailwind teal-400 */}
-                <stop offset="100%" stopColor="#06B6D4" /> {/* Tailwind cyan-500 */}
-            </linearGradient>
-        </defs>
-        <circle cx="12" cy="12" r="12" fill="url(#activityGradient)" />
-        <path d="M8 12.5l3 3 5-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-);
+const ActivityCompletedIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none"><defs><linearGradient id="activityGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#2DD4BF" /><stop offset="100%" stopColor="#06B6D4" /></linearGradient></defs><circle cx="12" cy="12" r="12" fill="url(#activityGradient)" /><path d="M8 12.5l3 3 5-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>);
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
 const ChevronRightIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>;
@@ -54,16 +42,9 @@ const GOAL_MILESTONES = [5, 10, 20, 50, 100, 200];
 const VOCAB_MILESTONES = [100, 200, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500];
 
 interface MilestoneProgressProps {
-  title: string;
-  iconSrc: string;
-  milestones: number[];
-  currentProgress: number;
-  masteryCount: number;
-  claimedMilestones: number[];
-  onClaim: (milestone: number, rewardAmount: number) => Promise<void>;
-  user: User | null;
-  progressColorClass?: string;
-  completedText?: string;
+  title: string; iconSrc: string; milestones: number[]; currentProgress: number; masteryCount: number;
+  claimedMilestones: number[]; onClaim: (milestone: number, rewardAmount: number) => Promise<void>;
+  user: User | null; progressColorClass?: string; completedText?: string;
 }
 
 const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
@@ -76,9 +57,7 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
 
     const { currentGoal, progressPercentage, isGoalMet, areAllGoalsMet } = useMemo(() => {
         const nextGoalIndex = milestones.findIndex(g => !claimedMilestones.includes(g));
-        if (nextGoalIndex === -1) {
-            return { areAllGoalsMet: true, progressPercentage: 100, isGoalMet: true, currentGoal: milestones[milestones.length - 1] };
-        }
+        if (nextGoalIndex === -1) return { areAllGoalsMet: true, progressPercentage: 100, isGoalMet: true, currentGoal: milestones[milestones.length - 1] };
         const currentGoal = milestones[nextGoalIndex];
         const previousGoal = nextGoalIndex > 0 ? milestones[nextGoalIndex - 1] : 0;
         const progressInMilestone = Math.max(0, currentProgress - previousGoal);
@@ -97,9 +76,7 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
         } catch (error) {
             console.error(`Lỗi khi nhận thưởng cho "${title}":`, error);
             alert("Đã có lỗi xảy ra. Vui lòng thử lại.");
-        } finally {
-            setIsClaiming(false);
-        }
+        } finally { setIsClaiming(false); }
     }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaim, title]);
 
     return (
@@ -210,18 +187,25 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
 });
 
 
+// [SỬA] Di chuyển CustomTooltip ra ngoài DashboardContent.
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const finalLabel = payload[0].payload.game ? payload[0].payload.game : `Ngày: ${label}`;
+    const total = payload.reduce((sum, entry) => sum + entry.value, 0);
+    return (
+      <div className="p-2 bg-gray-800 text-white rounded-md shadow-lg text-sm border border-gray-700">
+        <p className="font-bold">{finalLabel}</p>
+        {payload.map((pld) => <p key={pld.dataKey} style={{ color: pld.fill }}>{`${pld.name}: ${pld.value}`}</p>)}
+        {payload.length > 1 && total > 0 && <><hr className="my-1 border-gray-600" /><p className="font-semibold">{`Tổng: ${total}`}</p></>}
+      </div>
+    );
+  }
+  return null;
+};
+
+
 // --- MAIN DISPLAY COMPONENT ---
 const ITEMS_PER_PAGE = 10;
-
-// [FIX] Khai báo các đối tượng style và config của chart ra ngoài component
-// để tránh việc tạo lại chúng trên mỗi lần render, gây ra flickering.
-const CHART_MARGIN_VOCAB = { top: 5, right: 20, left: -10, bottom: 5 };
-const CHART_MARGIN_ACTIVITY = { top: 20, right: 20, left: -20, bottom: 5 };
-const CHART_GRID_STYLE = { strokeDasharray: "3 3", stroke: "#e0e0e0" };
-const CHART_AXIS_STYLE = { fontSize: 12 };
-const CHART_CURSOR_STYLE = { fill: 'rgba(136, 132, 216, 0.1)' };
-const CHART_LEGEND_STYLE = { top: 0, left: 25 };
-
 
 function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
   const {
@@ -242,140 +226,16 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
     });
   }, [analysisData?.wordMastery, sortConfig]);
 
-  const handleSort = (key: keyof WordMastery) => {
+  const handleSort = useCallback((key: keyof WordMastery) => {
     let direction: 'asc' | 'desc' = 'desc';
     if (sortConfig.key === key && sortConfig.direction === 'desc') direction = 'asc';
     setSortConfig({ key, direction });
     setCurrentPage(1); 
-  };
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const finalLabel = payload[0].payload.game ? payload[0].payload.game : `Ngày: ${label}`;
-      const total = payload.reduce((sum, entry) => sum + entry.value, 0);
-      return (
-        <div className="p-2 bg-gray-800 text-white rounded-md shadow-lg text-sm border border-gray-700">
-          <p className="font-bold">{finalLabel}</p>
-          {payload.map((pld) => <p key={pld.dataKey} style={{ color: pld.fill }}>{`${pld.name}: ${pld.value}`}</p>)}
-          {payload.length > 1 && total > 0 && <><hr className="my-1 border-gray-600" /><p className="font-semibold">{`Tổng: ${total}`}</p></>}
-        </div>
-      );
-    }
-    return null;
-  };
+  }, [sortConfig]);
   
   if (loading) return <AnalysisDashboardSkeleton />;
-
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 p-4">{error}</div>;
   
-  const mainContent = () => {
-    if (!analysisData || analysisData.totalWordsLearned === 0) {
-        return ( <div className="flex flex-col items-center justify-center h-full text-center text-gray-500"><h2 className="text-2xl font-bold mb-2">Chưa có dữ liệu</h2><p>Hãy bắt đầu học để xem tiến trình của bạn được phân tích tại đây!</p></div> );
-    }
-
-    const { totalWordsLearned, learningActivity, vocabularyGrowth } = analysisData;
-    const totalPages = Math.ceil(sortedWordMastery.length / ITEMS_PER_PAGE);
-    const paginatedMasteryData = sortedWordMastery.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-    const handlePageChange = (newPage: number) => { if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage); };
-    
-    return (
-        <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-full">
-            <div className="max-w-7xl mx-auto">
-                <div className="space-y-6 my-6">
-                    <MilestoneProgress
-                        title="Voca Journey"
-                        iconSrc={dashboardAssets.vocaJourneyIcon}
-                        milestones={VOCAB_MILESTONES}
-                        currentProgress={totalWordsLearned}
-                        masteryCount={userProgress.masteryCount}
-                        claimedMilestones={userProgress.claimedVocabMilestones}
-                        onClaim={claimVocabReward}
-                        user={user}
-                        progressColorClass="from-blue-400 to-purple-500"
-                        completedText="Max level reached!"
-                    />
-                    <MilestoneProgress
-                        title="Daily Missions"
-                        iconSrc={dashboardAssets.dailyMissionsIcon}
-                        milestones={GOAL_MILESTONES}
-                        currentProgress={wordsLearnedToday}
-                        masteryCount={userProgress.masteryCount}
-                        claimedMilestones={userProgress.claimedDailyGoals}
-                        onClaim={claimDailyReward}
-                        user={user}
-                        progressColorClass="from-green-400 to-blue-500"
-                        completedText="All missions completed!"
-                    />
-                </div>
-                <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    <ChartCard title="Vocabulary Growth">
-                        {/* [FIX] Sử dụng hằng số cho props để tránh re-render */}
-                        <ResponsiveContainer>
-                            <AreaChart data={vocabularyGrowth} margin={CHART_MARGIN_VOCAB}>
-                                <defs>
-                                    <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid {...CHART_GRID_STYLE} />
-                                <XAxis dataKey="date" {...CHART_AXIS_STYLE} />
-                                <YAxis allowDecimals={false} {...CHART_AXIS_STYLE} />
-                                <Tooltip content={CustomTooltip} />
-                                <Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </ChartCard>
-                    <ChartCard title="Study Activity" extra={<span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Last 30 Days</span>}>
-                        {/* [FIX] Sử dụng hằng số cho props để tránh re-render */}
-                        <ResponsiveContainer>
-                            <BarChart data={learningActivity} margin={CHART_MARGIN_ACTIVITY}>
-                                <CartesianGrid {...CHART_GRID_STYLE} />
-                                <XAxis dataKey="date" {...CHART_AXIS_STYLE} />
-                                <YAxis allowDecimals={false} {...CHART_AXIS_STYLE}/>
-                                <Tooltip content={CustomTooltip} cursor={CHART_CURSOR_STYLE}/>
-                                <Legend verticalAlign="top" wrapperStyle={CHART_LEGEND_STYLE}/>
-                                <Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" />
-                                <Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </ChartCard>
-                    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">Vocabulary Mastery Analysis</h3>
-                        {sortedWordMastery.length > 0 ? (<>
-                            <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 table-fixed"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3 text-center">Vocabulary</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('mastery')}>Score</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('lastPracticed')}>Latest</th></tr></thead>
-                                <tbody>{paginatedMasteryData.map(({ word, mastery, lastPracticed }) => (
-                                    <tr key={word} className="bg-white border-b hover:bg-gray-50">
-                                        <td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">{word}</td>
-                                        <td className="px-4 py-3 text-center"><div className="inline-flex items-center gap-2"><span className="font-bold w-4 text-center">{mastery}</span><div className="w-12 bg-gray-200 rounded-full h-2"><div className="bg-green-500 h-2 rounded-full" style={{ width: `${Math.min(mastery / 10, 1) * 100}%` }}></div></div></div></td>
-                                        <td className="px-4 py-3 text-right">{lastPracticed.toLocaleDateString('vi-VN')}</td>
-                                    </tr>
-                                ))}</tbody></table></div>
-                            
-                            {totalPages > 1 && (
-                                <div className="flex items-center justify-between mt-4">
-                                    <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeftIcon /><span className="ml-1">Previous</span></button>
-                                    <span className="text-sm font-medium text-gray-700">Page {currentPage} of {totalPages}</span>
-                                    <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"><span className="mr-1">Next</span><ChevronRightIcon /></button>
-                                </div>
-                            )}
-                        </>) : (<p className="text-center text-gray-500 py-4">No mastery data available.</p>)}
-                    </div>
-                    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
-                         <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
-                         {analysisData.recentCompletions.length > 0 ? (<ul className="space-y-3">{analysisData.recentCompletions.map((item, index) => (
-                            <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
-                                <span className="font-medium text-gray-700 capitalize">{item.word}</span><span className="text-sm text-gray-500">{item.date}</span>
-                            </li>
-                         ))}</ul>) : (<p className="text-center text-gray-500 py-4">Không có hoạt động nào gần đây.</p>)}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-  }
-
   return (
     <div className="bg-white flex flex-col h-full">
         <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
@@ -392,7 +252,55 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
           </div>
         </header>
         <div className="flex-grow overflow-y-auto">
-            {mainContent()}
+            {(!analysisData || analysisData.totalWordsLearned === 0) ? (
+                <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                    <h2 className="text-2xl font-bold mb-2">Chưa có dữ liệu</h2>
+                    <p>Hãy bắt đầu học để xem tiến trình của bạn được phân tích tại đây!</p>
+                </div>
+            ) : (() => {
+                const { totalWordsLearned, learningActivity, vocabularyGrowth } = analysisData;
+                const totalPages = Math.ceil(sortedWordMastery.length / ITEMS_PER_PAGE);
+                const paginatedMasteryData = sortedWordMastery.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+                const handlePageChange = (newPage: number) => { if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage); };
+                
+                return (
+                    <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-full">
+                        <div className="max-w-7xl mx-auto">
+                            <div className="space-y-6 my-6">
+                                <MilestoneProgress title="Voca Journey" iconSrc={dashboardAssets.vocaJourneyIcon} milestones={VOCAB_MILESTONES} currentProgress={totalWordsLearned} masteryCount={userProgress.masteryCount} claimedMilestones={userProgress.claimedVocabMilestones} onClaim={claimVocabReward} user={user} progressColorClass="from-blue-400 to-purple-500" completedText="Max level reached!" />
+                                <MilestoneProgress title="Daily Missions" iconSrc={dashboardAssets.dailyMissionsIcon} milestones={GOAL_MILESTONES} currentProgress={wordsLearnedToday} masteryCount={userProgress.masteryCount} claimedMilestones={userProgress.claimedDailyGoals} onClaim={claimDailyReward} user={user} progressColorClass="from-green-400 to-blue-500" completedText="All missions completed!" />
+                            </div>
+                            <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                                <ChartCard title="Vocabulary Growth"><ResponsiveContainer><AreaChart data={vocabularyGrowth} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}><defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12} /><Tooltip content={<CustomTooltip />} /><Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" /></AreaChart></ResponsiveContainer></ChartCard>
+                                <ChartCard title="Study Activity" extra={<span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Last 30 Days</span>}><ResponsiveContainer><BarChart data={learningActivity} margin={{ top: 20, right: 20, left: -20, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12}/><Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(136, 132, 216, 0.1)'}}/><Legend verticalAlign="top" wrapperStyle={{top: 0, left: 25}}/><Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" /><Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></ChartCard>
+                                <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
+                                    <h3 className="text-lg font-bold text-gray-800 mb-4">Vocabulary Mastery Analysis</h3>
+                                    {sortedWordMastery.length > 0 ? (<>
+                                        <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 table-fixed"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3 text-center">Vocabulary</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('mastery')}>Score</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('lastPracticed')}>Latest</th></tr></thead>
+                                            <tbody>{paginatedMasteryData.map(({ word, mastery, lastPracticed }) => (
+                                                <tr key={word} className="bg-white border-b hover:bg-gray-50"><td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">{word}</td><td className="px-4 py-3 text-center"><div className="inline-flex items-center gap-2"><span className="font-bold w-4 text-center">{mastery}</span><div className="w-12 bg-gray-200 rounded-full h-2"><div className="bg-green-500 h-2 rounded-full" style={{ width: `${Math.min(mastery / 10, 1) * 100}%` }}></div></div></div></td><td className="px-4 py-3 text-right">{lastPracticed.toLocaleDateString('vi-VN')}</td></tr>
+                                            ))}</tbody></table></div>
+                                        {totalPages > 1 && (
+                                            <div className="flex items-center justify-between mt-4">
+                                                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeftIcon /><span className="ml-1">Previous</span></button>
+                                                <span className="text-sm font-medium text-gray-700">Page {currentPage} of {totalPages}</span>
+                                                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"><span className="mr-1">Next</span><ChevronRightIcon /></button>
+                                            </div>
+                                        )}
+                                    </>) : (<p className="text-center text-gray-500 py-4">No mastery data available.</p>)}
+                                </div>
+                                <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
+                                     <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
+                                     {analysisData.recentCompletions.length > 0 ? (<ul className="space-y-3">{analysisData.recentCompletions.map((item, index) => (
+                                        <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors"><span className="font-medium text-gray-700 capitalize">{item.word}</span><span className="text-sm text-gray-500">{item.date}</span></li>
+                                     ))}</ul>) : (<p className="text-center text-gray-500 py-4">Không có hoạt động nào gần đây.</p>)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
         </div>
     </div>
   );
