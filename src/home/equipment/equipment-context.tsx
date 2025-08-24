@@ -12,7 +12,7 @@ import {
     RARITY_ORDER 
 } from './item-database.ts';
 import { updateUserInventory, fetchEquipmentScreenData } from '../../gameDataService.ts';
-import type { OwnedItem, EquippedItems, EquipmentSlotType } from './equipment-ui.tsx';
+import type { OwnedItem, EquippedItems, EquipmentSlotType, EquipmentScreenExitData } from './equipment-ui.tsx';
 
 // Định nghĩa các hằng số logic
 const CRAFTING_COST = 50;
@@ -60,6 +60,7 @@ const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinit
 interface EquipmentProviderProps {
     children: ReactNode;
     userId: string;
+    onClose: (dataUpdated: boolean, data?: EquipmentScreenExitData) => void;
 }
 
 // Interface định nghĩa ForgeGroup để dùng trong hàm handleForgeItems
@@ -104,6 +105,7 @@ interface EquipmentContextType {
     handleCloseCraftSuccessModal: () => void;
     handleOpenForgeModal: () => void;
     handleCloseForgeModal: () => void;
+    handleClose: () => void;
 
     // Constants
     MAX_ITEMS_IN_STORAGE: number;
@@ -117,6 +119,7 @@ const EquipmentContext = createContext<EquipmentContextType | undefined>(undefin
 export const EquipmentProvider: FC<EquipmentProviderProps> = ({ 
     children,
     userId,
+    onClose,
  }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [gold, setGold] = useState(0);
@@ -129,6 +132,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
     const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [dismantleSuccessToast, setDismantleSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+    const [dataHasChanged, setDataHasChanged] = useState(false);
     
     const [message, setMessage] = useState('');
     const [messageKey, setMessageKey] = useState(0);
@@ -201,6 +205,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
             setEquippedItems(updates.newEquipped);
             setGold(prev => prev + updates.goldChange);
             setEquipmentPieces(prev => prev + updates.piecesChange);
+            setDataHasChanged(true);
         } catch (error: any) { 
             showMessage(`Lỗi: ${error.message || 'Cập nhật thất bại'}`); 
             throw error;
@@ -356,12 +361,26 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
     const handleCloseCraftSuccessModal = useCallback(() => setNewlyCraftedItem(null), []);
     const handleCloseForgeModal = useCallback(() => setIsForgeModalOpen(false), []);
     const handleOpenForgeModal = useCallback(() => setIsForgeModalOpen(true), []);
+
+    const handleClose = useCallback(() => {
+        if (dataHasChanged) {
+            const exitData: EquipmentScreenExitData = {
+                gold,
+                equipmentPieces,
+                ownedItems,
+                equippedItems,
+            };
+            onClose(true, exitData);
+        } else {
+            onClose(false);
+        }
+    }, [onClose, dataHasChanged, gold, equipmentPieces, ownedItems, equippedItems]);
     
     const value = {
         isLoading,
         gold, equipmentPieces, ownedItems, equippedItems, selectedItem, newlyCraftedItem, isForgeModalOpen, isProcessing, dismantleSuccessToast,
         equippedItemsMap, unequippedItemsSorted,
-        handleEquipItem, handleUnequipItem, handleCraftItem, handleDismantleItem, handleUpgradeItem, handleForgeItems,
+        handleEquipItem, handleUnequipItem, handleCraftItem, handleDismantleItem, handleUpgradeItem, handleForgeItems, handleClose,
         handleSelectItem, handleSelectSlot, handleCloseDetailModal, handleCloseCraftSuccessModal, handleOpenForgeModal, handleCloseForgeModal,
         MAX_ITEMS_IN_STORAGE, CRAFTING_COST,
     };
@@ -382,5 +401,3 @@ export const useEquipment = (): EquipmentContextType => {
     }
     return context;
 };
-
-// --- END OF FILE equipment-context.tsx ---
