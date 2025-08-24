@@ -64,6 +64,10 @@ export const quizHomeAssets = {
 export const equipmentUiAssets = {
   goldIcon: require("./assets/images/coin.webp"),
   equipmentPieceIcon: require("./assets/images/equipment-piece.webp"),
+  // *** THÊM MỚI: Icon cho các ô trang bị ***
+  weaponIcon: require("./assets/equipment/weapon.webp"),
+  armorIcon: require("./assets/equipment/armor.webp"),
+  helmetIcon: require("./assets/equipment/helmet.webp"),
 };
 
 
