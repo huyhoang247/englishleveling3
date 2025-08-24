@@ -41,11 +41,8 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .vocab-screen-home-btn svg { width: 20px; height: 20px; }
         .vocabulary-chest-root .vocab-screen-home-btn span { font-size: 0.875rem; font-weight: 600; }
         @media (max-width: 640px) { .vocabulary-chest-root .vocab-screen-home-btn span { display: none; } .vocabulary-chest-root .header-right-group { gap: 8px; } }
-        .vocabulary-chest-root .chest-gallery-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; width: 100%; max-width: 1300px; padding: 20px 20px 100px; box-sizing: border-box; flex-grow: 1; overflow-y: auto; }
-        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar { width: 8px; }
-        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-track { background: rgba(10, 10, 20, 0.5); border-radius: 4px; }
-        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-thumb { background-color: #4a5588; border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
-        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar-thumb:hover { background-color: #6366f1; }
+        .vocabulary-chest-root .chest-gallery-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; width: 100%; max-width: 1300px; padding: 20px 20px 100px; box-sizing: border-box; flex-grow: 1; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar { display: none; }
         .vocabulary-chest-root .chest-ui-container { width: 100%; max-width: 380px; min-width: 300px; background-color: #1a1f36; border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(76, 89, 186, 0.2); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease, opacity 0.3s ease; position: relative; border: none; }
         .vocabulary-chest-root .chest-ui-container.is-coming-soon { filter: grayscale(80%); opacity: 0.7; }
         .vocabulary-chest-root .chest-ui-container::before { content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px; background: linear-gradient(135deg, rgba(129, 140, 248, 0.4), rgba(49, 46, 129, 0.3)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
