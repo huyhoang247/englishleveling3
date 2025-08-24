@@ -37,21 +37,19 @@ const SkillScreenSkeleton = () => {
                         <div className="w-10 h-10 rounded-md bg-slate-800/50"></div>
                         <div className="h-6 w-20 bg-slate-800/50 rounded-md"></div>
                     </div>
-                    <div className="h-12 w-28 bg-slate-700/80 rounded-lg"></div>
+                    {/* SỬA ĐỔI: Sử dụng font-bold, text-transparent và padding để kích thước khớp 100% với nút thật */}
+                    <div className="font-bold py-3 px-8 rounded-lg bg-slate-700/80 text-transparent">Craft</div>
                 </section>
 
                 {/* Storage Section Skeleton */}
-                {/* SỬA ĐỔI: Section này được giữ nguyên các class flexbox để chiếm toàn bộ không gian còn lại */}
                 <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
                     <div className="flex justify-between items-center mb-4 flex-shrink-0">
                         <div className="h-6 w-40 bg-slate-800/50 rounded-md"></div>
                         <div className="h-9 w-24 bg-slate-700/80 rounded-lg"></div>
                     </div>
-                    {/* SỬA ĐỔI: Thêm một div bọc ngoài với class "flex-grow min-h-0" để khớp với cấu trúc của UI thật, cho phép lưới bên trong giãn nở và chiếm không gian. */}
                     <div className="flex-grow min-h-0">
                         <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                            {/* Tăng số lượng item lên để đảm bảo lấp đầy màn hình trên hầu hết các độ phân giải */}
-                            {Array.from({ length: 32 }).map((_, i) => (
+                            {Array.from({ length: 25 }).map((_, i) => (
                                <div key={i} className="aspect-square rounded-lg bg-slate-800/50"></div>
                             ))}
                         </div>
@@ -63,4 +61,5 @@ const SkillScreenSkeleton = () => {
 };
 
 export default SkillScreenSkeleton;
+
 // --- END OF FILE skill-loading.tsx ---
