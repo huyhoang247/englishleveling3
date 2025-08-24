@@ -170,13 +170,14 @@ const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClo
                 )}
             </div>
 
+            {/* Lớp phủ mở thẻ - ĐÃ SỬA LỖI z-index */}
             {isOverlayVisible && openedCardCount === 1 && (
-                <div className="card-opening-overlay"><div className="overlay-content">
+                <div className="card-opening-overlay z-[1300]"><div className="overlay-content">
                     <SingleCardOpener card={cardsForPopup[0]} onClose={closeOverlay} onOpenAgain={openAgain} />
                 </div></div>
             )}
             {isOverlayVisible && openedCardCount === 4 && (
-                <div className="card-opening-overlay"><div className="overlay-content">
+                <div className="card-opening-overlay z-[1300]"><div className="overlay-content">
                     <FourCardsOpener cards={cardsForPopup} onClose={closeOverlay} onOpenAgain={openAgain} />
                 </div></div>
             )}
