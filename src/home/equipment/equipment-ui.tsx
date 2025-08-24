@@ -13,7 +13,7 @@ import { uiAssets, equipmentUiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import RateLimitToast from '../../thong-bao.tsx';
 import { EquipmentProvider, useEquipment } from './equipment-context.tsx';
-import EquipmentScreenSkeleton from './equipment-loading.tsx'; // SỬA ĐỔI: Import component skeleton mới
+import EquipmentScreenSkeleton from './equipment-loading.tsx';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
@@ -522,9 +522,9 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 });
 
 
-// --- COMPONENT HIỂN THỊ CHÍNH (ĐÃ ĐƯỢC ĐƠN GIẢN HÓA) ---
+// --- COMPONENT HIỂN THỊ CHÍNH ---
 function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenExitData) => void }) {
-    // Lấy tất cả state và hàm xử lý từ context
+    // SỬA ĐỔI: Lấy tất cả state và hàm, bao gồm `isLoading` từ context
     const {
         gold,
         equipmentPieces,
@@ -537,6 +537,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         dismantleSuccessToast,
         equippedItemsMap,
         unequippedItemsSorted,
+        isLoading, // LẤY `isLoading` TỪ CONTEXT
         handleEquipItem,
         handleUnequipItem,
         handleCraftItem,
@@ -553,20 +554,8 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         CRAFTING_COST
     } = useEquipment();
     
-    // SỬA ĐỔI: Thêm state isLoading để mô phỏng. Trong thực tế, state này sẽ đến từ context.
-    const [isLoading, setIsLoading] = useState(true);
-
-    // SỬA ĐỔI: Mô phỏng việc tải dữ liệu xong.
-    useEffect(() => {
-        // Giả sử context sẽ tự cập nhật isLoading khi dữ liệu sẵn sàng.
-        // Ở đây ta dùng setTimeout để mô phỏng.
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1200); // Tải trong 1.2 giây
-
-        return () => clearTimeout(timer);
-    }, []);
-
+    // SỬA ĐỔI: Xóa state isLoading cục bộ và useEffect giả lập
+    
     const handleClose = useCallback(() => {
         onClose({
             gold,
@@ -576,7 +565,6 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         });
     }, [onClose, gold, equipmentPieces, ownedItems, equippedItems]);
 
-    // SỬA ĐỔI: Lấy giá trị vàng để hiển thị, tránh hiển thị giá trị thật khi đang loading
     const displayGold = isLoading ? 0 : gold;
 
     return (
@@ -588,12 +576,12 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
             {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
             <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
 
-            {/* --- SỬA ĐỔI: Lớp phủ Skeleton Loading --- */}
+            {/* SỬA ĐỔI: Lớp phủ Skeleton Loading sử dụng `isLoading` từ context */}
             <div className={`absolute inset-0 z-20 transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <EquipmentScreenSkeleton />
             </div>
             
-            {/* --- SỬA ĐỔI: Nội dung chính với hiệu ứng mờ dần --- */}
+            {/* SỬA ĐỔI: Nội dung chính sử dụng `isLoading` từ context để ẩn/hiện */}
             <div className={`relative z-10 flex flex-col w-full h-screen transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                 <Header gold={displayGold} onClose={handleClose} />
                 <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
@@ -646,9 +634,8 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
     );
 }
 
-// --- COMPONENT CHA WRAPPER (ĐÃ CẬP NHẬT)---
+// --- COMPONENT CHA WRAPPER ---
 interface EquipmentScreenProps {
-    // --- THAY ĐỔI: Cập nhật chữ ký của onClose ---
     onClose: (data: EquipmentScreenExitData) => void;
     userId: string;
 }
