@@ -1,4 +1,4 @@
-// --- START OF FILE: AnalysisDashboardContext.tsx ---
+// --- START OF FILE: analysis-context.tsx ---
 
 import React, { 
     createContext, 
@@ -115,7 +115,6 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
     const claimDailyReward = useCallback(async (milestone: number, rewardAmount: number) => {
         if (!user) throw new Error("User not logged in");
         await claimDailyMilestoneReward(user.uid, milestone, rewardAmount);
-        // Update state locally immediately for better UX
         setUserProgress(prev => ({
             ...prev,
             coins: prev.coins + rewardAmount,
@@ -126,7 +125,6 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
     const claimVocabReward = useCallback(async (milestone: number, rewardAmount: number) => {
         if (!user) throw new Error("User not logged in");
         await claimVocabMilestoneReward(user.uid, milestone, rewardAmount);
-        // Update state locally
         setUserProgress(prev => ({
             ...prev,
             coins: prev.coins + rewardAmount,
@@ -134,7 +132,10 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
         }));
     }, [user]);
 
-    const value = {
+    // [SỬA] Sử dụng useMemo để memoize context value.
+    // GIẢI THÍCH: Điều này ngăn việc tạo một object `value` mới trên mỗi lần render,
+    // từ đó tránh re-render không cần thiết cho tất cả các component con sử dụng context này.
+    const value = useMemo(() => ({
         user,
         loading,
         error,
@@ -144,7 +145,17 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
         wordsLearnedToday,
         claimDailyReward,
         claimVocabReward,
-    };
+    }), [
+        user, 
+        loading, 
+        error, 
+        analysisData, 
+        dailyActivityData, 
+        userProgress, 
+        wordsLearnedToday, 
+        claimDailyReward, 
+        claimVocabReward
+    ]);
 
     return (
         <AnalysisDashboardContext.Provider value={value}>
