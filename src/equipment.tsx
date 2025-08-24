@@ -126,7 +126,20 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
     const borderStyle = itemDef ? `${getRarityColor(itemDef.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
     const backgroundStyle = itemDef ? 'bg-slate-900/80' : 'bg-slate-900/50';
 
+    // *** THAY ĐỔI: Sử dụng icon hình ảnh cho ô trang bị trống ***
     const getPlaceholderIcon = () => {
+        const iconMap = {
+            weapon: equipmentUiAssets.weaponIcon,
+            armor: equipmentUiAssets.armorIcon,
+            Helmet: equipmentUiAssets.helmetIcon,
+        };
+        const iconSrc = iconMap[slotType];
+
+        if (iconSrc) {
+            return <img src={iconSrc} alt={`${slotType} slot`} className="h-10 w-10 opacity-40 group-hover:opacity-60 transition-opacity" />;
+        }
+
+        // Fallback về SVG cũ nếu không tìm thấy icon
         return <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
         </svg>;
