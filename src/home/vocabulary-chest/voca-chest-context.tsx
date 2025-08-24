@@ -1,5 +1,3 @@
-// --- START OF FILE voca-chest-context.tsx ---
-
 // --- START OF FILE lat-the-context.tsx (UPDATED IMPORT PATH) ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
@@ -52,17 +50,19 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
 
     // --- DATA FETCHING EFFECT ---
     useEffect(() => {
+        const MIN_LOADING_TIME_MS = 700;
+        const startTime = Date.now();
+
         const fetchAllInitialData = async () => {
             if (!currentUserId) { setIsLoading(false); return; }
-            const MIN_LOADING_TIME_MS = 700; // Thêm thời gian chờ tối thiểu
-            const startTime = Date.now();
             setIsLoading(true);
+
             try {
                 const [screenData, openedVocabSnapshot] = await Promise.all([
                     fetchVocabularyScreenData(currentUserId),
                     getDocs(collection(db, 'users', currentUserId, 'openedVocab'))
                 ]);
-
+ 
                 setPlayerStats({
                     coins: screenData.coins, gems: screenData.gems,
                     totalVocab: screenData.totalVocab, capacity: screenData.capacity,
@@ -92,9 +92,7 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
                 const remainingTime = MIN_LOADING_TIME_MS - elapsedTime;
                 const delay = Math.max(0, remainingTime);
 
-                setTimeout(() => {
-                    setIsLoading(false);
-                }, delay);
+                setTimeout(() => setIsLoading(false), delay);
             }
         };
         fetchAllInitialData();
@@ -177,5 +175,3 @@ export const useVocabularyChest = (): VocabularyChestContextType => {
     if (context === undefined) { throw new Error('useVocabularyChest must be used within a VocabularyChestProvider'); }
     return context;
 };
-
-// --- END OF FILE voca-chest-context.tsx ---
