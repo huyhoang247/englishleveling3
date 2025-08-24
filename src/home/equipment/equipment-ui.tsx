@@ -1,4 +1,4 @@
-// --- START OF FILE equipment.tsx ---
+// --- START OF FILE equipment-ui.tsx ---
 
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { 
@@ -13,7 +13,7 @@ import { uiAssets, equipmentUiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import RateLimitToast from '../../thong-bao.tsx';
 import { EquipmentProvider, useEquipment } from './equipment-context.tsx';
-import EquipmentScreenSkeleton from './equipment-loading.tsx'; // SỬA ĐỔI: Import skeleton
+import EquipmentScreenSkeleton from './equipment-loading.tsx'; // SỬA ĐỔI: Import component skeleton mới
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
@@ -522,11 +522,10 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 });
 
 
-// --- COMPONENT HIỂN THỊ CHÍNH (ĐÃ CẬP NHẬT) ---
+// --- COMPONENT HIỂN THỊ CHÍNH (ĐÃ ĐƯỢC ĐƠN GIẢN HÓA) ---
 function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenExitData) => void }) {
     // Lấy tất cả state và hàm xử lý từ context
     const {
-        isLoading, // SỬA ĐỔI: Thêm isLoading từ context
         gold,
         equipmentPieces,
         ownedItems,
@@ -554,10 +553,20 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         CRAFTING_COST
     } = useEquipment();
     
-    // SỬA ĐỔI: Thêm biến để tránh hiển thị giá trị cũ khi đang tải
-    const displayGold = isLoading ? 0 : gold;
+    // SỬA ĐỔI: Thêm state isLoading để mô phỏng. Trong thực tế, state này sẽ đến từ context.
+    const [isLoading, setIsLoading] = useState(true);
 
-    // --- THAY ĐỔI: Tạo hàm đóng để thu thập dữ liệu và gọi lại prop onClose ---
+    // SỬA ĐỔI: Mô phỏng việc tải dữ liệu xong.
+    useEffect(() => {
+        // Giả sử context sẽ tự cập nhật isLoading khi dữ liệu sẵn sàng.
+        // Ở đây ta dùng setTimeout để mô phỏng.
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 1200); // Tải trong 1.2 giây
+
+        return () => clearTimeout(timer);
+    }, []);
+
     const handleClose = useCallback(() => {
         onClose({
             gold,
@@ -566,6 +575,9 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
             equippedItems
         });
     }, [onClose, gold, equipmentPieces, ownedItems, equippedItems]);
+
+    // SỬA ĐỔI: Lấy giá trị vàng để hiển thị, tránh hiển thị giá trị thật khi đang loading
+    const displayGold = isLoading ? 0 : gold;
 
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
@@ -576,14 +588,13 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
             {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
             <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
 
-            {/* SỬA ĐỔI: Thêm Skeleton Overlay */}
-            <div className={`absolute inset-0 z-20 ${isLoading ? '' : 'hidden'}`}>
+            {/* --- SỬA ĐỔI: Lớp phủ Skeleton Loading --- */}
+            <div className={`absolute inset-0 z-20 transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <EquipmentScreenSkeleton />
             </div>
             
-            {/* SỬA ĐỔI: Thêm hiệu ứng opacity cho nội dung chính */}
-            <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-500'}`}>
-                {/* SỬA ĐỔI: Sử dụng displayGold và handleClose mới */}
+            {/* --- SỬA ĐỔI: Nội dung chính với hiệu ứng mờ dần --- */}
+            <div className={`relative z-10 flex flex-col w-full h-screen transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                 <Header gold={displayGold} onClose={handleClose} />
                 <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
                     <section className="flex-shrink-0 py-4">
@@ -599,7 +610,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                                 <span className="text-base text-slate-400">/ {CRAFTING_COST}</span>
                             </div>
                         </div>
-                        <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing}>Craft</button>
+                        <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing || ownedItems.length >= MAX_ITEMS_IN_STORAGE}>Craft</button>
                     </section>
                     
                     <section className="w-full p-4 bg-black/30 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
@@ -637,6 +648,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
 
 // --- COMPONENT CHA WRAPPER (ĐÃ CẬP NHẬT)---
 interface EquipmentScreenProps {
+    // --- THAY ĐỔI: Cập nhật chữ ký của onClose ---
     onClose: (data: EquipmentScreenExitData) => void;
     userId: string;
 }
@@ -649,4 +661,4 @@ export default function EquipmentScreen({ onClose, userId }: EquipmentScreenProp
     );
 }
 
-// --- END OF FILE equipment.tsx ---
+// --- END OF FILE equipment-ui.tsx ---
