@@ -73,7 +73,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     // Data states
     isLoadingUserData, coins, displayedCoins, gems, masteryCards, pickaxes,
     minerChallengeHighestFloor, bossBattleHighestFloor, jackpotPool,
-    equipmentPieces, ownedItems, equippedItems,
     // UI states
     isAnyOverlayOpen, isGamePaused, showRateLimitToast,
     isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen,
@@ -179,13 +178,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             <ErrorBoundary>
                 {isEquipmentOpen && currentUser && (
                     <EquipmentScreen 
-                        onClose={toggleEquipmentScreen} 
+                        onClose={() => {
+                            toggleEquipmentScreen(); // 1. Đóng màn hình
+                            refreshUserData();      // 2. Đồng bộ lại GameContext để cập nhật coin, v.v.
+                        }} 
                         userId={currentUser.uid}
-                        initialGold={coins} 
-                        initialEquipmentPieces={equipmentPieces} 
-                        initialOwnedItems={ownedItems} 
-                        initialEquippedItems={equippedItems} 
-                        onDataChange={refreshUserData}
                     />
                 )}
             </ErrorBoundary>
