@@ -1,3 +1,5 @@
+// --- START OF FILE voca-chest-ui.tsx ---
+
 // --- START OF FILE lat-the.tsx (CONSTANTS MERGED) ---
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
@@ -122,41 +124,52 @@ interface VocabularyChestScreenUIProps { onClose: () => void; }
 
 const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClose }) => {
     const { isLoading, playerStats, availableIndices, urlsToPreload, isOverlayVisible, cardsForPopup, openedCardCount, processingChestId, openChest, closeOverlay, openAgain } = useVocabularyChest();
-    const animatedCoins = useAnimateValue(playerStats.coins, 500);
-    const animatedGems = useAnimateValue(playerStats.gems, 500);
 
-    if (isLoading) return <VocabularyChestLoadingSkeleton />;
+    // Bắt đầu animation từ 0 khi đang loading, và từ giá trị thật khi đã load xong
+    const displayCoins = isLoading ? 0 : playerStats.coins;
+    const displayGems = isLoading ? 0 : playerStats.gems;
+    const animatedCoins = useAnimateValue(displayCoins, 500);
+    const animatedGems = useAnimateValue(displayGems, 500);
 
     return (
         <div className="vocabulary-chest-root">
             <ScopedStyles />
             <ImagePreloader imageUrls={urlsToPreload} />
 
-            <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0 z-[1100]">
-                <button onClick={onClose} className={`vocab-screen-home-btn ${isOverlayVisible ? 'is-hidden' : ''}`} title="Quay lại Trang Chính">
-                    <HomeIcon /><span>Trang Chính</span>
-                </button>
-                <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <CardCapacityDisplay current={playerStats.totalVocab} max={playerStats.capacity} />
-                    <GemDisplay displayedGems={animatedGems} />
-                    <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
-                </div>
-            </header>
+            {/* Lớp phủ loading */}
+            <div className={`absolute inset-0 z-[1200] bg-[#0a0a14] transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                <VocabularyChestLoadingSkeleton />
+            </div>
 
-            {!isOverlayVisible && (
-                <div className="chest-gallery-container">
-                    {CHEST_DATA.map((chest) => (
-                        <ChestUI
-                            key={chest.id} {...chest}
-                            priceIconUrl={chest.currency === 'gem' ? uiAssets.gemIcon : uiAssets.priceIcon}
-                            remainingCount={availableIndices[chest.chestType]?.length ?? 0}
-                            onOpen1={() => openChest(1, chest.chestType)}
-                            onOpen10={() => openChest(4, chest.chestType)}
-                            isProcessing={processingChestId === chest.id}
-                        />
-                    ))}
-                </div>
-            )}
+            {/* Nội dung chính, bị ẩn đi khi đang loading */}
+            <div className={`relative z-[1100] flex flex-col w-full h-full ${isLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}`}>
+                <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0">
+                    <button onClick={onClose} className={`vocab-screen-home-btn ${isOverlayVisible ? 'is-hidden' : ''}`} title="Quay lại Trang Chính">
+                        <HomeIcon /><span>Trang Chính</span>
+                    </button>
+                    <div className="header-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <CardCapacityDisplay current={playerStats.totalVocab} max={playerStats.capacity} />
+                        <GemDisplay displayedGems={animatedGems} />
+                        <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
+                    </div>
+                </header>
+
+                {!isOverlayVisible && (
+                    <div className="chest-gallery-container">
+                        {CHEST_DATA.map((chest) => (
+                            <ChestUI
+                                key={chest.id} {...chest}
+                                priceIconUrl={chest.currency === 'gem' ? uiAssets.gemIcon : uiAssets.priceIcon}
+                                remainingCount={availableIndices[chest.chestType]?.length ?? 0}
+                                onOpen1={() => openChest(1, chest.chestType)}
+                                onOpen10={() => openChest(4, chest.chestType)}
+                                isProcessing={processingChestId === chest.id}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+
             {isOverlayVisible && openedCardCount === 1 && (
                 <div className="card-opening-overlay"><div className="overlay-content">
                     <SingleCardOpener card={cardsForPopup[0]} onClose={closeOverlay} onOpenAgain={openAgain} />
@@ -187,3 +200,5 @@ const VocabularyChest: React.FC<VocabularyChestProps> = ({ onClose, currentUserI
 );
 
 export default VocabularyChest;
+
+// --- END OF FILE voca-chest-ui.tsx ---
