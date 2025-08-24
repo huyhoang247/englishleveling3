@@ -91,7 +91,7 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4c-1.1 0-2 .9-2 2v4h1.5c1.93 0 3.5 1.57 3.5 3.5S5.43 20 3.5 20H2v-4c0-1.1.9-2 2-2h4v1.5a2.5 2.5 0 0 0 5 0V13h4c1.1 0 2-.9 2 2v4h-1.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5H22v-4c0-1.1-.9-2-2-2z"/> </svg>);
 const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => ( <img src={equipmentUiAssets.equipmentPieceIcon} alt="Mảnh Trang Bị" className={className} /> );
 
-// --- CÁC COMPONENT CON (KHÔNG THAY ĐỔI) ---
+// --- CÁC COMPONENT CON ---
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
     return (
         <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
@@ -110,6 +110,17 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
 
 const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { slotType: EquipmentSlotType, ownedItem: OwnedItem | null, onClick: () => void, isProcessing: boolean }) => {
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
+
+    // *** SỬA LỖI: Thêm rào chắn ***
+    if (ownedItem && !itemDef) {
+        console.error(`Không tìm thấy định nghĩa cho vật phẩm trang bị với ID: ${ownedItem.itemId}`, ownedItem);
+        return (
+            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 border-dashed border-red-500 flex items-center justify-center text-center text-red-400 text-xs p-2">
+                Lỗi Vật Phẩm (ID: {ownedItem.itemId})
+            </div>
+        );
+    }
+
     const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex flex-col items-center justify-center group";
     const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer';
     const borderStyle = itemDef ? `${getRarityColor(itemDef.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
@@ -144,6 +155,17 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
 
 const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: OwnedItem | undefined; onClick: (item: OwnedItem) => void; isProcessing: boolean; }) => {
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
+
+    // *** SỬA LỖI: Thêm rào chắn ***
+    if (ownedItem && !itemDef) {
+        console.error(`Không tìm thấy định nghĩa cho vật phẩm trong kho với ID: ${ownedItem.itemId}`, ownedItem);
+        return (
+            <div className="relative aspect-square rounded-lg border-2 border-dashed border-red-500 flex items-center justify-center text-center text-red-400 text-[10px] p-1">
+                Lỗi ID: {ownedItem.itemId}
+            </div>
+        );
+    }
+    
     const baseClasses = "relative aspect-square rounded-lg border-2 transition-all duration-200 flex items-center justify-center group";
     const interactivity = isProcessing ? 'cursor-wait' : (ownedItem ? 'cursor-pointer hover:scale-105 hover:shadow-lg' : 'cursor-default');
     const borderStyle = itemDef ? getRarityColor(itemDef.rarity) : 'border-slate-800 border-dashed';
@@ -226,6 +248,18 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     const [activeTab, setActiveTab] = useState<'stats' | 'upgrade'>('stats');
     const [toastInfo, setToastInfo] = useState<{ key: number; isVisible: boolean; icon: JSX.Element; bonus: number; colorClasses: { border: string; text: string; } } | null>(null);
 
+    // *** SỬA LỖI: Thêm rào chắn ***
+    useEffect(() => {
+        if (!itemDef) {
+            console.error(`Không thể mở modal chi tiết cho vật phẩm không tồn tại với ID: ${ownedItem.itemId}`);
+            onClose();
+        }
+    }, [itemDef, ownedItem.itemId, onClose]);
+
+    if (!itemDef) {
+        return null;
+    }
+    
     const sortedStats = useMemo(() => {
         const order = ['hp', 'atk', 'def'];
         const stats = ownedItem.stats || {};
@@ -240,8 +274,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
         orderedEntries.push(...Object.entries(remainingEntries));
         return orderedEntries;
     }, [ownedItem.stats]);
-
-    if (!itemDef) return null;
     
     const handleUpgradeClick = () => {
         const upgradableStats = sortedStats.filter(([_, value]) => typeof value === 'number').map(([key]) => key);
