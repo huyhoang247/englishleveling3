@@ -305,9 +305,9 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
             
             await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: refundGold, piecesChange: 0 });
             
-            let successMsg = `Hợp nhất thành công ${upgradedItemDef.name} [${group.nextRank}] - Đạt Lv. ${finalLevel}!`;
-            if (refundGold > 0) successMsg += ` Hoàn lại ${refundGold.toLocaleString()} vàng.`;
-            showMessage(successMsg);
+            setDismantleSuccessToast({ show: true, message: 'Hợp nhất thành công.' });
+            setTimeout(() => setDismantleSuccessToast(prev => ({ ...prev, show: false })), 4000);
+            
             setIsForgeModalOpen(false);
         } catch (error) { console.error(`Forge failed:`, error); }
     }, [ownedItems, equippedItems, performInventoryUpdate, showMessage]);
