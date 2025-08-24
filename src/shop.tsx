@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { itemDatabase, ItemRank } from './inventory/item-database.ts';
+import { itemDatabase, ItemRank } from './home/equipment/item-database.ts';
 import { uiAssets } from './game-assets.ts';
 
 // --- START: HELPERS & COMPONENTS SAO CHÉP TỪ INVENTORY.TSX ---
