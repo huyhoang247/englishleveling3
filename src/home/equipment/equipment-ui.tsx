@@ -524,7 +524,6 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 
 // --- COMPONENT HIỂN THỊ CHÍNH ---
 function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenExitData) => void }) {
-    // SỬA ĐỔI: Lấy tất cả state và hàm, bao gồm `isLoading` từ context
     const {
         gold,
         equipmentPieces,
@@ -537,7 +536,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         dismantleSuccessToast,
         equippedItemsMap,
         unequippedItemsSorted,
-        isLoading, // LẤY `isLoading` TỪ CONTEXT
+        isLoading,
         handleEquipItem,
         handleUnequipItem,
         handleCraftItem,
@@ -553,8 +552,6 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         MAX_ITEMS_IN_STORAGE,
         CRAFTING_COST
     } = useEquipment();
-    
-    // SỬA ĐỔI: Xóa state isLoading cục bộ và useEffect giả lập
     
     const handleClose = useCallback(() => {
         onClose({
@@ -576,60 +573,62 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
             {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
             <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
 
-            {/* SỬA ĐỔI: Lớp phủ Skeleton Loading sử dụng `isLoading` từ context */}
-            <div className={`absolute inset-0 z-20 transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                <EquipmentScreenSkeleton />
-            </div>
+            {isLoading && (
+                <div className="absolute inset-0 z-20">
+                    <EquipmentScreenSkeleton />
+                </div>
+            )}
             
-            {/* SỬA ĐỔI: Nội dung chính sử dụng `isLoading` từ context để ẩn/hiện */}
-            <div className={`relative z-10 flex flex-col w-full h-screen transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-                <Header gold={displayGold} onClose={handleClose} />
-                <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
-                    <section className="flex-shrink-0 py-4">
-                        <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
-                            {EQUIPMENT_SLOT_TYPES.map(slotType => <EquipmentSlot key={slotType} slotType={slotType} ownedItem={equippedItemsMap[slotType]} onClick={() => handleSelectSlot(slotType)} isProcessing={isProcessing} />)}
-                        </div>
-                    </section>
-                    <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                            <EquipmentPieceIcon className="w-10 h-10" />
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-xl font-bold text-white">{equipmentPieces.toLocaleString()}</span>
-                                <span className="text-base text-slate-400">/ {CRAFTING_COST}</span>
+            {!isLoading && (
+                <div className="relative z-10 flex flex-col w-full h-screen">
+                    <Header gold={displayGold} onClose={handleClose} />
+                    <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
+                        <section className="flex-shrink-0 py-4">
+                            <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
+                                {EQUIPMENT_SLOT_TYPES.map(slotType => <EquipmentSlot key={slotType} slotType={slotType} ownedItem={equippedItemsMap[slotType]} onClick={() => handleSelectSlot(slotType)} isProcessing={isProcessing} />)}
                             </div>
-                        </div>
-                        <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing || ownedItems.length >= MAX_ITEMS_IN_STORAGE}>Craft</button>
-                    </section>
-                    
-                    <section className="w-full p-4 bg-black/30 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
-                        <div className="flex justify-between items-center mb-4 flex-shrink-0">
-                            <div className="flex items-baseline gap-2">
-                                <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
-                                <span className="text-sm font-semibold text-slate-300">{unequippedItemsSorted.length}<span className="text-xs text-slate-500"> / {MAX_ITEMS_IN_STORAGE}</span></span>
+                        </section>
+                        <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <EquipmentPieceIcon className="w-10 h-10" />
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-xl font-bold text-white">{equipmentPieces.toLocaleString()}</span>
+                                    <span className="text-base text-slate-400">/ {CRAFTING_COST}</span>
+                                </div>
                             </div>
-                            <button onClick={handleOpenForgeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
-                        </div>
-                        <div className="flex-grow min-h-0 overflow-y-auto hide-scrollbar -m-1 p-1">
-                            {unequippedItemsSorted.length > 0 ? (
-                                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                                    {unequippedItemsSorted.map((ownedItem) => (
-                                        <InventorySlot
-                                            key={ownedItem.id}
-                                            ownedItem={ownedItem}
-                                            onClick={handleSelectItem}
-                                            isProcessing={isProcessing}
-                                        />
-                                    ))}
+                            <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing || ownedItems.length >= MAX_ITEMS_IN_STORAGE}>Craft</button>
+                        </section>
+                        
+                        <section className="w-full p-4 bg-black/30 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
+                            <div className="flex justify-between items-center mb-4 flex-shrink-0">
+                                <div className="flex items-baseline gap-2">
+                                    <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
+                                    <span className="text-sm font-semibold text-slate-300">{unequippedItemsSorted.length}<span className="text-xs text-slate-500"> / {MAX_ITEMS_IN_STORAGE}</span></span>
                                 </div>
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-slate-500">
-                                    <p>Kho chứa trống.</p>
-                                </div>
-                            )}
-                        </div>
-                    </section>
-                </main>
-            </div>
+                                <button onClick={handleOpenForgeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
+                            </div>
+                            <div className="flex-grow min-h-0 overflow-y-auto hide-scrollbar -m-1 p-1">
+                                {unequippedItemsSorted.length > 0 ? (
+                                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                                        {unequippedItemsSorted.map((ownedItem) => (
+                                            <InventorySlot
+                                                key={ownedItem.id}
+                                                ownedItem={ownedItem}
+                                                onClick={handleSelectItem}
+                                                isProcessing={isProcessing}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-slate-500">
+                                        <p>Kho chứa trống.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+                    </main>
+                </div>
+            )}
         </div>
     );
 }
