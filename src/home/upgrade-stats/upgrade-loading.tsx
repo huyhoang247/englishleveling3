@@ -4,7 +4,6 @@ const UpgradeStatsSkeleton: React.FC = () => {
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] p-4 flex flex-col items-center justify-center font-lilita text-white overflow-hidden">
       
-      {/* --- Skeleton Header (Đã chuẩn) --- */}
       <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 animate-pulse">
           <div className="w-5 h-5 bg-slate-700/80 rounded-sm"></div>
@@ -29,19 +28,19 @@ const UpgradeStatsSkeleton: React.FC = () => {
             {[...Array(3)].map((_, i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className="w-6 h-6 bg-slate-700 rounded-full"></div>
-                {/* SỬA ĐỔI: Dùng khoảng trắng {' '} thay vì text thật. Bỏ class 'text-transparent' không cần thiết. */}
-                <span className="text-lg font-bold bg-slate-700 rounded-md w-14">{' '}</span>
+                {/* QUAY LẠI PHƯƠNG PHÁP ĐÚNG: Dùng text + text-transparent */}
+                <span className="text-lg font-bold bg-slate-700 text-transparent rounded-md w-14">X</span>
               </div>
             ))}
           </div>
 
           <div className="w-full px-2 mb-8 animate-pulse">
               <div className="flex justify-between items-baseline mb-2 px-1">
-                  <span className="text-md font-bold tracking-wide bg-slate-700 rounded-md w-24">{' '}</span>
-                  <span className="text-sm font-semibold bg-slate-700 rounded-md w-16">{' '}</span>
+                  <span className="text-md font-bold tracking-wide bg-slate-700 text-transparent rounded-md w-24">X</span>
+                  <span className="text-sm font-semibold bg-slate-700 text-transparent rounded-md w-16">X</span>
               </div>
               <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1">
-                  <div className="h-full bg-slate-700 rounded-full w-2/5"></div>
+                  <div className="h-full bg-slate-700 rounded-full w-2-5"></div>
               </div>
           </div>
 
@@ -51,14 +50,14 @@ const UpgradeStatsSkeleton: React.FC = () => {
                       <div className="relative bg-slate-900/95 rounded-[11px] h-full flex flex-col items-center justify-between text-center w-28 sm:w-36 p-3 sm:p-4 gap-2 sm:gap-3 animate-pulse">
                           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-700"></div>
                           <div className="flex-grow flex flex-col items-center gap-1">
-                              {/* SỬA ĐỔI: Dùng {' '} thay cho text thật */}
-                              <p className="text-base sm:text-lg uppercase font-bold tracking-wider bg-slate-700 rounded-md w-16">{' '}</p>
-                              <p className="text-lg sm:text-xl font-black bg-slate-700 rounded-md w-12">{' '}</p>
-                              <p className="text-xs text-slate-400 bg-slate-700 rounded-md w-20">{' '}</p>
+                              {/* QUAY LẠI PHƯƠNG PHÁP ĐÚNG: Dùng text + text-transparent */}
+                              <p className="text-base sm:text-lg uppercase font-bold tracking-wider bg-slate-700 text-transparent rounded-md w-16">X</p>
+                              <p className="text-lg sm:text-xl font-black bg-slate-700 text-transparent rounded-md w-12">X</p>
+                              <p className="text-xs text-slate-400 bg-slate-700 text-transparent rounded-md w-20">X</p>
                           </div>
                           <div className="w-full bg-slate-900 border border-slate-700 rounded-lg py-1.5 sm:py-2 px-2 flex items-center justify-center gap-1.5 sm:gap-2 shadow-lg">
                               <div className="w-5 h-5 flex-shrink-0 bg-slate-700 rounded"></div>
-                              <span className="text-sm sm:text-base font-bold bg-slate-700 rounded-sm w-12">{' '}</span>
+                              <span className="text-sm sm:text-base font-bold bg-slate-700 text-transparent rounded-sm w-12">X</span>
                           </div>
                       </div>
                   </div>
