@@ -39,24 +39,26 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 
 const WarriorIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> );
 
-// THAY ĐỔI: Thêm icon vào component PlayerInfoDisplay
-const PlayerInfoDisplay = ({ stats, floor }: { stats: CombatStats, floor: string }) => {
+// THAY ĐỔI: Thêm prop onAvatarClick để xử lý sự kiện click
+const PlayerInfoDisplay = ({ stats, floor, onAvatarClick }: { stats: CombatStats, floor: string, onAvatarClick: () => void }) => {
     const percentage = Math.max(0, (stats.hp / stats.maxHp) * 100);
   
     return (
       <div className="w-64 bg-slate-900/50 backdrop-blur-sm rounded-lg p-2.5 border border-slate-700/50 shadow-lg flex items-center gap-3 animate-fade-in">
-          <div className="flex-shrink-0 w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center border-2 border-slate-600">
+          <div 
+            onClick={onAvatarClick}
+            className="flex-shrink-0 w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center border-2 border-slate-600 cursor-pointer transition-all duration-200 hover:border-blue-400 hover:scale-110"
+            title="View Your Stats"
+          >
               <WarriorIcon className="w-6 h-6 text-slate-400" />
           </div>
           <div className="flex-grow flex flex-col gap-1.5">
-            {/* Component hiển thị Floor với icon */}
             <div className="flex items-center gap-1.5 bg-black/40 px-2 py-0.5 rounded-md self-start border border-slate-700/80">
                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/floor-icon.webp" alt="Floor" className="w-3 h-3" />
                 <h3 className="font-bold text-xs tracking-widest uppercase text-slate-300 select-none">
                     {floor}
                 </h3>
             </div>
-            {/* Thanh máu */}
             <div className="relative w-full h-5 bg-black/40 rounded-full border border-slate-700/80 p-0.5 shadow-inner">
               <div 
                 className="h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-green-500 to-lime-400" 
@@ -74,7 +76,6 @@ const PlayerInfoDisplay = ({ stats, floor }: { stats: CombatStats, floor: string
     );
 };
 
-
 const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
   const percentage = Math.max(0, (current / max) * 100);
   return (
@@ -89,51 +90,39 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
   );
 };
 
-// XÓA BỎ COMPONENT ENERGYDISPLAY CŨ Ở ĐÂY
-/*
-const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
-    return (
-      <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-cyan-500/30">
-          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="Energy" className="w-5 h-5" />
-          <div className="flex items-baseline text-shadow-sm tracking-wider">
-              <span className="font-bold text-base text-cyan-300">{current}</span>
-              <span className="font-semibold text-sm text-cyan-400/80">/{max}</span>
-          </div>
-      </div>
-    );
-};
-*/
-
 const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colorClass: string }) => {
   return (
     <div key={id} className={`absolute top-1/3 font-lilita text-2xl animate-float-up pointer-events-none ${colorClass}`} style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}>{text}</div>
   );
 };
 
-const StatsModal = ({ player, boss, onClose }: { player: any, boss: any, onClose: () => void }) => {
+// THAY ĐỔI: Component modal mới để hiển thị stats cho một nhân vật
+const CharacterStatsModal = ({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
+  const isPlayer = characterType === 'player';
+  const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
+  const titleColor = isPlayer ? 'text-blue-300' : 'text-red-400';
+  
+  const StatItem = ({ label, value, color }: { label: string, value: string | number, color: string }) => (
+    <p className="text-lg tracking-wide">{label}: <span className={`font-bold ${color}`}>{value}</span></p>
+  );
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
       <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
-        <div className="p-5 pt-8">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-            <div className="flex flex-col items-center gap-1.5">
-              <h3 className="text-xl font-bold text-blue-300 text-shadow-sm tracking-wide">YOU</h3>
-              <p className="text-lg">ATK: <span className="font-bold text-red-400">{player.atk}</span></p>
-              <p className="text-lg">DEF: <span className="font-bold text-sky-400">{player.def}</span></p>
-            </div>
-            <div className="h-16 w-px bg-slate-600/70"></div>
-            <div className="flex flex-col items-center gap-1.5">
-              <h3 className="text-xl font-bold text-red-400 text-shadow-sm tracking-wide select-none">BOSS</h3>
-              <p className="text-lg">ATK: <span className="font-bold text-red-400">{boss.atk}</span></p>
-              <p className="text-lg">DEF: <span className="font-bold text-sky-400">{boss.def}</span></p>
-            </div>
+        <div className="p-5 pt-8 text-center">
+          <h3 className={`text-xl font-bold ${titleColor} text-shadow-sm tracking-widest mb-4`}>{title}</h3>
+          <div className="flex flex-col items-center gap-2">
+            <StatItem label="HP" value={`${Math.ceil(character.hp)} / ${character.maxHp}`} color="text-green-400" />
+            <StatItem label="ATK" value={character.atk} color="text-red-400" />
+            <StatItem label="DEF" value={character.def} color="text-sky-400" />
           </div>
         </div>
       </div>
     </div>
   )
 }
+
 
 const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     return (
@@ -239,7 +228,10 @@ export default function BossBattle({
   const [gameOver, setGameOver] = useState<null | 'win' | 'lose'>(null);
   const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
   const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
-  const [showStats, setShowStats] = useState(false);
+  
+  // THAY ĐỔI: State mới để quản lý modal nào đang hiển thị
+  const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
+  
   const [showLogModal, setShowLogModal] = useState(false);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   
@@ -462,7 +454,15 @@ export default function BossBattle({
         .animate-pulse-fast { animation: pulse-fast 1s infinite; }
       `}</style>
 
-      {showStats && <StatsModal player={playerStats} boss={bossStats} onClose={() => setShowStats(false)} />}
+      {/* THAY ĐỔI: Render modal mới dựa trên state */}
+      {statsModalTarget && (
+        <CharacterStatsModal 
+          character={statsModalTarget === 'player' ? playerStats : bossStats}
+          characterType={statsModalTarget}
+          onClose={() => setStatsModalTarget(null)}
+        />
+      )}
+      
       {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
       {showRewardsModal && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
 
@@ -491,19 +491,23 @@ export default function BossBattle({
                     )}
                     <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                 </div>
-
             </div>
         </header>
 
         <div className="fixed top-16 left-4 z-20">
-            <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} />
+            {/* THAY ĐỔI: Truyền hàm để mở modal */}
+            <PlayerInfoDisplay 
+              stats={playerStats} 
+              floor={currentBossData.floor}
+              onAvatarClick={() => setStatsModalTarget('player')}
+            />
         </div>
 
         <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
             <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
                 {/* Left/Center aligned controls */}
                 <div className="flex items-center gap-3">
-                    <button onClick={() => setShowStats(true)} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md">View Stats</button>
+                    {/* THAY ĐỔI: Đã xóa nút View Stats */}
                     {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button>)}
                 </div>
 
@@ -511,7 +515,6 @@ export default function BossBattle({
                 <div className="flex flex-col items-end gap-2">
                     {battleState === 'idle' && (
                         <div className="w-full flex justify-center gap-2">
-                            {/* View Log Icon Button */}
                             <button 
                                 onClick={() => setShowLogModal(true)} 
                                 disabled={!previousCombatLog.length} 
@@ -520,7 +523,6 @@ export default function BossBattle({
                             >
                                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/history-battle.webp" alt="Log" className="w-full h-full object-contain" />
                             </button>
-                            {/* Rewards Icon Button */}
                             <button 
                                 onClick={() => setShowRewardsModal(true)} 
                                 className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md" 
@@ -536,17 +538,21 @@ export default function BossBattle({
             {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
+                {/* THAY ĐỔI: Thêm sự kiện onClick cho Boss */}
+                <div 
+                  className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group"
+                  onClick={() => setStatsModalTarget('boss')}
+                  title="View Boss Stats"
+                >
                   <div className="relative group flex justify-center">
                     <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
                     <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                       {currentBossData.name.toUpperCase()}
-                      <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-slate-900"></div>
                     </div>
                   </div>
                   
                   <div className="w-40 h-40 md:w-56 md:h-56">
-                    <img src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} alt={currentBossData.name} className="w-full h-full object-contain" />
+                    <img src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} alt={currentBossData.name} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
                   </div>
                   <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
                 </div>
