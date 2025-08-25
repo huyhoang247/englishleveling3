@@ -44,7 +44,7 @@ const EnergyDisplay: React.FC<EnergyDisplayProps> = ({ currentEnergy, maxEnergy,
             className="w-4 h-4"
             // Dùng CSS filter để đổi màu icon từ cyan sang tím và thêm hiệu ứng phát sáng.
             style={{
-              filter: 'hue-rotate(180deg) brightness(0.9) saturate(2) drop-shadow(0 0 3px rgba(167, 139, 250, 0.7))'
+              filter: 'hue-rotate(90deg) brightness(0.9) saturate(2) drop-shadow(0 0 3px rgba(167, 139, 250, 0.7))'
             }}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
