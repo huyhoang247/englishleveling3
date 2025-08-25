@@ -1,3 +1,5 @@
+// --- START OF FILE voca-chest-ui.tsx (MODIFIED FOR INSTANT TRANSITION) ---
+
 // --- START OF FILE lat-the.tsx (CONSTANTS MERGED) ---
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
@@ -135,12 +137,12 @@ const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClo
             <ImagePreloader imageUrls={urlsToPreload} />
 
             {/* --- Lớp phủ Loading --- */}
-            <div className={`absolute inset-0 bg-[#0a0a14] z-20 transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`absolute inset-0 bg-[#0a0a14] z-20 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <VocabularyChestLoadingSkeleton />
             </div>
 
             {/* --- Nội dung chính (hiện ra sau khi loading) --- */}
-            <div className={`relative z-10 flex flex-col w-full h-screen transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+            <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                 <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0 z-[1100]">
                     <button onClick={onClose} className={`vocab-screen-home-btn ${isOverlayVisible ? 'is-hidden' : ''}`} title="Quay lại Trang Chính">
                         <HomeIcon /><span>Trang Chính</span>
