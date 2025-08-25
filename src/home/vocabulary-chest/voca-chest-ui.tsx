@@ -1,4 +1,4 @@
-// --- START OF FILE voca-chest-ui.tsx (MODIFIED FOR INSTANT TRANSITION) ---
+// --- START OF FILE voca-chest-ui.tsx (MODIFIED FOR INSTANT TRANSITION & SMOOTH FLIP) ---
 
 // --- START OF FILE lat-the.tsx (CONSTANTS MERGED) ---
 
@@ -31,7 +31,7 @@ const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
 
 // ========================================================================
-// === 1. COMPONENT CSS (Không thay đổi, giữ nguyên) ======================
+// === 1. COMPONENT CSS (ĐÃ SỬA LỖI ANIMATION) ===========================
 // ========================================================================
 const ScopedStyles = () => (
     <style>{`
@@ -97,7 +97,19 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
         .vocabulary-chest-root .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; will-change: transform; }
         .vocabulary-chest-root .card-container.is-flipping .card-inner { animation-name: vocabulary-chest-flip-in; animation-duration: 0.8s; animation-fill-mode: forwards; animation-timing-function: ease-in-out; }
-        .vocabulary-chest-root .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
+        
+        .vocabulary-chest-root .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform: translateZ(0); /* <- FIX: Bật tăng tốc phần cứng để animation mượt hơn */
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
         .vocabulary-chest-root .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #a78bfa; text-shadow: 0 0 10px #a78bfa; }
         .vocabulary-chest-root .card-front { transform: rotateY(180deg); padding: 6px; box-sizing: border-box; background: rgba(42, 49, 78, 0.85); border: 1px solid rgba(255, 255, 255, 0.18); }
         .vocabulary-chest-root .card-image-in-card { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
