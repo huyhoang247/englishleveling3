@@ -23,7 +23,7 @@ import AchievementsScreen from './home/achievements/achievement-ui.tsx';
 import AdminPanel from './admin.tsx';
 import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './home/skill-game/skill-ui.tsx';
-import { SkillBlueprint } from './skill-data.tsx';
+import { SkillBlueprint } from './home/skill-game/skill-data.tsx';
 import type { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
 // --- THAY ĐỔI: Import EquipmentScreen và type mới ---
