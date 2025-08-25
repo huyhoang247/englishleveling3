@@ -39,9 +39,6 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 
 const WarriorIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> );
 
-const FireIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M10.719.923c.36-1.091 1.902-1.091 2.262 0l1.325 4.024a1.353 1.353 0 001.28  .924H19.6c1.17 0 1.656 1.482.723 2.193l-3.41 2.478a1.353 1.353 0 00-.488 1.503l1.325 4.024c.36 1.091-.866 2.03-1.8 1.408l-3.41-2.478a1.353 1.353 0 00-1.584 0l-3.41 2.478c-.934.623-2.16-.317-1.8-1.408l1.325-4.024a1.353 1.353 0 00-.488-1.503L3.314 8.064c-.933-.711-.447-2.193.723-2.193h4.015c.578 0 1.102-.34 1.28-.924L10.719.923z" /></svg>);
-
-
 // THAY ĐỔI: Thêm prop onAvatarClick để xử lý sự kiện click
 const PlayerInfoDisplay = ({ stats, floor, onAvatarClick }: { stats: CombatStats, floor: string, onAvatarClick: () => void }) => {
     const percentage = Math.max(0, (stats.hp / stats.maxHp) * 100);
@@ -99,99 +96,88 @@ const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colo
   );
 };
 
-// THAY ĐỔI: Component modal được thiết kế lại hoàn toàn để đẹp và tinh tế hơn
+// THAY ĐỔI: Component modal được thiết kế lại hoàn toàn để giống với các popup khác
 const CharacterStatsModal = ({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
   const titleColor = isPlayer ? 'text-blue-300' : 'text-red-400';
-  const TitleIcon = isPlayer ? WarriorIcon : FireIcon;
-  
-  // Component con để hiển thị từng hàng chỉ số, được thiết kế lại
-  const StatDisplayRow = ({ 
-      icon, 
-      label, 
-      valueText, 
-      percentage, 
-      barGradient, 
-      shadowColor 
-  }: { 
-      icon: string, 
-      label: string, 
-      valueText: string, 
-      percentage: number, 
-      barGradient: string, 
-      shadowColor: string 
-  }) => (
-      <div className="w-full">
-          <div className="relative w-full h-10 bg-black/40 rounded-lg border border-slate-700/80 shadow-inner overflow-hidden flex items-center px-3">
-              {/* Thanh tiến trình (nền) */}
-              <div 
-                  className="absolute top-0 left-0 h-full rounded-lg transition-all duration-700 ease-out"
-                  style={{ 
-                      width: `${percentage}%`,
-                      background: barGradient,
-                      boxShadow: `inset 0 0 10px ${shadowColor}, 0 0 12px ${shadowColor}`
-                  }}
-              ></div>
-              
-              {/* Lớp nội dung (icon và text) */}
-              <div className="relative w-full flex justify-between items-center text-white text-shadow-sm">
-                  <div className="flex items-center gap-2">
-                      <img src={icon} alt={label} className="w-6 h-6 flex-shrink-0 drop-shadow-[0_2px_2px_rgba(0,0,0,0.7)]" />
-                      <span className="font-bold text-sm tracking-wider uppercase">{label}</span>
-                  </div>
-                  <span className="font-bold text-lg font-sans">{valueText}</span>
-              </div>
-          </div>
-      </div>
-  );
 
-  // Công thức scale phi tuyến tính cho thanh ATK/DEF để hiển thị đẹp hơn
-  const getStatPercentage = (value: number) => Math.min(100, (value / (value + 500)) * 100);
+  // Component con để hiển thị từng hàng chỉ số
+  const StatItem = ({ 
+    icon, 
+    current, 
+    max, 
+    gradient, 
+    shadowColor 
+  }: { 
+    icon: string, 
+    current: number, 
+    max?: number, 
+    gradient: string, 
+    shadowColor: string 
+  }) => {
+    // Nếu max không tồn tại, dùng công thức scale phi tuyến tính cho thanh progress
+    const percentage = max ? (current / max) * 100 : Math.min(100, (current / (current + 500)) * 100);
+    const valueText = max ? `${Math.ceil(current)} / ${max}` : String(current);
+
+    return (
+      <div className="flex items-center gap-3 w-full">
+        <div className="flex-shrink-0 w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-700 p-1.5">
+          <img src={icon} alt="Stat Icon" className="w-full h-full object-contain" />
+        </div>
+        <div className="relative w-full h-7 bg-black/40 rounded-full border border-slate-700/80 p-0.5 shadow-inner">
+          <div 
+            className={`h-full rounded-full transition-all duration-700 ease-out ${gradient}`}
+            style={{ 
+              width: `${percentage}%`,
+              boxShadow: `0 0 6px ${shadowColor}, 0 0 10px ${shadowColor}`
+            }}
+          ></div>
+          <div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow-sm font-bold tracking-wider">
+            <span>{valueText}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
-          <div 
-              className="relative w-80 bg-gradient-to-br from-slate-900 to-slate-800/90 border border-slate-700/80 border-t-cyan-400/50 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" 
-              onClick={(e) => e.stopPropagation()}
-          >
-              <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
-              <div className="p-5 pt-6 text-center">
-                  <div className="flex justify-center items-center gap-2 mb-5">
-                      <TitleIcon className={`w-6 h-6 ${titleColor}`} />
-                      <h3 className={`text-xl font-bold ${titleColor} text-shadow-sm tracking-widest`}>{title}</h3>
-                  </div>
-                  <div className="flex flex-col items-center gap-3">
-                      <StatDisplayRow 
-                          icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-hp.webp"
-                          label="HP"
-                          valueText={`${Math.ceil(character.hp)} / ${character.maxHp}`}
-                          percentage={(character.hp / character.maxHp) * 100}
-                          barGradient="linear-gradient(90deg, #4ade80 0%, #84cc16 100%)"
-                          shadowColor="rgba(132, 204, 22, 0.3)"
-                      />
-                      <StatDisplayRow 
-                          icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-atk.webp"
-                          label="ATK"
-                          valueText={String(character.atk)}
-                          percentage={getStatPercentage(character.atk)}
-                          barGradient="linear-gradient(90deg, #f87171 0%, #fb923c 100%)"
-                          shadowColor="rgba(239, 68, 68, 0.3)"
-                      />
-                      <StatDisplayRow 
-                          icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-def.webp"
-                          label="DEF"
-                          valueText={String(character.def)}
-                          percentage={getStatPercentage(character.def)}
-                          barGradient="linear-gradient(90deg, #38bdf8 0%, #22d3ee 100%)"
-                          shadowColor="rgba(14, 165, 233, 0.3)"
-                      />
-                  </div>
-              </div>
-          </div>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
+      <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
+        
+        {/* Header - Giống LogModal */}
+        <div className="p-4 border-b border-slate-700">
+          <h3 className={`text-xl font-bold text-center ${titleColor} text-shadow-sm tracking-widest`}>{title}</h3>
+        </div>
+        
+        {/* Content */}
+        <div className="p-5 flex flex-col gap-4">
+          <StatItem 
+            icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-hp.webp"
+            current={character.hp}
+            max={character.maxHp}
+            gradient="bg-gradient-to-r from-green-500 to-lime-400"
+            shadowColor="rgba(132, 204, 22, 0.4)"
+          />
+          <StatItem 
+            icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-atk.webp"
+            current={character.atk}
+            gradient="bg-gradient-to-r from-red-500 to-orange-400"
+            shadowColor="rgba(239, 68, 68, 0.4)"
+          />
+          <StatItem 
+            icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-def.webp"
+            current={character.def}
+            gradient="bg-gradient-to-r from-sky-500 to-cyan-400"
+            shadowColor="rgba(14, 165, 233, 0.4)"
+          />
+        </div>
       </div>
+    </div>
   )
 }
+
 
 const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     return (
@@ -518,7 +504,7 @@ export default function BossBattle({
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
-        .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: 'Inter', sans-serif; } @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap'); .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.6); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
+        .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
         @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
         .animate-pulse-fast { animation: pulse-fast 1s infinite; }
       `}</style>
