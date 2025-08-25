@@ -6,7 +6,7 @@ import {
     SkillBlueprint, 
     getActivationChance, 
     getRarityTextColor 
-} from './skill-data.tsx';
+} from './home/skill-game/skill-data.tsx';
 
 // --- TYPE DEFINITIONS ---
 type ActiveSkill = OwnedSkill & SkillBlueprint;
