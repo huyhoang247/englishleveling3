@@ -469,7 +469,7 @@ export default function BossBattle({
                       <HomeIcon className="w-5 h-5 text-slate-300" />
                       <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                     </button>
-                    <h3 className="text-xl font-bold text-blue-300 text-shadow">{currentBossData.floor}</h3>
+                    {/* Floor text has been moved from here */}
                 </div>
                 
                 {/* THAY ĐỔI Ở ĐÂY: Thêm EnergyDisplay vào header */}
@@ -534,12 +534,9 @@ export default function BossBattle({
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
                 <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
-                  <div className="relative group flex justify-center">
-                    <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
-                    <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                      {currentBossData.name.toUpperCase()}
-                      <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-slate-900"></div>
-                    </div>
+                  <div className="text-center">
+                    <h3 className="text-xl font-bold text-cyan-300 text-shadow tracking-wide uppercase">{currentBossData.floor}</h3>
+                    <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">{currentBossData.name}</h2>
                   </div>
                   
                   <div className="w-40 h-40 md:w-56 md:h-56">
