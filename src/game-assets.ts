@@ -34,9 +34,9 @@ export const uiAssets = {
   bookIcon: require("./assets/images/ancient-book.webp"),
   goldIcon: require("./assets/images/coin.webp"),
   // -- Thêm mới từ sidebar.tsx --
-  awardIcon: require("./assets/images/award.png"),
-  rankFrameIcon: require("./assets/images/rank-frame.png"),
-  luckyGameIcon: require("./assets/images/lucky-game.png"),
+  awardIcon: require("./assets/images/coin.webp"),
+  rankFrameIcon: require("./assets/images/coin.webp"),
+  luckyGameIcon: require("./assets/images/coin.webp"),
   upgradeIcon: require("./assets/images/upgrade-icon.webp"),
 };
 
