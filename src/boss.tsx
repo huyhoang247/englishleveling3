@@ -55,7 +55,7 @@ const PlayerStatusDisplay = ({ stats }: { stats: CombatStats }) => {
                 }}
               ></div>
               <div className="absolute inset-0 flex justify-center items-center text-xs text-white text-shadow-sm font-bold">
-                <span>{Math.ceil(stats.hp)} / {stats.maxHp}</span>
+                <span>{Math.ceil(stats.hp)}</span>
               </div>
             </div>
           </div>
@@ -70,7 +70,7 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
       <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
         <div className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}></div>
         <div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold">
-          <span>{Math.ceil(current)} / {max}</span>
+          <span>{Math.ceil(current)}</span>
         </div>
       </div>
     </div>
