@@ -19,6 +19,7 @@ const EnergyDisplay: React.FC<EnergyDisplayProps> = ({ currentEnergy, maxEnergy,
 
   return (
     // Energy Container: Gradient tím đậm đến đen, viền tím sáng hơn.
+    // 'relative' is crucial for z-index context.
     <div className="bg-gradient-to-br from-purple-800 to-slate-900 rounded-lg p-0.5 flex items-center shadow-lg border border-purple-500/80 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
       <style jsx>{`
         @keyframes pulse-fast {
@@ -30,40 +31,42 @@ const EnergyDisplay: React.FC<EnergyDisplayProps> = ({ currentEnergy, maxEnergy,
         }
       `}</style>
       
-      {/* Hiệu ứng tỏa sáng khi hover, đổi sang màu tím nhạt */}
-      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-400/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+      {/* Hiệu ứng tỏa sáng khi hover, đặt ở lớp sau (z-0) để không che nội dung */}
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-400/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000 z-0"></div>
       
-      {/* Energy Icon */}
-      <div className="relative mr-1 flex items-center justify-center">
-        <img
-          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png"
-          alt="Energy Orb Icon"
-          className="w-4 h-4"
-          // Dùng CSS filter để đổi màu icon từ cyan sang tím và thêm hiệu ứng phát sáng.
-          style={{
-            filter: 'hue-rotate(180deg) brightness(0.9) saturate(2) drop-shadow(0 0 3px rgba(167, 139, 250, 0.7))'
-          }}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.onerror = null; // Prevent infinite loop
-            target.src = energyIconPlaceholderUrl;
-          }}
-        />
-      </div>
-      
-      {/* Energy Text: Văn bản màu tím nhạt dễ đọc */}
-      <div className="flex items-baseline font-bold text-purple-200 text-xs tracking-wide pr-1">
-        <span>{currentEnergy.toLocaleString()}</span>
-        <span className="text-purple-400/80 text-[10px] font-semibold">/{maxEnergy.toLocaleString()}</span>
+      {/* Container cho nội dung, đặt ở lớp trên (z-10) để nổi lên trên hiệu ứng tỏa sáng */}
+      <div className="relative z-10 flex items-center">
+        {/* Energy Icon */}
+        <div className="relative mr-1 flex items-center justify-center">
+          <img
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png"
+            alt="Energy Orb Icon"
+            className="w-4 h-4"
+            // Dùng CSS filter để đổi màu icon từ cyan sang tím và thêm hiệu ứng phát sáng.
+            style={{
+              filter: 'hue-rotate(180deg) brightness(0.9) saturate(2) drop-shadow(0 0 3px rgba(167, 139, 250, 0.7))'
+            }}
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.onerror = null; // Prevent infinite loop
+              target.src = energyIconPlaceholderUrl;
+            }}
+          />
+        </div>
+        
+        {/* Energy Text: Văn bản màu tím nhạt dễ đọc */}
+        <div className="flex items-baseline font-bold text-purple-200 text-xs tracking-wide pr-1">
+          <span>{currentEnergy.toLocaleString()}</span>
+          <span className="text-purple-400/80 text-[10px] font-semibold">/{maxEnergy.toLocaleString()}</span>
+        </div>
+
+        {/* Nút Plus - Đồng bộ với theme mới */}
+        <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-600 to-indigo-800 rounded-full flex items-center justify-center cursor-pointer border border-purple-400 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200">
+          <span className="text-white font-bold text-xs">+</span>
+        </div>
       </div>
 
-      {/* Nút Plus - Đồng bộ với theme mới */}
-      <div className="ml-0.5 w-3 h-3 bg-gradient-to-br from-purple-600 to-indigo-800 rounded-full flex items-center justify-center cursor-pointer border border-purple-400 shadow-inner hover:shadow-purple-300/50 hover:scale-110 transition-all duration-200">
-        <span className="text-white font-bold text-xs">+</span>
-      </div>
-
-      {/* Các chi tiết trang trí nhỏ */}
-      <div className="absolute top-0.5 right-0.5 w-0.5 h-0.5 bg-purple-300 rounded-full animate-pulse-fast"></div>
+      {/* Chi tiết trang trí: Chỉ giữ lại chấm nháy bên trái */}
       <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div>
     </div>
   );
