@@ -9,7 +9,7 @@ import {
     getRarityTextColor 
 } from './home/skill-game/skill-data.tsx';
 // THAY ĐỔI: Import tài nguyên từ game-assets
-import { uiAssets } from './game-assets';
+import { uiAssets } from './game-assets.ts';
 
 // --- TYPE DEFINITIONS ---
 type ActiveSkill = OwnedSkill & SkillBlueprint;
