@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import BOSS_DATA from './boss/bossData.ts';
 import CoinDisplay from './ui/display/coin-display.tsx';
+// IMPORT ENERGY DISPLAY MỚI
 import EnergyDisplay from './ui/display/energy-display.tsx'; 
 import { 
     OwnedSkill, 
@@ -8,8 +9,6 @@ import {
     getActivationChance, 
     getRarityTextColor 
 } from './home/skill-game/skill-data.tsx';
-// THAY ĐỔI: Import tài nguyên từ game-assets
-import { uiAssets } from './game-assets.ts';
 
 // --- TYPE DEFINITIONS ---
 type ActiveSkill = OwnedSkill & SkillBlueprint;
@@ -40,6 +39,7 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 
 const WarriorIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> );
 
+// THAY ĐỔI: Thêm prop onAvatarClick để xử lý sự kiện click
 const PlayerInfoDisplay = ({ stats, floor, onAvatarClick }: { stats: CombatStats, floor: string, onAvatarClick: () => void }) => {
     const percentage = Math.max(0, (stats.hp / stats.maxHp) * 100);
   
@@ -96,70 +96,86 @@ const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colo
   );
 };
 
-// THAY ĐỔI: Component mới để hiển thị thanh tiến trình chỉ số
-const StatProgressBar = ({ icon, currentValue, maxValue, label, colorGradient, shadowColor }: { icon: string, currentValue: number, maxValue: number, label: string, colorGradient: string, shadowColor: string }) => {
-  const percentage = Math.min(100, (currentValue / maxValue) * 100);
-  return (
-    <div className="flex items-center gap-3 w-full">
-      <img src={icon} alt={label} className="w-8 h-8 flex-shrink-0" />
-      <div className="w-full">
-        <div className="relative w-full h-6 bg-black/40 rounded-full border border-slate-700/80 p-0.5 shadow-inner">
-          <div 
-            className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`}
-            style={{ 
-              width: `${percentage}%`,
-              boxShadow: `0 0 6px ${shadowColor}, 0 0 8px ${shadowColor}` 
-            }}
-          ></div>
-          <div className="absolute inset-0 flex justify-center items-center text-xs text-white text-shadow-sm font-bold">
-            <span>{label}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// THAY ĐỔI: Thiết kế lại modal chỉ số để sử dụng progress bar
+// THAY ĐỔI: Component modal được thiết kế lại hoàn toàn với progress bar
 const CharacterStatsModal = ({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
   const titleColor = isPlayer ? 'text-blue-300' : 'text-red-400';
 
-  // Đặt giá trị tối đa "ảo" cho ATK và DEF để thanh tiến trình có ý nghĩa
-  // Bạn có thể điều chỉnh các giá trị này cho phù hợp với game balance
-  const MAX_VISUAL_ATK = 5000;
-  const MAX_VISUAL_DEF = 5000;
+  // Component con để hiển thị từng thanh chỉ số
+  const StatProgressBar = ({ 
+    icon, 
+    label, 
+    current, 
+    max, 
+    barGradient, 
+    shadowColor 
+  }: { 
+    icon: string, 
+    label: string, 
+    current: number, 
+    max: number, 
+    barGradient: string, 
+    shadowColor: string 
+  }) => {
+    const percentage = Math.max(0, Math.min(100, (current / max) * 100));
+    
+    return (
+      <div className="flex items-center gap-3 w-full">
+        <div className="flex-shrink-0 w-10 h-10 bg-slate-900/50 rounded-lg flex items-center justify-center border border-slate-700 p-1.5">
+          <img src={icon} alt={label} className="w-full h-full object-contain" />
+        </div>
+        <div className="flex-grow">
+          <div className="relative w-full h-6 bg-black/40 rounded-full border border-slate-700/80 p-0.5 shadow-inner">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ease-out ${barGradient}`}
+              style={{ 
+                width: `${percentage}%`,
+                boxShadow: `0 0 5px ${shadowColor}, 0 0 8px ${shadowColor}`
+              }}
+            ></div>
+            <div className="absolute inset-0 flex justify-center items-center text-xs text-white text-shadow-sm font-bold tracking-wider">
+              {/* Chỉ hiển thị max value cho HP */}
+              <span>{`${label}: ${Math.ceil(current)}`}{max !== 1000 ? ` / ${max}` : ''}</span> 
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Đặt một giá trị tối đa ảo cho ATK/DEF để thanh progress bar có thể scale hợp lý
+  const MAX_VISUAL_STAT = 1000;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
       <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
-        <div className="p-6">
-          <h3 className={`text-2xl font-bold ${titleColor} text-shadow-sm tracking-widest mb-5 text-center`}>{title}</h3>
-          <div className="flex flex-col items-center gap-4">
+        <div className="p-5 pt-8 text-center">
+          <h3 className={`text-xl font-bold ${titleColor} text-shadow-sm tracking-widest mb-5`}>{title}</h3>
+          <div className="flex flex-col items-center gap-3.5">
             <StatProgressBar 
-              icon={uiAssets.statHpIcon}
-              currentValue={character.hp}
-              maxValue={character.maxHp}
-              label={`${Math.ceil(character.hp)} / ${character.maxHp}`}
-              colorGradient="bg-gradient-to-r from-green-500 to-lime-400"
+              icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-hp.webp"
+              label="HP"
+              current={character.hp}
+              max={character.maxHp}
+              barGradient="bg-gradient-to-r from-green-500 to-lime-400"
               shadowColor="rgba(132, 204, 22, 0.5)"
             />
-             <StatProgressBar 
-              icon={uiAssets.statAtkIcon}
-              currentValue={character.atk}
-              maxValue={MAX_VISUAL_ATK}
-              label={`ATK: ${character.atk}`}
-              colorGradient="bg-gradient-to-r from-red-500 to-orange-400"
+            <StatProgressBar 
+              icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-atk.webp"
+              label="ATK"
+              current={character.atk}
+              max={MAX_VISUAL_STAT}
+              barGradient="bg-gradient-to-r from-red-500 to-orange-400"
               shadowColor="rgba(239, 68, 68, 0.5)"
             />
              <StatProgressBar 
-              icon={uiAssets.statDefIcon}
-              currentValue={character.def}
-              maxValue={MAX_VISUAL_DEF}
-              label={`DEF: ${character.def}`}
-              colorGradient="bg-gradient-to-r from-sky-500 to-cyan-400"
+              icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-def.webp"
+              label="DEF"
+              current={character.def}
+              max={MAX_VISUAL_STAT}
+              barGradient="bg-gradient-to-r from-sky-500 to-cyan-400"
               shadowColor="rgba(14, 165, 233, 0.5)"
             />
           </div>
@@ -168,6 +184,7 @@ const CharacterStatsModal = ({ character, characterType, onClose }: { character:
     </div>
   )
 }
+
 
 const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     return (
@@ -274,6 +291,7 @@ export default function BossBattle({
   const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
   const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
   
+  // THAY ĐỔI: State mới để quản lý modal nào đang hiển thị
   const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
   
   const [showLogModal, setShowLogModal] = useState(false);
@@ -304,6 +322,7 @@ export default function BossBattle({
     let winner: 'win' | 'lose' | null = null;
     let turnEvents = { playerDmg: 0, playerHeal: 0, bossDmg: 0, bossReflectDmg: 0 };
 
+    // 1. Player's Attack Phase
     let atkMods = { boost: 1, armorPen: 0 };
     equippedSkills.forEach(skill => {
         if ((skill.id === 'damage_boost' || skill.id === 'armor_penetration') && checkActivation(skill.rarity)) {
@@ -318,6 +337,7 @@ export default function BossBattle({
     log(`Bạn tấn công, gây <b class="text-red-400">${playerDmg}</b> sát thương.`);
     boss.hp -= playerDmg;
 
+    // 2. Player's Post-Attack Phase (Lifesteal)
     equippedSkills.forEach(skill => {
         if (skill.id === 'life_steal' && checkActivation(skill.rarity)) {
             const healed = Math.ceil(playerDmg * (getSkillEffect(skill) / 100));
@@ -336,11 +356,13 @@ export default function BossBattle({
         return { player, boss, turnLogs, winner, turnEvents };
     }
 
+    // 3. Boss's Attack Phase
     const bossDmg = calculateDamage(boss.atk, player.def);
     turnEvents.bossDmg = bossDmg;
     log(`${currentBossData.name} phản công, gây <b class="text-red-400">${bossDmg}</b> sát thương.`);
     player.hp -= bossDmg;
 
+    // 4. Player's Defensive Phase (Thorns)
     let totalReflectDmg = 0;
     equippedSkills.forEach(skill => {
         if (skill.id === 'thorns' && checkActivation(skill.rarity)) {
@@ -371,6 +393,7 @@ export default function BossBattle({
     const nextTurn = turnCounter + 1;
     const { player: newPlayer, boss: newBoss, turnLogs, winner, turnEvents } = executeFullTurn(playerStats, bossStats, nextTurn);
     
+    // Animate visuals
     if (turnEvents.playerDmg > 0) showFloatingText(`-${formatDamageText(turnEvents.playerDmg)}`, 'text-red-500', false);
     if (turnEvents.playerHeal > 0) showFloatingText(`+${formatDamageText(turnEvents.playerHeal)}`, 'text-green-400', true);
     setTimeout(() => {
@@ -427,6 +450,7 @@ export default function BossBattle({
     }
   };
 
+  // --- BATTLE STATE TRANSITIONS ---
   const startGame = () => {
     if (battleState !== 'idle' || (playerStats.energy || 0) < 10) return;
     setPlayerStats(prev => ({ ...prev, energy: (prev.energy || 0) - 10 }));
@@ -465,6 +489,7 @@ export default function BossBattle({
     }));
   }
 
+  // --- REACT HOOKS ---
   useEffect(() => { setCurrentBossIndex(initialFloor); }, [initialFloor]);
   useEffect(() => { setPlayerStats(playerInitialStats); }, [playerInitialStats]);
   useEffect(() => {
@@ -479,12 +504,19 @@ export default function BossBattle({
     return () => {
       if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     };
-  }, [battleState, gameOver, turnCounter]);
+  }, [battleState, gameOver, turnCounter]); // Trigger on turnCounter change
 
+  // --- RENDER ---
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap'); .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; } @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+        .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
+        @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
+        .animate-pulse-fast { animation: pulse-fast 1s infinite; }
+      `}</style>
 
+      {/* THAY ĐỔI: Render modal mới dựa trên state */}
       {statsModalTarget && (
         <CharacterStatsModal 
           character={statsModalTarget === 'player' ? playerStats : bossStats}
@@ -500,36 +532,64 @@ export default function BossBattle({
         <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
                 <div className="flex items-center gap-3">
-                    <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Go Home" title="Go Home">
+                    <button
+                      onClick={onClose}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
+                      aria-label="Go Home"
+                      title="Go Home"
+                    >
                       <HomeIcon className="w-5 h-5 text-slate-300" />
                       <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                     </button>
                 </div>
                 
                 <div className="flex items-center gap-2 font-sans">
-                    {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && ( <EnergyDisplay currentEnergy={playerStats.energy} maxEnergy={playerStats.maxEnergy} isStatsFullscreen={false} /> )}
+                    {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && (
+                        <EnergyDisplay 
+                            currentEnergy={playerStats.energy} 
+                            maxEnergy={playerStats.maxEnergy}
+                            isStatsFullscreen={false}
+                        />
+                    )}
                     <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                 </div>
             </div>
         </header>
 
         <div className="fixed top-16 left-4 z-20">
-            <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} onAvatarClick={() => setStatsModalTarget('player')} />
+            {/* THAY ĐỔI: Truyền hàm để mở modal */}
+            <PlayerInfoDisplay 
+              stats={playerStats} 
+              floor={currentBossData.floor}
+              onAvatarClick={() => setStatsModalTarget('player')}
+            />
         </div>
 
         <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
             <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
+                {/* Left/Center aligned controls */}
                 <div className="flex items-center gap-3">
+                    {/* THAY ĐỔI: Đã xóa nút View Stats */}
                     {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button>)}
                 </div>
 
+                {/* Right-aligned controls */}
                 <div className="flex flex-col items-end gap-2">
                     {battleState === 'idle' && (
                         <div className="w-full flex justify-center gap-2">
-                            <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Last Battle Log">
+                            <button 
+                                onClick={() => setShowLogModal(true)} 
+                                disabled={!previousCombatLog.length} 
+                                className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" 
+                                title="View Last Battle Log"
+                            >
                                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/history-battle.webp" alt="Log" className="w-full h-full object-contain" />
                             </button>
-                            <button onClick={() => setShowRewardsModal(true)} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md" title="View Potential Rewards">
+                            <button 
+                                onClick={() => setShowRewardsModal(true)} 
+                                className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md" 
+                                title="View Potential Rewards"
+                            >
                                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/rewards-icon.webp" alt="Rewards" className="w-full h-full object-contain" />
                             </button>
                         </div>
@@ -540,10 +600,17 @@ export default function BossBattle({
             {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                <div onClick={() => setStatsModalTarget('boss')} className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group" title="View Boss Stats">
+                {/* THAY ĐỔI: Thêm sự kiện onClick cho Boss */}
+                <div 
+                  className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group"
+                  onClick={() => setStatsModalTarget('boss')}
+                  title="View Boss Stats"
+                >
                   <div className="relative group flex justify-center">
                     <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
-                    <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">{currentBossData.name.toUpperCase()}</div>
+                    <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                      {currentBossData.name.toUpperCase()}
+                    </div>
                   </div>
                   
                   <div className="w-40 h-40 md:w-56 md:h-56">
