@@ -493,7 +493,7 @@ export default function BossBattle({
                         <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />
                     )}
                     {battleState === 'idle' && (
-                        <div className="flex items-center gap-2">
+                        <div className="w-full flex justify-center gap-2">
                             {/* View Log Icon Button */}
                             <button 
                                 onClick={() => setShowLogModal(true)} 
