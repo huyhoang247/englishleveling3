@@ -55,7 +55,7 @@ const PlayerStatusDisplay = ({ stats }: { stats: CombatStats }) => {
                 }}
               ></div>
               <div className="absolute inset-0 flex justify-center items-center text-xs text-white text-shadow-sm font-bold">
-                <span>{Math.ceil(stats.hp)}</span>
+                <span>{Math.ceil(stats.hp)} / {stats.maxHp}</span>
               </div>
             </div>
           </div>
@@ -70,7 +70,7 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
       <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
         <div className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}></div>
         <div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold">
-          <span>{Math.ceil(current)}</span>
+          <span>{Math.ceil(current)} / {max}</span>
         </div>
       </div>
     </div>
@@ -480,21 +480,40 @@ export default function BossBattle({
         </div>
 
         <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
-            <div className="w-full max-w-2xl mx-auto mb-4 flex justify-end items-center gap-4 h-12">
-                {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && (
-                    <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />
-                )}
-            </div>
+            <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
+                {/* Left/Center aligned controls */}
+                <div className="flex items-center gap-3">
+                    <button onClick={() => setShowStats(true)} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md">View Stats</button>
+                    {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button>)}
+                </div>
 
-            <div className="w-full flex justify-center items-center gap-3 mb-4">
-                <button onClick={() => setShowStats(true)} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md">View Stats</button>
-                {battleState === 'idle' && (
-                  <>
-                    <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">View Log</button>
-                    <button onClick={() => setShowRewardsModal(true)} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md">Rewards</button>
-                  </>
-                )}
-                {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button>)}
+                {/* Right-aligned controls */}
+                <div className="flex flex-col items-end gap-2">
+                    {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && (
+                        <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />
+                    )}
+                    {battleState === 'idle' && (
+                        <div className="flex items-center gap-2">
+                            {/* View Log Icon Button */}
+                            <button 
+                                onClick={() => setShowLogModal(true)} 
+                                disabled={!previousCombatLog.length} 
+                                className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" 
+                                title="View Last Battle Log"
+                            >
+                                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/history-battle.webp" alt="Log" className="w-full h-full object-contain" />
+                            </button>
+                            {/* Rewards Icon Button */}
+                            <button 
+                                onClick={() => setShowRewardsModal(true)} 
+                                className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md" 
+                                title="View Potential Rewards"
+                            >
+                                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/rewards-icon.webp" alt="Rewards" className="w-full h-full object-contain" />
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
             
             {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
