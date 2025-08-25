@@ -3,6 +3,7 @@
 // src/sidebar.tsx
 
 import React, { useState, useEffect } from 'react';
+import { uiAssets } from './game-assets.ts'; // THÊM MỚI: Import tài nguyên game
 // Import the Rank component - REMOVED: Rank is now rendered by the parent
 // import EnhancedLeaderboard from './rank.tsx';
 
@@ -49,12 +50,16 @@ const TrophyIcon = ({ size = 24, color = 'currentColor', className = '', ...prop
     </svg>
 );
 
-// NEW: Icon for Upgrade
-const TrendingUpIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-        <polyline points="17 6 23 6 23 12"></polyline>
-    </svg>
+// THAY ĐỔI: Icon for Upgrade, thay thế SVG bằng hình ảnh từ game-assets
+const UpgradeIcon = ({ size = 24, className = '', ...props }) => (
+    <img
+        src={uiAssets.upgradeIcon}
+        alt="Upgrade Icon"
+        width={size}
+        height={size}
+        className={className}
+        {...props}
+    />
 );
 
 // NEW: Icon for Admin Panel
@@ -168,9 +173,10 @@ const ActivityIcon = ({ size = 24, color = 'currentColor', className = '', ...pr
   </svg>
 );
 
+// THAY ĐỔI: Icon được tải từ game-assets.ts
 const AwardIcon = ({ size = 24, className = '', ...props }) => (
   <img
-    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/award.png"
+    src={uiAssets.awardIcon}
     alt="Award Icon"
     width={size}
     height={size}
@@ -179,9 +185,10 @@ const AwardIcon = ({ size = 24, className = '', ...props }) => (
   />
 );
 
+// THAY ĐỔI: Icon được tải từ game-assets.ts
 const FrameIcon = ({ size = 24, className = '', ...props }) => (
   <img
-    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/frame.png"
+    src={uiAssets.rankFrameIcon}
     alt="Frame Icon"
     width={size}
     height={size}
@@ -190,9 +197,10 @@ const FrameIcon = ({ size = 24, className = '', ...props }) => (
   />
 );
 
+// THAY ĐỔI: Icon được tải từ game-assets.ts
 const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
   <img
-    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/fortune-wheel.png" // Updated image URL
+    src={uiAssets.luckyGameIcon}
     alt="Lucky Game Icon"
     width={size}
     height={size}
@@ -227,7 +235,7 @@ function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowLuckyGame
     { id: 'luckyGame', label: 'Lucky Game', icon: LuckyGameIcon, onClick: onShowLuckyGame },
     { id: 'minerChallenge', label: 'Miner Challenge', icon: BombIcon, onClick: onShowMinerChallenge },
     { id: 'achievements', label: 'Achievements', icon: TrophyIcon, onClick: onShowAchievements },
-    { id: 'upgrade', label: 'Upgrade', icon: TrendingUpIcon, onClick: onShowUpgrade },
+    { id: 'upgrade', label: 'Upgrade', icon: UpgradeIcon, onClick: onShowUpgrade }, // THAY ĐỔI: Sử dụng UpgradeIcon mới
     { id: 'baseBuilding', label: 'Base Building', icon: BuildingIcon, onClick: onShowBaseBuilding },
     { id: 'admin', label: 'Admin Panel', icon: DatabaseIcon, onClick: onShowAdmin }, 
   ];
