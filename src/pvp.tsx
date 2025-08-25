@@ -6,7 +6,7 @@ import {
     SkillBlueprint, 
     getActivationChance, 
     getRarityTextColor 
-} from './skill-data.tsx';
+} from './home/skill-game/skill-data.tsx';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import { updateUserCoins } from './gameDataService.ts';
 
