@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import BOSS_DATA from './boss/bossData.ts';
 import CoinDisplay from './ui/display/coin-display.tsx';
+// IMPORT ENERGY DISPLAY MỚI
+import EnergyDisplay from './ui/display/energy-display.tsx'; 
 import { 
     OwnedSkill, 
     SkillBlueprint, 
@@ -77,6 +79,8 @@ const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: numb
   );
 };
 
+// XÓA BỎ COMPONENT ENERGYDISPLAY CŨ Ở ĐÂY
+/*
 const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
     return (
       <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full border border-cyan-500/30">
@@ -88,6 +92,7 @@ const EnergyDisplay = ({ current, max }: { current: number, max: number }) => {
       </div>
     );
 };
+*/
 
 const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colorClass: string }) => {
   return (
@@ -467,7 +472,15 @@ export default function BossBattle({
                     <h3 className="text-xl font-bold text-blue-300 text-shadow">{currentBossData.floor}</h3>
                 </div>
                 
-                <div className="flex items-center font-sans">
+                {/* THAY ĐỔI Ở ĐÂY: Thêm EnergyDisplay vào header */}
+                <div className="flex items-center gap-2 font-sans">
+                    {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && (
+                        <EnergyDisplay 
+                            currentEnergy={playerStats.energy} 
+                            maxEnergy={playerStats.maxEnergy}
+                            isStatsFullscreen={false}
+                        />
+                    )}
                     <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                 </div>
 
@@ -489,9 +502,10 @@ export default function BossBattle({
 
                 {/* Right-aligned controls */}
                 <div className="flex flex-col items-end gap-2">
-                    {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && (
+                    {/* XÓA BỎ ENERGYDISPLAY CŨ Ở ĐÂY */}
+                    {/* {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && (
                         <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />
-                    )}
+                    )} */}
                     {battleState === 'idle' && (
                         <div className="w-full flex justify-center gap-2">
                             {/* View Log Icon Button */}
