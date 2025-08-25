@@ -39,7 +39,8 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 
 const WarriorIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> );
 
-const PlayerStatusDisplay = ({ stats }: { stats: CombatStats }) => {
+// THAY ĐỔI: Component PlayerInfoDisplay mới thay thế cho PlayerStatusDisplay cũ
+const PlayerInfoDisplay = ({ stats, floor }: { stats: CombatStats, floor: string }) => {
     const percentage = Math.max(0, (stats.hp / stats.maxHp) * 100);
   
     return (
@@ -47,7 +48,14 @@ const PlayerStatusDisplay = ({ stats }: { stats: CombatStats }) => {
           <div className="flex-shrink-0 w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center border-2 border-slate-600">
               <WarriorIcon className="w-6 h-6 text-slate-400" />
           </div>
-          <div className="flex-grow">
+          <div className="flex-grow flex flex-col gap-1.5">
+            {/* Component hiển thị Floor */}
+            <div className="bg-black/40 px-2 py-0.5 rounded-md self-start border border-slate-700/80">
+                <h3 className="font-bold text-xs tracking-widest uppercase text-slate-300 select-none">
+                    {floor}
+                </h3>
+            </div>
+            {/* Thanh máu */}
             <div className="relative w-full h-5 bg-black/40 rounded-full border border-slate-700/80 p-0.5 shadow-inner">
               <div 
                 className="h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-green-500 to-lime-400" 
@@ -64,6 +72,7 @@ const PlayerStatusDisplay = ({ stats }: { stats: CombatStats }) => {
       </div>
     );
 };
+
 
 const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
   const percentage = Math.max(0, (current / max) * 100);
@@ -469,10 +478,8 @@ export default function BossBattle({
                       <HomeIcon className="w-5 h-5 text-slate-300" />
                       <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                     </button>
-                    {/* THAY ĐỔI: Đã xóa Floor text khỏi đây */}
                 </div>
                 
-                {/* THAY ĐỔI Ở ĐÂY: Thêm EnergyDisplay vào header */}
                 <div className="flex items-center gap-2 font-sans">
                     {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && (
                         <EnergyDisplay 
@@ -487,14 +494,9 @@ export default function BossBattle({
             </div>
         </header>
 
-        {/* --- THAY ĐỔI: PLAYER STATUS VÀ FLOOR DISPLAY MỚI --- */}
-        <div className="fixed top-16 left-4 z-20 flex flex-col items-center">
-            <div className="bg-slate-900/60 backdrop-blur-sm px-4 py-1 rounded-md border border-slate-700/60 shadow-md mb-2">
-                <h3 className="font-bold text-sm tracking-widest uppercase text-slate-300 select-none">
-                    {currentBossData.floor}
-                </h3>
-            </div>
-            <PlayerStatusDisplay stats={playerStats} />
+        {/* --- THAY ĐỔI: Sử dụng PlayerInfoDisplay mới --- */}
+        <div className="fixed top-16 left-4 z-20">
+            <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} />
         </div>
 
         <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
