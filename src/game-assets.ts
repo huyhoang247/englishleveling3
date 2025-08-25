@@ -33,6 +33,11 @@ export const uiAssets = {
   // -- Thêm mới từ skill.tsx & skill-data.tsx --
   bookIcon: require("./assets/images/ancient-book.webp"),
   goldIcon: require("./assets/images/coin.webp"),
+  // -- Thêm mới từ sidebar.tsx --
+  awardIcon: require("./assets/images/award.png"),
+  rankFrameIcon: require("./assets/images/rank-frame.png"),
+  luckyGameIcon: require("./assets/images/lucky-game.png"),
+  upgradeIcon: require("./assets/images/upgrade-icon.webp"),
 };
 
 /**
