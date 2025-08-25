@@ -42,10 +42,7 @@ const EnergyDisplay: React.FC<EnergyDisplayProps> = ({ currentEnergy, maxEnergy,
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png"
             alt="Energy Orb Icon"
             className="w-4 h-4"
-            // Dùng CSS filter để đổi màu icon từ cyan sang tím và thêm hiệu ứng phát sáng.
-            style={{
-              filter: 'hue-rotate(90deg) brightness(0.9) saturate(2) drop-shadow(0 0 3px rgba(167, 139, 250, 0.7))'
-            }}
+            // Thuộc tính style đã được xóa ở đây để icon không bị đổi màu
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.onerror = null; // Prevent infinite loop
