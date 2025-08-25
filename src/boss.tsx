@@ -39,7 +39,7 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 
 const WarriorIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> );
 
-// THAY ĐỔI: Component PlayerInfoDisplay mới thay thế cho PlayerStatusDisplay cũ
+// THAY ĐỔI: Thêm icon vào component PlayerInfoDisplay
 const PlayerInfoDisplay = ({ stats, floor }: { stats: CombatStats, floor: string }) => {
     const percentage = Math.max(0, (stats.hp / stats.maxHp) * 100);
   
@@ -49,8 +49,9 @@ const PlayerInfoDisplay = ({ stats, floor }: { stats: CombatStats, floor: string
               <WarriorIcon className="w-6 h-6 text-slate-400" />
           </div>
           <div className="flex-grow flex flex-col gap-1.5">
-            {/* Component hiển thị Floor */}
-            <div className="bg-black/40 px-2 py-0.5 rounded-md self-start border border-slate-700/80">
+            {/* Component hiển thị Floor với icon */}
+            <div className="flex items-center gap-1.5 bg-black/40 px-2 py-0.5 rounded-md self-start border border-slate-700/80">
+                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/floor-icon.webp" alt="Floor" className="w-3 h-3" />
                 <h3 className="font-bold text-xs tracking-widest uppercase text-slate-300 select-none">
                     {floor}
                 </h3>
@@ -494,7 +495,6 @@ export default function BossBattle({
             </div>
         </header>
 
-        {/* --- THAY ĐỔI: Sử dụng PlayerInfoDisplay mới --- */}
         <div className="fixed top-16 left-4 z-20">
             <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} />
         </div>
@@ -509,10 +509,6 @@ export default function BossBattle({
 
                 {/* Right-aligned controls */}
                 <div className="flex flex-col items-end gap-2">
-                    {/* XÓA BỎ ENERGYDISPLAY CŨ Ở ĐÂY */}
-                    {/* {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && (
-                        <EnergyDisplay current={playerStats.energy} max={playerStats.maxEnergy} />
-                    )} */}
                     {battleState === 'idle' && (
                         <div className="w-full flex justify-center gap-2">
                             {/* View Log Icon Button */}
