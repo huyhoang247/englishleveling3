@@ -1,6 +1,4 @@
-// --- START OF FILE voca-chest-ui.tsx (MODIFIED FOR INSTANT TRANSITION) ---
-
-// --- START OF FILE lat-the.tsx (CONSTANTS MERGED) ---
+// --- START OF FILE voca-chest-ui.tsx (UPDATED WITH SMOOTH ANIMATION) ---
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
 
@@ -29,9 +27,8 @@ export const CHEST_DEFINITIONS = {
 
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
-
 // ========================================================================
-// === 1. COMPONENT CSS (Không thay đổi, giữ nguyên) ======================
+// === 1. COMPONENT CSS (CẬP NHẬT ANIMATION LẬT THẺ) ======================
 // ========================================================================
 const ScopedStyles = () => (
     <style>{`
@@ -84,7 +81,14 @@ const ScopedStyles = () => (
         @keyframes vocabulary-chest-rune-glow { 0%, 100% { filter: drop-shadow(0 0 2px currentColor); } 50% { filter: drop-shadow(0 0 5px currentColor); } }
         .vocabulary-chest-root .chest-spinner { width: 64px; height: 64px; color: #c084fc; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cstyle%3Epath%7Bfill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;%7D%3C/style%3E%3Cpath d='M50,6 a23,23 0 1,0 0,88 a23,23 0 1,0 0,-88 M20,25 l10,10 M70,25 l10,10 M20,75 l10,-10 M70,75 l10,-10 M50,20 l0,10 M50,70 l0,10 M25,40 l10,0 M65,40 l10,0'/%3E%3Cpath d='M50,25 a12,12 0 1,0 0,50 a12,12 0 1,0 0,-50 M40,50 l20,0 M50,40 l0,20'/%3E%3C/svg%3E"); background-size: contain; background-position: center; background-repeat: no-repeat; stroke-dasharray: 1000; animation: vocabulary-chest-spinner-spin 10s linear infinite, vocabulary-chest-rune-draw 2.5s ease-out forwards, vocabulary-chest-rune-glow 2s ease-in-out infinite; }
         @keyframes vocabulary-chest-fade-in { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes vocabulary-chest-flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
+        
+        /* === CẬP NHẬT ANIMATION LẬT THẺ === */
+        @keyframes vocabulary-chest-flip-in-smooth {
+            0% { transform: perspective(1000px) rotateY(0deg) scale(1); }
+            50% { transform: perspective(1000px) rotateY(90deg) scale(1.1); }
+            100% { transform: perspective(1000px) rotateY(180deg) scale(1); }
+        }
+
         @keyframes vocabulary-chest-deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .vocabulary-chest-root .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: vocabulary-chest-fade-in 0.5s ease; overflow: hidden; padding: 70px 15px 80px; box-sizing: border-box; }
         .vocabulary-chest-root .overlay-content { width: 100%; max-width: 900px; }
@@ -96,7 +100,15 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .footer-btn:disabled { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.2); cursor: not-allowed; background-color: transparent; }
         .vocabulary-chest-root .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
         .vocabulary-chest-root .card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; will-change: transform; }
-        .vocabulary-chest-root .card-container.is-flipping .card-inner { animation-name: vocabulary-chest-flip-in; animation-duration: 0.8s; animation-fill-mode: forwards; animation-timing-function: ease-in-out; }
+        
+        /* === CẬP NHẬT RULE ANIMATION === */
+        .vocabulary-chest-root .card-container.is-flipping .card-inner {
+            animation-name: vocabulary-chest-flip-in-smooth;
+            animation-duration: 0.7s;
+            animation-fill-mode: forwards;
+            animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
         .vocabulary-chest-root .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
         .vocabulary-chest-root .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #a78bfa; text-shadow: 0 0 10px #a78bfa; }
         .vocabulary-chest-root .card-front { transform: rotateY(180deg); padding: 6px; box-sizing: border-box; background: rgba(42, 49, 78, 0.85); border: 1px solid rgba(255, 255, 255, 0.18); }
@@ -107,25 +119,118 @@ const ScopedStyles = () => (
 );
 
 // ========================================================================
-// === 2. CÁC COMPONENT CON (Không thay đổi, giữ nguyên) ===================
+// === 2. CÁC COMPONENT CON (CẬP NHẬT LOGIC PRELOAD ẢNH) =================
 // ========================================================================
 const HomeIcon = ({ className = '' }: { className?: string }) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /></svg>);
 interface ImageCard { id: number; url: string; }
 const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, isFlipping: boolean, flipDelay: number }) => (<div className={`card-container ${isFlipping ? 'is-flipping' : ''}`}><div className="card-inner" style={{ animationDelay: `${flipDelay}ms` }}><div className="card-face card-back">?</div><div className="card-face card-front"><img src={cardData.url} alt={`Revealed content ${cardData.id}`} className="card-image-in-card" /></div></div></div>));
-const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => { const [isFlipping, setIsFlipping] = useState(false); const [isProcessing, setIsProcessing] = useState(true); useEffect(() => { const t1 = setTimeout(() => setIsFlipping(true), 300); const t2 = setTimeout(() => setIsProcessing(false), 1100); return () => { clearTimeout(t1); clearTimeout(t2); }; }, [card]); const handleOpenAgain = () => { if (isProcessing) return; setIsProcessing(true); setIsFlipping(false); setTimeout(() => onOpenAgain(), 300); }; return (<><div style={{ textAlign: 'center' }}><div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw' }}><Card cardData={card} isFlipping={isFlipping} flipDelay={0} /></div></div><div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>{isProcessing ? 'Đang mở...' : 'Mở Lại'}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
-const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => { const [startFlipping, setStartFlipping] = useState(false); const [phase, setPhase] = useState('DEALING'); const startRound = useCallback(() => { setPhase('DEALING'); setStartFlipping(false); const totalDealTime = 500 + 80 * (cards.length - 1); setTimeout(() => { setPhase('FLIPPING'); setStartFlipping(true); const totalFlipTime = 800 + 200 * (cards.length - 1); setTimeout(() => setPhase('REVEALED'), totalFlipTime); }, totalDealTime); }, [cards.length]); useEffect(() => { if (cards.length > 0) startRound(); }, [cards, startRound]); const handleOpenAgain = () => { if (phase !== 'REVEALED') return; onOpenAgain(); }; const btnProps = (() => { switch (phase) { case 'DEALING': return { text: 'Đang chia bài...', disabled: true }; case 'FLIPPING': return { text: 'Đang lật...', disabled: true }; case 'REVEALED': return { text: 'Mở Lại x4', disabled: false }; default: return { text: '', disabled: true }; } })(); return (<><div style={{ textAlign: 'center' }}><div className="four-card-grid-container">{cards.map((card, index) => (<div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}><Card cardData={card} isFlipping={startFlipping} flipDelay={index * 200} /></div>))}</div></div><div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
+
+// --- VERSION CẬP NHẬT CỦA SingleCardOpener ---
+const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => {
+    const [isFlipping, setIsFlipping] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(true);
+    const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+    useEffect(() => {
+        setIsImageLoaded(false);
+        setIsFlipping(false);
+        setIsProcessing(true);
+        const img = new Image();
+        img.src = card.url;
+        img.onload = () => setIsImageLoaded(true);
+        img.onerror = () => setIsImageLoaded(true); // Continue anyway on error
+    }, [card]);
+
+    useEffect(() => {
+        if (isImageLoaded) {
+            const t1 = setTimeout(() => setIsFlipping(true), 100);
+            const t2 = setTimeout(() => setIsProcessing(false), 100 + 700); // 100ms delay + 700ms animation
+            return () => { clearTimeout(t1); clearTimeout(t2); };
+        }
+    }, [isImageLoaded]);
+
+    const handleOpenAgain = () => {
+        if (isProcessing) return;
+        setIsProcessing(true);
+        onOpenAgain();
+    };
+
+    return (<><div style={{ textAlign: 'center' }}><div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw' }}><Card cardData={card} isFlipping={isFlipping} flipDelay={0} /></div></div><div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>{isProcessing ? 'Đang mở...' : 'Mở Lại'}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>);
+};
+
+// --- VERSION CẬP NHẬT CỦA FourCardsOpener ---
+const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => {
+    const [startFlipping, setStartFlipping] = useState(false);
+    const [phase, setPhase] = useState('LOADING'); // LOADING -> DEALING -> FLIPPING -> REVEALED
+    const [loadedImageCount, setLoadedImageCount] = useState(0);
+
+    useEffect(() => {
+        setLoadedImageCount(0);
+        setStartFlipping(false);
+        setPhase('LOADING');
+
+        if (cards.length === 0) return;
+        
+        let loadedCount = 0;
+        cards.forEach(card => {
+            const img = new Image();
+            img.src = card.url;
+            const onFinish = () => {
+                loadedCount++;
+                if (loadedCount === cards.length) {
+                    setLoadedImageCount(cards.length);
+                }
+            };
+            img.onload = onFinish;
+            img.onerror = onFinish;
+        });
+
+    }, [cards]);
+
+    useEffect(() => {
+        if (loadedImageCount === cards.length && cards.length > 0) {
+            setPhase('DEALING');
+            const totalDealTime = 500 + 80 * (cards.length - 1);
+            const t1 = setTimeout(() => {
+                setPhase('FLIPPING');
+                setStartFlipping(true);
+                const totalFlipTime = 700 + 200 * (cards.length - 1);
+                const t2 = setTimeout(() => setPhase('REVEALED'), totalFlipTime);
+                return () => clearTimeout(t2);
+            }, totalDealTime);
+            return () => clearTimeout(t1);
+        }
+    }, [loadedImageCount, cards.length]);
+
+    const handleOpenAgain = () => {
+        if (phase !== 'REVEALED') return;
+        onOpenAgain();
+    };
+
+    const btnProps = (() => {
+        switch (phase) {
+            case 'LOADING': return { text: 'Đang tải...', disabled: true };
+            case 'DEALING': return { text: 'Đang chia bài...', disabled: true };
+            case 'FLIPPING': return { text: 'Đang lật...', disabled: true };
+            case 'REVEALED': return { text: 'Mở Lại x4', disabled: false };
+            default: return { text: '', disabled: true };
+        }
+    })();
+
+    return (<><div style={{ textAlign: 'center' }}><div className="four-card-grid-container">{cards.map((card, index) => (<div key={card.id} className={`card-wrapper ${phase !== 'LOADING' ? 'dealt-in' : ''}`} style={{ animationDelay: `${index * 80}ms`, opacity: phase === 'LOADING' ? 0 : 1 }}><Card cardData={card} isFlipping={startFlipping} flipDelay={index * 200} /></div>))}</div></div><div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>);
+};
+
 interface ChestUIProps { headerTitle: string; levelName: string | null; imageUrl: string; infoText: React.ReactNode; price1: number | string; price10: number | null; priceIconUrl: string; onOpen1: () => void; onOpen10: () => void; isComingSoon: boolean; remainingCount: number; isProcessing: boolean; }
 const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, infoText, price1, price10, priceIconUrl, onOpen1, onOpen10, isComingSoon, remainingCount, isProcessing }) => (<div className={`chest-ui-container ${isComingSoon ? 'is-coming-soon' : ''} ${isProcessing ? 'is-processing' : ''}`}>{isProcessing && (<div className="chest-processing-overlay"><div className="chest-spinner"></div></div>)}<header className="chest-header">{headerTitle}</header><main className="chest-body"><div className="chest-top-section"><div className="chest-level-info">{levelName && !isComingSoon && <button className="chest-help-icon" title="Thông tin">?</button>}{levelName && <span className="chest-level-name">{levelName}</span>}</div><p className="remaining-count-text">{isComingSoon ? "Sắp ra mắt" : <>Còn lại: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> thẻ</>}</p></div><div className="chest-visual-row"><img src={imageUrl} alt={headerTitle} className="chest-image" /><div className="info-bubble">{infoText}</div></div><div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '15px' }}><button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}><span>Mở x1</span>{typeof price1 === 'number' && (<span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price1.toLocaleString()}</span>)}</button>{price10 !== null && (<button className="chest-button btn-get-10" onClick={onOpen10} disabled={isComingSoon || remainingCount < 4}><span>Mở x4</span><span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price10.toLocaleString()}</span></button>)}</div></main></div>);
 
 // ========================================================================
-// === 3. COMPONENT HIỂN THỊ CHÍNH (Sử dụng Context) =======================
+// === 3. COMPONENT HIỂN THỊ CHÍNH (Không thay đổi) =======================
 // ========================================================================
 interface VocabularyChestScreenUIProps { onClose: () => void; }
 
 const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClose }) => {
     const { isLoading, playerStats, availableIndices, urlsToPreload, isOverlayVisible, cardsForPopup, openedCardCount, processingChestId, openChest, closeOverlay, openAgain } = useVocabularyChest();
     
-    // Hiển thị 0 khi đang tải để animation bắt đầu từ 0 khi tải xong
     const displayCoins = isLoading ? 0 : playerStats.coins;
     const displayGems = isLoading ? 0 : playerStats.gems;
     const animatedCoins = useAnimateValue(displayCoins, 500);
@@ -136,13 +241,11 @@ const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClo
             <ScopedStyles />
             <ImagePreloader imageUrls={urlsToPreload} />
 
-            {/* --- Lớp phủ Loading --- */}
-            <div className={`absolute inset-0 bg-[#0a0a14] z-20 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`absolute inset-0 bg-[#0a0a14] z-20 transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <VocabularyChestLoadingSkeleton />
             </div>
 
-            {/* --- Nội dung chính (hiện ra sau khi loading) --- */}
-            <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+            <div className={`relative z-10 flex flex-col w-full h-screen transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                 <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0 z-[1100]">
                     <button onClick={onClose} className={`vocab-screen-home-btn ${isOverlayVisible ? 'is-hidden' : ''}`} title="Quay lại Trang Chính">
                         <HomeIcon /><span>Trang Chính</span>
@@ -168,7 +271,6 @@ const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClo
                     </div>
                 )}
                 
-                {/* --- Lớp phủ mở thẻ (di chuyển vào trong để xử lý z-index) --- */}
                 {isOverlayVisible && openedCardCount === 1 && (
                     <div className="card-opening-overlay"><div className="overlay-content">
                         <SingleCardOpener card={cardsForPopup[0]} onClose={closeOverlay} onOpenAgain={openAgain} />
@@ -185,7 +287,7 @@ const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClo
 }
 
 // ========================================================================
-// === 4. COMPONENT BỌC (WRAPPER) ĐỂ CUNG CẤP CONTEXT ====================
+// === 4. COMPONENT BỌC (WRAPPER) (Không thay đổi) ========================
 // ========================================================================
 interface VocabularyChestProps {
     onClose: () => void;
