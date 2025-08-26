@@ -568,25 +568,24 @@ export default function BossBattle({
 
                 {/* Right-aligned controls */}
                 <div className="flex flex-col items-end gap-2">
-                    {battleState === 'idle' && (
-                        <div className="w-full flex justify-center gap-2">
-                            <button 
-                                onClick={() => setShowLogModal(true)} 
-                                disabled={!previousCombatLog.length} 
-                                className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" 
-                                title="View Last Battle Log"
-                            >
-                                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/history-battle.webp" alt="Log" className="w-full h-full object-contain" />
-                            </button>
-                            <button 
-                                onClick={() => setShowRewardsModal(true)} 
-                                className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md" 
-                                title="View Potential Rewards"
-                            >
-                                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/rewards-icon.webp" alt="Rewards" className="w-full h-full object-contain" />
-                            </button>
-                        </div>
-                    )}
+                    <div className="w-full flex justify-center gap-2">
+                        <button 
+                            onClick={() => setShowLogModal(true)} 
+                            disabled={!previousCombatLog.length || battleState !== 'idle'} 
+                            className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" 
+                            title="View Last Battle Log"
+                        >
+                            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/history-battle.webp" alt="Log" className="w-full h-full object-contain" />
+                        </button>
+                        <button 
+                            onClick={() => setShowRewardsModal(true)} 
+                            disabled={battleState !== 'idle'}
+                            className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" 
+                            title="View Potential Rewards"
+                        >
+                            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/rewards-icon.webp" alt="Rewards" className="w-full h-full object-contain" />
+                        </button>
+                    </div>
                 </div>
             </div>
             
