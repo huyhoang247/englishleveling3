@@ -104,7 +104,7 @@ const CharacterStatsModal = ({ character, characterType, onClose }: { character:
     const valueText = max ? `${Math.ceil(current)} / ${max}` : String(current);
     return (
       <div className="flex items-center gap-3 w-full">
-        <div className="flex-shrink-0 w-24 h-10 bg-slate-800 rounded-lg flex items-center justify-start gap-2 border border-slate-700 p-2">
+        <div className="flex-shrink-0 w-24 h-10 bg-slate-800 rounded-lg flex items-center justify-center gap-2 border border-slate-700 p-2">
           <img src={icon} alt={label} className="w-6 h-6 object-contain" />
           <span className="font-bold text-sm text-slate-300 tracking-wider">{label}</span>
         </div>
