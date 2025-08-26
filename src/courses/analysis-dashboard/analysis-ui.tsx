@@ -27,9 +27,10 @@ const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns
 // --- TYPE DEFINITIONS ---
 interface AnalysisDashboardProps { onGoBack: () => void; }
 
-// --- REUSABLE COMPONENTS ---
+// --- REUSABLE COMPONENTS (CẬP NHẬT) ---
 const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> = ({ title, children, extra }) => (
-    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+    // [THIẾT KẾ] Thêm một gradient nền rất nhẹ để tạo cảm giác chiều sâu cho thẻ
+    <div className="bg-gradient-to-br from-white to-slate-50 p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
         <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-800">{title}</h3>
             {extra && <div>{extra}</div>}
@@ -186,15 +187,28 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     );
 });
 
+// --- CUSTOM TOOLTIP (CẬP NHẬT) ---
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const finalLabel = payload[0].payload.game ? payload[0].payload.game : `Ngày: ${label}`;
     const total = payload.reduce((sum, entry) => sum + entry.value, 0);
+    
+    // [THIẾT KẾ] Cập nhật giao diện tooltip hiện đại hơn với hiệu ứng glassmorphism
     return (
-      <div className="p-2 bg-gray-800 text-white rounded-md shadow-lg text-sm border border-gray-700">
-        <p className="font-bold">{finalLabel}</p>
-        {payload.map((pld) => <p key={pld.dataKey} style={{ color: pld.fill }}>{`${pld.name}: ${pld.value}`}</p>)}
-        {payload.length > 1 && total > 0 && <><hr className="my-1 border-gray-600" /><p className="font-semibold">{`Tổng: ${total}`}</p></>}
+      <div className="p-3 bg-slate-900/80 backdrop-blur-sm text-white rounded-xl shadow-lg text-sm border border-slate-700">
+        <p className="font-bold mb-1">{finalLabel}</p>
+        {payload.map((pld) => (
+            <p key={pld.dataKey} style={{ color: pld.color || pld.fill }}>
+                {`${pld.name}: `}
+                <span className="font-semibold">{pld.value}</span>
+            </p>
+        ))}
+        {payload.length > 1 && total > 0 && 
+            <>
+                <hr className="my-1.5 border-slate-600" />
+                <p className="font-semibold">{`Tổng: ${total}`}</p>
+            </>
+        }
       </div>
     );
   }
@@ -202,19 +216,70 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 // [TỐI ƯU] Định nghĩa các hằng số cho props của biểu đồ để chúng không bị tạo lại trên mỗi lần render.
-const chartMargin = { top: 5, right: 20, left: -10, bottom: 5 };
 const barChartMargin = { top: 20, right: 20, left: -20, bottom: 5 };
 const legendWrapperStyle = { top: 0, left: 25 };
 const barChartCursorStyle = { fill: 'rgba(136, 132, 216, 0.1)' };
 
-// [TỐI ƯU] Tách biểu đồ thành các component riêng và memoize để ngăn re-render không cần thiết.
+// --- VOCABULARY GROWTH CHART (THIẾT KẾ LẠI HOÀN TOÀN) ---
 const VocabularyGrowthChart = memo(({ data }: { data: any[] }) => {
     return (
         <ChartCard title="Vocabulary Growth">
             <ResponsiveContainer>
-                <AreaChart data={data} margin={chartMargin}>
-                    <defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12} /><Tooltip content={<CustomTooltip />} /><Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" />
+                <AreaChart data={data} margin={{ top: 10, right: 20, left: -10, bottom: 5 }}>
+                    {/* [THIẾT KẾ] Định nghĩa các hiệu ứng: gradient màu sắc và hiệu ứng "glow" */}
+                    <defs>
+                        {/* Gradient màu mới, chuyển từ cyan sang tím */}
+                        <linearGradient id="vocabGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.6}/>
+                            <stop offset="95%" stopColor="#a855f7" stopOpacity={0.1}/>
+                        </linearGradient>
+
+                        {/* Filter SVG để tạo hiệu ứng phát sáng mềm mại */}
+                        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#8b5cf6" floodOpacity="0.5" />
+                        </filter>
+                    </defs>
+
+                    {/* [THIẾT KẾ] Lưới ngang tinh tế, bỏ lưới dọc */}
+                    <CartesianGrid vertical={false} stroke="#f3f4f6" />
+                    
+                    {/* [THIẾT KẾ] Trục X và Y được tối giản, bỏ đường kẻ trục */}
+                    <XAxis 
+                        dataKey="date" 
+                        fontSize={12} 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#6b7281' }}
+                    />
+                    <YAxis 
+                        allowDecimals={false} 
+                        fontSize={12} 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#6b7281' }}
+                    />
+                    
+                    {/* [THIẾT KẾ] Sử dụng Tooltip đã được style lại */}
+                    <Tooltip content={<CustomTooltip />} />
+                    
+                    {/* [THIẾT KẾ] Component Area chính với các thuộc tính mới */}
+                    <Area 
+                        type="monotone" 
+                        dataKey="cumulative" 
+                        name="Tổng số từ" 
+                        stroke="#8b5cf6" // Màu đường viền tím
+                        strokeWidth={2.5}
+                        fillOpacity={1} 
+                        fill="url(#vocabGradient)" // Áp dụng gradient
+                        filter="url(#glow)" // Áp dụng hiệu ứng glow
+                        dot={false} // Ẩn các điểm tròn mặc định
+                        activeDot={{ // Style cho điểm tròn khi hover
+                            r: 6, 
+                            stroke: 'white', 
+                            strokeWidth: 2, 
+                            fill: '#8b5cf6' 
+                        }}
+                    />
                 </AreaChart>
             </ResponsiveContainer>
         </ChartCard>
