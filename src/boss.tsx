@@ -39,7 +39,6 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 
 const WarriorIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> );
 
-// THAY ĐỔI: Thêm prop onAvatarClick để xử lý sự kiện click
 const PlayerInfoDisplay = ({ stats, floor, onAvatarClick }: { stats: CombatStats, floor: string, onAvatarClick: () => void }) => {
     const percentage = Math.max(0, (stats.hp / stats.maxHp) * 100);
   
@@ -96,88 +95,39 @@ const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colo
   );
 };
 
-// THAY ĐỔI: Component modal được thiết kế lại hoàn toàn để giống với các popup khác
 const CharacterStatsModal = ({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
   const titleColor = isPlayer ? 'text-blue-300' : 'text-red-400';
-
-  // Component con để hiển thị từng hàng chỉ số
-  const StatItem = ({ 
-    icon, 
-    current, 
-    max, 
-    gradient, 
-    shadowColor 
-  }: { 
-    icon: string, 
-    current: number, 
-    max?: number, 
-    gradient: string, 
-    shadowColor: string 
-  }) => {
-    // Nếu max không tồn tại, dùng công thức scale phi tuyến tính cho thanh progress
+  const StatItem = ({ icon, current, max, gradient, shadowColor }: { icon: string, current: number, max?: number, gradient: string, shadowColor: string }) => {
     const percentage = max ? (current / max) * 100 : Math.min(100, (current / (current + 500)) * 100);
     const valueText = max ? `${Math.ceil(current)} / ${max}` : String(current);
-
     return (
       <div className="flex items-center gap-3 w-full">
         <div className="flex-shrink-0 w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-700 p-1.5">
           <img src={icon} alt="Stat Icon" className="w-full h-full object-contain" />
         </div>
         <div className="relative w-full h-7 bg-black/40 rounded-full border border-slate-700/80 p-0.5 shadow-inner">
-          <div 
-            className={`h-full rounded-full transition-all duration-700 ease-out ${gradient}`}
-            style={{ 
-              width: `${percentage}%`,
-              boxShadow: `0 0 6px ${shadowColor}, 0 0 10px ${shadowColor}`
-            }}
-          ></div>
-          <div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow-sm font-bold tracking-wider">
-            <span>{valueText}</span>
-          </div>
+          <div className={`h-full rounded-full transition-all duration-700 ease-out ${gradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 6px ${shadowColor}, 0 0 10px ${shadowColor}` }}></div>
+          <div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow-sm font-bold tracking-wider"><span>{valueText}</span></div>
         </div>
       </div>
     );
   };
-
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
       <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
-        
-        {/* Header - Giống LogModal */}
-        <div className="p-4 border-b border-slate-700">
-          <h3 className={`text-xl font-bold text-center ${titleColor} text-shadow-sm tracking-widest`}>{title}</h3>
-        </div>
-        
-        {/* Content */}
+        <div className="p-4 border-b border-slate-700"><h3 className={`text-xl font-bold text-center ${titleColor} text-shadow-sm tracking-widest`}>{title}</h3></div>
         <div className="p-5 flex flex-col gap-4">
-          <StatItem 
-            icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-hp.webp"
-            current={character.hp}
-            max={character.maxHp}
-            gradient="bg-gradient-to-r from-green-500 to-lime-400"
-            shadowColor="rgba(132, 204, 22, 0.4)"
-          />
-          <StatItem 
-            icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-atk.webp"
-            current={character.atk}
-            gradient="bg-gradient-to-r from-red-500 to-orange-400"
-            shadowColor="rgba(239, 68, 68, 0.4)"
-          />
-          <StatItem 
-            icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-def.webp"
-            current={character.def}
-            gradient="bg-gradient-to-r from-sky-500 to-cyan-400"
-            shadowColor="rgba(14, 165, 233, 0.4)"
-          />
+          <StatItem icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-hp.webp" current={character.hp} max={character.maxHp} gradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.4)" />
+          <StatItem icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-atk.webp" current={character.atk} gradient="bg-gradient-to-r from-red-500 to-orange-400" shadowColor="rgba(239, 68, 68, 0.4)" />
+          <StatItem icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-def.webp" current={character.def} gradient="bg-gradient-to-r from-sky-500 to-cyan-400" shadowColor="rgba(14, 165, 233, 0.4)" />
         </div>
       </div>
     </div>
   )
 }
-
 
 const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
     return (
@@ -260,6 +210,46 @@ const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
   );
 }
 
+const SweepRewardsModal = ({ isSuccess, rewards, onClose }: { isSuccess: boolean; rewards: { coins: number; energy: number }; onClose: () => void; }) => {
+  const title = isSuccess ? 'SWEEP SUCCESS' : 'SWEEP FAILED';
+  const titleColor = isSuccess ? 'text-yellow-300' : 'text-slate-300';
+  const iconSrc = isSuccess 
+    ? "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1834_C%C3%BAp%20V%C3%A0ng%20Kh%C3%B4ng%20Sao_remix_01k0kspc1wfjyamwcc0f3m8q6v.png"
+    : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1828_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Th%E1%BA%A5t%20B%E1%BA%A1i_remix_01k0kscbkvfngrav0b2ypp55rs.png";
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+      <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
+        <img src={iconSrc} alt={title} className="w-16 h-16 object-contain mb-2" />
+        <h2 className={`text-3xl font-bold ${titleColor} tracking-widest uppercase mb-4 text-shadow`}>{title}</h2>
+
+        {isSuccess ? (
+          <div className="w-full flex flex-col items-center gap-3">
+            <p className="font-sans text-slate-300/80 text-sm tracking-wide uppercase">Rewards Received</p>
+            <div className="flex flex-row flex-wrap justify-center gap-3">
+              <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
+                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coins" className="w-6 h-6" />
+                <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
+              </div>
+              <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
+                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="Energy" className="w-6 h-6" />
+                <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">You were defeated and received no rewards. Try upgrading your stats.</p>
+        )}
+
+        <hr className="w-full border-t border-slate-700/50 my-5" />
+        <button onClick={onClose} className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600 hover:border-slate-500 transition-all duration-200 active:scale-95">
+          Close
+        </button>
+      </div>
+    </div>
+  );
+};
+
 
 // --- MAIN BOSS BATTLE COMPONENT ---
 export default function BossBattle({ 
@@ -283,15 +273,11 @@ export default function BossBattle({
   const [gameOver, setGameOver] = useState<null | 'win' | 'lose'>(null);
   const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
   const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
-  
-  // THAY ĐỔI: State mới để quản lý modal nào đang hiển thị
   const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
-  
   const [showLogModal, setShowLogModal] = useState(false);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   
-  // THÊM MỚI: State cho thông báo sweep
-  const [sweepNotification, setSweepNotification] = useState<{ message: string; success: boolean } | null>(null);
+  const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
 
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -384,12 +370,10 @@ export default function BossBattle({
   };
 
   // --- BATTLE CONTROL FUNCTIONS ---
-  
   const runBattleTurn = () => {
     const nextTurn = turnCounter + 1;
     const { player: newPlayer, boss: newBoss, turnLogs, winner, turnEvents } = executeFullTurn(playerStats, bossStats, nextTurn);
     
-    // Animate visuals
     if (turnEvents.playerDmg > 0) showFloatingText(`-${formatDamageText(turnEvents.playerDmg)}`, 'text-red-500', false);
     if (turnEvents.playerHeal > 0) showFloatingText(`+${formatDamageText(turnEvents.playerHeal)}`, 'text-green-400', true);
     setTimeout(() => {
@@ -446,51 +430,40 @@ export default function BossBattle({
     }
   };
 
-  // --- BATTLE STATE TRANSITIONS ---
   const startGame = () => {
     if (battleState !== 'idle' || (playerStats.energy || 0) < 10) return;
     setPlayerStats(prev => ({ ...prev, energy: (prev.energy || 0) - 10 }));
     setBattleState('fighting');
   };
   
-  // THÊM MỚI: Hàm hiển thị thông báo sweep và tự động ẩn
-  const showSweepNotification = (message: string, success: boolean) => {
-    setSweepNotification({ message, success });
-    setTimeout(() => setSweepNotification(null), 3500);
-  };
-
-  // THÊM MỚI: Logic để quét nhanh tầng trước đó
   const handleSweep = () => {
     if (currentBossIndex <= 0 || (playerStats.energy || 0) < 10) return;
 
     setPlayerStats(prev => ({ ...prev, energy: (prev.energy || 0) - 10 }));
 
     const previousBossData = BOSS_DATA[currentBossIndex - 1];
-    let simPlayer = { ...playerInitialStats }; // Dùng chỉ số ban đầu để mô phỏng công bằng
+    let simPlayer = { ...playerInitialStats };
     let simBoss = { ...previousBossData.stats };
     let simTurn = 0;
     let finalWinner: 'win' | 'lose' | null = null;
 
-    // Chạy mô phỏng nhanh, không log
-    while (finalWinner === null && simTurn < 500) { // Thêm giới hạn để tránh lặp vô hạn
+    while (finalWinner === null && simTurn < 500) { 
         simTurn++;
         const turnResult = executeFullTurn(simPlayer, simBoss, simTurn);
         simPlayer = turnResult.player;
         simBoss = turnResult.boss;
         finalWinner = turnResult.winner;
     }
-    if (!finalWinner) finalWinner = 'lose'; // Mặc định là thua nếu quá nhiều lượt
+    if (!finalWinner) finalWinner = 'lose';
 
     const rewards = previousBossData.rewards || { coins: 0, energy: 0 };
     onBattleEnd(finalWinner, finalWinner === 'win' ? rewards : { coins: 0, energy: 0 });
 
-    if (finalWinner === 'win') {
-        showSweepNotification(`Sweep Success! +${rewards.coins} Coins, +${rewards.energy} Energy`, true);
-    } else {
-        showSweepNotification('Sweep Failed. You were defeated.', false);
-    }
+    setSweepResult({
+      result: finalWinner,
+      rewards: finalWinner === 'win' ? rewards : { coins: 0, energy: 0 }
+    });
   };
-
 
   const resetAllStateForNewBattle = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
@@ -539,7 +512,7 @@ export default function BossBattle({
     return () => {
       if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     };
-  }, [battleState, gameOver, turnCounter]); // Trigger on turnCounter change
+  }, [battleState, gameOver, turnCounter]);
 
   // --- RENDER ---
   return (
@@ -549,29 +522,17 @@ export default function BossBattle({
         .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
         @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
         .animate-pulse-fast { animation: pulse-fast 1s infinite; }
-        @keyframes fade-in-out { 0% { opacity: 0; transform: translateY(20px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(20px); } }
-        .animate-fade-in-out { animation: fade-in-out 3.5s ease-out forwards; }
       `}</style>
-
-      {/* THÊM MỚI: Thông báo kết quả Sweep */}
-      {sweepNotification && (
-        <div 
-          key={Date.now()}
-          className={`fixed bottom-5 right-5 z-[60] px-5 py-3 rounded-lg shadow-2xl backdrop-blur-md border font-sans text-sm font-semibold text-white animate-fade-in-out ${sweepNotification.success ? 'bg-green-500/30 border-green-500/50' : 'bg-red-500/30 border-red-500/50'}`}
-        >
-          {sweepNotification.message}
-        </div>
-      )}
-
-      {/* THAY ĐỔI: Render modal mới dựa trên state */}
-      {statsModalTarget && (
-        <CharacterStatsModal 
-          character={statsModalTarget === 'player' ? playerStats : bossStats}
-          characterType={statsModalTarget}
-          onClose={() => setStatsModalTarget(null)}
+      
+      {sweepResult && (
+        <SweepRewardsModal
+          isSuccess={sweepResult.result === 'win'}
+          rewards={sweepResult.rewards}
+          onClose={() => setSweepResult(null)}
         />
       )}
-      
+
+      {statsModalTarget && <CharacterStatsModal character={statsModalTarget === 'player' ? playerStats : bossStats} characterType={statsModalTarget} onClose={() => setStatsModalTarget(null)}/>}
       {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
       {showRewardsModal && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
 
@@ -579,44 +540,22 @@ export default function BossBattle({
         <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
                 <div className="flex items-center gap-3">
-                    <button
-                      onClick={onClose}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
-                      aria-label="Go Home"
-                      title="Go Home"
-                    >
+                    <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Go Home" title="Go Home">
                       <HomeIcon className="w-5 h-5 text-slate-300" />
                       <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                     </button>
                 </div>
-                
                 <div className="flex items-center gap-2 font-sans">
-                    {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && (
-                        <EnergyDisplay 
-                            currentEnergy={playerStats.energy} 
-                            maxEnergy={playerStats.maxEnergy}
-                            isStatsFullscreen={false}
-                        />
-                    )}
+                    {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && (<EnergyDisplay currentEnergy={playerStats.energy} maxEnergy={playerStats.maxEnergy} isStatsFullscreen={false}/>)}
                     <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                 </div>
             </div>
         </header>
 
-        {/* THAY ĐỔI: Logic hiển thị nút Sweep và Skip Battle */}
         <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
-            <PlayerInfoDisplay 
-              stats={playerStats} 
-              floor={currentBossData.floor}
-              onAvatarClick={() => setStatsModalTarget('player')}
-            />
+            <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} onAvatarClick={() => setStatsModalTarget('player')} />
             {battleState === 'idle' && currentBossIndex > 0 && (
-                <button
-                    onClick={handleSweep}
-                    disabled={(playerStats.energy || 0) < 10}
-                    title="Instantly clear the previous floor for rewards"
-                    className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700 animate-fade-in flex items-center gap-1.5"
-                >
+                <button onClick={handleSweep} disabled={(playerStats.energy || 0) < 10} title="Instantly clear the previous floor for rewards" className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700 animate-fade-in flex items-center gap-1.5">
                     <span>Sweep Previous</span>
                     <span className="flex items-center gap-0.5 opacity-80">
                         (-10 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="Energy" className="w-3 h-3"/>)
@@ -624,10 +563,7 @@ export default function BossBattle({
                 </button>
             )}
             {battleState === 'fighting' && !gameOver && (
-                <button 
-                    onClick={skipBattle} 
-                    className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300 animate-fade-in"
-                >
+                <button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300 animate-fade-in">
                     Skip Battle
                 </button>
             )}
@@ -635,26 +571,13 @@ export default function BossBattle({
 
         <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
             <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
-                {/* THAY ĐỔI: Xóa nút skip battle khỏi đây, div này giờ chỉ để giữ layout */}
                 <div></div>
-
-                {/* Right-aligned controls */}
                 <div className="flex flex-col items-end gap-2">
                     <div className="w-full flex justify-center gap-2">
-                        <button 
-                            onClick={() => setShowLogModal(true)} 
-                            disabled={!previousCombatLog.length || battleState !== 'idle'} 
-                            className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" 
-                            title="View Last Battle Log"
-                        >
+                        <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Last Battle Log">
                             <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/history-battle.webp" alt="Log" className="w-full h-full object-contain" />
                         </button>
-                        <button 
-                            onClick={() => setShowRewardsModal(true)} 
-                            disabled={battleState !== 'idle'}
-                            className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" 
-                            title="View Potential Rewards"
-                        >
+                        <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Potential Rewards">
                             <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/rewards-icon.webp" alt="Rewards" className="w-full h-full object-contain" />
                         </button>
                     </div>
@@ -664,19 +587,13 @@ export default function BossBattle({
             {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                {/* THAY ĐỔI: Thêm sự kiện onClick cho Boss */}
-                <div 
-                  className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group"
-                  onClick={() => setStatsModalTarget('boss')}
-                  title="View Boss Stats"
-                >
+                <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group" onClick={() => setStatsModalTarget('boss')} title="View Boss Stats">
                   <div className="relative group flex justify-center">
                     <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
                     <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                       {currentBossData.name.toUpperCase()}
                     </div>
                   </div>
-                  
                   <div className="w-40 h-40 md:w-56 md:h-56">
                     <img src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} alt={currentBossData.name} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
                   </div>
