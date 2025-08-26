@@ -290,6 +290,9 @@ export default function BossBattle({
   const [showLogModal, setShowLogModal] = useState(false);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   
+  // THÊM MỚI: State cho thông báo sweep
+  const [sweepNotification, setSweepNotification] = useState<{ message: string; success: boolean } | null>(null);
+
   const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // --- LOGIC HELPERS ---
@@ -401,15 +404,17 @@ export default function BossBattle({
     if (winner) endGame(winner);
   };
   
-  // THAY ĐỔI: Tách logic mô phỏng ra hàm riêng
-  const simulateFullBattle = (initialPlayer: CombatStats, initialBoss: CombatStats) => {
-    let tempPlayer = { ...initialPlayer };
-    let tempBoss = { ...initialBoss };
-    let tempTurn = 0;
+  const skipBattle = () => {
+    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+    setBattleState('finished');
+
+    let tempPlayer = { ...playerStats };
+    let tempBoss = { ...bossStats };
+    let tempTurn = turnCounter;
     let finalWinner: 'win' | 'lose' | null = null;
     const fullLog: string[] = [];
 
-    while (finalWinner === null && tempTurn < 100) { // Thêm giới hạn lượt để tránh vòng lặp vô hạn
+    while (finalWinner === null) {
         tempTurn++;
         const turnResult = executeFullTurn(tempPlayer, tempBoss, tempTurn);
         tempPlayer = turnResult.player;
@@ -417,65 +422,27 @@ export default function BossBattle({
         finalWinner = turnResult.winner;
         fullLog.push(...turnResult.turnLogs);
     }
-    
-    if (finalWinner === null) finalWinner = 'lose'; // Mặc định thua nếu quá nhiều lượt
 
-    return { result: finalWinner, finalPlayer: tempPlayer, finalBoss: tempBoss, fullLog, finalTurn: tempTurn };
-  }
-
-  const skipBattle = () => {
-    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    setBattleState('finished');
-    
-    const { result, finalPlayer, finalBoss, fullLog, finalTurn } = simulateFullBattle(playerStats, bossStats);
-
-    setPlayerStats(finalPlayer);
-    setBossStats(finalBoss);
+    setPlayerStats(tempPlayer);
+    setBossStats(tempBoss);
     setCombatLog(prev => [...fullLog.reverse(), ...prev]);
-    setTurnCounter(turnCounter + finalTurn);
-    endGame(result);
+    setTurnCounter(tempTurn);
+    endGame(finalWinner);
   };
-
-  // THAY ĐỔI: Thêm hàm xử lý Sweep
-  const handleSweepPreviousFloor = () => {
-    if (battleState !== 'idle' || currentBossIndex === 0) return;
-    if ((playerStats.energy || 0) < 10) {
-        showFloatingText("Not enough energy!", "text-red-500", true);
-        return;
-    }
-
-    setPlayerStats(prev => ({ ...prev, energy: (prev.energy || 0) - 10 }));
-    
-    const previousBossData = BOSS_DATA[currentBossIndex - 1];
-    const { result } = simulateFullBattle(playerStats, previousBossData.stats);
-
-    if (result === 'win') {
-        const rewards = previousBossData.rewards;
-        onBattleEnd('win', rewards);
-        addLog(`<span class="text-cyan-400">[Sweep]</span> Quét thành công <b class="text-yellow-300">${previousBossData.floor}</b>. Bạn nhận được <b class="text-yellow-300">${rewards.coins}</b> vàng và <b class="text-cyan-300">${rewards.energy}</b> năng lượng.`);
-    } else {
-        onBattleEnd('lose', { coins: 0, energy: 0 });
-        addLog(`<span class="text-red-400">[Sweep]</span> Quét thất bại! Bạn đã bị đánh bại ở <b class="text-yellow-300">${previousBossData.floor}</b>.`);
-    }
-  }
 
   const endGame = (result: 'win' | 'lose') => {
     if (gameOver) return;
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     setGameOver(result);
     setBattleState('finished');
+    const rewards = currentBossData.rewards || { coins: 0, energy: 0 };
+    onBattleEnd(result, result === 'win' ? rewards : { coins: 0, energy: 0 });
     
-    if (result === 'win') {
-      const rewards = currentBossData.rewards || { coins: 0, energy: 0 };
-      onBattleEnd(result, rewards);
-      if (playerStats.energy !== undefined && playerStats.maxEnergy !== undefined) {
-          setPlayerStats(prev => ({
-              ...prev,
-              energy: Math.min(prev.maxEnergy!, (prev.energy || 0) + rewards.energy)
-          }));
-      }
-    } else {
-      onBattleEnd(result, { coins: 0, energy: 0 });
+    if (result === 'win' && playerStats.energy !== undefined && playerStats.maxEnergy !== undefined) {
+        setPlayerStats(prev => ({
+            ...prev,
+            energy: Math.min(prev.maxEnergy!, (prev.energy || 0) + rewards.energy)
+        }));
     }
   };
 
@@ -486,6 +453,45 @@ export default function BossBattle({
     setBattleState('fighting');
   };
   
+  // THÊM MỚI: Hàm hiển thị thông báo sweep và tự động ẩn
+  const showSweepNotification = (message: string, success: boolean) => {
+    setSweepNotification({ message, success });
+    setTimeout(() => setSweepNotification(null), 3500);
+  };
+
+  // THÊM MỚI: Logic để quét nhanh tầng trước đó
+  const handleSweep = () => {
+    if (currentBossIndex <= 0 || (playerStats.energy || 0) < 10) return;
+
+    setPlayerStats(prev => ({ ...prev, energy: (prev.energy || 0) - 10 }));
+
+    const previousBossData = BOSS_DATA[currentBossIndex - 1];
+    let simPlayer = { ...playerInitialStats }; // Dùng chỉ số ban đầu để mô phỏng công bằng
+    let simBoss = { ...previousBossData.stats };
+    let simTurn = 0;
+    let finalWinner: 'win' | 'lose' | null = null;
+
+    // Chạy mô phỏng nhanh, không log
+    while (finalWinner === null && simTurn < 500) { // Thêm giới hạn để tránh lặp vô hạn
+        simTurn++;
+        const turnResult = executeFullTurn(simPlayer, simBoss, simTurn);
+        simPlayer = turnResult.player;
+        simBoss = turnResult.boss;
+        finalWinner = turnResult.winner;
+    }
+    if (!finalWinner) finalWinner = 'lose'; // Mặc định là thua nếu quá nhiều lượt
+
+    const rewards = previousBossData.rewards || { coins: 0, energy: 0 };
+    onBattleEnd(finalWinner, finalWinner === 'win' ? rewards : { coins: 0, energy: 0 });
+
+    if (finalWinner === 'win') {
+        showSweepNotification(`Sweep Success! +${rewards.coins} Coins, +${rewards.energy} Energy`, true);
+    } else {
+        showSweepNotification('Sweep Failed. You were defeated.', false);
+    }
+  };
+
+
   const resetAllStateForNewBattle = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     setPreviousCombatLog(combatLog);
@@ -543,7 +549,19 @@ export default function BossBattle({
         .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
         @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
         .animate-pulse-fast { animation: pulse-fast 1s infinite; }
+        @keyframes fade-in-out { 0% { opacity: 0; transform: translateY(20px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(20px); } }
+        .animate-fade-in-out { animation: fade-in-out 3.5s ease-out forwards; }
       `}</style>
+
+      {/* THÊM MỚI: Thông báo kết quả Sweep */}
+      {sweepNotification && (
+        <div 
+          key={Date.now()}
+          className={`fixed bottom-5 right-5 z-[60] px-5 py-3 rounded-lg shadow-2xl backdrop-blur-md border font-sans text-sm font-semibold text-white animate-fade-in-out ${sweepNotification.success ? 'bg-green-500/30 border-green-500/50' : 'bg-red-500/30 border-red-500/50'}`}
+        >
+          {sweepNotification.message}
+        </div>
+      )}
 
       {/* THAY ĐỔI: Render modal mới dựa trên state */}
       {statsModalTarget && (
@@ -585,32 +603,30 @@ export default function BossBattle({
             </div>
         </header>
 
-        {/* THAY ĐỔI: Thêm nút Sweep và logic hiển thị */}
+        {/* THAY ĐỔI: Logic hiển thị nút Sweep và Skip Battle */}
         <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
             <PlayerInfoDisplay 
               stats={playerStats} 
               floor={currentBossData.floor}
               onAvatarClick={() => setStatsModalTarget('player')}
             />
-            
             {battleState === 'idle' && currentBossIndex > 0 && (
-                <button 
-                    onClick={handleSweepPreviousFloor} 
+                <button
+                    onClick={handleSweep}
                     disabled={(playerStats.energy || 0) < 10}
-                    className="w-full flex items-center justify-center gap-2 font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md text-cyan-300 disabled:opacity-60 disabled:cursor-not-allowed animate-fade-in"
-                    title={`Sweep ${BOSS_DATA[currentBossIndex - 1].floor} for rewards`}
+                    title="Instantly clear the previous floor for rewards"
+                    className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700 animate-fade-in flex items-center gap-1.5"
                 >
                     <span>Sweep Previous</span>
-                    <div className="flex items-center gap-1 font-semibold text-cyan-400/80">
-                      <span>10</span><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="" className="w-3 h-3"/>
-                    </div>
+                    <span className="flex items-center gap-0.5 opacity-80">
+                        (-10 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="Energy" className="w-3 h-3"/>)
+                    </span>
                 </button>
             )}
-
             {battleState === 'fighting' && !gameOver && (
                 <button 
                     onClick={skipBattle} 
-                    className="w-full font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300 animate-fade-in"
+                    className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300 animate-fade-in"
                 >
                     Skip Battle
                 </button>
@@ -619,7 +635,10 @@ export default function BossBattle({
 
         <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
             <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
+                {/* THAY ĐỔI: Xóa nút skip battle khỏi đây, div này giờ chỉ để giữ layout */}
                 <div></div>
+
+                {/* Right-aligned controls */}
                 <div className="flex flex-col items-end gap-2">
                     <div className="w-full flex justify-center gap-2">
                         <button 
@@ -645,6 +664,7 @@ export default function BossBattle({
             {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
+                {/* THAY ĐỔI: Thêm sự kiện onClick cho Boss */}
                 <div 
                   className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group"
                   onClick={() => setStatsModalTarget('boss')}
@@ -677,7 +697,7 @@ export default function BossBattle({
                 )}
                 {battleState !== 'idle' && (
                   <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
-                      {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse-fast' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
+                      {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
                   </div>
                 )}
             </div>
