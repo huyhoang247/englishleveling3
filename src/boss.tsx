@@ -35,7 +35,7 @@ interface BossBattleProps {
 
 // --- UI HELPER COMPONENTS ---
 
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 R 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
 const WarriorIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> );
 
@@ -304,7 +304,6 @@ export default function BossBattle({
     let winner: 'win' | 'lose' | null = null;
     let turnEvents = { playerDmg: 0, playerHeal: 0, bossDmg: 0, bossReflectDmg: 0 };
 
-    // 1. Player's Attack Phase
     let atkMods = { boost: 1, armorPen: 0 };
     equippedSkills.forEach(skill => {
         if ((skill.id === 'damage_boost' || skill.id === 'armor_penetration') && checkActivation(skill.rarity)) {
@@ -319,7 +318,6 @@ export default function BossBattle({
     log(`Bạn tấn công, gây <b class="text-red-400">${playerDmg}</b> sát thương.`);
     boss.hp -= playerDmg;
 
-    // 2. Player's Post-Attack Phase (Lifesteal)
     equippedSkills.forEach(skill => {
         if (skill.id === 'life_steal' && checkActivation(skill.rarity)) {
             const healed = Math.ceil(playerDmg * (getSkillEffect(skill) / 100));
@@ -338,13 +336,11 @@ export default function BossBattle({
         return { player, boss, turnLogs, winner, turnEvents };
     }
 
-    // 3. Boss's Attack Phase
     const bossDmg = calculateDamage(boss.atk, player.def);
     turnEvents.bossDmg = bossDmg;
     log(`${currentBossData.name} phản công, gây <b class="text-red-400">${bossDmg}</b> sát thương.`);
     player.hp -= bossDmg;
 
-    // 4. Player's Defensive Phase (Thorns)
     let totalReflectDmg = 0;
     equippedSkills.forEach(skill => {
         if (skill.id === 'thorns' && checkActivation(skill.rarity)) {
@@ -391,14 +387,12 @@ export default function BossBattle({
   const skipBattle = () => {
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     setBattleState('finished');
-
     let tempPlayer = { ...playerStats };
     let tempBoss = { ...bossStats };
     let tempTurn = turnCounter;
     let finalWinner: 'win' | 'lose' | null = null;
     const fullLog: string[] = [];
-
-    while (finalWinner === null) {
+    while (finalWinner === null && tempTurn < turnCounter + 500) {
         tempTurn++;
         const turnResult = executeFullTurn(tempPlayer, tempBoss, tempTurn);
         tempPlayer = turnResult.player;
@@ -406,7 +400,7 @@ export default function BossBattle({
         finalWinner = turnResult.winner;
         fullLog.push(...turnResult.turnLogs);
     }
-
+    if (!finalWinner) finalWinner = 'lose';
     setPlayerStats(tempPlayer);
     setBossStats(tempBoss);
     setCombatLog(prev => [...fullLog.reverse(), ...prev]);
@@ -555,11 +549,13 @@ export default function BossBattle({
         <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
             <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} onAvatarClick={() => setStatsModalTarget('player')} />
             {battleState === 'idle' && currentBossIndex > 0 && (
-                <button onClick={handleSweep} disabled={(playerStats.energy || 0) < 10} title="Instantly clear the previous floor for rewards" className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700 animate-fade-in flex items-center gap-1.5">
-                    <span>Sweep Previous</span>
-                    <span className="flex items-center gap-0.5 opacity-80">
-                        (-10 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="Energy" className="w-3 h-3"/>)
-                    </span>
+                <button 
+                    onClick={handleSweep} 
+                    disabled={(playerStats.energy || 0) < 10} 
+                    title="Instantly clear the previous floor for rewards" 
+                    className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700 animate-fade-in"
+                >
+                    Sweep Previous
                 </button>
             )}
             {battleState === 'fighting' && !gameOver && (
