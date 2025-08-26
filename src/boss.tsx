@@ -549,22 +549,27 @@ export default function BossBattle({
             </div>
         </header>
 
-        <div className="fixed top-16 left-4 z-20">
-            {/* THAY ĐỔI: Truyền hàm để mở modal */}
+        {/* THAY ĐỔI: Di chuyển nút Skip Battle vào đây */}
+        <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
             <PlayerInfoDisplay 
               stats={playerStats} 
               floor={currentBossData.floor}
               onAvatarClick={() => setStatsModalTarget('player')}
             />
+            {battleState === 'fighting' && !gameOver && (
+                <button 
+                    onClick={skipBattle} 
+                    className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300 animate-fade-in"
+                >
+                    Skip Battle
+                </button>
+            )}
         </div>
 
         <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
             <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
-                {/* Left/Center aligned controls */}
-                <div className="flex items-center gap-3">
-                    {/* THAY ĐỔI: Đã xóa nút View Stats */}
-                    {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button>)}
-                </div>
+                {/* THAY ĐỔI: Xóa nút skip battle khỏi đây, div này giờ chỉ để giữ layout */}
+                <div></div>
 
                 {/* Right-aligned controls */}
                 <div className="flex flex-col items-end gap-2">
