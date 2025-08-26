@@ -401,17 +401,15 @@ export default function BossBattle({
     if (winner) endGame(winner);
   };
   
-  const skipBattle = () => {
-    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    setBattleState('finished');
-
-    let tempPlayer = { ...playerStats };
-    let tempBoss = { ...bossStats };
-    let tempTurn = turnCounter;
+  // THAY ĐỔI: Tách logic mô phỏng ra hàm riêng
+  const simulateFullBattle = (initialPlayer: CombatStats, initialBoss: CombatStats) => {
+    let tempPlayer = { ...initialPlayer };
+    let tempBoss = { ...initialBoss };
+    let tempTurn = 0;
     let finalWinner: 'win' | 'lose' | null = null;
     const fullLog: string[] = [];
 
-    while (finalWinner === null) {
+    while (finalWinner === null && tempTurn < 100) { // Thêm giới hạn lượt để tránh vòng lặp vô hạn
         tempTurn++;
         const turnResult = executeFullTurn(tempPlayer, tempBoss, tempTurn);
         tempPlayer = turnResult.player;
@@ -419,27 +417,65 @@ export default function BossBattle({
         finalWinner = turnResult.winner;
         fullLog.push(...turnResult.turnLogs);
     }
+    
+    if (finalWinner === null) finalWinner = 'lose'; // Mặc định thua nếu quá nhiều lượt
 
-    setPlayerStats(tempPlayer);
-    setBossStats(tempBoss);
+    return { result: finalWinner, finalPlayer: tempPlayer, finalBoss: tempBoss, fullLog, finalTurn: tempTurn };
+  }
+
+  const skipBattle = () => {
+    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+    setBattleState('finished');
+    
+    const { result, finalPlayer, finalBoss, fullLog, finalTurn } = simulateFullBattle(playerStats, bossStats);
+
+    setPlayerStats(finalPlayer);
+    setBossStats(finalBoss);
     setCombatLog(prev => [...fullLog.reverse(), ...prev]);
-    setTurnCounter(tempTurn);
-    endGame(finalWinner);
+    setTurnCounter(turnCounter + finalTurn);
+    endGame(result);
   };
+
+  // THAY ĐỔI: Thêm hàm xử lý Sweep
+  const handleSweepPreviousFloor = () => {
+    if (battleState !== 'idle' || currentBossIndex === 0) return;
+    if ((playerStats.energy || 0) < 10) {
+        showFloatingText("Not enough energy!", "text-red-500", true);
+        return;
+    }
+
+    setPlayerStats(prev => ({ ...prev, energy: (prev.energy || 0) - 10 }));
+    
+    const previousBossData = BOSS_DATA[currentBossIndex - 1];
+    const { result } = simulateFullBattle(playerStats, previousBossData.stats);
+
+    if (result === 'win') {
+        const rewards = previousBossData.rewards;
+        onBattleEnd('win', rewards);
+        addLog(`<span class="text-cyan-400">[Sweep]</span> Quét thành công <b class="text-yellow-300">${previousBossData.floor}</b>. Bạn nhận được <b class="text-yellow-300">${rewards.coins}</b> vàng và <b class="text-cyan-300">${rewards.energy}</b> năng lượng.`);
+    } else {
+        onBattleEnd('lose', { coins: 0, energy: 0 });
+        addLog(`<span class="text-red-400">[Sweep]</span> Quét thất bại! Bạn đã bị đánh bại ở <b class="text-yellow-300">${previousBossData.floor}</b>.`);
+    }
+  }
 
   const endGame = (result: 'win' | 'lose') => {
     if (gameOver) return;
     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     setGameOver(result);
     setBattleState('finished');
-    const rewards = currentBossData.rewards || { coins: 0, energy: 0 };
-    onBattleEnd(result, result === 'win' ? rewards : { coins: 0, energy: 0 });
     
-    if (result === 'win' && playerStats.energy !== undefined && playerStats.maxEnergy !== undefined) {
-        setPlayerStats(prev => ({
-            ...prev,
-            energy: Math.min(prev.maxEnergy!, (prev.energy || 0) + rewards.energy)
-        }));
+    if (result === 'win') {
+      const rewards = currentBossData.rewards || { coins: 0, energy: 0 };
+      onBattleEnd(result, rewards);
+      if (playerStats.energy !== undefined && playerStats.maxEnergy !== undefined) {
+          setPlayerStats(prev => ({
+              ...prev,
+              energy: Math.min(prev.maxEnergy!, (prev.energy || 0) + rewards.energy)
+          }));
+      }
+    } else {
+      onBattleEnd(result, { coins: 0, energy: 0 });
     }
   };
 
@@ -549,17 +585,32 @@ export default function BossBattle({
             </div>
         </header>
 
-        {/* THAY ĐỔI: Di chuyển nút Skip Battle vào đây */}
+        {/* THAY ĐỔI: Thêm nút Sweep và logic hiển thị */}
         <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
             <PlayerInfoDisplay 
               stats={playerStats} 
               floor={currentBossData.floor}
               onAvatarClick={() => setStatsModalTarget('player')}
             />
+            
+            {battleState === 'idle' && currentBossIndex > 0 && (
+                <button 
+                    onClick={handleSweepPreviousFloor} 
+                    disabled={(playerStats.energy || 0) < 10}
+                    className="w-full flex items-center justify-center gap-2 font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md text-cyan-300 disabled:opacity-60 disabled:cursor-not-allowed animate-fade-in"
+                    title={`Sweep ${BOSS_DATA[currentBossIndex - 1].floor} for rewards`}
+                >
+                    <span>Sweep Previous</span>
+                    <div className="flex items-center gap-1 font-semibold text-cyan-400/80">
+                      <span>10</span><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="" className="w-3 h-3"/>
+                    </div>
+                </button>
+            )}
+
             {battleState === 'fighting' && !gameOver && (
                 <button 
                     onClick={skipBattle} 
-                    className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300 animate-fade-in"
+                    className="w-full font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300 animate-fade-in"
                 >
                     Skip Battle
                 </button>
@@ -568,10 +619,7 @@ export default function BossBattle({
 
         <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
             <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
-                {/* THAY ĐỔI: Xóa nút skip battle khỏi đây, div này giờ chỉ để giữ layout */}
                 <div></div>
-
-                {/* Right-aligned controls */}
                 <div className="flex flex-col items-end gap-2">
                     <div className="w-full flex justify-center gap-2">
                         <button 
@@ -597,7 +645,6 @@ export default function BossBattle({
             {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
 
             <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                {/* THAY ĐỔI: Thêm sự kiện onClick cho Boss */}
                 <div 
                   className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group"
                   onClick={() => setStatsModalTarget('boss')}
@@ -630,7 +677,7 @@ export default function BossBattle({
                 )}
                 {battleState !== 'idle' && (
                   <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
-                      {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
+                      {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse-fast' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
                   </div>
                 )}
             </div>
