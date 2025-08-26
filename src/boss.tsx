@@ -99,8 +99,7 @@ const CharacterStatsModal = ({ character, characterType, onClose }: { character:
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
   const titleColor = isPlayer ? 'text-blue-300' : 'text-red-400';
-  const StatItem = ({ label, icon, current, max, gradient, shadowColor }: { label: string, icon: string, current: number, max?: number, gradient: string, shadowColor: string }) => {
-    const percentage = max ? (current / max) * 100 : Math.min(100, (current / (current + 500)) * 100);
+  const StatItem = ({ label, icon, current, max }: { label: string, icon: string, current: number, max?: number }) => {
     const valueText = max ? `${Math.ceil(current)} / ${max}` : String(current);
     return (
       <div className="flex items-center gap-3 w-full">
@@ -108,9 +107,8 @@ const CharacterStatsModal = ({ character, characterType, onClose }: { character:
           <img src={icon} alt={label} className="w-6 h-6 object-contain" />
           <span className="font-bold text-sm text-slate-300 tracking-wider">{label}</span>
         </div>
-        <div className="relative w-full h-7 bg-black/40 rounded-full border border-slate-700/80 p-0.5 shadow-inner">
-          <div className={`h-full rounded-full transition-all duration-700 ease-out ${gradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 6px ${shadowColor}, 0 0 10px ${shadowColor}` }}></div>
-          <div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow-sm font-bold tracking-wider"><span>{valueText}</span></div>
+        <div className="flex-grow h-10 bg-black/40 rounded-lg flex items-center justify-center border border-slate-700/80">
+          <span className="font-bold text-sm text-white text-shadow-sm tracking-wider">{valueText}</span>
         </div>
       </div>
     );
@@ -121,9 +119,9 @@ const CharacterStatsModal = ({ character, characterType, onClose }: { character:
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
         <div className="p-4 border-b border-slate-700"><h3 className={`text-xl font-bold text-center ${titleColor} text-shadow-sm tracking-widest`}>{title}</h3></div>
         <div className="p-5 flex flex-col gap-4">
-          <StatItem label="HP" icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-hp.webp" current={character.hp} max={character.maxHp} gradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.4)" />
-          <StatItem label="ATK" icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-atk.webp" current={character.atk} gradient="bg-gradient-to-r from-red-500 to-orange-400" shadowColor="rgba(239, 68, 68, 0.4)" />
-          <StatItem label="DEF" icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-def.webp" current={character.def} gradient="bg-gradient-to-r from-sky-500 to-cyan-400" shadowColor="rgba(14, 165, 233, 0.4)" />
+          <StatItem label="HP" icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-hp.webp" current={character.hp} max={character.maxHp} />
+          <StatItem label="ATK" icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-atk.webp" current={character.atk} />
+          <StatItem label="DEF" icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-def.webp" current={character.def} />
         </div>
       </div>
     </div>
