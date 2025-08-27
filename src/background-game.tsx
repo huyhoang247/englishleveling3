@@ -1,4 +1,4 @@
-// --- START OF FILE src/background-game.tsx ---
+// --- START OF FILE background-game.tsx ---
 
 import React, { useEffect, useRef, Component } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -150,24 +150,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         <div className="fixed inset-0 z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isMinerChallengeOpen && currentUser && (<MinerChallenge onClose={toggleMinerChallenge} initialDisplayedCoins={displayedCoins} masteryCards={masteryCards} initialPickaxes={pickaxes} initialHighestFloor={minerChallengeHighestFloor} onGameEnd={handleMinerChallengeEnd} />)}</ErrorBoundary>
         </div>
-        
-        {/* --- CẬP NHẬT CÁCH GỌI BossBattle --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isBossBattleOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isBossBattleOpen && currentUser && (
                     <BossBattle 
-                        onClose={toggleBossBattle} 
-                        onBattleEnd={async (result, rewards) => { 
-                            if (result === 'win' && currentUser) {
-                                setCoins(await updateUserCoins(currentUser.uid, rewards.coins));
-                            }
-                        }} 
+                        userId={currentUser.uid}
+                        onClose={toggleBossBattle}
+                        onBattleEnd={async (result, rewards) => { if (result === 'win' && currentUser) setCoins(await updateUserCoins(currentUser.uid, rewards.coins)); }}
                         onFloorComplete={handleBossFloorUpdate}
                     />
                 )}
             </ErrorBoundary>
         </div>
-
         <div className="fixed inset-0 z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} onPurchase={handleShopPurchase} currentUser={currentUser} />}</ErrorBoundary> </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> 
             <ErrorBoundary>{isVocabularyChestOpen && currentUser && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onStateUpdate={handleStateUpdateFromChest} />)}</ErrorBoundary> 
@@ -193,6 +187,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                   userId={currentUser.uid} />)}</ErrorBoundary>
         </div>
         
+        {/* --- THAY ĐỔI: Cập nhật cách gọi EquipmentScreen --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isEquipmentOpen && currentUser && (
@@ -216,4 +211,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
-// --- END OF FILE src/background-game.tsx ---
+// --- END OF FILE background-game.tsx ---
