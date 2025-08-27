@@ -146,9 +146,9 @@ export const bossBattleAssets = {
   historyIcon: require("./assets/images/history-battle.webp"),
   rewardsIcon: require("./assets/images/rewards-icon.webp"),
   coinIcon: require("./assets/images/coin.webp"),
-  energyIcon: require("./assets/icon/Picsart_25-07-27_08-51-26-493.png"),
-  victoryIcon: require("./assets/icon/20250720_1834_Cúp Vàng Không Sao_remix_01k0kspc1wfjyamwcc0f3m8q6v.png"),
-  defeatIcon: require("./assets/icon/20250720_1828_Biểu Tượng Thất Bại_remix_01k0kscbkvfngrav0b2ypp55rs.png"),
+  energyIcon: require("./assets/images/energy-icon.webp"),
+  victoryIcon: require("./assets/images/victory-icon.webp"),
+  defeatIcon: require("./assets/images/defeat-icon.webp"),
 };
 
 
