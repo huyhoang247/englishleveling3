@@ -9,7 +9,7 @@ import {
     getActivationChance, 
     getRarityTextColor 
 } from './home/skill-game/skill-data.tsx';
-import { uiAssets, bossBattleAssets } from './game-assets'; // IMPORT TÀI NGUYÊN
+import { uiAssets, bossBattleAssets } from './game-assets.ts'; // IMPORT TÀI NGUYÊN
 
 // --- TYPE DEFINITIONS ---
 type ActiveSkill = OwnedSkill & SkillBlueprint;
