@@ -427,7 +427,16 @@ export default function BossBattle({
     setGameOver(result);
     setBattleState('finished');
     const rewards = currentBossData.rewards || { coins: 0, energy: 0 };
+    
+    // Báo cho cha (background-game) để cập nhật DB và GameContext
     onBattleEnd(result, result === 'win' ? rewards : { coins: 0, energy: 0 });
+    
+    // --- FIX: CẬP NHẬT TRỰC TIẾP STATE NỘI BỘ NGAY LẬP TỨC ---
+    // Dòng code này sẽ cập nhật CoinDisplay bên trong BossBattle
+    if (result === 'win') {
+      setDisplayedCoins(prev => prev + rewards.coins);
+    }
+    // --- END FIX ---
     
     if (result === 'win' && playerStats?.energy !== undefined && playerStats?.maxEnergy !== undefined) {
         setPlayerStats(prev => ({
