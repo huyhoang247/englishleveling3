@@ -28,7 +28,8 @@ const PlayerInfoDisplay = ({ stats, floor, onAvatarClick }: { stats: CombatStats
     const percentage = Math.max(0, (stats.hp / stats.maxHp) * 100);
   
     return (
-      <div className="w-64 bg-slate-900/50 backdrop-blur-sm rounded-lg p-2.5 border border-slate-700/50 shadow-lg flex items-center gap-3 animate-fade-in">
+      // *** THAY ĐỔI Ở ĐÂY: ĐÃ XÓA "animate-fade-in" ***
+      <div className="w-64 bg-slate-900/50 backdrop-blur-sm rounded-lg p-2.5 border border-slate-700/50 shadow-lg flex items-center gap-3">
           <div 
             onClick={onAvatarClick}
             className="flex-shrink-0 w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center border-2 border-slate-600 cursor-pointer transition-all duration-200 hover:border-blue-400 hover:scale-110"
