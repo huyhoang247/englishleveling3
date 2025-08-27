@@ -13,7 +13,7 @@ import {
 import { uiAssets, bossBattleAssets } from './game-assets.ts'; // IMPORT TÀI NGUYÊN
 // --- THÊM IMPORT MỚI ---
 import { fetchBossBattleData } from './gameDataService.ts';
-import { auth } from '../firebase'; // Cần để lấy userId
+import { auth } from './firebase'; // Cần để lấy userId
 
 // --- TYPE DEFINITIONS ---
 type ActiveSkill = OwnedSkill & SkillBlueprint;
