@@ -475,6 +475,18 @@ export default function BossBattle({
     const rewards = previousBossData.rewards || { coins: 0, energy: 0 };
     onBattleEnd(finalWinner, finalWinner === 'win' ? rewards : { coins: 0, energy: 0 });
 
+    // --- FIX: CẬP NHẬT TRỰC TIẾP STATE NỘI BỘ SAU KHI SWEEP ---
+    if (finalWinner === 'win') {
+      // Cập nhật vàng hiển thị
+      setDisplayedCoins(prev => prev + rewards.coins);
+      // Cập nhật lại năng lượng (cộng phần thưởng)
+      setPlayerStats(prev => ({
+          ...prev!,
+          energy: Math.min(prev!.maxEnergy!, (prev!.energy || 0) + rewards.energy)
+      }));
+    }
+    // --- END FIX ---
+
     setSweepResult({
       result: finalWinner,
       rewards: finalWinner === 'win' ? rewards : { coins: 0, energy: 0 }
