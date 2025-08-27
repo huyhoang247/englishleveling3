@@ -275,8 +275,8 @@ export default function BossBattle({
   const [displayedCoins, setDisplayedCoins] = useState(0);
   
   const [currentBossIndex, setCurrentBossIndex] = useState(0);
-  const [playerStats, setPlayerStats] = useState<CombatStats>({ maxHp: 1, hp: 1, atk: 0, def: 0, maxEnergy: 50, energy: 50 }); // Giá trị mặc định
-  const [bossStats, setBossStats] = useState<CombatStats>(BOSS_DATA[0].stats); // Giá trị mặc định
+  const [playerStats, setPlayerStats] = useState<CombatStats>({ maxHp: 1, hp: 1, atk: 0, def: 0, maxEnergy: 50, energy: 50 });
+  const [bossStats, setBossStats] = useState<CombatStats>(BOSS_DATA[0].stats);
   
   const [combatLog, setCombatLog] = useState<string[]>([]);
   const [previousCombatLog, setPreviousCombatLog] = useState<string[]>([]);
