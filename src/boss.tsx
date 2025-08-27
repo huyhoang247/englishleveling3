@@ -1,40 +1,16 @@
 // --- START OF FILE boss.tsx ---
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { auth } from './firebase.js'; // Import auth để lấy userId
+import React, { useState, useCallback, useEffect } from 'react';
+import { BossBattleProvider, useBossBattle, CombatStats } from './boss-battle-context.tsx'; // IMPORT CONTEXT MỚI
 import BOSS_DATA from './boss/bossData.ts';
 import CoinDisplay from './ui/display/coin-display.tsx';
-// IMPORT ENERGY DISPLAY MỚI
 import EnergyDisplay from './ui/display/energy-display.tsx'; 
-import { 
-    ALL_SKILLS,
-    OwnedSkill, 
-    SkillBlueprint, 
-    getActivationChance, 
-    getRarityTextColor 
-} from './home/skill-game/skill-data.tsx';
-import { uiAssets, bossBattleAssets } from './game-assets.ts'; // IMPORT TÀI NGUYÊN
-// --- THAY ĐỔI: IMPORT CÁC HÀM VÀ SERVICE CẦN THIẾT ---
-import { fetchBossBattlePrerequisites } from './gameDataService.ts';
-import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
-import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
+import { uiAssets, bossBattleAssets } from './game-assets.ts';
 
 // --- COMPONENT TẢI DỮ LIỆU ---
 const BossBattleLoader = () => (<div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 text-white font-lilita text-2xl tracking-widest"><div className="animate-pulse">LOADING BATTLE...</div></div>);
 
-// --- TYPE DEFINITIONS ---
-type ActiveSkill = OwnedSkill & SkillBlueprint;
-
-type CombatStats = {
-    maxHp: number;
-    hp: number;
-    atk: number;
-    def: number;
-    maxEnergy?: number;
-    energy?: number;
-};
-
-interface BossBattleProps {
+interface BossBattleWrapperProps {
   userId: string;
   onClose: () => void;
   onBattleEnd: (result: 'win' | 'lose', rewards: { coins: number; energy: number }) => void;
@@ -42,7 +18,7 @@ interface BossBattleProps {
 }
 
 
-// --- UI HELPER COMPONENTS ---
+// --- UI HELPER COMPONENTS (Toàn bộ code được giữ nguyên và đầy đủ) ---
 
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
@@ -259,457 +235,167 @@ const SweepRewardsModal = ({ isSuccess, rewards, onClose }: { isSuccess: boolean
 };
 
 
-// --- MAIN BOSS BATTLE COMPONENT ---
-export default function BossBattle({ 
-  userId,
-  onClose, 
-  onBattleEnd, 
-  onFloorComplete,
-}: BossBattleProps) {
-  
-  // --- STATE MANAGEMENT ---
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [combatLog, setCombatLog] = useState<string[]>([]);
-  const [previousCombatLog, setPreviousCombatLog] = useState<string[]>([]);
-  const [turnCounter, setTurnCounter] = useState(0);
-  const [gameOver, setGameOver] = useState<null | 'win' | 'lose'>(null);
-  const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
-  const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
-  const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
-  const [showLogModal, setShowLogModal] = useState(false);
-  const [showRewardsModal, setShowRewardsModal] = useState(false);
-  const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
+// --- MAIN VIEW COMPONENT ---
+const BossBattleView = ({ onClose }: { onClose: () => void }) => {
+    // --- LẤY STATE VÀ ACTIONS TỪ CONTEXT ---
+    const {
+        isLoading, error, playerStats, bossStats, combatLog, previousCombatLog, gameOver,
+        battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
+        startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
+    } = useBossBattle();
 
-  // --- THAY ĐỔI: State để lưu trữ dữ liệu lấy từ service ---
-  const [playerStats, setPlayerStats] = useState<CombatStats | null>(null);
-  const [bossStats, setBossStats] = useState<CombatStats | null>(null);
-  const [equippedSkills, setEquippedSkills] = useState<ActiveSkill[]>([]);
-  const [currentFloor, setCurrentFloor] = useState(0);
-  const [displayedCoins, setDisplayedCoins] = useState(0);
-
-  const initialPlayerStatsRef = useRef<CombatStats | null>(null);
-  const currentBossData = BOSS_DATA[currentFloor];
-  const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // --- LOGIC HELPERS ---
-  const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
-  const addLog = (message: string) => setCombatLog(prev => [message, ...prev].slice(0, 50));
-  const showFloatingText = (text: string, colorClass: string, isPlayerSide: boolean) => {
-    const id = Date.now() + Math.random();
-    const position = isPlayerSide ? 'left-[5%]' : 'right-[5%]'
-    setDamages(prev => [...prev, { id, text, colorClass: `${position} ${colorClass}` }]);
-    setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
-  };
-  
-  // --- CORE BATTLE LOGIC FUNCTION ---
-  const executeFullTurn = (currentPlayer: CombatStats, currentBoss: CombatStats, turn: number) => {
-    const turnLogs: string[] = [];
-    const log = (msg: string) => turnLogs.push(`[Lượt ${turn}] ${msg}`);
-    const checkActivation = (rarity: string) => Math.random() * 100 < getActivationChance(rarity);
-    const getSkillEffect = (skill: ActiveSkill) => (skill.baseEffectValue || 0) + (skill.level - 1) * (skill.effectValuePerLevel || 0);
-    const calculateDamage = (atk: number, def: number) => Math.max(1, Math.floor(atk * (0.8 + Math.random() * 0.4) * (1 - def / (def + 100))));
+    // --- STATE UI CỤC BỘ ---
+    const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
+    const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
+    const [showLogModal, setShowLogModal] = useState(false);
+    const [showRewardsModal, setShowRewardsModal] = useState(false);
+    const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
+    const [isSweeping, setIsSweeping] = useState(false);
     
-    let player = { ...currentPlayer };
-    let boss = { ...currentBoss };
-    let winner: 'win' | 'lose' | null = null;
-    let turnEvents = { playerDmg: 0, playerHeal: 0, bossDmg: 0, bossReflectDmg: 0 };
+    // --- LOGIC UI CỤC BỘ ---
+    const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
-    let atkMods = { boost: 1, armorPen: 0 };
-    equippedSkills.forEach(skill => {
-        if ((skill.id === 'damage_boost' || skill.id === 'armor_penetration') && checkActivation(skill.rarity)) {
-            const effect = getSkillEffect(skill);
-            log(`<span class="${getRarityTextColor(skill.rarity)} font-bold">[Kỹ Năng] ${skill.name}</span> kích hoạt!`);
-            if (skill.id === 'damage_boost') atkMods.boost += effect / 100;
-            if (skill.id === 'armor_penetration') atkMods.armorPen += effect / 100;
-        }
-    });
-    const playerDmg = calculateDamage(player.atk * atkMods.boost, Math.max(0, boss.def * (1 - atkMods.armorPen)));
-    turnEvents.playerDmg = playerDmg;
-    log(`Bạn tấn công, gây <b class="text-red-400">${playerDmg}</b> sát thương.`);
-    boss.hp -= playerDmg;
+    const showFloatingText = useCallback((text: string, colorClass: string, isPlayerSide: boolean) => {
+        const id = Date.now() + Math.random();
+        const position = isPlayerSide ? 'left-[25%]' : 'right-[25%]'; // Vị trí hiển thị
+        setDamages(prev => [...prev, { id, text, colorClass: `${position} ${colorClass}` }]);
+        setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
+    }, []);
 
-    equippedSkills.forEach(skill => {
-        if (skill.id === 'life_steal' && checkActivation(skill.rarity)) {
-            const healed = Math.ceil(playerDmg * (getSkillEffect(skill) / 100));
-            const actualHeal = Math.min(healed, player.maxHp - player.hp);
-            if (actualHeal > 0) {
-                turnEvents.playerHeal = actualHeal;
-                log(`<span class="text-green-400 font-bold">[Kỹ Năng] ${skill.name}</span> hút <b class="text-green-400">${actualHeal}</b> Máu.`);
-                player.hp += actualHeal;
-            }
-        }
-    });
-    
-    if (boss.hp <= 0) {
-        boss.hp = 0; winner = 'win';
-        log(`${currentBossData.name} đã bị đánh bại!`);
-        return { player, boss, turnLogs, winner, turnEvents };
-    }
+    // Effect để hiển thị floating text dựa trên sự kiện từ context
+    useEffect(() => {
+        if (!lastTurnEvents) return;
 
-    const bossDmg = calculateDamage(boss.atk, player.def);
-    turnEvents.bossDmg = bossDmg;
-    log(`${currentBossData.name} phản công, gây <b class="text-red-400">${bossDmg}</b> sát thương.`);
-    player.hp -= bossDmg;
+        const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
-    let totalReflectDmg = 0;
-    equippedSkills.forEach(skill => {
-        if (skill.id === 'thorns' && checkActivation(skill.rarity)) {
-            const reflectDmg = Math.ceil(bossDmg * (getSkillEffect(skill) / 100));
-            totalReflectDmg += reflectDmg;
-            log(`<span class="text-orange-400 font-bold">[Kỹ Năng] ${skill.name}</span> phản lại <b class="text-orange-400">${reflectDmg}</b> sát thương.`);
-            boss.hp -= reflectDmg;
-        }
-    });
-    if (totalReflectDmg > 0) turnEvents.bossReflectDmg = totalReflectDmg;
+        if (playerDmg > 0) showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', false);
+        if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', true);
+        
+        setTimeout(() => {
+          if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', true);
+          if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', false);
+        }, 500);
 
-    if (player.hp <= 0) {
-        player.hp = 0; winner = 'lose';
-        log("Bạn đã gục ngã... THẤT BẠI!");
-        return { player, boss, turnLogs, winner, turnEvents };
-    }
-    if (boss.hp <= 0) {
-        boss.hp = 0; winner = 'win';
-        log(`${currentBossData.name} đã bị đánh bại!`);
-    }
+    }, [lastTurnEvents, showFloatingText]);
 
-    return { player, boss, turnLogs, winner, turnEvents };
-  };
-
-  // --- BATTLE CONTROL FUNCTIONS ---
-  const runBattleTurn = () => {
-    if (!playerStats || !bossStats) return;
-    const nextTurn = turnCounter + 1;
-    const { player: newPlayer, boss: newBoss, turnLogs, winner, turnEvents } = executeFullTurn(playerStats, bossStats, nextTurn);
-    
-    if (turnEvents.playerDmg > 0) showFloatingText(`-${formatDamageText(turnEvents.playerDmg)}`, 'text-red-500', false);
-    if (turnEvents.playerHeal > 0) showFloatingText(`+${formatDamageText(turnEvents.playerHeal)}`, 'text-green-400', true);
-    setTimeout(() => {
-      if (turnEvents.bossDmg > 0) showFloatingText(`-${formatDamageText(turnEvents.bossDmg)}`, 'text-red-500', true);
-      if (turnEvents.bossReflectDmg > 0) showFloatingText(`-${formatDamageText(turnEvents.bossReflectDmg)}`, 'text-orange-400', false);
-    }, 500);
-
-    setPlayerStats(newPlayer);
-    setBossStats(newBoss);
-    setCombatLog(prev => [...turnLogs.reverse(), ...prev]);
-    setTurnCounter(nextTurn);
-    if (winner) endGame(winner);
-  };
-  
-  const skipBattle = () => {
-    if (!playerStats || !bossStats) return;
-     if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    setBattleState('finished');
-    let tempPlayer = { ...playerStats };
-    let tempBoss = { ...bossStats };
-    let tempTurn = turnCounter;
-    let finalWinner: 'win' | 'lose' | null = null;
-    const fullLog: string[] = [];
-    while (finalWinner === null && tempTurn < turnCounter + 500) {
-        tempTurn++;
-        const turnResult = executeFullTurn(tempPlayer, tempBoss, tempTurn);
-        tempPlayer = turnResult.player;
-        tempBoss = turnResult.boss;
-        finalWinner = turnResult.winner;
-        fullLog.push(...turnResult.turnLogs);
-    }
-    if (!finalWinner) finalWinner = 'lose';
-    setPlayerStats(tempPlayer);
-    setBossStats(tempBoss);
-    setCombatLog(prev => [...fullLog.reverse(), ...prev]);
-    setTurnCounter(tempTurn);
-    endGame(finalWinner);
-  };
-
-  const endGame = (result: 'win' | 'lose') => {
-    if (gameOver) return;
-    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    setGameOver(result);
-    setBattleState('finished');
-    const rewards = currentBossData.rewards || { coins: 0, energy: 0 };
-    
-    // Báo cho cha (background-game) để cập nhật DB và GameContext
-    onBattleEnd(result, result === 'win' ? rewards : { coins: 0, energy: 0 });
-    
-    // --- FIX: CẬP NHẬT TRỰC TIẾP STATE NỘI BỘ NGAY LẬP TỨC ---
-    // Dòng code này sẽ cập nhật CoinDisplay bên trong BossBattle
-    if (result === 'win') {
-      setDisplayedCoins(prev => prev + rewards.coins);
-    }
-    // --- END FIX ---
-    
-    if (result === 'win' && playerStats?.energy !== undefined && playerStats?.maxEnergy !== undefined) {
-        setPlayerStats(prev => ({
-            ...prev!,
-            energy: Math.min(prev!.maxEnergy!, (prev!.energy || 0) + rewards.energy)
-        }));
-    }
-  };
-
-  const startGame = () => {
-    if (battleState !== 'idle' || (playerStats?.energy || 0) < 10) return;
-    setPlayerStats(prev => ({ ...prev!, energy: (prev!.energy || 0) - 10 }));
-    setBattleState('fighting');
-  };
-  
-  const handleSweep = () => {
-     if (!initialPlayerStatsRef.current || currentFloor <= 0 || (playerStats?.energy || 0) < 10) return;
-
-    setPlayerStats(prev => ({ ...prev!, energy: (prev!.energy || 0) - 10 }));
-
-    const previousBossData = BOSS_DATA[currentFloor - 1];
-    let simPlayer = { ...initialPlayerStatsRef.current };
-    let simBoss = { ...previousBossData.stats };
-    let simTurn = 0;
-    let finalWinner: 'win' | 'lose' | null = null;
-
-    while (finalWinner === null && simTurn < 500) { 
-        simTurn++;
-        const turnResult = executeFullTurn(simPlayer, simBoss, simTurn);
-        simPlayer = turnResult.player;
-        simBoss = turnResult.boss;
-        finalWinner = turnResult.winner;
-    }
-    if (!finalWinner) finalWinner = 'lose';
-
-    const rewards = previousBossData.rewards || { coins: 0, energy: 0 };
-    onBattleEnd(finalWinner, finalWinner === 'win' ? rewards : { coins: 0, energy: 0 });
-
-    // --- FIX: CẬP NHẬT TRỰC TIẾP STATE NỘI BỘ SAU KHI SWEEP ---
-    if (finalWinner === 'win') {
-      // Cập nhật vàng hiển thị
-      setDisplayedCoins(prev => prev + rewards.coins);
-      // Cập nhật lại năng lượng (cộng phần thưởng)
-      setPlayerStats(prev => ({
-          ...prev!,
-          energy: Math.min(prev!.maxEnergy!, (prev!.energy || 0) + rewards.energy)
-      }));
-    }
-    // --- END FIX ---
-
-    setSweepResult({
-      result: finalWinner,
-      rewards: finalWinner === 'win' ? rewards : { coins: 0, energy: 0 }
-    });
-  };
-
-  const resetAllStateForNewBattle = () => {
-    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    setPreviousCombatLog(combatLog);
-    setCombatLog([]);
-    setTurnCounter(0);
-    setGameOver(null);
-    setBattleState('idle');
-    setDamages([]);
-  }
-
-  const retryCurrentFloor = () => {
-    resetAllStateForNewBattle();
-     if (initialPlayerStatsRef.current) {
-      setPlayerStats(initialPlayerStatsRef.current);
-    }
-    setBossStats(BOSS_DATA[currentFloor].stats);
-    setTimeout(() => addLog(`[Lượt 0] ${BOSS_DATA[currentFloor].name} đã xuất hiện.`), 100);
-  };
-  
-  const handleNextFloor = () => {
-    if (!initialPlayerStatsRef.current) return;
-    const nextIndex = currentFloor + 1;
-    if(nextIndex >= BOSS_DATA.length) return;
-    
-    resetAllStateForNewBattle();
-    setCurrentFloor(nextIndex);
-    onFloorComplete(nextIndex);
-    
-    setPlayerStats(prev => ({
-      ...initialPlayerStatsRef.current!, 
-      hp: initialPlayerStatsRef.current!.maxHp,
-      energy: prev!.energy 
-    }));
-  }
-
-  // --- REACT HOOKS ---
-
-  // --- THAY ĐỔI: useEffect để tải dữ liệu ---
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchBossBattlePrerequisites(userId);
-
-        // 1. Tính toán chỉ số người chơi (logic được chuyển từ GameContext)
-        const BASE_HP = 0, BASE_ATK = 0, BASE_DEF = 0;
-        const bonusHp = calculateTotalStatValue(data.baseStats.hp, statConfig.hp.baseUpgradeBonus);
-        const bonusAtk = calculateTotalStatValue(data.baseStats.atk, statConfig.atk.baseUpgradeBonus);
-        const bonusDef = calculateTotalStatValue(data.baseStats.def, statConfig.def.baseUpgradeBonus);
-        let itemHpBonus = 0, itemAtkBonus = 0, itemDefBonus = 0;
-
-        Object.values(data.equipment.equipped).forEach(itemId => { 
-            if(itemId){
-                const item = data.equipment.owned.find(i => i.id === itemId);
-                if (item) { 
-                    itemHpBonus += item.stats.hp || 0; 
-                    itemAtkBonus += item.stats.atk || 0; 
-                    itemDefBonus += item.stats.def || 0; 
-                }
-            }
-        });
-        const calculatedStats: CombatStats = { maxHp: BASE_HP + bonusHp + itemHpBonus, hp: BASE_HP + bonusHp + itemHpBonus, atk: BASE_ATK + bonusAtk + itemAtkBonus, def: BASE_DEF + bonusDef + itemDefBonus, maxEnergy: 50, energy: 50 };
-        setPlayerStats(calculatedStats);
-        initialPlayerStatsRef.current = calculatedStats;
-
-        // 2. Lấy chi tiết kỹ năng đã trang bị (logic được chuyển từ GameContext)
-        const skillsDetails = data.skills.equipped.map(equippedId => { if (!equippedId) return null; const owned = data.skills.owned.find(s => s.id === equippedId); if (!owned) return null; const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId); if (!blueprint) return null; return { ...owned, ...blueprint }; }).filter((skill): skill is ActiveSkill => skill !== null);
-        setEquippedSkills(skillsDetails);
-
-        // 3. Thiết lập các state khác
-        setCurrentFloor(data.bossBattleHighestFloor);
-        setDisplayedCoins(data.coins);
-
-      } catch (e) {
-        console.error("Failed to load boss battle data:", e);
-        setError(e instanceof Error ? e.message : "An unknown error occurred.");
-      } finally {
-        setIsLoading(false);
-      }
+    const handleSweepClick = async () => {
+        setIsSweeping(true);
+        const result = await handleSweep();
+        setSweepResult(result);
+        setIsSweeping(false);
     };
 
-    loadData();
-  }, [userId]);
+    // --- RENDER LOGIC CHO TẢI DỮ LIỆU VÀ LỖI ---
+    if (isLoading) return <BossBattleLoader />;
+    if (error) return <div className="absolute inset-0 bg-red-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 text-white font-lilita"><p>Error: {error}</p><button onClick={onClose} className="mt-4 px-4 py-2 bg-slate-700 rounded">Close</button></div>;
+    if (!playerStats || !bossStats || !currentBossData) return <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 text-white font-lilita">Missing required data.</div>;
 
-  useEffect(() => {
-    if (!isLoading && currentBossData) {
-      setBossStats(currentBossData.stats);
-      addLog(`[Lượt 0] ${currentBossData.name} đã xuất hiện. Hãy chuẩn bị!`);
-    }
-  }, [currentFloor, isLoading, currentBossData]);
-
-  useEffect(() => {
-    if (battleState === 'fighting' && !gameOver) {
-      battleIntervalRef.current = setInterval(runBattleTurn, 1200);
-    }
-    return () => {
-      if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-    };
-  }, [battleState, gameOver, turnCounter]);
-
-  // --- RENDER LOGIC CHO TẢI DỮ LIỆU VÀ LỖI ---
-  if (isLoading) return <BossBattleLoader />;
-  if (error) return <div className="absolute inset-0 bg-red-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 text-white font-lilita"><p>Error: {error}</p><button onClick={onClose} className="mt-4 px-4 py-2 bg-slate-700 rounded">Close</button></div>;
-  if (!playerStats || !bossStats || !currentBossData) return <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 text-white font-lilita">Missing required data.</div>;
-
-  // --- RENDER ---
-  return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
-        .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
-        @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
-        .animate-pulse-fast { animation: pulse-fast 1s infinite; }
-      `}</style>
+    // --- RENDER ---
+    return (
+        <>
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+                .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
+                @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
+                .animate-pulse-fast { animation: pulse-fast 1s infinite; }
+            `}</style>
       
-      {sweepResult && (
-        <SweepRewardsModal
-          isSuccess={sweepResult.result === 'win'}
-          rewards={sweepResult.rewards}
-          onClose={() => setSweepResult(null)}
-        />
-      )}
+            {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
+            {statsModalTarget && <CharacterStatsModal character={statsModalTarget === 'player' ? playerStats : bossStats} characterType={statsModalTarget} onClose={() => setStatsModalTarget(null)}/>}
+            {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
+            {showRewardsModal && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
 
-      {statsModalTarget && <CharacterStatsModal character={statsModalTarget === 'player' ? playerStats : bossStats} characterType={statsModalTarget} onClose={() => setStatsModalTarget(null)}/>}
-      {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
-      {showRewardsModal && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
-
-      <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
-        <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
-            <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
-                <div className="flex items-center gap-3">
-                    <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Go Home" title="Go Home">
-                      <HomeIcon className="w-5 h-5 text-slate-300" />
-                      <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
-                    </button>
-                </div>
-                <div className="flex items-center gap-2 font-sans">
-                    {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && (<EnergyDisplay currentEnergy={playerStats.energy} maxEnergy={playerStats.maxEnergy} isStatsFullscreen={false}/>)}
-                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
-                </div>
-            </div>
-        </header>
-
-        <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
-            <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} onAvatarClick={() => setStatsModalTarget('player')} />
-            {battleState === 'idle' && currentFloor > 0 && (
-                <button 
-                    onClick={handleSweep} 
-                    disabled={(playerStats.energy || 0) < 10} 
-                    title="Instantly clear the previous floor for rewards" 
-                    className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700 animate-fade-in"
-                >
-                    Sweep Previous
-                </button>
-            )}
-            {battleState === 'fighting' && !gameOver && (
-                <button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300 animate-fade-in">
-                    Skip Battle
-                </button>
-            )}
-        </div>
-
-        <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
-            <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
-                <div></div>
-                <div className="flex flex-col items-end gap-2">
-                    <div className="w-full flex justify-center gap-2">
-                        <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Last Battle Log">
-                            <img src={bossBattleAssets.historyIcon} alt="Log" className="w-full h-full object-contain" />
-                        </button>
-                        <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Potential Rewards">
-                            <img src={bossBattleAssets.rewardsIcon} alt="Rewards" className="w-full h-full object-contain" />
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
-
-            <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group" onClick={() => setStatsModalTarget('boss')} title="View Boss Stats">
-                  <div className="relative group flex justify-center">
-                    <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
-                    <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                      {currentBossData.name.toUpperCase()}
-                    </div>
-                  </div>
-                  <div className="w-40 h-40 md:w-56 md:h-56">
-                    <img src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} alt={currentBossData.name} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
-                  </div>
-                  <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
-                </div>
-            </div>
-
-            <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
-                {battleState === 'idle' && (
-                <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="btn-shine relative overflow-hidden px-10 py-2 bg-slate-900/80 rounded-lg text-teal-300 border border-teal-500/40 transition-all duration-300 hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)] active:scale-95 disabled:bg-slate-800/60 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed disabled:shadow-none">
-                    <div className="flex flex-col items-center gap-0.5">
-                        <span className="font-bold text-lg tracking-widest uppercase">Fight</span>
-                        <div className="flex items-center gap-1 text-xs font-semibold text-cyan-400/80">
-                            <span>10</span><img src={bossBattleAssets.energyIcon} alt="" className="w-3 h-3"/>
+            <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
+                <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
+                    <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
+                        <div className="flex items-center gap-3">
+                            <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Go Home" title="Go Home">
+                                <HomeIcon className="w-5 h-5 text-slate-300" />
+                                <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2 font-sans">
+                            {playerStats.energy !== undefined && playerStats.maxEnergy !== undefined && (<EnergyDisplay currentEnergy={playerStats.energy} maxEnergy={playerStats.maxEnergy} isStatsFullscreen={false}/>)}
+                            <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                         </div>
                     </div>
-                </button>
-                )}
-                {battleState !== 'idle' && (
-                  <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
-                      {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
-                  </div>
-                )}
-            </div>
+                </header>
 
-            {gameOver === 'win' && (<VictoryModal onRestart={retryCurrentFloor} onNextFloor={handleNextFloor} isLastBoss={currentFloor === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
-            {gameOver === 'lose' && (<DefeatModal onRestart={retryCurrentFloor} />)}
-        </main>
-      </div>
-    </>
-  );
+                <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
+                    <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} onAvatarClick={() => setStatsModalTarget('player')} />
+                    {battleState === 'idle' && currentFloor > 0 && (
+                        <button onClick={handleSweepClick} disabled={(playerStats.energy || 0) < 10 || isSweeping} title="Instantly clear the previous floor for rewards" className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700 animate-fade-in">
+                            {isSweeping ? 'Sweeping...' : 'Sweep Previous'}
+                        </button>
+                    )}
+                    {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300 animate-fade-in">Skip Battle</button> )}
+                </div>
+
+                <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
+                    <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
+                        <div></div>
+                        <div className="flex flex-col items-end gap-2">
+                            <div className="w-full flex justify-center gap-2">
+                                <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Last Battle Log">
+                                    <img src={bossBattleAssets.historyIcon} alt="Log" className="w-full h-full object-contain" />
+                                </button>
+                                <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Potential Rewards">
+                                    <img src={bossBattleAssets.rewardsIcon} alt="Rewards" className="w-full h-full object-contain" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+            
+                    {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
+
+                    <div className="w-full max-w-4xl flex justify-center items-center my-8">
+                        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group" onClick={() => setStatsModalTarget('boss')} title="View Boss Stats">
+                            <div className="relative group flex justify-center">
+                                <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
+                                <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">{currentBossData.name.toUpperCase()}</div>
+                            </div>
+                            <div className="w-40 h-40 md:w-56 md:h-56">
+                                <img src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} alt={currentBossData.name} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
+                            </div>
+                            <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+                        </div>
+                    </div>
+
+                    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
+                        {battleState === 'idle' && (
+                        <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="btn-shine relative overflow-hidden px-10 py-2 bg-slate-900/80 rounded-lg text-teal-300 border border-teal-500/40 transition-all duration-300 hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)] active:scale-95 disabled:bg-slate-800/60 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed disabled:shadow-none">
+                            <div className="flex flex-col items-center gap-0.5">
+                                <span className="font-bold text-lg tracking-widest uppercase">Fight</span>
+                                <div className="flex items-center gap-1 text-xs font-semibold text-cyan-400/80"><span>10</span><img src={bossBattleAssets.energyIcon} alt="" className="w-3 h-3"/></div>
+                            </div>
+                        </button>
+                        )}
+                        {battleState !== 'idle' && (
+                        <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
+                            {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse-fast' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
+                        </div>
+                        )}
+                    </div>
+
+                    {gameOver === 'win' && (<VictoryModal onRestart={retryCurrentFloor} onNextFloor={handleNextFloor} isLastBoss={currentFloor === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
+                    {gameOver === 'lose' && (<DefeatModal onRestart={retryCurrentFloor} />)}
+                </main>
+            </div>
+        </>
+    );
+}
+
+// --- WRAPPER COMPONENT ---
+// Component được export ra ngoài sẽ là component này, nó có nhiệm vụ cung cấp Provider
+export default function BossBattle(props: BossBattleWrapperProps) {
+    return (
+        <BossBattleProvider
+            userId={props.userId}
+            onBattleEnd={props.onBattleEnd}
+            onFloorComplete={props.onFloorComplete}
+        >
+            <BossBattleView onClose={props.onClose} />
+        </BossBattleProvider>
+    );
 }
 // --- END OF FILE boss.tsx ---
