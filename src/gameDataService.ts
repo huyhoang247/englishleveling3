@@ -6,6 +6,11 @@ import {
   collection, getDocs, writeBatch
 } from 'firebase/firestore';
 
+// --- THÊM CÁC IMPORT CẦN THIẾT ---
+import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
+import { ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
+
+
 // Các interface này nên được định nghĩa ở một nơi tập trung (ví dụ: types.ts) và import vào
 // Tuy nhiên, để file này tự chứa, tôi sẽ định nghĩa chúng ở đây.
 export type Rarity = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' | 'SSR';
@@ -98,6 +103,67 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
     return newUserData;
   }
 };
+
+// --- START: HÀM MỚI ---
+/**
+ * Lấy dữ liệu chiến đấu đầy đủ cho màn hình Boss Battle.
+ * @param userId - ID của người dùng.
+ * @returns Dữ liệu chiến đấu đầy đủ.
+ */
+export const fetchBossBattleData = async (userId: string) => {
+    if (!userId) throw new Error("User ID is required for boss battle.");
+    const gameData = await fetchOrCreateUserGameData(userId);
+
+    // 1. Tính toán chỉ số chiến đấu
+    const BASE_HP = 0, BASE_ATK = 0, BASE_DEF = 0;
+    const bonusHp = calculateTotalStatValue(gameData.stats.hp, statConfig.hp.baseUpgradeBonus);
+    const bonusAtk = calculateTotalStatValue(gameData.stats.atk, statConfig.atk.baseUpgradeBonus);
+    const bonusDef = calculateTotalStatValue(gameData.stats.def, statConfig.def.baseUpgradeBonus);
+
+    let itemHpBonus = 0, itemAtkBonus = 0, itemDefBonus = 0;
+    Object.values(gameData.equipment.equipped).forEach(itemId => {
+        if (itemId) {
+            const item = gameData.equipment.owned.find(i => i.id === itemId);
+            if (item) {
+                itemHpBonus += item.stats.hp || 0;
+                itemAtkBonus += item.stats.atk || 0;
+                itemDefBonus += item.stats.def || 0;
+            }
+        }
+    });
+
+    const battleStats = {
+        maxHp: BASE_HP + bonusHp + itemHpBonus,
+        hp: BASE_HP + bonusHp + itemHpBonus,
+        atk: BASE_ATK + bonusAtk + itemAtkBonus,
+        def: BASE_DEF + bonusDef + itemDefBonus,
+        maxEnergy: 50,
+        energy: 50 // Bắt đầu với năng lượng đầy
+    };
+
+    // 2. Lấy chi tiết kỹ năng đã trang bị
+    const equippedSkillsDetails = gameData.skills.equipped
+        .map(equippedId => {
+            if (!equippedId) return null;
+            const owned = gameData.skills.owned.find(s => s.id === equippedId);
+            if (!owned) return null;
+            const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId);
+            if (!blueprint) return null;
+            return { ...owned, ...blueprint };
+        })
+        .filter((skill): skill is OwnedSkill & SkillBlueprint => skill !== null);
+    
+    // 3. Lấy thêm dữ liệu cần thiết khác
+    const { bossBattleHighestFloor, coins } = gameData;
+
+    return {
+        battleStats,
+        equippedSkills: equippedSkillsDetails,
+        initialFloor: bossBattleHighestFloor,
+        displayedCoins: coins
+    };
+};
+// --- END: HÀM MỚI ---
 
 // +++ START: HÀM MỚI ĐƯỢC THÊM VÀO +++
 /**
