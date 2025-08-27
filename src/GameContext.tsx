@@ -248,7 +248,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     } finally { setIsSyncingData(false); }
   };
 
-  const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
+  // --- SỬA LỖI: BỌC HÀM TẠO TOGGLE BẰNG useCallback ---
+  const createToggleFunction = useCallback((setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
       const isLoading = isLoadingUserData || !assetsLoaded;
       if (isLoading) return;
       if (isSyncingData) { setShowRateLimitToast(true); return; }
@@ -256,11 +257,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
           const newState = !prev;
           if (newState) {
               hideNavBar();
+              // Mảng các hàm setter này không thay đổi, nên có thể để bên trong
               [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen ].forEach(s => { if (s !== setter) s(false); });
           } else { showNavBar(); }
           return newState;
       });
-  };
+  }, [isLoadingUserData, assetsLoaded, isSyncingData, hideNavBar, showNavBar]); // Dependencies của hàm create
 
   const getPlayerBattleStats = () => {
     const BASE_HP = 0, BASE_ATK = 0, BASE_DEF = 0;
@@ -289,19 +291,20 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => { setCoins(updates.newCoins); setGems(updates.newGems); setTotalVocabCollected(updates.newTotalVocab); };
   const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => { if (updates.coins !== undefined) setCoins(updates.coins); if (updates.masteryCards !== undefined) setMasteryCards(updates.masteryCards); };
   
-  const toggleRank = createToggleFunction(setIsRankOpen);
-  const togglePvpArena = createToggleFunction(setIsPvpArenaOpen);
-  const toggleLuckyGame = createToggleFunction(setIsLuckyGameOpen);
-  const toggleMinerChallenge = createToggleFunction(setIsMinerChallengeOpen);
-  const toggleBossBattle = createToggleFunction(setIsBossBattleOpen);
-  const toggleShop = createToggleFunction(setIsShopOpen);
-  const toggleVocabularyChest = createToggleFunction(setIsVocabularyChestOpen);
-  const toggleAchievements = createToggleFunction(setIsAchievementsOpen);
-  const toggleAdminPanel = createToggleFunction(setIsAdminPanelOpen);
-  const toggleUpgradeScreen = createToggleFunction(setIsUpgradeScreenOpen);
-  const toggleSkillScreen = createToggleFunction(setIsSkillScreenOpen);
-  const toggleEquipmentScreen = createToggleFunction(setIsEquipmentOpen);
-  const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
+  // --- SỬA LỖI: BỌC CÁC HÀM TOGGLE BẰNG useCallback ---
+  const toggleRank = useCallback(createToggleFunction(setIsRankOpen), [createToggleFunction]);
+  const togglePvpArena = useCallback(createToggleFunction(setIsPvpArenaOpen), [createToggleFunction]);
+  const toggleLuckyGame = useCallback(createToggleFunction(setIsLuckyGameOpen), [createToggleFunction]);
+  const toggleMinerChallenge = useCallback(createToggleFunction(setIsMinerChallengeOpen), [createToggleFunction]);
+  const toggleBossBattle = useCallback(createToggleFunction(setIsBossBattleOpen), [createToggleFunction]);
+  const toggleShop = useCallback(createToggleFunction(setIsShopOpen), [createToggleFunction]);
+  const toggleVocabularyChest = useCallback(createToggleFunction(setIsVocabularyChestOpen), [createToggleFunction]);
+  const toggleAchievements = useCallback(createToggleFunction(setIsAchievementsOpen), [createToggleFunction]);
+  const toggleAdminPanel = useCallback(createToggleFunction(setIsAdminPanelOpen), [createToggleFunction]);
+  const toggleUpgradeScreen = useCallback(createToggleFunction(setIsUpgradeScreenOpen), [createToggleFunction]);
+  const toggleSkillScreen = useCallback(createToggleFunction(setIsSkillScreenOpen), [createToggleFunction]);
+  const toggleEquipmentScreen = useCallback(createToggleFunction(setIsEquipmentOpen), [createToggleFunction]);
+  const toggleBaseBuilding = useCallback(createToggleFunction(setIsBaseBuildingOpen), [createToggleFunction]);
   
   const handleSkillScreenClose = (dataUpdated: boolean) => {
     toggleSkillScreen();
@@ -310,16 +313,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
   const updateSkillsState = (data: SkillScreenExitData) => {
     setCoins(data.gold);
-    setDisplayedCoins(data.gold); // THÊM MỚI: Cập nhật ngay lập tức `displayedCoins` để tránh độ trễ
+    setDisplayedCoins(data.gold);
     setAncientBooks(data.ancientBooks);
     setOwnedSkills(data.ownedSkills);
     setEquippedSkillIds(data.equippedSkillIds);
   };
 
-  // --- THÊM MỚI: Hàm cập nhật "êm ái" cho EquipmentScreen ---
   const updateEquipmentData = (data: EquipmentScreenExitData) => {
     setCoins(data.gold);
-    setDisplayedCoins(data.gold); // Cập nhật ngay để UI mượt
+    setDisplayedCoins(data.gold);
     setEquipmentPieces(data.equipmentPieces);
     setOwnedItems(data.ownedItems);
     setEquippedItems(data.equippedItems);
@@ -336,7 +338,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen, isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, handleStatsUpdate,
     handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
-    updateEquipmentData, // Thêm hàm mới vào context
+    updateEquipmentData,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding, setCoins
   };
