@@ -12,7 +12,7 @@ import {
 } from './home/skill-game/skill-data.tsx';
 import { uiAssets, bossBattleAssets } from './game-assets.ts'; // IMPORT TÀI NGUYÊN
 // --- THÊM IMPORT MỚI ---
-import { fetchBossBattleData } from '../gameDataService.ts';
+import { fetchBossBattleData } from './gameDataService.ts';
 import { auth } from '../firebase'; // Cần để lấy userId
 
 // --- TYPE DEFINITIONS ---
