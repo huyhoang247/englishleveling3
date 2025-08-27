@@ -1,15 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+// --- START OF FILE boss.tsx ---
+
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import BOSS_DATA from './boss/bossData.ts';
 import CoinDisplay from './ui/display/coin-display.tsx';
 // IMPORT ENERGY DISPLAY MỚI
-import EnergyDisplay from './ui/display/energy-display.tsx'; 
-import { 
-    OwnedSkill, 
-    SkillBlueprint, 
-    getActivationChance, 
-    getRarityTextColor 
+import EnergyDisplay from './ui/display/energy-display.tsx';
+import {
+    OwnedSkill,
+    SkillBlueprint,
+    ALL_SKILLS,
+    getActivationChance,
+    getRarityTextColor
 } from './home/skill-game/skill-data.tsx';
 import { uiAssets, bossBattleAssets } from './game-assets.ts'; // IMPORT TÀI NGUYÊN
+import { auth } from './firebase.js';
+import { fetchOrCreateUserGameData, UserGameData } from './gameDataService.ts';
+import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
 
 // --- TYPE DEFINITIONS ---
 type ActiveSkill = OwnedSkill & SkillBlueprint;
@@ -23,14 +29,12 @@ type CombatStats = {
     energy?: number;
 };
 
+// --- Props được đơn giản hóa, chỉ nhận userId và các callback ---
 interface BossBattleProps {
+  userId: string;
   onClose: () => void;
-  playerInitialStats: CombatStats;
   onBattleEnd: (result: 'win' | 'lose', rewards: { coins: number; energy: number }) => void;
-  initialFloor: number;
   onFloorComplete: (newFloor: number) => void;
-  equippedSkills: ActiveSkill[];
-  displayedCoins: number;
 }
 
 
@@ -253,19 +257,101 @@ const SweepRewardsModal = ({ isSuccess, rewards, onClose }: { isSuccess: boolean
 
 // --- MAIN BOSS BATTLE COMPONENT ---
 export default function BossBattle({ 
+  userId,
   onClose, 
-  playerInitialStats, 
   onBattleEnd, 
-  initialFloor, 
   onFloorComplete,
-  equippedSkills,
-  displayedCoins
 }: BossBattleProps) {
   
+  // --- State để quản lý việc tải dữ liệu ---
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [gameData, setGameData] = useState<UserGameData | null>(null);
+
+  // --- Hàm helper để tính toán chỉ số người chơi từ UserGameData ---
+  const calculatePlayerBattleStats = (data: UserGameData): CombatStats => {
+    const BASE_HP = 0, BASE_ATK = 0, BASE_DEF = 0;
+    const bonusHp = calculateTotalStatValue(data.stats.hp, statConfig.hp.baseUpgradeBonus);
+    const bonusAtk = calculateTotalStatValue(data.stats.atk, statConfig.atk.baseUpgradeBonus);
+    const bonusDef = calculateTotalStatValue(data.stats.def, statConfig.def.baseUpgradeBonus);
+    let itemHpBonus = 0, itemAtkBonus = 0, itemDefBonus = 0;
+    
+    Object.values(data.equipment.equipped).forEach(itemId => { 
+        if(itemId){
+            const item = data.equipment.owned.find(i => i.id === itemId);
+            if (item) { 
+                itemHpBonus += item.stats.hp || 0; 
+                itemAtkBonus += item.stats.atk || 0; 
+                itemDefBonus += item.stats.def || 0; 
+            }
+        }
+    });
+
+    return { 
+      maxHp: BASE_HP + bonusHp + itemHpBonus, 
+      hp: BASE_HP + bonusHp + itemHpBonus, 
+      atk: BASE_ATK + bonusAtk + itemAtkBonus, 
+      def: BASE_DEF + bonusDef + itemDefBonus, 
+      maxEnergy: 50, 
+      energy: 50 // Giả sử năng lượng luôn đầy khi vào trận
+    };
+  };
+
+  // --- Hàm helper để lấy thông tin chi tiết các kỹ năng đã trang bị ---
+  const getEquippedSkillsDetails = (data: UserGameData): ActiveSkill[] => {
+    if (!data.skills.owned || !data.skills.equipped) return [];
+    return data.skills.equipped
+      .map(equippedId => {
+        if (!equippedId) return null;
+        const owned = data.skills.owned.find(s => s.id === equippedId);
+        if (!owned) return null;
+        const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId);
+        if (!blueprint) return null;
+        return { ...owned, ...blueprint };
+      })
+      .filter((skill): skill is ActiveSkill => skill !== null);
+  };
+
+  // --- Lấy dữ liệu khi component được mount ---
+  useEffect(() => {
+    const loadData = async () => {
+      if (!userId) {
+        setError("User ID is missing.");
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const data = await fetchOrCreateUserGameData(userId);
+        setGameData(data);
+      } catch (err) {
+        console.error("Failed to fetch game data for Boss Battle:", err);
+        setError("Could not load player data. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, [userId]);
+
+  // --- Dùng useMemo để tính toán dữ liệu 1 lần, tránh lặp lại ---
+  const { playerInitialStats, equippedSkills, initialFloor, displayedCoins } = useMemo(() => {
+    if (!gameData) {
+      return { playerInitialStats: { maxHp: 100, hp: 100, atk: 10, def: 5, maxEnergy: 50, energy: 50 }, equippedSkills: [], initialFloor: 0, displayedCoins: 0 };
+    }
+    return {
+      playerInitialStats: calculatePlayerBattleStats(gameData),
+      equippedSkills: getEquippedSkillsDetails(gameData),
+      initialFloor: gameData.bossBattleHighestFloor,
+      displayedCoins: gameData.coins
+    };
+  }, [gameData]);
+
+
   // --- STATE MANAGEMENT ---
   const [currentBossIndex, setCurrentBossIndex] = useState(initialFloor);
   const currentBossData = BOSS_DATA[currentBossIndex];
-  const [playerStats, setPlayerStats] = useState<CombatStats>(playerInitialStats);
+  // Khởi tạo playerStats sau khi playerInitialStats được tính toán
+  const [playerStats, setPlayerStats] = useState<CombatStats>({ maxHp: 0, hp: 0, atk: 0, def: 0 }); 
   const [bossStats, setBossStats] = useState<CombatStats>(currentBossData.stats);
   const [combatLog, setCombatLog] = useState<string[]>([]);
   const [previousCombatLog, setPreviousCombatLog] = useState<string[]>([]);
@@ -492,8 +578,12 @@ export default function BossBattle({
   }
 
   // --- REACT HOOKS ---
-  useEffect(() => { setCurrentBossIndex(initialFloor); }, [initialFloor]);
-  useEffect(() => { setPlayerStats(playerInitialStats); }, [playerInitialStats]);
+  // Đồng bộ state nội bộ khi dữ liệu từ server thay đổi
+  useEffect(() => {
+    setCurrentBossIndex(initialFloor);
+    setPlayerStats(playerInitialStats);
+  }, [initialFloor, playerInitialStats]);
+
   useEffect(() => {
     setBossStats(BOSS_DATA[currentBossIndex].stats);
     addLog(`[Lượt 0] ${BOSS_DATA[currentBossIndex].name} đã xuất hiện. Hãy chuẩn bị!`);
@@ -507,6 +597,14 @@ export default function BossBattle({
       if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
     };
   }, [battleState, gameOver, turnCounter]);
+
+  // --- Xử lý trạng thái Loading và Error ---
+  if (isLoading) {
+    return <div className="w-full h-screen bg-gray-900 flex items-center justify-center text-white font-bold">Loading Battle Data...</div>;
+  }
+  if (error) {
+    return <div className="w-full h-screen bg-gray-900 flex items-center justify-center text-red-500 font-bold">{error}</div>;
+  }
 
   // --- RENDER ---
   return (
