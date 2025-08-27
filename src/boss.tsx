@@ -1,6 +1,7 @@
 // --- START OF FILE boss.tsx ---
 
-import React, { useState, useCallback, useEffect } from 'react';
+// --- OPTIMIZATION: Import 'memo' từ React ---
+import React, { useState, useCallback, useEffect, memo } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './boss-battle-context.tsx'; // IMPORT CONTEXT MỚI
 import BOSS_DATA from './boss/bossData.ts';
 import CoinDisplay from './ui/display/coin-display.tsx';
@@ -18,17 +19,19 @@ interface BossBattleWrapperProps {
 }
 
 
-// --- UI HELPER COMPONENTS (Toàn bộ code được giữ nguyên và đầy đủ) ---
+// --- UI HELPER COMPONENTS (Toàn bộ code được giữ nguyên và đầy đủ, đã thêm React.memo) ---
 
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+// --- OPTIMIZATION: Bọc component bằng React.memo để tránh re-render không cần thiết ---
+const HomeIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> ));
 
-const WarriorIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> );
+// --- OPTIMIZATION: Bọc component bằng React.memo ---
+const WarriorIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> ));
 
-const PlayerInfoDisplay = ({ stats, floor, onAvatarClick }: { stats: CombatStats, floor: string, onAvatarClick: () => void }) => {
+// --- OPTIMIZATION: Bọc component bằng React.memo. Component này chỉ re-render khi stats.hp hoặc floor thay đổi. ---
+const PlayerInfoDisplay = memo(({ stats, floor, onAvatarClick }: { stats: CombatStats, floor: string, onAvatarClick: () => void }) => {
     const percentage = Math.max(0, (stats.hp / stats.maxHp) * 100);
   
     return (
-      // *** THAY ĐỔI Ở ĐÂY: ĐÃ XÓA "animate-fade-in" ***
       <div className="w-64 bg-slate-900/50 backdrop-blur-sm rounded-lg p-2.5 border border-slate-700/50 shadow-lg flex items-center gap-3">
           <div 
             onClick={onAvatarClick}
@@ -59,21 +62,28 @@ const PlayerInfoDisplay = ({ stats, floor, onAvatarClick }: { stats: CombatStats
           </div>
       </div>
     );
-};
+});
 
-const HealthBar = ({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
-  const percentage = Math.max(0, (current / max) * 100);
+// --- OPTIMIZATION: Bọc component bằng React.memo và dùng 'transform: scaleX' thay vì 'width' để animation mượt hơn ---
+const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
+  const scale = Math.max(0, current / max); // Giá trị từ 0 đến 1
   return (
     <div className="w-full">
       <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
-        <div className={`h-full rounded-full transition-all duration-500 ease-out ${colorGradient}`} style={{ width: `${percentage}%`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}></div>
+        <div 
+            className={`h-full rounded-full transition-transform duration-500 ease-out origin-left ${colorGradient}`} 
+            style={{ 
+                transform: `scaleX(${scale})`, 
+                boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` 
+            }}>
+        </div>
         <div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold">
           <span>{Math.ceil(current)} / {max}</span>
         </div>
       </div>
     </div>
   );
-};
+});
 
 const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colorClass: string }) => {
   return (
@@ -81,7 +91,8 @@ const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colo
   );
 };
 
-const CharacterStatsModal = ({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
+// --- OPTIMIZATION: Bọc các Modal bằng React.memo ---
+const CharacterStatsModal = memo(({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
   const titleColor = isPlayer ? 'text-blue-300' : 'text-red-400';
@@ -112,9 +123,9 @@ const CharacterStatsModal = ({ character, characterType, onClose }: { character:
       </div>
     </div>
   )
-}
+});
 
-const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
+const LogModal = memo(({ log, onClose }: { log: string[], onClose: () => void }) => {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
         <div className="relative w-96 max-w-md bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col" onClick={(e) => e.stopPropagation()}>
@@ -126,9 +137,9 @@ const LogModal = ({ log, onClose }: { log: string[], onClose: () => void }) => {
         </div>
       </div>
     )
-}
+});
 
-const RewardsModal = ({ onClose, rewards }: { onClose: () => void, rewards: { coins: number, energy: number } }) => {
+const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards: { coins: number, energy: number } }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
       <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
@@ -149,9 +160,9 @@ const RewardsModal = ({ onClose, rewards }: { onClose: () => void, rewards: { co
       </div>
     </div>
   );
-};
+});
 
-const VictoryModal = ({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number, energy: number } }) => {
+const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number, energy: number } }) => {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
       <div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
@@ -179,9 +190,9 @@ const VictoryModal = ({ onRestart, onNextFloor, isLastBoss, rewards }: { onResta
       </div>
     </div>
   );
-}
+});
 
-const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
+const DefeatModal = memo(({ onRestart }: { onRestart: () => void }) => {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
       <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl shadow-black/30 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
@@ -193,9 +204,9 @@ const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
       </div>
     </div>
   );
-}
+});
 
-const SweepRewardsModal = ({ isSuccess, rewards, onClose }: { isSuccess: boolean; rewards: { coins: number; energy: number }; onClose: () => void; }) => {
+const SweepRewardsModal = memo(({ isSuccess, rewards, onClose }: { isSuccess: boolean; rewards: { coins: number; energy: number }; onClose: () => void; }) => {
   const title = isSuccess ? 'SWEEP SUCCESS' : 'SWEEP FAILED';
   const titleColor = isSuccess ? 'text-yellow-300' : 'text-slate-300';
   const iconSrc = isSuccess 
@@ -233,7 +244,7 @@ const SweepRewardsModal = ({ isSuccess, rewards, onClose }: { isSuccess: boolean
       </div>
     </div>
   );
-};
+});
 
 
 // --- MAIN VIEW COMPONENT ---
