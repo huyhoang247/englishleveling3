@@ -9,6 +9,7 @@ import {
     getActivationChance, 
     getRarityTextColor 
 } from './home/skill-game/skill-data.tsx';
+import { uiAssets, bossBattleAssets } from './game-assets'; // IMPORT TÀI NGUYÊN
 
 // --- TYPE DEFINITIONS ---
 type ActiveSkill = OwnedSkill & SkillBlueprint;
@@ -35,7 +36,7 @@ interface BossBattleProps {
 
 // --- UI HELPER COMPONENTS ---
 
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 R 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
 const WarriorIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> );
 
@@ -53,7 +54,7 @@ const PlayerInfoDisplay = ({ stats, floor, onAvatarClick }: { stats: CombatStats
           </div>
           <div className="flex-grow flex flex-col gap-1.5">
             <div className="flex items-center gap-1.5 bg-black/40 px-2 py-0.5 rounded-md self-start border border-slate-700/80">
-                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/floor-icon.webp" alt="Floor" className="w-3 h-3" />
+                <img src={bossBattleAssets.floorIcon} alt="Floor" className="w-3 h-3" />
                 <h3 className="font-bold text-xs tracking-widest uppercase text-slate-300 select-none">
                     {floor}
                 </h3>
@@ -119,9 +120,9 @@ const CharacterStatsModal = ({ character, characterType, onClose }: { character:
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
         <div className="p-4 border-b border-slate-700"><h3 className={`text-xl font-bold text-center ${titleColor} text-shadow-sm tracking-widest`}>{title}</h3></div>
         <div className="p-5 flex flex-col gap-4">
-          <StatItem label="HP" icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-hp.webp" current={character.hp} max={character.maxHp} />
-          <StatItem label="ATK" icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-atk.webp" current={character.atk} />
-          <StatItem label="DEF" icon="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats-def.webp" current={character.def} />
+          <StatItem label="HP" icon={uiAssets.statHpIcon} current={character.hp} max={character.maxHp} />
+          <StatItem label="ATK" icon={uiAssets.statAtkIcon} current={character.atk} />
+          <StatItem label="DEF" icon={uiAssets.statDefIcon} current={character.def} />
         </div>
       </div>
     </div>
@@ -151,11 +152,11 @@ const RewardsModal = ({ onClose, rewards }: { onClose: () => void, rewards: { co
           <h3 className="text-xl font-bold text-center text-yellow-300 text-shadow-sm tracking-wide mb-5 uppercase">Rewards</h3>
           <div className="flex flex-row flex-wrap justify-center gap-3">
             <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coins" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />
+              <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />
               <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
             </div>
             <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
+              <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
               <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
             </div>
           </div>
@@ -169,17 +170,17 @@ const VictoryModal = ({ onRestart, onNextFloor, isLastBoss, rewards }: { onResta
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
       <div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
-          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1834_C%C3%BAp%20V%C3%A0ng%20Kh%C3%B4ng%20Sao_remix_01k0kspc1wfjyamwcc0f3m8q6v.png" alt="Victory" className="w-16 h-16 object-contain mb-2 drop-shadow-[0_2px_4px_rgba(250,204,21,0.5)]" />
+          <img src={bossBattleAssets.victoryIcon} alt="Victory" className="w-16 h-16 object-contain mb-2 drop-shadow-[0_2px_4px_rgba(250,204,21,0.5)]" />
           <h2 className="text-4xl font-bold text-yellow-300 tracking-widest uppercase mb-4 text-shadow" style={{ textShadow: `0 0 10px rgba(252, 211, 77, 0.7)` }}>VICTORY</h2>
           <div className="w-full flex flex-col items-center gap-3">
               <p className="font-sans text-yellow-100/80 text-sm tracking-wide uppercase">Rewards Earned</p>
               <div className="flex flex-row flex-wrap justify-center gap-3">
                   <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                      <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coins" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />
+                      <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />
                       <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
                   </div>
                   <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                      <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
+                      <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
                       <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
                   </div>
               </div>
@@ -199,7 +200,7 @@ const DefeatModal = ({ onRestart }: { onRestart: () => void }) => {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
       <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl shadow-black/30 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
-          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1828_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Th%E1%BA%A5t%20B%E1%BA%A1i_remix_01k0kscbkvfngrav0b2ypp55rs.png" alt="Defeat" className="w-16 h-16 object-contain mb-2" />
+          <img src={bossBattleAssets.defeatIcon} alt="Defeat" className="w-16 h-16 object-contain mb-2" />
           <h2 className="text-4xl font-bold text-slate-300 tracking-widest uppercase mb-3">DEFEAT</h2>
           <p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">The darkness has consumed you. Rise again and reclaim your honor.</p>
           <hr className="w-full border-t border-slate-700/50 my-5" />
@@ -213,8 +214,8 @@ const SweepRewardsModal = ({ isSuccess, rewards, onClose }: { isSuccess: boolean
   const title = isSuccess ? 'SWEEP SUCCESS' : 'SWEEP FAILED';
   const titleColor = isSuccess ? 'text-yellow-300' : 'text-slate-300';
   const iconSrc = isSuccess 
-    ? "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1834_C%C3%BAp%20V%C3%A0ng%20Kh%C3%B4ng%20Sao_remix_01k0kspc1wfjyamwcc0f3m8q6v.png"
-    : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1828_Bi%E1%BB%83u%20T%C6%B0%E1%BB%A3ng%20Th%E1%BA%A5t%20B%E1%BA%A1i_remix_01k0kscbkvfngrav0b2ypp55rs.png";
+    ? bossBattleAssets.victoryIcon
+    : bossBattleAssets.defeatIcon;
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
@@ -227,11 +228,11 @@ const SweepRewardsModal = ({ isSuccess, rewards, onClose }: { isSuccess: boolean
             <p className="font-sans text-slate-300/80 text-sm tracking-wide uppercase">Rewards Received</p>
             <div className="flex flex-row flex-wrap justify-center gap-3">
               <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coins" className="w-6 h-6" />
+                <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
                 <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
               </div>
               <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="Energy" className="w-6 h-6" />
+                <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6" />
                 <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
               </div>
             </div>
@@ -570,10 +571,10 @@ export default function BossBattle({
                 <div className="flex flex-col items-end gap-2">
                     <div className="w-full flex justify-center gap-2">
                         <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Last Battle Log">
-                            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/history-battle.webp" alt="Log" className="w-full h-full object-contain" />
+                            <img src={bossBattleAssets.historyIcon} alt="Log" className="w-full h-full object-contain" />
                         </button>
                         <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Potential Rewards">
-                            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/rewards-icon.webp" alt="Rewards" className="w-full h-full object-contain" />
+                            <img src={bossBattleAssets.rewardsIcon} alt="Rewards" className="w-full h-full object-contain" />
                         </button>
                     </div>
                 </div>
@@ -602,7 +603,7 @@ export default function BossBattle({
                     <div className="flex flex-col items-center gap-0.5">
                         <span className="font-bold text-lg tracking-widest uppercase">Fight</span>
                         <div className="flex items-center gap-1 text-xs font-semibold text-cyan-400/80">
-                            <span>10</span><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png" alt="" className="w-3 h-3"/>
+                            <span>10</span><img src={bossBattleAssets.energyIcon} alt="" className="w-3 h-3"/>
                         </div>
                     </div>
                 </button>
