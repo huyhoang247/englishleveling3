@@ -150,23 +150,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         <div className="fixed inset-0 z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isMinerChallengeOpen && currentUser && (<MinerChallenge onClose={toggleMinerChallenge} initialDisplayedCoins={displayedCoins} masteryCards={masteryCards} initialPickaxes={pickaxes} initialHighestFloor={minerChallengeHighestFloor} onGameEnd={handleMinerChallengeEnd} />)}</ErrorBoundary>
         </div>
-        {/* --- Cập nhật cách gọi BossBattle --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isBossBattleOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isBossBattleOpen && currentUser && (
-                    <BossBattle 
-                        userId={currentUser.uid}
-                        onClose={toggleBossBattle} 
-                        onBattleEnd={async (result, rewards) => { 
-                            // Callback này vẫn quan trọng để cập nhật state chung trong GameContext
-                            if (result === 'win' && currentUser) {
-                                setCoins(await updateUserCoins(currentUser.uid, rewards.coins)); 
-                            }
-                        }} 
-                        onFloorComplete={handleBossFloorUpdate}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{isBossBattleOpen && currentUser && (<BossBattle onClose={toggleBossBattle} playerInitialStats={getPlayerBattleStats()} onBattleEnd={async (result, rewards) => { if (result === 'win' && currentUser) setCoins(await updateUserCoins(currentUser.uid, rewards.coins)); }} initialFloor={bossBattleHighestFloor} onFloorComplete={handleBossFloorUpdate} equippedSkills={getEquippedSkillsDetails()} displayedCoins={displayedCoins} />)}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} onPurchase={handleShopPurchase} currentUser={currentUser} />}</ErrorBoundary> </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> 
