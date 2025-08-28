@@ -3,10 +3,10 @@
 // --- OPTIMIZATION: Import 'memo' từ React ---
 import React, { useState, useCallback, useEffect, memo } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './boss-battle-context.tsx'; // IMPORT CONTEXT MỚI
-import BOSS_DATA from './boss/bossData.ts';
-import CoinDisplay from './ui/display/coin-display.tsx';
-import EnergyDisplay from './ui/display/energy-display.tsx'; 
-import { uiAssets, bossBattleAssets } from './game-assets.ts';
+import BOSS_DATA from '../../boss/bossData.ts';
+import CoinDisplay from '../../ui/display/coin-display.tsx';
+import EnergyDisplay from '../../ui/display/energy-display.tsx'; 
+import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
 
 // --- COMPONENT TẢI DỮ LIỆU ---
 const BossBattleLoader = () => (<div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 text-white font-lilita text-2xl tracking-widest"><div className="animate-pulse">LOADING BATTLE...</div></div>);
