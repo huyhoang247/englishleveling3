@@ -1,15 +1,14 @@
-// --- START OF FILE tower-ui.tsx (Full, Unabbreviated Code) ---
+// --- START OF FILE tower-ui.tsx (Full Code, No Fade Effect) ---
 
 // --- START OF FILE boss.tsx ---
 
-// --- OPTIMIZATION: Import 'memo' từ React ---
 import React, { useState, useCallback, useEffect, memo } from 'react';
-import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx'; // IMPORT CONTEXT MỚI
+import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import EnergyDisplay from '../../ui/display/energy-display.tsx'; 
 import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
-import BossBattleLoader from './tower-loading.tsx'; // <-- Dòng import này đã có và rất quan trọng
+import BossBattleLoader from './tower-loading.tsx';
 
 interface BossBattleWrapperProps {
   userId: string;
@@ -19,7 +18,7 @@ interface BossBattleWrapperProps {
 }
 
 
-// --- UI HELPER COMPONENTS (Toàn bộ code được giữ nguyên và đầy đủ, đã thêm React.memo) ---
+// --- UI HELPER COMPONENTS ---
 
 const HomeIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> ));
 
@@ -62,7 +61,7 @@ const PlayerInfoDisplay = memo(({ stats, floor, onAvatarClick }: { stats: Combat
 });
 
 const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
-  const scale = Math.max(0, current / max); // Giá trị từ 0 đến 1
+  const scale = Math.max(0, current / max);
   return (
     <div className="w-full">
       <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
@@ -244,14 +243,12 @@ const SweepRewardsModal = memo(({ isSuccess, rewards, onClose }: { isSuccess: bo
 
 // --- MAIN VIEW COMPONENT ---
 const BossBattleView = ({ onClose }: { onClose: () => void }) => {
-    // --- LẤY STATE VÀ ACTIONS TỪ CONTEXT ---
     const {
         isLoading, error, playerStats, bossStats, combatLog, previousCombatLog, gameOver,
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
-    // --- STATE UI CỤC BỘ ---
     const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -259,32 +256,23 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
     const [isSweeping, setIsSweeping] = useState(false);
     
-    // --- LOGIC UI CỤC BỘ ---
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
-
     const showFloatingText = useCallback((text: string, colorClass: string, isPlayerSide: boolean) => {
         const id = Date.now() + Math.random();
-        const position = isPlayerSide ? 'left-[25%]' : 'right-[25%]'; // Vị trí hiển thị
+        const position = isPlayerSide ? 'left-[25%]' : 'right-[25%]';
         setDamages(prev => [...prev, { id, text, colorClass: `${position} ${colorClass}` }]);
         setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
     }, []);
-
-    // Effect để hiển thị floating text dựa trên sự kiện từ context
     useEffect(() => {
         if (!lastTurnEvents) return;
-
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
-
         if (playerDmg > 0) showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', false);
         if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', true);
-        
         setTimeout(() => {
           if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', true);
           if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', false);
         }, 500);
-
     }, [lastTurnEvents, showFloatingText]);
-
     const handleSweepClick = async () => {
         setIsSweeping(true);
         const result = await handleSweep();
@@ -292,11 +280,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         setIsSweeping(false);
     };
 
-    // --- RENDER LOGIC CHO TẢI DỮ LIỆU VÀ LỖI ---
     if (error) return <div className="absolute inset-0 bg-red-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 text-white font-lilita"><p>Error: {error}</p><button onClick={onClose} className="mt-4 px-4 py-2 bg-slate-700 rounded">Close</button></div>;
     if (!isLoading && (!playerStats || !bossStats || !currentBossData)) return <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 text-white font-lilita">Missing required data.</div>;
 
-    // --- RENDER ---
     return (
         <>
             <style>{`
@@ -313,11 +299,11 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
             <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
                 
-                <div className={`absolute inset-0 z-50 transition-opacity duration-500 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                <div className={`absolute inset-0 z-50 ${isLoading ? '' : 'hidden'}`}>
                     <BossBattleLoader />
                 </div>
 
-                <div className={`w-full h-full flex flex-col transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+                <div className={`w-full h-full flex flex-col ${isLoading ? 'hidden' : ''}`}>
                     <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
                         <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
                             <div className="flex items-center gap-3">
@@ -376,7 +362,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                       </div>
                                   </div>
                                 )}
-
+                                
                                 <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
                                     {battleState === 'idle' && (
                                     <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="btn-shine relative overflow-hidden px-10 py-2 bg-slate-900/80 rounded-lg text-teal-300 border border-teal-500/40 transition-all duration-300 hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)] active:scale-95 disabled:bg-slate-800/60 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed disabled:shadow-none">
@@ -392,7 +378,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     </div>
                                     )}
                                 </div>
-
+                                
                                 {gameOver === 'win' && (<VictoryModal onRestart={retryCurrentFloor} onNextFloor={handleNextFloor} isLastBoss={currentFloor === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
                                 {gameOver === 'lose' && (<DefeatModal onRestart={retryCurrentFloor} />)}
                             </main>
