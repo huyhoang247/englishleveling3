@@ -1,14 +1,15 @@
-// --- START OF FILE tower-ui.tsx (Full Code, No Fade Effect) ---
+// --- START OF FILE tower-ui.tsx (Full, Unabbreviated Code) ---
 
 // --- START OF FILE boss.tsx ---
 
+// --- OPTIMIZATION: Import 'memo' từ React ---
 import React, { useState, useCallback, useEffect, memo } from 'react';
-import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
+import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx'; // IMPORT CONTEXT MỚI
 import BOSS_DATA from './tower-data.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import EnergyDisplay from '../../ui/display/energy-display.tsx'; 
 import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
-import BossBattleLoader from './tower-loading.tsx';
+import BossBattleLoader from './tower-loading.tsx'; // <-- Dòng import này đã có và rất quan trọng
 
 interface BossBattleWrapperProps {
   userId: string;
@@ -18,7 +19,7 @@ interface BossBattleWrapperProps {
 }
 
 
-// --- UI HELPER COMPONENTS ---
+// --- UI HELPER COMPONENTS (Toàn bộ code được giữ nguyên và đầy đủ, đã thêm React.memo) ---
 
 const HomeIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> ));
 
@@ -61,7 +62,7 @@ const PlayerInfoDisplay = memo(({ stats, floor, onAvatarClick }: { stats: Combat
 });
 
 const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
-  const scale = Math.max(0, current / max);
+  const scale = Math.max(0, current / max); // Giá trị từ 0 đến 1
   return (
     <div className="w-full">
       <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
@@ -243,12 +244,14 @@ const SweepRewardsModal = memo(({ isSuccess, rewards, onClose }: { isSuccess: bo
 
 // --- MAIN VIEW COMPONENT ---
 const BossBattleView = ({ onClose }: { onClose: () => void }) => {
+    // --- LẤY STATE VÀ ACTIONS TỪ CONTEXT ---
     const {
         isLoading, error, playerStats, bossStats, combatLog, previousCombatLog, gameOver,
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
+    // --- STATE UI CỤC BỘ ---
     const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -256,23 +259,32 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
     const [isSweeping, setIsSweeping] = useState(false);
     
+    // --- LOGIC UI CỤC BỘ ---
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
+
     const showFloatingText = useCallback((text: string, colorClass: string, isPlayerSide: boolean) => {
         const id = Date.now() + Math.random();
-        const position = isPlayerSide ? 'left-[25%]' : 'right-[25%]';
+        const position = isPlayerSide ? 'left-[25%]' : 'right-[25%]'; // Vị trí hiển thị
         setDamages(prev => [...prev, { id, text, colorClass: `${position} ${colorClass}` }]);
         setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
     }, []);
+
+    // Effect để hiển thị floating text dựa trên sự kiện từ context
     useEffect(() => {
         if (!lastTurnEvents) return;
+
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
+
         if (playerDmg > 0) showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', false);
         if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', true);
+        
         setTimeout(() => {
           if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', true);
           if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', false);
         }, 500);
+
     }, [lastTurnEvents, showFloatingText]);
+
     const handleSweepClick = async () => {
         setIsSweeping(true);
         const result = await handleSweep();
@@ -280,9 +292,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         setIsSweeping(false);
     };
 
+    // --- RENDER LOGIC CHO LỖI ---
     if (error) return <div className="absolute inset-0 bg-red-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 text-white font-lilita"><p>Error: {error}</p><button onClick={onClose} className="mt-4 px-4 py-2 bg-slate-700 rounded">Close</button></div>;
-    if (!isLoading && (!playerStats || !bossStats || !currentBossData)) return <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 text-white font-lilita">Missing required data.</div>;
-
+    // --- RENDER ---
     return (
         <>
             <style>{`
@@ -293,98 +305,102 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
-            {statsModalTarget && <CharacterStatsModal character={statsModalTarget === 'player' ? playerStats! : bossStats!} characterType={statsModalTarget} onClose={() => setStatsModalTarget(null)}/>}
+            {statsModalTarget && playerStats && bossStats && <CharacterStatsModal character={statsModalTarget === 'player' ? playerStats : bossStats} characterType={statsModalTarget} onClose={() => setStatsModalTarget(null)}/>}
             {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
             {showRewardsModal && currentBossData && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
 
             <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
                 
-                <div className={`absolute inset-0 z-50 ${isLoading ? '' : 'hidden'}`}>
-                    <BossBattleLoader />
-                </div>
-
-                <div className={`w-full h-full flex flex-col ${isLoading ? 'hidden' : ''}`}>
-                    <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
-                        <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
-                            <div className="flex items-center gap-3">
-                                <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Go Home" title="Go Home">
-                                    <HomeIcon className="w-5 h-5 text-slate-300" />
-                                    <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
-                                </button>
+                {isLoading ? (
+                    <div className="absolute inset-0 z-50">
+                        <BossBattleLoader />
+                    </div>
+                ) : (
+                    <div className="w-full h-full flex flex-col">
+                        {(!playerStats || !bossStats || !currentBossData) ? (
+                            <div className="flex-grow flex items-center justify-center">
+                                <p>Missing required data.</p>
                             </div>
-                            <div className="flex items-center gap-2 font-sans">
-                                {playerStats?.energy !== undefined && playerStats?.maxEnergy !== undefined && (<EnergyDisplay currentEnergy={playerStats.energy} maxEnergy={playerStats.maxEnergy} isStatsFullscreen={false}/>)}
-                                <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
-                            </div>
-                        </div>
-                    </header>
-
-                    {playerStats && currentBossData && (
-                        <>
-                            <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
-                                <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} onAvatarClick={() => setStatsModalTarget('player')} />
-                                {battleState === 'idle' && currentFloor > 0 && (
-                                    <button onClick={handleSweepClick} disabled={(playerStats.energy || 0) < 10 || isSweeping} title="Instantly clear the previous floor for rewards" className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700 animate-fade-in">
-                                        {isSweeping ? 'Sweeping...' : 'Sweep Previous'}
-                                    </button>
-                                )}
-                                {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300 animate-fade-in">Skip Battle</button> )}
-                            </div>
-
-                            <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
-                                <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
-                                    <div></div>
-                                    <div className="flex flex-col items-end gap-2">
-                                        <div className="w-full flex justify-center gap-2">
-                                            <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Last Battle Log">
-                                                <img src={bossBattleAssets.historyIcon} alt="Log" className="w-full h-full object-contain" />
-                                            </button>
-                                            <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Potential Rewards">
-                                                <img src={bossBattleAssets.rewardsIcon} alt="Rewards" className="w-full h-full object-contain" />
+                        ) : (
+                            <>
+                                <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
+                                    <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
+                                        <div className="flex items-center gap-3">
+                                            <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Go Home" title="Go Home">
+                                                <HomeIcon className="w-5 h-5 text-slate-300" />
+                                                <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                                             </button>
                                         </div>
-                                    </div>
-                                </div>
-                        
-                                {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
-
-                                {bossStats && (
-                                  <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                                      <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group" onClick={() => setStatsModalTarget('boss')} title="View Boss Stats">
-                                          <div className="relative group flex justify-center">
-                                              <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
-                                              <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">{currentBossData.name.toUpperCase()}</div>
-                                          </div>
-                                          <div className="w-40 h-40 md:w-56 md:h-56">
-                                              <img src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} alt={currentBossData.name} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
-                                          </div>
-                                          <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
-                                      </div>
-                                  </div>
-                                )}
-                                
-                                <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
-                                    {battleState === 'idle' && (
-                                    <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="btn-shine relative overflow-hidden px-10 py-2 bg-slate-900/80 rounded-lg text-teal-300 border border-teal-500/40 transition-all duration-300 hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)] active:scale-95 disabled:bg-slate-800/60 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed disabled:shadow-none">
-                                        <div className="flex flex-col items-center gap-0.5">
-                                            <span className="font-bold text-lg tracking-widest uppercase">Fight</span>
-                                            <div className="flex items-center gap-1 text-xs font-semibold text-cyan-400/80"><span>10</span><img src={bossBattleAssets.energyIcon} alt="" className="w-3 h-3"/></div>
+                                        <div className="flex items-center gap-2 font-sans">
+                                            {playerStats?.energy !== undefined && playerStats?.maxEnergy !== undefined && (<EnergyDisplay currentEnergy={playerStats.energy} maxEnergy={playerStats.maxEnergy} isStatsFullscreen={false}/>)}
+                                            <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                                         </div>
-                                    </button>
-                                    )}
-                                    {battleState !== 'idle' && (
-                                    <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
-                                        {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse-fast' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
                                     </div>
+                                </header>
+    
+                                <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
+                                    <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} onAvatarClick={() => setStatsModalTarget('player')} />
+                                    {battleState === 'idle' && currentFloor > 0 && (
+                                        <button onClick={handleSweepClick} disabled={(playerStats.energy || 0) < 10 || isSweeping} title="Instantly clear the previous floor for rewards" className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700">
+                                            {isSweeping ? 'Sweeping...' : 'Sweep Previous'}
+                                        </button>
                                     )}
+                                    {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button> )}
                                 </div>
-                                
-                                {gameOver === 'win' && (<VictoryModal onRestart={retryCurrentFloor} onNextFloor={handleNextFloor} isLastBoss={currentFloor === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
-                                {gameOver === 'lose' && (<DefeatModal onRestart={retryCurrentFloor} />)}
-                            </main>
-                        </>
-                    )}
-                </div>
+    
+                                <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
+                                    <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
+                                        <div></div>
+                                        <div className="flex flex-col items-end gap-2">
+                                            <div className="w-full flex justify-center gap-2">
+                                                <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Last Battle Log">
+                                                    <img src={bossBattleAssets.historyIcon} alt="Log" className="w-full h-full object-contain" />
+                                                </button>
+                                                <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Potential Rewards">
+                                                    <img src={bossBattleAssets.rewardsIcon} alt="Rewards" className="w-full h-full object-contain" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                            
+                                    {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
+    
+                                    <div className="w-full max-w-4xl flex justify-center items-center my-8">
+                                        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group" onClick={() => setStatsModalTarget('boss')} title="View Boss Stats">
+                                            <div className="relative group flex justify-center">
+                                                <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
+                                                <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">{currentBossData.name.toUpperCase()}</div>
+                                            </div>
+                                            <div className="w-40 h-40 md:w-56 md:h-56">
+                                                <img src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} alt={currentBossData.name} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
+                                            </div>
+                                            <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+                                        </div>
+                                    </div>
+    
+                                    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
+                                        {battleState === 'idle' && (
+                                        <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="btn-shine relative overflow-hidden px-10 py-2 bg-slate-900/80 rounded-lg text-teal-300 border border-teal-500/40 transition-all duration-300 hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)] active:scale-95 disabled:bg-slate-800/60 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed disabled:shadow-none">
+                                            <div className="flex flex-col items-center gap-0.5">
+                                                <span className="font-bold text-lg tracking-widest uppercase">Fight</span>
+                                                <div className="flex items-center gap-1 text-xs font-semibold text-cyan-400/80"><span>10</span><img src={bossBattleAssets.energyIcon} alt="" className="w-3 h-3"/></div>
+                                            </div>
+                                        </button>
+                                        )}
+                                        {battleState !== 'idle' && (
+                                        <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
+                                            {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse-fast' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
+                                        </div>
+                                        )}
+                                    </div>
+    
+                                    {gameOver === 'win' && (<VictoryModal onRestart={retryCurrentFloor} onNextFloor={handleNextFloor} isLastBoss={currentFloor === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
+                                    {gameOver === 'lose' && (<DefeatModal onRestart={retryCurrentFloor} />)}
+                                </main>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
         </>
     );
