@@ -35,11 +35,7 @@ import { useGame } from './GameContext.tsx';
 import { updateUserCoins } from './gameDataService.ts';
 
 // --- SVG Icon Components ---
-const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}>
-    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
+// XIcon đã được định nghĩa trong SystemCheckScreen mới, không cần định nghĩa lại ở đây
 interface GemIconProps { size?: number; color?: string; className?: string; [key: string]: any; }
 const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
@@ -63,17 +59,29 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   render() { if (this.state.hasError) { return this.props.fallback || ( <div className="text-red-500 p-4 bg-red-100 border border-red-400 rounded"> <p>Có lỗi xảy ra khi hiển thị nội dung.</p> <p>Chi tiết lỗi: {this.state.error?.message}</p> <p>(Kiểm tra Console để biết thêm thêm thông tin)</p> </div> ); } return this.props.children; }
 }
 
+
+// --- BẮT ĐẦU PHẦN NÂNG CẤP: SystemCheckScreen đã được thay thế hoàn toàn ---
 // ==================================================================
-// COMPONENT MỚI: SystemCheckScreen
-// (Được định nghĩa trong file này để tránh tạo file mới)
+// COMPONENT NÂNG CẤP: SystemCheckScreen
+// (Toàn diện hơn, chính xác hơn và giao diện tốt hơn)
 // ==================================================================
+
+// --- Helper Icons (tự chứa, không cần import) ---
+const MemoryIcon = ({ size = 20, ...props }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M2 13h2"/><path d="M20 13h2"/><path d="M12 2v2"/><path d="M12 20v2"/><rect width="14" height="14" x="5" y="5" rx="2"/><path d="M9 5v14"/><path d="M15 5v14"/></svg>;
+const HardDriveIcon = ({ size = 20, ...props }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="22" x2="2" y1="12" y2="12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/></svg>;
+const WifiIcon = ({ size = 20, ...props }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" x2="12.01" y1="20" y2="20"/></svg>;
+const CpuIcon = ({ size = 20, ...props }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>;
+const RefreshCwIcon = ({ size = 16, ...props }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>;
+const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}> <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /> </svg> );
+
+
 const formatBytes = (bytes: number, decimals = 2): string => {
-  if (bytes === 0) return '0 Bytes';
+  if (!+bytes) return '0 Bytes';
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
 
 interface SystemCheckScreenProps {
@@ -81,95 +89,122 @@ interface SystemCheckScreenProps {
 }
 
 const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({ onClose }) => {
-  const [memoryInfo, setMemoryInfo] = React.useState<any>(null);
-  const [storageInfo, setStorageInfo] = React.useState<StorageEstimate | null>(null);
+  const [systemInfo, setSystemInfo] = React.useState<any>({});
   const [isLoading, setIsLoading] = React.useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        // Lấy thông tin bộ nhớ (API không chuẩn)
-        if ('performance' in window && 'memory' in (window.performance as any)) {
-          setMemoryInfo((window.performance as any).memory);
-        }
+  const fetchSystemData = React.useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data: any = {};
 
-        // Lấy thông tin lưu trữ (API chuẩn)
-        if ('storage' in navigator && 'estimate' in navigator.storage) {
-          const estimate = await navigator.storage.estimate();
-          setStorageInfo(estimate);
-        }
-      } catch (error) {
-        console.error("Error fetching system info:", error);
-      } finally {
-        setIsLoading(false);
+      // 1. Memory Info (Non-standard)
+      if ('performance' in window && 'memory' in (window.performance as any)) {
+        data.memory = (window.performance as any).memory;
       }
-    };
 
-    fetchData();
+      // 2. Storage Info (Standard)
+      if ('storage' in navigator && 'estimate' in navigator.storage) {
+        data.storage = await navigator.storage.estimate();
+      }
+
+      // 3. Network Info (Standard)
+      if ('connection' in navigator) {
+        data.network = navigator.connection;
+      }
+
+      // 4. CPU Info (Standard)
+      if ('hardwareConcurrency' in navigator) {
+        data.cpuCores = navigator.hardwareConcurrency;
+      }
+      
+      setSystemInfo(data);
+    } catch (error) {
+      console.error("Error fetching system info:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const renderMemoryInfo = () => {
-    if (!memoryInfo) {
-      return <p className="text-sm text-gray-400 italic">Memory API is not supported by your browser.</p>;
-    }
-    return (
-      <ul className="text-sm space-y-1">
-        <li><span className="font-semibold text-cyan-300">Used JS Heap:</span> {formatBytes(memoryInfo.usedJSHeapSize)}</li>
-        <li><span className="font-semibold text-cyan-300">Total JS Heap:</span> {formatBytes(memoryInfo.totalJSHeapSize)}</li>
-        <li><span className="font-semibold text-cyan-300">Heap Size Limit:</span> {formatBytes(memoryInfo.jsHeapSizeLimit)}</li>
-      </ul>
-    );
-  };
+  React.useEffect(() => {
+    fetchSystemData();
+  }, [fetchSystemData]);
 
-  const renderStorageInfo = () => {
-    if (!storageInfo || !storageInfo.usage || !storageInfo.quota) {
-      return <p className="text-sm text-gray-400 italic">Storage API is not supported or failed to provide data.</p>;
-    }
-    const usagePercentage = ((storageInfo.usage / storageInfo.quota) * 100).toFixed(2);
-    return (
-      <div>
-        <div className="flex justify-between text-sm mb-1">
-          <span className="font-semibold text-cyan-300">{formatBytes(storageInfo.usage)} used</span>
-          <span className="text-gray-400">of {formatBytes(storageInfo.quota)}</span>
-        </div>
-        <div className="w-full bg-slate-700 rounded-full h-2.5">
-          <div className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2.5 rounded-full" style={{ width: `${usagePercentage}%` }}></div>
-        </div>
-        <p className="text-right text-xs mt-1 text-gray-400">{usagePercentage}% full</p>
+  const InfoCard: React.FC<{ icon: React.ReactNode; title: string; children: React.ReactNode; notSupported?: boolean }> = ({ icon, title, children, notSupported }) => (
+    <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
+      <div className="flex items-center mb-3">
+        <div className="text-cyan-400 mr-3">{icon}</div>
+        <h3 className="text-md font-semibold text-gray-200">{title}</h3>
       </div>
-    );
-  };
+      {notSupported 
+        ? <p className="text-sm text-gray-500 italic">API không được trình duyệt này hỗ trợ.</p>
+        : children
+      }
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in p-4">
-      <div className="relative w-full max-w-md bg-slate-900/90 border border-slate-700 rounded-2xl shadow-2xl text-white font-sans animate-fade-in-scale-fast">
+      <div className="relative w-full max-w-lg bg-slate-900/90 border border-slate-700 rounded-2xl shadow-2xl text-white font-sans animate-fade-in-scale-fast">
         <div className="flex justify-between items-center p-4 border-b border-slate-800">
           <h2 className="text-lg font-bold text-cyan-300 tracking-wide">System Status</h2>
-          <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:bg-slate-700 hover:text-white transition-colors">
-            <XIcon size={20} />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button onClick={fetchSystemData} disabled={isLoading} className="p-1.5 rounded-full text-gray-400 hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Refresh Data">
+              <RefreshCwIcon className={isLoading ? 'animate-spin' : ''} />
+            </button>
+            <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:bg-slate-700 hover:text-white transition-colors">
+              <XIcon size={20} />
+            </button>
+          </div>
         </div>
-        <div className="p-5 space-y-6">
-          {isLoading ? (
-            <p className="text-center text-gray-300">Loading system data...</p>
-          ) : (
-            <>
-              <div>
-                <h3 className="text-md font-semibold mb-2 text-gray-200 border-b border-slate-800 pb-1">Application Memory (RAM)</h3>
-                {renderMemoryInfo()}
-              </div>
-              <div>
-                <h3 className="text-md font-semibold mb-2 text-gray-200 border-b border-slate-800 pb-1">Local Storage</h3>
-                {renderStorageInfo()}
-              </div>
-            </>
-          )}
-        </div>
+
+        {isLoading ? (
+          <div className="p-10 text-center text-gray-300">Đang tải dữ liệu hệ thống...</div>
+        ) : (
+          <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto">
+            <InfoCard icon={<HardDriveIcon />} title="Local Storage">
+              {!systemInfo.storage ? (
+                 <p className="text-sm text-gray-500 italic">Không thể lấy thông tin lưu trữ.</p>
+              ) : (
+                <>
+                  <div className="w-full bg-slate-700 rounded-full h-2.5 my-1">
+                    <div className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2.5 rounded-full" style={{ width: `${((systemInfo.storage.usage / systemInfo.storage.quota) * 100).toFixed(2)}%` }}></div>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>{formatBytes(systemInfo.storage.usage)} đã dùng</span>
+                    <span>Tổng: {formatBytes(systemInfo.storage.quota)}</span>
+                  </div>
+                </>
+              )}
+            </InfoCard>
+
+            <InfoCard icon={<CpuIcon />} title="Hardware" notSupported={!systemInfo.cpuCores}>
+               <p className="text-sm"><span className="font-semibold text-cyan-300">CPU Logical Cores:</span> {systemInfo.cpuCores || 'N/A'}</p>
+            </InfoCard>
+            
+            <InfoCard icon={<WifiIcon />} title="Network Connection" notSupported={!systemInfo.network}>
+              <ul className="text-sm space-y-1">
+                <li><span className="font-semibold text-cyan-300">Type:</span> {systemInfo.network?.type || 'N/A'}</li>
+                <li><span className="font-semibold text-cyan-300">Effective Speed:</span> {systemInfo.network?.effectiveType || 'N/A'}</li>
+                <li><span className="font-semibold text-cyan-300">Downlink:</span> {systemInfo.network?.downlink ? `${systemInfo.network.downlink} Mbps` : 'N/A'}</li>
+              </ul>
+            </InfoCard>
+
+            <InfoCard icon={<MemoryIcon />} title="JavaScript Heap Memory" notSupported={!systemInfo.memory}>
+              <ul className="text-sm space-y-1">
+                <li><span className="font-semibold text-cyan-300">Used:</span> {formatBytes(systemInfo.memory?.usedJSHeapSize)}</li>
+                <li><span className="font-semibold text-cyan-300">Allocated:</span> {formatBytes(systemInfo.memory?.totalJSHeapSize)}</li>
+                <li><span className="font-semibold text-cyan-300">Limit:</span> {formatBytes(systemInfo.memory?.jsHeapSizeLimit)}</li>
+              </ul>
+              <p className="text-xs text-gray-500 mt-2 italic">*Chỉ số tham khảo cho dev, không phải tổng RAM.</p>
+            </InfoCard>
+          </div>
+        )}
       </div>
     </div>
   );
 };
+// --- KẾT THÚC PHẦN NÂNG CẤP ---
+
 
 interface ObstacleRunnerGameProps {
   className?: string;
