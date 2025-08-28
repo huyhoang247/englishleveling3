@@ -26,6 +26,7 @@ interface SystemCheckScreenProps {
   onClose: () => void;
 }
 
+// Định nghĩa component với một tên riêng để tránh nhầm lẫn
 const SystemCheckScreenComponent: React.FC<SystemCheckScreenProps> = ({ onClose }) => {
   const [systemInfo, setSystemInfo] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -149,4 +150,6 @@ const SystemCheckScreenComponent: React.FC<SystemCheckScreenProps> = ({ onClose 
   );
 };
 
-export default memo(SystemCheckScreenComponent);
+// Bọc component trong memo() và sau đó export default nó
+const SystemCheckScreen = memo(SystemCheckScreenComponent);
+export default SystemCheckScreen;
