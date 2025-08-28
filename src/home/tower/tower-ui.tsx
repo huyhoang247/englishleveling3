@@ -1,6 +1,3 @@
---- START OF FILE tower-ui.tsx.txt ---
-
-// --- START OF FILE boss.tsx ---
 
 // --- OPTIMIZATION: Import 'memo' từ React ---
 import React, { useState, useCallback, useEffect, memo } from 'react';
