@@ -32,11 +32,9 @@ const BossBattleLoader: React.FC = () => {
         <div className="w-64 bg-slate-900/50 backdrop-blur-sm rounded-lg p-2.5 border border-slate-700/50 shadow-lg flex items-center gap-3">
           <div className="flex-shrink-0 w-10 h-10 bg-slate-800 rounded-full border-2 border-slate-600"></div>
           <div className="flex-grow flex flex-col gap-1.5">
-            {/* START OF CORRECTION: Floor Box Skeleton now matches the real structure */}
-            <div className="flex items-center gap-1.5 bg-black/40 px-2 py-0.5 rounded-md self-start border border-slate-700/80">
-                {/* Icon placeholder */}
+            {/* START OF CORRECTION: Floor Box now has the correct height and content alignment */}
+            <div className="h-5 w-24 flex items-center gap-1.5 bg-black/40 px-2 py-0.5 rounded-md self-start border border-slate-700/80">
                 <div className="w-3 h-3 bg-slate-700/80 rounded-sm"></div>
-                {/* Text placeholder */}
                 <div className="h-3 w-16 bg-slate-700/80 rounded-sm"></div>
             </div>
             {/* END OF CORRECTION */}
@@ -45,8 +43,10 @@ const BossBattleLoader: React.FC = () => {
             </div>
           </div>
         </div>
-        {/* Sweep Previous Button Skeleton */}
-        <div className="h-[28px] w-28 px-4 py-1.5 bg-slate-800/70 rounded-lg border border-slate-600"></div>
+        {/* Sweep Previous Button Skeleton - now perfectly sized */}
+        <div className="bg-slate-800/70 rounded-lg border border-slate-600 px-4 py-1.5">
+            <div className="h-[14px] w-20 bg-slate-700/80 rounded-sm"></div>
+        </div>
       </div>
       
       {/* --- Main Content Area --- */}
@@ -54,9 +54,7 @@ const BossBattleLoader: React.FC = () => {
         
         {/* --- Skeleton for Top-Right Buttons & Spacing (Correct Positioning) --- */}
         <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
-            {/* Empty div to push buttons to the right */}
             <div></div>
-            {/* Buttons container */}
             <div className="flex flex-col items-end gap-2">
                 <div className="flex justify-center gap-2">
                     <div className="w-10 h-10 bg-slate-800/70 rounded-full border border-slate-600"></div>
@@ -78,10 +76,10 @@ const BossBattleLoader: React.FC = () => {
 
         {/* --- Skeleton Action Button (Bottom) (Correct) --- */}
         <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
-            <div className="relative px-10 py-2 bg-slate-900/80 rounded-lg border border-slate-700/40">
-                <div className="flex flex-col items-center gap-1">
-                    <div className="h-6 w-24 bg-slate-700 rounded-md"></div>
-                    <div className="h-4 w-12 bg-slate-700 rounded-md mt-0.5"></div>
+            <div className="relative overflow-hidden px-10 py-2 bg-slate-900/80 rounded-lg border border-slate-700/40">
+                <div className="flex flex-col items-center gap-0.5">
+                    <div className="h-5 w-20 bg-slate-700 rounded-md"></div>
+                    <div className="h-3 w-12 bg-slate-700 rounded-md"></div>
                 </div>
             </div>
         </div>
