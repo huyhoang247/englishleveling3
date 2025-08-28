@@ -7,10 +7,10 @@ import BOSS_DATA from './tower-data.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import EnergyDisplay from '../../ui/display/energy-display.tsx'; 
 import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
-import TowerLoadingSkeleton from './tower-loading.tsx'; // <<<--- IMPORT SKELETON MỚI
++ import TowerBattleSkeleton from './tower-loading.tsx'; // +++ IMPORT SKELETON MỚI
 
-// --- COMPONENT TẢI DỮ LIỆU CŨ ĐÃ BỊ XÓA ---
-// const BossBattleLoader = () => (<div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 text-white font-lilita text-2xl tracking-widest"><div className="animate-pulse">LOADING BATTLE...</div></div>);
+// --- COMPONENT TẢI DỮ LIỆU ---
+- const BossBattleLoader = () => (<div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 text-white font-lilita text-2xl tracking-widest"><div className="animate-pulse">LOADING BATTLE...</div></div>);
 
 interface BossBattleWrapperProps {
   userId: string;
@@ -299,7 +299,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     };
 
     // --- RENDER LOGIC CHO TẢI DỮ LIỆU VÀ LỖI ---
-    if (isLoading) return <TowerLoadingSkeleton />; // <<<--- THAY THẾ Ở ĐÂY
+-     if (isLoading) return <BossBattleLoader />;
++     if (isLoading) return <TowerBattleSkeleton />;
     if (error) return <div className="absolute inset-0 bg-red-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 text-white font-lilita"><p>Error: {error}</p><button onClick={onClose} className="mt-4 px-4 py-2 bg-slate-700 rounded">Close</button></div>;
     if (!playerStats || !bossStats || !currentBossData) return <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 text-white font-lilita">Missing required data.</div>;
 
