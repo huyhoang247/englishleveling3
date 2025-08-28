@@ -63,6 +63,114 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   render() { if (this.state.hasError) { return this.props.fallback || ( <div className="text-red-500 p-4 bg-red-100 border border-red-400 rounded"> <p>Có lỗi xảy ra khi hiển thị nội dung.</p> <p>Chi tiết lỗi: {this.state.error?.message}</p> <p>(Kiểm tra Console để biết thêm thêm thông tin)</p> </div> ); } return this.props.children; }
 }
 
+// ==================================================================
+// COMPONENT MỚI: SystemCheckScreen
+// (Được định nghĩa trong file này để tránh tạo file mới)
+// ==================================================================
+const formatBytes = (bytes: number, decimals = 2): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+};
+
+interface SystemCheckScreenProps {
+  onClose: () => void;
+}
+
+const SystemCheckScreen: React.FC<SystemCheckScreenProps> = ({ onClose }) => {
+  const [memoryInfo, setMemoryInfo] = React.useState<any>(null);
+  const [storageInfo, setStorageInfo] = React.useState<StorageEstimate | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Lấy thông tin bộ nhớ (API không chuẩn)
+        if ('performance' in window && 'memory' in (window.performance as any)) {
+          setMemoryInfo((window.performance as any).memory);
+        }
+
+        // Lấy thông tin lưu trữ (API chuẩn)
+        if ('storage' in navigator && 'estimate' in navigator.storage) {
+          const estimate = await navigator.storage.estimate();
+          setStorageInfo(estimate);
+        }
+      } catch (error) {
+        console.error("Error fetching system info:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const renderMemoryInfo = () => {
+    if (!memoryInfo) {
+      return <p className="text-sm text-gray-400 italic">Memory API is not supported by your browser.</p>;
+    }
+    return (
+      <ul className="text-sm space-y-1">
+        <li><span className="font-semibold text-cyan-300">Used JS Heap:</span> {formatBytes(memoryInfo.usedJSHeapSize)}</li>
+        <li><span className="font-semibold text-cyan-300">Total JS Heap:</span> {formatBytes(memoryInfo.totalJSHeapSize)}</li>
+        <li><span className="font-semibold text-cyan-300">Heap Size Limit:</span> {formatBytes(memoryInfo.jsHeapSizeLimit)}</li>
+      </ul>
+    );
+  };
+
+  const renderStorageInfo = () => {
+    if (!storageInfo || !storageInfo.usage || !storageInfo.quota) {
+      return <p className="text-sm text-gray-400 italic">Storage API is not supported or failed to provide data.</p>;
+    }
+    const usagePercentage = ((storageInfo.usage / storageInfo.quota) * 100).toFixed(2);
+    return (
+      <div>
+        <div className="flex justify-between text-sm mb-1">
+          <span className="font-semibold text-cyan-300">{formatBytes(storageInfo.usage)} used</span>
+          <span className="text-gray-400">of {formatBytes(storageInfo.quota)}</span>
+        </div>
+        <div className="w-full bg-slate-700 rounded-full h-2.5">
+          <div className="bg-gradient-to-r from-cyan-500 to-blue-500 h-2.5 rounded-full" style={{ width: `${usagePercentage}%` }}></div>
+        </div>
+        <p className="text-right text-xs mt-1 text-gray-400">{usagePercentage}% full</p>
+      </div>
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in p-4">
+      <div className="relative w-full max-w-md bg-slate-900/90 border border-slate-700 rounded-2xl shadow-2xl text-white font-sans animate-fade-in-scale-fast">
+        <div className="flex justify-between items-center p-4 border-b border-slate-800">
+          <h2 className="text-lg font-bold text-cyan-300 tracking-wide">System Status</h2>
+          <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:bg-slate-700 hover:text-white transition-colors">
+            <XIcon size={20} />
+          </button>
+        </div>
+        <div className="p-5 space-y-6">
+          {isLoading ? (
+            <p className="text-center text-gray-300">Loading system data...</p>
+          ) : (
+            <>
+              <div>
+                <h3 className="text-md font-semibold mb-2 text-gray-200 border-b border-slate-800 pb-1">Application Memory (RAM)</h3>
+                {renderMemoryInfo()}
+              </div>
+              <div>
+                <h3 className="text-md font-semibold mb-2 text-gray-200 border-b border-slate-800 pb-1">Local Storage</h3>
+                {renderStorageInfo()}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface ObstacleRunnerGameProps {
   className?: string;
   hideNavBar: () => void;
@@ -96,6 +204,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
   const currentUser = auth.currentUser; // Get current user for passing to components
+  // --- THÊM MỚI: State và handler cho màn hình System Check ---
+  const [isSystemCheckOpen, setIsSystemCheckOpen] = React.useState(false);
+  const toggleSystemCheck = () => setIsSystemCheckOpen(p => !p);
   const isAdmin = currentUser?.email === 'vanlongt309@gmail.com';
 
   // Effect to manage page overflow, specific to the game screen
@@ -120,7 +231,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
 
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
-      <SidebarLayout setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank} onShowLuckyGame={toggleLuckyGame} onShowMinerChallenge={toggleMinerChallenge} onShowAchievements={toggleAchievements} onShowUpgrade={toggleUpgradeScreen} onShowBaseBuilding={toggleBaseBuilding} onShowAdmin={isAdmin ? toggleAdminPanel : undefined}>
+      <SidebarLayout 
+        setToggleSidebar={handleSetToggleSidebar} 
+        onShowRank={toggleRank} 
+        onShowLuckyGame={toggleLuckyGame} 
+        onShowMinerChallenge={toggleMinerChallenge} 
+        onShowAchievements={toggleAchievements} 
+        onShowUpgrade={toggleUpgradeScreen} 
+        onShowBaseBuilding={toggleBaseBuilding}
+        onShowSystemCheck={toggleSystemCheck}
+        onShowAdmin={isAdmin ? toggleAdminPanel : undefined}
+      >
         <DungeonCanvasBackground isPaused={isGamePaused} />
         <div style={{ display: isAnyOverlayOpen ? 'none' : 'block', visibility: isLoadingUserData ? 'hidden' : 'visible' }} className="w-full h-full">
           <div className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-transparent`} onClick={handleTap}>
@@ -203,6 +324,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                     />
                 )}
             </ErrorBoundary>
+        </div>
+
+        {/* --- THÊM MỚI: Overlay cho System Check --- */}
+        <div className="fixed inset-0 z-[60]" style={{ display: isSystemCheckOpen ? 'block' : 'none' }}>
+            <ErrorBoundary><SystemCheckScreen onClose={toggleSystemCheck} /></ErrorBoundary>
         </div>
 
         <div className="fixed inset-0 z-[70]" style={{ display: isAdminPanelOpen ? 'block' : 'none' }}> <ErrorBoundary>{isAdminPanelOpen && <AdminPanel onClose={toggleAdminPanel} />}</ErrorBoundary> </div>
