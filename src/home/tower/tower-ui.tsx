@@ -1,3 +1,5 @@
+--- START OF FILE tower-ui.tsx.txt ---
+
 // --- START OF FILE boss.tsx ---
 
 // --- OPTIMIZATION: Import 'memo' từ React ---
@@ -7,10 +9,82 @@ import BOSS_DATA from './tower-data.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import EnergyDisplay from '../../ui/display/energy-display.tsx'; 
 import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
-+ import TowerBattleSkeleton from './tower-loading.tsx'; // +++ IMPORT SKELETON MỚI
 
-// --- COMPONENT TẢI DỮ LIỆU ---
-- const BossBattleLoader = () => (<div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 text-white font-lilita text-2xl tracking-widest"><div className="animate-pulse">LOADING BATTLE...</div></div>);
+// --- START OF MODIFICATION: Cập nhật component tải dữ liệu ---
+// --- COMPONENT TẢI DỮ LIỆU (SKELETON VERSION) ---
+const BossBattleLoader = () => {
+  return (
+    <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden animate-pulse">
+      {/* Skeleton Header */}
+      <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 h-14">
+        <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60">
+            <div className="w-5 h-5 bg-slate-700/80 rounded-sm"></div>
+            <div className="hidden sm:inline h-4 w-16 bg-slate-700/80 rounded-sm"></div>
+          </div>
+          <div className="flex items-center gap-2 font-sans">
+            <div className="flex items-center gap-1.5 bg-slate-800/80 rounded-lg p-1.5 border border-slate-700/60">
+              <div className="w-4 h-4 rounded-full bg-slate-700/80"></div>
+              <div className="h-4 w-12 bg-slate-700/80 rounded-sm"></div>
+            </div>
+            <div className="flex items-center gap-1.5 bg-slate-800/80 rounded-lg p-1.5 border border-slate-700/60">
+              <div className="w-4 h-4 rounded-full bg-slate-700/80"></div>
+              <div className="h-4 w-12 bg-slate-700/80 rounded-sm"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Skeleton Player Info (Top-Left) */}
+      <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
+        <div className="w-64 bg-slate-900/50 backdrop-blur-sm rounded-lg p-2.5 border border-slate-700/50 shadow-lg flex items-center gap-3">
+          <div className="flex-shrink-0 w-10 h-10 bg-slate-800 rounded-full border-2 border-slate-600"></div>
+          <div className="flex-grow flex flex-col gap-1.5">
+            <div className="h-4 w-24 bg-black/40 rounded-md self-start border border-slate-700/80"></div>
+            <div className="w-full h-5 bg-black/40 rounded-full border border-slate-700/80 p-0.5">
+              <div className="h-full w-3/4 bg-slate-700 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Skeleton Buttons (Top-Right) */}
+      <div className="fixed top-16 right-4 z-20 flex flex-col items-end">
+        <div className="flex justify-center gap-2">
+            <div className="w-10 h-10 bg-slate-800/70 rounded-full border border-slate-600"></div>
+            <div className="w-10 h-10 bg-slate-800/70 rounded-full border border-slate-600"></div>
+        </div>
+      </div>
+
+      <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
+        {/* Placeholder for spacing */}
+        <div className="w-full max-w-2xl mx-auto mb-4 min-h-[5rem]"></div>
+        
+        {/* Skeleton Boss Area (Center) */}
+        <div className="w-full max-w-4xl flex justify-center items-center my-8">
+            <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 w-72">
+                <div className="h-6 w-20 bg-slate-700/80 rounded-md"></div>
+                <div className="w-40 h-40 md:w-56 md:h-56 bg-slate-800/60 rounded-lg"></div>
+                <div className="w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1">
+                    <div className="h-full bg-slate-700 rounded-full w-full"></div>
+                </div>
+            </div>
+        </div>
+
+        {/* Skeleton Action Button (Bottom) */}
+        <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
+            <div className="px-10 py-2 bg-slate-900/80 rounded-lg border border-slate-700/40">
+                <div className="flex flex-col items-center gap-1">
+                    <div className="h-6 w-24 bg-slate-700 rounded-md"></div>
+                    <div className="h-4 w-12 bg-slate-700 rounded-md"></div>
+                </div>
+            </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+// --- END OF MODIFICATION ---
 
 interface BossBattleWrapperProps {
   userId: string;
@@ -299,8 +373,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     };
 
     // --- RENDER LOGIC CHO TẢI DỮ LIỆU VÀ LỖI ---
--     if (isLoading) return <BossBattleLoader />;
-+     if (isLoading) return <TowerBattleSkeleton />;
+    if (isLoading) return <BossBattleLoader />;
     if (error) return <div className="absolute inset-0 bg-red-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 text-white font-lilita"><p>Error: {error}</p><button onClick={onClose} className="mt-4 px-4 py-2 bg-slate-700 rounded">Close</button></div>;
     if (!playerStats || !bossStats || !currentBossData) return <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 text-white font-lilita">Missing required data.</div>;
 
