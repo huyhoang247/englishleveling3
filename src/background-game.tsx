@@ -14,7 +14,7 @@ import PvpArena from './pvp.tsx';
 import DungeonCanvasBackground from './background-canvas.tsx';
 import LuckyChestGame from './lucky-game.tsx';
 import { uiAssets, lottieAssets } from './game-assets.ts';
-import BossBattle from './boss.tsx';
+import BossBattle from './home/tower/tower-ui.tsx';
 import Shop from './shop.tsx';
 import VocabularyChestScreen from './home/vocabulary-chest/voca-chest-ui.tsx';
 import MinerChallenge from './bomb.tsx';
