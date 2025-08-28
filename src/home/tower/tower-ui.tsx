@@ -3,7 +3,7 @@
 // --- OPTIMIZATION: Import 'memo' từ React ---
 import React, { useState, useCallback, useEffect, memo } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx'; // IMPORT CONTEXT MỚI
-import BOSS_DATA from '../../boss/bossData.ts';
+import BOSS_DATA from './tower-data.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import EnergyDisplay from '../../ui/display/energy-display.tsx'; 
 import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
