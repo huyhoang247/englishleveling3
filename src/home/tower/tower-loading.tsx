@@ -38,9 +38,9 @@ const BossBattleLoader: React.FC = () => {
             </div>
           </div>
         </div>
-        {/* START OF CORRECTION: Added backdrop-blur-sm, shadow-md, and adjusted placeholder height */}
+        {/* START OF CORRECTION: Adjusted placeholder width to match text length */}
         <div className="bg-slate-800/70 backdrop-blur-sm rounded-lg border border-slate-600 px-4 py-1.5 shadow-md">
-            <div className="h-4 w-20 bg-slate-700/80 rounded-sm"></div>
+            <div className="h-4 w-24 bg-slate-700/80 rounded-sm"></div>
         </div>
         {/* END OF CORRECTION */}
       </div>
