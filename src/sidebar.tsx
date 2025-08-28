@@ -19,6 +19,7 @@ interface SidebarLayoutProps {
   onShowAchievements?: () => void; // NEW: Handler for showing Achievements
   onShowUpgrade?: () => void; // NEW: Handler for showing Upgrade screen
   onShowBaseBuilding?: () => void; // NEW: Handler for Base Building
+  onShowSystemCheck?: () => void; // NEW: Handler for System Check screen
   onShowAdmin?: () => void; // NEW: Handler for showing Admin Panel
 }
 
@@ -78,6 +79,16 @@ const BuildingIcon = ({ size = 24, color = 'currentColor', className = '', ...pr
       <rect x="9" y="9" width="6" height="6"></rect>
       <path d="M9 22v-3h6v3"></path>
       <path d="M4 10h16"></path>
+    </svg>
+);
+
+// NEW: Icon for System Check
+const ServerIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+        <line x1="6" y1="6" x2="6.01" y2="6"></line>
+        <line x1="6" y1="18" x2="6.01" y2="18"></line>
     </svg>
 );
 
@@ -211,7 +222,7 @@ const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
 
 
 // SidebarLayout component including Sidebar and main content area
-function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowLuckyGame, onShowAchievements, onShowUpgrade, onShowAdmin, onShowMinerChallenge, onShowBaseBuilding }: SidebarLayoutProps) {
+function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowLuckyGame, onShowAchievements, onShowUpgrade, onShowAdmin, onShowMinerChallenge, onShowBaseBuilding, onShowSystemCheck }: SidebarLayoutProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -237,6 +248,7 @@ function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowLuckyGame
     { id: 'achievements', label: 'Achievements', icon: TrophyIcon, onClick: onShowAchievements },
     { id: 'upgrade', label: 'Upgrade', icon: UpgradeIcon, onClick: onShowUpgrade }, // THAY ĐỔI: Sử dụng UpgradeIcon mới
     { id: 'baseBuilding', label: 'Base Building', icon: BuildingIcon, onClick: onShowBaseBuilding },
+    { id: 'systemCheck', label: 'System Check', icon: ServerIcon, onClick: onShowSystemCheck },
     { id: 'admin', label: 'Admin Panel', icon: DatabaseIcon, onClick: onShowAdmin }, 
   ];
 
@@ -277,6 +289,10 @@ function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowLuckyGame
                   }
                   // NEW: Only render the Base Building item if the handler is provided
                   if (item.id === 'baseBuilding' && !onShowBaseBuilding) {
+                      return null;
+                  }
+                  // NEW: Only render the System Check item if the handler is provided
+                  if (item.id === 'systemCheck' && !onShowSystemCheck) {
                       return null;
                   }
                   
