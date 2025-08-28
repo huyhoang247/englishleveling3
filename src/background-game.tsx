@@ -1,6 +1,6 @@
 // src/background-game.tsx
 
-import React, { useEffect, useRef, Component, lazy, Suspense, useCallback } from 'react';
+import React, { useEffect, useRef, Component, lazy, Suspense, useCallback, useState } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import GemDisplay from './ui/display/gem-display.tsx';
@@ -31,7 +31,6 @@ import { useGame } from './GameContext.tsx';
 import { updateUserCoins } from './gameDataService.ts';
 
 // TỐI ƯU HÓA: Tải component SystemCheckScreen một cách "lười biếng"
-// Code của component này sẽ không được tải cho đến khi người dùng click mở nó.
 const SystemCheckScreen = lazy(() => import('./SystemCheckScreen.tsx'));
 
 // --- SVG Icon Components ---
@@ -208,11 +207,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         </div>
 
         {isSystemCheckOpen && (
-            <Suspense fallback={<SuspenseLoader />}>
-                <ErrorBoundary>
+            <ErrorBoundary fallback={<div className="fixed inset-0 bg-black/70 flex items-center justify-center text-red-400">Lỗi khi tải công cụ System Check.</div>}>
+                <Suspense fallback={<SuspenseLoader />}>
                     <SystemCheckScreen onClose={toggleSystemCheck} />
-                </ErrorBoundary>
-            </Suspense>
+                </Suspense>
+            </ErrorBoundary>
         )}
 
         {isAdminPanelOpen && ( <div className="fixed inset-0 z-[70]"> <ErrorBoundary><AdminPanel onClose={toggleAdminPanel} /></ErrorBoundary> </div> )}
