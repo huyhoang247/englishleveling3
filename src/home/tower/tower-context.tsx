@@ -1,16 +1,16 @@
 // --- START OF FILE boss-battle-context.tsx ---
 
 import React, { useState, useEffect, useRef, useCallback, createContext, useContext, ReactNode } from 'react';
-import BOSS_DATA from './boss/bossData.ts';
+import BOSS_DATA from '../../boss/bossData.ts';
 import { 
     ALL_SKILLS,
     OwnedSkill, 
     SkillBlueprint, 
     getActivationChance, 
     getRarityTextColor 
-} from './home/skill-game/skill-data.tsx';
-import { fetchBossBattlePrerequisites } from './gameDataService.ts';
-import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
+} from '../../home/skill-game/skill-data.tsx';
+import { fetchBossBattlePrerequisites } from '../../gameDataService.ts';
+import { calculateTotalStatValue, statConfig } from '../../home/upgrade-stats/upgrade-ui.tsx';
 
 // --- TYPE DEFINITIONS ---
 export type ActiveSkill = OwnedSkill & SkillBlueprint;
