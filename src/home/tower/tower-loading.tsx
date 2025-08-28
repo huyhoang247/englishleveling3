@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 
 const BossBattleLoader: React.FC = () => {
@@ -26,15 +24,17 @@ const BossBattleLoader: React.FC = () => {
         </div>
       </header>
 
-      {/* --- Skeleton Player Info & Sweep Button (Top-Left) (Correct) --- */}
+      {/* --- Skeleton Player Info & Sweep Button (Top-Left) --- */}
       <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
         <div className="w-64 bg-slate-900/50 backdrop-blur-sm rounded-lg p-2.5 border border-slate-700/50 shadow-lg flex items-center gap-3">
           <div className="flex-shrink-0 w-10 h-10 bg-slate-800 rounded-full border-2 border-slate-600"></div>
           <div className="flex-grow flex flex-col gap-1.5">
-            <div className="h-5 w-24 flex items-center gap-1.5 bg-black/40 px-2 py-0.5 rounded-md self-start border border-slate-700/80">
+            {/* START OF CORRECTION: Removed fixed height/width from container and matched placeholder height to line-height */}
+            <div className="flex items-center gap-1.5 bg-black/40 px-2 py-0.5 rounded-md self-start border border-slate-700/80">
                 <div className="w-3 h-3 bg-slate-700/80 rounded-sm"></div>
-                <div className="h-3 w-16 bg-slate-700/80 rounded-sm"></div>
+                <div className="h-4 w-16 bg-slate-700/80 rounded-sm"></div>
             </div>
+            {/* END OF CORRECTION */}
             <div className="w-full h-5 bg-black/40 rounded-full border border-slate-700/80 p-0.5">
               <div className="h-full w-3/4 bg-slate-700 rounded-full"></div>
             </div>
@@ -59,22 +59,15 @@ const BossBattleLoader: React.FC = () => {
             </div>
         </div>
         
-        {/* --- Skeleton Boss Area (Center) (CORRECTED) --- */}
+        {/* --- Skeleton Boss Area (Center) --- */}
         <div className="w-full max-w-4xl flex justify-center items-center my-8">
-            {/* START OF CORRECTION: Removed fixed width `w-72`. Width is now determined by content. */}
             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3">
-                {/* Title placeholder: `text-2xl` has line-height of `2rem` (h-8) */}
                 <div className="h-8 w-20 bg-slate-700/80 rounded-md"></div>
-                
-                {/* Image placeholder: This defines the card's width. Correct as is. */}
                 <div className="w-40 h-40 md:w-56 md:h-56 bg-slate-800/60 rounded-lg"></div>
-                
-                {/* HealthBar placeholder: `w-full` now correctly refers to the width of the image box. */}
                 <div className="w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1">
                     <div className="h-full bg-slate-700 rounded-full w-full"></div>
                 </div>
             </div>
-            {/* END OF CORRECTION */}
         </div>
 
         {/* --- Skeleton Action Button (Bottom) (Correct) --- */}
