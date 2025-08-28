@@ -1,7 +1,7 @@
 // --- START OF FILE boss-battle-context.tsx ---
 
 import React, { useState, useEffect, useRef, useCallback, createContext, useContext, ReactNode } from 'react';
-import BOSS_DATA from '../../boss/bossData.ts';
+import BOSS_DATA from './tower-data.ts';
 import { 
     ALL_SKILLS,
     OwnedSkill, 
