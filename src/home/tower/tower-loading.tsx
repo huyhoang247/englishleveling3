@@ -5,7 +5,8 @@ import React from 'react';
 const BossBattleLoader: React.FC = () => {
   return (
     <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden animate-pulse">
-      {/* Skeleton Header */}
+      
+      {/* --- Skeleton Header (Correct) --- */}
       <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 h-14">
         <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60">
@@ -25,8 +26,9 @@ const BossBattleLoader: React.FC = () => {
         </div>
       </header>
 
-      {/* Skeleton Player Info (Top-Left) */}
+      {/* --- Skeleton Player Info & Sweep Button (Top-Left) (Corrected) --- */}
       <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
+        {/* PlayerInfoDisplay Skeleton */}
         <div className="w-64 bg-slate-900/50 backdrop-blur-sm rounded-lg p-2.5 border border-slate-700/50 shadow-lg flex items-center gap-3">
           <div className="flex-shrink-0 w-10 h-10 bg-slate-800 rounded-full border-2 border-slate-600"></div>
           <div className="flex-grow flex flex-col gap-1.5">
@@ -36,21 +38,27 @@ const BossBattleLoader: React.FC = () => {
             </div>
           </div>
         </div>
+        {/* Sweep Previous Button Skeleton */}
+        <div className="h-[28px] w-28 px-4 py-1.5 bg-slate-800/70 rounded-lg border border-slate-600"></div>
       </div>
       
-      {/* Skeleton Buttons (Top-Right) */}
-      <div className="fixed top-16 right-4 z-20 flex flex-col items-end">
-        <div className="flex justify-center gap-2">
-            <div className="w-10 h-10 bg-slate-800/70 rounded-full border border-slate-600"></div>
-            <div className="w-10 h-10 bg-slate-800/70 rounded-full border border-slate-600"></div>
-        </div>
-      </div>
-
+      {/* --- Main Content Area --- */}
       <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
-        {/* Placeholder for spacing */}
-        <div className="w-full max-w-2xl mx-auto mb-4 min-h-[5rem]"></div>
         
-        {/* Skeleton Boss Area (Center) */}
+        {/* --- Skeleton for Top-Right Buttons & Spacing (Corrected Positioning) --- */}
+        <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
+            {/* Empty div to push buttons to the right */}
+            <div></div>
+            {/* Buttons container */}
+            <div className="flex flex-col items-end gap-2">
+                <div className="flex justify-center gap-2">
+                    <div className="w-10 h-10 bg-slate-800/70 rounded-full border border-slate-600"></div>
+                    <div className="w-10 h-10 bg-slate-800/70 rounded-full border border-slate-600"></div>
+                </div>
+            </div>
+        </div>
+        
+        {/* --- Skeleton Boss Area (Center) (Correct) --- */}
         <div className="w-full max-w-4xl flex justify-center items-center my-8">
             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 w-72">
                 <div className="h-6 w-20 bg-slate-700/80 rounded-md"></div>
@@ -61,12 +69,12 @@ const BossBattleLoader: React.FC = () => {
             </div>
         </div>
 
-        {/* Skeleton Action Button (Bottom) */}
+        {/* --- Skeleton Action Button (Bottom) (Correct) --- */}
         <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
-            <div className="px-10 py-2 bg-slate-900/80 rounded-lg border border-slate-700/40">
+            <div className="relative px-10 py-2 bg-slate-900/80 rounded-lg border border-slate-700/40">
                 <div className="flex flex-col items-center gap-1">
                     <div className="h-6 w-24 bg-slate-700 rounded-md"></div>
-                    <div className="h-4 w-12 bg-slate-700 rounded-md"></div>
+                    <div className="h-4 w-12 bg-slate-700 rounded-md mt-0.5"></div>
                 </div>
             </div>
         </div>
