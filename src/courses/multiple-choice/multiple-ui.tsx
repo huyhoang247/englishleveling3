@@ -1,8 +1,8 @@
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
-import { QuizProvider, useQuiz } from './multiple-context.tsx'; 
-import { useAnimateValue } from '../../ui/useAnimateValue.ts'; 
+import { QuizProvider, useQuiz } from './multiple-context.tsx';
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
+import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 import StreakDisplay from '../../ui/display/streak-display.tsx';
 import Confetti from '../../ui/fireworks-effect.tsx';
 import QuizLoadingSkeleton from './multiple-loading.tsx'; // <<<--- DÒNG IMPORT QUAN TRỌNG ĐÂY!
@@ -22,7 +22,7 @@ const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http:/
 const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
 interface Definition { vietnamese: string; english: string; explanation: string; }
 const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> = ({ data, onClose }) => { if (!data) return null; return ( <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose} > <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl w-full max-w-md p-6 relative shadow-lg transform transition-all duration-300 scale-95 opacity-0 animate-scale-up" onClick={(e) => e.stopPropagation()} > <div className="inline-flex items-center bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-sm font-semibold px-3 py-1 rounded-full mb-4"> <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor"> <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /> </svg> <span>{data.english}</span> </div> <p className="text-gray-700 dark:text-gray-400 text-base leading-relaxed italic"> {`${data.vietnamese} (${data.english}) là ${data.explanation}`} </p> </div> <style jsx>{` @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; } `}</style> </div> ); };
-const AudioQuestionDisplay: React.FC<{ audioUrl: string; }> = memo(({ audioUrl }) => { const audioRef = useRef<HTMLAudioElement>(null); const [isPlaying, setIsPlaying] = useState(false); const togglePlay = useCallback(() => { const audio = audioRef.current; if (!audio) return; if (audio.paused) { audio.play().catch(e => console.error("Error playing audio:", e)); } else { audio.pause(); } }, []); useEffect(() => { const audio = audioRef.current; if (!audio) return; const handlePlay = () => setIsPlaying(true); const handlePause = () => setIsPlaying(false); const handleEnded = () => setIsPlaying(false); audio.addEventListener('play', handlePlay); audio.addEventListener('pause', handlePause); audio.addEventListener('ended', handleEnded); audio.play().catch(e => console.error("Autoplay prevented:", e)); return () => { audio.removeEventListener('play', handlePlay); audio.removeEventListener('pause', handlePause); audio.removeEventListener('ended', handleEnded); audio.pause(); }; }, [audioUrl]); return ( <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex flex-col items-center justify-center min-h-[140px]"> <audio ref={audioRef} src={audioUrl} key={audioUrl} preload="auto" className="hidden" /> <button onClick={togglePlay} className="w-20 h-20 flex items-center justify-center bg-white/20 rounded-full text-white hover:bg-white/30 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/50" aria-label={isPlaying ? 'Pause audio' : 'Play audio'} > {isPlaying ? <PauseIcon className="w-10 h-10" /> : <VolumeUpIcon className="w-10 h-10" />} </button> <p className="text-white/80 text-sm mt-3 font-medium">Nghe và chọn đáp án đúng</p> </div> ); });
+// --- XÓA COMPONENT AudioQuestionDisplay KHỎI ĐÂY ---
 
 // --- Component UI chính, nhận dữ liệu từ Context ---
 function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
@@ -41,11 +41,53 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
   const totalCompletedBeforeSession = filteredQuizData.length > 0 ? filteredQuizData.length - playableQuestions.length : 0;
   const quizProgress = filteredQuizData.length > 0 ? ((totalCompletedBeforeSession + currentQuestion) / filteredQuizData.length) * 100 : 0;
 
-  if (loading) return <QuizLoadingSkeleton />;
+  // --- START: THAY ĐỔI LỚN - LOGIC ÂM THANH ĐƯỢC ĐƯA VÀO ĐÂY ---
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioUrl = playableQuestions[currentQuestion]?.audioUrl;
 
-  // --- PHẦN JSX RENDER UI (Không thay đổi) ---
+  const togglePlay = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      audio.play().catch(e => console.error("Error playing audio:", e));
+    } else {
+      audio.pause();
+    }
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => setIsPlaying(false);
+
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
+
+    if (audioUrl) {
+        audio.play().catch(e => console.error("Autoplay prevented:", e));
+    }
+
+    return () => {
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+      audio.pause();
+    };
+  }, [audioUrl]);
+  // --- END: THAY ĐỔI LỚN - LOGIC ÂM THANH ---
+
+  if (loading) return <QuizLoadingSkeleton />;
+  
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      {/* Thẻ audio ẩn, được điều khiển bởi logic ở trên */}
+      <audio ref={audioRef} src={audioUrl} key={audioUrl} preload="auto" className="hidden" />
+
       {showConfetti && <Confetti />}
       {showDetailPopup && <DetailPopup data={detailData} onClose={onCloseDetailPopup} />}
 
@@ -87,25 +129,31 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                   </div>
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                   
+                  {/* --- START: KHU VỰC HIỂN THỊ CÂU HỎI ĐƯỢC THIẾT KẾ LẠI --- */}
                   <div className="relative">
-                    {/* --- THÊM MỚI TẠI ĐÂY --- */}
-                    <div className="absolute top-3 left-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/20 backdrop-blur-sm border border-white/25">
-                      <VolumeUpIcon className="w-4 h-4 text-white/80" />
-                    </div>
-                    {/* --- KẾT THÚC PHẦN THÊM MỚI --- */}
-
+                    { audioUrl && (
+                      <button onClick={togglePlay} className={`absolute top-3 left-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
+                        { isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" /> }
+                      </button>
+                    )}
+                    
                     <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 bg-black/20 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full border border-white/25">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-purple-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v.01M12 21v.01M3 12h.01M21 12h.01M5.64 5.64l.01.01M18.36 18.36l.01.01M5.64 18.36l.01-.01M18.36 5.64l.01-.01"/></svg>
                       <span>Matilda</span>
                     </div>
 
-                    { (playableQuestions[currentQuestion]?.word && playableQuestions[currentQuestion]?.audioUrl) ? (
-                        <AudioQuestionDisplay audioUrl={playableQuestions[currentQuestion].audioUrl} />
+                    { audioUrl ? (
+                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex items-center justify-center min-h-[140px]">
+                            <p className="text-white/80 text-sm font-medium">Nghe và chọn đáp án đúng</p>
+                        </div>
                     ) : (
-                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1"><h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>{playableQuestions[currentQuestion]?.vietnamese && (!playableQuestions[currentQuestion]?.word || playableQuestions[currentQuestion]?.word && !playableQuestions[currentQuestion]?.audioUrl) && (<p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>)}</div>
+                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
+                            <h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>
+                            {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
+                        </div>
                     )}
                   </div>
-
+                  {/* --- END: KHU VỰC HIỂN THỊ CÂU HỎI --- */}
                 </div>
                 <div className="p-6">
                   <div className="space-y-3 mb-6">
