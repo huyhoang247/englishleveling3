@@ -352,4 +352,3 @@ export const useQuiz = (): QuizContextType & { showConfetti: boolean } => {
   return context as QuizContextType & { showConfetti: boolean };
 };
 
---- END OF FILE src/quiz/QuizContext.tsx ---
