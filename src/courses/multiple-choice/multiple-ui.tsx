@@ -78,6 +78,11 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
           ) : (
               <>
                 <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
+                  {/* --- THẺ MATILDA ĐÃ ĐƯỢC THÊM VÀO ĐÂY --- */}
+                  <div className="absolute top-0 right-0 bg-yellow-400/20 backdrop-blur-sm text-yellow-200 text-xs font-bold px-3 py-1 rounded-bl-lg border-l border-b border-white/20 shadow-lg">
+                    Matilda
+                  </div>
+
                   <div className="flex justify-between items-center mb-4">
                     <div className="relative"><div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{totalCompletedBeforeSession + currentQuestion + 1}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{filteredQuizData.length}</span></div></div></div>
                     <div className="flex items-center gap-2">
