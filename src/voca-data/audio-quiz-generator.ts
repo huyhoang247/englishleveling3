@@ -1,6 +1,3 @@
---- START OF FILE audio-quiz-generatorhgfd.ts.txt ---
-
-// --- START OF FILE: audio-quiz-generator.ts ---
 
 import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 
