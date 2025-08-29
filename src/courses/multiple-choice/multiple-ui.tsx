@@ -7,9 +7,9 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 import StreakDisplay from '../../ui/display/streak-display.tsx';
 import Confetti from '../../ui/fireworks-effect.tsx';
-import QuizLoadingSkeleton from './multiple-loading.tsx'; // <<<--- DÒNG IMPORT QUAN TRỌNG ĐÂY!
+import QuizLoadingSkeleton from './multiple-loading.tsx';
 
-// --- PHẦN CODE KHÔNG ĐỔI (Các component con & Icons) ---
+// --- CÁC COMPONENT CON & ICONS ---
 const optionLabels = ['A', 'B', 'C', 'D'];
 const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo(({ timeLeft, totalTime }) => { const radius = 20; const circumference = 2 * Math.PI * radius; const progress = Math.max(0, timeLeft / totalTime); const strokeDashoffset = circumference * (1 - progress); const getTimeColor = () => { if (timeLeft <= 0) return 'text-gray-400'; if (timeLeft <= 10) return 'text-red-500'; if (timeLeft <= 20) return 'text-yellow-500'; return 'text-indigo-400'; }; const ringColorClass = getTimeColor(); return ( <div className="relative flex items-center justify-center w-8 h-8"> <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 44 44"> <circle className="text-white/20" stroke="currentColor" strokeWidth="3" fill="transparent" r={radius} cx="22" cy="22" /> <circle className={`${ringColorClass} transition-all duration-500`} stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="transparent" r={radius} cx="22" cy="22" style={{ strokeDasharray: circumference, strokeDashoffset }} /> </svg> <span className={`font-bold text-xs ${ringColorClass}`}>{Math.max(0, timeLeft)}</span> </div> ); });
 const CheckIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17L4 12"></path></svg> );
@@ -25,88 +25,66 @@ const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="htt
 interface Definition { vietnamese: string; english: string; explanation: string; }
 const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> = ({ data, onClose }) => { if (!data) return null; return ( <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose} > <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl w-full max-w-md p-6 relative shadow-lg transform transition-all duration-300 scale-95 opacity-0 animate-scale-up" onClick={(e) => e.stopPropagation()} > <div className="inline-flex items-center bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-sm font-semibold px-3 py-1 rounded-full mb-4"> <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor"> <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /> </svg> <span>{data.english}</span> </div> <p className="text-gray-700 dark:text-gray-400 text-base leading-relaxed italic"> {`${data.vietnamese} (${data.english}) là ${data.explanation}`} </p> </div> <style jsx>{` @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; } `}</style> </div> ); };
 
-// THÊM MỚI: Icon cho nút chọn giọng đọc
-const VoiceIcon = ({ className }: { className: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
-  </svg>
-);
-const ChevronDownIcon = ({ className }: { className: string }) => (
+const ChevronLeftIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+);
+const ChevronRightIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
     </svg>
 );
 
-
-// THÊM MỚI: Component VoiceSelector có thể tái sử dụng
-const VoiceSelector: React.FC<{
-  availableVoices: string[];
-  selectedVoice: string;
-  onVoiceChange: (voice: string) => void;
-}> = ({ availableVoices, selectedVoice, onVoiceChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  // Xử lý đóng popover khi click ra ngoài
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [wrapperRef]);
-  
-  if (availableVoices.length <= 1) return null; // Không hiển thị nếu chỉ có 1 hoặc không có giọng đọc
+const VoiceStepper: React.FC<{
+  currentVoice: string;
+  onNavigate: (direction: 'next' | 'previous') => void;
+  availableVoiceCount: number;
+}> = ({ currentVoice, onNavigate, availableVoiceCount }) => {
+  if (availableVoiceCount <= 1) {
+    return null;
+  }
 
   return (
-    <div className="relative" ref={wrapperRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 bg-black/20 backdrop-blur-sm px-2 py-1.5 rounded-full border border-white/25 transition-all duration-200 hover:bg-white/20"
+    <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
+      <button 
+        onClick={() => onNavigate('previous')} 
+        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200"
+        aria-label="Giọng đọc trước"
       >
-        <VoiceIcon className="w-4 h-4 text-white" />
-        <span className="text-xs font-semibold text-white">{selectedVoice}</span>
-        <ChevronDownIcon className={`w-2.5 h-2.5 text-white/70 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronLeftIcon className="w-3 h-3 text-white/80" />
       </button>
+      
+      <div className="text-center w-20 overflow-hidden">
+         <span 
+            key={currentVoice}
+            className="text-xs font-semibold text-white animate-fade-in-short"
+         >
+            {currentVoice}
+        </span>
+      </div>
 
-      {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-36 bg-gray-800/90 backdrop-blur-md border border-white/20 rounded-lg shadow-2xl z-20 overflow-hidden animate-fade-in-down">
-          <ul className="py-1">
-            {availableVoices.map(voice => (
-              <li key={voice}>
-                <button
-                  onClick={() => {
-                    onVoiceChange(voice);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 text-sm transition-colors duration-150 ${
-                    selectedVoice === voice
-                      ? 'bg-indigo-500 text-white font-semibold'
-                      : 'text-gray-200 hover:bg-white/10'
-                  }`}
-                >
-                  {voice}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <style jsx>{`
-            @keyframes fade-in-down {
-              from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-              to { opacity: 1; transform: translateY(0) scale(1); }
-            }
-            .animate-fade-in-down { animation: fade-in-down 0.2s ease-out forwards; }
-          `}</style>
-        </div>
-      )}
+      <button 
+        onClick={() => onNavigate('next')} 
+        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200"
+        aria-label="Giọng đọc tiếp theo"
+      >
+        <ChevronRightIcon className="w-3 h-3 text-white/80" />
+      </button>
+      <style jsx>{`
+        @keyframes fade-in-short {
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-short {
+          animation: fade-in-short 0.25s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 };
 
-
-// --- Component UI chính, nhận dữ liệu từ Context ---
+// --- COMPONENT UI CHÍNH ---
 function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
   const {
     loading, showScore, currentQuestion, score, coins, streak, masteryCount, streakAnimation,
@@ -114,10 +92,9 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
     answered, showNextButton, hintUsed, hiddenOptions, currentQuestionWord,
     handleAnswer, handleHintClick, handleNextQuestion, resetQuiz, handleDetailClick,
     showDetailPopup, detailData, onCloseDetailPopup, showConfetti,
-    // THÊM MỚI: Lấy các giá trị liên quan đến giọng đọc từ context
     currentAudioUrl,
     selectedVoice,
-    handleVoiceChange,
+    handleChangeVoiceDirection,
   } = useQuiz();
 
   const displayedCoins = useAnimateValue(coins, 500);
@@ -127,7 +104,6 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
   const totalCompletedBeforeSession = filteredQuizData.length > 0 ? filteredQuizData.length - playableQuestions.length : 0;
   const quizProgress = filteredQuizData.length > 0 ? ((totalCompletedBeforeSession + currentQuestion) / filteredQuizData.length) * 100 : 0;
 
-  // --- START: LOGIC ÂM THANH SỬ DỤNG currentAudioUrl TỪ CONTEXT ---
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -164,14 +140,12 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
       audio.pause();
     };
   }, [currentAudioUrl]);
-  // --- END: LOGIC ÂM THANH ---
 
   if (loading) return <QuizLoadingSkeleton />;
   
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       <audio ref={audioRef} src={currentAudioUrl || ''} key={currentAudioUrl} preload="auto" className="hidden" />
-
       {showConfetti && <Confetti />}
       {showDetailPopup && <DetailPopup data={detailData} onClose={onCloseDetailPopup} />}
 
@@ -213,20 +187,18 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                   </div>
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                   
-                  {/* --- START: KHU VỰC HIỂN THỊ CÂU HỎI ĐƯỢC THIẾT KẾ LẠI --- */}
                   <div className="relative">
                     {currentAudioUrl && (
-                      <button onClick={togglePlay} className={`absolute top-3 left-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
+                      <button onClick={togglePlay} className={`absolute top-1/2 -translate-y-1/2 left-3 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
                         { isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" /> }
                       </button>
                     )}
                     
-                    {/* THAY ĐỔI LỚN: Thay thế 2 button bằng component VoiceSelector mới */}
-                    <div className="absolute top-2 right-2 z-10">
-                       <VoiceSelector
-                          availableVoices={playableQuestions[currentQuestion]?.audioUrls ? Object.keys(playableQuestions[currentQuestion].audioUrls) : []}
-                          selectedVoice={selectedVoice}
-                          onVoiceChange={handleVoiceChange}
+                    <div className="absolute top-3 right-3 z-10">
+                       <VoiceStepper
+                          currentVoice={selectedVoice}
+                          onNavigate={handleChangeVoiceDirection}
+                          availableVoiceCount={playableQuestions[currentQuestion]?.audioUrls ? Object.keys(playableQuestions[currentQuestion].audioUrls).length : 0}
                        />
                     </div>
 
@@ -241,7 +213,6 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                         </div>
                     )}
                   </div>
-                  {/* --- END: KHU VỰC HIỂN THỊ CÂU HỎI --- */}
                 </div>
                 <div className="p-6">
                   <div className="space-y-3 mb-6">
@@ -287,8 +258,7 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
   );
 }
 
-
-// --- Component Wrapper, cung cấp Context Provider ---
+// --- COMPONENT WRAPPER ---
 export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () => void; selectedPractice: number; }) {
   return (
     <QuizProvider selectedPractice={selectedPractice}>
