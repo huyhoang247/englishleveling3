@@ -1,6 +1,3 @@
---- START OF FILE multiple-context.tsx (2).txt ---
-
-// --- START OF FILE src/quiz/QuizContext.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { db, auth } from '../../firebase.js';
