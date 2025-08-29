@@ -1,14 +1,18 @@
-// --- START OF FILE tower-ui.tsx (Full, Unabbreviated, Modified Code) ---
+// --- START OF FILE tower-ui.tsx (6).txt ---
 
-// --- OPTIMIZATION: Import 'memo' và 'useRef' từ React ---
-import React, { useState, useCallback, useEffect, memo, useRef } from 'react';
-import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
+// --- START OF FILE tower-ui.tsx (Full, Unabbreviated Code) ---
+
+// --- START OF FILE boss.tsx ---
+
+// --- OPTIMIZATION: Import 'memo' từ React ---
+import React, { useState, useCallback, useEffect, memo } from 'react';
+import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx'; // IMPORT CONTEXT MỚI
 import BOSS_DATA from './tower-data.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import EnergyDisplay from '../../ui/display/energy-display.tsx'; 
 import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
-import BossBattleLoader from './tower-loading.tsx';
-import { useAnimateValue } from '../../ui/useAnimateValue.ts';
+import BossBattleLoader from './tower-loading.tsx'; // <-- Dòng import này đã có và rất quan trọng
+import { useAnimateValue } from '../../ui/useAnimateValue.ts'; // SỬA ĐỔI: Import useAnimateValue
 
 interface BossBattleWrapperProps {
   userId: string;
@@ -18,9 +22,9 @@ interface BossBattleWrapperProps {
 }
 
 
-// --- UI HELPER COMPONENTS ---
+// --- UI HELPER COMPONENTS (Toàn bộ code được giữ nguyên và đầy đủ, đã thêm React.memo) ---
 
-const HomeIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> ));
+const HomeIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> ));
 
 const WarriorIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> ));
 
@@ -80,16 +84,9 @@ const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current:
   );
 });
 
-// --- SỬA ĐỔI: Component FloatingText nhận thêm prop 'style' ---
-const FloatingText = ({ text, id, colorClass, style }: { text: string, id: number, colorClass: string, style?: React.CSSProperties }) => {
+const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colorClass: string }) => {
   return (
-    <div 
-        key={id} 
-        className={`absolute top-1/3 font-lilita text-2xl animate-float-up pointer-events-none ${colorClass}`} 
-        style={{ ...style, textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}
-    >
-        {text}
-    </div>
+    <div key={id} className={`absolute top-1/3 font-lilita text-2xl animate-float-up pointer-events-none ${colorClass}`} style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}>{text}</div>
   );
 };
 
@@ -257,86 +254,49 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
-    // --- THÊM MỚI: Refs để tham chiếu đến các phần tử UI ---
-    const playerInfoRef = useRef<HTMLDivElement>(null);
-    const bossRef = useRef<HTMLDivElement>(null);
-    
-    // --- THÊM MỚI: State để lưu tọa độ X đã tính toán ---
-    const [floatingTextPositions, setFloatingTextPositions] = useState({ playerX: 0, bossX: 0 });
-
-    // --- SỬA ĐỔI: State 'damages' giờ đây lưu object style ---
-    const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string, style: React.CSSProperties }[]>([]);
-    
     // --- STATE UI CỤC BỘ ---
+    const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
     const [showRewardsModal, setShowRewardsModal] = useState(false);
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
     const [isSweeping, setIsSweeping] = useState(false);
     
-    // --- LOGIC ANIMATION COIN/ENERGY ---
+    // --- SỬA ĐỔI: LOGIC ANIMATION CHO COIN VÀ ENERGY ---
     const displayableCoins = isLoading ? 0 : displayedCoins;
     const animatedCoins = useAnimateValue(displayableCoins);
+
     const displayableEnergy = isLoading || !playerStats ? 0 : playerStats.energy ?? 0;
     const animatedEnergy = useAnimateValue(displayableEnergy);
 
+    // --- LOGIC UI CỤC BỘ ---
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
-    // --- SỬA ĐỔI: Hàm showFloatingText sử dụng tọa độ đã tính toán ---
+    // --- THAY ĐỔI: Hàm showFloatingText giờ nhận thêm tham số isPlayerSide ---
     const showFloatingText = useCallback((text: string, colorClass: string, isPlayerSide: boolean) => {
         const id = Date.now() + Math.random();
-        
-        // Tạo object style vị trí động
-        const positionStyle: React.CSSProperties = {
-            left: isPlayerSide ? `${floatingTextPositions.playerX}px` : `${floatingTextPositions.bossX}px`,
-            // transform là chìa khóa để căn giữa phần tử tại tọa độ 'left'
-            transform: 'translateX(-50%)', 
-        };
-
-        setDamages(prev => [...prev, { id, text, colorClass, style: positionStyle }]);
+        // Vị trí hiển thị: left-[25%] cho người chơi (bên trái), right-[25%] cho boss (bên phải)
+        const position = isPlayerSide ? 'left-[5%]' : 'right-[5%]';
+        setDamages(prev => [...prev, { id, text, colorClass: `${position} ${colorClass}` }]);
         setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
-    }, [floatingTextPositions]); // Thêm dependency để hàm được cập nhật khi tọa độ thay đổi
+    }, []);
 
-    // --- THÊM MỚI: useEffect để tính toán vị trí động cho floating text ---
-    useEffect(() => {
-        const calculatePositions = () => {
-            const playerNode = playerInfoRef.current;
-            const bossNode = bossRef.current;
-
-            if (playerNode && bossNode) {
-                const playerRect = playerNode.getBoundingClientRect();
-                const bossRect = bossNode.getBoundingClientRect();
-                const viewportWidth = window.innerWidth;
-
-                // Vị trí X của Player: Trung tâm của khoảng trống từ lề trái màn hình đến cạnh phải của thẻ player
-                const playerX = playerRect.right / 2;
-
-                // Vị trí X của Boss: Trung tâm của khoảng trống từ cạnh trái của thẻ boss đến lề phải màn hình
-                const bossX = bossRect.left + (viewportWidth - bossRect.left) / 2;
-                
-                setFloatingTextPositions({ playerX, bossX });
-            }
-        };
-
-        calculatePositions(); // Chạy lần đầu
-        window.addEventListener('resize', calculatePositions); // Chạy lại khi thay đổi kích thước cửa sổ
-
-        return () => {
-            window.removeEventListener('resize', calculatePositions); // Dọn dẹp listener khi component unmount
-        };
-    }, [isLoading]); // Chạy lại khi loading xong để đảm bảo các thẻ đã hiện ra
-
-
-    // Effect để hiển thị floating text dựa trên sự kiện từ context
+    // --- THAY ĐỔI: Effect hiển thị floating text dựa trên sự kiện và vị trí ---
     useEffect(() => {
         if (!lastTurnEvents) return;
+
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
+        // Sát thương người chơi gây ra cho boss (hiển thị bên boss - phải)
         if (playerDmg > 0) showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', false);
+        // Hồi máu cho người chơi (hiển thị bên người chơi - trái)
         if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', true);
         
+        // Tạo độ trễ nhỏ để hiệu ứng của boss xuất hiện sau
         setTimeout(() => {
+          // Sát thương boss gây ra cho người chơi (hiển thị bên người chơi - trái)
           if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', true);
+          // Sát thương phản đòn lên boss (hiển thị bên boss - phải)
           if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', false);
         }, 500);
 
@@ -349,8 +309,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         setIsSweeping(false);
     };
 
+    // --- RENDER LOGIC CHO LỖI ---
     if (error) return <div className="absolute inset-0 bg-red-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 text-white font-lilita"><p>Error: {error}</p><button onClick={onClose} className="mt-4 px-4 py-2 bg-slate-700 rounded">Close</button></div>;
-    
+    // --- RENDER ---
     return (
         <>
             <style>{`
@@ -368,11 +329,15 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
                 
                 {isLoading ? (
-                    <div className="absolute inset-0 z-50"><BossBattleLoader /></div>
+                    <div className="absolute inset-0 z-50">
+                        <BossBattleLoader />
+                    </div>
                 ) : (
                     <div className="w-full h-full flex flex-col">
                         {(!playerStats || !bossStats || !currentBossData) ? (
-                            <div className="flex-grow flex items-center justify-center"><p>Missing required data.</p></div>
+                            <div className="flex-grow flex items-center justify-center">
+                                <p>Missing required data.</p>
+                            </div>
                         ) : (
                             <>
                                 <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
@@ -384,14 +349,24 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             </button>
                                         </div>
                                         <div className="flex items-center gap-2 font-sans">
-                                            {playerStats?.maxEnergy !== undefined && (<EnergyDisplay currentEnergy={animatedEnergy} maxEnergy={playerStats.maxEnergy} isStatsFullscreen={false}/>)}
-                                            <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
+                                            {/* SỬA ĐỔI: Sử dụng animatedEnergy */}
+                                            {playerStats?.maxEnergy !== undefined && (
+                                                <EnergyDisplay 
+                                                    currentEnergy={animatedEnergy} 
+                                                    maxEnergy={playerStats.maxEnergy} 
+                                                    isStatsFullscreen={false}
+                                                />
+                                            )}
+                                            {/* SỬA ĐỔI: Sử dụng animatedCoins */}
+                                            <CoinDisplay 
+                                                displayedCoins={animatedCoins} 
+                                                isStatsFullscreen={false} 
+                                            />
                                         </div>
                                     </div>
                                 </header>
     
-                                {/* --- THÊM MỚI: Gắn ref vào div bao bọc thông tin người chơi --- */}
-                                <div ref={playerInfoRef} className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
+                                <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
                                     <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} onAvatarClick={() => setStatsModalTarget('player')} />
                                     {battleState === 'idle' && currentFloor > 0 && (
                                         <button onClick={handleSweepClick} disabled={(playerStats.energy || 0) < 10 || isSweeping} title="Instantly clear the previous floor for rewards" className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700">
@@ -416,12 +391,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         </div>
                                     </div>
                             
-                                    {/* --- SỬA ĐỔI: Render FloatingText với prop style --- */}
-                                    {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} style={d.style} />))}
+                                    {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
     
                                     <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                                        {/* --- THÊM MỚI: Gắn ref vào div của boss --- */}
-                                        <div ref={bossRef} className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group" onClick={() => setStatsModalTarget('boss')} title="View Boss Stats">
+                                        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group" onClick={() => setStatsModalTarget('boss')} title="View Boss Stats">
                                             <div className="relative group flex justify-center">
                                                 <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
                                                 <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">{currentBossData.name.toUpperCase()}</div>
