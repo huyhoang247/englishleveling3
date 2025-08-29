@@ -1,4 +1,4 @@
-// --- START OF FILE boss-battle-context.tsx ---
+// --- START OF FILE tower-context.tsx (FIXED) ---
 
 import React, { useState, useEffect, useRef, useCallback, createContext, useContext, ReactNode } from 'react';
 import BOSS_DATA from './tower-data.ts';
@@ -94,6 +94,9 @@ export const BossBattleProvider = ({
     const initialPlayerStatsRef = useRef<CombatStats | null>(null);
     const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const isEndingGame = useRef(false); // Ref để tránh gọi endGame nhiều lần
+    
+    // --- FIX: Create a ref to hold the latest version of the battle turn callback ---
+    const savedCallback = useRef<() => void>();
 
     const currentBossData = BOSS_DATA[currentFloor] || null;
 
@@ -335,8 +338,15 @@ export const BossBattleProvider = ({
     }, [playerStats, currentFloor, executeFullTurn, onBattleEnd]);
 
     // --- REACT HOOKS ---
+
+    // --- FIX: Store the latest callback in the ref ---
+    useEffect(() => {
+        savedCallback.current = runBattleTurn;
+    }, [runBattleTurn]);
+
     useEffect(() => {
         const loadData = async () => {
+          const startTime = Date.now(); // Record start time for minimum loading
           try {
             setIsLoading(true);
             const data = await fetchBossBattlePrerequisites(userId);
@@ -371,7 +381,15 @@ export const BossBattleProvider = ({
             console.error("Failed to load boss battle data:", e);
             setError(e instanceof Error ? e.message : "An unknown error occurred.");
           } finally {
-            setIsLoading(false);
+            // --- MODIFIED: Ensure minimum loading time of 0.7s ---
+            const elapsedTime = Date.now() - startTime;
+            const remainingTime = 700 - elapsedTime;
+
+            if (remainingTime > 0) {
+                setTimeout(() => setIsLoading(false), remainingTime);
+            } else {
+                setIsLoading(false);
+            }
           }
         };
     
@@ -385,15 +403,22 @@ export const BossBattleProvider = ({
           addLog(`[Lượt 0] ${currentBossData.name} đã xuất hiện. Hãy chuẩn bị!`);
         }
     }, [currentFloor, isLoading, currentBossData]);
-
+    
+    // --- FIX: Modified useEffect to use the ref, preventing stale closure ---
     useEffect(() => {
         if (battleState === 'fighting' && !gameOver) {
-          battleIntervalRef.current = setInterval(runBattleTurn, 1200);
+          // The interval calls the function from the ref, which is always up-to-date.
+          battleIntervalRef.current = setInterval(() => {
+              if(savedCallback.current) {
+                savedCallback.current();
+              }
+          }, 1200);
         }
         return () => {
           if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
         };
-    }, [battleState, gameOver, runBattleTurn]);
+    }, [battleState, gameOver]); // Removed `runBattleTurn` from dependencies
+
 
     // --- CUNG CẤP VALUE CHO CONTEXT ---
     const value: BossBattleContextType = {
@@ -432,4 +457,4 @@ export const useBossBattle = (): BossBattleContextType => {
     return context;
 };
 
-// --- END OF FILE boss-battle-context.tsx ---
+// --- END OF FILE tower-context.tsx (FIXED) ---
