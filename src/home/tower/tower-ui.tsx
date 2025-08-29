@@ -10,6 +10,7 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import EnergyDisplay from '../../ui/display/energy-display.tsx'; 
 import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
 import BossBattleLoader from './tower-loading.tsx'; // <-- Dòng import này đã có và rất quan trọng
+import { useAnimateValue } from '../../ui/useAnimateValue.ts'; // SỬA ĐỔI: Import useAnimateValue
 
 interface BossBattleWrapperProps {
   userId: string;
@@ -259,6 +260,13 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
     const [isSweeping, setIsSweeping] = useState(false);
     
+    // --- SỬA ĐỔI: LOGIC ANIMATION CHO COIN VÀ ENERGY ---
+    const displayableCoins = isLoading ? 0 : displayedCoins;
+    const animatedCoins = useAnimateValue(displayableCoins);
+
+    const displayableEnergy = isLoading || !playerStats ? 0 : playerStats.energy ?? 0;
+    const animatedEnergy = useAnimateValue(displayableEnergy);
+
     // --- LOGIC UI CỤC BỘ ---
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
@@ -332,8 +340,19 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             </button>
                                         </div>
                                         <div className="flex items-center gap-2 font-sans">
-                                            {playerStats?.energy !== undefined && playerStats?.maxEnergy !== undefined && (<EnergyDisplay currentEnergy={playerStats.energy} maxEnergy={playerStats.maxEnergy} isStatsFullscreen={false}/>)}
-                                            <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
+                                            {/* SỬA ĐỔI: Sử dụng animatedEnergy */}
+                                            {playerStats?.maxEnergy !== undefined && (
+                                                <EnergyDisplay 
+                                                    currentEnergy={animatedEnergy} 
+                                                    maxEnergy={playerStats.maxEnergy} 
+                                                    isStatsFullscreen={false}
+                                                />
+                                            )}
+                                            {/* SỬA ĐỔI: Sử dụng animatedCoins */}
+                                            <CoinDisplay 
+                                                displayedCoins={animatedCoins} 
+                                                isStatsFullscreen={false} 
+                                            />
                                         </div>
                                     </div>
                                 </header>
