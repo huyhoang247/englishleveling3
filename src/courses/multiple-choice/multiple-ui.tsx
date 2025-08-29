@@ -1,4 +1,3 @@
---- START OF FILE multiple-ui.tsx (6).txt ---
 
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import { QuizProvider, useQuiz } from './multiple-context.tsx';
