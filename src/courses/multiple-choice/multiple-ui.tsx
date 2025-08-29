@@ -1,3 +1,5 @@
+--- START OF FILE multiple-ui.tsx (6).txt ---
+
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import { QuizProvider, useQuiz } from './multiple-context.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
@@ -32,6 +34,10 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
     answered, showNextButton, hintUsed, hiddenOptions, currentQuestionWord,
     handleAnswer, handleHintClick, handleNextQuestion, resetQuiz, handleDetailClick,
     showDetailPopup, detailData, onCloseDetailPopup, showConfetti,
+    // THÊM MỚI: Lấy các giá trị liên quan đến giọng đọc từ context
+    currentAudioUrl,
+    selectedVoice,
+    handleVoiceChange,
   } = useQuiz();
 
   const displayedCoins = useAnimateValue(coins, 500);
@@ -41,10 +47,10 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
   const totalCompletedBeforeSession = filteredQuizData.length > 0 ? filteredQuizData.length - playableQuestions.length : 0;
   const quizProgress = filteredQuizData.length > 0 ? ((totalCompletedBeforeSession + currentQuestion) / filteredQuizData.length) * 100 : 0;
 
-  // --- START: THAY ĐỔI LỚN - LOGIC ÂM THANH ĐƯỢC ĐƯA VÀO ĐÂY ---
+  // --- START: LOGIC ÂM THANH SỬ DỤNG currentAudioUrl TỪ CONTEXT ---
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const audioUrl = playableQuestions[currentQuestion]?.audioUrl;
+  // THAY ĐỔI: Biến audioUrl cục bộ bị loại bỏ, sử dụng currentAudioUrl từ context
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
@@ -68,7 +74,8 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('ended', handleEnded);
 
-    if (audioUrl) {
+    // THAY ĐỔI: Sử dụng currentAudioUrl
+    if (currentAudioUrl) {
         audio.play().catch(e => console.error("Autoplay prevented:", e));
     }
 
@@ -78,15 +85,15 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
       audio.removeEventListener('ended', handleEnded);
       audio.pause();
     };
-  }, [audioUrl]);
-  // --- END: THAY ĐỔI LỚN - LOGIC ÂM THANH ---
+  }, [currentAudioUrl]); // THAY ĐỔI: Dependency là currentAudioUrl
+  // --- END: LOGIC ÂM THANH ---
 
   if (loading) return <QuizLoadingSkeleton />;
   
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      {/* Thẻ audio ẩn, được điều khiển bởi logic ở trên */}
-      <audio ref={audioRef} src={audioUrl} key={audioUrl} preload="auto" className="hidden" />
+      {/* THAY ĐỔI: Thẻ audio sử dụng currentAudioUrl từ context */}
+      <audio ref={audioRef} src={currentAudioUrl || ''} key={currentAudioUrl} preload="auto" className="hidden" />
 
       {showConfetti && <Confetti />}
       {showDetailPopup && <DetailPopup data={detailData} onClose={onCloseDetailPopup} />}
@@ -131,18 +138,41 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                   
                   {/* --- START: KHU VỰC HIỂN THỊ CÂU HỎI ĐƯỢC THIẾT KẾ LẠI --- */}
                   <div className="relative">
-                    { audioUrl && (
+                    {/* THAY ĐỔI: Điều kiện hiển thị là currentAudioUrl */}
+                    { currentAudioUrl && (
                       <button onClick={togglePlay} className={`absolute top-3 left-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
                         { isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" /> }
                       </button>
                     )}
                     
-                    <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 bg-black/20 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full border border-white/25">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-purple-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v.01M12 21v.01M3 12h.01M21 12h.01M5.64 5.64l.01.01M18.36 18.36l.01.01M5.64 18.36l.01-.01M18.36 5.64l.01-.01"/></svg>
-                      <span>Matilda</span>
-                    </div>
+                    {/* THAY ĐỔI LỚN: Thay thế tag tĩnh bằng bộ chuyển đổi giọng đọc động */}
+                    { currentAudioUrl && (
+                      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
+                          <button
+                              onClick={() => handleVoiceChange('matilda')}
+                              className={`px-3 py-0.5 text-xs font-semibold rounded-full transition-all duration-200 ${
+                                  selectedVoice === 'matilda'
+                                  ? 'bg-white text-purple-700 shadow-md'
+                                  : 'bg-transparent text-white/70 hover:bg-white/20'
+                              }`}
+                          >
+                              Matilda
+                          </button>
+                          <button
+                              onClick={() => handleVoiceChange('arabella')}
+                              className={`px-3 py-0.5 text-xs font-semibold rounded-full transition-all duration-200 ${
+                                  selectedVoice === 'arabella'
+                                  ? 'bg-white text-purple-700 shadow-md'
+                                  : 'bg-transparent text-white/70 hover:bg-white/20'
+                              }`}
+                          >
+                              Arabella
+                          </button>
+                      </div>
+                    )}
 
-                    { audioUrl ? (
+                    {/* THAY ĐỔI: Điều kiện hiển thị là currentAudioUrl */}
+                    { currentAudioUrl ? (
                         <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex items-center justify-center min-h-[140px]">
                             <p className="text-white/80 text-sm font-medium">Nghe và chọn đáp án đúng</p>
                         </div>
