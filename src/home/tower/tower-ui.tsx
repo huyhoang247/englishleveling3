@@ -276,7 +276,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const showFloatingText = useCallback((text: string, colorClass: string, isPlayerSide: boolean) => {
         const id = Date.now() + Math.random();
         // Vị trí hiển thị: left-[25%] cho người chơi (bên trái), right-[25%] cho boss (bên phải)
-        const position = isPlayerSide ? 'left-[25%]' : 'right-[25%]';
+        const position = isPlayerSide ? 'left-[5%]' : 'right-[5%]';
         setDamages(prev => [...prev, { id, text, colorClass: `${position} ${colorClass}` }]);
         setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
     }, []);
