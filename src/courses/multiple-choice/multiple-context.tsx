@@ -1,3 +1,5 @@
+--- START OF FILE multiple-context.tsx (2).txt ---
+
 // --- START OF FILE src/quiz/QuizContext.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -42,6 +44,8 @@ interface QuizContextType {
   hintUsed: boolean;
   hiddenOptions: string[];
   currentQuestionWord: string | null;
+  currentAudioUrl: string | null; // THÊM MỚI: URL audio hiện tại
+  selectedVoice: 'matilda' | 'arabella'; // THÊM MỚI: Giọng đọc được chọn
   
   // Actions / Handlers
   handleAnswer: (selectedAnswer: string) => void;
@@ -49,6 +53,7 @@ interface QuizContextType {
   handleNextQuestion: () => void;
   resetQuiz: () => void;
   handleDetailClick: () => void;
+  handleVoiceChange: (voice: 'matilda' | 'arabella') => void; // THÊM MỚI: Hàm đổi giọng đọc
 
   // Detail Popup State
   showDetailPopup: boolean;
@@ -61,7 +66,7 @@ const QuizContext = createContext<QuizContextType | undefined>(undefined);
 
 // --- TẠO PROVIDER COMPONENT ---
 export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractice: number }> = ({ children, selectedPractice }) => {
-  // --- TOÀN BỘ STATE VÀ LOGIC CỦA QUIZ ĐƯỢC CHUYỂN VÀO ĐÂY ---
+  // --- TOÀN BỘ STATE VÀ LOGIC CỦA QUIZ ĐƯỢỢC CHUYỂN VÀO ĐÂY ---
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
@@ -87,6 +92,22 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [detailData, setDetailData] = useState<Definition | null>(null);
   const [currentQuestionWord, setCurrentQuestionWord] = useState<string | null>(null);
+
+  // THÊM MỚI: State để quản lý giọng đọc được chọn
+  const [selectedVoice, setSelectedVoice] = useState<'matilda' | 'arabella'>('matilda');
+  const handleVoiceChange = (voice: 'matilda' | 'arabella') => {
+    setSelectedVoice(voice);
+  };
+
+  // THÊM MỚI: Tính toán URL audio hiện tại dựa trên câu hỏi và giọng đọc được chọn
+  const currentAudioUrl = useMemo(() => {
+    const question = playableQuestions[currentQuestion];
+    if (question?.audioUrls) {
+      return question.audioUrls[selectedVoice];
+    }
+    return null;
+  }, [currentQuestion, playableQuestions, selectedVoice]);
+
 
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
@@ -208,7 +229,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
 
     setPlayableQuestions(shuffleArray(newRemainingQuestions));
     setCurrentQuestion(0); setScore(0); setShowScore(false); setSelectedOption(null); setAnswered(false); setStreak(0); setTimeLeft(TOTAL_TIME); setShowNextButton(false); setHintUsed(false); setHiddenOptions([]);
-
+    // THÊM MỚI: Reset lại giọng đọc về mặc định khi reset quiz
+    setSelectedVoice('matilda');
   }, [playableQuestions, currentQuestion, filteredQuizData, userVocabulary]);
 
 
@@ -288,6 +310,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
     const nextQuestion = currentQuestion + 1;
     if (nextQuestion < playableQuestions.length) {
       setCurrentQuestion(nextQuestion); setSelectedOption(null); setAnswered(false); setShowNextButton(false); setHintUsed(false); setHiddenOptions([]);
+      // THÊM MỚI: Reset lại giọng đọc về mặc định cho câu hỏi tiếp theo
+      setSelectedVoice('matilda');
     } else { setShowScore(true); }
   };
   
@@ -309,6 +333,10 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
     answered, showNextButton, hintUsed, hiddenOptions, currentQuestionWord,
     handleAnswer, handleHintClick, handleNextQuestion, resetQuiz, handleDetailClick,
     showDetailPopup, detailData, onCloseDetailPopup, showConfetti,
+    // THÊM MỚI: Cung cấp state và hàm xử lý giọng đọc
+    currentAudioUrl,
+    selectedVoice,
+    handleVoiceChange,
   };
 
   return (
@@ -326,3 +354,5 @@ export const useQuiz = (): QuizContextType & { showConfetti: boolean } => {
   }
   return context as QuizContextType & { showConfetti: boolean };
 };
+
+--- END OF FILE src/quiz/QuizContext.tsx ---
