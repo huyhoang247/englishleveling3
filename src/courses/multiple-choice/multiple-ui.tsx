@@ -87,8 +87,13 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                   </div>
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                   
-                  {/* --- START: THAY ĐỔI TẠI ĐÂY --- */}
                   <div className="relative">
+                    {/* --- THÊM MỚI TẠI ĐÂY --- */}
+                    <div className="absolute top-3 left-3 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/20 backdrop-blur-sm border border-white/25">
+                      <VolumeUpIcon className="w-4 h-4 text-white/80" />
+                    </div>
+                    {/* --- KẾT THÚC PHẦN THÊM MỚI --- */}
+
                     <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 bg-black/20 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full border border-white/25">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-purple-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v.01M12 21v.01M3 12h.01M21 12h.01M5.64 5.64l.01.01M18.36 18.36l.01.01M5.64 18.36l.01-.01M18.36 5.64l.01-.01"/></svg>
                       <span>Matilda</span>
@@ -100,7 +105,6 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                         <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1"><h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>{playableQuestions[currentQuestion]?.vietnamese && (!playableQuestions[currentQuestion]?.word || playableQuestions[currentQuestion]?.word && !playableQuestions[currentQuestion]?.audioUrl) && (<p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>)}</div>
                     )}
                   </div>
-                  {/* --- END: THAY ĐỔI TẠI ĐÂY --- */}
 
                 </div>
                 <div className="p-6">
