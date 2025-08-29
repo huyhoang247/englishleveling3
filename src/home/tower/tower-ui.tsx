@@ -1,3 +1,5 @@
+// --- START OF FILE tower-ui.tsx (6).txt ---
+
 // --- START OF FILE tower-ui.tsx (Full, Unabbreviated Code) ---
 
 // --- START OF FILE boss.tsx ---
@@ -270,24 +272,31 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     // --- LOGIC UI CỤC BỘ ---
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
+    // --- THAY ĐỔI: Hàm showFloatingText giờ nhận thêm tham số isPlayerSide ---
     const showFloatingText = useCallback((text: string, colorClass: string, isPlayerSide: boolean) => {
         const id = Date.now() + Math.random();
-        const position = isPlayerSide ? 'left-[25%]' : 'right-[25%]'; // Vị trí hiển thị
+        // Vị trí hiển thị: left-[25%] cho người chơi (bên trái), right-[25%] cho boss (bên phải)
+        const position = isPlayerSide ? 'left-[25%]' : 'right-[25%]';
         setDamages(prev => [...prev, { id, text, colorClass: `${position} ${colorClass}` }]);
         setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
     }, []);
 
-    // Effect để hiển thị floating text dựa trên sự kiện từ context
+    // --- THAY ĐỔI: Effect hiển thị floating text dựa trên sự kiện và vị trí ---
     useEffect(() => {
         if (!lastTurnEvents) return;
 
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
+        // Sát thương người chơi gây ra cho boss (hiển thị bên boss - phải)
         if (playerDmg > 0) showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', false);
+        // Hồi máu cho người chơi (hiển thị bên người chơi - trái)
         if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', true);
         
+        // Tạo độ trễ nhỏ để hiệu ứng của boss xuất hiện sau
         setTimeout(() => {
+          // Sát thương boss gây ra cho người chơi (hiển thị bên người chơi - trái)
           if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', true);
+          // Sát thương phản đòn lên boss (hiển thị bên boss - phải)
           if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', false);
         }, 500);
 
