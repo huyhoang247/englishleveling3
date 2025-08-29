@@ -1,11 +1,17 @@
+--- START OF FILE audio-quiz-generatorhgfd.ts.txt ---
+
 // --- START OF FILE: audio-quiz-generator.ts ---
 
 import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 
 // Định nghĩa cấu trúc cho một đối tượng câu hỏi audio.
+// THAY ĐỔI: Chuyển từ audioUrl: string sang audioUrls: object
 export interface AudioQuizQuestion {
   question: string;
-  audioUrl: string;
+  audioUrls: {
+    matilda: string;
+    arabella: string;
+  };
   options: string[];
   correctAnswer: string;
   word: string;
@@ -71,8 +77,9 @@ export const generateAudioQuizQuestions = (userVocabulary: string[]): AudioQuizQ
         // Các tệp âm thanh được đặt tên theo số (ví dụ: 001.mp3, 1001.mp3).
         const audioNumber = (item.index + 1).toString().padStart(3, '0');
         
-        // Tạo URL đầy đủ với thư mục audio đã xác định.
-        const audioUrl = `https://raw.githubusercontent.com/englishleveling46/Flashcard/main/${audioDirectory}/${audioNumber}.mp3`;
+        // THAY ĐỔI: Tạo URL cho cả hai giọng đọc
+        const matildaUrl = `https://raw.githubusercontent.com/englishleveling46/Flashcard/main/${audioDirectory}/${audioNumber}.mp3`;
+        const arabellaUrl = `https://raw.githubusercontent.com/englishleveling46/Flashcard/main/voice1/${audioDirectory}/${audioNumber}.mp3`;
         
         const correctWord = item.word.toLowerCase();
         
@@ -89,7 +96,11 @@ export const generateAudioQuizQuestions = (userVocabulary: string[]): AudioQuizQ
         // Trả về đối tượng câu hỏi hoàn chỉnh.
         return {
             question: "Nghe và chọn từ đúng:", 
-            audioUrl: audioUrl,
+            // THAY ĐỔI: Lưu object audioUrls thay vì một URL duy nhất
+            audioUrls: {
+                matilda: matildaUrl,
+                arabella: arabellaUrl,
+            },
             options: [correctWord, ...incorrectOptions],
             correctAnswer: correctWord,
             word: item.word,
