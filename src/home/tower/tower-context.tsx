@@ -1,5 +1,3 @@
-// --- START OF FILE tower-context.tsx (FIXED) ---
-
 // --- START OF FILE boss-battle-context.tsx ---
 
 import React, { useState, useEffect, useRef, useCallback, createContext, useContext, ReactNode } from 'react';
@@ -199,53 +197,21 @@ export const BossBattleProvider = ({
         }
     }, [currentBossData, onBattleEnd]);
 
-    // =================================================================
-    // START: FIXED CODE BLOCK
-    // =================================================================
     const runBattleTurn = useCallback(() => {
-        setTurnCounter(currentTurn => {
-            const nextTurn = currentTurn + 1;
-    
-            // Nest state updates to ensure we always get the latest values
-            setPlayerStats(currentPlayerStats => {
-                setBossStats(currentBossStats => {
-                    // If either stats are missing, do nothing
-                    if (!currentPlayerStats || !currentBossStats) {
-                        return currentBossStats; 
-                    }
-    
-                    const { 
-                        player: newPlayer, 
-                        boss: newBoss, 
-                        turnLogs, 
-                        winner, 
-                        turnEvents 
-                    } = executeFullTurn(currentPlayerStats, currentBossStats, nextTurn);
-    
-                    // Update other states inside the callback
-                    setLastTurnEvents({ ...turnEvents, timestamp: Date.now() });
-                    setCombatLog(prevLog => [...turnLogs.reverse(), ...prevLog]);
-    
-                    if (winner) {
-                        endGame(winner);
-                    }
-                    
-                    // Update boss and player stats
-                    setPlayerStats(newPlayer);
-                    return newBoss; // Return new boss stats for setBossStats
-                });
-                // This return is for the outer setPlayerStats.
-                // It's okay to return the old state here because the inner call to `setPlayerStats(newPlayer)`
-                // has already queued the correct update.
-                return currentPlayerStats; 
-            });
-    
-            return nextTurn; // Return new turn for setTurnCounter
-        });
-    }, [executeFullTurn, endGame]); // Dependencies are now stable
-    // =================================================================
-    // END: FIXED CODE BLOCK
-    // =================================================================
+        if (!playerStats || !bossStats) return;
+
+        const nextTurn = turnCounter + 1;
+        const { player: newPlayer, boss: newBoss, turnLogs, winner, turnEvents } = executeFullTurn(playerStats, bossStats, nextTurn);
+        
+        setPlayerStats(newPlayer);
+        setBossStats(newBoss);
+        setLastTurnEvents({ ...turnEvents, timestamp: Date.now() });
+        setCombatLog(prev => [...turnLogs.reverse(), ...prev]);
+        setTurnCounter(nextTurn);
+        if (winner) {
+            endGame(winner);
+        }
+    }, [turnCounter, playerStats, bossStats, executeFullTurn, endGame]);
 
     const skipBattle = useCallback(() => {
         if (!playerStats || !bossStats) return;
@@ -371,7 +337,6 @@ export const BossBattleProvider = ({
     // --- REACT HOOKS ---
     useEffect(() => {
         const loadData = async () => {
-          const startTime = Date.now(); // Record start time for minimum loading
           try {
             setIsLoading(true);
             const data = await fetchBossBattlePrerequisites(userId);
@@ -406,15 +371,7 @@ export const BossBattleProvider = ({
             console.error("Failed to load boss battle data:", e);
             setError(e instanceof Error ? e.message : "An unknown error occurred.");
           } finally {
-            // --- MODIFIED: Ensure minimum loading time of 0.7s ---
-            const elapsedTime = Date.now() - startTime;
-            const remainingTime = 700 - elapsedTime;
-
-            if (remainingTime > 0) {
-                setTimeout(() => setIsLoading(false), remainingTime);
-            } else {
-                setIsLoading(false);
-            }
+            setIsLoading(false);
           }
         };
     
