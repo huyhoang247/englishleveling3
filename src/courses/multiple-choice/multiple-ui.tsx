@@ -78,11 +78,6 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
           ) : (
               <>
                 <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative">
-                  {/* --- THẺ MATILDA ĐÃ ĐƯỢC THÊM VÀO ĐÂY --- */}
-                  <div className="absolute top-0 right-0 bg-yellow-400/20 backdrop-blur-sm text-yellow-200 text-xs font-bold px-3 py-1 rounded-bl-lg border-l border-b border-white/20 shadow-lg">
-                    Matilda
-                  </div>
-
                   <div className="flex justify-between items-center mb-4">
                     <div className="relative"><div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{totalCompletedBeforeSession + currentQuestion + 1}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{filteredQuizData.length}</span></div></div></div>
                     <div className="flex items-center gap-2">
@@ -92,11 +87,20 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                   </div>
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                   
-                  { (playableQuestions[currentQuestion]?.word && playableQuestions[currentQuestion]?.audioUrl) ? (
-                      <AudioQuestionDisplay audioUrl={playableQuestions[currentQuestion].audioUrl} />
-                  ) : (
-                      <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1"><h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>{playableQuestions[currentQuestion]?.vietnamese && (!playableQuestions[currentQuestion]?.word || playableQuestions[currentQuestion]?.word && !playableQuestions[currentQuestion]?.audioUrl) && (<p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>)}</div>
-                  )}
+                  {/* --- START: THAY ĐỔI TẠI ĐÂY --- */}
+                  <div className="relative">
+                    <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 bg-black/20 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full border border-white/25">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-purple-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v.01M12 21v.01M3 12h.01M21 12h.01M5.64 5.64l.01.01M18.36 18.36l.01.01M5.64 18.36l.01-.01M18.36 5.64l.01-.01"/></svg>
+                      <span>Matilda</span>
+                    </div>
+
+                    { (playableQuestions[currentQuestion]?.word && playableQuestions[currentQuestion]?.audioUrl) ? (
+                        <AudioQuestionDisplay audioUrl={playableQuestions[currentQuestion].audioUrl} />
+                    ) : (
+                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1"><h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>{playableQuestions[currentQuestion]?.vietnamese && (!playableQuestions[currentQuestion]?.word || playableQuestions[currentQuestion]?.word && !playableQuestions[currentQuestion]?.audioUrl) && (<p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>)}</div>
+                    )}
+                  </div>
+                  {/* --- END: THAY ĐỔI TẠI ĐÂY --- */}
 
                 </div>
                 <div className="p-6">
