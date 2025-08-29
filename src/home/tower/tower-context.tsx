@@ -1,3 +1,5 @@
+// --- START OF FILE tower-context.tsx ---
+
 // --- START OF FILE boss-battle-context.tsx ---
 
 import React, { useState, useEffect, useRef, useCallback, createContext, useContext, ReactNode } from 'react';
@@ -197,21 +199,47 @@ export const BossBattleProvider = ({
         }
     }, [currentBossData, onBattleEnd]);
 
+    // --- SỬA ĐỔI LỚN: Sửa lỗi "Stale Closure" ---
+    // Hàm này được viết lại hoàn toàn để sử dụng functional updates.
+    // Nó đảm bảo rằng mỗi lượt đánh đều sử dụng state mới nhất.
     const runBattleTurn = useCallback(() => {
-        if (!playerStats || !bossStats) return;
+        let turnResult: ReturnType<typeof executeFullTurn>; // Biến để lưu kết quả tính toán
 
-        const nextTurn = turnCounter + 1;
-        const { player: newPlayer, boss: newBoss, turnLogs, winner, turnEvents } = executeFullTurn(playerStats, bossStats, nextTurn);
-        
-        setPlayerStats(newPlayer);
-        setBossStats(newBoss);
-        setLastTurnEvents({ ...turnEvents, timestamp: Date.now() });
-        setCombatLog(prev => [...turnLogs.reverse(), ...prev]);
-        setTurnCounter(nextTurn);
-        if (winner) {
-            endGame(winner);
-        }
-    }, [turnCounter, playerStats, bossStats, executeFullTurn, endGame]);
+        setPlayerStats(currentPlayer => {
+            // Guard clause
+            if (!currentPlayer) return currentPlayer;
+
+            setBossStats(currentBoss => {
+                if (!currentBoss) return currentBoss;
+
+                setTurnCounter(currentTurn => {
+                    const nextTurn = currentTurn + 1;
+                    
+                    // Thực hiện tính toán cho lượt đánh
+                    turnResult = executeFullTurn(currentPlayer, currentBoss, nextTurn);
+                    const { turnLogs, winner, turnEvents } = turnResult;
+                    
+                    // Cập nhật các state phụ (log, hiệu ứng)
+                    setCombatLog(prevLog => [...turnLogs.reverse(), ...prevLog].slice(0, 50));
+                    setLastTurnEvents({ ...turnEvents, timestamp: Date.now() });
+
+                    // Nếu có người thắng, kết thúc game
+                    if (winner) {
+                        endGame(winner);
+                    }
+                    
+                    return nextTurn; // Trả về turn mới
+                });
+                
+                // Trả về boss stats mới từ kết quả tính toán
+                return turnResult.boss;
+            });
+
+            // Trả về player stats mới từ kết quả tính toán
+            return turnResult.player;
+        });
+    }, [executeFullTurn, endGame]); // Dependencies là các hàm ổn định, nên hàm này chỉ tạo 1 lần.
+
 
     const skipBattle = useCallback(() => {
         if (!playerStats || !bossStats) return;
@@ -244,12 +272,22 @@ export const BossBattleProvider = ({
     const startGame = useCallback(() => {
         if (battleState !== 'idle' || (playerStats?.energy || 0) < 10) return;
         isEndingGame.current = false;
+        
+        // --- CÁC THAY ĐỔI NHỎ ĐỂ ĐỒNG BỘ LOG ---
+        // Reset log và turn trước khi bắt đầu
+        if(currentBossData) {
+            setCombatLog([`[Lượt 0] ${currentBossData.name} đã xuất hiện.`]);
+        } else {
+            setCombatLog([]);
+        }
+        setTurnCounter(0);
+
         setPlayerStats(prev => {
             if (!prev) return null;
             return { ...prev, energy: (prev.energy || 0) - 10 };
         });
         setBattleState('fighting');
-    }, [battleState, playerStats]);
+    }, [battleState, playerStats, currentBossData]);
 
     const resetAllStateForNewBattle = useCallback(() => {
         if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
@@ -272,7 +310,8 @@ export const BossBattleProvider = ({
         }
         if(currentBossData) {
             setBossStats(currentBossData.stats);
-            setTimeout(() => addLog(`[Lượt 0] ${currentBossData.name} đã xuất hiện.`), 100);
+            // --- CÁC THAY ĐỔI NHỎ ĐỂ ĐỒNG BỘ LOG ---
+            setTimeout(() => setCombatLog([`[Lượt 0] ${currentBossData.name} đã xuất hiện.`]), 50);
         }
     }, [resetAllStateForNewBattle, currentBossData]);
 
@@ -337,6 +376,7 @@ export const BossBattleProvider = ({
     // --- REACT HOOKS ---
     useEffect(() => {
         const loadData = async () => {
+          const startTime = Date.now(); // Record start time for minimum loading
           try {
             setIsLoading(true);
             const data = await fetchBossBattlePrerequisites(userId);
@@ -371,7 +411,15 @@ export const BossBattleProvider = ({
             console.error("Failed to load boss battle data:", e);
             setError(e instanceof Error ? e.message : "An unknown error occurred.");
           } finally {
-            setIsLoading(false);
+            // --- MODIFIED: Ensure minimum loading time of 0.7s ---
+            const elapsedTime = Date.now() - startTime;
+            const remainingTime = 700 - elapsedTime;
+
+            if (remainingTime > 0) {
+                setTimeout(() => setIsLoading(false), remainingTime);
+            } else {
+                setIsLoading(false);
+            }
           }
         };
     
@@ -381,10 +429,13 @@ export const BossBattleProvider = ({
     useEffect(() => {
         if (!isLoading && currentBossData) {
           setBossStats(currentBossData.stats);
-          setCombatLog([]);
-          addLog(`[Lượt 0] ${currentBossData.name} đã xuất hiện. Hãy chuẩn bị!`);
+          // --- CÁC THAY ĐỔI NHỎ ĐỂ ĐỒNG BỘ LOG ---
+          // Chỉ set log ban đầu khi game đang ở trạng thái chờ
+          if (battleState === 'idle') {
+            setCombatLog([`[Lượt 0] ${currentBossData.name} đã xuất hiện.`]);
+          }
         }
-    }, [currentFloor, isLoading, currentBossData]);
+    }, [currentFloor, isLoading, currentBossData, battleState]);
 
     useEffect(() => {
         if (battleState === 'fighting' && !gameOver) {
