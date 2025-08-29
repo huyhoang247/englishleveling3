@@ -1,3 +1,4 @@
+// --- START OF FILE: multiple-context.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { db, auth } from '../../firebase.js';
@@ -41,8 +42,8 @@ interface QuizContextType {
   hintUsed: boolean;
   hiddenOptions: string[];
   currentQuestionWord: string | null;
-  currentAudioUrl: string | null; // THÊM MỚI: URL audio hiện tại
-  selectedVoice: 'matilda' | 'arabella'; // THÊM MỚI: Giọng đọc được chọn
+  currentAudioUrl: string | null;
+  selectedVoice: string; // THAY ĐỔI: Từ 'matilda' | 'arabella' sang string
   
   // Actions / Handlers
   handleAnswer: (selectedAnswer: string) => void;
@@ -50,7 +51,7 @@ interface QuizContextType {
   handleNextQuestion: () => void;
   resetQuiz: () => void;
   handleDetailClick: () => void;
-  handleVoiceChange: (voice: 'matilda' | 'arabella') => void; // THÊM MỚI: Hàm đổi giọng đọc
+  handleVoiceChange: (voice: string) => void; // THAY ĐỔI: Từ 'matilda' | 'arabella' sang string
 
   // Detail Popup State
   showDetailPopup: boolean;
@@ -90,9 +91,9 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
   const [detailData, setDetailData] = useState<Definition | null>(null);
   const [currentQuestionWord, setCurrentQuestionWord] = useState<string | null>(null);
 
-  // THÊM MỚI: State để quản lý giọng đọc được chọn
-  const [selectedVoice, setSelectedVoice] = useState<'matilda' | 'arabella'>('matilda');
-  const handleVoiceChange = (voice: 'matilda' | 'arabella') => {
+  // THAY ĐỔI: State để quản lý giọng đọc được chọn, khởi tạo với giọng đọc đầu tiên
+  const [selectedVoice, setSelectedVoice] = useState<string>('Matilda'); // Giá trị mặc định là 'Matilda'
+  const handleVoiceChange = (voice: string) => {
     setSelectedVoice(voice);
   };
 
@@ -226,8 +227,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
 
     setPlayableQuestions(shuffleArray(newRemainingQuestions));
     setCurrentQuestion(0); setScore(0); setShowScore(false); setSelectedOption(null); setAnswered(false); setStreak(0); setTimeLeft(TOTAL_TIME); setShowNextButton(false); setHintUsed(false); setHiddenOptions([]);
-    // THÊM MỚI: Reset lại giọng đọc về mặc định khi reset quiz
-    setSelectedVoice('matilda');
+    // THAY ĐỔI: Reset lại giọng đọc về mặc định khi reset quiz
+    setSelectedVoice('Matilda');
   }, [playableQuestions, currentQuestion, filteredQuizData, userVocabulary]);
 
 
@@ -307,8 +308,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
     const nextQuestion = currentQuestion + 1;
     if (nextQuestion < playableQuestions.length) {
       setCurrentQuestion(nextQuestion); setSelectedOption(null); setAnswered(false); setShowNextButton(false); setHintUsed(false); setHiddenOptions([]);
-      // THÊM MỚI: Reset lại giọng đọc về mặc định cho câu hỏi tiếp theo
-      setSelectedVoice('matilda');
+      // THAY ĐỔI: Reset lại giọng đọc về mặc định cho câu hỏi tiếp theo
+      setSelectedVoice('Matilda');
     } else { setShowScore(true); }
   };
   
@@ -351,4 +352,4 @@ export const useQuiz = (): QuizContextType & { showConfetti: boolean } => {
   }
   return context as QuizContextType & { showConfetti: boolean };
 };
-
+// --- END OF FILE: multiple-context.tsx ---
