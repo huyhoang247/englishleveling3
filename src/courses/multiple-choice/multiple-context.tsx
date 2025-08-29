@@ -43,7 +43,7 @@ interface QuizContextType {
   hiddenOptions: string[];
   currentQuestionWord: string | null;
   currentAudioUrl: string | null;
-  selectedVoice: string; // THAY ĐỔI: Từ 'matilda' | 'arabella' sang string
+  selectedVoice: string;
   
   // Actions / Handlers
   handleAnswer: (selectedAnswer: string) => void;
@@ -51,7 +51,8 @@ interface QuizContextType {
   handleNextQuestion: () => void;
   resetQuiz: () => void;
   handleDetailClick: () => void;
-  handleVoiceChange: (voice: string) => void; // THAY ĐỔI: Từ 'matilda' | 'arabella' sang string
+  handleVoiceChange: (voice: string) => void;
+  handleChangeVoiceDirection: (direction: 'next' | 'previous') => void;
 
   // Detail Popup State
   showDetailPopup: boolean;
@@ -64,7 +65,6 @@ const QuizContext = createContext<QuizContextType | undefined>(undefined);
 
 // --- TẠO PROVIDER COMPONENT ---
 export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractice: number }> = ({ children, selectedPractice }) => {
-  // --- TOÀN BỘ STATE VÀ LOGIC CỦA QUIZ ĐƯỢỢC CHUYỂN VÀO ĐÂY ---
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
@@ -81,7 +81,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
   const [showNextButton, setShowNextButton] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [userVocabulary, setUserVocabulary] = useState<string[]>([]); // Vẫn giữ để các hàm khác có thể dùng
+  const [userVocabulary, setUserVocabulary] = useState<string[]>([]);
   const [filteredQuizData, setFilteredQuizData] = useState<any[]>([]);
   const [playableQuestions, setPlayableQuestions] = useState<any[]>([]);
   const HINT_COST = 200;
@@ -90,14 +90,32 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [detailData, setDetailData] = useState<Definition | null>(null);
   const [currentQuestionWord, setCurrentQuestionWord] = useState<string | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState<string>('Matilda');
 
-  // THAY ĐỔI: State để quản lý giọng đọc được chọn, khởi tạo với giọng đọc đầu tiên
-  const [selectedVoice, setSelectedVoice] = useState<string>('Matilda'); // Giá trị mặc định là 'Matilda'
   const handleVoiceChange = (voice: string) => {
     setSelectedVoice(voice);
   };
 
-  // THÊM MỚI: Tính toán URL audio hiện tại dựa trên câu hỏi và giọng đọc được chọn
+  const handleChangeVoiceDirection = useCallback((direction: 'next' | 'previous') => {
+    const question = playableQuestions[currentQuestion];
+    if (!question?.audioUrls) return;
+    
+    const availableVoices = Object.keys(question.audioUrls);
+    if (availableVoices.length <= 1) return;
+    
+    const currentIndex = availableVoices.indexOf(selectedVoice);
+    if (currentIndex === -1) return;
+
+    let nextIndex;
+    if (direction === 'next') {
+      nextIndex = (currentIndex + 1) % availableVoices.length;
+    } else { // previous
+      nextIndex = (currentIndex - 1 + availableVoices.length) % availableVoices.length;
+    }
+    
+    setSelectedVoice(availableVoices[nextIndex]);
+  }, [currentQuestion, playableQuestions, selectedVoice]);
+
   const currentAudioUrl = useMemo(() => {
     const question = playableQuestions[currentQuestion];
     if (question?.audioUrls) {
@@ -105,7 +123,6 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
     }
     return null;
   }, [currentQuestion, playableQuestions, selectedVoice]);
-
 
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
@@ -138,12 +155,10 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
             getCompletedWordsForGameMode(user.uid, gameModeId)
           ]);
 
-          // Cập nhật state người dùng
           setCoins(userData.coins || 0);
           setMasteryCount(userData.masteryCards || 0);
-          setUserVocabulary(vocabList); // Cập nhật để các logic khác sử dụng
+          setUserVocabulary(vocabList);
           
-          // --- LOGIC TẠO CÂU HỎI ĐƯỢC CHUYỂN VÀO ĐÂY ---
           const practiceBaseId = selectedPractice % 100;
           let allPossibleQuestions: any[] = [];
           let remainingQuestions: any[] = [];
@@ -182,39 +197,27 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
     
           setFilteredQuizData(allPossibleQuestions);
           setPlayableQuestions(shuffleArray(remainingQuestions));
-          // --- KẾT THÚC LOGIC TẠO CÂU HỎI ---
 
         } catch (error) {
           console.error("Lỗi khi tải dữ liệu quiz:", error);
           setCoins(0); setMasteryCount(0); setUserVocabulary([]); 
           setFilteredQuizData([]); setPlayableQuestions([]);
         } finally {
-          // Chỉ tắt loading sau khi mọi thứ đã sẵn sàng
           setLoading(false);
         }
       } else {
-        // Xử lý khi không có user
         setLoading(false);
         setCoins(0); setMasteryCount(0); setUserVocabulary([]);
         setFilteredQuizData([]); setPlayableQuestions([]);
       }
     };
     loadQuizData();
-  }, [user, selectedPractice]); // Chạy lại khi user hoặc bài tập thay đổi
+  }, [user, selectedPractice]);
 
   const resetQuiz = useCallback(() => {
-    // Để reset, chúng ta chỉ cần trigger lại useEffect trên bằng cách thay đổi một dependency
-    // Nhưng vì không có state nào phù hợp, ta sẽ tái tạo logic tạo câu hỏi một cách đơn giản
-    // Lưu ý: Logic này giả định userVocabulary không thay đổi trong phiên.
-    // Nếu muốn cập nhật lại toàn bộ, cách tốt nhất là có một state để trigger `loadQuizData`.
     const completedWordsForSession = new Set(
       playableQuestions
         .slice(0, currentQuestion)
-        .filter((q, index) => {
-            const answer = playableQuestions[index].correctAnswer;
-            // logic kiểm tra câu trả lời đúng của người dùng ở đây nếu có
-            return true; // Giả định tất cả các câu đã qua là đã hoàn thành
-        })
         .map(q => q.word || userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)))
         .filter(Boolean)
         .map(word => word.toLowerCase())
@@ -227,10 +230,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
 
     setPlayableQuestions(shuffleArray(newRemainingQuestions));
     setCurrentQuestion(0); setScore(0); setShowScore(false); setSelectedOption(null); setAnswered(false); setStreak(0); setTimeLeft(TOTAL_TIME); setShowNextButton(false); setHintUsed(false); setHiddenOptions([]);
-    // THAY ĐỔI: Reset lại giọng đọc về mặc định khi reset quiz
     setSelectedVoice('Matilda');
   }, [playableQuestions, currentQuestion, filteredQuizData, userVocabulary]);
-
 
   useEffect(() => {
     if (playableQuestions[currentQuestion]?.options) {
@@ -254,7 +255,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
   const handleTimeUp = () => { if (answered) return; setAnswered(true); setSelectedOption(null); setStreak(0); setShowNextButton(true); };
 
   useEffect(() => {
-    if (showScore || answered || playableQuestions.length === 0 || loading) return; // Thêm check `loading`
+    if (showScore || answered || playableQuestions.length === 0 || loading) return;
     setTimeLeft(TOTAL_TIME);
     const timerId = setInterval(() => { setTimeLeft(prevTime => { if (prevTime <= 1) { clearInterval(timerId); handleTimeUp(); return 0; } return prevTime - 1; }); }, 1000);
     return () => clearInterval(timerId);
@@ -308,12 +309,9 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
     const nextQuestion = currentQuestion + 1;
     if (nextQuestion < playableQuestions.length) {
       setCurrentQuestion(nextQuestion); setSelectedOption(null); setAnswered(false); setShowNextButton(false); setHintUsed(false); setHiddenOptions([]);
-      // THAY ĐỔI: Reset lại giọng đọc về mặc định cho câu hỏi tiếp theo
       setSelectedVoice('Matilda');
     } else { setShowScore(true); }
   };
-  
-  // NOTE: Hàm resetQuiz đã được sửa đổi ở trên.
 
   const handleDetailClick = () => {
     if (currentQuestionWord) {
@@ -324,17 +322,16 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
 
   const onCloseDetailPopup = () => setShowDetailPopup(false);
 
-  // --- TẠO GIÁ TRỊ ĐỂ CUNG CẤP CHO CONTEXT ---
   const value = {
     loading, showScore, currentQuestion, score, coins, streak, masteryCount, streakAnimation,
     timeLeft, playableQuestions, filteredQuizData, shuffledOptions, selectedOption,
     answered, showNextButton, hintUsed, hiddenOptions, currentQuestionWord,
     handleAnswer, handleHintClick, handleNextQuestion, resetQuiz, handleDetailClick,
     showDetailPopup, detailData, onCloseDetailPopup, showConfetti,
-    // THÊM MỚI: Cung cấp state và hàm xử lý giọng đọc
     currentAudioUrl,
     selectedVoice,
     handleVoiceChange,
+    handleChangeVoiceDirection,
   };
 
   return (
@@ -344,7 +341,6 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
   );
 };
 
-// --- TẠO CUSTOM HOOK ---
 export const useQuiz = (): QuizContextType & { showConfetti: boolean } => {
   const context = useContext(QuizContext);
   if (context === undefined) {
