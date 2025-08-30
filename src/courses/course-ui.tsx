@@ -6,6 +6,8 @@ import VocaMatchGame from './voca-match/voca-match-ui.tsx';
 import AnalysisDashboard from './analysis-dashboard/analysis-ui.tsx';
 import WordChainGame from './word-chain-game/word-chain-ui.tsx';
 import PracticeListLoadingSkeleton from './course-loading.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
+import HomeButton from '../ui/home-button.tsx'; // <<< THAY ĐỔI: IMPORT HOME BUTTON
+import BackButton from '../ui/back-button.tsx'; // <<< THAY ĐỔI: IMPORT BACK BUTTON
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
 import { QuizAppProvider, useQuizApp } from './course-context.tsx';
@@ -146,8 +148,7 @@ const QuizAppContent: React.FC = () => {
 }
 
 // --- START: UNIFIED HEADER COMPONENT ---
-const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> );
-const BackIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
+// <<< THAY ĐỔI: HomeIcon và BackIcon đã bị xóa vì chúng ta đang sử dụng các component nút chuyên dụng
 const AnalysisIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg> );
 
 function AppHeader() {
@@ -169,13 +170,13 @@ function AppHeader() {
     <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center">
-          <div className="w-24">
+          <div className="w-24 flex">
             {currentView === 'main' ? (
               <a className="flex items-center" href="#" onClick={(e) => { e.preventDefault(); goHome(); }}>
                  <img src={quizHomeAssets.logoLarge} alt="Quiz App Logo" className="h-10 w-auto" />
               </a>
             ) : (
-              <button onClick={goBack} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Quay lại"><BackIcon /></button>
+              <BackButton onClick={goBack} /> // <<< THAY ĐỔI: SỬ DỤNG BACKBUTTON COMPONENT
             )}
           </div>
           <div className="flex-1 flex justify-center px-4">
@@ -185,7 +186,7 @@ function AppHeader() {
               {currentView === 'main' ? (
                 <button onClick={() => setCurrentView('analysis')} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Xem phân tích"><AnalysisIcon /></button>
               ) : (
-                 <button onClick={goHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ"><HomeIcon /></button>
+                 <HomeButton onClick={goHome} /> // <<< THAY ĐỔI: SỬ DỤNG HOMEBUTTON COMPONENT
               )}
           </div>
         </div>
