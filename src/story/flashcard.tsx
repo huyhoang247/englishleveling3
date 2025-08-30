@@ -35,16 +35,16 @@ const VoiceStepper: React.FC<{
 
   return (
     <div className="flex items-center justify-center gap-1 bg-gray-200 dark:bg-gray-800 p-1 rounded-full">
-      <button 
-        onClick={() => onNavigate('previous')} 
+      <button
+        onClick={() => onNavigate('previous')}
         className="flex items-center justify-center w-7 h-7 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors duration-200"
         aria-label="Giọng đọc trước"
       >
         <ChevronLeftIcon className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
       </button>
-      
+
       <div className="text-center w-20 overflow-hidden px-1">
-         <span 
+         <span
             key={currentVoice}
             className="text-xs font-semibold text-gray-600 dark:text-gray-300 animate-fade-in-short"
          >
@@ -52,8 +52,8 @@ const VoiceStepper: React.FC<{
         </span>
       </div>
 
-      <button 
-        onClick={() => onNavigate('next')} 
+      <button
+        onClick={() => onNavigate('next')}
         className="flex items-center justify-center w-7 h-7 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors duration-200"
         aria-label="Giọng đọc tiếp theo"
       >
@@ -94,7 +94,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   zIndex = 50,
 }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'example' | 'vocabulary'>('basic');
-  
+
   const [audioUrls, setAudioUrls] = useState<{ [key: string]: string } | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<string>('Matilda');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -140,7 +140,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     }
     setSelectedVoice(availableVoices[nextIndex]);
   }, [audioUrls, selectedVoice]);
-  
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -201,7 +201,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             </>
         );
     };
-    
+
     switch (activeTab) {
       case 'basic':
         return (
@@ -229,7 +229,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   {wordToFind}
                 </span>
               </div>
-              
+
               {filteredSentences.length > 0 ? (
                 <div className="space-y-4">
                   {filteredSentences.map((sentence, index) => (
@@ -261,7 +261,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             <audio ref={audioRef} src={currentAudioUrl || ''} key={currentAudioUrl} preload="auto" className="hidden" />
             <div className="max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                
+
                 <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
                   <div className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full mb-4 dark:bg-blue-900/50 dark:text-blue-200">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -274,20 +274,13 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   </p>
                 </div>
 
-                <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
-                  <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Ví dụ</h5>
-                  <p className="text-gray-700 dark:text-gray-300 italic">
-                    "{selectedCard.vocabulary.example}"
-                  </p>
-                </div>
-
                 {/* --- START: UNIFIED AUDIO CONTROL --- */}
                 {audioUrls && (
                   <div className="bg-gray-50 dark:bg-black p-4 rounded-xl border border-gray-200 dark:border-gray-800 md:col-span-2">
                      <div className="flex justify-between items-center">
                        <div className="flex items-center gap-3">
-                          <button 
-                            onClick={togglePlay} 
+                          <button
+                            onClick={togglePlay}
                             className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 ${isPlaying ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'}`}
                             aria-label={isPlaying ? 'Dừng phát' : 'Phát âm'}
                           >
@@ -306,7 +299,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                    </div>
                 )}
                 {/* --- END: UNIFIED AUDIO CONTROL --- */}
-                
+
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Mức độ phổ biến</h5>
                   <div className="flex items-center gap-4">
@@ -400,11 +393,11 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                     key={tab.key}
                     className={`
                       px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-300
-                      ${isActive 
+                      ${isActive
                         ? 'bg-white text-gray-900 shadow-sm'
                         : 'text-gray-400 hover:bg-white/10 hover:text-white'
                       }
-                      dark:focus:outline-none 
+                      dark:focus:outline-none
                       ${isActive
                         ? 'dark:bg-gray-800 dark:text-gray-100'
                         : 'dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-300'
@@ -420,7 +413,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           </div>
 
           {renderModalContent()}
-          
+
           <BackButton onClick={onClose} />
       </div>
     </>
