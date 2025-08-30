@@ -3,7 +3,7 @@
 import React, { useState, useMemo, FC, ReactNode, useCallback, memo } from 'react';
 import { User } from 'firebase/auth';
 import { AnalysisDashboardProvider, useAnalysisDashboard, WordMastery } from './analysis-context.tsx';
-import AnalysisDashboardSkeleton from './analysis-loading.tsx'; 
+import AnalysisDashboardSkeleton from '../../ui/analysis-loading.tsx'; 
 
 import { 
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
@@ -13,9 +13,10 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets, dashboardAssets } from '../../game-assets.ts'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 import { useAnimateValue } from '../../ui/useAnimateValue.ts'; 
+import HomeButton from '../../ui/components/home-button.tsx'; // << 1. IMPORT COMPONENT MỚI
 
 // --- ICONS (Grouped for better organization) ---
-const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
+// HomeIcon đã được xóa vì chúng ta sẽ dùng HomeButton component
 const ActivityCompletedIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none"><defs><linearGradient id="activityGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#2DD4BF" /><stop offset="100%" stopColor="#06B6D4" /></linearGradient></defs><circle cx="12" cy="12" r="12" fill="url(#activityGradient)" /><path d="M8 12.5l3 3 5-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>);
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
@@ -267,10 +268,9 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
     <div className="bg-white flex flex-col h-full">
         <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
           <div className="flex h-14 items-center justify-between px-4">
-            <div className="w-24">
-              <button onClick={onGoBack} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ">
-                  <HomeIcon />
-              </button>
+            <div className="flex items-center">
+                {/* << 2. THAY THẾ NÚT HOME CŨ BẰNG COMPONENT MỚI */}
+                <HomeButton onClick={onGoBack} title="Về trang chủ" />
             </div>
             <div className="flex items-center justify-end gap-3">
                <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
