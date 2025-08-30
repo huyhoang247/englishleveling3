@@ -3,7 +3,7 @@
 import React, { useState, useMemo, FC, ReactNode, useCallback, memo } from 'react';
 import { User } from 'firebase/auth';
 import { AnalysisDashboardProvider, useAnalysisDashboard, WordMastery } from './analysis-context.tsx';
-import AnalysisDashboardSkeleton from '../../ui/analysis-loading.tsx'; 
+import AnalysisDashboardSkeleton from './analysis-loading.tsx'; 
 
 import { 
     AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
@@ -13,7 +13,7 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets, dashboardAssets } from '../../game-assets.ts'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 import { useAnimateValue } from '../../ui/useAnimateValue.ts'; 
-import HomeButton from '../../ui/components/home-button.tsx'; // << 1. IMPORT COMPONENT MỚI
+import HomeButton from '../../ui/home-button.tsx'; // << 1. IMPORT COMPONENT MỚI
 
 // --- ICONS (Grouped for better organization) ---
 // HomeIcon đã được xóa vì chúng ta sẽ dùng HomeButton component
