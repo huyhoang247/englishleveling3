@@ -237,8 +237,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             <div className="max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 
-                {/* --- START: KHÔI PHỤC GIAO DIỆN CŨ CHO WORD & MEANING --- */}
-                {/* Box 1: Word & Meaning (Theo style của file 6) */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
                   <div className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full mb-4 dark:bg-blue-900/50 dark:text-blue-200">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -250,7 +248,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                     {selectedCard.vocabulary.meaning}
                   </p>
                 </div>
-                {/* --- END: KHÔI PHỤC GIAO DIỆN --- */}
 
                 <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Ví dụ</h5>
@@ -262,7 +259,10 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                 {/* Box 3: Pronunciation (Half Width) */}
                 {audioUrls && (
                   <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
-                    <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Phát âm (Pronunciation)</h5>
+                    <div className="inline-flex items-center gap-1.5 bg-teal-100 text-teal-800 text-sm font-semibold px-3 py-1 rounded-full mb-3 dark:bg-teal-500/20 dark:text-teal-300">
+                      <VolumeUpIcon className="h-3.5 w-3.5" />
+                      <span>Phát âm</span>
+                    </div>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <VolumeUpIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
