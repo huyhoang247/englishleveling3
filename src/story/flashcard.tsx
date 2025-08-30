@@ -38,7 +38,7 @@ const VoiceStepper: React.FC<{
 };
 // --- END: CÁC COMPONENT & ICON ---
 
-// Animation styles - Clean and minimal
+// --- START: UPDATED ANIMATIONS ---
 const animations = `
   @keyframes fadeIn {
     0% { opacity: 0; }
@@ -53,11 +53,22 @@ const animations = `
     100% { opacity: 1; transform: translateY(0); }
   }
   @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  /* NEW: Animation for the glowing effect */
+  @keyframes pulse-glow {
+    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+    100% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+  }
   .content-transition {
     animation: slideUp 0.3s ease-out;
   }
   .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; }
+  /* NEW: Class to apply the animation */
+  .is-playing-glow {
+    animation: pulse-glow 1.75s infinite cubic-bezier(0.66, 0, 0, 1);
+  }
 `;
+// --- END: UPDATED ANIMATIONS ---
+
 
 const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   selectedCard,
@@ -255,19 +266,25 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   </p>
                 </div>
 
-                {/* --- START: UNIFIED AUDIO CONTROL --- */}
+                {/* --- START: ENHANCED AUDIO CONTROL --- */}
                 {audioUrls && (
                   <div className="bg-gray-50 dark:bg-black p-4 rounded-xl border border-gray-200 dark:border-gray-800">
                     <div className="flex justify-between items-center">
-                      {/* CHANGE: Chuyển div thành button và thêm onClick={togglePlay} */}
                       <button 
                         onClick={togglePlay} 
                         aria-label="Phát hoặc dừng âm thanh"
                         className="flex items-center gap-3 text-left group"
                       >
-                          {/* CHANGE: Thêm hiệu ứng hover tinh tế cho icon bên trái */}
-                          <div className="flex-shrink-0 w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center transition-colors group-hover:dark:bg-gray-700">
-                              <VolumeUpIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                          {/* UPDATED: Add conditional classes for the glowing/color change effect */}
+                          <div className={`
+                            flex-shrink-0 w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center
+                            transition-all duration-300 group-hover:dark:bg-gray-700
+                            ${isPlaying ? 'is-playing-glow dark:bg-blue-900/50' : ''}
+                          `}>
+                            <VolumeUpIcon className={`
+                              w-5 h-5 text-gray-500 dark:text-gray-400 transition-colors
+                              ${isPlaying ? 'dark:text-blue-300' : ''}
+                            `} />
                           </div>
                           <div>
                               <h5 className="text-sm font-semibold text-gray-600 dark:text-gray-400">Phát âm</h5>
@@ -287,7 +304,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                     </div>
                   </div>
                 )}
-                {/* --- END: UNIFIED AUDIO CONTROL --- */}
+                {/* --- END: ENHANCED AUDIO CONTROL --- */}
                 
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Mức độ phổ biến</h5>
