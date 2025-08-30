@@ -13,7 +13,7 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets, dashboardAssets } from '../../game-assets.ts'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 import { useAnimateValue } from '../../ui/useAnimateValue.ts'; 
-import HomeButton from '../../ui/back-button.tsx'; // << 1. IMPORT COMPONENT MỚI
+import HomeButton from '../../ui/home-button.tsx'; // << 1. IMPORT COMPONENT MỚI
 
 // --- ICONS (Grouped for better organization) ---
 // HomeIcon đã được xóa vì chúng ta sẽ dùng HomeButton component
