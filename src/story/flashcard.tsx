@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import BackButton from '../footer-back.tsx';
 import { ExampleSentence, Flashcard as CoreFlashcard } from './flashcard-data.ts';
-import { generateAudioUrlsForWord } from '../voca-data/audio-quiz-generator.ts';
+import { generateAudioUrlsForWord } from './audio-quiz-generator.ts';
 
 // Đổi tên interface để tránh xung đột với tên component, mặc dù vẫn dùng chung cấu trúc từ file data
 interface FlashcardData extends CoreFlashcard {}
@@ -236,26 +236,22 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             <audio ref={audioRef} src={currentAudioUrl || ''} key={currentAudioUrl} preload="auto" className="hidden" />
             <div className="max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-                {/* --- START: GIAO DIỆN MỚI, LOGIC HƠN --- */}
-
-                {/* Box 1: Word & Meaning (Full Width) */}
+                
+                {/* --- START: KHÔI PHỤC GIAO DIỆN CŨ CHO WORD & MEANING --- */}
+                {/* Box 1: Word & Meaning (Theo style của file 6) */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
-                  <div className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-2xl font-bold px-4 py-2 rounded-full dark:bg-blue-900/50 dark:text-blue-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <div className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full mb-4 dark:bg-blue-900/50 dark:text-blue-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                     </svg>
                     <span>{selectedCard.vocabulary.word}</span>
                   </div>
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700/50">
-                    <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Định nghĩa</h5>
-                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed italic">
-                      {selectedCard.vocabulary.meaning}
-                    </p>
-                  </div>
+                  <p className="text-sm italic text-gray-600 dark:text-gray-400 leading-relaxed">
+                    {selectedCard.vocabulary.meaning}
+                  </p>
                 </div>
-                
-                {/* Box 2: Example (Full Width) */}
+                {/* --- END: KHÔI PHỤC GIAO DIỆN --- */}
+
                 <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Ví dụ</h5>
                   <p className="text-gray-700 dark:text-gray-300 italic">
@@ -310,7 +306,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   </div>
                 </div>
 
-                {/* Box 5: Phrases (Full Width) */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl md:col-span-2">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Cụm từ phổ biến</h5>
                   <div className="flex flex-wrap gap-2">
@@ -322,7 +317,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   </div>
                 </div>
 
-                {/* Box 6: Synonyms (Half Width) */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Từ đồng nghĩa</h5>
                   <div className="flex flex-wrap gap-2">
@@ -334,7 +328,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   </div>
                 </div>
 
-                {/* Box 7: Antonyms (Half Width) */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Từ trái nghĩa</h5>
                   <div className="flex flex-wrap gap-2">
@@ -345,8 +338,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                     ))}
                   </div>
                 </div>
-
-                {/* --- END: GIAO DIỆN MỚI, LOGIC HƠN --- */}
 
               </div>
             </div>
