@@ -34,19 +34,19 @@ const VoiceStepper: React.FC<{
   }
 
   return (
-    <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
+    <div className="flex items-center justify-center gap-1 bg-gray-200 dark:bg-gray-800 p-1 rounded-full">
       <button 
         onClick={() => onNavigate('previous')} 
-        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200"
+        className="flex items-center justify-center w-7 h-7 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors duration-200"
         aria-label="Giọng đọc trước"
       >
-        <ChevronLeftIcon className="w-3 h-3 text-white/80" />
+        <ChevronLeftIcon className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
       </button>
       
-      <div className="text-center w-20 overflow-hidden">
+      <div className="text-center w-20 overflow-hidden px-1">
          <span 
             key={currentVoice}
-            className="text-xs font-semibold text-white animate-fade-in-short"
+            className="text-xs font-semibold text-gray-600 dark:text-gray-300 animate-fade-in-short"
          >
             {currentVoice}
         </span>
@@ -54,10 +54,10 @@ const VoiceStepper: React.FC<{
 
       <button 
         onClick={() => onNavigate('next')} 
-        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200"
+        className="flex items-center justify-center w-7 h-7 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors duration-200"
         aria-label="Giọng đọc tiếp theo"
       >
-        <ChevronRightIcon className="w-3 h-3 text-white/80" />
+        <ChevronRightIcon className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
       </button>
     </div>
   );
