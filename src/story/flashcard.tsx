@@ -24,18 +24,16 @@ const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="htt
 const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 const ChevronRightIcon = ({ className }: { className:string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg> );
 
+// **REFINED COMPONENT** VoiceStepper được tinh chỉnh để chỉ chứa các nút điều hướng
 const VoiceStepper: React.FC<{
-  currentVoice: string;
   onNavigate: (direction: 'next' | 'previous') => void;
   availableVoiceCount: number;
-}> = ({ currentVoice, onNavigate, availableVoiceCount }) => {
+}> = ({ onNavigate, availableVoiceCount }) => {
   if (availableVoiceCount <= 1) return null;
   return (
-    <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
-      <button onClick={() => onNavigate('previous')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200" aria-label="Giọng đọc trước"><ChevronLeftIcon className="w-3 h-3 text-white/80" /></button>
-      <div className="text-center w-20 overflow-hidden"><span key={currentVoice} className="text-xs font-semibold text-white animate-fade-in-short">{currentVoice}</span></div>
-      <button onClick={() => onNavigate('next')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200" aria-label="Giọng đọc tiếp theo"><ChevronRightIcon className="w-3 h-3 text-white/80" /></button>
-      <style jsx>{` @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; } `}</style>
+    <div className="flex items-center">
+      <button onClick={() => onNavigate('previous')} className="flex items-center justify-center w-7 h-7 rounded-full hover:bg-white/20 transition-colors duration-200" aria-label="Giọng đọc trước"><ChevronLeftIcon className="w-3.5 h-3.5 text-white/80" /></button>
+      <button onClick={() => onNavigate('next')} className="flex items-center justify-center w-7 h-7 rounded-full hover:bg-white/20 transition-colors duration-200" aria-label="Giọng đọc tiếp theo"><ChevronRightIcon className="w-3.5 h-3.5 text-white/80" /></button>
     </div>
   );
 };
@@ -55,9 +53,11 @@ const animations = `
     0% { opacity: 0; transform: translateY(8px); }
     100% { opacity: 1; transform: translateY(0); }
   }
+  @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
   .content-transition {
     animation: slideUp 0.3s ease-out;
   }
+  .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; }
 `;
 
 const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
@@ -256,24 +256,25 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   </p>
                 </div>
 
-                {/* Box 3: Pronunciation (Half Width) */}
+                {/* --- START: REFINED AUDIO PLAYER --- */}
                 {audioUrls && (
-                  <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
-                    <div className="inline-flex items-center gap-1.5 bg-teal-100 text-teal-800 text-sm font-semibold px-3 py-1 rounded-full mb-3 dark:bg-teal-500/20 dark:text-teal-300">
-                      <VolumeUpIcon className="h-3.5 w-3.5" />
-                      <span>Phát âm</span>
-                    </div>
+                  <div className="bg-gray-50 dark:bg-black p-4 rounded-xl border border-gray-200 dark:border-gray-800">
                     <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <VolumeUpIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{selectedVoice}</span>
+                      <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0 w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                              <VolumeUpIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                          </div>
+                          <div>
+                              <h5 className="text-sm font-semibold text-gray-600 dark:text-gray-400">Phát âm</h5>
+                              <span key={selectedVoice} className="text-xs text-gray-500 animate-fade-in-short">{selectedVoice}</span>
+                          </div>
                       </div>
-                      <div className="flex items-center gap-2 bg-gray-900/80 p-1.5 rounded-full border border-gray-700">
-                        <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-white/10 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
-                          { isPlaying ? <PauseIcon className="w-5 h-5 text-white" /> : <VolumeUpIcon className="w-5 h-5 text-white/80" /> }
+
+                      <div className="flex items-center gap-1 bg-gray-900 p-1 rounded-full border border-gray-700/80">
+                        <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${isPlaying ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white/10 text-white/80 hover:bg-white/20'}`} aria-label={isPlaying ? 'Dừng phát' : 'Phát âm'}>
+                          { isPlaying ? <PauseIcon className="w-5 h-5" /> : <VolumeUpIcon className="w-5 h-5" /> }
                         </button>
                         <VoiceStepper
-                          currentVoice={selectedVoice}
                           onNavigate={handleChangeVoiceDirection}
                           availableVoiceCount={Object.keys(audioUrls).length}
                         />
@@ -281,8 +282,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                     </div>
                   </div>
                 )}
+                {/* --- END: REFINED AUDIO PLAYER --- */}
                 
-                {/* Box 4: Popularity (Half Width) */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Mức độ phổ biến</h5>
                   <div className="flex items-center gap-4">
