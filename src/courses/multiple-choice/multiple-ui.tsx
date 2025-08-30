@@ -195,18 +195,29 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                           availableVoiceCount={playableQuestions[currentQuestion]?.audioUrls ? Object.keys(playableQuestions[currentQuestion].audioUrls).length : 0}
                        />
                     </div>
-
-                    <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>
-                             {currentAudioUrl && (
-                              <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
-                                { isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" /> }
-                              </button>
+                    
+                    {playableQuestions[currentQuestion]?.question ? (
+                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex items-center gap-4">
+                            {currentAudioUrl && (
+                                <button onClick={togglePlay} className={`flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-all duration-200 hover:scale-110 hover:bg-black/30 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
+                                    {isPlaying ? <PauseIcon className="w-6 h-6 text-white" /> : <VolumeUpIcon className="w-6 h-6 text-white/80" />}
+                                </button>
                             )}
+                            <div className="flex-grow">
+                                <h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>
+                                {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
+                            </div>
                         </div>
-                        {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
-                    </div>
+                    ) : (
+                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex items-center justify-center min-h-[140px]">
+                            {currentAudioUrl && (
+                                <button onClick={togglePlay} className={`absolute top-1/2 -translate-y-1/2 left-3 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
+                                    {isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" />}
+                                </button>
+                            )}
+                            <p className="text-white/80 text-sm font-medium">Nghe và chọn đáp án đúng</p>
+                        </div>
+                    )}
                   </div>
                 </div>
                 <div className="p-6">
