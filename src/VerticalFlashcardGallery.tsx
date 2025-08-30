@@ -11,7 +11,7 @@ import { SidebarLayout } from './sidebar-story.tsx';
 // <<< THAY ĐỔI: IMPORT DỮ LIỆU VÀ ASSETS >>>
 import { ALL_CARDS_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
 // Giả sử file game-assets.ts nằm cùng cấp với thư mục chứa file này
-import { quizHomeAssets } from '../game-assets';
+import { quizHomeAssets } from './game-assets.ts';
 
 
 // --- Interfaces and Data ---
