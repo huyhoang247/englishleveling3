@@ -187,38 +187,34 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                   </div>
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                   
-                  {/* === START: CODE ĐÃ SỬA === */}
-                  {/* Container cho các nút điều khiển audio, nằm BÊN TRONG thẻ gradient */}
-                  {currentAudioUrl && (
-                    <div className="flex justify-between items-center mb-3">
-                      {/* Nút Loa */}
-                      <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
-                        { isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" /> }
-                      </button>
-
-                      {/* Voice Stepper */}
-                      <VoiceStepper
-                        currentVoice={selectedVoice}
-                        onNavigate={handleChangeVoiceDirection}
-                        availableVoiceCount={playableQuestions[currentQuestion]?.audioUrls ? Object.keys(playableQuestions[currentQuestion].audioUrls).length : 0}
-                      />
-                    </div>
-                  )}
-
-                  {/* Khung chứa nội dung câu hỏi */}
-                  <div>
+                  <div className="relative">
+                    {/* --- START: MODIFIED BLOCK --- */}
+                    {/* Thanh điều khiển âm thanh được đặt ở trên cùng */}
+                    {currentAudioUrl && (
+                      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-3">
+                        <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
+                          { isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" /> }
+                        </button>
+                        <VoiceStepper
+                           currentVoice={selectedVoice}
+                           onNavigate={handleChangeVoiceDirection}
+                           availableVoiceCount={playableQuestions[currentQuestion]?.audioUrls ? Object.keys(playableQuestions[currentQuestion].audioUrls).length : 0}
+                        />
+                      </div>
+                    )}
+                    {/* --- END: MODIFIED BLOCK --- */}
+                    
                     {currentAudioUrl ? (
-                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden flex items-center justify-center min-h-[140px]">
+                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex items-center justify-center min-h-[140px]">
                             <p className="text-white/80 text-sm font-medium">Nghe và chọn đáp án đúng</p>
                         </div>
                     ) : (
-                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden min-h-[140px] flex flex-col justify-center">
+                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
                             <h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>
                             {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
                         </div>
                     )}
                   </div>
-                  {/* === END: CODE ĐÃ SỬA === */}
                 </div>
                 <div className="p-6">
                   <div className="space-y-3 mb-6">
