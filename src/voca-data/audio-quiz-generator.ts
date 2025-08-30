@@ -1,3 +1,4 @@
+--- START OF FILE audio-quiz-generator (1).ttrfds.txt ---
 // --- START OF FILE: audio-quiz-generator.ts ---
 
 import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
@@ -24,6 +25,50 @@ export interface AudioQuizQuestion {
 }
 
 /**
+ * Tái cấu trúc: Tạo một hàm helper để tạo URLs audio cho một từ duy nhất.
+ * Hàm này có thể được tái sử dụng ở nhiều nơi (Quiz, Flashcard Detail, ...).
+ *
+ * @param word - Từ tiếng Anh cần tạo URL audio.
+ * @returns Một object chứa các URL audio cho mỗi giọng đọc, hoặc null nếu không tìm thấy từ.
+ */
+export const generateAudioUrlsForWord = (word: string): { [voiceName: string]: string } | null => {
+    const wordLowerCase = word.toLowerCase();
+    const index = defaultVocabulary.findIndex(v => v.toLowerCase() === wordLowerCase);
+
+    if (index === -1) {
+        console.warn(`Word "${word}" not found in defaultVocabulary. Cannot generate audio URL.`);
+        return null;
+    }
+
+    let audioDirectory: string;
+    if (index < 1000) { audioDirectory = 'audio1'; }
+    else if (index < 2000) { audioDirectory = 'audio2'; }
+    else if (index >= 2000 && index < 2400) { audioDirectory = 'audio3'; }
+    else if (index >= 3000 && index < 4000) { audioDirectory = 'audio4'; }
+    else if (index >= 4000 && index < 4700) { audioDirectory = 'audio5'; }
+    else if (index >= 5000 && index < 6000) { audioDirectory = 'audio6'; }
+    else if (index >= 6000 && index < 7000) { audioDirectory = 'audio7'; }
+    else if (index >= 7000 && index < 7500) { audioDirectory = 'audio8'; }
+    else if (index >= 8000 && index < 9000) { audioDirectory = 'audio9'; }
+    else if (index >= 9000 && index < 10000) { audioDirectory = 'audio10'; }
+    else if (index >= 10000) { audioDirectory = 'audio11'; }
+    else {
+        audioDirectory = 'audio_default';
+        console.warn(`Word at index ${index} is in an unhandled audio directory range.`);
+    }
+    
+    const audioNumber = (index + 1).toString().padStart(3, '0');
+    
+    const generatedAudioUrls: { [voiceName: string]: string } = {};
+    for (const [name, path] of Object.entries(AVAILABLE_VOICES)) {
+        generatedAudioUrls[name] = `https://raw.githubusercontent.com/englishleveling46/Flashcard/main/${path}${audioDirectory}/${audioNumber}.mp3`;
+    }
+
+    return generatedAudioUrls;
+};
+
+
+/**
  * Tạo các câu hỏi trắc nghiệm dạng nghe dựa trên từ vựng đã học của người dùng.
  * Hàm này lọc danh sách từ vựng mặc định để tìm các từ người dùng đã biết,
  * sau đó xây dựng các đối tượng câu hỏi với URL audio, đáp án đúng và các đáp án gây nhiễu.
@@ -36,56 +81,18 @@ export const generateAudioQuizQuestions = (userVocabulary: string[]): AudioQuizQ
     const userVocabSet = new Set(userVocabulary.map(w => w.toLowerCase()));
 
     // Lọc từ vựng mặc định để chỉ lấy những từ người dùng đã học.
-    // Chúng ta cũng cần chỉ mục ban đầu để tạo URL tệp âm thanh chính xác.
     const potentialQuestions = defaultVocabulary
-        .map((word, index) => ({ word, index }))
+        .map((word) => ({ word }))
         .filter(item => userVocabSet.has(item.word.toLowerCase()));
 
     // Ánh xạ mỗi từ đã học thành một đối tượng câu hỏi.
     const allPossibleQuestions = potentialQuestions.map(item => {
-        // Xác định thư mục audio dựa trên chỉ mục của từ theo yêu cầu mới.
-        // Lưu ý: Tên file (2001, 3001,...) bằng item.index + 1.
-        // Do đó, điều kiện sẽ dựa trên item.index.
-        let audioDirectory: string;
-
-        if (item.index < 1000) { // File 1-1000 (index 0-999)
-            audioDirectory = 'audio1';
-        } else if (item.index < 2000) { // File 1001-2000 (index 1000-1999)
-            audioDirectory = 'audio2';
-        } else if (item.index >= 2000 && item.index < 2400) { // File 2001-2400 (index 2000-2399)
-            audioDirectory = 'audio3';
-        } else if (item.index >= 3000 && item.index < 4000) { // File 3001-4000 (index 3000-3999)
-            audioDirectory = 'audio4';
-        } else if (item.index >= 4000 && item.index < 4700) { // File 4001-4700 (index 4000-4699)
-            audioDirectory = 'audio5';
-        } else if (item.index >= 5000 && item.index < 6000) { // File 5001-6000 (index 5000-5999)
-            audioDirectory = 'audio6';
-        } else if (item.index >= 6000 && item.index < 7000) { // File 6001-7000 (index 6000-6999)
-            audioDirectory = 'audio7';
-        } else if (item.index >= 7000 && item.index < 7500) { // File 7001-7500 (index 7000-7499)
-            audioDirectory = 'audio8';
-        } else if (item.index >= 8000 && item.index < 9000) { // File 8001-9000 (index 8000-8999)
-            audioDirectory = 'audio9';
-        } else if (item.index >= 9000 && item.index < 10000) { // File 9001-10000 (index 9000-9999)
-            audioDirectory = 'audio10';
-        } else if (item.index >= 10000) { // File 10001 trở đi (index 10000+)
-            audioDirectory = 'audio11';
-        } else {
-            // Trường hợp dự phòng cho các từ nằm trong "khoảng trống"
-            // (ví dụ: 2401-3000, 4701-5000,...)
-            // Bạn có thể đặt một thư mục mặc định hoặc báo lỗi tại đây.
-            // Ở đây mình tạm đặt là 'audio_default' và in ra cảnh báo.
-            audioDirectory = 'audio_default'; 
-            console.warn(`Word at index ${item.index} is in an unhandled audio directory range.`);
-        }
-
-        // Các tệp âm thanh được đặt tên theo số (ví dụ: 001.mp3, 1001.mp3).
-        const audioNumber = (item.index + 1).toString().padStart(3, '0');
+        // THAY ĐỔI: Sử dụng hàm helper mới để lấy URL audio.
+        const generatedAudioUrls = generateAudioUrlsForWord(item.word);
         
-        // THAY ĐỔI: Tạo URL động cho tất cả các giọng đọc trong AVAILABLE_VOICES
-        const generatedAudioUrls: { [voiceName: string]: string } = {};
-        for (const [name, path] of Object.entries(AVAILABLE_VOICES)) {
-            generatedAudioUrls[name] = `https://raw.githubusercontent.com/englishleveling46/Flashcard/main/${path}${audioDirectory}/${audioNumber}.mp3`;
+        // Nếu không tạo được URL (từ không tồn tại), bỏ qua câu hỏi này.
+        if (!generatedAudioUrls) {
+            return null;
         }
         
         const correctWord = item.word.toLowerCase();
@@ -103,14 +110,13 @@ export const generateAudioQuizQuestions = (userVocabulary: string[]): AudioQuizQ
         // Trả về đối tượng câu hỏi hoàn chỉnh.
         return {
             question: "Nghe và chọn từ đúng:", 
-            // THAY ĐỔI: Gán object audioUrls đã được tạo động
             audioUrls: generatedAudioUrls,
             options: [correctWord, ...incorrectOptions],
             correctAnswer: correctWord,
             word: item.word,
             vietnamese: null // Câu hỏi audio không hiển thị nghĩa tiếng Việt.
         };
-    });
+    }).filter((q): q is AudioQuizQuestion => q !== null); // Lọc bỏ các giá trị null
 
     return allPossibleQuestions;
 };
