@@ -1,4 +1,3 @@
---- START OF FILE audio-quiz-generator (1).ttrfds.txt ---
 // --- START OF FILE: audio-quiz-generator.ts ---
 
 import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
@@ -14,7 +13,6 @@ const AVAILABLE_VOICES = {
 };
 
 // Định nghĩa cấu trúc cho một đối tượng câu hỏi audio.
-// THAY ĐỔI: Chuyển từ object cố định sang một dictionary linh hoạt
 export interface AudioQuizQuestion {
   question: string;
   audioUrls: { [voiceName: string]: string }; // Kiểu [key: string]: string
@@ -87,7 +85,7 @@ export const generateAudioQuizQuestions = (userVocabulary: string[]): AudioQuizQ
 
     // Ánh xạ mỗi từ đã học thành một đối tượng câu hỏi.
     const allPossibleQuestions = potentialQuestions.map(item => {
-        // THAY ĐỔI: Sử dụng hàm helper mới để lấy URL audio.
+        // Sử dụng hàm helper mới để lấy URL audio.
         const generatedAudioUrls = generateAudioUrlsForWord(item.word);
         
         // Nếu không tạo được URL (từ không tồn tại), bỏ qua câu hỏi này.
@@ -120,5 +118,3 @@ export const generateAudioQuizQuestions = (userVocabulary: string[]): AudioQuizQ
 
     return allPossibleQuestions;
 };
-
-// --- END OF FILE: audio-quiz-generator.ts ---
