@@ -1,6 +1,8 @@
 // src/ui/components/back-button.tsx
 
 import React from 'react';
+// Giả sử file game-assets.ts nằm ở đây, hãy điều chỉnh đường dẫn cho đúng
+import { uiAssets } from '../../game-assets'; 
 
 // --- STYLES (Self-contained) ---
 const ScopedStyles = () => (
@@ -25,7 +27,8 @@ const ScopedStyles = () => (
             visibility: hidden;
             pointer-events: none;
         }
-        .screen-back-btn svg {
+        /* THAY ĐỔI TỪ 'svg' SANG 'img' */
+        .screen-back-btn img {
             width: 20px;
             height: 20px;
         }
@@ -42,20 +45,8 @@ const ScopedStyles = () => (
     `}</style>
 );
 
-// --- SVG ICON (Updated to a Bolder Outline Back Arrow) ---
-const BackIcon = ({ className = '' }: { className?: string }) => (
-    <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        fill="none" 
-        viewBox="0 0 24 24" 
-        strokeWidth={2.5} // Tăng độ đậm của icon tại đây. Bạn có thể chỉnh thành 2 hoặc 3 nếu muốn.
-        stroke="currentColor" 
-        className={className}
-    >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-    </svg>
-);
-
+// --- SVG ICON (ĐÃ BỊ XÓA) ---
+// Component BackIcon không còn cần thiết nữa
 
 // --- COMPONENT PROPS ---
 interface BackButtonProps {
@@ -80,7 +71,8 @@ const BackButton: React.FC<BackButtonProps> = ({
                 className={`screen-back-btn ${isHidden ? 'is-hidden' : ''}`}
                 title={title}
             >
-                <BackIcon />
+                {/* THAY THẾ SVG BẰNG THẺ IMG */}
+                <img src={uiAssets.backIcon} alt="Back" />
                 {label && <span>{label}</span>}
             </button>
         </>
