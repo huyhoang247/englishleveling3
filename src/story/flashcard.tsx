@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import BackButton from '../footer-back.tsx';
 import { ExampleSentence, Flashcard as CoreFlashcard } from './flashcard-data.ts';
-import { generateAudioUrlsForWord } from '../voca-data/audio-quiz-generator.ts';
+import { generateAudioUrlsForWord } from './audio-quiz-generator.ts';
 
 // Đổi tên interface để tránh xung đột với tên component, mặc dù vẫn dùng chung cấu trúc từ file data
 interface FlashcardData extends CoreFlashcard {}
@@ -238,40 +238,37 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
                 {/* --- START: THAY ĐỔI GIAO DIỆN --- */}
-                {/* Box 1: Word */}
+                {/* Box 1: Word & Audio Player */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
-                  <div className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-2xl font-bold px-4 py-2 rounded-full dark:bg-blue-900/50 dark:text-blue-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                    </svg>
-                    <span>{selectedCard.vocabulary.word}</span>
+                  <div className="flex justify-between items-center">
+                    <div className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-2xl font-bold px-4 py-2 rounded-full dark:bg-blue-900/50 dark:text-blue-200">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                      </svg>
+                      <span>{selectedCard.vocabulary.word}</span>
+                    </div>
+                    {audioUrls && (
+                      <div className="flex items-center gap-2 bg-gray-900/80 p-1.5 rounded-full border border-gray-700">
+                        <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-white/10 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
+                          { isPlaying ? <PauseIcon className="w-5 h-5 text-white" /> : <VolumeUpIcon className="w-5 h-5 text-white/80" /> }
+                        </button>
+                        <VoiceStepper
+                          currentVoice={selectedVoice}
+                          onNavigate={handleChangeVoiceDirection}
+                          availableVoiceCount={Object.keys(audioUrls).length}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Box 2: Meaning */}
-                <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl">
+                <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Định nghĩa</h5>
                   <p className="text-gray-700 dark:text-gray-300 leading-relaxed italic">
                     {selectedCard.vocabulary.meaning}
                   </p>
                 </div>
-                
-                {/* Box 3: Pronunciation */}
-                {audioUrls && (
-                  <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl">
-                    <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Pronunciation</h5>
-                    <div className="flex items-center gap-2 bg-gray-900/80 p-1.5 rounded-full border border-gray-700 self-start mt-1">
-                      <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-white/10 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
-                        { isPlaying ? <PauseIcon className="w-5 h-5 text-white" /> : <VolumeUpIcon className="w-5 h-5 text-white/80" /> }
-                      </button>
-                      <VoiceStepper
-                        currentVoice={selectedVoice}
-                        onNavigate={handleChangeVoiceDirection}
-                        availableVoiceCount={Object.keys(audioUrls).length}
-                      />
-                    </div>
-                  </div>
-                )}
                 {/* --- END: THAY ĐỔI GIAO DIỆN --- */}
 
                 <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
