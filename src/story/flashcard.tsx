@@ -24,7 +24,6 @@ const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="htt
 const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 const ChevronRightIcon = ({ className }: { className:string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg> );
 
-// **REFINED COMPONENT** VoiceStepper được tinh chỉnh để chỉ chứa các nút điều hướng
 const VoiceStepper: React.FC<{
   onNavigate: (direction: 'next' | 'previous') => void;
   availableVoiceCount: number;
@@ -256,19 +255,25 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   </p>
                 </div>
 
-                {/* --- START: REFINED AUDIO PLAYER --- */}
+                {/* --- START: UNIFIED AUDIO CONTROL --- */}
                 {audioUrls && (
                   <div className="bg-gray-50 dark:bg-black p-4 rounded-xl border border-gray-200 dark:border-gray-800">
                     <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                          <div className="flex-shrink-0 w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                      {/* CHANGE: Chuyển div thành button và thêm onClick={togglePlay} */}
+                      <button 
+                        onClick={togglePlay} 
+                        aria-label="Phát hoặc dừng âm thanh"
+                        className="flex items-center gap-3 text-left group"
+                      >
+                          {/* CHANGE: Thêm hiệu ứng hover tinh tế cho icon bên trái */}
+                          <div className="flex-shrink-0 w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center transition-colors group-hover:dark:bg-gray-700">
                               <VolumeUpIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                           </div>
                           <div>
                               <h5 className="text-sm font-semibold text-gray-600 dark:text-gray-400">Phát âm</h5>
                               <span key={selectedVoice} className="text-xs text-gray-500 animate-fade-in-short">{selectedVoice}</span>
                           </div>
-                      </div>
+                      </button>
 
                       <div className="flex items-center gap-1 bg-gray-900 p-1 rounded-full border border-gray-700/80">
                         <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${isPlaying ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white/10 text-white/80 hover:bg-white/20'}`} aria-label={isPlaying ? 'Dừng phát' : 'Phát âm'}>
@@ -282,7 +287,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                     </div>
                   </div>
                 )}
-                {/* --- END: REFINED AUDIO PLAYER --- */}
+                {/* --- END: UNIFIED AUDIO CONTROL --- */}
                 
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Mức độ phổ biến</h5>
