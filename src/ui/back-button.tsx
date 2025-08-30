@@ -2,7 +2,7 @@
 
 import React from 'react';
 // Giả sử file game-assets.ts nằm ở đây, hãy điều chỉnh đường dẫn cho đúng
-import { uiAssets } from '../../game-assets'; 
+import { uiAssets } from '../game-assets.ts'; 
 
 // --- STYLES (Self-contained) ---
 const ScopedStyles = () => (
