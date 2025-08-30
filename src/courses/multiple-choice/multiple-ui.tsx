@@ -187,38 +187,38 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                   </div>
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                   
-                  <div className="relative">
-                    <div className="absolute top-3 right-3 z-10">
-                       <VoiceStepper
-                          currentVoice={selectedVoice}
-                          onNavigate={handleChangeVoiceDirection}
-                          availableVoiceCount={playableQuestions[currentQuestion]?.audioUrls ? Object.keys(playableQuestions[currentQuestion].audioUrls).length : 0}
-                       />
+                  {/* === START: CODE ĐÃ SỬA === */}
+                  {/* Container mới cho các nút điều khiển audio */}
+                  {currentAudioUrl && (
+                    <div className="flex justify-between items-center mb-2">
+                      {/* Nút Loa - đã bỏ absolute positioning */}
+                      <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
+                        { isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" /> }
+                      </button>
+
+                      {/* Voice Stepper - đã bỏ thẻ div wrapper absolute */}
+                      <VoiceStepper
+                        currentVoice={selectedVoice}
+                        onNavigate={handleChangeVoiceDirection}
+                        availableVoiceCount={playableQuestions[currentQuestion]?.audioUrls ? Object.keys(playableQuestions[currentQuestion].audioUrls).length : 0}
+                      />
                     </div>
-                    
-                    {playableQuestions[currentQuestion]?.question ? (
-                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex items-center gap-4">
-                            {currentAudioUrl && (
-                                <button onClick={togglePlay} className={`flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-all duration-200 hover:scale-110 hover:bg-black/30 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
-                                    {isPlaying ? <PauseIcon className="w-6 h-6 text-white" /> : <VolumeUpIcon className="w-6 h-6 text-white/80" />}
-                                </button>
-                            )}
-                            <div className="flex-grow">
-                                <h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>
-                                {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
-                            </div>
+                  )}
+
+                  {/* Khung chứa nội dung câu hỏi */}
+                  <div>
+                    {currentAudioUrl ? (
+                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex items-center justify-center min-h-[140px]">
+                            <p className="text-white/80 text-sm font-medium">Nghe và chọn đáp án đúng</p>
                         </div>
                     ) : (
-                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex items-center justify-center min-h-[140px]">
-                            {currentAudioUrl && (
-                                <button onClick={togglePlay} className={`absolute top-1/2 -translate-y-1/2 left-3 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
-                                    {isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" />}
-                                </button>
-                            )}
-                            <p className="text-white/80 text-sm font-medium">Nghe và chọn đáp án đúng</p>
+                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
+                            <h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>
+                            {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
                         </div>
                     )}
                   </div>
+                  {/* === END: CODE ĐÃ SỬA === */}
                 </div>
                 <div className="p-6">
                   <div className="space-y-3 mb-6">
