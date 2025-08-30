@@ -224,8 +224,6 @@ const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
 // SidebarLayout component including Sidebar and main content area
 function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowLuckyGame, onShowAchievements, onShowUpgrade, onShowAdmin, onShowMinerChallenge, onShowBaseBuilding, onShowSystemCheck }: SidebarLayoutProps) {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(3);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const toggleSidebar = () => {
     setIsSidebarVisible(!isSidebarVisible);
@@ -236,10 +234,6 @@ function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowLuckyGame
       setToggleSidebar(toggleSidebar);
     }
   }, [setToggleSidebar, toggleSidebar]);
-
-  const toggleUserMenu = () => {
-    setUserMenuOpen(!userMenuOpen);
-  };
 
   const menuItems = [
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
@@ -340,51 +334,6 @@ function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowLuckyGame
                 })}
               </ul>
             </nav>
-          )}
-
-          {isSidebarVisible && (
-            <div className="mt-auto p-3 border-t border-gray-800">
-              <div className="relative">
-                <button
-                  onClick={toggleUserMenu}
-                  className="flex items-center space-x-3 p-2 rounded-lg w-full bg-gradient-to-r from-gray-800 to-gray-700 hover:from-gray-700 hover:to-gray-600 transition-all duration-200"
-                >
-                  <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 shadow-sm flex items-center justify-center text-white font-semibold text-sm">
-                    TD
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-200 truncate">Trần Đức</p>
-                  </div>
-                  <div className="w-6 h-6 rounded-full bg-gray-900 flex items-center justify-center shadow-sm">
-                    <ChevronDownIcon size={14} className="text-gray-400" />
-                  </div>
-                </button>
-
-                {userMenuOpen && (
-                  <div className="absolute bottom-full mb-2 left-0 w-full bg-gray-800 rounded-lg shadow-lg border border-gray-700 py-1 z-10">
-                    <a href="#" className="flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-700">
-                      <div className="w-6 h-6 rounded-full bg-gray-700 text-blue-400 flex items-center justify-center mr-2">
-                        <UsersIcon size={14} />
-                      </div>
-                      Hồ sơ
-                    </a>
-                    <a href="#" className="flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-700">
-                      <div className="w-6 h-6 rounded-full bg-gray-700 text-gray-400 flex items-center justify-center mr-2">
-                        <SettingsIcon size={14} />
-                      </div>
-                      Cài đặt
-                    </a>
-                    <div className="my-1 border-t border-gray-700"></div>
-                    <a href="#" className="flex items-center px-3 py-2 text-sm text-red-400 hover:bg-gray-700">
-                      <div className="w-6 h-6 rounded-full bg-gray-700 text-red-400 flex items-center justify-center mr-2">
-                        <XIcon size={14} />
-                      </div>
-                      Đăng xuất
-                    </a>
-                  </div>
-                )}
-              </div>
-            </div>
           )}
         </div>
       </div>
