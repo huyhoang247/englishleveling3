@@ -11,7 +11,7 @@ import { SidebarLayout } from './sidebar-story.tsx';
 // <<< THAY ĐỔI: IMPORT DỮ LIỆU VÀ ASSETS >>>
 import { ALL_CARDS_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
 // Giả sử file game-assets.ts nằm cùng cấp với thư mục chứa file này
-import { quizHomeAssets } from './game-assets.ts';
+import { quizHomeAssets } from '../game-assets';
 
 
 // --- Interfaces and Data ---
@@ -62,13 +62,14 @@ interface GalleryHeaderProps {
 
 function GalleryHeader({ activeScreen, onGoBack, onGoHome, toggleSidebar, setShowSettings }: GalleryHeaderProps) {
   const headerTitle = useMemo(() => {
-    if (activeScreen === 'home') return 'Flashcard Gallery';
-    // Capitalize first letter for other screens
+    // <<< THAY ĐỔI: Ẩn tiêu đề ở màn hình home >>>
+    if (activeScreen === 'home') return null;
     return activeScreen.charAt(0).toUpperCase() + activeScreen.slice(1);
   }, [activeScreen]);
 
   return (
-    <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md">
+    // <<< THAY ĐỔI: Xóa class sticky, top-0, z-50 >>>
+    <header className="bg-slate-900/95 backdrop-blur-sm shadow-md">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center">
           <div className="w-24">
@@ -81,7 +82,7 @@ function GalleryHeader({ activeScreen, onGoBack, onGoHome, toggleSidebar, setSho
             )}
           </div>
           <div className="flex-1 flex justify-center px-4">
-            <h2 className="text-lg font-bold text-slate-200 truncate">{headerTitle}</h2>
+            {headerTitle && <h2 className="text-lg font-bold text-slate-200 truncate">{headerTitle}</h2>}
           </div>
           <div className="w-24 flex items-center justify-end gap-2">
               {activeScreen === 'home' ? (
@@ -444,8 +445,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       onShowHelp={handleShowHelp}
       activeScreen={activeScreen}
     >
-      {/* <<< THAY ĐỔI: CẤU TRÚC LAYOUT MỚI VỚI HEADER CỐ ĐỊNH >>> */}
-      <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
+      {/* <<< THAY ĐỔI: Xóa h-screen để toàn bộ trang cuộn >>> */}
+      <div className="flex flex-col bg-white dark:bg-gray-900">
         <style>{animations}</style>
         <style>{scrollbarHide}</style>
         
@@ -457,10 +458,10 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
           setShowSettings={setShowSettings}
         />
 
-        <main ref={mainContainerRef} className="flex-grow overflow-y-auto">
+        {/* <<< THAY ĐỔI: Xóa flex-grow và overflow-y-auto >>> */}
+        <main ref={mainContainerRef}>
           {activeScreen === 'home' && (
             <>
-              {/* <<< THAY ĐỔI: BỎ HEADER CŨ, GIỮ LẠI TABS VÀ CÁC PHẦN KHÁC >>> */}
               <div className="w-full max-w-6xl py-6 mx-auto">
                 <div className="inline-flex rounded-lg bg-white dark:bg-gray-800 p-1 mb-4 shadow-sm border border-gray-200 dark:border-gray-700 mx-4">
                   <button onClick={() => { setActiveTab('collection'); handlePageChange(1); }} className={`flex items-center space-x-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-300 ${activeTab === 'collection' ? 'bg-indigo-50 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-medium shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
@@ -748,7 +749,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
           )}
 
           {activeScreen !== 'home' && (
-              <div className="flex items-center justify-center h-full text-2xl text-gray-600 dark:text-gray-300">
+              <div className="flex items-center justify-center h-full text-2xl text-gray-600 dark:text-gray-300 p-8">
                   {activeScreen === 'stats' && 'Màn hình Stats'}
                   {activeScreen === 'rank' && 'Màn hình Rank'}
                   {activeScreen === 'goldMine' && 'Màn hình Mỏ vàng'}
