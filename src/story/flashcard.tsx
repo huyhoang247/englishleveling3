@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import BackButton from '../footer-back.tsx';
 import { ExampleSentence, Flashcard as CoreFlashcard } from './flashcard-data.ts';
-import { generateAudioUrlsForWord } from './audio-quiz-generator.ts';
+import { generateAudioUrlsForWord } from '../voca-data/audio-quiz-generator.ts';
 
 // Đổi tên interface để tránh xung đột với tên component, mặc dù vẫn dùng chung cấu trúc từ file data
 interface FlashcardData extends CoreFlashcard {}
