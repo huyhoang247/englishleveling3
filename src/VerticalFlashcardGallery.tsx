@@ -72,24 +72,25 @@ function GalleryHeader({ activeScreen, onGoBack, onGoHome, toggleSidebar, setSho
     <header className="bg-slate-900/95 backdrop-blur-sm shadow-md">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center">
-          <div className="w-24">
+          <div className="w-24 flex justify-start">
             {activeScreen === 'home' ? (
-              <a className="flex items-center" href="#" onClick={(e) => { e.preventDefault(); onGoHome(); }}>
-                 <img src={quizHomeAssets.logoLarge} alt="Logo" className="h-10 w-auto" />
-              </a>
+              <button onClick={() => toggleSidebar?.()} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Mở menu"><MenuIcon /></button>
             ) : (
               <button onClick={onGoBack} className="p-2 -ml-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Quay lại"><BackIcon /></button>
             )}
           </div>
           <div className="flex-1 flex justify-center px-4">
-            {headerTitle && <h2 className="text-lg font-bold text-slate-200 truncate">{headerTitle}</h2>}
+             {activeScreen === 'home' ? (
+              <a className="flex items-center" href="#" onClick={(e) => { e.preventDefault(); onGoHome(); }}>
+                 <img src={quizHomeAssets.logoLarge} alt="Logo" className="h-10 w-auto" />
+              </a>
+            ) : (
+                headerTitle && <h2 className="text-lg font-bold text-slate-200 truncate">{headerTitle}</h2>
+            )}
           </div>
-          <div className="w-24 flex items-center justify-end gap-2">
+          <div className="w-24 flex items-center justify-end">
               {activeScreen === 'home' ? (
-                <>
                   <button onClick={() => setShowSettings(true)} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Cài đặt hiển thị"><SettingsIcon /></button>
-                  <button onClick={() => toggleSidebar?.()} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Mở menu"><MenuIcon /></button>
-                </>
               ) : (
                  <button onClick={onGoHome} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Về trang chủ"><HomeIcon /></button>
               )}
