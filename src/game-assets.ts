@@ -21,6 +21,7 @@ export const uiAssets = {
   gemIcon: require("./assets/images/gems.webp"),
   vocabularyChestIcon: require("./assets/images/vocabulary-chest.webp"),
   skillIcon: require("./assets/images/skill-icon.webp"),
+  backIcon: require("./assets/images/back-icon.webp"), // <--- THÊM DÒNG NÀY
   // -- Thêm mới từ lat-the.tsx --
   priceIcon: require("./assets/images/coin.webp"),
   cardCapacityIcon: require("./assets/images/card-capacity.webp"),
@@ -39,6 +40,8 @@ export const uiAssets = {
   luckyGameIcon: require("./assets/images/coin.webp"),
   upgradeIcon: require("./assets/images/upgrade-icon.webp"),
 };
+
+// ... (phần còn lại của file giữ nguyên)
 
 /**
  * Tài nguyên cho màn hình phân tích (Dashboard)
