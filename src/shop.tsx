@@ -104,7 +104,7 @@ const ShopHeader = ({ onClose, userGold, userGems, isLoading }: { onClose: () =>
     const navItems = ['Cửa Hàng', 'Nhiệm Vụ', 'Bang Hội', 'Sự Kiện'];
     const activeNav = 'Cửa Hàng';
 
-    // THAY ĐỔI: Sử dụng hook để tạo giá trị động, thời gian 500ms
+    // THÊM MỚI: Sử dụng hook để tạo giá trị động
     const animatedGold = useAnimateValue(userGold, 500);
     const animatedGems = useAnimateValue(userGems, 500);
 
