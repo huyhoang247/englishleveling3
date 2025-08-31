@@ -6,9 +6,9 @@ import { uiAssets } from './game-assets.ts';
 // --- THAY ĐỔI: Import trực tiếp service và auth ---
 import { fetchOrCreateUserGameData, processShopPurchase } from './gameDataService.ts';
 import { auth } from './firebase.js';
-import CoinDisplay from './coin-display.tsx';
-import GemDisplay from './gem-display.tsx';
-import HomeButton from './ui/components/home-button.tsx'; // Import HomeButton
+import CoinDisplay from './ui/display/coin-display.tsx';
+import GemDisplay from './ui/display/gem-display.tsx';
+import HomeButton from './ui//home-button.tsx'; // Import HomeButton
 
 // --- START: HELPERS & COMPONENTS SAO CHÉP TỪ INVENTORY.TSX ---
 const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; case 'SSR': return 'border-rose-500'; default: return 'border-gray-600'; } };
