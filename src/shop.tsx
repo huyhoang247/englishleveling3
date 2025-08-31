@@ -91,7 +91,7 @@ const ShopHeader = ({ onClose, userGold, userGems, isLoading }: { onClose: () =>
     const navItems = ['Cửa Hàng', 'Nhiệm Vụ', 'Bang Hội', 'Sự Kiện'];
     const activeNav = 'Cửa Hàng';
     return (
-        <header className="sticky top-0 left-0 right-0 z-40 bg-slate-900/70 backdrop-blur-sm border-b border-white/10">
+        <header className="sticky top-0 left-0 right-0 z-40 bg-slate-900 border-b border-white/10">
             <div className="max-w-[1600px] mx-auto flex items-center justify-between h-[53px] px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center gap-4">
                     <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-800/70 text-slate-400 hover:bg-slate-700/60 hover:text-white transition-colors border border-slate-700/50" aria-label="Đóng cửa hàng">
