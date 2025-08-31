@@ -164,7 +164,7 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
             <ShopHeader onClose={onClose} userGold={coins} userGems={gems} isLoading={isLoading} />
 
             {/* VÙNG CHỨA TABS - CỐ ĐỊNH, KHÔNG CUỘN DỌC */}
-            <div className="flex-shrink-0 bg-[#0a0a14] border-b border-slate-800/70 shadow-md">
+            <div className="flex-shrink-0 bg-[#0a0a14] border-b border-slate-800/70 shadow-md pt-2">
                  <div className="max-w-[1600px] mx-auto">
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
                  </div>
