@@ -1,3 +1,5 @@
+// --- START OF FILE shop.tsx (11).txt ---
+
 // --- START OF FILE shop.tsx ---
 
 import React, { useState, useEffect } from 'react';
@@ -93,7 +95,8 @@ const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: s
 // --- >>> END: COMPONENT CATEGORY TABS ĐÃ ĐƯỢC CẬP NHẬT <<< ---
 
 // --- >>> START: COMPONENT CHÍNH CỦA CỬA HÀNG ĐÃ ĐƯỢC CẤU TRÚC LẠI <<< ---
-const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPurchaseComplete: () => void; }) => {
+// --- THAY ĐỔI: Cập nhật props của GameShopUI ---
+const GameShopUI = ({ onClose, onCurrencyUpdate }: { onClose: () => void; onCurrencyUpdate: (updates: { coins?: number; gems?: number }) => void; }) => {
     const currentUser = auth.currentUser;
     const [coins, setCoins] = useState(0);
     const [gems, setGems] = useState(0);
@@ -128,7 +131,8 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
         try {
             const { newCoins } = await processShopPurchase(currentUser.uid, item, quantity);
             setCoins(newCoins);
-            onPurchaseComplete();
+            // --- THAY ĐỔI: Gọi onCurrencyUpdate thay vì onPurchaseComplete ---
+            onCurrencyUpdate({ coins: newCoins });
             alert(`Mua thành công x${quantity} ${item.name}!`);
         } catch (error) {
             console.error("Shop purchase transaction failed:", error);
@@ -143,7 +147,8 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
             const { newGems, newCoins } = await processGemToCoinExchange(currentUser.uid, pkg.gems);
             setGems(newGems);
             setCoins(newCoins);
-            onPurchaseComplete();
+            // --- THAY ĐỔI: Gọi onCurrencyUpdate thay vì onPurchaseComplete ---
+            onCurrencyUpdate({ coins: newCoins, gems: newGems });
             alert(`Đổi thành công ${pkg.gems.toLocaleString()} Gems để nhận được ${pkg.coins.toLocaleString()} Vàng!`);
         } catch (error) {
             console.error("Gem to Coin exchange failed:", error);
@@ -229,6 +234,8 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
 };
 // --- >>> END: COMPONENT CHÍNH CỦA CỬA HÀNG ĐÃ ĐƯỢC CẤU TRÚC LẠI <<< ---
 
-export default function App({ onClose, onPurchaseComplete }: { onClose: () => void; onPurchaseComplete: () => void; }) {
-    return <GameShopUI onClose={onClose} onPurchaseComplete={onPurchaseComplete} />;
+// --- THAY ĐỔI: Cập nhật props của App component ---
+export default function App({ onClose, onCurrencyUpdate }: { onClose: () => void; onCurrencyUpdate: (updates: { coins?: number; gems?: number }) => void; }) {
+    return <GameShopUI onClose={onClose} onCurrencyUpdate={onCurrencyUpdate} />;
 } 
+// --- END OF FILE shop.tsx ---
