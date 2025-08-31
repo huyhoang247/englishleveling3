@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { itemDatabase, ItemRank } from './home/equipment/item-database.ts';
 import { uiAssets } from './game-assets.ts';
@@ -74,14 +73,12 @@ const GemExchangeCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => 
                 <Coins className="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110" />
             </div>
             {/* THAY ĐỔI: Thay chữ "Vàng" bằng icon */}
-            {/* <<< START CHANGE */}
             <div className="p-4 bg-black/40 border-t border-slate-700 group-hover:border-yellow-500 transition-colors duration-300 mt-auto">
                 <div className="flex items-center justify-center gap-1.5 text-lg font-semibold text-yellow-300">
                     <span>{pkg.coins.toLocaleString('vi-VN')}</span>
                     <Coins className="w-5 h-5" />
                 </div>
             </div>
-            {/* <<< END CHANGE */}
         </div>
     );
 };
@@ -224,56 +221,65 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
     const handleCloseGemModal = () => setSelectedGemPackage(null);
     const handleCloseExchangeModal = () => setSelectedExchangePackage(null);
 
+    // --- THAY ĐỔI: Bố cục được thay đổi để chỉ scroll nội dung chính ---
+    // <<< START CHANGE
     return (
-        <div className="w-full h-full overflow-y-auto bg-slate-900 font-sans text-white">
+        <div className="w-full h-screen bg-slate-900 font-sans text-white flex flex-col">
             <ShopHeader onClose={onClose} userGold={coins} userGems={gems} isLoading={isLoading} />
-            <div className="absolute inset-0 top-[53px] bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]"></div>
-            <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24">
-                <main>
-                    <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
-                    <section>
-                        <div className="flex justify-between items-center mb-4 pr-2">
-                            <h2 className="text-2xl font-bold text-white">{activeCategory}</h2>
-                            {activeCategory === 'Item' && <ShopCountdown />}
-                        </div>
-                        {activeCategory === 'Nạp Gems' ? (
-                            <div className="grid grid-cols-2 gap-4 md:gap-6">
-                                {gemPackages.map(pkg => (
-                                    <GemPackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectGemPackage} />
-                                ))}
+            {/* Container cho khu vực nội dung, chiếm phần không gian còn lại và cho phép cuộn bên trong */}
+            <div className="flex-1 relative overflow-y-auto">
+                {/* Lớp nền dạng lưới, nằm cố định phía sau */}
+                <div className="absolute inset-0 bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]"></div>
+                
+                {/* Container cho nội dung chính, có padding và giới hạn chiều rộng */}
+                <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24">
+                    <main>
+                        <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
+                        <section>
+                            <div className="flex justify-between items-center mb-4 pr-2">
+                                <h2 className="text-2xl font-bold text-white">{activeCategory}</h2>
+                                {activeCategory === 'Item' && <ShopCountdown />}
                             </div>
-                        ) : activeCategory === 'Đổi Vàng' ? (
-                            <div className="grid grid-cols-2 gap-4 md:gap-6">
-                                {gemToCoinPackages.map(pkg => (
-                                    <GemExchangeCard key={pkg.id} pkg={pkg} onSelect={handleSelectExchangePackage} />
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-                                {allItems
-                                    .filter(item => ['Vũ khí', 'Trang bị', 'Trang phục', 'Item', 'Rương'].includes(item.type))
-                                    .map(item => (
-                                        <ShopItemCard
-                                            key={`${item.id}-${item.name}-${item.rarity}`}
-                                            item={item}
-                                            onSelect={handleSelectItem}
-                                        />
+                            {activeCategory === 'Nạp Gems' ? (
+                                <div className="grid grid-cols-2 gap-4 md:gap-6">
+                                    {gemPackages.map(pkg => (
+                                        <GemPackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectGemPackage} />
                                     ))}
-                            </div>
-                        )}
-                    </section>
-                </main>
-                {selectedItem && <ItemDetailModal item={selectedItem} onClose={handleCloseItemModal} onPurchase={handleLocalPurchase} currentCoins={coins} />}
-                {selectedGemPackage && <PaymentQRModal pkg={selectedGemPackage} onClose={handleCloseGemModal} currentUser={currentUser} />}
-                {selectedExchangePackage && <ExchangeConfirmationModal pkg={selectedExchangePackage} onClose={handleCloseExchangeModal} onConfirm={handleGemExchange} currentGems={gems} />}
+                                </div>
+                            ) : activeCategory === 'Đổi Vàng' ? (
+                                <div className="grid grid-cols-2 gap-4 md:gap-6">
+                                    {gemToCoinPackages.map(pkg => (
+                                        <GemExchangeCard key={pkg.id} pkg={pkg} onSelect={handleSelectExchangePackage} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                                    {allItems
+                                        .filter(item => ['Vũ khí', 'Trang bị', 'Trang phục', 'Item', 'Rương'].includes(item.type))
+                                        .map(item => (
+                                            <ShopItemCard
+                                                key={`${item.id}-${item.name}-${item.rarity}`}
+                                                item={item}
+                                                onSelect={handleSelectItem}
+                                            />
+                                        ))}
+                                </div>
+                            )}
+                        </section>
+                    </main>
+                    {/* Các modal sẽ hiển thị bên trên tất cả */}
+                    {selectedItem && <ItemDetailModal item={selectedItem} onClose={handleCloseItemModal} onPurchase={handleLocalPurchase} currentCoins={coins} />}
+                    {selectedGemPackage && <PaymentQRModal pkg={selectedGemPackage} onClose={handleCloseGemModal} currentUser={currentUser} />}
+                    {selectedExchangePackage && <ExchangeConfirmationModal pkg={selectedExchangePackage} onClose={handleCloseExchangeModal} onConfirm={handleGemExchange} currentGems={gems} />}
+                </div>
             </div>
             <style jsx global>{` .bg-grid-slate-800\\/40 { background-image: linear-gradient(white 2px, transparent 2px), linear-gradient(to right, white 2px, transparent 2px); background-size: 6rem 6rem; background-position: -0.5rem -0.5rem; opacity: 0.1; pointer-events: none; } `}</style>
         </div>
     );
+    // <<< END CHANGE
 };
 
 // --- Component Wrapper để export ---
 export default function App({ onClose, onPurchaseComplete }: { onClose: () => void; onPurchaseComplete: () => void; }) {
     return <GameShopUI onClose={onClose} onPurchaseComplete={onPurchaseComplete} />;
 }
-// --- END OF FILE src/shop.tsx ---
