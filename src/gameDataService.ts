@@ -1,4 +1,3 @@
---- START OF FILE gameDataService.tgfdes.txt ---
 
 // --- START OF FILE gameDataService.ts ---
 
