@@ -1,3 +1,5 @@
+// --- START OF FILE background-game.tsx (27).txt ---
+
 // --- START OF FILE src/background-game.tsx ---
 
 import React, { useEffect, useRef, Component, lazy, Suspense, useCallback, useState } from 'react';
@@ -74,11 +76,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
     setCoins, updateSkillsState,
     updateEquipmentData,
+    // --- THAY ĐỔI: Lấy hàm updateUserCurrency từ context ---
+    updateUserCurrency,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge,
     toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding,
-    // --- THAY ĐỔI: Lấy hàm refreshUserData từ context để truyền vào Shop ---
-    refreshUserData
   } = useGame();
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
@@ -173,7 +175,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 {isShopOpen && 
                     <Shop 
                         onClose={toggleShop} 
-                        onPurchaseComplete={refreshUserData} 
+                        onCurrencyUpdate={updateUserCurrency} 
                     />
                 }
             </ErrorBoundary> 
