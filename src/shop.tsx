@@ -6,9 +6,10 @@ import { uiAssets } from './game-assets.ts';
 // --- THAY ĐỔI: Import trực tiếp service và auth ---
 import { fetchOrCreateUserGameData, processShopPurchase } from './gameDataService.ts';
 import { auth } from './firebase.js';
-import CoinDisplay from './ui/display/coin-display.tsx';
-import GemDisplay from './ui/display/gem-display.tsx';
-import HomeButton from './ui//home-button.tsx'; // Import HomeButton
+import CoinDisplay from './coin-display.tsx';
+import GemDisplay from './gem-display.tsx';
+import HomeButton from './ui/components/home-button.tsx';
+import { useAnimateValue } from './ui/useAnimateValue.ts'; // THÊM MỚI: Import hook animation
 
 // --- START: HELPERS & COMPONENTS SAO CHÉP TỪ INVENTORY.TSX ---
 const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; case 'SSR': return 'border-rose-500'; default: return 'border-gray-600'; } };
@@ -102,6 +103,11 @@ const ItemDetailModal = ({ item, onClose, onPurchase, currentCoins }: { item: an
 const ShopHeader = ({ onClose, userGold, userGems, isLoading }: { onClose: () => void; userGold: number; userGems: number; isLoading: boolean; }) => {
     const navItems = ['Cửa Hàng', 'Nhiệm Vụ', 'Bang Hội', 'Sự Kiện'];
     const activeNav = 'Cửa Hàng';
+
+    // THÊM MỚI: Sử dụng hook để tạo giá trị động
+    const animatedGold = useAnimateValue(userGold, 1000);
+    const animatedGems = useAnimateValue(userGems, 1000);
+
     return (
         <header className="sticky top-0 left-0 right-0 z-40 bg-slate-900 border-b border-white/10">
             <div className="max-w-[1600px] mx-auto flex items-center justify-between h-[53px] px-4 sm:px-6 lg:px-8">
@@ -116,8 +122,9 @@ const ShopHeader = ({ onClose, userGold, userGems, isLoading }: { onClose: () =>
                     </nav>
                 </div>
                 <div className="flex items-center gap-3">
-                    <GemDisplay displayedGems={userGems} />
-                    <CoinDisplay displayedCoins={userGold} isStatsFullscreen={false} />
+                    {/* THAY ĐỔI: Truyền giá trị đã được animate vào component */}
+                    <GemDisplay displayedGems={isLoading ? 0 : animatedGems} />
+                    <CoinDisplay displayedCoins={isLoading ? 0 : animatedGold} isStatsFullscreen={false} />
                 </div>
             </div>
         </header>
@@ -158,7 +165,7 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
         if (!currentUser) throw new Error("User not authenticated.");
         try {
             const { newCoins } = await processShopPurchase(currentUser.uid, item, quantity);
-            setCoins(newCoins);
+            setCoins(newCoins); // Cập nhật state 'coins' sẽ tự động kích hoạt animation trong ShopHeader
             onPurchaseComplete();
             alert(`Mua thành công x${quantity} ${item.name}!`);
         } catch (error) {
