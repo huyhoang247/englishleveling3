@@ -91,8 +91,8 @@ const ShopHeader = ({ onClose, userGold, userGems, isLoading }: { onClose: () =>
     const navItems = ['Cửa Hàng', 'Nhiệm Vụ', 'Bang Hội', 'Sự Kiện'];
     const activeNav = 'Cửa Hàng';
     return (
-        <header className="sticky top-0 left-0 right-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-white/10 transition-all duration-300">
-            <div className="max-w-[1600px] mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+        <header className="sticky top-0 left-0 right-0 z-40 bg-slate-900/70 backdrop-blur-sm border-b border-white/10">
+            <div className="max-w-[1600px] mx-auto flex items-center justify-between h-[53px] px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center gap-4">
                     <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-800/70 text-slate-400 hover:bg-slate-700/60 hover:text-white transition-colors border border-slate-700/50" aria-label="Đóng cửa hàng">
                         <img src={uiAssets.closeIcon} alt="Close" className="w-5 h-5" />
@@ -166,7 +166,7 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
     return (
         <div className="w-full h-full overflow-y-auto bg-slate-900 font-sans text-white">
             <ShopHeader onClose={onClose} userGold={coins} userGems={gems} isLoading={isLoading} />
-            <div className="absolute inset-0 top-16 bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]"></div>
+            <div className="absolute inset-0 top-[53px] bg-grid-slate-800/40 [mask-image:linear-gradient(0deg,#000000,rgba(0,0,0,0))]"></div>
             <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24">
                 <main>
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
