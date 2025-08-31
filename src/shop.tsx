@@ -183,15 +183,11 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
         <div className="w-full h-screen bg-[#0a0a14] font-sans text-white flex flex-col">
             <ShopHeader onClose={onClose} userGold={coins} userGems={gems} isLoading={isLoading} />
             <div className="flex-1 relative overflow-y-auto bg-[#0a0a14] [background-image:radial-gradient(circle_at_center,_#16213e,_#0a0a14)]">
-                {/* ===>>> DÒNG ĐÃ SỬA: pt-8 đã được đổi thành pt-2 <<<=== */}
                 <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-24">
                     <main>
                         <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
                         <section>
-                            <div className="flex justify-between items-center mb-4 pr-2">
-                                <h2 className="text-2xl font-bold text-white">{activeCategory}</h2>
-                                {activeCategory === 'Item' && <ShopCountdown />}
-                            </div>
+                            {/* ===>>> Dòng chứa ShopCountdown đã được xóa hoàn toàn <<<=== */}
                             {activeCategory === 'Nạp Gems' ? (
                                 <div className="grid grid-cols-2 gap-4 md:gap-6">
                                     {gemPackages.map(pkg => (
