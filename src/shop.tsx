@@ -1,7 +1,4 @@
 
-
-// --- START OF FILE src/shop.tsx ---
-
 import React, { useState, useEffect } from 'react';
 import { itemDatabase, ItemRank } from './home/equipment/item-database.ts';
 import { uiAssets } from './game-assets.ts';
@@ -30,7 +27,7 @@ const Shield = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><pat
 const Gem = (props: any) => ( <img src={uiAssets.gemIcon} alt="Gems" {...props} /> );
 const Swords = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M14.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4-4L14.5 3.5z"/><path d="M19.5 8.5a2.12 2.12 0 0 1-3-3L10 12l4 4L19.5 8.5z"/></Icon> );
 const Coins = (props: any) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" {...props} /> );
-const ArrowRightCircle = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="M12 8l4 4-4 4"/><path d="M8 12h8"/></Icon> ); // THÊM ICON MỚI
+const ArrowRightCircle = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="M12 8l4 4-4 4"/><path d="M8 12h8"/></Icon> );
 const Sparkles = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="m12 3-1.9 4.2-4.3.4 3.3 2.9-1 4.2 3.6-2.3 3.6 2.3-1-4.2 3.3-2.9-4.3-.4L12 3z"/><path d="M5 12.5 3.1 14 5 15.5"/><path d="M19 12.5 20.9 14 19 15.5"/></Icon> );
 const ShoppingCart = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.16" /></Icon> );
 const Tag = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.432 0l6.568-6.568a2.426 2.426 0 0 0 0-3.432L12.586 2.586z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></Icon> );
@@ -61,7 +58,33 @@ const getShopItems = () => { try { const storedData = localStorage.getItem('dail
 
 const ShopItemCard = ({ item, onSelect }: { item: any; onSelect: (item: any) => void }) => { const rarityTextColor = getRarityTextColor(item.rarity); const rarityBorderColor = getRarityColor(item.rarity); return ( <div className="group relative overflow-hidden rounded-lg bg-slate-800/60 border border-slate-700 transition-all duration-300 hover:border-cyan-400 hover:shadow-2xl hover:shadow-cyan-500/20 cursor-pointer" onClick={() => onSelect(item)}> <div className="relative"> <img src={item.image} alt={item.name} className="w-full h-40 object-contain object-center p-4" /> <div className={`absolute top-2 right-2 px-2 py-0.5 text-xs font-bold rounded-full bg-slate-900/80 ${rarityTextColor} ${rarityBorderColor}`}> {item.rarity} </div> </div> <div className="p-4"> <h3 className="text-base font-bold text-white truncate">{item.name}</h3> <div className="flex items-center justify-between mt-3"> <div className="flex items-center space-x-1.5"> <Coins className="w-4 h-4" /> <span className="text-lg font-bold text-white">{item.price.toLocaleString()}</span> </div> <button className="text-xs font-semibold text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity"> CHI TIẾT </button> </div> </div> </div> ); };
 const GemPackageCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => void }) => { return ( <div className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-800/80 to-purple-900/40 border border-slate-700 transition-all duration-300 hover:border-purple-500 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer flex flex-col" onClick={() => onSelect(pkg)}> <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10"> <div className="flex items-center gap-1.5 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-600/50"> <Gem className="w-4 h-4" /> <span className="text-sm font-bold text-white">{pkg.gems.toLocaleString()}</span> </div> {pkg.bonus && ( <div className="px-2.5 py-1 text-xs font-bold bg-yellow-400/20 text-yellow-200 rounded-full border border-yellow-500/40"> -{pkg.bonus.replace(' bonus', '')} </div> )} </div> <div className="relative flex-grow flex items-center justify-center px-8 pt-14 pb-6"> <Gem className="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110" /> </div> <div className="p-4 bg-black/40 border-t border-slate-700 group-hover:border-purple-500 transition-colors duration-300 mt-auto"> <p className="text-lg font-semibold text-purple-300 text-center"> {pkg.price.toLocaleString('vi-VN')} VNĐ </p> </div> </div> ); };
-const GemExchangeCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => void }) => { return ( <div className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-800/80 to-yellow-900/40 border border-slate-700 transition-all duration-300 hover:border-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/20 cursor-pointer flex flex-col" onClick={() => onSelect(pkg)}> <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10"> <div className="flex items-center gap-1.5 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-600/50"> <Gem className="w-4 h-4" /> <span className="text-sm font-bold text-white">{pkg.gems.toLocaleString()}</span> </div> <div className="px-2.5 py-1 text-xs font-bold bg-green-400/20 text-green-200 rounded-full border border-green-500/40"> ĐỔI </div> </div> <div className="relative flex-grow flex items-center justify-center px-8 pt-14 pb-6"> <Coins className="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110" /> </div> <div className="p-4 bg-black/40 border-t border-slate-700 group-hover:border-yellow-500 transition-colors duration-300 mt-auto"> <p className="text-lg font-semibold text-yellow-300 text-center"> {pkg.coins.toLocaleString('vi-VN')} Vàng </p> </div> </div> ); };
+const GemExchangeCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => void }) => {
+    return (
+        <div className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-800/80 to-yellow-900/40 border border-slate-700 transition-all duration-300 hover:border-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/20 cursor-pointer flex flex-col" onClick={() => onSelect(pkg)}>
+            <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10">
+                <div className="flex items-center gap-1.5 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-600/50">
+                    <Gem className="w-4 h-4" />
+                    <span className="text-sm font-bold text-white">{pkg.gems.toLocaleString()}</span>
+                </div>
+                 <div className="px-2.5 py-1 text-xs font-bold bg-green-400/20 text-green-200 rounded-full border border-green-500/40">
+                    ĐỔI
+                </div>
+            </div>
+            <div className="relative flex-grow flex items-center justify-center px-8 pt-14 pb-6">
+                <Coins className="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110" />
+            </div>
+            {/* THAY ĐỔI: Thay chữ "Vàng" bằng icon */}
+            {/* <<< START CHANGE */}
+            <div className="p-4 bg-black/40 border-t border-slate-700 group-hover:border-yellow-500 transition-colors duration-300 mt-auto">
+                <div className="flex items-center justify-center gap-1.5 text-lg font-semibold text-yellow-300">
+                    <span>{pkg.coins.toLocaleString('vi-VN')}</span>
+                    <Coins className="w-5 h-5" />
+                </div>
+            </div>
+            {/* <<< END CHANGE */}
+        </div>
+    );
+};
 const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: string; setActiveCategory: (category: string) => void }) => {
     const categories = [
         { name: 'Nạp Gems', icon: Gem },
@@ -186,7 +209,7 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
             setGems(newGems);
             setCoins(newCoins);
             onPurchaseComplete();
-            alert(`Đổi thành công ${pkg.gems.toLocaleString()} Gems, nhận được ${pkg.coins.toLocaleString()} Vàng!`);
+            alert(`Đổi thành công ${pkg.gems.toLocaleString()} Gems để nhận được ${pkg.coins.toLocaleString()} Vàng!`);
         } catch (error) {
             console.error("Gem to Coin exchange failed:", error);
             alert(`Đổi thất bại: ${error instanceof Error ? error.message : String(error)}`);
