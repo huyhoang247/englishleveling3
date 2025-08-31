@@ -145,7 +145,7 @@ const GameShopUI = ({ onClose, onCurrencyUpdate }: { onClose: () => void; onCurr
             setCoins(newCoins);
             // --- THAY ĐỔI: Gọi onCurrencyUpdate thay vì onPurchaseComplete ---
             onCurrencyUpdate({ coins: newCoins });
-            triggerToast(`Mua thành công x${quantity} ${item.name}!`, false);
+            triggerToast('Mua thành công!', false);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             console.error("Shop purchase transaction failed:", error);
@@ -162,7 +162,7 @@ const GameShopUI = ({ onClose, onCurrencyUpdate }: { onClose: () => void; onCurr
             setCoins(newCoins);
             // --- THAY ĐỔI: Gọi onCurrencyUpdate thay vì onPurchaseComplete ---
             onCurrencyUpdate({ coins: newCoins, gems: newGems });
-            triggerToast(`Đổi thành công ${pkg.gems.toLocaleString()} Gems để nhận được ${pkg.coins.toLocaleString()} Vàng!`, false);
+            triggerToast('Đổi thành công!', false);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             console.error("Gem to Coin exchange failed:", error);
