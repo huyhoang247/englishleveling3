@@ -171,7 +171,7 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
             </div>
             
             {/* VÙNG NỘI DUNG CHÍNH - CHỈ VÙNG NÀY CUỘN DỌC */}
-            <div className="flex-1 relative overflow-y-auto [background-image:radial-gradient(circle_at_center,_#16213e,_#0a0a14)]">
+            <div className="flex-1 relative overflow-y-auto scrollbar-hidden [background-image:radial-gradient(circle_at_center,_#16213e,_#0a0a14)]">
                 <main className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24">
                     <section>
                         {activeCategory === 'Nạp Gems' ? (
