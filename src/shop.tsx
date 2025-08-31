@@ -171,7 +171,7 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
             </div>
             
             {/* VÙNG NỘI DUNG CHÍNH - CHỈ VÙNG NÀY CUỘN DỌC */}
-            <div className="flex-1 relative overflow-y-auto scrollbar-hidden [background-image:radial-gradient(circle_at_center,_#16213e,_#0a0a14)]">
+            <div className="flex-1 relative overflow-y-auto scrollbar-hide [background-image:radial-gradient(circle_at_center,_#16213e,_#0a0a14)]">
                 <main className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24">
                     <section>
                         {activeCategory === 'Nạp Gems' ? (
@@ -214,6 +214,16 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
             {selectedItem && <ItemDetailModal item={selectedItem} onClose={handleCloseItemModal} onPurchase={handleLocalPurchase} currentCoins={coins} />}
             {selectedGemPackage && <PaymentQRModal pkg={selectedGemPackage} onClose={handleCloseGemModal} currentUser={currentUser} />}
             {selectedExchangePackage && <ExchangeConfirmationModal pkg={selectedExchangePackage} onClose={handleCloseExchangeModal} onConfirm={handleGemExchange} currentGems={gems} />}
+        
+            <style jsx>{`
+                .scrollbar-hide::-webkit-scrollbar {
+                    display: none;
+                }
+                .scrollbar-hide {
+                    -ms-overflow-style: none;  /* IE and Edge */
+                    scrollbar-width: none;  /* Firefox */
+                }
+            `}</style>
         </div>
     );
 };
@@ -221,4 +231,4 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
 
 export default function App({ onClose, onPurchaseComplete }: { onClose: () => void; onPurchaseComplete: () => void; }) {
     return <GameShopUI onClose={onClose} onPurchaseComplete={onPurchaseComplete} />;
-}
+} 
