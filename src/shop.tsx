@@ -1,8 +1,7 @@
-// --- START OF FILE shop.tsx (11).txt ---
-
 // --- START OF FILE shop.tsx ---
 
 import React, { useState, useEffect } from 'react';
+import RateLimitToast from './thong-bao.tsx';
 import { itemDatabase, ItemRank } from './home/equipment/item-database.ts';
 import { uiAssets } from './game-assets.ts';
 import { fetchOrCreateUserGameData, processShopPurchase, processGemToCoinExchange } from './gameDataService.ts';
@@ -106,6 +105,19 @@ const GameShopUI = ({ onClose, onCurrencyUpdate }: { onClose: () => void; onCurr
     const [selectedGemPackage, setSelectedGemPackage] = useState<any | null>(null);
     const [selectedExchangePackage, setSelectedExchangePackage] = useState<any | null>(null);
     const [allItems, setAllItems] = useState<any[]>([]);
+    const [toastState, setToastState] = useState({
+        show: false,
+        message: '',
+        showIcon: true,
+    });
+
+    const triggerToast = (message: string, showIcon = true, duration = 3000) => {
+        setToastState({ show: true, message, showIcon });
+        setTimeout(() => {
+            setToastState(prevState => ({ ...prevState, show: false }));
+        }, duration);
+    };
+
 
     useEffect(() => {
         const fetchShopData = async () => {
@@ -133,10 +145,11 @@ const GameShopUI = ({ onClose, onCurrencyUpdate }: { onClose: () => void; onCurr
             setCoins(newCoins);
             // --- THAY ĐỔI: Gọi onCurrencyUpdate thay vì onPurchaseComplete ---
             onCurrencyUpdate({ coins: newCoins });
-            alert(`Mua thành công x${quantity} ${item.name}!`);
+            triggerToast(`Mua thành công x${quantity} ${item.name}!`, false);
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             console.error("Shop purchase transaction failed:", error);
-            alert(`Mua thất bại: ${error instanceof Error ? error.message : String(error)}`);
+            triggerToast(`Mua thất bại: ${errorMessage}`, true);
             throw error;
         }
     };
@@ -149,10 +162,11 @@ const GameShopUI = ({ onClose, onCurrencyUpdate }: { onClose: () => void; onCurr
             setCoins(newCoins);
             // --- THAY ĐỔI: Gọi onCurrencyUpdate thay vì onPurchaseComplete ---
             onCurrencyUpdate({ coins: newCoins, gems: newGems });
-            alert(`Đổi thành công ${pkg.gems.toLocaleString()} Gems để nhận được ${pkg.coins.toLocaleString()} Vàng!`);
+            triggerToast(`Đổi thành công ${pkg.gems.toLocaleString()} Gems để nhận được ${pkg.coins.toLocaleString()} Vàng!`, false);
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             console.error("Gem to Coin exchange failed:", error);
-            alert(`Đổi thất bại: ${error instanceof Error ? error.message : String(error)}`);
+            triggerToast(`Đổi thất bại: ${errorMessage}`, true);
             throw error;
         }
     };
@@ -166,6 +180,11 @@ const GameShopUI = ({ onClose, onCurrencyUpdate }: { onClose: () => void; onCurr
 
     return (
         <div className="w-full h-screen bg-[#0a0a14] font-sans text-white flex flex-col">
+            <RateLimitToast
+                show={toastState.show}
+                message={toastState.message}
+                showIcon={toastState.showIcon}
+            />
             <ShopHeader onClose={onClose} userGold={coins} userGems={gems} isLoading={isLoading} />
 
             {/* VÙNG CHỨA TABS - CỐ ĐỊNH, KHÔNG CUỘN DỌC */}
