@@ -59,7 +59,6 @@ const GemPackageCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => v
 const GemExchangeCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => void }) => { return ( <div className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-800/80 to-yellow-900/40 border border-slate-700 transition-all duration-300 hover:border-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/20 cursor-pointer flex flex-col" onClick={() => onSelect(pkg)}> <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10"> <div className="flex items-center gap-1.5 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-600/50"> <Gem className="w-4 h-4" /> <span className="text-sm font-bold text-white">{pkg.gems.toLocaleString()}</span> </div> <div className="px-2.5 py-1 text-xs font-bold bg-green-400/20 text-green-200 rounded-full border border-green-500/40"> ĐỔI </div> </div> <div className="relative flex-grow flex items-center justify-center px-8 pt-14 pb-6"> <Coins className="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110" /> </div> <div className="p-4 bg-black/40 border-t border-slate-700 group-hover:border-yellow-500 transition-colors duration-300 mt-auto"> <div className="flex items-center justify-center gap-1.5 text-lg font-semibold text-yellow-300"> <span>{pkg.coins.toLocaleString('vi-VN')}</span> <Coins className="w-5 h-5" /> </div> </div> </div> ); };
 // --- >>> START: COMPONENT CATEGORY TABS ĐÃ ĐƯỢC THAY THẾ <<< ---
 const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: string; setActiveCategory: (category: string) => void }) => {
-    // Để minh họa khả năng mở rộng, chúng ta thêm vài mục giả
     const categories = [
         { name: 'Nạp Gems', icon: Gem },
         { name: 'Đổi Vàng', icon: Coins },
@@ -68,12 +67,12 @@ const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: s
         { name: 'Trang Bị', icon: Shield },
         { name: 'Gói Đặc Biệt', icon: Sparkles },
         { name: 'Sự Kiện', icon: ArrowRightCircle },
-        // ... bạn có thể thêm bao nhiêu mục tùy ý
     ];
 
     return (
         <>
-            <nav className="relative flex items-center gap-2 mb-8 border-b border-slate-700/60 overflow-x-auto horizontal-scrollbar-hidden -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+            {/* ===>>> DÒNG ĐÃ SỬA: Xóa mb-8 <<<=== */}
+            <nav className="relative flex items-center gap-2 border-b border-slate-700/60 overflow-x-auto horizontal-scrollbar-hidden -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
                 {categories.map(({ name, icon: IconComponent }) => (
                     <button
                         key={name}
@@ -124,7 +123,6 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
     const [coins, setCoins] = useState(0);
     const [gems, setGems] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
-    // Cập nhật state mặc định để khớp với mục đầu tiên trong danh sách tab mới
     const [activeCategory, setActiveCategory] = useState('Nạp Gems');
     const [selectedItem, setSelectedItem] = useState<any | null>(null);
     const [selectedGemPackage, setSelectedGemPackage] = useState<any | null>(null);
@@ -190,18 +188,21 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
         <div className="w-full h-screen bg-[#0a0a14] font-sans text-white flex flex-col">
             <ShopHeader onClose={onClose} userGold={coins} userGems={gems} isLoading={isLoading} />
             <div className="flex-1 relative overflow-y-auto bg-[#0a0a14] [background-image:radial-gradient(circle_at_center,_#16213e,_#0a0a14)]">
-                <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-24">
-                    <main>
+                {/* ===>>> CẤU TRÚC ĐÃ THAY ĐỔI <<<=== */}
+                <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+                    <div className="sticky top-0 z-30 bg-[#0a0a14] pt-4 pb-3">
                         <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
-                        <section>
+                    </div>
+                    <main>
+                        <section className="pt-6">
                             {activeCategory === 'Nạp Gems' ? (
-                                <div className="grid grid-cols-2 gap-4 md:gap-6">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                                     {gemPackages.map(pkg => (
                                         <GemPackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectGemPackage} />
                                     ))}
                                 </div>
                             ) : activeCategory === 'Đổi Vàng' ? (
-                                <div className="grid grid-cols-2 gap-4 md:gap-6">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                                     {gemToCoinPackages.map(pkg => (
                                         <GemExchangeCard key={pkg.id} pkg={pkg} onSelect={handleSelectExchangePackage} />
                                     ))}
