@@ -1,4 +1,4 @@
-// src/background-game.tsx
+// --- START OF FILE src/background-game.tsx ---
 
 import React, { useEffect, useRef, Component, lazy, Suspense, useCallback, useState } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -30,10 +30,8 @@ import GameSkeletonLoader from './GameSkeletonLoader.tsx';
 import { useGame } from './GameContext.tsx';
 import { updateUserCoins } from './gameDataService.ts';
 
-// TỐI ƯU HÓA: Tải component SystemCheckScreen một cách "lười biếng"
 const SystemCheckScreen = lazy(() => import('./SystemCheckScreen.tsx'));
 
-// --- SVG Icon Components ---
 interface GemIconProps { size?: number; color?: string; className?: string; [key: string]: any; }
 const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
@@ -47,7 +45,6 @@ const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => (
   </div>
 );
 
-// --- Error Boundary Component ---
 interface ErrorBoundaryProps { children: React.ReactNode; fallback?: React.ReactNode; }
 interface ErrorBoundaryState { hasError: boolean; error: Error | null; }
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -73,13 +70,15 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     isBossBattleOpen, isShopOpen, isVocabularyChestOpen, isAchievementsOpen,
     isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
     handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
-    handleUpdateJackpotPool, handleStatsUpdate, handleShopPurchase, getPlayerBattleStats,
+    handleUpdateJackpotPool, handleStatsUpdate, /* handleShopPurchase, */ getPlayerBattleStats, // Loại bỏ handleShopPurchase
     getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
     setCoins, updateSkillsState,
     updateEquipmentData,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge,
     toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding,
+    // --- THAY ĐỔI: Lấy hàm refreshUserData từ context để truyền vào Shop ---
+    refreshUserData
   } = useGame();
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
@@ -168,7 +167,17 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 )}
             </ErrorBoundary>
         </div>
-        <div className="fixed inset-0 z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} onPurchase={handleShopPurchase} currentUser={currentUser} />}</ErrorBoundary> </div>
+        {/* --- THAY ĐỔI: Cách gọi Shop đã được cập nhật --- */}
+        <div className="fixed inset-0 z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> 
+            <ErrorBoundary>
+                {isShopOpen && 
+                    <Shop 
+                        onClose={toggleShop} 
+                        onPurchaseComplete={refreshUserData} 
+                    />
+                }
+            </ErrorBoundary> 
+        </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> 
             <ErrorBoundary>{isVocabularyChestOpen && currentUser && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onStateUpdate={handleStateUpdateFromChest} />)}</ErrorBoundary> 
         </div>
@@ -221,3 +230,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
+// --- END OF FILE src/background-game.tsx ---
