@@ -1,3 +1,5 @@
+// --- START OF FILE GameContext.tsx (8).txt ---
+
 // --- START OF FILE src/GameContext.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
@@ -70,8 +72,10 @@ interface IGameContext {
     handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
     handleSkillScreenClose: (dataUpdated: boolean) => void;
     updateSkillsState: (data: SkillScreenExitData) => void;
-    // --- THÊM MỚI: Hàm cập nhật cho Equipment ---
     updateEquipmentData: (data: EquipmentScreenExitData) => void;
+    // --- THÊM MỚI: Hàm cập nhật tiền tệ ---
+    updateUserCurrency: (updates: { coins?: number; gems?: number }) => void;
+
 
     // Toggles
     toggleRank: () => void;
@@ -316,13 +320,23 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     setEquippedSkillIds(data.equippedSkillIds);
   };
 
-  // --- THÊM MỚI: Hàm cập nhật "êm ái" cho EquipmentScreen ---
   const updateEquipmentData = (data: EquipmentScreenExitData) => {
     setCoins(data.gold);
     setDisplayedCoins(data.gold); // Cập nhật ngay để UI mượt
     setEquipmentPieces(data.equipmentPieces);
     setOwnedItems(data.ownedItems);
     setEquippedItems(data.equippedItems);
+  };
+
+  // --- THÊM MỚI: Hàm cập nhật "nhẹ" chỉ số tiền tệ ---
+  const updateUserCurrency = (updates: { coins?: number; gems?: number }) => {
+    if (updates.coins !== undefined) {
+        setCoins(updates.coins);
+        setDisplayedCoins(updates.coins);
+    }
+    if (updates.gems !== undefined) {
+        setGems(updates.gems);
+    }
   };
 
   const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen;
@@ -336,7 +350,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen, isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, handleStatsUpdate,
     handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
-    updateEquipmentData, // Thêm hàm mới vào context
+    updateEquipmentData,
+    // --- THÊM MỚI: Thêm hàm mới vào context value ---
+    updateUserCurrency,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding, setCoins
   };
