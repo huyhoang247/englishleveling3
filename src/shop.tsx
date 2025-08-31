@@ -43,7 +43,31 @@ const getShopItems = () => { try { const storedData = localStorage.getItem('dail
 
 const ShopItemCard = ({ item, onSelect }: { item: any; onSelect: (item: any) => void }) => { const rarityTextColor = getRarityTextColor(item.rarity); const rarityBorderColor = getRarityColor(item.rarity); return ( <div className="group relative overflow-hidden rounded-lg bg-slate-800/60 border border-slate-700 transition-all duration-300 hover:border-cyan-400 hover:shadow-2xl hover:shadow-cyan-500/20 cursor-pointer" onClick={() => onSelect(item)}> <div className="relative"> <img src={item.image} alt={item.name} className="w-full h-40 object-contain object-center p-4" /> <div className={`absolute top-2 right-2 px-2 py-0.5 text-xs font-bold rounded-full bg-slate-900/80 ${rarityTextColor} ${rarityBorderColor}`}> {item.rarity} </div> </div> <div className="p-4"> <h3 className="text-base font-bold text-white truncate">{item.name}</h3> <div className="flex items-center justify-between mt-3"> <div className="flex items-center space-x-1.5"> <Coins className="w-4 h-4" /> <span className="text-lg font-bold text-white">{item.price.toLocaleString()}</span> </div> <button className="text-xs font-semibold text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity"> CHI TIẾT </button> </div> </div> </div> ); };
 const GemPackageCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => void }) => { return ( <div className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-800/80 to-purple-900/40 border border-slate-700 transition-all duration-300 hover:border-purple-500 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer flex flex-col" onClick={() => onSelect(pkg)}> <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10"> <div className="flex items-center gap-1.5 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-600/50"> <Gem className="w-4 h-4" /> <span className="text-sm font-bold text-white">{pkg.gems.toLocaleString()}</span> </div> {pkg.bonus && ( <div className="px-2.5 py-1 text-xs font-bold bg-yellow-400/20 text-yellow-200 rounded-full border border-yellow-500/40"> -{pkg.bonus.replace(' bonus', '')} </div> )} </div> <div className="relative flex-grow flex items-center justify-center px-8 pt-14 pb-6"> <Gem className="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110" /> </div> <div className="p-4 bg-black/40 border-t border-slate-700 group-hover:border-purple-500 transition-colors duration-300 mt-auto"> <p className="text-lg font-semibold text-purple-300 text-center"> {pkg.price.toLocaleString('vi-VN')} VNĐ </p> </div> </div> ); };
-const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: string; setActiveCategory: (category: string) => void }) => { const categories = [ { name: 'Nạp Gems', icon: Gem }, { name: 'Vũ khí', icon: Swords }, { name: 'Trang bị', icon: Shield }, { name: 'Trang phục', icon: Sparkles }, { name: 'Vật phẩm', icon: Tag }, { name: 'Rương', icon: ShoppingCart }, { name: 'Nâng Cấp', icon: ArrowUpCircle }, ]; return ( <nav className="flex flex-wrap gap-2 mb-8"> {categories.map(({ name, icon: IconComponent }) => ( <button key={name} onClick={() => setActiveCategory(name)} className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:-translate-y-0.5 ${ activeCategory === name ? 'bg-cyan-500 text-slate-900 shadow-lg shadow-cyan-500/20' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white' }`}> <IconComponent className="w-5 h-5" /> <span>{name}</span> </button> ))} </nav> ); };
+const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: string; setActiveCategory: (category: string) => void }) => {
+    // --- THAY ĐỔI: Gộp và loại bỏ các tab theo yêu cầu ---
+    const categories = [
+        { name: 'Nạp Gems', icon: Gem },
+        { name: 'Item', icon: Tag },
+    ];
+    return (
+        <nav className="flex flex-wrap gap-2 mb-8">
+            {categories.map(({ name, icon: IconComponent }) => (
+                <button
+                    key={name}
+                    onClick={() => setActiveCategory(name)}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:-translate-y-0.5 ${
+                        activeCategory === name
+                            ? 'bg-cyan-500 text-slate-900 shadow-lg shadow-cyan-500/20'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+                    }`}
+                >
+                    <IconComponent className="w-5 h-5" />
+                    <span>{name}</span>
+                </button>
+            ))}
+        </nav>
+    );
+};
 const PaymentQRModal = ({ pkg, onClose, currentUser }: { pkg: any | null; onClose: () => void; currentUser: any | null }) => { const [transactionMemo, setTransactionMemo] = useState(''); const [qrCodeUrl, setQrCodeUrl] = useState(''); const [copyText, setCopyText] = useState('SAO CHÉP'); useEffect(() => { if (pkg && currentUser) { const memo = `NAPGEM${currentUser.uid.slice(0, 8)}${Date.now()}`.toUpperCase(); setTransactionMemo(memo); const url = `https://img.vietqr.io/image/${BANK_INFO.ID}-${BANK_INFO.ACCOUNT_NO}-compact2.png?amount=${pkg.price}&addInfo=${encodeURIComponent(memo)}&accountName=${encodeURIComponent(BANK_INFO.ACCOUNT_NAME)}`; setQrCodeUrl(url); } }, [pkg, currentUser]); const handleCopyMemo = () => { if (!transactionMemo) return; navigator.clipboard.writeText(transactionMemo); setCopyText('ĐÃ CHÉP!'); setTimeout(() => setCopyText('SAO CHÉP'), 2000); }; if (!pkg) return null; return ( <div className="fixed inset-0 flex items-center justify-center z-50 p-3"> <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div> <div className="relative bg-gradient-to-br from-slate-900 to-purple-900/50 p-5 rounded-xl border-2 border-purple-500 shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col"> <div className="flex justify-between items-start mb-4"> <h3 className="text-2xl font-bold text-purple-300">Thanh toán Gói Gems</h3> <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Close" className="w-5 h-5" /></button> </div> <div className="text-center w-full mx-auto"> <h4 className="text-xl font-bold text-white mb-1">Thanh toán cho gói: {pkg.gems.toLocaleString()} Gems</h4> <p className="text-2xl font-bold text-purple-400 mb-4">{pkg.price.toLocaleString('vi-VN')} VNĐ</p> <div className="bg-white p-3 rounded-lg shadow-lg w-48 h-48 mx-auto"> {qrCodeUrl ? <img src={qrCodeUrl} alt="VietQR Code" className="w-full h-full object-contain" /> : <div className="w-full h-full bg-gray-200 animate-pulse"></div> } </div> <div className="mt-4 text-sm text-slate-300 space-y-3"> <p>Quét mã QR bằng ứng dụng ngân hàng của bạn để thanh toán.</p> <div className="bg-slate-800/60 p-3 rounded-lg border border-slate-700"> <p className="text-xs text-slate-400">Nội dung chuyển khoản (BẮT BUỘC):</p> <div className="flex items-center justify-between gap-2 mt-1"> <p className="text-base font-mono font-bold text-yellow-300 tracking-widest">{transactionMemo}</p> <button onClick={handleCopyMemo} className="flex items-center gap-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-2 py-1 rounded-md transition-colors"> <ClipboardCopy className="w-3 h-3"/> {copyText} </button> </div> </div> <div className="bg-blue-900/30 text-blue-200 text-xs p-3 rounded-lg border border-blue-700/50"> <p className="font-bold mb-1">Lưu ý quan trọng:</p> <ul className="list-disc list-inside text-left space-y-0.5"> <li>Chuyển đúng số tiền và nội dung hiển thị.</li> <li>Gems sẽ được tự động cộng vào tài khoản sau vài phút.</li> </ul> </div> </div> </div> </div> </div> ); };
 const ShopCountdown = () => { const [timeLeft, setTimeLeft] = useState({ hours: '00', minutes: '00', seconds: '00' }); useEffect(() => { const timer = setInterval(() => { const now = new Date(); const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)); const difference = tomorrow.getTime() - now.getTime(); if (difference > 0) { const hours = Math.floor((difference / (1000 * 60 * 60)) % 24); const minutes = Math.floor((difference / 1000 / 60) % 60); const seconds = Math.floor((difference / 1000) % 60); setTimeLeft({ hours: hours.toString().padStart(2, '0'), minutes: minutes.toString().padStart(2, '0'), seconds: seconds.toString().padStart(2, '0'), }); } }, 1000); return () => clearInterval(timer); }, []); return ( <div className="flex items-center gap-2 text-sm text-slate-400"> <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '2s' }}/> <span>Làm mới sau:</span> <span className="font-mono font-bold text-slate-200 tracking-wider">{timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}</span> </div> ); };
 
@@ -171,8 +195,30 @@ const GameShopUI = ({ onClose, onPurchaseComplete }: { onClose: () => void; onPu
                 <main>
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
                     <section>
-                        <div className="flex justify-between items-center mb-4 pr-2"> <h2 className="text-2xl font-bold text-white">{activeCategory}</h2> {activeCategory === 'Vũ khí' && <ShopCountdown />} </div>
-                        {activeCategory === 'Nạp Gems' ? ( <div className="grid grid-cols-2 gap-4 md:gap-6"> {gemPackages.map(pkg => ( <GemPackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectGemPackage} /> ))} </div> ) : ( <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6"> {allItems.filter(item => item.type === activeCategory).map(item => ( <ShopItemCard key={`${item.id}-${item.name}-${item.rarity}`} item={item} onSelect={handleSelectItem} /> ))} </div> )}
+                        <div className="flex justify-between items-center mb-4 pr-2">
+                            <h2 className="text-2xl font-bold text-white">{activeCategory}</h2>
+                            {activeCategory === 'Vũ khí' && <ShopCountdown />}
+                        </div>
+                        {activeCategory === 'Nạp Gems' ? (
+                            <div className="grid grid-cols-2 gap-4 md:gap-6">
+                                {gemPackages.map(pkg => (
+                                    <GemPackageCard key={pkg.id} pkg={pkg} onSelect={handleSelectGemPackage} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                                {/* --- THAY ĐỔI: Cập nhật logic lọc cho tab "Item" --- */}
+                                {allItems
+                                    .filter(item => item.type === 'Vật phẩm' || item.type === 'Nâng Cấp')
+                                    .map(item => (
+                                        <ShopItemCard
+                                            key={`${item.id}-${item.name}-${item.rarity}`}
+                                            item={item}
+                                            onSelect={handleSelectItem}
+                                        />
+                                    ))}
+                            </div>
+                        )}
                     </section>
                 </main>
                 {selectedItem && <ItemDetailModal item={selectedItem} onClose={handleCloseItemModal} onPurchase={handleLocalPurchase} currentCoins={coins} />}
