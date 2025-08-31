@@ -1,3 +1,5 @@
+--- START OF FILE gameDataService.tgfdes.txt ---
+
 // --- START OF FILE gameDataService.ts ---
 
 import { db } from './firebase';
@@ -288,6 +290,34 @@ export const updateUserInventory = async (userId: string, updates: { newOwned: O
             equipment: { ...currentEquipment, pieces: newPieces, owned: updates.newOwned, equipped: updates.newEquipped }
         });
         return { newCoins, newPieces };
+    });
+};
+
+export const processGemToCoinExchange = async (userId: string, gemCost: number) => {
+    if (!userId) throw new Error("User ID is required.");
+    if (gemCost <= 0) throw new Error("Gem cost must be positive.");
+
+    const userDocRef = doc(db, 'users', userId);
+    const coinReward = gemCost * 1000; // Tỷ lệ 1 Gem = 1000 Coins
+
+    return runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if (!userDoc.exists()) throw new Error("User document does not exist!");
+
+        const data = userDoc.data();
+        const currentGems = data.gems || 0;
+        const currentCoins = data.coins || 0;
+
+        if (currentGems < gemCost) {
+            throw new Error("Không đủ Gems để thực hiện giao dịch.");
+        }
+
+        const newGems = currentGems - gemCost;
+        const newCoins = currentCoins + coinReward;
+
+        t.update(userDocRef, { gems: newGems, coins: newCoins });
+
+        return { newGems, newCoins };
     });
 };
 
