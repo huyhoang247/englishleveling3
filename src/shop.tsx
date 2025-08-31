@@ -6,6 +6,9 @@ import { uiAssets } from './game-assets.ts';
 // --- THAY ĐỔI: Import trực tiếp service và auth ---
 import { fetchOrCreateUserGameData, processShopPurchase } from './gameDataService.ts';
 import { auth } from './firebase.js';
+import CoinDisplay from './coin-display.tsx';
+import GemDisplay from './gem-display.tsx';
+import HomeButton from './ui/components/home-button.tsx'; // Import HomeButton
 
 // --- START: HELPERS & COMPONENTS SAO CHÉP TỪ INVENTORY.TSX ---
 const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; case 'SSR': return 'border-rose-500'; default: return 'border-gray-600'; } };
@@ -95,30 +98,6 @@ const ItemDetailModal = ({ item, onClose, onPurchase, currentCoins }: { item: an
     const quantityOptions = item.quantityOptions || [1, 5, 10];
     return ( <div className="fixed inset-0 flex items-center justify-center z-50 p-3"> <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div> <div className={`relative bg-gradient-to-br ${getRarityGradient(item.rarity)} p-5 rounded-xl border-2 ${getRarityColor(item.rarity)} shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col`}> <div className="flex-shrink-0 border-b border-gray-700/50 pb-4"> <div className="flex justify-between items-start mb-4"> <h3 className={`text-2xl font-bold ${getRarityTextColor(item.rarity)}`}>{item.name}</h3> <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Close" className="w-5 h-5" /></button> </div> <div className="flex flex-col sm:flex-row gap-4 mb-4"> <div className={`w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center text-5xl bg-black/30 rounded-lg border-2 ${getRarityColor(item.rarity)} shadow-inner flex-shrink-0 mx-auto sm:mx-0`}> <img src={item.image} alt={item.name} className="w-full h-full object-contain p-2" /> </div> <div className="flex-1"> <div className="flex items-center mb-2 gap-2 flex-wrap"> <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(item.rarity)} bg-gray-800/70 border border-gray-700 capitalize`}>{getRarityDisplayName(item.rarity)}</span> <span className="text-gray-400 capitalize bg-gray-800/50 px-2.5 py-1 rounded-full border border-gray-700/50 text-xs">{item.type}</span> </div> <p className="text-gray-400 text-sm leading-relaxed line-clamp-3">{item.description}</p> </div> </div> {hasSkills && ( <nav className="flex -mb-[18px] space-x-4 px-1"> <button onClick={() => setActiveModalTab('info')} className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${activeModalTab === 'info' ? 'border-yellow-400 text-yellow-300' : 'border-transparent text-gray-500 hover:text-gray-300'}`}>Thông Tin</button> <button onClick={() => setActiveModalTab('skills')} className={`px-1 py-3 text-sm font-medium border-b-2 transition-colors duration-200 ${activeModalTab === 'skills' ? 'border-yellow-400 text-yellow-300' : 'border-transparent text-gray-500 hover:text-gray-300'}`}>Kỹ Năng</button> </nav> )} </div> <div className="flex-1 min-h-[150px] overflow-y-auto scrollbar-hidden"> <div className="modal-tab-content pt-4 pb-2"> {(!hasSkills || activeModalTab === 'info') ? ( renderItemStats(item) ) : ( renderItemSkills(item) )} </div> </div> <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4"> {isStackable && ( <div className="mb-4"> <label className="block text-sm font-medium text-gray-400 mb-2">Số lượng:</label> <div className="flex items-center gap-2"> {quantityOptions.map(q => ( <button key={q} onClick={() => setQuantity(q)} className={`flex-1 px-3 py-1.5 text-sm font-bold rounded-md transition-all duration-200 ${ quantity === q ? 'bg-cyan-500 text-slate-900 shadow-md shadow-cyan-500/20 ring-2 ring-cyan-300' : 'bg-slate-800/70 text-slate-300 hover:bg-slate-700'}`}> {item.id === 2001 ? `+${q}` : `x${q}`} </button> ))} </div> </div> )} <div className="flex items-center justify-between"> <div className="flex items-center space-x-2"> <Coins className="w-6 h-6" /> <span className="text-xl font-bold text-white">{totalCost.toLocaleString()}</span> </div> <button className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-bold text-sm uppercase px-5 py-2.5 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 active:scale-100 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed disabled:shadow-none disabled:scale-100" onClick={handlePurchaseClick} disabled={isPurchasing || !canAfford}> {isPurchasing ? 'ĐANG XỬ LÝ...' : (canAfford ? 'MUA NGAY' : 'KHÔNG ĐỦ VÀNG')} </button> </div> </div> </div> <style jsx>{` .scrollbar-hidden::-webkit-scrollbar { display: none; } .scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; } @keyframes modal-tab-fade-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } } .modal-tab-content { animation: modal-tab-fade-in 0.3s cubic-bezier(0.215, 0.610, 0.355, 1.000); } `}</style> </div> ); };
 
-// --- CÁC COMPONENT HIỂN THỊ TIỀN TỆ MỚI (GIỐNG voca-chest-ui.tsx) ---
-const CoinDisplay = ({ amount, isLoading }: { amount: number, isLoading: boolean }) => (
-    <div className="flex items-center gap-2 bg-slate-800/70 h-[34px] pl-2 pr-3 rounded-full border border-slate-700/50">
-        <Coins className="w-6 h-6" />
-        {isLoading ? (
-            <div className="w-16 h-4 bg-slate-700 rounded-md animate-pulse"></div>
-        ) : (
-            <span className="font-bold text-sm text-yellow-300 tracking-wider">{amount.toLocaleString()}</span>
-        )}
-    </div>
-);
-
-const GemDisplay = ({ amount, isLoading }: { amount: number, isLoading: boolean }) => (
-    <div className="flex items-center gap-2 bg-slate-800/70 h-[34px] pl-2 pr-3 rounded-full border border-slate-700/50">
-        <Gem className="w-6 h-6" />
-        {isLoading ? (
-            <div className="w-12 h-4 bg-slate-700 rounded-md animate-pulse"></div>
-        ) : (
-            <span className="font-bold text-sm text-cyan-300 tracking-wider">{amount.toLocaleString()}</span>
-        )}
-    </div>
-);
-
-
 // --- HEADER MỚI CỦA CỬA HÀNG ---
 const ShopHeader = ({ onClose, userGold, userGems, isLoading }: { onClose: () => void; userGold: number; userGems: number; isLoading: boolean; }) => {
     const navItems = ['Cửa Hàng', 'Nhiệm Vụ', 'Bang Hội', 'Sự Kiện'];
@@ -127,9 +106,7 @@ const ShopHeader = ({ onClose, userGold, userGems, isLoading }: { onClose: () =>
         <header className="sticky top-0 left-0 right-0 z-40 bg-slate-900 border-b border-white/10">
             <div className="max-w-[1600px] mx-auto flex items-center justify-between h-[53px] px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center gap-4">
-                    <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-800/70 text-slate-400 hover:bg-slate-700/60 hover:text-white transition-colors border border-slate-700/50" aria-label="Đóng cửa hàng">
-                        <img src={uiAssets.closeIcon} alt="Close" className="w-5 h-5" />
-                    </button>
+                    <HomeButton onClick={onClose} label="" title="Về trang chính" />
                     <nav className="hidden md:flex items-center gap-4">
                         {navItems.map(item => (
                             <a key={item} href="#" className={`text-sm font-medium px-3 py-2 rounded-md transition-colors ${ activeNav === item ? 'text-white bg-white/10' : 'text-slate-400 hover:text-white' }`}>
@@ -139,8 +116,8 @@ const ShopHeader = ({ onClose, userGold, userGems, isLoading }: { onClose: () =>
                     </nav>
                 </div>
                 <div className="flex items-center gap-3">
-                    <GemDisplay amount={userGems} isLoading={isLoading} />
-                    <CoinDisplay amount={userGold} isLoading={isLoading} />
+                    <GemDisplay displayedGems={userGems} />
+                    <CoinDisplay displayedCoins={userGold} isStatsFullscreen={false} />
                 </div>
             </div>
         </header>
