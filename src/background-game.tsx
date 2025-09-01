@@ -23,7 +23,7 @@ import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './home/skill-game/skill-ui.tsx';
 import type { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 import EquipmentScreen, { type EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
-import AuctionHouse from './home/auction/AuctionHouse.tsx'; // THÊM MỚI
+import AuctionHouse from './home/auction/auction-house-ui.tsx'; // THÊM MỚI
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 import { useGame } from './GameContext.tsx';
