@@ -1,3 +1,5 @@
+// --- START OF FILE GameContext.tsx ---
+
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { auth } from './firebase.js';
@@ -69,7 +71,7 @@ interface IGameContext {
     handleSkillScreenClose: (dataUpdated: boolean) => void;
     updateSkillsState: (data: SkillScreenExitData) => void;
     updateEquipmentData: (data: EquipmentScreenExitData) => void;
-    updateUserCurrency: (updates: { coins?: number; gems?: number }) => void;
+    updateUserCurrency: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
 
 
     // Toggles
@@ -326,13 +328,22 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     setEquippedItems(data.equippedItems);
   };
 
-  const updateUserCurrency = (updates: { coins?: number; gems?: number }) => {
+  const updateUserCurrency = (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => {
     if (updates.coins !== undefined) {
         setCoins(updates.coins);
         setDisplayedCoins(updates.coins);
     }
     if (updates.gems !== undefined) {
         setGems(updates.gems);
+    }
+    if (updates.equipmentPieces !== undefined) {
+        setEquipmentPieces(updates.equipmentPieces);
+    }
+    if (updates.ancientBooks !== undefined) {
+        setAncientBooks(updates.ancientBooks);
+    }
+    if (updates.cardCapacity !== undefined) {
+        setCardCapacity(updates.cardCapacity);
     }
   };
 
@@ -368,3 +379,4 @@ export const useGame = (): IGameContext => {
   }
   return context;
 };
+// --- END OF FILE GameContext.tsx ---
