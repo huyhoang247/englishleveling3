@@ -2,11 +2,14 @@ import React, { useState, useEffect, useMemo, FC, useRef } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { 
     listenToActiveAuctions, listenToUserAuctions, listAuctionItem, placeBidOnAuction, 
-    claimAuctionWin, reclaimExpiredAuction, AuctionItem, fetchOrCreateUserGameData
+    claimAuctionWin, reclaimExpiredAuction, AuctionItem, fetchOrCreateUserGameData,
 } from '../../gameDataService.ts'; // Thêm fetchOrCreateUserGameData
 import type { OwnedItem, EquippedItems } from '../equipment/equipment-ui.tsx';
 import { getItemDefinition, ItemRank, RARITY_ORDER } from '../equipment/item-database.ts';
 import { uiAssets } from '../../game-assets.ts';
+import CoinDisplay from '../../ui/display/coin-display.tsx';
+import GemDisplay from '../../ui/display/gem-display.tsx';
+import HomeButton from '../../ui/home-button.tsx';
 
 // --- Helper Functions & Components ---
 const getRarityColor = (rank: ItemRank): string => {
@@ -49,24 +52,6 @@ const useAnimateValue = (endValue: number, duration: number = 500) => {
 
     return currentValue;
 };
-
-const CoinDisplay: FC<{ displayedCoins: number }> = ({ displayedCoins }) => (
-    <div className="flex items-center gap-1.5 bg-slate-800/70 border border-slate-700/80 rounded-full px-3 h-8">
-        <CoinIcon className="w-5 h-5" />
-        <span className="font-bold text-sm text-yellow-300 tracking-wider">
-            {displayedCoins.toLocaleString()}
-        </span>
-    </div>
-);
-
-const GemDisplay: FC<{ displayedGems: number }> = ({ displayedGems }) => (
-    <div className="flex items-center gap-1.5 bg-slate-800/70 border border-slate-700/80 rounded-full px-3 h-8">
-        <GemIcon className="w-5 h-5" />
-        <span className="font-bold text-sm text-cyan-300 tracking-wider">
-            {displayedGems.toLocaleString()}
-        </span>
-    </div>
-);
 // --- END: HELPERS SAO CHÉP TỪ SHOP-UI ---
 
 const useCountdown = (endTime: Timestamp | undefined) => {
@@ -239,7 +224,7 @@ const AuctionHeader: FC<AuctionHeaderProps> = ({ onClose, userCoins, userGems, a
         <header className="flex-shrink-0 bg-slate-900 border-b border-white/10 shadow-lg z-10">
             <div className="max-w-[1700px] mx-auto flex items-center justify-between h-[60px] px-4">
                 <div className="flex items-center gap-4">
-                    <h2 className="text-xl font-bold text-yellow-300 tracking-wider">Sàn Đấu Giá</h2>
+                    <HomeButton onClick={onClose} label="" title="Về trang chính" />
                     <div className="hidden md:flex items-center gap-2 p-1 bg-slate-800/50 rounded-lg">
                         <TabButton tabId="browse" text="Sàn Đấu Giá"/>
                         <TabButton tabId="my_auctions" text="Đấu Giá Của Tôi"/>
@@ -248,7 +233,7 @@ const AuctionHeader: FC<AuctionHeaderProps> = ({ onClose, userCoins, userGems, a
                 </div>
                 <div className="flex items-center gap-3">
                     <GemDisplay displayedGems={animatedGems} />
-                    <CoinDisplay displayedCoins={animatedCoins} />
+                    <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
                     <button onClick={onClose} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-red-500/80 flex items-center justify-center transition-colors ml-2">
                         <CloseIcon className="w-5 h-5"/>
                     </button>
