@@ -1,14 +1,14 @@
 // --- START OF FILE shop.tsx ---
 
 import React, { useState, useEffect } from 'react';
-import RateLimitToast from './thong-bao.tsx';
-import { itemDatabase, ItemRank } from './home/equipment/item-database.ts';
-import { uiAssets } from './game-assets.ts';
-import { auth } from './firebase.js';
-import CoinDisplay from './ui/display/coin-display.tsx';
-import GemDisplay from './ui/display/gem-display.tsx';
-import HomeButton from './ui/home-button.tsx';
-import { useAnimateValue } from './ui/useAnimateValue.ts';
+import RateLimitToast from '../../thong-bao.tsx';
+import { itemDatabase, ItemRank } from '../equipment/item-database.ts';
+import { uiAssets } from '../../game-assets.ts';
+import { auth } from '../../firebase.js';
+import CoinDisplay from '../../ui/display/coin-display.tsx';
+import GemDisplay from '../../ui/display/gem-display.tsx';
+import HomeButton from '../../ui/home-button.tsx';
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import { ShopProvider, useShop } from './shop-context.tsx'; // Import Context
 
 // --- START: HELPERS & COMPONENTS SAO CHÉP TỪ INVENTORY.TSX (Không thay đổi) ---
