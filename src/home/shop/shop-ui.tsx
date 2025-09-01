@@ -153,7 +153,7 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
 // --- >>> END: COMPONENT CHÍNH CỦA CỬA HÀNG ĐÃ ĐƯỢC CẤU TRÚC LẠI <<< ---
 
 // --- Cập nhật App component để sử dụng Provider ---
-export default function App({ onClose, onCurrencyUpdate }: { onClose: () => void; onCurrencyUpdate: (updates: { coins?: number; gems?: number }) => void; }) {
+export default function App({ onClose, onCurrencyUpdate }: { onClose: () => void; onCurrencyUpdate: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void; }) {
     return (
         <ShopProvider onCurrencyUpdate={onCurrencyUpdate} getShopItemsFunction={getShopItems}>
             <GameShopUI onClose={onClose} />
