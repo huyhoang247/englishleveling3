@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { useGame } from '../../GameContext.tsx';
 import { auth } from '../../firebase.js';
 import { OwnedItem } from '../equipment/equipment-ui.tsx';
-import { getItemDefinition, ItemRank } from '../item-database.ts';
+import { getItemDefinition, ItemRank } from '../equipment/item-database.ts';
 import {
     Auction,
     fetchActiveAuctions,
