@@ -7,7 +7,7 @@ import { itemDatabase } from '../equipment/item-database.ts';
 import type { User } from 'firebase/auth';
 
 // --- Static Data (copied from shop.tsx for self-containment) ---
-const sampleItemsNonWeapons = [ { id: 1002, name: 'Giáp Thiên Thần', type: 'Trang bị', rarity: 'S', price: 1820, image: 'https://placehold.co/600x600/1a1a2e/87ceeb?text=🛡️', description: 'Bộ giáp mang lại sự bảo vệ tối thượng và khả năng hồi phục máu theo thời gian.' }, { id: 1006, name: 'Khiên Bất Diệt', type: 'Trang bị', rarity: 'SR', price: 2000, image: 'https://placehold.co/600x600/1a1a2e/c0c0c0?text=🛡️', description: 'Một chiếc khiên không thể bị phá hủy, chặn mọi đòn tấn công từ phía trước.' }, { id: 1004, name: 'Gói Trang Phục Hắc Tinh', type: 'Trang phục', rarity: 'S', price: 2200, image: 'https://placehold.co/600x600/1a1a2e/9370db?text=✨', description: 'Thay đổi ngoại hình của bạn thành một thực thể vũ trụ bí ẩn và quyền năng.' }, { id: 1003, name: 'Ngọc Tái Sinh', type: 'Item', rarity: 'A', price: 975, image: 'https://placehold.co/600x600/1a1a2e/32cd32?text=💎', description: 'Hồi sinh ngay lập tức tại chỗ khi bị hạ gục. Chỉ có thể sử dụng một lần mỗi trận.' }, { id: 1009, name: 'Sách Cổ', type: 'Item', rarity: 'A', price: 1500, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png', description: 'Dùng để học và nâng cấp các kỹ năng đặc biệt.', stackable: true }, { id: 1007, name: 'Vé Nâng Cấp VIP', type: 'Item', rarity: 'B', price: 500, image: 'https://placehold.co/600x600/1a1a2e/f0e68c?text=🎟️', description: 'Nhận đặc quyền VIP trong 30 ngày, bao gồm tăng kinh nghiệm và vật phẩm nhận được.' }, { id: 1008, name: 'Rương Kho Báu Bí Ẩn', type: 'Rương', rarity: 'A', price: 750, image: 'https://placehold.co/600x600/1a1a2e/d2b48c?text=📦', description: 'Mở để có cơ hội nhận được một vật phẩm quý hiếm ngẫu nhiên từ danh sách phần thưởng.' }, { id: 2001, name: 'Nâng Cấp Sức Chứa Thẻ', type: 'Item', rarity: 'A', price: 100, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png', description: 'Tăng giới hạn số lượng thẻ từ vựng có thể sở hữu. Giá được tính trên mỗi đơn vị sức chứa.', stackable: true, quantityOptions: [50, 100, 200] }, ];
+const sampleItemsNonWeapons = [ { id: 1002, name: 'Giáp Thiên Thần', type: 'Trang bị', rarity: 'S', price: 1820, image: 'https://placehold.co/600x600/1a1a2e/87ceeb?text=🛡️', description: 'Bộ giáp mang lại sự bảo vệ tối thượng và khả năng hồi phục máu theo thời gian.' }, { id: 1006, name: 'Khiên Bất Diệt', type: 'Trang bị', rarity: 'SR', price: 2000, image: 'https://placehold.co/600x600/1a1a2e/c0c0c0?text=🛡️', description: 'Một chiếc khiên không thể bị phá hủy, chặn mọi đòn tấn công từ phía trước.' }, { id: 1004, name: 'Gói Trang Phục Hắc Tinh', type: 'Trang phục', rarity: 'S', price: 2200, image: 'https://placehold.co/600x600/1a1a2e/9370db?text=✨', description: 'Thay đổi ngoại hình của bạn thành một thực thể vũ trụ bí ẩn và quyền năng.' }, { id: 1003, name: 'Ngọc Tái Sinh', type: 'Item', rarity: 'A', price: 975, image: 'https://placehold.co/600x600/1a1a2e/32cd32?text=💎', description: 'Hồi sinh ngay lập tức tại chỗ khi bị hạ gục. Chỉ có thể sử dụng một lần mỗi trận.' }, { id: 1009, name: 'Sách Cổ', type: 'Item', rarity: 'A', price: 1500, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/20250720_1859_Icon%20S%C3%A1ch%20C%E1%BB%95%20Anime_simple_compose_01k0kv0rg5fhzrx8frbtsgqk33.png', description: 'Dùng để học và nâng cấp các kỹ năng đặc biệt.', stackable: true }, { id: 1007, name: 'Vé Nâng Cấp VIP', type: 'Item', rarity: 'B', price: 500, image: 'https://placehold.co/600x600/1a1a2e/f0e68c?text=🎟️', description: 'Nhận đặc quyền VIP trong 30 ngày, bao gồm tăng kinh nghiệm và vật phẩm nhận được.' }, { id: 1008, name: 'Rương Kho Báu Bí Ẩn', type: 'Rương', rarity: 'A', price: 750, image: 'https://placehold.co/600x600/1a1a2e/d2b48c?text=📦', description: 'Mở để có cơ hội nhận được một vật phẩm quý hiếm ngẫu nhiên từ danh sách phần thưởng.' }, { id: 2001, name: 'Nâng Cấp Sức Chứa Thẻ', type: 'Item', rarity: 'A', price: 100, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png', description: 'Tăng giới hạn số lượng thẻ từ vựng có thể sở hữu. Giá được tính trên mỗi đơn vị sức chứa.', stackable: true, quantityOptions: [50, 100, 200] }, { id: 2002, name: 'Mảnh Trang Bị', type: 'Item', rarity: 'B', price: 10, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/icon/icon_item_1054.png', description: 'Nguyên liệu cốt lõi dùng để chế tạo và hợp nhất trang bị.', stackable: true, quantityOptions: [10, 50, 100] }, ];
 
 // --- Type Definitions ---
 interface ToastState {
@@ -43,7 +43,7 @@ const ShopContext = createContext<ShopContextType | undefined>(undefined);
 // --- Provider Component ---
 interface ShopProviderProps {
   children: ReactNode;
-  onCurrencyUpdate: (updates: { coins?: number; gems?: number }) => void;
+  onCurrencyUpdate: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
   getShopItemsFunction: () => any[]; // Pass the function as a prop
 }
 
@@ -100,9 +100,15 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, onCurrencyUpdate
   const handleLocalPurchase = async (item: any, quantity: number) => {
     if (!currentUser) throw new Error("User not authenticated.");
     try {
-      const { newCoins } = await processShopPurchase(currentUser.uid, item, quantity);
+      const { newCoins, newBooks, newCapacity, newPieces } = await processShopPurchase(currentUser.uid, item, quantity);
       setCoins(newCoins);
-      onCurrencyUpdate({ coins: newCoins });
+
+      const updates: { coins?: number; ancientBooks?: number; cardCapacity?: number; equipmentPieces?: number; } = { coins: newCoins };
+      if (item.id === 1009) updates.ancientBooks = newBooks;
+      if (item.id === 2001) updates.cardCapacity = newCapacity;
+      if (item.id === 2002) updates.equipmentPieces = newPieces;
+      
+      onCurrencyUpdate(updates);
       triggerToast('Mua thành công!', false);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
