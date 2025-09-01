@@ -5,8 +5,8 @@ import { User } from 'firebase/auth';
 import { auth } from './firebase.js';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
 import { OwnedItem, EquippedItems, EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
+import { AuctionHouseExitData } from './home/auction/auction-house-ui.tsx';
 import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
-
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processShopPurchase
@@ -52,7 +52,7 @@ interface IGameContext {
     isBaseBuildingOpen: boolean;
     isSkillScreenOpen: boolean;
     isEquipmentOpen: boolean;
-    isAuctionHouseOpen: boolean; // Mới
+    isAuctionHouseOpen: boolean;
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
@@ -68,10 +68,10 @@ interface IGameContext {
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
     handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
-    handleSkillScreenClose: (dataUpdated: boolean) => void;
     updateSkillsState: (data: SkillScreenExitData) => void;
     updateEquipmentData: (data: EquipmentScreenExitData) => void;
-    updateUserCurrency: (updates: { coins?: number; gems?: number }) => Promise<void>; // Sửa đổi
+    updateAuctionHouseData: (data: AuctionHouseExitData) => void;
+    updateUserCurrency: (updates: { coins?: number; gems?: number }) => void;
 
     // Toggles
     toggleRank: () => void;
@@ -87,8 +87,8 @@ interface IGameContext {
     toggleSkillScreen: () => void;
     toggleEquipmentScreen: () => void;
     toggleBaseBuilding: () => void;
-    toggleAuctionHouse: () => void; // Mới
-    setCoins: React.Dispatch<React.SetStateAction<number>>; // For direct updates from components
+    toggleAuctionHouse: () => void;
+    setCoins: React.Dispatch<React.SetStateAction<number>>;
 }
 
 // --- Create the context ---
@@ -105,8 +105,7 @@ interface GameProviderProps {
 export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar, showNavBar, assetsLoaded }) => {
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
 
-  // States for UI and User Data
-  const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
+  // States for User Data
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
   const [gems, setGems] = useState(0);
@@ -139,9 +138,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [isBaseBuildingOpen, setIsBaseBuildingOpen] = useState(false);
   const [isSkillScreenOpen, setIsSkillScreenOpen] = useState(false);
   const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
-  const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false); // Mới
+  const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false);
   
-  // States for data syncing and rate limiting UI
+  // Misc States
+  const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
   const [isSyncingData, setIsSyncingData] = useState(false);
   const [showRateLimitToast, setShowRateLimitToast] = useState(false);
   
@@ -168,8 +168,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setEquipmentPieces(gameData.equipment.pieces);
       setOwnedItems(gameData.equipment.owned);
       setEquippedItems(gameData.equipment.equipped);
-    } catch (error) { console.error("Error refreshing user data:", error);
-    } finally { setIsLoadingUserData(false); }
+    } catch (error) { 
+      console.error("Error refreshing user data:", error);
+    } finally { 
+      setIsLoadingUserData(false); 
+    }
   }, []);
 
   useEffect(() => {
@@ -177,12 +180,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       if (user) {
         setIsLoadingUserData(true);
         try {
-            const [_, jackpotData] = await Promise.all([ refreshUserData(), fetchJackpotPool() ]);
-            setJackpotPool(jackpotData);
-        } catch (error) { console.error("Error fetching initial user/app data:", error); setIsLoadingUserData(false); }
+            await Promise.all([ refreshUserData(), fetchJackpotPool().then(setJackpotPool) ]);
+        } catch (error) { 
+            console.error("Error fetching initial user/app data:", error); 
+            setIsLoadingUserData(false); 
+        }
       } else {
+        // Reset all states on logout
         setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsAuctionHouseOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
+        setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setIsSkillScreenOpen(false); setIsEquipmentOpen(false); setIsAuctionHouseOpen(false);
+        setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 }); setBossBattleHighestFloor(0); setAncientBooks(0);
         setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]);
         setEquippedItems({ weapon: null, armor: null, Helmet: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
@@ -197,8 +204,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
   
-  useEffect(() => { if (showRateLimitToast) { const timer = setTimeout(() => { setShowRateLimitToast(false); }, 2500); return () => clearTimeout(timer); } }, [showRateLimitToast]);
-  useEffect(() => { if (displayedCoins === coins) return; const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100); return () => clearTimeout(timeoutId); }, [coins]);
+  useEffect(() => { if (showRateLimitToast) { const timer = setTimeout(() => setShowRateLimitToast(false), 2500); return () => clearTimeout(timer); } }, [showRateLimitToast]);
+  useEffect(() => { if (displayedCoins !== coins) { const timeoutId = setTimeout(() => setDisplayedCoins(coins), 100); return () => clearTimeout(timeoutId); } }, [coins, displayedCoins]);
   
   const handleBossFloorUpdate = async (newFloor: number) => {
     const userId = auth.currentUser?.uid;
@@ -235,13 +242,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
-    if (!userId) { throw new Error("Người dùng chưa được xác thực."); }
-    if (!item || typeof item.price !== 'number' || !item.id || typeof quantity !== 'number' || quantity <= 0) { throw new Error("Dữ liệu vật phẩm hoặc số lượng không hợp lệ."); }
+    if (!userId) throw new Error("Người dùng chưa được xác thực.");
     setIsSyncingData(true);
     try {
       const { newCoins, newBooks, newCapacity } = await processShopPurchase(userId, item, quantity);
       setCoins(newCoins);
-      if (item.id === 1009) { setAncientBooks(newBooks); } else if (item.id === 2001) { setCardCapacity(newCapacity); }
+      if (item.id === 1009) setAncientBooks(newBooks);
+      if (item.id === 2001) setCardCapacity(newCapacity);
       alert(`Mua thành công x${quantity} ${item.name}!`);
     } catch (error) {
       console.error("Shop purchase transaction failed:", error);
@@ -265,7 +272,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   };
 
   const getPlayerBattleStats = () => {
-    const BASE_HP = 0, BASE_ATK = 0, BASE_DEF = 0;
+    const BASE_HP = 100, BASE_ATK = 10, BASE_DEF = 5; // Base stats for player
     const bonusHp = calculateTotalStatValue(userStats.hp, statConfig.hp.baseUpgradeBonus);
     const bonusAtk = calculateTotalStatValue(userStats.atk, statConfig.atk.baseUpgradeBonus);
     const bonusDef = calculateTotalStatValue(userStats.def, statConfig.def.baseUpgradeBonus);
@@ -280,7 +287,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
             }
         }
     });
-    return { maxHp: BASE_HP + bonusHp + itemHpBonus, hp: BASE_HP + bonusHp + itemHpBonus, atk: BASE_ATK + bonusAtk + itemAtkBonus, def: BASE_DEF + bonusDef + itemDefBonus, maxEnergy: 50, energy: 50 };
+    const finalHp = BASE_HP + bonusHp + itemHpBonus;
+    return { maxHp: finalHp, hp: finalHp, atk: BASE_ATK + bonusAtk + itemAtkBonus, def: BASE_DEF + bonusDef + itemDefBonus, maxEnergy: 50, energy: 50 };
   };
 
   const getEquippedSkillsDetails = () => {
@@ -304,12 +312,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const toggleSkillScreen = createToggleFunction(setIsSkillScreenOpen);
   const toggleEquipmentScreen = createToggleFunction(setIsEquipmentOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
-  const toggleAuctionHouse = createToggleFunction(setIsAuctionHouseOpen); // Mới
-  
-  const handleSkillScreenClose = (dataUpdated: boolean) => {
-    toggleSkillScreen();
-    if (dataUpdated) refreshUserData();
-  };
+  const toggleAuctionHouse = createToggleFunction(setIsAuctionHouseOpen);
 
   const updateSkillsState = (data: SkillScreenExitData) => {
     setCoins(data.gold);
@@ -326,35 +329,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     setOwnedItems(data.ownedItems);
     setEquippedItems(data.equippedItems);
   };
+  
+  const updateAuctionHouseData = (data: AuctionHouseExitData) => {
+    setCoins(data.gold);
+    setDisplayedCoins(data.gold);
+    setGems(data.gems);
+    setOwnedItems(data.ownedItems);
+  };
 
-  const updateUserCurrency = useCallback(async (updates: { coins?: number; gems?: number }) => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) return;
-
-    const oldCoins = coins;
-    const oldGems = gems;
-
-    // Client-side update for responsiveness
-    if (updates.coins !== undefined) {
-        setCoins(updates.coins);
-        setDisplayedCoins(updates.coins);
-    }
+  const updateUserCurrency = (updates: { coins?: number; gems?: number }) => {
+    if (updates.coins !== undefined) { setCoins(updates.coins); setDisplayedCoins(updates.coins); }
     if (updates.gems !== undefined) setGems(updates.gems);
-    
-    // Server-side update
-    try {
-        if (updates.coins !== undefined) {
-            await updateUserCoins(userId, updates.coins - oldCoins); // Gửi delta
-        }
-        if (updates.gems !== undefined) {
-            await updateUserGems(userId, updates.gems - oldGems); // Gửi delta
-        }
-    } catch (error) {
-        console.error("Lỗi khi cập nhật tiền tệ:", error);
-        // Rollback on failure
-        await refreshUserData();
-    }
-  }, [coins, gems, refreshUserData]);
+  };
 
   const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen;
   const isLoading = isLoadingUserData || !assetsLoaded;
@@ -366,9 +352,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen, isAuctionHouseOpen, isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, handleStatsUpdate,
-    handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
-    updateEquipmentData,
-    updateUserCurrency,
+    handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
+    updateSkillsState, updateEquipmentData, updateAuctionHouseData, updateUserCurrency,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding, toggleAuctionHouse, setCoins
   };
@@ -384,4 +369,5 @@ export const useGame = (): IGameContext => {
   }
   return context;
 };
+
 // --- END OF FILE src/GameContext.tsx ---
