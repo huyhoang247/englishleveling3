@@ -1,14 +1,9 @@
-// --- START OF FILE GameContext.tsx (11).txt ---
-
-// --- START OF FILE GameContext.tsx (8).txt ---
-
 // --- START OF FILE src/GameContext.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { auth } from './firebase.js';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
-// --- THAY ĐỔI: Import các type cần thiết từ equipment.tsx ---
 import { OwnedItem, EquippedItems, EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
 import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
 
@@ -18,9 +13,7 @@ import {
 } from './gameDataService.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
-// --- Define the shape of the context ---
 interface IGameContext {
-    // User Data States
     isLoadingUserData: boolean;
     isSyncingData: boolean;
     coins: number;
@@ -41,7 +34,6 @@ interface IGameContext {
     ownedItems: OwnedItem[];
     equippedItems: EquippedItems;
 
-    // UI States
     isBackgroundPaused: boolean;
     showRateLimitToast: boolean;
     isRankOpen: boolean;
@@ -57,11 +49,10 @@ interface IGameContext {
     isBaseBuildingOpen: boolean;
     isSkillScreenOpen: boolean;
     isEquipmentOpen: boolean;
-    isAuctionHouseOpen: boolean; // THÊM MỚI
+    isAuctionHouseOpen: boolean;
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
-    // Functions
     refreshUserData: () => Promise<void>;
     handleBossFloorUpdate: (newFloor: number) => Promise<void>;
     handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => Promise<void>;
@@ -76,11 +67,8 @@ interface IGameContext {
     handleSkillScreenClose: (dataUpdated: boolean) => void;
     updateSkillsState: (data: SkillScreenExitData) => void;
     updateEquipmentData: (data: EquipmentScreenExitData) => void;
-    // --- THÊM MỚI: Hàm cập nhật tiền tệ ---
     updateUserCurrency: (updates: { coins?: number; gems?: number }) => void;
 
-
-    // Toggles
     toggleRank: () => void;
     togglePvpArena: () => void;
     toggleLuckyGame: () => void;
@@ -94,14 +82,12 @@ interface IGameContext {
     toggleSkillScreen: () => void;
     toggleEquipmentScreen: () => void;
     toggleBaseBuilding: () => void;
-    toggleAuctionHouse: () => void; // THÊM MỚI
-    setCoins: React.Dispatch<React.SetStateAction<number>>; // For direct updates from components
+    toggleAuctionHouse: () => void;
+    setCoins: React.Dispatch<React.SetStateAction<number>>;
 }
 
-// --- Create the context ---
 const GameContext = createContext<IGameContext | undefined>(undefined);
 
-// --- Create the Provider component ---
 interface GameProviderProps {
     children: ReactNode;
     hideNavBar: () => void;
@@ -112,7 +98,6 @@ interface GameProviderProps {
 export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar, showNavBar, assetsLoaded }) => {
   const [isLoadingUserData, setIsLoadingUserData] = useState(true);
 
-  // States for UI and User Data
   const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
   const [coins, setCoins] = useState(0);
   const [displayedCoins, setDisplayedCoins] = useState(0);
@@ -132,7 +117,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
   const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
 
-  // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [isPvpArenaOpen, setIsPvpArenaOpen] = useState(false);
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
@@ -146,9 +130,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [isBaseBuildingOpen, setIsBaseBuildingOpen] = useState(false);
   const [isSkillScreenOpen, setIsSkillScreenOpen] = useState(false);
   const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
-  const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false); // THÊM MỚI
+  const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false);
   
-  // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
   const [showRateLimitToast, setShowRateLimitToast] = useState(false);
   
@@ -265,7 +248,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
           const newState = !prev;
           if (newState) {
               hideNavBar();
-              [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen, setIsAuctionHouseOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen ].forEach(s => { if (s !== setter) s(false); });
+              [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen, setIsAuctionHouseOpen ].forEach(s => { if (s !== setter) s(false); });
           } else { showNavBar(); }
           return newState;
       });
@@ -311,7 +294,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const toggleSkillScreen = createToggleFunction(setIsSkillScreenOpen);
   const toggleEquipmentScreen = createToggleFunction(setIsEquipmentOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
-  const toggleAuctionHouse = createToggleFunction(setIsAuctionHouseOpen); // THÊM MỚI
+  const toggleAuctionHouse = createToggleFunction(setIsAuctionHouseOpen);
   
   const handleSkillScreenClose = (dataUpdated: boolean) => {
     toggleSkillScreen();
@@ -320,7 +303,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
   const updateSkillsState = (data: SkillScreenExitData) => {
     setCoins(data.gold);
-    setDisplayedCoins(data.gold); // THÊM MỚI: Cập nhật ngay lập tức `displayedCoins` để tránh độ trễ
+    setDisplayedCoins(data.gold);
     setAncientBooks(data.ancientBooks);
     setOwnedSkills(data.ownedSkills);
     setEquippedSkillIds(data.equippedSkillIds);
@@ -328,13 +311,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
   const updateEquipmentData = (data: EquipmentScreenExitData) => {
     setCoins(data.gold);
-    setDisplayedCoins(data.gold); // Cập nhật ngay để UI mượt
+    setDisplayedCoins(data.gold);
     setEquipmentPieces(data.equipmentPieces);
     setOwnedItems(data.ownedItems);
     setEquippedItems(data.equippedItems);
   };
 
-  // --- THÊM MỚI: Hàm cập nhật "nhẹ" chỉ số tiền tệ ---
   const updateUserCurrency = (updates: { coins?: number; gems?: number }) => {
     if (updates.coins !== undefined) {
         setCoins(updates.coins);
@@ -345,7 +327,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     }
   };
 
-  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen; // THÊM MỚI
+  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen;
   const isLoading = isLoadingUserData || !assetsLoaded;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
@@ -357,7 +339,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, handleStatsUpdate,
     handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
     updateEquipmentData,
-    // --- THÊM MỚI: Thêm hàm mới vào context value ---
     updateUserCurrency,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding, toggleAuctionHouse, setCoins
@@ -366,7 +347,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 };
 
-// --- Create a custom hook for easy context access ---
 export const useGame = (): IGameContext => {
   const context = useContext(GameContext);
   if (context === undefined) {
@@ -375,7 +355,3 @@ export const useGame = (): IGameContext => {
   return context;
 };
 // --- END OF FILE src/GameContext.tsx ---
-
-// --- END OF FILE GameContext.tsx (8).txt ---
-
-// --- END OF FILE GameContext.tsx (11).txt ---
