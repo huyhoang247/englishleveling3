@@ -3,10 +3,10 @@ import { Timestamp } from 'firebase/firestore';
 import { 
     listenToActiveAuctions, listenToUserAuctions, listAuctionItem, placeBidOnAuction, 
     claimAuctionWin, reclaimExpiredAuction, AuctionItem 
-} from '../../gameDataService';
-import type { OwnedItem, EquippedItems } from '../equipment/equipment-ui';
-import { getItemDefinition, ItemRank, RARITY_ORDER } from '../equipment/item-database';
-import { uiAssets } from '../../game-assets';
+} from '../../gameDataService.ts';
+import type { OwnedItem, EquippedItems } from '../equipment/equipment-ui.tsx';
+import { getItemDefinition, ItemRank, RARITY_ORDER } from '../equipment/item-database.ts';
+import { uiAssets } from '../../game-assets.ts';
 
 // --- Helper Functions & Components ---
 const getRarityColor = (rank: ItemRank): string => {
