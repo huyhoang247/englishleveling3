@@ -4,7 +4,7 @@ import { db } from './firebase';
 import { 
   doc, getDoc, setDoc, runTransaction, 
   collection, getDocs, writeBatch,
-  Timestamp, query, where, orderBy, addDoc
+  Timestamp, onSnapshot, query, where, orderBy
 } from 'firebase/firestore';
 
 // Các interface này nên được định nghĩa ở một nơi tập trung (ví dụ: types.ts) và import vào
@@ -478,97 +478,127 @@ export const updateAchievementData = async (
   }
 };
 
+// --- AUCTION HOUSE FUNCTIONS ---
 
-// --- Auction House Functions ---
+// Định nghĩa cấu trúc của một mục đấu giá trên Firestore
 export interface AuctionItem {
-    id: string; 
-    sellerId: string;
-    sellerName: string;
-    item: OwnedItem;
-    startingPrice: number;
-    currentBid: number;
-    buyoutPrice?: number;
-    currentBidderId: string | null;
-    currentBidderName: string | null;
-    startTime: Timestamp;
-    endTime: Timestamp;
-    status: 'active' | 'ended' | 'cancelled';
+  id: string; // Document ID
+  item: OwnedItem;
+  sellerId: string;
+  sellerName: string;
+  startTime: Timestamp;
+  endTime: Timestamp;
+  startPrice: number;
+  currentBid: number;
+  highestBidderId: string | null;
+  highestBidderName: string | null;
+  status: 'active' | 'ended' | 'claimed';
 }
 
-export const fetchActiveAuctions = async (): Promise<AuctionItem[]> => {
-    const auctionsCol = collection(db, 'auctions');
-    const q = query(auctionsCol, where("status", "==", "active"), where("endTime", ">", Timestamp.now()), orderBy("endTime", "asc"));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuctionItem));
-};
+/**
+ * Lắng nghe các phiên đấu giá đang hoạt động trong thời gian thực.
+ * @param callback - Hàm sẽ được gọi mỗi khi có cập nhật.
+ * @returns {Function} Hàm để hủy lắng nghe (unsubscribe).
+ */
+export const fetchActiveAuctions = (callback: (auctions: AuctionItem[]) => void) => {
+  const auctionsRef = collection(db, 'auctions');
+  const q = query(
+    auctionsRef, 
+    where('status', '==', 'active'), 
+    where('endTime', '>', Timestamp.now()),
+    orderBy('endTime', 'asc') // Ưu tiên các mục sắp hết hạn
+  );
 
-export const placeBidOnAuction = async (userId: string, userName: string, auctionId: string, bidAmount: number) => {
-    const userDocRef = doc(db, 'users', userId);
-    const auctionDocRef = doc(db, 'auctions', auctionId);
-    const BID_FEE = 1;
-
-    return runTransaction(db, async (t) => {
-        const [userDoc, auctionDoc] = await Promise.all([t.get(userDocRef), t.get(auctionDocRef)]);
-        if (!userDoc.exists()) throw new Error("Không tìm thấy người dùng.");
-        if (!auctionDoc.exists()) throw new Error("Phiên đấu giá không tồn tại hoặc đã kết thúc.");
-        const userData = userDoc.data();
-        const auctionData = auctionDoc.data() as Omit<AuctionItem, 'id'>;
-        if (auctionData.status !== 'active' || auctionData.endTime.toMillis() < Date.now()) throw new Error("Phiên đấu giá đã kết thúc.");
-        if ((userData.gems || 0) < BID_FEE) throw new Error("Không đủ Gem để trả phí đặt giá.");
-        if ((userData.coins || 0) < bidAmount) throw new Error("Không đủ vàng để đặt giá.");
-        const minBid = auctionData.currentBid > 0 ? Math.ceil(auctionData.currentBid * 1.05) : auctionData.startingPrice;
-        if (bidAmount < minBid) throw new Error(`Giá đặt không hợp lệ. Tối thiểu: ${minBid.toLocaleString()}.`);
-        if (auctionData.sellerId === userId) throw new Error("Không thể đặt giá cho vật phẩm của chính bạn.");
-
-        const newEndTime = (auctionData.endTime.toMillis() - Date.now() < 5 * 60 * 1000)
-            ? Timestamp.fromMillis(Date.now() + 5 * 60 * 1000)
-            : auctionData.endTime;
-
-        t.update(auctionDocRef, {
-            currentBid: bidAmount,
-            currentBidderId: userId,
-            currentBidderName: userName,
-            endTime: newEndTime
-        });
-        t.update(userDocRef, { gems: (userData.gems || 0) - BID_FEE });
+  const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const activeAuctions: AuctionItem[] = [];
+    querySnapshot.forEach((doc) => {
+      activeAuctions.push({ id: doc.id, ...doc.data() } as AuctionItem);
     });
+    callback(activeAuctions);
+  }, (error) => {
+    console.error("Lỗi khi lắng nghe đấu giá:", error);
+    callback([]); // Trả về mảng rỗng nếu có lỗi
+  });
+
+  return unsubscribe;
 };
 
-export const createAuction = async (userId: string, userName: string, item: OwnedItem, startingPrice: number) => {
-    const userDocRef = doc(db, 'users', userId);
-    const auctionsCol = collection(db, 'auctions');
-    const LISTING_FEE = 1000;
+/**
+ * Đặt giá cho một vật phẩm trong phiên đấu giá.
+ * @param auctionId - ID của phiên đấu giá.
+ * @param bidderId - ID của người đặt giá.
+ * @param bidderName - Tên của người đặt giá.
+ * @param bidAmount - Số vàng muốn đặt.
+ * @returns {Promise<{newCoins: number, newGems: number}>} Số vàng và gem mới của người đặt giá.
+ */
+export const placeBidOnAuction = async (
+  auctionId: string, 
+  bidderId: string,
+  bidderName: string,
+  bidAmount: number,
+): Promise<{newCoins: number, newGems: number}> => {
+  if (!auctionId || !bidderId || !bidAmount) throw new Error("Thông tin đặt giá không hợp lệ.");
 
-    return runTransaction(db, async (t) => {
-        const userDoc = await t.get(userDocRef);
-        if (!userDoc.exists()) throw new Error("Không tìm thấy người dùng.");
-        const userData = userDoc.data();
-        if ((userData.coins || 0) < LISTING_FEE) throw new Error(`Không đủ vàng để trả phí đăng bán (${LISTING_FEE.toLocaleString()}).`);
-        const currentOwnedItems = userData.equipment?.owned || [];
-        const itemIndex = currentOwnedItems.findIndex((i: OwnedItem) => i.id === item.id);
-        if (itemIndex === -1) throw new Error("Vật phẩm không có trong kho của bạn.");
+  const BID_FEE = 1; // Phí 1 gem mỗi lần đặt giá
 
-        const newOwnedItems = currentOwnedItems.filter((_: any, index: number) => index !== itemIndex);
-        
-        t.update(userDocRef, {
-            'equipment.owned': newOwnedItems,
-            coins: (userData.coins || 0) - LISTING_FEE
-        });
+  return await runTransaction(db, async (t) => {
+    const auctionRef = doc(db, 'auctions', auctionId);
+    const bidderRef = doc(db, 'users', bidderId);
 
-        const newAuctionRef = doc(auctionsCol);
-        t.set(newAuctionRef, {
-            sellerId: userId,
-            sellerName: userName,
-            item: item,
-            startingPrice: startingPrice,
-            currentBid: startingPrice,
-            currentBidderId: null,
-            currentBidderName: null,
-            startTime: Timestamp.now(),
-            endTime: Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000),
-            status: 'active' as const,
-        });
+    const [auctionDoc, bidderDoc] = await Promise.all([t.get(auctionRef), t.get(bidderRef)]);
+
+    if (!auctionDoc.exists()) throw new Error("Phiên đấu giá không tồn tại.");
+    if (!bidderDoc.exists()) throw new Error("Người dùng không tồn tại.");
+
+    const auctionData = auctionDoc.data() as Omit<AuctionItem, 'id'>;
+    const bidderData = bidderDoc.data();
+
+    // --- Kiểm tra điều kiện ---
+    if (auctionData.status !== 'active' || auctionData.endTime.toMillis() < Date.now()) {
+      throw new Error("Phiên đấu giá đã kết thúc.");
+    }
+    if (bidderData.gems < BID_FEE) {
+      throw new Error(`Không đủ Gem. Cần ${BID_FEE} Gem để đặt giá.`);
+    }
+    if (bidderData.coins < bidAmount) {
+        throw new Error("Không đủ Vàng để đặt giá.");
+    }
+    if (bidAmount <= auctionData.currentBid) {
+      throw new Error("Giá đặt phải cao hơn giá hiện tại.");
+    }
+    if (bidderId === auctionData.highestBidderId) {
+      throw new Error("Bạn đang là người giữ giá cao nhất.");
+    }
+
+    // --- Hoàn tiền cho người giữ giá cũ (nếu có) ---
+    const previousBidderId = auctionData.highestBidderId;
+    const previousBidAmount = auctionData.currentBid;
+    
+    if (previousBidderId && previousBidderId !== bidderId) {
+        const previousBidderRef = doc(db, 'users', previousBidderId);
+        const previousBidderDoc = await t.get(previousBidderRef);
+        if (previousBidderDoc.exists()) {
+            const newCoinsForPreviousBidder = (previousBidderDoc.data().coins || 0) + previousBidAmount;
+            t.update(previousBidderRef, { coins: newCoinsForPreviousBidder });
+        }
+    }
+
+    // --- Cập nhật thông tin phiên đấu giá ---
+    t.update(auctionRef, {
+      currentBid: bidAmount,
+      highestBidderId: bidderId,
+      highestBidderName: bidderName,
     });
-};
 
+    // --- Trừ tiền và phí của người đặt giá mới ---
+    const newBidderCoins = bidderData.coins - bidAmount;
+    const newBidderGems = bidderData.gems - BID_FEE;
+    t.update(bidderRef, {
+      coins: newBidderCoins,
+      gems: newBidderGems,
+    });
+
+    return { newCoins: newBidderCoins, newGems: newBidderGems };
+  });
+};
 // --- END OF FILE gameDataService.ts ---
