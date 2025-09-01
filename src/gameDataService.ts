@@ -4,17 +4,15 @@ import { db } from './firebase';
 import { 
   doc, getDoc, setDoc, runTransaction, 
   collection, getDocs, writeBatch,
-  Timestamp, 
-  query, 
-  where, 
-  orderBy, 
-  increment,
-  arrayUnion
+  Timestamp, query, where, orderBy, addDoc
 } from 'firebase/firestore';
 
+// Các interface này nên được định nghĩa ở một nơi tập trung (ví dụ: types.ts) và import vào
+// Tuy nhiên, để file này tự chứa, tôi sẽ định nghĩa chúng ở đây.
 export type Rarity = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' | 'SSR';
 export interface OwnedSkill { id: string; skillId: string; level: number; rarity: Rarity; }
 
+// Sửa lại interface OwnedItem và EquippedItems để khớp với equipment.tsx
 export interface OwnedItem {
     id: string;
     itemId: number;
@@ -49,6 +47,12 @@ export interface VocabularyItem {
   maxExp: number; 
 }
 
+
+/**
+ * Lấy dữ liệu game của người dùng. Nếu chưa có, tạo mới với giá trị mặc định.
+ * @param userId - ID của người dùng.
+ * @returns {Promise<UserGameData>} Dữ liệu game của người dùng.
+ */
 export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGameData> => {
   if (!userId) throw new Error("User ID is required.");
 
@@ -57,6 +61,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
 
   if (docSnap.exists()) {
     const data = docSnap.data();
+    // Đảm bảo dữ liệu skills có cấu trúc đúng
     const skillsData = data.skills || { owned: [], equipped: [null, null, null] };
     if (!Array.isArray(skillsData.equipped) || skillsData.equipped.length !== 3) {
       skillsData.equipped = [null, null, null];
@@ -95,6 +100,11 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
   }
 };
 
+/**
+ * Lấy dữ liệu cần thiết cho màn hình Trang Bị.
+ * @param userId - ID của người dùng.
+ * @returns Dữ liệu cần thiết cho màn hình trang bị.
+ */
 export const fetchEquipmentScreenData = async (userId: string) => {
   if (!userId) throw new Error("User ID is required.");
   const gameData = await fetchOrCreateUserGameData(userId);
@@ -106,16 +116,26 @@ export const fetchEquipmentScreenData = async (userId: string) => {
   };
 };
 
+/**
+ * Lấy dữ liệu cần thiết cho màn hình Kỹ năng.
+ * @param userId - ID của người dùng.
+ * @returns Dữ liệu cần thiết cho màn hình kỹ năng.
+ */
 export const fetchSkillScreenData = async (userId: string) => {
   if (!userId) throw new Error("User ID is required.");
   const gameData = await fetchOrCreateUserGameData(userId);
   return {
     coins: gameData.coins,
     ancientBooks: gameData.ancientBooks,
-    skills: gameData.skills,
+    skills: gameData.skills, // Gồm { owned, equipped }
   };
 };
 
+/**
+ * Lấy dữ liệu cần thiết cho màn hình Lật Thẻ Từ Vựng.
+ * @param userId - ID của người dùng.
+ * @returns {Promise<{coins: number, gems: number, totalVocab: number, capacity: number}>} Dữ liệu cần thiết.
+ */
 export const fetchVocabularyScreenData = async (userId: string) => {
   if (!userId) throw new Error("User ID is required.");
   const gameData = await fetchOrCreateUserGameData(userId);
@@ -127,13 +147,18 @@ export const fetchVocabularyScreenData = async (userId: string) => {
   };
 };
 
+/**
+ * Lấy dữ liệu thô cần thiết cho màn hình Đấu Trùm.
+ * @param userId - ID của người dùng.
+ * @returns Dữ liệu thô cần thiết cho màn hình Đấu Trùm.
+ */
 export const fetchBossBattlePrerequisites = async (userId: string) => {
   if (!userId) throw new Error("User ID is required.");
   const gameData = await fetchOrCreateUserGameData(userId);
   return {
     baseStats: gameData.stats,
-    equipment: gameData.equipment,
-    skills: gameData.skills,
+    equipment: gameData.equipment, // Gồm owned và equipped
+    skills: gameData.skills, // Gồm owned và equipped
     bossBattleHighestFloor: gameData.bossBattleHighestFloor,
     coins: gameData.coins,
   };
@@ -270,7 +295,7 @@ export const processGemToCoinExchange = async (userId: string, gemCost: number) 
     if (gemCost <= 0) throw new Error("Gem cost must be positive.");
 
     const userDocRef = doc(db, 'users', userId);
-    const coinReward = gemCost * 1000;
+    const coinReward = gemCost * 1000; // Tỷ lệ 1 Gem = 1000 Coins
 
     return runTransaction(db, async (t) => {
         const userDoc = await t.get(userDocRef);
@@ -454,135 +479,96 @@ export const updateAchievementData = async (
 };
 
 
-// --- START: AUCTION HOUSE LOGIC ---
-export interface AuctionListing {
-  id: string; // Document ID
-  item: OwnedItem;
-  sellerId: string;
-  sellerName: string;
-  startingBid: number;
-  currentBid: number;
-  highestBidderId: string | null;
-  highestBidderName: string | null;
-  buyoutPrice: number | null;
-  endTime: Timestamp;
-  createdAt: Timestamp;
-  status: 'active' | 'ended_sold' | 'ended_unsold' | 'cancelled';
-  feeRefunded: boolean;
+// --- Auction House Functions ---
+export interface AuctionItem {
+    id: string; 
+    sellerId: string;
+    sellerName: string;
+    item: OwnedItem;
+    startingPrice: number;
+    currentBid: number;
+    buyoutPrice?: number;
+    currentBidderId: string | null;
+    currentBidderName: string | null;
+    startTime: Timestamp;
+    endTime: Timestamp;
+    status: 'active' | 'ended' | 'cancelled';
 }
 
-const AUCTION_DURATION_HOURS = 24;
-const LISTING_FEE_GEMS = 1;
-
-export const fetchActiveAuctions = async (): Promise<AuctionListing[]> => {
-  const auctionsCol = collection(db, 'auctions');
-  const q = query(auctionsCol, where('status', '==', 'active'), orderBy('endTime', 'asc'));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuctionListing));
+export const fetchActiveAuctions = async (): Promise<AuctionItem[]> => {
+    const auctionsCol = collection(db, 'auctions');
+    const q = query(auctionsCol, where("status", "==", "active"), where("endTime", ">", Timestamp.now()), orderBy("endTime", "asc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuctionItem));
 };
 
-export const listAuctionItem = async (
-  userId: string,
-  userName: string,
-  itemToList: OwnedItem,
-  startingBid: number,
-  buyoutPrice: number | null
-): Promise<void> => {
-  const userDocRef = doc(db, 'users', userId);
-  const auctionDocRef = doc(collection(db, 'auctions'));
-
-  await runTransaction(db, async (t) => {
-    const userDoc = await t.get(userDocRef);
-    if (!userDoc.exists()) throw new Error("User not found.");
-
-    const userData = userDoc.data();
-    if ((userData.gems || 0) < LISTING_FEE_GEMS) throw new Error("Không đủ Gems để đăng bán.");
-
-    const currentOwned = userData.equipment?.owned || [];
-    const itemIndex = currentOwned.findIndex((i: OwnedItem) => i.id === itemToList.id);
-    if (itemIndex === -1) throw new Error("Vật phẩm không tồn tại trong kho của bạn.");
-
-    const newOwned = [...currentOwned];
-    newOwned.splice(itemIndex, 1);
-    t.update(userDocRef, {
-      'gems': increment(-LISTING_FEE_GEMS),
-      'equipment.owned': newOwned
-    });
-
-    const newAuction: Omit<AuctionListing, 'id'> = {
-      item: itemToList, sellerId: userId, sellerName: userName,
-      startingBid: startingBid, currentBid: startingBid,
-      highestBidderId: null, highestBidderName: null, buyoutPrice: buyoutPrice,
-      endTime: Timestamp.fromMillis(Date.now() + AUCTION_DURATION_HOURS * 60 * 60 * 1000),
-      createdAt: Timestamp.now(), status: 'active', feeRefunded: false,
-    };
-    t.set(auctionDocRef, newAuction);
-  });
-};
-
-export const placeBidOnItem = async (
-    userId: string, userName: string, auctionId: string, bidAmount: number
-): Promise<void> => {
+export const placeBidOnAuction = async (userId: string, userName: string, auctionId: string, bidAmount: number) => {
     const userDocRef = doc(db, 'users', userId);
     const auctionDocRef = doc(db, 'auctions', auctionId);
+    const BID_FEE = 1;
 
-    await runTransaction(db, async (t) => {
+    return runTransaction(db, async (t) => {
         const [userDoc, auctionDoc] = await Promise.all([t.get(userDocRef), t.get(auctionDocRef)]);
-
-        if (!userDoc.exists()) throw new Error("User not found.");
-        if (!auctionDoc.exists()) throw new Error("Phiên đấu giá không tồn tại.");
-
+        if (!userDoc.exists()) throw new Error("Không tìm thấy người dùng.");
+        if (!auctionDoc.exists()) throw new Error("Phiên đấu giá không tồn tại hoặc đã kết thúc.");
         const userData = userDoc.data();
-        const auctionData = auctionDoc.data() as Omit<AuctionListing, 'id'>;
-
-        if (auctionData.status !== 'active') throw new Error("Phiên đấu giá đã kết thúc.");
-        if (auctionData.endTime.toMillis() < Date.now()) throw new Error("Phiên đấu giá đã hết hạn.");
-        if (bidAmount <= auctionData.currentBid) throw new Error("Giá đặt phải cao hơn giá hiện tại.");
+        const auctionData = auctionDoc.data() as Omit<AuctionItem, 'id'>;
+        if (auctionData.status !== 'active' || auctionData.endTime.toMillis() < Date.now()) throw new Error("Phiên đấu giá đã kết thúc.");
+        if ((userData.gems || 0) < BID_FEE) throw new Error("Không đủ Gem để trả phí đặt giá.");
         if ((userData.coins || 0) < bidAmount) throw new Error("Không đủ vàng để đặt giá.");
-        if (auctionData.sellerId === userId) throw new Error("Bạn không thể tự đấu giá vật phẩm của mình.");
+        const minBid = auctionData.currentBid > 0 ? Math.ceil(auctionData.currentBid * 1.05) : auctionData.startingPrice;
+        if (bidAmount < minBid) throw new Error(`Giá đặt không hợp lệ. Tối thiểu: ${minBid.toLocaleString()}.`);
+        if (auctionData.sellerId === userId) throw new Error("Không thể đặt giá cho vật phẩm của chính bạn.");
 
-        if (auctionData.highestBidderId) {
-            const prevBidderDocRef = doc(db, 'users', auctionData.highestBidderId);
-            t.update(prevBidderDocRef, { 'coins': increment(auctionData.currentBid) });
-        }
-        t.update(userDocRef, { 'coins': increment(-bidAmount) });
+        const newEndTime = (auctionData.endTime.toMillis() - Date.now() < 5 * 60 * 1000)
+            ? Timestamp.fromMillis(Date.now() + 5 * 60 * 1000)
+            : auctionData.endTime;
+
         t.update(auctionDocRef, {
-            currentBid: bidAmount, highestBidderId: userId, highestBidderName: userName,
+            currentBid: bidAmount,
+            currentBidderId: userId,
+            currentBidderName: userName,
+            endTime: newEndTime
+        });
+        t.update(userDocRef, { gems: (userData.gems || 0) - BID_FEE });
+    });
+};
+
+export const createAuction = async (userId: string, userName: string, item: OwnedItem, startingPrice: number) => {
+    const userDocRef = doc(db, 'users', userId);
+    const auctionsCol = collection(db, 'auctions');
+    const LISTING_FEE = 1000;
+
+    return runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if (!userDoc.exists()) throw new Error("Không tìm thấy người dùng.");
+        const userData = userDoc.data();
+        if ((userData.coins || 0) < LISTING_FEE) throw new Error(`Không đủ vàng để trả phí đăng bán (${LISTING_FEE.toLocaleString()}).`);
+        const currentOwnedItems = userData.equipment?.owned || [];
+        const itemIndex = currentOwnedItems.findIndex((i: OwnedItem) => i.id === item.id);
+        if (itemIndex === -1) throw new Error("Vật phẩm không có trong kho của bạn.");
+
+        const newOwnedItems = currentOwnedItems.filter((_: any, index: number) => index !== itemIndex);
+        
+        t.update(userDocRef, {
+            'equipment.owned': newOwnedItems,
+            coins: (userData.coins || 0) - LISTING_FEE
+        });
+
+        const newAuctionRef = doc(auctionsCol);
+        t.set(newAuctionRef, {
+            sellerId: userId,
+            sellerName: userName,
+            item: item,
+            startingPrice: startingPrice,
+            currentBid: startingPrice,
+            currentBidderId: null,
+            currentBidderName: null,
+            startTime: Timestamp.now(),
+            endTime: Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000),
+            status: 'active' as const,
         });
     });
 };
-
-export const processExpiredAuctions = async (): Promise<string[]> => {
-    const auctionsCol = collection(db, 'auctions');
-    const q = query(auctionsCol, where('status', '==', 'active'), where('endTime', '<', Timestamp.now()));
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) return [];
-
-    const processedIds: string[] = [];
-    const batch = writeBatch(db);
-
-    for (const docSnap of querySnapshot.docs) {
-        const auction = { id: docSnap.id, ...docSnap.data() } as AuctionListing;
-        const sellerDocRef = doc(db, 'users', auction.sellerId);
-
-        if (auction.highestBidderId) {
-            const buyerDocRef = doc(db, 'users', auction.highestBidderId);
-            batch.update(sellerDocRef, { 'coins': increment(auction.currentBid) });
-            batch.update(buyerDocRef, { 'equipment.owned': arrayUnion(auction.item) });
-            batch.update(docSnap.ref, { status: 'ended_sold' });
-        } else {
-            batch.update(sellerDocRef, { 'equipment.owned': arrayUnion(auction.item) });
-            batch.update(sellerDocRef, { 'gems': increment(LISTING_FEE_GEMS) });
-            batch.update(docSnap.ref, { status: 'ended_unsold', feeRefunded: true });
-        }
-        processedIds.push(auction.id);
-    }
-
-    await batch.commit();
-    console.log(`Processed ${processedIds.length} expired auctions.`);
-    return processedIds;
-};
-// --- END: AUCTION HOUSE LOGIC ---
 
 // --- END OF FILE gameDataService.ts ---
