@@ -25,13 +25,13 @@ import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './home/skill-game/skill-ui.tsx';
 import type { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 import EquipmentScreen, { type EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
-import AuctionHouseScreen from './home/auction/AuctionHouseScreen.tsx';
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 import { useGame } from './GameContext.tsx';
 import { updateUserCoins } from './gameDataService.ts';
 
 const SystemCheckScreen = lazy(() => import('./SystemCheckScreen.tsx'));
+const AuctionHouse = lazy(() => import('./home/auction/AuctionHouse.tsx'));
 
 interface GemIconProps { size?: number; color?: string; className?: string; [key: string]: any; }
 const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -69,8 +69,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     isAnyOverlayOpen, isGamePaused, showRateLimitToast,
     isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen,
     isBossBattleOpen, isShopOpen, isVocabularyChestOpen, isAchievementsOpen,
-    isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
-    isAuctionHouseOpen,
+    isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen, isAuctionHouseOpen,
     handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
     handleUpdateJackpotPool, handleStatsUpdate, getPlayerBattleStats,
     getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
@@ -80,8 +79,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     refreshUserData,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge,
     toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
-    toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding,
-    toggleAuctionHouse
+    toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleAuctionHouse, toggleBaseBuilding,
   } = useGame();
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
@@ -89,25 +87,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   const isAdmin = currentUser?.email === 'vanlongt309@gmail.com';
   
   const [isSystemCheckOpen, setIsSystemCheckOpen] = useState(false);
-  const toggleSystemCheck = useCallback(() => {
-    setIsSystemCheckOpen(p => !p);
-  }, []);
+  const toggleSystemCheck = useCallback(() => setIsSystemCheckOpen(p => !p), []);
 
   useEffect(() => {
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    const originalBodyOverflow = document.body.style.overflow;
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
     return () => {
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
     };
   }, []);
 
   const handleTap = () => { };
-  const renderCharacter = () => {
-    return (<div className="character-container absolute w-28 h-28 left-1/2 -translate-x-1/2 bottom-40 z-20"><DotLottieReact src={lottieAssets.characterRun} loop autoplay={!isGamePaused} className="w-full h-full" /></div>);
-  };
+  const renderCharacter = () => (<div className="character-container absolute w-28 h-28 left-1/2 -translate-x-1/2 bottom-40 z-20"><DotLottieReact src={lottieAssets.characterRun} loop autoplay={!isGamePaused} className="w-full h-full" /></div>);
   const handleSetToggleSidebar = (toggleFn: () => void) => { sidebarToggleRef.current = toggleFn; };
 
   const SuspenseLoader = () => (
@@ -119,14 +111,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   return (
     <div className="w-screen h-[var(--app-height)] overflow-hidden bg-gray-950 relative">
       <SidebarLayout 
-        setToggleSidebar={handleSetToggleSidebar} 
-        onShowRank={toggleRank} 
-        onShowLuckyGame={toggleLuckyGame} 
-        onShowMinerChallenge={toggleMinerChallenge} 
-        onShowAchievements={toggleAchievements} 
-        onShowUpgrade={toggleUpgradeScreen} 
-        onShowBaseBuilding={toggleBaseBuilding}
-        onShowSystemCheck={toggleSystemCheck}
+        setToggleSidebar={handleSetToggleSidebar} onShowRank={toggleRank} onShowLuckyGame={toggleLuckyGame} onShowMinerChallenge={toggleMinerChallenge} onShowAchievements={toggleAchievements} onShowUpgrade={toggleUpgradeScreen} onShowBaseBuilding={toggleBaseBuilding} onShowSystemCheck={toggleSystemCheck}
         onShowAdmin={isAdmin ? toggleAdminPanel : undefined}
       >
         <DungeonCanvasBackground isPaused={isGamePaused} />
@@ -141,7 +126,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             </div>
             <RateLimitToast show={showRateLimitToast} />
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena }, { icon: <img src={uiAssets.auctionIcon} alt="Auction House Icon" className="w-full h-full object-contain" />, onClick: toggleAuctionHouse } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
+              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.auctionIcon} alt="Auction Icon" className="w-full h-full object-contain p-1" />, onClick: toggleAuctionHouse }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
               {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
@@ -159,26 +144,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             <ErrorBoundary>{isMinerChallengeOpen && currentUser && (<MinerChallenge onClose={toggleMinerChallenge} initialDisplayedCoins={displayedCoins} masteryCards={masteryCards} initialPickaxes={pickaxes} initialHighestFloor={minerChallengeHighestFloor} onGameEnd={handleMinerChallengeEnd} />)}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isBossBattleOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isBossBattleOpen && currentUser && (
-                    <BossBattle 
-                        userId={currentUser.uid}
-                        onClose={toggleBossBattle}
-                        onBattleEnd={async (result, rewards) => { if (result === 'win' && currentUser) setCoins(await updateUserCoins(currentUser.uid, rewards.coins)); }}
-                        onFloorComplete={handleBossFloorUpdate}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{isBossBattleOpen && currentUser && (<BossBattle userId={currentUser.uid} onClose={toggleBossBattle} onBattleEnd={async (result, rewards) => { if (result === 'win' && currentUser) setCoins(await updateUserCoins(currentUser.uid, rewards.coins)); }} onFloorComplete={handleBossFloorUpdate} />)}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> 
-            <ErrorBoundary>
-                {isShopOpen && 
-                    <Shop 
-                        onClose={toggleShop} 
-                        onCurrencyUpdate={updateUserCurrency} 
-                    />
-                }
-            </ErrorBoundary> 
+            <ErrorBoundary>{isShopOpen && <Shop onClose={toggleShop} onCurrencyUpdate={updateUserCurrency} />}</ErrorBoundary> 
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> 
             <ErrorBoundary>{isVocabularyChestOpen && currentUser && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onStateUpdate={handleStateUpdateFromChest} />)}</ErrorBoundary> 
@@ -193,46 +162,23 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             <ErrorBoundary>{isBaseBuildingOpen && currentUser && (<BaseBuildingScreen onClose={toggleBaseBuilding} coins={coins} gems={gems} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(currentUser!.uid, amount))} />)}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isSkillScreenOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isSkillScreenOpen && currentUser && (
-                <SkillScreen 
-                  onClose={(dataUpdated: boolean, data?: SkillScreenExitData) => {
-                    toggleSkillScreen();
-                    if (dataUpdated && data) {
-                      updateSkillsState(data);
-                    }
-                  }} 
-                  userId={currentUser.uid} />)}</ErrorBoundary>
+            <ErrorBoundary>{isSkillScreenOpen && currentUser && (<SkillScreen onClose={(dataUpdated: boolean, data?: SkillScreenExitData) => { toggleSkillScreen(); if (dataUpdated && data) { updateSkillsState(data); } }} userId={currentUser.uid} />)}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isEquipmentOpen && currentUser && (
-                    <EquipmentScreen 
-                        onClose={(exitData: EquipmentScreenExitData) => {
-                            toggleEquipmentScreen(); 
-                            updateEquipmentData(exitData);
-                        }} 
-                        userId={currentUser.uid}
-                    />
-                )}
-            </ErrorBoundary>
+            <ErrorBoundary>{isEquipmentOpen && currentUser && (<EquipmentScreen onClose={(exitData: EquipmentScreenExitData) => { toggleEquipmentScreen(); updateEquipmentData(exitData); }} userId={currentUser.uid} />)}</ErrorBoundary>
         </div>
 
-        <div className="fixed inset-0 z-[60]" style={{ display: isAuctionHouseOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>
-                {isAuctionHouseOpen && currentUser && (
-                    <AuctionHouseScreen 
-                        onClose={toggleAuctionHouse}
-                        onTransactionComplete={refreshUserData}
-                    />
-                )}
+        {isAuctionHouseOpen && currentUser && (
+            <ErrorBoundary fallback={<div className="fixed inset-0 bg-black/70 flex items-center justify-center text-red-400">Lỗi khi tải Nhà Đấu Giá.</div>}>
+                <Suspense fallback={<SuspenseLoader />}>
+                    <AuctionHouse onClose={(dataUpdated) => { toggleAuctionHouse(); if (dataUpdated) { refreshUserData(); } }} userId={currentUser.uid} userName={currentUser.displayName || "Player"}/>
+                </Suspense>
             </ErrorBoundary>
-        </div>
+        )}
 
         {isSystemCheckOpen && (
             <ErrorBoundary fallback={<div className="fixed inset-0 bg-black/70 flex items-center justify-center text-red-400">Lỗi khi tải công cụ System Check.</div>}>
-                <Suspense fallback={<SuspenseLoader />}>
-                    <SystemCheckScreen onClose={toggleSystemCheck} />
-                </Suspense>
+                <Suspense fallback={<SuspenseLoader />}><SystemCheckScreen onClose={toggleSystemCheck} /></Suspense>
             </ErrorBoundary>
         )}
 
