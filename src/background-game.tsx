@@ -1,7 +1,3 @@
-// --- START OF FILE background-game.tsx (30).txt ---
-
-// --- START OF FILE background-game.tsx (27).txt ---
-
 // --- START OF FILE src/background-game.tsx ---
 
 import React, { useEffect, useRef, Component, lazy, Suspense, useCallback, useState } from 'react';
@@ -29,7 +25,7 @@ import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './home/skill-game/skill-ui.tsx';
 import type { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 import EquipmentScreen, { type EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
-import AuctionHouseUI from './home/auction/AuctionHouseUI.tsx'; // THÊM MỚI
+import AuctionHouseScreen from './home/auction/AuctionHouseScreen.tsx';
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 import { useGame } from './GameContext.tsx';
@@ -48,11 +44,6 @@ const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => (
   <div className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-10" onClick={onClick} title="Xem chỉ số nhân vật">
     <img src={uiAssets.statsIcon} alt="Award Icon" className="w-full h-full object-contain" onError={(e) => { const target = e.target as HTMLImageElement; target.onerror = null; target.src = "https://placehold.co/32x32/ffffff/000000?text=Icon"; }} />
   </div>
-);
-
-// THÊM MỚI: Icon cho Nhà Đấu Giá (bạn có thể thay bằng file ảnh nếu muốn)
-const GavelIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}><path d="M22.29 10.84 13.2 1.75a2.5 2.5 0 0 0-3.54 0L7.56 3.84 9.66 6l.71-.71a1 1 0 0 1 1.41 0l4.24 4.24a1 1 0 0 1 0 1.41l-.7.71 2.12 2.12 2.83-2.83a2.5 2.5 0 0 0 0-3.54ZM8.25 5.25 1.71 11.79a2.5 2.5 0 0 0 0 3.54l2.83 2.83a2.5 2.5 0 0 0 3.54 0L14.53 11.7l-2.12-2.12-3.45 3.45a.5.5 0 0 1-.71 0l-1.41-1.41a.5.5 0 0 1 0-.71l3.45-3.45-2.12-2.12-1.41 1.41ZM2 21h12v1H2z"/></svg>
 );
 
 interface ErrorBoundaryProps { children: React.ReactNode; fallback?: React.ReactNode; }
@@ -78,17 +69,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     isAnyOverlayOpen, isGamePaused, showRateLimitToast,
     isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen,
     isBossBattleOpen, isShopOpen, isVocabularyChestOpen, isAchievementsOpen,
-    isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen, isAuctionHouseOpen, // THÊM MỚI
+    isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
+    isAuctionHouseOpen,
     handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
-    handleUpdateJackpotPool, handleStatsUpdate, /* handleShopPurchase, */ getPlayerBattleStats, // Loại bỏ handleShopPurchase
+    handleUpdateJackpotPool, handleStatsUpdate, getPlayerBattleStats,
     getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
     setCoins, updateSkillsState,
     updateEquipmentData,
-    // --- THAY ĐỔI: Lấy hàm updateUserCurrency từ context ---
     updateUserCurrency,
+    refreshUserData,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge,
     toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
-    toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding, toggleAuctionHouse // THÊM MỚI
+    toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleBaseBuilding,
+    toggleAuctionHouse
   } = useGame();
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
@@ -148,10 +141,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             </div>
             <RateLimitToast show={showRateLimitToast} />
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
+              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena }, { icon: <img src={uiAssets.auctionIcon} alt="Auction House Icon" className="w-full h-full object-contain" />, onClick: toggleAuctionHouse } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, { icon: <GavelIcon className="w-full h-full object-contain p-1.5 text-cyan-300" />, onClick: toggleAuctionHouse }, ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
+              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
           </div>
         </div>
@@ -177,7 +170,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 )}
             </ErrorBoundary>
         </div>
-        {/* --- THAY ĐỔI: Cách gọi Shop đã được cập nhật --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> 
             <ErrorBoundary>
                 {isShopOpen && 
@@ -225,13 +217,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             </ErrorBoundary>
         </div>
 
-        {/* THÊM MỚI: Modal Đấu Giá */}
         <div className="fixed inset-0 z-[60]" style={{ display: isAuctionHouseOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isAuctionHouseOpen && currentUser && (
-                    <AuctionHouseUI 
-                        onClose={toggleAuctionHouse} 
-                        userId={currentUser.uid}
+                    <AuctionHouseScreen 
+                        onClose={toggleAuctionHouse}
+                        onTransactionComplete={refreshUserData}
                     />
                 )}
             </ErrorBoundary>
@@ -253,5 +244,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   );
 }
 // --- END OF FILE src/background-game.tsx ---
-// --- END OF FILE background-game.tsx (27).txt ---
-// --- END OF FILE background-game.tsx (30).txt ---
