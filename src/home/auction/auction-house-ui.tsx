@@ -224,10 +224,10 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50">
             {isLoading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-[101]"><div className="text-white text-xl animate-pulse">Đang xử lý...</div></div>}
             
-            <div className="w-full max-w-5xl h-[90vh] bg-gradient-to-br from-slate-900 to-[#110f21] border-2 border-slate-700 rounded-lg flex flex-col shadow-2xl shadow-black/50">
+            <div className="w-full h-full bg-gradient-to-br from-slate-900 to-[#110f21] flex flex-col">
                 <header className="flex-shrink-0 p-4 border-b border-slate-700 flex justify-between items-center">
                     <h2 className="text-2xl font-bold text-yellow-300 tracking-wider">Sàn Đấu Giá</h2>
                     <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition-colors"><CloseIcon className="w-5 h-5"/></button>
@@ -243,7 +243,7 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
                     {message && <div className={`absolute top-4 left-1/2 -translate-x-1/2 p-3 rounded-lg text-white font-bold text-sm shadow-lg z-50 animate-pulse ${message.type === 'error' ? 'bg-red-600/90' : 'bg-green-600/90'}`}>{message.text}</div>}
                     
                     {activeTab === 'browse' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                             {activeAuctions.length > 0 ? activeAuctions.map(auction => (
                                 <AuctionCard key={auction.id} auction={auction} userId={userId} 
                                     onBid={handleBid}
@@ -253,7 +253,7 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
                         </div>
                     )}
                     {activeTab === 'my_auctions' && (
-                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                             {userAuctions.length > 0 ? userAuctions.map(auction => (
                                 <AuctionCard key={auction.id} auction={auction} userId={userId} 
                                     onBid={handleBid}
