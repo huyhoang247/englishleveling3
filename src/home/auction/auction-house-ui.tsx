@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo, FC } from 'react';
+import React, { useState, useEffect, useMemo, FC, useRef } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { 
     listenToActiveAuctions, listenToUserAuctions, listAuctionItem, placeBidOnAuction, 
-    claimAuctionWin, reclaimExpiredAuction, AuctionItem 
-} from '../../gameDataService.ts';
+    claimAuctionWin, reclaimExpiredAuction, AuctionItem, fetchOrCreateUserGameData
+} from '../../gameDataService.ts'; // Thêm fetchOrCreateUserGameData
 import type { OwnedItem, EquippedItems } from '../equipment/equipment-ui.tsx';
 import { getItemDefinition, ItemRank, RARITY_ORDER } from '../equipment/item-database.ts';
 import { uiAssets } from '../../game-assets.ts';
@@ -21,6 +21,53 @@ const getRarityTextColor = (rank: ItemRank): string => {
 const CloseIcon = ({ className = '' }: { className?: string }) => ( <img src={uiAssets.closeIcon} alt="Đóng" className={className} /> );
 const CoinIcon = ({ className = '' }: { className?: string }) => ( <img src={uiAssets.coinIcon} alt="Vàng" className={className} /> );
 const GemIcon = ({ className = '' }: { className?: string }) => ( <img src={uiAssets.gemIcon} alt="Gem" className={className} /> );
+
+// --- START: HELPERS SAO CHÉP TỪ SHOP-UI ĐỂ HIỂN THỊ TIỀN TỆ ---
+const useAnimateValue = (endValue: number, duration: number = 500) => {
+    const [currentValue, setCurrentValue] = useState(0);
+    const frameRate = 1000 / 60;
+    const totalFrames = Math.round(duration / frameRate);
+
+    useEffect(() => {
+        let frame = 0;
+        const startValue = currentValue;
+        const counter = setInterval(() => {
+            frame++;
+            const progress = frame / totalFrames;
+            const nextValue = Math.round(startValue + (endValue - startValue) * progress);
+
+            if (frame >= totalFrames) {
+                clearInterval(counter);
+                setCurrentValue(endValue);
+            } else {
+                setCurrentValue(nextValue);
+            }
+        }, frameRate);
+
+        return () => clearInterval(counter);
+    }, [endValue, duration]); // Chỉ chạy lại khi endValue hoặc duration thay đổi
+
+    return currentValue;
+};
+
+const CoinDisplay: FC<{ displayedCoins: number }> = ({ displayedCoins }) => (
+    <div className="flex items-center gap-1.5 bg-slate-800/70 border border-slate-700/80 rounded-full px-3 h-8">
+        <CoinIcon className="w-5 h-5" />
+        <span className="font-bold text-sm text-yellow-300 tracking-wider">
+            {displayedCoins.toLocaleString()}
+        </span>
+    </div>
+);
+
+const GemDisplay: FC<{ displayedGems: number }> = ({ displayedGems }) => (
+    <div className="flex items-center gap-1.5 bg-slate-800/70 border border-slate-700/80 rounded-full px-3 h-8">
+        <GemIcon className="w-5 h-5" />
+        <span className="font-bold text-sm text-cyan-300 tracking-wider">
+            {displayedGems.toLocaleString()}
+        </span>
+    </div>
+);
+// --- END: HELPERS SAO CHÉP TỪ SHOP-UI ---
 
 const useCountdown = (endTime: Timestamp | undefined) => {
     const [timeLeft, setTimeLeft] = useState('');
@@ -44,6 +91,7 @@ const useCountdown = (endTime: Timestamp | undefined) => {
     return timeLeft;
 };
 
+// --- Các component con (AuctionCard, CreateAuctionView) giữ nguyên, không thay đổi ---
 const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: AuctionItem) => void; onClaim: (a: AuctionItem) => void; onReclaim: (a: AuctionItem) => void; }> = ({ auction, userId, onBid, onClaim, onReclaim }) => {
     const itemDef = getItemDefinition(auction.item.itemId);
     const timeLeft = useCountdown(auction.endTime);
@@ -86,7 +134,6 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
         </div>
     );
 };
-
 const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedItems; onList: (item: OwnedItem, price: number, duration: number) => void; }> = ({ ownedItems, equippedItems, onList }) => {
     const [selectedItem, setSelectedItem] = useState<OwnedItem | null>(null);
     const [price, setPrice] = useState('');
@@ -169,6 +216,57 @@ const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedIt
 };
 
 
+// --- START: AUCTION HEADER COMPONENT MỚI ---
+interface AuctionHeaderProps {
+    onClose: () => void;
+    userCoins: number;
+    userGems: number;
+    activeTab: 'browse' | 'my_auctions' | 'create';
+    setActiveTab: (tab: 'browse' | 'my_auctions' | 'create') => void;
+}
+
+const AuctionHeader: FC<AuctionHeaderProps> = ({ onClose, userCoins, userGems, activeTab, setActiveTab }) => {
+    const animatedCoins = useAnimateValue(userCoins);
+    const animatedGems = useAnimateValue(userGems);
+
+    const TabButton: FC<{tabId: typeof activeTab, text: string}> = ({ tabId, text }) => (
+        <button onClick={() => setActiveTab(tabId)} className={`px-4 py-2 text-sm font-bold transition-colors relative rounded-md ${activeTab === tabId ? 'text-cyan-300 bg-white/10' : 'text-slate-400 hover:text-white'}`}>
+            {text}
+        </button>
+    );
+
+    return (
+        <header className="flex-shrink-0 bg-slate-900 border-b border-white/10 shadow-lg z-10">
+            <div className="max-w-[1700px] mx-auto flex items-center justify-between h-[60px] px-4">
+                <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-bold text-yellow-300 tracking-wider">Sàn Đấu Giá</h2>
+                    <div className="hidden md:flex items-center gap-2 p-1 bg-slate-800/50 rounded-lg">
+                        <TabButton tabId="browse" text="Sàn Đấu Giá"/>
+                        <TabButton tabId="my_auctions" text="Đấu Giá Của Tôi"/>
+                        <TabButton tabId="create" text="Đăng Bán"/>
+                    </div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <GemDisplay displayedGems={animatedGems} />
+                    <CoinDisplay displayedCoins={animatedCoins} />
+                    <button onClick={onClose} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-red-500/80 flex items-center justify-center transition-colors ml-2">
+                        <CloseIcon className="w-5 h-5"/>
+                    </button>
+                </div>
+            </div>
+             {/* Tab bar cho màn hình nhỏ */}
+             <div className="md:hidden flex justify-center p-2 border-t border-slate-800 bg-black/20">
+                 <div className="flex items-center gap-2 p-1 bg-slate-800/50 rounded-lg">
+                    <TabButton tabId="browse" text="Sàn"/>
+                    <TabButton tabId="my_auctions" text="Của Tôi"/>
+                    <TabButton tabId="create" text="Bán"/>
+                </div>
+            </div>
+        </header>
+    );
+};
+// --- END: AUCTION HEADER COMPONENT MỚI ---
+
 interface AuctionHouseProps {
     userId: string; userName: string;
     ownedItems: OwnedItem[]; equippedItems: EquippedItems;
@@ -181,8 +279,25 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
     const [userAuctions, setUserAuctions] = useState<AuctionItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState<{type: 'error' | 'success', text: string} | null>(null);
-
+    // State mới để lưu trữ tiền tệ
+    const [coins, setCoins] = useState(0);
+    const [gems, setGems] = useState(0);
+    
+    // Hàm mới để làm mới dữ liệu người dùng
+    const refreshUserData = async () => {
+        try {
+            const data = await fetchOrCreateUserGameData(userId);
+            setCoins(data.coins);
+            setGems(data.gems);
+        } catch (error) {
+            console.error("Failed to refresh user data:", error);
+            setMessage({ type: 'error', text: 'Lỗi cập nhật dữ liệu người dùng.' });
+        }
+    };
+    
+    // Lấy dữ liệu ban đầu
     useEffect(() => {
+        refreshUserData();
         const unsubActive = listenToActiveAuctions(setActiveAuctions);
         const unsubUser = listenToUserAuctions(userId, setUserAuctions);
         return () => { unsubActive(); unsubUser(); };
@@ -201,15 +316,10 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
             await action();
             setMessage({type: 'success', text: successMsg});
             onAuctionAction(); // Refresh parent state
+            await refreshUserData(); // Cập nhật lại Vàng/Gem sau khi hành động thành công
         } catch (e: any) { setMessage({type: 'error', text: e.message || 'Có lỗi xảy ra.'});
         } finally { setIsLoading(false); }
     };
-
-    const TabButton: FC<{tabId: typeof activeTab, text: string}> = ({ tabId, text }) => (
-        <button onClick={() => setActiveTab(tabId)} className={`px-4 py-3 text-sm font-bold transition-colors relative ${activeTab === tabId ? 'text-cyan-300' : 'text-slate-400 hover:text-white'}`}>
-            {text} {activeTab === tabId && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400"></div>}
-        </button>
-    );
     
     const handleBid = (auction: AuctionItem) => {
         const bidAmountStr = prompt(`Giá hiện tại: ${auction.currentBid.toLocaleString()}. Nhập giá của bạn:`);
@@ -228,18 +338,15 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
             {isLoading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-[101]"><div className="text-white text-xl animate-pulse">Đang xử lý...</div></div>}
             
             <div className="w-full h-full bg-gradient-to-br from-slate-900 to-[#110f21] flex flex-col">
-                <header className="flex-shrink-0 p-4 border-b border-slate-700 flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-yellow-300 tracking-wider">Sàn Đấu Giá</h2>
-                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition-colors"><CloseIcon className="w-5 h-5"/></button>
-                </header>
+                <AuctionHeader 
+                    onClose={onClose}
+                    userCoins={coins}
+                    userGems={gems}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                />
                 
-                <div className="flex-shrink-0 flex border-b border-slate-700 bg-black/20">
-                    <TabButton tabId="browse" text="Sàn Đấu Giá"/>
-                    <TabButton tabId="my_auctions" text="Đấu Giá Của Tôi"/>
-                    <TabButton tabId="create" text="Đăng Bán"/>
-                </div>
-
-                <main className="flex-1 min-h-0 overflow-y-auto p-4 relative">
+                <main className="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 relative">
                     {message && <div className={`absolute top-4 left-1/2 -translate-x-1/2 p-3 rounded-lg text-white font-bold text-sm shadow-lg z-50 animate-pulse ${message.type === 'error' ? 'bg-red-600/90' : 'bg-green-600/90'}`}>{message.text}</div>}
                     
                     {activeTab === 'browse' && (
