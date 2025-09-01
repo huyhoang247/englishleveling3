@@ -39,6 +39,7 @@ export const uiAssets = {
   rankFrameIcon: require("./assets/images/coin.webp"),
   luckyGameIcon: require("./assets/images/coin.webp"),
   upgradeIcon: require("./assets/images/upgrade-icon.webp"),
+  gavelIcon: require("./assets/images/auction-icon.webp"), // THÊM MỚI ICON ĐẤU GIÁ
 };
 
 // ... (phần còn lại của file giữ nguyên)
