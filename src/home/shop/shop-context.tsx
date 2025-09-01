@@ -2,7 +2,7 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, FC } from 'react';
 import { auth } from '../../firebase.js';
-import { fetchOrCreateUserGameData, processShopPurchase, processGemToCoinExchange } from './gameDataService.ts';
+import { fetchOrCreateUserGameData, processShopPurchase, processGemToCoinExchange } from '../../gameDataService.ts';
 import { itemDatabase } from '../equipment/item-database.ts';
 import type { User } from 'firebase/auth';
 
