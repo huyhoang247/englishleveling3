@@ -66,7 +66,17 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
     if (!Array.isArray(skillsData.equipped) || skillsData.equipped.length !== 3) {
       skillsData.equipped = [null, null, null];
     }
-    const equipmentData = data.equipment || { pieces: 100, owned: [], equipped: { weapon: null, armor: null, Helmet: null } };
+
+    // --- SỬA ĐỔI BẮT ĐẦU ---
+    // 1. Định nghĩa một cấu trúc mặc định đầy đủ.
+    const defaultEquipment = { pieces: 100, owned: [], equipped: { weapon: null, armor: null, Helmet: null } };
+
+    // 2. Hợp nhất object mặc định với dữ liệu thực tế.
+    //    - Đặt object mặc định làm nền.
+    //    - Dữ liệu từ `data.equipment` (nếu có) sẽ ghi đè lên các giá trị mặc định.
+    //    - Nếu `data.equipment` thiếu thuộc tính `pieces`, giá trị `pieces: 100` từ `defaultEquipment` sẽ được giữ lại.
+    const equipmentData = { ...defaultEquipment, ...(data.equipment || {}) };
+    // --- SỬA ĐỔI KẾT THÚC ---
 
     return {
       coins: data.coins || 0,
@@ -331,7 +341,6 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
         const updates: { [key: string]: any } = { coins: currentCoins - totalCost };
         let newBooks = data.ancientBooks || 0;
         let newCapacity = data.cardCapacity || 100;
-        let newPieces = data.equipment?.pieces || 0;
 
         if (item.id === 1009) {
             newBooks += quantity;
@@ -339,13 +348,10 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
         } else if (item.id === 2001) {
             newCapacity += quantity;
             updates.cardCapacity = newCapacity;
-        } else if (item.id === 2002) {
-            newPieces += quantity;
-            updates['equipment.pieces'] = newPieces;
         }
         
         t.update(userDocRef, updates);
-        return { newCoins: updates.coins, newBooks, newCapacity, newPieces };
+        return { newCoins: updates.coins, newBooks, newCapacity };
     });
 };
 
