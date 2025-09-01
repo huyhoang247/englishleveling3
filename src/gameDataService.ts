@@ -331,6 +331,7 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
         const updates: { [key: string]: any } = { coins: currentCoins - totalCost };
         let newBooks = data.ancientBooks || 0;
         let newCapacity = data.cardCapacity || 100;
+        let newPieces = data.equipment?.pieces || 0;
 
         if (item.id === 1009) {
             newBooks += quantity;
@@ -338,10 +339,13 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
         } else if (item.id === 2001) {
             newCapacity += quantity;
             updates.cardCapacity = newCapacity;
+        } else if (item.id === 2002) {
+            newPieces += quantity;
+            updates['equipment.pieces'] = newPieces;
         }
         
         t.update(userDocRef, updates);
-        return { newCoins: updates.coins, newBooks, newCapacity };
+        return { newCoins: updates.coins, newBooks, newCapacity, newPieces };
     });
 };
 
