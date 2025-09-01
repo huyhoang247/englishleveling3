@@ -1,13 +1,13 @@
 // --- START OF FILE src/home/auction/auction-house-ui.tsx ---
 
 import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
-import { useAnimateValue } from '../../ui/useAnimateValue';
-import { uiAssets, equipmentUiAssets } from '../../game-assets';
-import CoinDisplay from '../../ui/display/coin-display';
-import GemDisplay from '../../ui/display/gem-display';
-import { OwnedItem, getRarityColor, getRarityTextColor, getRarityGradient } from '../equipment/equipment-ui';
-import { getItemDefinition, ItemDefinition } from '../equipment/item-database';
-import { createAuctionListing, placeBidOnAuction, claimAuctionResult } from '../../gameDataService';
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
+import { uiAssets, equipmentUiAssets } from '../../game-assets.ts';
+import CoinDisplay from '../../ui/display/coin-display.tsx';
+import GemDisplay from '../../ui/display/gem-display.tsx';
+import { OwnedItem, getRarityColor, getRarityTextColor, getRarityGradient } from '../equipment/equipment-ui.tsx';
+import { getItemDefinition, ItemDefinition } from '../equipment/item-database.ts';
+import { createAuctionListing, placeBidOnAuction, claimAuctionResult } from '../../gameDataService.ts';
 import { User } from 'firebase/auth';
 
 // --- Interfaces (Cần khớp với gameDataService) ---
