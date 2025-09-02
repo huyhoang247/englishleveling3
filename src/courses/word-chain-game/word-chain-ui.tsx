@@ -13,6 +13,7 @@ import { WordChainProvider, useWordChain } from './word-chain-context.tsx';
 // --- Component Imports ---
 import FlashcardDetailModal from '../../story/flashcard.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
+import HomeButton from '../../ui/components/home-button.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 
 // --- Icons (Giữ nguyên) ---
@@ -21,20 +22,9 @@ const UserIcon = () => (
         <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
     </svg>
 );
-const BotIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-        <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-    </svg>
-);
 const SendIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-    </svg>
-);
-const HomeIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
-        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
     </svg>
 );
 
@@ -64,8 +54,8 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
         return wordChain.map((entry, index) => {
             const isPlayer = entry.author === 'player';
             return (
-                <div key={index} className={`flex items-end gap-2 w-full ${isPlayer ? 'justify-end' : 'justify-start'}`}>
-                    {!isPlayer && <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500"><BotIcon /></div>}
+                <div key={index} className={`flex items-start gap-2 w-full ${isPlayer ? 'justify-end' : 'justify-start'}`}>
+                    {!isPlayer && <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/bot-icon.webp" alt="Bot" className="flex-shrink-0 w-8 h-8 rounded-full object-cover" />}
                     <button
                         onClick={() => handleWordClick(entry.word)}
                         className={`max-w-[70%] rounded-2xl px-4 py-2 text-lg text-left relative shadow-md transition-all duration-300 transform animate-pop-in hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 ${isPlayer
@@ -87,10 +77,7 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
                 <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
                     <div className="flex h-14 items-center justify-between px-4">
                         <div className="flex justify-start">
-                            <button onClick={onGoBack} className="flex items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors" aria-label="Home">
-                                <HomeIcon />
-                                <span>Home</span>
-                            </button>
+                           <HomeButton onClick={onGoBack} label="Home" />
                         </div>
                         <div className="flex items-center gap-2">
                             <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
@@ -102,8 +89,8 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
                 <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 space-y-4">
                     {renderChain()}
                     {gameState === 'aiTurn' && (
-                        <div className="flex items-end gap-2 justify-start animate-pop-in">
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500"><BotIcon /></div>
+                        <div className="flex items-start gap-2 justify-start animate-pop-in">
+                            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/bot-icon.webp" alt="Bot typing" className="flex-shrink-0 w-8 h-8 rounded-full object-cover" />
                             <div className="max-w-[70%] rounded-2xl px-4 py-2 text-lg bg-white rounded-bl-lg shadow-md flex items-center gap-1">
                                 <span className="animate-pulse-dot bg-gray-400"></span>
                                 <span className="animate-pulse-dot bg-gray-400 delay-150"></span>
