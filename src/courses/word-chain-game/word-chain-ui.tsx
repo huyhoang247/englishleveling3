@@ -13,7 +13,7 @@ import { WordChainProvider, useWordChain } from './word-chain-context.tsx';
 // --- Component Imports ---
 import FlashcardDetailModal from '../../story/flashcard.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import HomeButton from '../../ui/components/home-button.tsx';
+import HomeButton from '../../ui/home-button.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 
 // --- Icons (Giữ nguyên) ---
