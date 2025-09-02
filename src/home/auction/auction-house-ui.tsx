@@ -145,16 +145,16 @@ const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedIt
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
             <div className="bg-black/20 rounded-lg p-4 flex flex-col">
-                <h3 className="text-lg font-bold text-cyan-300 mb-3">Chọn vật phẩm để bán</h3>
+                <h3 className="text-lg font-bold text-cyan-300 mb-3">Storage</h3>
                 <div className="flex-grow overflow-y-auto pr-2">
                     {unequippedItems.length > 0 ? (
-                        <div className="grid grid-cols-4 lg:grid-cols-5 gap-2">
+                        <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
                             {unequippedItems.map(item => {
                                 const itemDef = getItemDefinition(item.itemId);
                                 return itemDef ? (
                                     <div key={item.id} onClick={() => setSelectedItem(item)} className={`relative aspect-square rounded-lg border-2 bg-slate-900/50 flex items-center justify-center cursor-pointer transition-all ${selectedItem?.id === item.id ? `scale-110 shadow-lg ${getRarityColor(itemDef.rarity).replace('border-','shadow-')}` : 'hover:scale-105'} ${getRarityColor(itemDef.rarity)}`}>
                                         <img src={itemDef.icon} alt={itemDef.name} className="w-3/4 h-3/4 object-contain" />
-                                        <span className="absolute top-0.5 right-0.5 text-[10px] bg-black/70 px-1 rounded-sm font-bold">Lv.{item.level}</span>
+                                        <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">Lv.{item.level}</span>
                                     </div>
                                 ) : null;
                             })}
