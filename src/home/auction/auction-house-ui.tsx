@@ -240,10 +240,15 @@ const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedIt
                     isProcessing={isProcessing}
                 />
             )}
-            <h3 className="text-lg font-bold text-cyan-300 mb-4">Kho đồ của bạn (Chọn vật phẩm để bán)</h3>
+            <div className="flex justify-between items-center mb-4 flex-shrink-0">
+                <div className="flex items-baseline gap-2">
+                    <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
+                    <span className="text-sm font-semibold text-slate-300">{unequippedItems.length} items</span>
+                </div>
+            </div>
             <div className="flex-grow overflow-y-auto pr-2">
                 {unequippedItems.length > 0 ? (
-                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
+                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
                         {unequippedItems.map(item => {
                             const itemDef = getItemDefinition(item.itemId);
                             if (!itemDef) return null;
@@ -371,6 +376,7 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50">
+            <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); }`}</style>
             {isLoading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-[101]"><div className="text-white text-xl animate-pulse">Đang xử lý...</div></div>}
             
             <div className="w-full h-full bg-gradient-to-br from-slate-900 to-[#110f21] flex flex-col">
