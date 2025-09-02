@@ -234,9 +234,6 @@ const AuctionHeader: FC<AuctionHeaderProps> = ({ onClose, userCoins, userGems, a
                 <div className="flex items-center gap-3">
                     <GemDisplay displayedGems={animatedGems} />
                     <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
-                    <button onClick={onClose} className="w-9 h-9 rounded-full bg-slate-800 hover:bg-red-500/80 flex items-center justify-center transition-colors ml-2">
-                        <CloseIcon className="w-5 h-5"/>
-                    </button>
                 </div>
             </div>
              {/* Tab bar cho màn hình nhỏ */}
