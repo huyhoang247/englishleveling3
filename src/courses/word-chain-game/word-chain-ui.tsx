@@ -1,4 +1,4 @@
-// --- START OF FILE: src/word-chain.tsx (Refactored) ---
+// --- START OF FILE: src/word-chain.tsx (Refactored & Fixed Alignment) ---
 
 import { useState, useEffect, Fragment } from 'react';
 import { auth } from '../../firebase';
@@ -54,7 +54,7 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
         return wordChain.map((entry, index) => {
             const isPlayer = entry.author === 'player';
             return (
-                <div key={index} className={`flex items-start gap-2 w-full ${isPlayer ? 'justify-end' : 'justify-start'}`}>
+                <div key={index} className={`flex items-center gap-2 w-full ${isPlayer ? 'justify-end' : 'justify-start'}`}>
                     {!isPlayer && <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/bot-icon.webp" alt="Bot" className="flex-shrink-0 w-8 h-8 rounded-full object-cover" />}
                     <button
                         onClick={() => handleWordClick(entry.word)}
@@ -89,7 +89,7 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
                 <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 space-y-4">
                     {renderChain()}
                     {gameState === 'aiTurn' && (
-                        <div className="flex items-start gap-2 justify-start animate-pop-in">
+                        <div className="flex items-center gap-2 justify-start animate-pop-in">
                             <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/bot-icon.webp" alt="Bot typing" className="flex-shrink-0 w-8 h-8 rounded-full object-cover" />
                             <div className="max-w-[70%] rounded-2xl px-4 py-2 text-lg bg-white rounded-bl-lg shadow-md flex items-center gap-1">
                                 <span className="animate-pulse-dot bg-gray-400"></span>
