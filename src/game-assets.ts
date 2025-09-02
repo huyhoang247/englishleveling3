@@ -18,6 +18,7 @@ export const uiAssets = {
   missionIcon: require("./assets/images/equipment-icon.webp"),
   closeIcon: require("./assets/images/close-icon.webp"),
   towerIcon: require("./assets/images/tower-icon.webp"),
+  pvpIcon: require("./assets/images/pvp-icon.webp"), // <--- THÊM MỚI ICON PVP
   gemIcon: require("./assets/images/gems.webp"),
   vocabularyChestIcon: require("./assets/images/vocabulary-chest.webp"),
   skillIcon: require("./assets/images/skill-icon.webp"),
