@@ -7,9 +7,10 @@ import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 const AVAILABLE_VOICES = {
     'Matilda': '', // Giọng mặc định không có tiền tố thư mục
     'Arabella': 'voice1/',
+    'Hope': 'voice2/', // Thêm giọng Hope. Sử dụng 'voice2/' để đảm bảo mỗi giọng có một đường dẫn file riêng biệt, tuân thủ yêu cầu "thiết kế logic".
     // Thêm các giọng đọc khác ở đây trong tương lai, ví dụ:
-    // 'James': 'voice2/',
-    // 'Sophia': 'voice3/',
+    // 'James': 'voice3/',
+    // 'Sophia': 'voice4/',
 };
 
 // Định nghĩa cấu trúc cho một đối tượng câu hỏi audio.
