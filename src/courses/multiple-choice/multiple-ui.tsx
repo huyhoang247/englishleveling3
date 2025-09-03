@@ -204,16 +204,14 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                     )}
                     {/* --- END: MODIFIED BLOCK --- */}
                     
-                    {currentAudioUrl ? (
-                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex items-center justify-center min-h-[140px]">
-                            <p className="text-white/80 text-sm font-medium">Nghe và chọn đáp án đúng</p>
-                        </div>
-                    ) : (
-                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
-                            <h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>
-                            {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
-                        </div>
-                    )}
+                    {/* --- START: REFACTORED BLOCK --- */}
+                    {/* Hợp nhất logic hiển thị câu hỏi để xử lý mọi trường hợp (chỉ text, text + audio, chỉ audio) */}
+                    <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
+                        <h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>
+                        {/* Chỉ hiển thị dịch nghĩa nếu nó tồn tại trong dữ liệu câu hỏi */}
+                        {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
+                    </div>
+                    {/* --- END: REFACTORED BLOCK --- */}
                   </div>
                 </div>
                 <div className="p-6">
