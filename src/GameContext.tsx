@@ -52,7 +52,8 @@ interface IGameContext {
     isBaseBuildingOpen: boolean;
     isSkillScreenOpen: boolean;
     isEquipmentOpen: boolean;
-    isAuctionHouseOpen: boolean; // THÊM MỚI
+    isAuctionHouseOpen: boolean;
+    isCheckInOpen: boolean; // THÊM MỚI
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
@@ -87,7 +88,8 @@ interface IGameContext {
     toggleUpgradeScreen: () => void;
     toggleSkillScreen: () => void;
     toggleEquipmentScreen: () => void;
-    toggleAuctionHouse: () => void; // THÊM MỚI
+    toggleAuctionHouse: () => void;
+    toggleCheckIn: () => void; // THÊM MỚI
     toggleBaseBuilding: () => void;
     setCoins: React.Dispatch<React.SetStateAction<number>>; // For direct updates from components
 }
@@ -140,7 +142,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [isBaseBuildingOpen, setIsBaseBuildingOpen] = useState(false);
   const [isSkillScreenOpen, setIsSkillScreenOpen] = useState(false);
   const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
-  const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false); // THÊM MỚI
+  const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false);
+  const [isCheckInOpen, setIsCheckInOpen] = useState(false); // THÊM MỚI
   
   // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
@@ -259,7 +262,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
           const newState = !prev;
           if (newState) {
               hideNavBar();
-              [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen, setIsAuctionHouseOpen ].forEach(s => { if (s !== setter) s(false); });
+              [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen, setIsAuctionHouseOpen, setIsCheckInOpen ].forEach(s => { if (s !== setter) s(false); });
           } else { showNavBar(); }
           return newState;
       });
@@ -304,7 +307,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const toggleUpgradeScreen = createToggleFunction(setIsUpgradeScreenOpen);
   const toggleSkillScreen = createToggleFunction(setIsSkillScreenOpen);
   const toggleEquipmentScreen = createToggleFunction(setIsEquipmentOpen);
-  const toggleAuctionHouse = createToggleFunction(setIsAuctionHouseOpen); // THÊM MỚI
+  const toggleAuctionHouse = createToggleFunction(setIsAuctionHouseOpen);
+  const toggleCheckIn = createToggleFunction(setIsCheckInOpen); // THÊM MỚI
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
   
   const handleSkillScreenClose = (dataUpdated: boolean) => {
@@ -347,7 +351,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     }
   };
 
-  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen; // CẬP NHẬT
+  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen; // CẬP NHẬT
   const isLoading = isLoadingUserData || !assetsLoaded;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
@@ -356,7 +360,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, equipmentPieces, ownedItems, equippedItems,
     isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
-    isAuctionHouseOpen, // CẬP NHẬT
+    isAuctionHouseOpen,
+    isCheckInOpen, // CẬP NHẬT
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, handleStatsUpdate,
     handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
@@ -364,7 +369,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     updateUserCurrency,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
-    toggleAuctionHouse, // CẬP NHẬT
+    toggleAuctionHouse,
+    toggleCheckIn, // CẬP NHẬT
     toggleBaseBuilding, setCoins
   };
 
