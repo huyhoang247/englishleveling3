@@ -176,8 +176,8 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
 
                   {/* Icon container with smooth transition */}
                   <div
-                    className={`p-2 rounded-lg transition-all duration-300 ease-in-out transform
-                      ${isActive ? `bg-gray-500 bg-opacity-50 shadow-lg` : 'bg-transparent'}`} // Apply gray, semi-transparent, slightly rounded rectangle background if active
+                    className={`p-2 rounded-full transition-all duration-300 ease-in-out transform
+                      ${isActive ? `bg-gray-500 bg-opacity-30 shadow-lg` : 'bg-transparent'}`} // Apply gray, semi-transparent circular background if active
                   >
                     <Icon
                       size={20}
