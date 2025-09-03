@@ -2,7 +2,7 @@
 
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import { QuizProvider, useQuiz } from './multiple-context.tsx';
-import BackButton from '../../ui/components/back-button.tsx';
+import BackButton from '../../ui/back-button.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
