@@ -67,31 +67,36 @@ export const generateAudioUrlsForWord = (word: string): { [voiceName: string]: s
 };
 
 /**
- * TẠO MỚI: Hàm tạo URL audio cho các câu exam (Practice 5).
- * Logic thư mục và đường dẫn khác với audio từ vựng.
+ * TẠO MỚI: Tạo URL audio cho một câu exam dựa trên chỉ số của nó.
+ * Hàm này có logic thư mục và đường dẫn riêng biệt cho audio của exam.
  *
- * @param sentenceIndex - Index (dựa trên 1) của câu trong danh sách `exampleData`.
- * @returns Một object chứa URL audio cho giọng đọc exam.
+ * @param sentenceIndex - Chỉ số (index) của câu trong danh sách `exampleData`.
+ * @returns Một object chứa URL audio cho giọng đọc exam, hoặc null nếu index không hợp lệ.
  */
-export const generateAudioUrlsForExam = (sentenceIndex: number): { [voiceName: string]: string } | null => {
-    // Giả định sentenceIndex là 1-based, chuyển về 0-based để tính toán
-    const index = sentenceIndex - 1;
-
-    let audioDirectory: string;
-    if (index >= 0 && index < 1000) { audioDirectory = 'audio1'; }
-    else if (index >= 1000 && index < 2000) { audioDirectory = 'audio2'; }
-    else if (index >= 2000 && index < 3000) { audioDirectory = 'audio3'; }
-    else {
-        // console.warn(`Sentence index ${sentenceIndex} is out of the supported range for exam audio.`);
-        return null; // Nằm ngoài phạm vi audio được hỗ trợ
+export const generateAudioUrlsForExamSentence = (sentenceIndex: number): { [voiceName: string]: string } | null => {
+    if (sentenceIndex < 0) {
+        console.warn(`Invalid sentenceIndex "${sentenceIndex}". Cannot generate audio URL.`);
+        return null;
     }
 
-    const audioNumber = sentenceIndex.toString().padStart(3, '0');
-    const path = 'exam/voice1/'; // Tiền tố thư mục cho audio exam
-    const voiceName = 'Matilda'; // Giọng đọc cho exam
+    let audioDirectory: string;
+    // Điều kiện audio cho exam như yêu cầu
+    if (sentenceIndex < 1000) { audioDirectory = 'audio1'; }
+    else if (sentenceIndex < 2000) { audioDirectory = 'audio2'; }
+    else if (sentenceIndex < 3000) { audioDirectory = 'audio3'; }
+    else {
+        // Xử lý các trường hợp ngoài phạm vi nếu cần
+        audioDirectory = 'audio_default_exam';
+        console.warn(`Sentence at index ${sentenceIndex} is in an unhandled audio directory range for exam.`);
+    }
 
+    // Tiền tố thư mục cho exam audio
+    const pathPrefix = 'exam/voice1/';
+    const audioNumber = (sentenceIndex + 1).toString().padStart(3, '0');
+
+    // Chỉ có một giọng 'Matilda' cho exam audio theo yêu cầu
     const generatedAudioUrls: { [voiceName: string]: string } = {
-        [voiceName]: `https://raw.githubusercontent.com/englishleveling46/Flashcard/main/${path}${audioDirectory}/${audioNumber}.mp3`
+        'Matilda': `https://raw.githubusercontent.com/englishleveling46/Flashcard/main/${pathPrefix}${audioDirectory}/${audioNumber}.mp3`
     };
 
     return generatedAudioUrls;
