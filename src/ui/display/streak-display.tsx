@@ -13,23 +13,21 @@ const STREAK_ICON_URL = 'https://raw.githubusercontent.com/huyhoang247/englishle
 
 // StreakDisplay component - Frosty Crystal Theme (Trắng Tuyết)
 const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimating }) => (
-  // Đã loại bỏ background gradient (bg-gradient-to-br from-white to-sky-100) và shadow (shadow-lg)
-  // Giữ lại border để định hình component
-  <div className="rounded-lg p-0.5 flex items-center justify-center border border-sky-200 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+  // Sử dụng 'gap-x-0.5' để tạo một khoảng cách nhỏ và nhất quán giữa icon và chữ số
+  <div className="rounded-lg p-0.5 flex items-center justify-center border border-sky-200/50 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer gap-x-0.5">
     <style jsx>{`
-      /* Animation for the streak number */
+      /* Animation for the streak number - điều chỉnh lại để hợp với chữ trắng */
       @keyframes highlight-change {
         0% {
-          /* Chữ sẽ đậm lên thành màu xanh thẫm */
-          color: #0c4a6e; /* Tailwind's sky-900 */
-          /* Hiệu ứng phát sáng màu xanh băng giá */
-          text-shadow: 0 0 7px rgba(56, 189, 248, 0.7); /* Sky-blue frosty glow */
+          /* Chữ sẽ phát sáng màu trắng băng giá */
+          color: #ffffff;
+          text-shadow: 0 0 8px rgba(56, 189, 248, 0.9), 0px 1px 3px rgba(0, 0, 0, 0.6);
           transform: scale(1.15);
         }
         100% {
-          /* Trở về màu chữ mặc định */
-          color: #075985; /* Tailwind's sky-800 */
-          text-shadow: none;
+          /* Trở về màu chữ mặc định với shadow cơ bản */
+          color: #ffffff;
+          text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.6);
           transform: scale(1);
         }
       }
@@ -46,29 +44,28 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
         animation: pulse-fast 1.3s infinite;
       }
 
-      /* Gentle "pop" animation for the streak icon, now smoother */
+      /* Gentle "pop" animation for the streak icon */
       @keyframes icon-pop {
         0% {
           transform: scale(1);
         }
         50% {
-          transform: scale(1.15); /* Giảm độ nảy xuống một chút */
+          transform: scale(1.15);
         }
         100% {
           transform: scale(1);
         }
       }
       .is-icon-animating {
-        /* Kéo dài thời gian và dùng ease-out để animation mượt hơn, bớt dứt khoát */
         animation: icon-pop 0.6s ease-out;
       }
     `}</style>
     
     {/* Hiệu ứng "shine" trong suốt như một lớp băng mỏng lướt qua */}
-    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/60 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
     
-    <div className="relative flex items-center justify-center mr-0.5">
-      {/* Use the single icon and apply animation when isAnimating is true */}
+    {/* Bỏ margin để 'gap' trong div cha xử lý khoảng cách */}
+    <div className="relative flex items-center justify-center">
       <img 
         src={STREAK_ICON_URL} 
         alt="Streak Icon" 
@@ -76,8 +73,11 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
       />
     </div>
     
-    {/* Màu chữ là màu xanh đậm, font siêu đậm để nổi bật trên nền trắng */}
-    <div className={`font-extrabold text-sky-800 text-xs tracking-wide streak-counter ml-1 mr-1 ${isAnimating ? 'is-animating' : ''}`}>
+    {/* Chữ số màu trắng, font siêu đậm, có text-shadow để dễ đọc */}
+    <div 
+      className={`font-extrabold text-white text-xs tracking-wide streak-counter ${isAnimating ? 'is-animating' : ''}`}
+      style={{ textShadow: '0px 1px 3px rgba(0, 0, 0, 0.6)' }}
+    >
       {displayedStreak}
     </div>
     
