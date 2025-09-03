@@ -13,8 +13,9 @@ const STREAK_ICON_URL = 'https://raw.githubusercontent.com/huyhoang247/englishle
 
 // StreakDisplay component - Frosty Crystal Theme (Trắng Tuyết)
 const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimating }) => (
-  // Nền gradient từ trắng tinh sang xanh da trời rất nhạt, viền xanh nhạt
-  <div className="bg-gradient-to-br from-white to-sky-100 rounded-lg p-0.5 flex items-center justify-center shadow-lg border border-sky-200 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+  // Đã loại bỏ background gradient (bg-gradient-to-br from-white to-sky-100) và shadow (shadow-lg)
+  // Giữ lại border để định hình component
+  <div className="rounded-lg p-0.5 flex items-center justify-center border border-sky-200 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
     <style jsx>{`
       /* Animation for the streak number */
       @keyframes highlight-change {
