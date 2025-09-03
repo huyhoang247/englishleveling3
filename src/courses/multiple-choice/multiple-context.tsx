@@ -1,4 +1,4 @@
-// --- START OF FILE multiple-context.tsx ---
+// --- START OF FILE: multiple-context.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { db, auth } from '../../firebase.js';
@@ -7,7 +7,7 @@ import quizData from './multiple-data.ts';
 import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
 import { exampleData } from '../../voca-data/example-data.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
-import { generateAudioQuizQuestions, generateAudioExamQuestions } from '../../voca-data/audio-quiz-generator.ts';
+import { generateAudioQuizQuestions, generateAudioUrlsForExam } from '../../voca-data/audio-quiz-generator.ts';
 
 // --- CÁC HÀM TIỆN ÍCH VÀ INTERFACE ---
 const shuffleArray = (array: any[]) => {
@@ -182,11 +182,43 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
                   return [];
               });
               remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
+          } else if (practiceBaseId === 5) {
+              const userVocabSet = new Set(vocabList.map(v => v.toLowerCase()));
+              
+              allPossibleQuestions = exampleData.flatMap((sentence, index) => {
+                  // Tìm từ vựng của người dùng có trong câu này
+                  const wordsInSentence = sentence.english.toLowerCase().match(/\b(\w+)\b/g) || [];
+                  const matchedVocab = wordsInSentence.find(word => userVocabSet.has(word));
+
+                  if (matchedVocab) {
+                      const audioUrls = generateAudioUrlsForExam(index + 1); // index+1 vì id là 1-based
+                      if (!audioUrls) return []; // Bỏ qua nếu không có audio
+
+                      const wordRegex = new RegExp(`\\b${matchedVocab}\\b`, 'i');
+                      const questionText = sentence.english.replace(wordRegex, '___');
+                      
+                      const incorrectOptions: string[] = [];
+                      while (incorrectOptions.length < 3) {
+                          const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)].toLowerCase();
+                          if (randomWord !== matchedVocab && !incorrectOptions.includes(randomWord)) {
+                              incorrectOptions.push(randomWord);
+                          }
+                      }
+
+                      return [{
+                          question: questionText,
+                          vietnamese: sentence.vietnamese,
+                          audioUrls: audioUrls,
+                          options: [matchedVocab, ...incorrectOptions],
+                          correctAnswer: matchedVocab,
+                          word: matchedVocab
+                      }];
+                  }
+                  return [];
+              });
+              remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
           } else if (practiceBaseId === 4) {
               allPossibleQuestions = generateAudioQuizQuestions(vocabList);
-              remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
-          } else if (practiceBaseId === 5) {
-              allPossibleQuestions = generateAudioExamQuestions(vocabList);
               remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
           } else { // practiceBaseId === 1
               allPossibleQuestions = quizData.filter(question =>
@@ -351,4 +383,4 @@ export const useQuiz = (): QuizContextType & { showConfetti: boolean } => {
   }
   return context as QuizContextType & { showConfetti: boolean };
 };
-// --- END OF FILE multiple-context.tsx ---
+// --- END OF FILE: multiple-context.tsx ---
