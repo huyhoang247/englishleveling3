@@ -7,7 +7,7 @@ import { exampleData } from '../voca-data/example-data.ts';
 const AVAILABLE_VOCAB_VOICES = {
     'Matilda': '', // Giọng mặc định không có tiền tố thư mục
     'Arabella': 'voice1/',
-    'Hope': 'voice2/', // Thêm giọng Hope. Sử dụng 'voice2/' để đảm bảo mỗi giọng có một đường dẫn file riêng biệt, tuân thủ yêu cầu "thiết kế logic".
+    'Hope': 'voice2/',
 };
 
 const AVAILABLE_EXAM_VOICES = {
@@ -18,7 +18,7 @@ const AVAILABLE_EXAM_VOICES = {
 // Định nghĩa cấu trúc cho một đối tượng câu hỏi audio.
 export interface AudioQuizQuestion {
   question: string;
-  audioUrls: { [voiceName: string]: string }; // Kiểu [key: string]: string
+  audioUrls: { [voiceName: string]: string };
   options: string[];
   correctAnswer: string;
   word: string;
@@ -64,7 +64,6 @@ export const generateAudioUrls = (word: string, type: 'vocab' | 'exam'): { [voic
         else if (index < 3000) { audioDirectory = 'audio3'; }
         else { audioDirectory = 'audio_default'; }
     } else {
-        // Fallback just in case
         audioDirectory = 'audio_default';
     }
     
@@ -78,6 +77,16 @@ export const generateAudioUrls = (word: string, type: 'vocab' | 'exam'): { [voic
     }
 
     return generatedAudioUrls;
+};
+
+// <<< THÊM VÀO ĐÂY: Hàm tương thích ngược để sửa lỗi import >>>
+/**
+ * @deprecated Sử dụng generateAudioUrls(word, 'vocab') thay thế.
+ * Hàm này được giữ lại để đảm bảo các component khác không bị lỗi import khi refactor.
+ */
+export const generateAudioUrlsForWord = (word: string): { [voiceName: string]: string } | null => {
+    // Luôn gọi hàm mới với type là 'vocab' để đảm bảo hoạt động như cũ
+    return generateAudioUrls(word, 'vocab');
 };
 
 
@@ -96,6 +105,7 @@ export const generateAudioQuizQuestions = (userVocabulary: string[]): AudioQuizQ
         .filter(item => userVocabSet.has(item.word.toLowerCase()));
 
     const allPossibleQuestions = potentialQuestions.map(item => {
+        // Sử dụng hàm mới để linh hoạt hơn
         const generatedAudioUrls = generateAudioUrls(item.word, 'vocab');
         
         if (!generatedAudioUrls) {
@@ -118,9 +128,9 @@ export const generateAudioQuizQuestions = (userVocabulary: string[]): AudioQuizQ
             options: [correctWord, ...incorrectOptions],
             correctAnswer: correctWord,
             word: item.word,
-            vietnamese: null // Câu hỏi audio không hiển thị nghĩa tiếng Việt.
+            vietnamese: null
         };
-    }).filter((q): q is AudioQuizQuestion => q !== null); // Lọc bỏ các giá trị null
+    }).filter((q): q is AudioQuizQuestion => q !== null);
 
     return allPossibleQuestions;
 };
@@ -142,9 +152,8 @@ export const generateAudioExamQuestions = (userVocabulary: string[]): AudioQuizQ
         if (matchingSentences.length > 0) {
             const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
             
-            // Gọi hàm helper để tạo URL audio với type 'exam'
             const generatedAudioUrls = generateAudioUrls(word, 'exam');
-            if (!generatedAudioUrls) return []; // Bỏ qua nếu không tạo được audio
+            if (!generatedAudioUrls) return [];
 
             const questionText = randomSentence.english.replace(wordRegex, '___');
             const lowerCaseCorrectWord = word.toLowerCase();
