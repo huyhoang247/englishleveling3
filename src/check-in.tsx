@@ -79,19 +79,14 @@ const DailyCheckIn = () => {
   ];
 
   const claimReward = (day) => {
-    // Check if the day is the current day and hasn't been claimed yet
     if (day === currentDay && !claimedDays.includes(day)) {
       setAnimatingReward(dailyRewards.find(reward => reward.day === day));
       
-      // MODIFIED: Update state immediately, then show animation
       const newClaimedDays = [...claimedDays, day];
       setClaimedDays(newClaimedDays);
       setLoginStreak(newClaimedDays.length);
       
       setShowRewardAnimation(true);
-
-      // REMOVED: The setTimeout that automatically closed the animation overlay.
-      // The user will now close it manually.
     }
   };
 
@@ -112,28 +107,20 @@ const DailyCheckIn = () => {
     setLoginStreak(0);
   };
 
-  // Toggle test controls visibility
   const toggleTestControls = () => {
     setShowTestControls(!showTestControls);
   };
 
-  // REMOVED: Sparkle animation effect via useEffect is no longer needed.
-
   return (
     <div className="bg-gradient-to-br from-slate-900 via-violet-900 to-slate-900 shadow-2xl rounded-xl max-w-md mx-auto overflow-hidden relative">
-      {/* REMOVED: Background sparkle effects have been removed as per the request. */}
-
+      
       {/* Enhanced Progress info - REDESIGNED WITH WATER LEVEL */}
       <div className="flex justify-center mt-6 mb-6">
         <div className="bg-gradient-to-r from-slate-800/80 to-slate-800/50 backdrop-blur-sm rounded-full px-6 py-2 flex items-center gap-3 border border-slate-700 shadow-lg">
           <div className="flex items-center">
             <div className="relative w-16 h-16">
-              {/* Water level container */}
               <div className="w-16 h-16 relative overflow-hidden rounded-full border-2 border-slate-700">
-                {/* Water background */}
                 <div className="absolute inset-0 bg-slate-900"></div>
-
-                {/* Water fill animation */}
                 <div
                   className="water-fill absolute w-full bg-gradient-to-b from-cyan-400 to-blue-600 opacity-80"
                   style={{
@@ -144,14 +131,10 @@ const DailyCheckIn = () => {
                     transition: 'height 1s ease-out'
                   }}
                 >
-                  {/* Water wave effect */}
                   <div className="water-wave1"></div>
                   <div className="water-wave2"></div>
                 </div>
-
-                {/* Login streak number */}
                 <div className="absolute inset-0 flex items-center justify-center z-10">
-                  {/* MODIFIED: Added opacity-70 class */}
                   <span className="text-2xl font-bold text-white opacity-70">{loginStreak}</span>
                 </div>
               </div>
@@ -164,7 +147,6 @@ const DailyCheckIn = () => {
               Ngày {currentDay}
             </div>
             <div className="mt-1 flex items-center">
-              {/* Progress dots reflect current day */}
               {[...Array(7)].map((_, i) => (
                 <div
                   key={i}
@@ -182,46 +164,34 @@ const DailyCheckIn = () => {
 
       {/* Calendar bar with glowing current day */}
       <div className="px-6 mb-6">
-        {/* Enhanced day indicators */}
         <div className="flex justify-between">
           {dailyRewards.map(reward => {
-            // Determine the status and styles for each day indicator
             const isPast = reward.day < currentDay;
             const isCurrent = reward.day === currentDay;
             const isClaimed = claimedDays.includes(reward.day);
-            const isFuture = reward.day > currentDay;
-
-            // Base classes
+            
             let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 relative";
 
-            // Apply status-specific styles
             if (isPast && isClaimed) {
               dayClasses += " bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md";
             } else if (isPast && !isClaimed) {
               dayClasses += " bg-slate-700 text-slate-400 opacity-70";
             } else if (isCurrent) {
               dayClasses += " bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg";
-            } else { // isFuture or past but not claimed
+            } else {
               dayClasses += " bg-slate-700 text-slate-400";
             }
 
             return (
               <div key={reward.day} className="relative group">
-                {/* Day indicator circle */}
                 <div className={dayClasses}>
-                  {/* Day number */}
                   <span className="font-bold z-10">{reward.day}</span>
-
-                  {/* Decorative elements */}
                   {isCurrent && (
                     <>
-                      {/* Pulsing ring effect for current day */}
                       <div className="absolute inset-0 rounded-full animate-ping opacity-30 bg-indigo-400"></div>
                       <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-400 to-indigo-500 opacity-30 blur-sm"></div>
                     </>
                   )}
-
-                  {/* Check mark for claimed days */}
                   {isClaimed && (
                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900 flex items-center justify-center shadow-lg z-20">
                       <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -230,8 +200,6 @@ const DailyCheckIn = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Tooltip on hover */}
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30">
                   <div className="bg-slate-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
                     {reward.name}
@@ -254,7 +222,6 @@ const DailyCheckIn = () => {
                 claimedDays.includes(reward.day) ? 'opacity-60' : 'hover:transform hover:scale-[1.02]'
               }`}
             >
-              {/* Glowing border for current day */}
               {reward.day === currentDay && !claimedDays.includes(reward.day) && (
                 <div className="absolute inset-0 rounded-xl animate-pulse-slow"
                     style={{
@@ -263,7 +230,6 @@ const DailyCheckIn = () => {
                     }}>
                 </div>
               )}
-
               <div
                 className={`relative flex items-center gap-4 p-4 rounded-xl ${
                   reward.day === currentDay && !claimedDays.includes(reward.day)
@@ -271,12 +237,9 @@ const DailyCheckIn = () => {
                     : 'bg-slate-800'
                 }`}
               >
-                {/* Day indicator */}
                 <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg font-medium text-slate-300">
                   Ngày {reward.day}
                 </div>
-
-                {/* Reward icon */}
                 <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
                   reward.day === 7
                     ? 'bg-gradient-to-br from-purple-400 to-indigo-600'
@@ -294,14 +257,10 @@ const DailyCheckIn = () => {
                     <div className="w-8 h-8">{reward.icon}</div>
                   </div>
                 </div>
-
-                {/* Reward info */}
                 <div className="flex-1">
                   <h3 className="font-bold text-white">{reward.name}</h3>
                   <p className="text-slate-300 text-sm">x{reward.amount}</p>
                 </div>
-
-                {/* Claim button */}
                 <button
                   onClick={() => claimReward(reward.day)}
                   disabled={reward.day !== currentDay || claimedDays.includes(reward.day)}
@@ -319,8 +278,6 @@ const DailyCheckIn = () => {
                     ? 'Nhận Ngay'
                     : 'Chờ'}
                 </button>
-
-                {/* "Claimed" overlay */}
                 {claimedDays.includes(reward.day) && (
                   <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
                     <div className="bg-green-600 rounded-full p-2 transform rotate-12">
@@ -340,30 +297,23 @@ const DailyCheckIn = () => {
       <div className="mx-6 mb-6 relative overflow-hidden rounded-xl">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-indigo-500/20 to-purple-400/20 animate-pulse-slow"></div>
         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl transform translate-x-8 -translate-y-8"></div>
-
         <div className="relative p-5 bg-gradient-to-br from-slate-800/95 to-slate-900 backdrop-blur-sm border border-purple-500/30">
           <div className="absolute top-1 right-2">
             <div className="text-xs font-semibold text-slate-300 bg-slate-700 px-2 py-1 rounded">
               Còn {7 - currentDay} ngày
             </div>
           </div>
-
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-600 p-1 shadow-lg shadow-indigo-500/20">
                 <div className="w-full h-full bg-indigo-500/20 rounded-lg flex items-center justify-center">
-                   {/* Replaced Crown icon with SVG */}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="text-indigo-300 w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 6l-2 3H5l2-3-2-3h5l2-3 2 3h5l-2 3 2 3h-5l-2-3z"></path>
-                    <path d="M2 15l.9 1.8a6 6 0 0 0 8.2 8.2l1.8.9 1.8-.9a6 6 0 0 0 8.2-8.2L22 15"></path>
-                  </svg>
+                  <CrownIcon className="text-indigo-300 w-8 h-8"/>
                 </div>
               </div>
               <div className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-400 rounded-full text-slate-900 flex items-center justify-center font-bold text-xs">
                 7
               </div>
             </div>
-
             <div>
               <div className="text-sm text-indigo-300 font-semibold">PHẦN THƯỞNG ĐẶC BIỆT</div>
               <div className="text-white font-bold text-lg">Vũ Khí Thần Thánh</div>
@@ -385,7 +335,6 @@ const DailyCheckIn = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-
           {showTestControls && (
             <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 mb-4">
               <h3 className="text-white font-medium mb-3 text-sm flex items-center gap-2">
@@ -395,7 +344,6 @@ const DailyCheckIn = () => {
                 </svg>
                 Bảng Điều Khiển
               </h3>
-
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={goToPreviousDay}
@@ -426,7 +374,6 @@ const DailyCheckIn = () => {
                   Ngày Sau
                 </button>
               </div>
-
               <div className="mt-2 text-xs text-slate-400">
                 Ngày hiện tại: <span className="text-indigo-400 font-medium">{currentDay}</span> |
                 Đã nhận: <span className="text-green-400 font-medium">{claimedDays.length}</span> phần thưởng |
@@ -437,17 +384,15 @@ const DailyCheckIn = () => {
         </div>
       </div>
 
-      {/* MODIFIED: Reward animation overlay */}
+      {/* Reward animation overlay */}
       {showRewardAnimation && animatingReward && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50">
-          {/* ADDED: Subtle radial gradient background effect */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15)_0%,rgba(139,92,246,0)_70%)]"></div>
-
+          {/* REMOVED: The purple radial gradient background effect has been removed. */}
+          
           <div className="relative max-w-xs w-full bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-6 shadow-2xl animate-float border border-slate-700">
             <div className="absolute -top-20 left-1/2 transform -translate-x-1/2">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 p-1 shadow-lg shadow-indigo-500/50">
                 <div className="w-full h-full rounded-full bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
-                  {/* MODIFIED: Applied new animation to the icon wrapper */}
                   <div className="w-12 h-12 animate-reward-icon-pop">
                     {animatingReward?.icon}
                   </div>
@@ -460,8 +405,6 @@ const DailyCheckIn = () => {
               <div className="text-white text-xl font-bold mb-3">{animatingReward?.name}</div>
               <div className="text-indigo-200 text-3xl font-bold">x{animatingReward?.amount}</div>
               <div className="mt-6 text-sm text-slate-400">Phần thưởng đã được thêm vào kho đồ</div>
-
-              {/* ADDED: Confirmation button to close the overlay */}
               <button
                 onClick={() => setShowRewardAnimation(false)}
                 className="mt-6 w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-shadow duration-300"
@@ -470,8 +413,6 @@ const DailyCheckIn = () => {
               </button>
             </div>
           </div>
-
-          {/* REMOVED: Animated particles are no longer needed. */}
         </div>
       )}
 
@@ -481,24 +422,15 @@ const DailyCheckIn = () => {
           50% { transform: translateY(-10px); }
         }
 
-        /* ADDED: New keyframe animation for the reward icon */
         @keyframes reward-icon-pop {
             0% { transform: scale(0.8); opacity: 0.8; }
             50% { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.7));}
             100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 5px rgba(167, 139, 250, 0.5));}
         }
 
-        /* REMOVED: Particle animations are no longer needed */
-
         @keyframes pulse-slow {
           0%, 100% { opacity: 0.5; }
           50% { opacity: 1; }
-        }
-
-        @keyframes gradient-animation {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
         }
 
         @keyframes wave {
@@ -531,12 +463,9 @@ const DailyCheckIn = () => {
           animation: float 3s ease-in-out infinite;
         }
         
-        /* ADDED: Class for the new icon animation */
         .animate-reward-icon-pop {
             animation: reward-icon-pop 1.5s ease-in-out infinite;
         }
-
-        /* REMOVED: Particle animation classes are no longer needed */
 
         .drop-shadow-glow {
           filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.5));
