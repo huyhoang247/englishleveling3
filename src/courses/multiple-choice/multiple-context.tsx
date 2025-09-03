@@ -7,7 +7,7 @@ import quizData from './multiple-data.ts';
 import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
 import { exampleData } from '../../voca-data/example-data.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
-import { generateAudioQuizQuestions, generateAudioUrlsForExam } from '../../voca-data/audio-quiz-generator.ts';
+import { generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../../voca-data/audio-quiz-generator.ts';
 
 // --- CÁC HÀM TIỆN ÍCH VÀ INTERFACE ---
 const shuffleArray = (array: any[]) => {
@@ -182,43 +182,47 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
                   return [];
               });
               remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
+          } else if (practiceBaseId === 4) {
+              allPossibleQuestions = generateAudioQuizQuestions(vocabList);
+              remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
           } else if (practiceBaseId === 5) {
-              const userVocabSet = new Set(vocabList.map(v => v.toLowerCase()));
-              
-              allPossibleQuestions = exampleData.flatMap((sentence, index) => {
-                  // Tìm từ vựng của người dùng có trong câu này
-                  const wordsInSentence = sentence.english.toLowerCase().match(/\b(\w+)\b/g) || [];
-                  const matchedVocab = wordsInSentence.find(word => userVocabSet.has(word));
-
-                  if (matchedVocab) {
-                      const audioUrls = generateAudioUrlsForExam(index + 1); // index+1 vì id là 1-based
-                      if (!audioUrls) return []; // Bỏ qua nếu không có audio
-
-                      const wordRegex = new RegExp(`\\b${matchedVocab}\\b`, 'i');
-                      const questionText = sentence.english.replace(wordRegex, '___');
+              allPossibleQuestions = vocabList.flatMap(word => {
+                  const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
+                  // Tìm các câu ví dụ chứa từ vựng của người dùng
+                  const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
+                  if (matchingSentences.length > 0) {
+                      // Chọn ngẫu nhiên một câu
+                      const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
+                      // Tìm index của câu đó trong mảng gốc để tạo URL audio
+                      const sentenceIndex = exampleData.findIndex(ex => ex.english === randomSentence.english && ex.vietnamese === randomSentence.vietnamese);
                       
+                      if (sentenceIndex === -1) return []; // Bỏ qua nếu không tìm thấy câu (trường hợp hiếm)
+
+                      // Tạo URL audio cho câu
+                      const audioUrls = generateAudioUrlsForExamSentence(sentenceIndex);
+                      if (!audioUrls) return []; // Bỏ qua nếu không tạo được URL
+
+                      // Tạo các lựa chọn sai
                       const incorrectOptions: string[] = [];
+                      const lowerCaseCorrectWord = word.toLowerCase();
                       while (incorrectOptions.length < 3) {
-                          const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)].toLowerCase();
-                          if (randomWord !== matchedVocab && !incorrectOptions.includes(randomWord)) {
+                          const randomWord = defaultVocabulary[Math.floor(Math.random() * defaultVocabulary.length)];
+                          if (randomWord.toLowerCase() !== lowerCaseCorrectWord && !incorrectOptions.some(opt => opt.toLowerCase() === randomWord.toLowerCase())) {
                               incorrectOptions.push(randomWord);
                           }
                       }
-
-                      return [{
-                          question: questionText,
-                          vietnamese: sentence.vietnamese,
+                      // Trả về đối tượng câu hỏi. `question` là text chung cho câu hỏi nghe
+                      return [{ 
+                          question: "Nghe câu và điền từ còn thiếu:", 
+                          vietnamese: randomSentence.vietnamese,
                           audioUrls: audioUrls,
-                          options: [matchedVocab, ...incorrectOptions],
-                          correctAnswer: matchedVocab,
-                          word: matchedVocab
+                          options: [word.toLowerCase(), ...incorrectOptions.map(opt => opt.toLowerCase())], 
+                          correctAnswer: word.toLowerCase(), 
+                          word: word 
                       }];
                   }
                   return [];
               });
-              remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
-          } else if (practiceBaseId === 4) {
-              allPossibleQuestions = generateAudioQuizQuestions(vocabList);
               remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
           } else { // practiceBaseId === 1
               allPossibleQuestions = quizData.filter(question =>
