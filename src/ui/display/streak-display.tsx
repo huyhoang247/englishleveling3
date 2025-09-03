@@ -13,8 +13,8 @@ const STREAK_ICON_URL = 'https://raw.githubusercontent.com/huyhoang247/englishle
 
 // StreakDisplay component - Frosty Crystal Theme (Trắng Tuyết)
 const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimating }) => (
-  // Sử dụng 'gap-x-0.5' để tạo một khoảng cách nhỏ và nhất quán giữa icon và chữ số
-  <div className="rounded-lg p-0.5 flex items-center justify-center border border-sky-200/50 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer gap-x-0.5">
+  // Thay p-0.5 thành px-2 py-0.5 để thêm padding ngang
+  <div className="rounded-lg px-2 py-0.5 flex items-center justify-center border border-sky-200/50 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer gap-x-0.5">
     <style jsx>{`
       /* Animation for the streak number - điều chỉnh lại để hợp với chữ trắng */
       @keyframes highlight-change {
