@@ -42,21 +42,13 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
     {
       id: "quiz",
       label: "Trắc nghiệm",
-      icon: (props: { size: number; color: string; strokeWidth: number }) => (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
+      icon: (props: { size: number; color: string; strokeWidth: number }) => ( // Replaced SVG with an img tag
+        <img
+          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/course-icon.webp"
+          alt="Trắc nghiệm"
           width={props.size}
           height={props.size}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={props.color}
-          strokeWidth={props.strokeWidth}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-          <circle cx="12" cy="12" r="6" />
-        </svg>
+        />
       ),
       gradient: "from-green-500 to-teal-400"
     },
