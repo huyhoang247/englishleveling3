@@ -2,7 +2,7 @@
 
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import { QuizProvider, useQuiz } from './multiple-context.tsx';
-import BackButton from '../../ui/back-button.tsx';
+import BackButton from '../../ui/components/back-button.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
@@ -150,7 +150,9 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
       {showDetailPopup && <DetailPopup data={detailData} onClose={onCloseDetailPopup} />}
 
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
-        <BackButton onClick={onGoBack} label="" title="Quay lại" />
+        <div className="transform scale-90 origin-left">
+          <BackButton onClick={onGoBack} label="" title="Quay lại" />
+        </div>
         <div className="flex items-center gap-2 sm:gap-3">
           <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
           <MasteryDisplay masteryCount={masteryCount} />
