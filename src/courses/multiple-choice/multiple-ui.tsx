@@ -150,7 +150,7 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
       {showDetailPopup && <DetailPopup data={detailData} onClose={onCloseDetailPopup} />}
 
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
-        <div className="transform scale-80 origin-left">
+        <div className="transform scale-90 origin-left">
           <BackButton onClick={onGoBack} label="" title="Quay lại" />
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
