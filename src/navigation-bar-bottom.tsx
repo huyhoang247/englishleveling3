@@ -16,7 +16,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
   // Keep the isVisible state and toggle logic if needed for the story tab feature
   const [isVisible, setIsVisible] = useState(true);
 
-  // Define the tabs data with updated quiz icon and removed gradients
+  // Define the tabs data
   const tabs = [
     {
       id: "home",
@@ -37,23 +37,22 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
           <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
       ),
+      gradient: "from-purple-500 to-blue-500"
     },
     {
       id: "quiz",
       label: "Trắc nghiệm",
-      // Updated icon to use an <img> tag for the quiz tab
-      icon: (props: { size: number; isActive: boolean }) => (
+      icon: (props: { size: number; color: string; strokeWidth: number }) => (
         <img
           src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/course-icon.webp"
-          alt="Trắc nghiệm"
+          alt="Quiz Icon"
           width={props.size}
           height={props.size}
-          // Apply grayscale and lower opacity for inactive state for a cohesive look
-          className={`transition-all duration-300 ${
-            props.isActive ? "" : "grayscale opacity-70"
-          }`}
+          // Simulate inactive state by graying out the image
+          className={props.color === '#ffffff' ? '' : 'grayscale opacity-70'}
         />
       ),
+      gradient: "from-green-500 to-teal-400"
     },
     {
       id: "story",
@@ -74,6 +73,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
           <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
         </svg>
       ),
+      gradient: "from-amber-500 to-yellow-300"
     },
     {
       id: "game",
@@ -97,6 +97,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
           <rect x="2" y="6" width="20" height="12" rx="2" />
         </svg>
       ),
+      gradient: "from-red-500 to-orange-400"
     },
     {
       id: "profile",
@@ -117,10 +118,11 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
           <circle cx="12" cy="7" r="4" />
         </svg>
       ),
+      gradient: "from-indigo-500 to-purple-400"
     },
   ];
 
-  // Hàm xử lý ẩn/hiện thanh điều hướng
+  // Hàm xử lý ẩn/hiện thanh điều hướng (kept from original file)
   const toggleVisibility = () => {
     setIsVisible(!isVisible);
   };
@@ -156,42 +158,37 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
             return (
               <div key={tab.id} className="flex-1 relative flex justify-center items-center">
                 <button
-                  className="w-full h-14 flex flex-col items-center justify-center relative group"
+                  className="w-full flex flex-col items-center relative group justify-center"
                   // Call the onTabChange prop function when the button is clicked
                   onClick={() => {
-                    onTabChange(tab.id as 'home' | 'quiz' | 'story' | 'game' | 'profile'); // Notify the parent component
+                    onTabChange(tab.id); // Notify the parent component of the tab change
                     // When changing tab, if not 'story', ensure the navigation bar is visible
                     if (tab.id !== 'story') {
                       setIsVisible(true);
                     }
                   }}
                 >
-                  {/* NEW: Unified active state design */}
-                  {/* 1. A subtle, pill-shaped background for the active icon */}
+                  {/* Background glow effect, visible only when active */}
                   <div
-                    className={`absolute w-16 h-8 bg-gray-400 rounded-full transition-all duration-300 ease-in-out
-                      ${isActive ? 'opacity-10' : 'opacity-0 scale-50'}`}
-                  ></div>
-
-                  {/* 2. The icon itself, with special handling for the image-based quiz icon */}
-                  <div className="relative z-10">
-                    {tab.id === 'quiz' ? (
-                      <Icon size={26} isActive={isActive} />
-                    ) : (
-                      <Icon
-                        size={24}
-                        color={isActive ? "#ffffff" : "#9ca3af"} // White for active, gray for inactive
-                        strokeWidth={isActive ? 2.2 : 1.8} // Thicker, more elegant stroke for active
-                      />
-                    )}
-                  </div>
-                  
-                  {/* 3. A clean, animated indicator line above the active icon */}
-                  <div
-                    className={`absolute top-[6px] h-[3px] w-6 bg-cyan-400 rounded-full
-                      transition-all duration-300 ease-out
-                      ${isActive ? 'opacity-100' : 'opacity-0 -translate-y-2'}`}
+                    className={`absolute inset-0 bg-gradient-to-br ${tab.gradient} rounded-xl blur-sm
+                      transition-opacity duration-300 ease-in-out ${isActive ? 'opacity-15' : 'opacity-0'}`}
                   />
+
+                  {/* Icon container with smooth transition */}
+                  <div
+                    className={`p-2 rounded-lg transition-all duration-300 ease-in-out transform
+                      ${isActive ? `bg-gray-500 bg-opacity-50 shadow-lg` : 'bg-transparent'}`} // Apply gray, semi-transparent, slightly rounded rectangle background if active
+                  >
+                    <Icon
+                      size={20}
+                      color={isActive ? "#ffffff" : "#9ca3af"} // White color for active icon, gray for inactive
+                      strokeWidth={isActive ? 2.5 : 2} // Thicker stroke for active icon
+                    />
+                  </div>
+                  {/* Tab label - optional, uncomment if you want labels */}
+                  {/* <span className={`text-xs mt-1 transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                    {tab.label}
+                  </span> */}
                 </button>
 
                 {/* Separator line between tabs */}
@@ -207,7 +204,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
         <div className="h-1 w-full bg-gray-900"></div>
       </div>
 
-      {/* Custom CSS for the glow effect on the toggle button */}
+      {/* Custom CSS for the glow effect */}
       <style jsx>{`
         .glow-sm {
           box-shadow: 0 0 8px 1px rgba(59, 130, 246, 0.5); /* Example blue glow */
