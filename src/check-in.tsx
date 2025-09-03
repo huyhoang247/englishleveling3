@@ -116,20 +116,8 @@ const DailyCheckIn = () => {
     setShowTestControls(!showTestControls);
   };
 
-  // Sparkle animation effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const sparkles = document.querySelectorAll('.sparkle');
-      sparkles.forEach(sparkle => {
-        sparkle.style.top = `${Math.random() * 100}%`;
-        sparkle.style.left = `${Math.random() * 100}%`;
-        sparkle.style.opacity = Math.random();
-        sparkle.style.transform = `scale(${Math.random() * 2})`;
-      });
-    }, 1500);
-
-    return () => clearInterval(interval);
-  }, []);
+  // Sparkle animation effect REMOVED
+  // useEffect(() => { ... });
 
   // Particle animation classes
   const particleClasses = [
@@ -141,21 +129,8 @@ const DailyCheckIn = () => {
   ];
 
   return (
-    <div className="bg-black/90 shadow-2xl rounded-xl max-w-md mx-auto overflow-hidden relative"> {/* MODIFIED */}
-      {/* Background effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(10)].map((_, i) => (
-          <div
-            key={i}
-            className="sparkle absolute w-2 h-2 bg-white rounded-full opacity-0 transition-all duration-1000"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              boxShadow: '0 0 10px 2px rgba(255, 255, 255, 0.8)'
-            }}
-          />
-        ))}
-      </div>
+    <div className="bg-black/90 shadow-2xl rounded-xl max-w-md mx-auto overflow-hidden relative">
+      {/* Background effects REMOVED */}
 
       {/* Enhanced Progress info - REDESIGNED WITH WATER LEVEL */}
       <div className="flex justify-center mt-6 mb-6">
