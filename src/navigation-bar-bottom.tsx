@@ -8,6 +8,9 @@ interface NavigationBarBottomProps {
   onTabChange: (tab: 'home' | 'quiz' | 'story' | 'game' | 'profile') => void; // Updated possible values
 }
 
+// Define the type for an icon, which can be a React component or an image URL string
+type IconType = ((props: { size: number; color: string; strokeWidth: number }) => JSX.Element) | string;
+
 // Define the NavigationBarBottom functional component, receiving the defined props
 const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
   activeTab, // Destructure activeTab from props
@@ -17,7 +20,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
   const [isVisible, setIsVisible] = useState(true);
 
   // Define the tabs data
-  const tabs = [
+  const tabs: { id: 'home' | 'quiz' | 'story' | 'game' | 'profile'; label: string; icon: IconType }[] = [
     {
       id: "home",
       label: "Trang chủ",
@@ -37,20 +40,12 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
           <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
       ),
-      gradient: "from-purple-500 to-blue-500"
     },
     {
       id: "quiz",
       label: "Trắc nghiệm",
-      icon: (props: { size: number; color: string; strokeWidth: number }) => ( // Replaced SVG with an img tag
-        <img
-          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/course-icon.webp"
-          alt="Trắc nghiệm"
-          width={props.size}
-          height={props.size}
-        />
-      ),
-      gradient: "from-green-500 to-teal-400"
+      // Use the provided image URL for the quiz icon
+      icon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/course-icon.webp",
     },
     {
       id: "story",
@@ -71,7 +66,6 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
           <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
         </svg>
       ),
-      gradient: "from-amber-500 to-yellow-300"
     },
     {
       id: "game",
@@ -95,7 +89,6 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
           <rect x="2" y="6" width="20" height="12" rx="2" />
         </svg>
       ),
-      gradient: "from-red-500 to-orange-400"
     },
     {
       id: "profile",
@@ -116,7 +109,6 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
           <circle cx="12" cy="7" r="4" />
         </svg>
       ),
-      gradient: "from-indigo-500 to-purple-400"
     },
   ];
 
@@ -149,14 +141,13 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
       >
         <div className="mx-2 my-2 flex justify-between items-center">
           {tabs.map((tab, index) => {
-            const Icon = tab.icon;
             // Determine if the current tab is active based on the activeTab prop
             const isActive = activeTab === tab.id;
 
             return (
               <div key={tab.id} className="flex-1 relative flex justify-center items-center">
                 <button
-                  className="w-full flex flex-col items-center relative group justify-center"
+                  className="w-full flex flex-col items-center relative group justify-center py-1"
                   // Call the onTabChange prop function when the button is clicked
                   onClick={() => {
                     onTabChange(tab.id); // Notify the parent component of the tab change
@@ -166,27 +157,38 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
                     }
                   }}
                 >
-                  {/* Background glow effect, visible only when active */}
+                  {/* Redesigned uniform background glow effect, visible only when active */}
                   <div
-                    className={`absolute inset-0 bg-gradient-to-br ${tab.gradient} rounded-xl blur-sm
-                      transition-opacity duration-300 ease-in-out ${isActive ? 'opacity-15' : 'opacity-0'}`}
+                    className={`absolute inset-0 bg-sky-400 rounded-xl blur-lg
+                      transition-opacity duration-300 ease-in-out ${isActive ? 'opacity-20' : 'opacity-0'}`}
                   />
 
-                  {/* Icon container with smooth transition */}
+                  {/* Icon container with a new, subtle, and uniform active state */}
                   <div
                     className={`p-2 rounded-full transition-all duration-300 ease-in-out transform
-                      ${isActive ? `bg-gradient-to-br ${tab.gradient} shadow-lg` : 'bg-transparent'}`} // Apply gradient and shadow if active
+                      ${isActive ? 'bg-sky-500 bg-opacity-20' : 'bg-transparent'}`}
                   >
-                    <Icon
-                      size={20}
-                      color={isActive ? "#ffffff" : "#9ca3af"} // White color for active icon, gray for inactive
-                      strokeWidth={isActive ? 2.5 : 2} // Thicker stroke for active icon
-                    />
+                    {typeof tab.icon === 'string' ? (
+                      // Render an <img> tag if the icon is a URL
+                      <img
+                        src={tab.icon}
+                        alt={tab.label}
+                        className={`w-5 h-5 object-contain transition-filter duration-300 ${isActive ? '' : 'filter grayscale'}`}
+                      />
+                    ) : (
+                      // Render the icon as a component if it's a function
+                      <tab.icon
+                        size={20}
+                        color={isActive ? "#0ea5e9" : "#9ca3af"} // A vibrant sky-blue for active, gray for inactive
+                        strokeWidth={isActive ? 2.5 : 2} // Thicker stroke for active icon
+                      />
+                    )}
                   </div>
-                  {/* Tab label - optional, uncomment if you want labels */}
-                  {/* <span className={`text-xs mt-1 transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                  
+                  {/* Subtle label that appears only when active */}
+                  <span className={`text-xs mt-1 font-medium text-white transition-all duration-300 ${isActive ? 'opacity-100' : 'opacity-0 h-0'}`}>
                     {tab.label}
-                  </span> */}
+                  </span>
                 </button>
 
                 {/* Separator line between tabs */}
