@@ -294,7 +294,7 @@ function PracticeList() {
         '2': { title: 'Practice 2', desc: ['Gap Fill', 'EN-VI'], color: 'pink' },
         '3': { title: 'Practice 3', desc: ['Gap Fill', 'EN'], color: 'teal' },
         '4': { title: 'Practice 4', desc: ['Listening', 'Words'], color: 'orange' },
-        '5': { title: 'Practice 5', desc: ['Listening', 'Gap Fill'], color: 'purple' },
+        '5': { title: 'Practice 5', desc: ['Listening', 'Gap Fill'], color: 'purple' }
     },
     vocaMatch: {
         '1': { title: 'Practice 1', desc: ['Match Words'], color: 'green' },
