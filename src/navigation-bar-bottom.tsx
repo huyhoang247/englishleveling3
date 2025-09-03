@@ -8,9 +8,6 @@ interface NavigationBarBottomProps {
   onTabChange: (tab: 'home' | 'quiz' | 'story' | 'game' | 'profile') => void; // Updated possible values
 }
 
-// Define the type for an icon, which can be a React component or an image URL string
-type IconType = ((props: { size: number; color: string; strokeWidth: number }) => JSX.Element) | string;
-
 // Define the NavigationBarBottom functional component, receiving the defined props
 const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
   activeTab, // Destructure activeTab from props
@@ -19,8 +16,8 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
   // Keep the isVisible state and toggle logic if needed for the story tab feature
   const [isVisible, setIsVisible] = useState(true);
 
-  // Define the tabs data
-  const tabs: { id: 'home' | 'quiz' | 'story' | 'game' | 'profile'; label: string; icon: IconType }[] = [
+  // Define the tabs data with updated quiz icon and removed gradients
+  const tabs = [
     {
       id: "home",
       label: "Trang chủ",
@@ -44,8 +41,19 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
     {
       id: "quiz",
       label: "Trắc nghiệm",
-      // Use the provided image URL for the quiz icon
-      icon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/course-icon.webp",
+      // Updated icon to use an <img> tag for the quiz tab
+      icon: (props: { size: number; isActive: boolean }) => (
+        <img
+          src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/course-icon.webp"
+          alt="Trắc nghiệm"
+          width={props.size}
+          height={props.size}
+          // Apply grayscale and lower opacity for inactive state for a cohesive look
+          className={`transition-all duration-300 ${
+            props.isActive ? "" : "grayscale opacity-70"
+          }`}
+        />
+      ),
     },
     {
       id: "story",
@@ -112,7 +120,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
     },
   ];
 
-  // Hàm xử lý ẩn/hiện thanh điều hướng (kept from original file)
+  // Hàm xử lý ẩn/hiện thanh điều hướng
   const toggleVisibility = () => {
     setIsVisible(!isVisible);
   };
@@ -141,54 +149,49 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
       >
         <div className="mx-2 my-2 flex justify-between items-center">
           {tabs.map((tab, index) => {
+            const Icon = tab.icon;
             // Determine if the current tab is active based on the activeTab prop
             const isActive = activeTab === tab.id;
 
             return (
               <div key={tab.id} className="flex-1 relative flex justify-center items-center">
                 <button
-                  className="w-full flex flex-col items-center relative group justify-center py-1"
+                  className="w-full h-14 flex flex-col items-center justify-center relative group"
                   // Call the onTabChange prop function when the button is clicked
                   onClick={() => {
-                    onTabChange(tab.id); // Notify the parent component of the tab change
+                    onTabChange(tab.id as 'home' | 'quiz' | 'story' | 'game' | 'profile'); // Notify the parent component
                     // When changing tab, if not 'story', ensure the navigation bar is visible
                     if (tab.id !== 'story') {
                       setIsVisible(true);
                     }
                   }}
                 >
-                  {/* Redesigned uniform background glow effect, visible only when active */}
+                  {/* NEW: Unified active state design */}
+                  {/* 1. A subtle, pill-shaped background for the active icon */}
                   <div
-                    className={`absolute inset-0 bg-sky-400 rounded-xl blur-lg
-                      transition-opacity duration-300 ease-in-out ${isActive ? 'opacity-20' : 'opacity-0'}`}
-                  />
+                    className={`absolute w-16 h-8 bg-gray-400 rounded-full transition-all duration-300 ease-in-out
+                      ${isActive ? 'opacity-10' : 'opacity-0 scale-50'}`}
+                  ></div>
 
-                  {/* Icon container with a new, subtle, and uniform active state */}
-                  <div
-                    className={`p-2 rounded-full transition-all duration-300 ease-in-out transform
-                      ${isActive ? 'bg-sky-500 bg-opacity-20' : 'bg-transparent'}`}
-                  >
-                    {typeof tab.icon === 'string' ? (
-                      // Render an <img> tag if the icon is a URL
-                      <img
-                        src={tab.icon}
-                        alt={tab.label}
-                        className={`w-5 h-5 object-contain transition-filter duration-300 ${isActive ? '' : 'filter grayscale'}`}
-                      />
+                  {/* 2. The icon itself, with special handling for the image-based quiz icon */}
+                  <div className="relative z-10">
+                    {tab.id === 'quiz' ? (
+                      <Icon size={26} isActive={isActive} />
                     ) : (
-                      // Render the icon as a component if it's a function
-                      <tab.icon
-                        size={20}
-                        color={isActive ? "#0ea5e9" : "#9ca3af"} // A vibrant sky-blue for active, gray for inactive
-                        strokeWidth={isActive ? 2.5 : 2} // Thicker stroke for active icon
+                      <Icon
+                        size={24}
+                        color={isActive ? "#ffffff" : "#9ca3af"} // White for active, gray for inactive
+                        strokeWidth={isActive ? 2.2 : 1.8} // Thicker, more elegant stroke for active
                       />
                     )}
                   </div>
                   
-                  {/* Subtle label that appears only when active */}
-                  <span className={`text-xs mt-1 font-medium text-white transition-all duration-300 ${isActive ? 'opacity-100' : 'opacity-0 h-0'}`}>
-                    {tab.label}
-                  </span>
+                  {/* 3. A clean, animated indicator line above the active icon */}
+                  <div
+                    className={`absolute top-[6px] h-[3px] w-6 bg-cyan-400 rounded-full
+                      transition-all duration-300 ease-out
+                      ${isActive ? 'opacity-100' : 'opacity-0 -translate-y-2'}`}
+                  />
                 </button>
 
                 {/* Separator line between tabs */}
@@ -204,7 +207,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
         <div className="h-1 w-full bg-gray-900"></div>
       </div>
 
-      {/* Custom CSS for the glow effect */}
+      {/* Custom CSS for the glow effect on the toggle button */}
       <style jsx>{`
         .glow-sm {
           box-shadow: 0 0 8px 1px rgba(59, 130, 246, 0.5); /* Example blue glow */
