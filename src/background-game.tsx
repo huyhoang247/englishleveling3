@@ -23,7 +23,8 @@ import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './home/skill-game/skill-ui.tsx';
 import type { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 import EquipmentScreen, { type EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
-import AuctionHouse from './home/auction/auction-house-ui.tsx'; // THÊM MỚI
+import AuctionHouse from './home/auction/auction-house-ui.tsx';
+import DailyCheckIn from './check-in.tsx'; // THÊM MỚI
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 import { useGame } from './GameContext.tsx';
@@ -68,8 +69,9 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen,
     isBossBattleOpen, isShopOpen, isVocabularyChestOpen, isAchievementsOpen,
     isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
-    isAuctionHouseOpen, // THÊM MỚI
-    ownedItems, equippedItems, refreshUserData, // THÊM MỚI
+    isAuctionHouseOpen,
+    isCheckInOpen, // THÊM MỚI
+    ownedItems, equippedItems, refreshUserData,
     handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
     handleUpdateJackpotPool, handleStatsUpdate, getPlayerBattleStats,
     getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
@@ -79,7 +81,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge,
     toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
-    toggleAuctionHouse, // THÊM MỚI
+    toggleAuctionHouse,
+    toggleCheckIn, // THÊM MỚI
     toggleBaseBuilding,
   } = useGame();
 
@@ -143,7 +146,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
               {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, { icon: <img src={uiAssets.gavelIcon} alt="Auction House Icon" className="w-full h-full object-contain p-1" />, onClick: toggleAuctionHouse } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
+              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, { icon: <img src={uiAssets.gavelIcon} alt="Auction House Icon" className="w-full h-full object-contain p-1" />, onClick: toggleAuctionHouse }, { icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-full object-contain p-1.5 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>, onClick: toggleCheckIn } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
           </div>
         </div>
@@ -231,7 +234,24 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 )}
             </ErrorBoundary>
         </div>
-
+        
+        {/* THÊM MỚI: Render Daily Check-in */}
+        {isCheckInOpen && (
+            <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+                <ErrorBoundary>
+                    <div className="relative">
+                        <DailyCheckIn />
+                        <button 
+                            onClick={toggleCheckIn} 
+                            className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-slate-800 text-white/80 flex items-center justify-center font-bold text-lg hover:bg-red-600 hover:text-white transition-all z-10 border-2 border-slate-700"
+                            aria-label="Đóng"
+                        >
+                            &times;
+                        </button>
+                    </div>
+                </ErrorBoundary>
+            </div>
+        )}
 
         {isSystemCheckOpen && (
             <ErrorBoundary fallback={<div className="fixed inset-0 bg-black/70 flex items-center justify-center text-red-400">Lỗi khi tải công cụ System Check.</div>}>
