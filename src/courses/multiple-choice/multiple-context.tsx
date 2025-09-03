@@ -211,10 +211,12 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
                               incorrectOptions.push(randomWord);
                           }
                       }
-                      // Trả về đối tượng câu hỏi. `question` là text chung cho câu hỏi nghe
+                      // Tạo câu hỏi dạng điền vào chỗ trống từ câu tiếng Anh
+                      const questionText = randomSentence.english.replace(wordRegex, '___');
+
                       return [{ 
-                          question: "Nghe câu và điền từ còn thiếu:", 
-                          vietnamese: randomSentence.vietnamese,
+                          question: questionText,
+                          vietnamese: null, // Yêu cầu: Không hiển thị dịch nghĩa tiếng Việt cho practice 5
                           audioUrls: audioUrls,
                           options: [word.toLowerCase(), ...incorrectOptions.map(opt => opt.toLowerCase())], 
                           correctAnswer: word.toLowerCase(), 
