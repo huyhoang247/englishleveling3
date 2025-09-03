@@ -45,16 +45,16 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ displayedStreak, isAnimat
         animation: pulse-fast 1.3s infinite;
       }
 
-      /* Gentle "pop" animation for the streak icon when updated */
+      /* Gentle "pop" animation for the streak icon when updated (no rotation) */
       @keyframes icon-pop {
         0% {
-          transform: scale(1) rotate(0deg);
+          transform: scale(1);
         }
         50% {
-          transform: scale(1.25) rotate(-10deg);
+          transform: scale(1.2); /* Nảy lên một chút */
         }
         100% {
-          transform: scale(1) rotate(0deg);
+          transform: scale(1);
         }
       }
       .is-icon-animating {
