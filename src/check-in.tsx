@@ -129,320 +129,330 @@ const DailyCheckIn = () => {
   ];
 
   return (
-    <div className="bg-black/90 shadow-2xl rounded-xl max-w-md mx-auto overflow-hidden relative">
+    // <!-- MODIFIED: Thêm flex flex-col h-screen để kiểm soát layout dọc và chiều cao -->
+    <div className="bg-black/90 shadow-2xl rounded-xl max-w-md mx-auto overflow-hidden relative flex flex-col h-screen">
       {/* Background effects REMOVED */}
 
-      {/* Enhanced Progress info - REDESIGNED WITH WATER LEVEL */}
-      <div className="flex justify-center mt-6 mb-6">
-        <div className="bg-gradient-to-r from-slate-800/80 to-slate-800/50 backdrop-blur-sm rounded-full px-6 py-2 flex items-center gap-3 border border-slate-700 shadow-lg">
-          <div className="flex items-center">
-            <div className="relative w-16 h-16">
-              {/* Water level container */}
-              <div className="w-16 h-16 relative overflow-hidden rounded-full border-2 border-slate-700">
-                {/* Water background */}
-                <div className="absolute inset-0 bg-slate-900"></div>
+      {/* --- PHẦN HEADER CỐ ĐỊNH --- */}
+      <div>
+        {/* Enhanced Progress info - REDESIGNED WITH WATER LEVEL */}
+        <div className="flex justify-center mt-6 mb-6">
+          <div className="bg-gradient-to-r from-slate-800/80 to-slate-800/50 backdrop-blur-sm rounded-full px-6 py-2 flex items-center gap-3 border border-slate-700 shadow-lg">
+            <div className="flex items-center">
+              <div className="relative w-16 h-16">
+                {/* Water level container */}
+                <div className="w-16 h-16 relative overflow-hidden rounded-full border-2 border-slate-700">
+                  {/* Water background */}
+                  <div className="absolute inset-0 bg-slate-900"></div>
 
-                {/* Water fill animation */}
-                <div
-                  className="water-fill absolute w-full bg-gradient-to-b from-cyan-400 to-blue-600 opacity-80"
-                  style={{
-                    bottom: 0,
-                    height: `${(loginStreak / 7) * 100}%`,
-                    borderTopLeftRadius: '50%',
-                    borderTopRightRadius: '50%',
-                    transition: 'height 1s ease-out'
-                  }}
-                >
-                  {/* Water wave effect */}
-                  <div className="water-wave1"></div>
-                  <div className="water-wave2"></div>
-                </div>
-
-                {/* Login streak number */}
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                  {/* MODIFIED: Added opacity-70 class */}
-                  <span className="text-2xl font-bold text-white opacity-70">{loginStreak}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col">
-            <div className="text-white font-bold">Check In</div>
-            <div className="text-indigo-300 text-sm font-medium">
-              Ngày {currentDay}
-            </div>
-            <div className="mt-1 flex items-center">
-              {/* Progress dots reflect current day */}
-              {[...Array(7)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-4 h-1 rounded-full mr-1 ${
-                    i < currentDay
-                      ? 'bg-gradient-to-r from-purple-400 to-indigo-500'
-                      : 'bg-slate-700'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Calendar bar with glowing current day */}
-      <div className="px-6 mb-6">
-        {/* Enhanced day indicators */}
-        <div className="flex justify-between">
-          {dailyRewards.map(reward => {
-            // Determine the status and styles for each day indicator
-            const isPast = reward.day < currentDay;
-            const isCurrent = reward.day === currentDay;
-            const isClaimed = claimedDays.includes(reward.day);
-            const isFuture = reward.day > currentDay;
-
-            // Base classes
-            let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 relative";
-
-            // Apply status-specific styles
-            if (isPast && isClaimed) {
-              dayClasses += " bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md";
-            } else if (isPast && !isClaimed) {
-              dayClasses += " bg-slate-700 text-slate-400 opacity-70";
-            } else if (isCurrent) {
-              dayClasses += " bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg";
-            } else { // isFuture or past but not claimed
-              dayClasses += " bg-slate-700 text-slate-400";
-            }
-
-            return (
-              <div key={reward.day} className="relative group">
-                {/* Day indicator circle */}
-                <div className={dayClasses}>
-                  {/* Day number */}
-                  <span className="font-bold z-10">{reward.day}</span>
-
-                  {/* Decorative elements */}
-                  {isCurrent && (
-                    <>
-                      {/* Pulsing ring effect for current day */}
-                      <div className="absolute inset-0 rounded-full animate-ping opacity-30 bg-indigo-400"></div>
-                      <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-400 to-indigo-500 opacity-30 blur-sm"></div>
-                    </>
-                  )}
-
-                  {/* Check mark for claimed days */}
-                  {isClaimed && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900 flex items-center justify-center shadow-lg z-20">
-                      <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                {/* Tooltip on hover */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30">
-                  <div className="bg-slate-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
-                    {reward.name}
-                  </div>
-                  <div className="w-2 h-2 bg-slate-800 transform rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Rewards section */}
-      <div className="px-6 pb-6">
-        <div className="grid grid-cols-1 gap-4">
-          {dailyRewards.map(reward => (
-            <div
-              key={reward.day}
-              className={`group relative rounded-xl overflow-hidden transition-all duration-300 ${
-                claimedDays.includes(reward.day) ? 'opacity-60' : 'hover:transform hover:scale-[1.02]'
-              }`}
-            >
-              {/* Glowing border for current day */}
-              {reward.day === currentDay && !claimedDays.includes(reward.day) && (
-                <div className="absolute inset-0 rounded-xl animate-pulse-slow"
+                  {/* Water fill animation */}
+                  <div
+                    className="water-fill absolute w-full bg-gradient-to-b from-cyan-400 to-blue-600 opacity-80"
                     style={{
-                      background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.6), transparent)`,
-                      backgroundSize: '200% 200%',
-                    }}>
-                </div>
-              )}
+                      bottom: 0,
+                      height: `${(loginStreak / 7) * 100}%`,
+                      borderTopLeftRadius: '50%',
+                      borderTopRightRadius: '50%',
+                      transition: 'height 1s ease-out'
+                    }}
+                  >
+                    {/* Water wave effect */}
+                    <div className="water-wave1"></div>
+                    <div className="water-wave2"></div>
+                  </div>
 
+                  {/* Login streak number */}
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    {/* MODIFIED: Added opacity-70 class */}
+                    <span className="text-2xl font-bold text-white opacity-70">{loginStreak}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="text-white font-bold">Check In</div>
+              <div className="text-indigo-300 text-sm font-medium">
+                Ngày {currentDay}
+              </div>
+              <div className="mt-1 flex items-center">
+                {/* Progress dots reflect current day */}
+                {[...Array(7)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-4 h-1 rounded-full mr-1 ${
+                      i < currentDay
+                        ? 'bg-gradient-to-r from-purple-400 to-indigo-500'
+                        : 'bg-slate-700'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Calendar bar with glowing current day */}
+        <div className="px-6 mb-6">
+          {/* Enhanced day indicators */}
+          <div className="flex justify-between">
+            {dailyRewards.map(reward => {
+              // Determine the status and styles for each day indicator
+              const isPast = reward.day < currentDay;
+              const isCurrent = reward.day === currentDay;
+              const isClaimed = claimedDays.includes(reward.day);
+              const isFuture = reward.day > currentDay;
+
+              // Base classes
+              let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 relative";
+
+              // Apply status-specific styles
+              if (isPast && isClaimed) {
+                dayClasses += " bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md";
+              } else if (isPast && !isClaimed) {
+                dayClasses += " bg-slate-700 text-slate-400 opacity-70";
+              } else if (isCurrent) {
+                dayClasses += " bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg";
+              } else { // isFuture or past but not claimed
+                dayClasses += " bg-slate-700 text-slate-400";
+              }
+
+              return (
+                <div key={reward.day} className="relative group">
+                  {/* Day indicator circle */}
+                  <div className={dayClasses}>
+                    {/* Day number */}
+                    <span className="font-bold z-10">{reward.day}</span>
+
+                    {/* Decorative elements */}
+                    {isCurrent && (
+                      <>
+                        {/* Pulsing ring effect for current day */}
+                        <div className="absolute inset-0 rounded-full animate-ping opacity-30 bg-indigo-400"></div>
+                        <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-400 to-indigo-500 opacity-30 blur-sm"></div>
+                      </>
+                    )}
+
+                    {/* Check mark for claimed days */}
+                    {isClaimed && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900 flex items-center justify-center shadow-lg z-20">
+                        <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tooltip on hover */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30">
+                    <div className="bg-slate-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
+                      {reward.name}
+                    </div>
+                    <div className="w-2 h-2 bg-slate-800 transform rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+      
+      {/* <!-- ADDED: Vùng chứa nội dung có thể cuộn --> */}
+      <div className="flex-1 overflow-y-auto px-6">
+        {/* Rewards section */}
+        <div className="pb-6">
+          <div className="grid grid-cols-1 gap-4">
+            {dailyRewards.map(reward => (
               <div
-                className={`relative flex items-center gap-4 p-4 rounded-xl ${
-                  reward.day === currentDay && !claimedDays.includes(reward.day)
-                    ? 'bg-gradient-to-r from-slate-800 to-slate-800/95 border border-purple-500/50'
-                    : 'bg-slate-800'
+                key={reward.day}
+                className={`group relative rounded-xl overflow-hidden transition-all duration-300 ${
+                  claimedDays.includes(reward.day) ? 'opacity-60' : 'hover:transform hover:scale-[1.02]'
                 }`}
               >
-                {/* Day indicator */}
-                <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg font-medium text-slate-300">
-                  Ngày {reward.day}
-                </div>
-
-                {/* Reward icon */}
-                <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
-                  reward.day === 7
-                    ? 'bg-gradient-to-br from-purple-400 to-indigo-600'
-                    : reward.day === currentDay && !claimedDays.includes(reward.day)
-                    ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600'
-                    : 'bg-gradient-to-br from-slate-700 to-slate-900'
-                } shadow-lg p-1`}>
-                  <div className={`w-full h-full rounded-lg flex items-center justify-center ${
-                    reward.day === 7
-                      ? 'bg-indigo-500/20'
-                      : reward.day === currentDay && !claimedDays.includes(reward.day)
-                      ? 'bg-slate-800/80 backdrop-blur-sm'
-                      : 'bg-slate-800'
-                  }`}>
-                    <div className="w-8 h-8">{reward.icon}</div>
-                  </div>
-                </div>
-
-                {/* Reward info */}
-                <div className="flex-1">
-                  <h3 className="font-bold text-white">{reward.name}</h3>
-                  <p className="text-slate-300 text-sm">x{reward.amount}</p>
-                </div>
-
-                {/* Claim button */}
-                <button
-                  onClick={() => claimReward(reward.day)}
-                  disabled={reward.day !== currentDay || claimedDays.includes(reward.day)}
-                  className={`min-w-[90px] py-2 px-3 rounded-lg font-semibold text-sm transition-all ${
-                    claimedDays.includes(reward.day)
-                      ? 'bg-green-600 text-white'
-                      : reward.day === currentDay
-                      ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white hover:shadow-indigo-400/20 hover:shadow-lg'
-                      : 'bg-slate-700 text-slate-400'
-                  }`}
-                >
-                  {claimedDays.includes(reward.day)
-                    ? 'Đã Nhận'
-                    : reward.day === currentDay
-                    ? 'Nhận Ngay'
-                    : 'Chờ'}
-                </button>
-
-                {/* "Claimed" overlay */}
-                {claimedDays.includes(reward.day) && (
-                  <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
-                    <div className="bg-green-600 rounded-full p-2 transform rotate-12">
-                      <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
+                {/* Glowing border for current day */}
+                {reward.day === currentDay && !claimedDays.includes(reward.day) && (
+                  <div className="absolute inset-0 rounded-xl animate-pulse-slow"
+                      style={{
+                        background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.6), transparent)`,
+                        backgroundSize: '200% 200%',
+                      }}>
                   </div>
                 )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Final day special reward */}
-      <div className="mx-6 mb-6 relative overflow-hidden rounded-xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-indigo-500/20 to-purple-400/20 animate-pulse-slow"></div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl transform translate-x-8 -translate-y-8"></div>
+                <div
+                  className={`relative flex items-center gap-4 p-4 rounded-xl ${
+                    reward.day === currentDay && !claimedDays.includes(reward.day)
+                      ? 'bg-gradient-to-r from-slate-800 to-slate-800/95 border border-purple-500/50'
+                      : 'bg-slate-800'
+                  }`}
+                >
+                  {/* Day indicator */}
+                  <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg font-medium text-slate-300">
+                    Ngày {reward.day}
+                  </div>
 
-        <div className="relative p-5 bg-gradient-to-br from-slate-800/95 to-slate-900 backdrop-blur-sm border border-purple-500/30">
-          <div className="absolute top-1 right-2">
-            <div className="text-xs font-semibold text-slate-300 bg-slate-700 px-2 py-1 rounded">
-              Còn {7 - currentDay} ngày
-            </div>
-          </div>
+                  {/* Reward icon */}
+                  <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
+                    reward.day === 7
+                      ? 'bg-gradient-to-br from-purple-400 to-indigo-600'
+                      : reward.day === currentDay && !claimedDays.includes(reward.day)
+                      ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600'
+                      : 'bg-gradient-to-br from-slate-700 to-slate-900'
+                  } shadow-lg p-1`}>
+                    <div className={`w-full h-full rounded-lg flex items-center justify-center ${
+                      reward.day === 7
+                        ? 'bg-indigo-500/20'
+                        : reward.day === currentDay && !claimedDays.includes(reward.day)
+                        ? 'bg-slate-800/80 backdrop-blur-sm'
+                        : 'bg-slate-800'
+                    }`}>
+                      <div className="w-8 h-8">{reward.icon}</div>
+                    </div>
+                  </div>
 
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-600 p-1 shadow-lg shadow-indigo-500/20">
-                <div className="w-full h-full bg-indigo-500/20 rounded-lg flex items-center justify-center">
-                   {/* Replaced Crown icon with SVG */}
-                  <svg xmlns="http://www.w3.org/2000/svg" className="text-indigo-300 w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 6l-2 3H5l2-3-2-3h5l2-3 2 3h5l-2 3 2 3h-5l-2-3z"></path>
-                    <path d="M2 15l.9 1.8a6 6 0 0 0 8.2 8.2l1.8.9 1.8-.9a6 6 0 0 0 8.2-8.2L22 15"></path>
-                  </svg>
+                  {/* Reward info */}
+                  <div className="flex-1">
+                    <h3 className="font-bold text-white">{reward.name}</h3>
+                    <p className="text-slate-300 text-sm">x{reward.amount}</p>
+                  </div>
+
+                  {/* Claim button */}
+                  <button
+                    onClick={() => claimReward(reward.day)}
+                    disabled={reward.day !== currentDay || claimedDays.includes(reward.day)}
+                    className={`min-w-[90px] py-2 px-3 rounded-lg font-semibold text-sm transition-all ${
+                      claimedDays.includes(reward.day)
+                        ? 'bg-green-600 text-white'
+                        : reward.day === currentDay
+                        ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white hover:shadow-indigo-400/20 hover:shadow-lg'
+                        : 'bg-slate-700 text-slate-400'
+                    }`}
+                  >
+                    {claimedDays.includes(reward.day)
+                      ? 'Đã Nhận'
+                      : reward.day === currentDay
+                      ? 'Nhận Ngay'
+                      : 'Chờ'}
+                  </button>
+
+                  {/* "Claimed" overlay */}
+                  {claimedDays.includes(reward.day) && (
+                    <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
+                      <div className="bg-green-600 rounded-full p-2 transform rotate-12">
+                        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-400 rounded-full text-slate-900 flex items-center justify-center font-bold text-xs">
-                7
-              </div>
-            </div>
-
-            <div>
-              <div className="text-sm text-indigo-300 font-semibold">PHẦN THƯỞNG ĐẶC BIỆT</div>
-              <div className="text-white font-bold text-lg">Vũ Khí Thần Thánh</div>
-              <div className="text-xs text-slate-400 mt-1">Hiếm có - Chỉ đạt được khi đăng nhập đủ 7 ngày</div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Test Controls Area */}
-      <div className="mx-6 mb-6">
-        <div className="relative">
-          <button
-            onClick={toggleTestControls}
-            className="mb-2 bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-3 rounded-lg text-xs font-medium transition-all flex items-center gap-1"
-          >
-            {showTestControls ? "Ẩn Bảng Điều Khiển" : "Hiện Bảng Điều Khiển"}
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+      {/* --- PHẦN FOOTER CỐ ĐỊNH --- */}
+      <div>
+        {/* Final day special reward */}
+        <div className="mx-6 mb-6 relative overflow-hidden rounded-xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-indigo-500/20 to-purple-400/20 animate-pulse-slow"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl transform translate-x-8 -translate-y-8"></div>
 
-          {showTestControls && (
-            <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 mb-4">
-              <h3 className="text-white font-medium mb-3 text-sm flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Bảng Điều Khiển
-              </h3>
-
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={goToPreviousDay}
-                  disabled={currentDay === 1}
-                  className={`p-2 rounded text-center text-sm font-medium ${
-                    currentDay === 1
-                      ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                      : 'bg-indigo-500 hover:bg-indigo-600 text-white'
-                  }`}
-                >
-                  Ngày Trước
-                </button>
-                <button
-                  onClick={resetClaimedDays}
-                  className="p-2 bg-red-500 hover:bg-red-600 text-white rounded text-center text-sm font-medium"
-                >
-                  Đặt Lại
-                </button>
-                <button
-                  onClick={goToNextDay}
-                  disabled={currentDay === 7}
-                  className={`p-2 rounded text-center text-sm font-medium ${
-                    currentDay === 7
-                      ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                      : 'bg-indigo-500 hover:bg-indigo-600 text-white'
-                  }`}
-                >
-                  Ngày Sau
-                </button>
-              </div>
-
-              <div className="mt-2 text-xs text-slate-400">
-                Ngày hiện tại: <span className="text-indigo-400 font-medium">{currentDay}</span> |
-                Đã nhận: <span className="text-green-400 font-medium">{claimedDays.length}</span> phần thưởng |
-                Streak: <span className="text-purple-400 font-medium">{loginStreak}</span> ngày
+          <div className="relative p-5 bg-gradient-to-br from-slate-800/95 to-slate-900 backdrop-blur-sm border border-purple-500/30">
+            <div className="absolute top-1 right-2">
+              <div className="text-xs font-semibold text-slate-300 bg-slate-700 px-2 py-1 rounded">
+                Còn {7 - currentDay} ngày
               </div>
             </div>
-          )}
+
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-600 p-1 shadow-lg shadow-indigo-500/20">
+                  <div className="w-full h-full bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                    {/* Replaced Crown icon with SVG */}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="text-indigo-300 w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 6l-2 3H5l2-3-2-3h5l2-3 2 3h5l-2 3 2 3h-5l-2-3z"></path>
+                      <path d="M2 15l.9 1.8a6 6 0 0 0 8.2 8.2l1.8.9 1.8-.9a6 6 0 0 0 8.2-8.2L22 15"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-400 rounded-full text-slate-900 flex items-center justify-center font-bold text-xs">
+                  7
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm text-indigo-300 font-semibold">PHẦN THƯỞNG ĐẶC BIỆT</div>
+                <div className="text-white font-bold text-lg">Vũ Khí Thần Thánh</div>
+                <div className="text-xs text-slate-400 mt-1">Hiếm có - Chỉ đạt được khi đăng nhập đủ 7 ngày</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Test Controls Area */}
+        <div className="mx-6 mb-6">
+          <div className="relative">
+            <button
+              onClick={toggleTestControls}
+              className="mb-2 bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-3 rounded-lg text-xs font-medium transition-all flex items-center gap-1"
+            >
+              {showTestControls ? "Ẩn Bảng Điều Khiển" : "Hiện Bảng Điều Khiển"}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showTestControls && (
+              <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 mb-4">
+                <h3 className="text-white font-medium mb-3 text-sm flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Bảng Điều Khiển
+                </h3>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={goToPreviousDay}
+                    disabled={currentDay === 1}
+                    className={`p-2 rounded text-center text-sm font-medium ${
+                      currentDay === 1
+                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                        : 'bg-indigo-500 hover:bg-indigo-600 text-white'
+                    }`}
+                  >
+                    Ngày Trước
+                  </button>
+                  <button
+                    onClick={resetClaimedDays}
+                    className="p-2 bg-red-500 hover:bg-red-600 text-white rounded text-center text-sm font-medium"
+                  >
+                    Đặt Lại
+                  </button>
+                  <button
+                    onClick={goToNextDay}
+                    disabled={currentDay === 7}
+                    className={`p-2 rounded text-center text-sm font-medium ${
+                      currentDay === 7
+                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                        : 'bg-indigo-500 hover:bg-indigo-600 text-white'
+                    }`}
+                  >
+                    Ngày Sau
+                  </button>
+                </div>
+
+                <div className="mt-2 text-xs text-slate-400">
+                  Ngày hiện tại: <span className="text-indigo-400 font-medium">{currentDay}</span> |
+                  Đã nhận: <span className="text-green-400 font-medium">{claimedDays.length}</span> phần thưởng |
+                  Streak: <span className="text-purple-400 font-medium">{loginStreak}</span> ngày
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
