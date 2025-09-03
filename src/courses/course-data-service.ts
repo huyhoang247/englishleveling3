@@ -508,9 +508,9 @@ export const fetchPracticeListProgress = async (
               });
           });
 
-          const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1, 2, 3, 4] : [1, 2, 3, 4].map(n => i*100+n)).flat();
+          const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1, 2, 3, 4, 5] : [1, 2, 3, 4, 5].map(n => i*100+n)).flat();
           const totalP1 = questionToUserVocab.size;
-          const totalP2_P3 = wordToRelevantExampleSentences.size;
+          const totalP2_P3_P5 = wordToRelevantExampleSentences.size;
           const totalP4 = userVocabSet.size;
 
           allModes.forEach(num => {
@@ -521,10 +521,10 @@ export const fetchPracticeListProgress = async (
                   let completedCount = 0;
                   questionToUserVocab.forEach(words => { if (words.some(w => completedSet.has(w))) completedCount++; });
                   newProgressData[num] = { completed: completedCount, total: totalP1 };
-              } else if (baseNum === 2 || baseNum === 3) {
+              } else if (baseNum === 2 || baseNum === 3 || baseNum === 5) {
                   let completedCount = 0;
                   for (const word of wordToRelevantExampleSentences.keys()) { if (completedSet.has(word)) completedCount++; }
-                  newProgressData[num] = { completed: completedCount, total: totalP2_P3 };
+                  newProgressData[num] = { completed: completedCount, total: totalP2_P3_P5 };
               } else if (baseNum === 4) {
                   newProgressData[num] = { completed: completedSet.size, total: totalP4 };
               }
