@@ -1,4 +1,4 @@
-// --- START OF FILE: multiple-context.tsx ---
+// --- START OF FILE multiple-context.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { db, auth } from '../../firebase.js';
@@ -7,7 +7,7 @@ import quizData from './multiple-data.ts';
 import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
 import { exampleData } from '../../voca-data/example-data.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
-import { generateAudioQuizQuestions } from '../../voca-data/audio-quiz-generator.ts';
+import { generateAudioQuizQuestions, generateAudioExamQuestions } from '../../voca-data/audio-quiz-generator.ts';
 
 // --- CÁC HÀM TIỆN ÍCH VÀ INTERFACE ---
 const shuffleArray = (array: any[]) => {
@@ -185,6 +185,9 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
           } else if (practiceBaseId === 4) {
               allPossibleQuestions = generateAudioQuizQuestions(vocabList);
               remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
+          } else if (practiceBaseId === 5) {
+              allPossibleQuestions = generateAudioExamQuestions(vocabList);
+              remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
           } else { // practiceBaseId === 1
               allPossibleQuestions = quizData.filter(question =>
                   vocabList.some(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(question.question))
@@ -242,7 +245,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
   useEffect(() => {
     if (playableQuestions.length > 0 && currentQuestion < playableQuestions.length) {
       const currentQuizItem = playableQuestions[currentQuestion];
-      const isSpecialType = [2, 3, 4].includes(selectedPractice % 100);
+      const isSpecialType = [2, 3, 4, 5].includes(selectedPractice % 100);
       if (isSpecialType) {
         setCurrentQuestionWord(currentQuizItem.word);
       } else {
@@ -348,4 +351,4 @@ export const useQuiz = (): QuizContextType & { showConfetti: boolean } => {
   }
   return context as QuizContextType & { showConfetti: boolean };
 };
-// --- END OF FILE: multiple-context.tsx ---
+// --- END OF FILE multiple-context.tsx ---
