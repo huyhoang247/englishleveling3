@@ -1,5 +1,3 @@
-// --- START OF FILE course-ui.tsx ---
-
 // quiz-app-home.tsx
 import React, { useMemo, memo, useCallback, useState, useEffect } from 'react';
 import QuizApp from './multiple-choice/multiple-ui.tsx';
@@ -292,14 +290,24 @@ function PracticeList() {
   
   const practiceDetails = useMemo(() => ({
     tracNghiem: {
-      '1': { title: 'Practice 1', desc: ['Word Meaning'], color: 'indigo' },
-      '2': { title: 'Practice 2', desc: ['Gap Fill', 'EN-VI'], color: 'pink' },
-      '3': { title: 'Practice 3', desc: ['Gap Fill', 'EN'], color: 'teal' },
-      '4': { title: 'Practice 4', desc: ['Listening', 'Words'], color: 'orange' },
-      '5': { title: 'Practice 5', desc: ['Listening', 'Gap Fill'], color: 'purple' },
+        '1': { title: 'Practice 1', desc: ['Word Meaning'], color: 'indigo' },
+        '2': { title: 'Practice 2', desc: ['Gap Fill', 'EN-VI'], color: 'pink' },
+        '3': { title: 'Practice 3', desc: ['Gap Fill', 'EN'], color: 'teal' },
+        '4': { title: 'Practice 4', desc: ['Listening', 'Words'], color: 'orange' },
+        '5': { title: 'Practice 5', desc: ['Listening', 'Gap Fill'], color: 'purple' },
     },
-    vocaMatch: { '1': { title: 'Practice 1', desc: ['Match Words'], color: 'green' }, },
-    dienTu: { '1': { title: 'Practice 1', desc: ['Type Word', 'Picture'], color: 'indigo' }, '2': { title: 'Practice 2', desc: ['Gap Fill', 'Hide 1'], color: 'pink' }, '3': { title: 'Practice 3', desc: ['Gap Fill', 'Hide 2'], color: 'teal' }, '4': { title: 'Practice 4', desc: ['Gap Fill', 'Hide 3'], color: 'orange' }, '5': { title: 'Practice 5', desc: ['Gap Fill', 'Hide 4'], color: 'purple' }, '6': { title: 'Practice 6', desc: ['Gap Fill', 'Hide 5'], color: 'yellow' }, '7': { title: 'Practice 7', desc: ['Gap Fill', 'Random Hide'], color: 'red' }, },
+    vocaMatch: {
+        '1': { title: 'Practice 1', desc: ['Match Words'], color: 'green' },
+    },
+    dienTu: {
+        '1': { title: 'Practice 1', desc: ['Type Word', 'Picture'], color: 'indigo' },
+        '2': { title: 'Practice 2', desc: ['Gap Fill', 'Hide 1'], color: 'pink' },
+        '3': { title: 'Practice 3', desc: ['Gap Fill', 'Hide 2'], color: 'teal' },
+        '4': { title: 'Practice 4', desc: ['Gap Fill', 'Hide 3'], color: 'orange' },
+        '5': { title: 'Practice 5', desc: ['Gap Fill', 'Hide 4'], color: 'purple' },
+        '6': { title: 'Practice 6', desc: ['Gap Fill', 'Hide 5'], color: 'yellow' },
+        '7': { title: 'Practice 7', desc: ['Gap Fill', 'Random Hide'], color: 'red' },
+    },
   }), []);
   
   const handleReviewClick = useCallback((practiceNumber) => { setSelectedPracticeForReview(practiceNumber); setView('reviews'); }, []);
@@ -452,4 +460,3 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         </div>
     );
 };
-// --- END OF FILE course-ui.tsx ---
