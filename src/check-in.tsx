@@ -82,15 +82,16 @@ const DailyCheckIn = () => {
     // Check if the day is the current day and hasn't been claimed yet
     if (day === currentDay && !claimedDays.includes(day)) {
       setAnimatingReward(dailyRewards.find(reward => reward.day === day));
+      
+      // MODIFIED: Update state immediately, then show animation
+      const newClaimedDays = [...claimedDays, day];
+      setClaimedDays(newClaimedDays);
+      setLoginStreak(newClaimedDays.length);
+      
       setShowRewardAnimation(true);
 
-      setTimeout(() => {
-        setShowRewardAnimation(false);
-        const newClaimedDays = [...claimedDays, day];
-        setClaimedDays(newClaimedDays);
-        // Update login streak to reflect the total number of claimed days
-        setLoginStreak(newClaimedDays.length);
-      }, 2000);
+      // REMOVED: The setTimeout that automatically closed the animation overlay.
+      // The user will now close it manually.
     }
   };
 
@@ -116,46 +117,11 @@ const DailyCheckIn = () => {
     setShowTestControls(!showTestControls);
   };
 
-  // Sparkle animation effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const sparkles = document.querySelectorAll('.sparkle');
-      sparkles.forEach(sparkle => {
-        sparkle.style.top = `${Math.random() * 100}%`;
-        sparkle.style.left = `${Math.random() * 100}%`;
-        sparkle.style.opacity = Math.random();
-        sparkle.style.transform = `scale(${Math.random() * 2})`;
-      });
-    }, 1500);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Particle animation classes
-  const particleClasses = [
-    "animate-float-particle-1",
-    "animate-float-particle-2",
-    "animate-float-particle-3",
-    "animate-float-particle-4",
-    "animate-float-particle-5"
-  ];
+  // REMOVED: Sparkle animation effect via useEffect is no longer needed.
 
   return (
     <div className="bg-gradient-to-br from-slate-900 via-violet-900 to-slate-900 shadow-2xl rounded-xl max-w-md mx-auto overflow-hidden relative">
-      {/* Background effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(10)].map((_, i) => (
-          <div
-            key={i}
-            className="sparkle absolute w-2 h-2 bg-white rounded-full opacity-0 transition-all duration-1000"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              boxShadow: '0 0 10px 2px rgba(255, 255, 255, 0.8)'
-            }}
-          />
-        ))}
-      </div>
+      {/* REMOVED: Background sparkle effects have been removed as per the request. */}
 
       {/* Enhanced Progress info - REDESIGNED WITH WATER LEVEL */}
       <div className="flex justify-center mt-6 mb-6">
@@ -471,15 +437,18 @@ const DailyCheckIn = () => {
         </div>
       </div>
 
-      {/* Reward animation overlay */}
+      {/* MODIFIED: Reward animation overlay */}
       {showRewardAnimation && animatingReward && (
-        <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="relative max-w-xs w-full bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-6 shadow-2xl animate-float">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50">
+          {/* ADDED: Subtle radial gradient background effect */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.15)_0%,rgba(139,92,246,0)_70%)]"></div>
+
+          <div className="relative max-w-xs w-full bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-6 shadow-2xl animate-float border border-slate-700">
             <div className="absolute -top-20 left-1/2 transform -translate-x-1/2">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 p-1 shadow-lg shadow-indigo-500/50">
                 <div className="w-full h-full rounded-full bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
-                  <div className="w-12 h-12 animate-pulse">
-                    {/* Display the SVG icon directly */}
+                  {/* MODIFIED: Applied new animation to the icon wrapper */}
+                  <div className="w-12 h-12 animate-reward-icon-pop">
                     {animatingReward?.icon}
                   </div>
                 </div>
@@ -490,34 +459,19 @@ const DailyCheckIn = () => {
               <div className="text-indigo-400 text-lg font-bold mb-1">Nhận Thưởng Thành Công!</div>
               <div className="text-white text-xl font-bold mb-3">{animatingReward?.name}</div>
               <div className="text-indigo-200 text-3xl font-bold">x{animatingReward?.amount}</div>
-
               <div className="mt-6 text-sm text-slate-400">Phần thưởng đã được thêm vào kho đồ</div>
+
+              {/* ADDED: Confirmation button to close the overlay */}
+              <button
+                onClick={() => setShowRewardAnimation(false)}
+                className="mt-6 w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:shadow-lg hover:shadow-indigo-500/30 transition-shadow duration-300"
+              >
+                Tuyệt vời!
+              </button>
             </div>
           </div>
 
-          {/* Animated particles - Fixed to move around */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(20)].map((_, i) => {
-              // Choose a random animation class from our predefined classes
-              const randomAnimClass = particleClasses[i % particleClasses.length];
-
-              return (
-                <div
-                  key={i}
-                  className={`absolute w-2 h-2 rounded-full ${randomAnimClass}`}
-                  style={{
-                    top: `${50 + (Math.random() * 30 - 15)}%`,
-                    left: `${50 + (Math.random() * 30 - 15)}%`,
-                    backgroundColor: i % 2 === 0 ? '#8b5cf6' : '#ffffff',
-                    boxShadow: `0 0 10px 2px rgba(255, 255, 255, 0.3)`,
-                    opacity: Math.random() * 0.7 + 0.3,
-                    animationDuration: `${1 + Math.random() * 3}s`,
-                    animationDelay: `${Math.random() * 0.5}s`
-                  }}
-                />
-              );
-            })}
-          </div>
+          {/* REMOVED: Animated particles are no longer needed. */}
         </div>
       )}
 
@@ -527,30 +481,14 @@ const DailyCheckIn = () => {
           50% { transform: translateY(-10px); }
         }
 
-        @keyframes float-particle-1 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(-100px, -100px) scale(0); }
+        /* ADDED: New keyframe animation for the reward icon */
+        @keyframes reward-icon-pop {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.7));}
+            100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 5px rgba(167, 139, 250, 0.5));}
         }
 
-        @keyframes float-particle-2 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(100px, -100px) scale(0); }
-        }
-
-        @keyframes float-particle-3 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(-50px, 100px) scale(0); }
-        }
-
-        @keyframes float-particle-4 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(50px, 100px) scale(0); }
-        }
-
-        @keyframes float-particle-5 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(0, -120px) scale(0); }
-        }
+        /* REMOVED: Particle animations are no longer needed */
 
         @keyframes pulse-slow {
           0%, 100% { opacity: 0.5; }
@@ -592,26 +530,13 @@ const DailyCheckIn = () => {
         .animate-float {
           animation: float 3s ease-in-out infinite;
         }
-
-        .animate-float-particle-1 {
-          animation: float-particle-1 2s ease-out forwards;
+        
+        /* ADDED: Class for the new icon animation */
+        .animate-reward-icon-pop {
+            animation: reward-icon-pop 1.5s ease-in-out infinite;
         }
 
-        .animate-float-particle-2 {
-          animation: float-particle-2 2s ease-out forwards;
-        }
-
-        .animate-float-particle-3 {
-          animation: float-particle-3 2s ease-out forwards;
-        }
-
-        .animate-float-particle-4 {
-          animation: float-particle-4 2s ease-out forwards;
-        }
-
-        .animate-float-particle-5 {
-          animation: float-particle-5 2s ease-out forwards;
-        }
+        /* REMOVED: Particle animation classes are no longer needed */
 
         .drop-shadow-glow {
           filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.5));
@@ -622,4 +547,3 @@ const DailyCheckIn = () => {
 };
 
 export default DailyCheckIn;
-
