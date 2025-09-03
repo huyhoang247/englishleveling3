@@ -1,4 +1,4 @@
-// --- START OF FILE: multiple-ui.tsx ---
+// --- START OF FILE multiple-ui.tsx ---
 
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import { QuizProvider, useQuiz } from './multiple-context.tsx';
@@ -189,7 +189,6 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                   
                   <div className="relative">
                     {/* --- START: MODIFIED BLOCK --- */}
-                    {/* Thanh điều khiển âm thanh được đặt ở trên cùng */}
                     {currentAudioUrl && (
                       <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-3">
                         <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
@@ -202,18 +201,15 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                         />
                       </div>
                     )}
-                    {/* --- END: MODIFIED BLOCK --- */}
                     
-                    {currentAudioUrl ? (
-                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 flex items-center justify-center min-h-[140px]">
-                            <p className="text-white/80 text-sm font-medium">Nghe và chọn đáp án đúng</p>
-                        </div>
-                    ) : (
-                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
-                            <h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>
-                            {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
-                        </div>
-                    )}
+                    <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
+                      {/* Luôn hiển thị câu hỏi. Đối với Practice 4, nó sẽ là "Nghe và chọn...". Đối với Practice 5, nó sẽ là câu với "___". */}
+                      <h2 className="text-xl font-bold text-white leading-tight pt-8 text-center sm:text-left sm:pt-0">
+                        {playableQuestions[currentQuestion]?.question}
+                      </h2>
+                      {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic text-center sm:text-left">{playableQuestions[currentQuestion]?.vietnamese}</p>}
+                    </div>
+                    {/* --- END: MODIFIED BLOCK --- */}
                   </div>
                 </div>
                 <div className="p-6">
@@ -268,4 +264,4 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     </QuizProvider>
   );
 }
-// --- END OF FILE: multiple-ui.tsx ---
+// --- END OF FILE multiple-ui.tsx ---
