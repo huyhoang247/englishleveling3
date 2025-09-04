@@ -132,11 +132,17 @@ const DailyCheckIn = () => {
     <div className="bg-black/90 shadow-2xl overflow-hidden relative flex flex-col h-screen px-4 pt-4"> {/* Thêm padding top */}
       {/* --- PHẦN HEADER CỐ ĐỊNH --- */}
       <div>
-        {/* Enhanced Progress info - REDESIGNED WITH WATER LEVEL */}
+        {/* --- MODIFIED START: Header được thiết kế lại --- */}
+        {/* Enhanced Progress info - REDESIGNED */}
         <div className="flex justify-center mt-6 mb-6">
-          <div className="bg-gradient-to-r from-slate-800/80 to-slate-800/50 backdrop-blur-sm rounded-full px-6 py-2 flex items-center gap-3 border border-slate-700 shadow-lg">
-            <div className="flex items-center">
+          {/* The main card for the header info */}
+          <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl px-4 py-4 w-full max-w-sm flex items-center gap-4 border border-slate-700 shadow-lg">
+            
+            {/* Water level circle on the left */}
+            <div className="flex-shrink-0">
               <div className="relative w-16 h-16">
+                {/* Adding a subtle glow effect */}
+                <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 opacity-20 blur-md"></div>
                 {/* Water level container */}
                 <div className="w-16 h-16 relative overflow-hidden rounded-full border-2 border-slate-700">
                   {/* Water background */}
@@ -148,8 +154,6 @@ const DailyCheckIn = () => {
                     style={{
                       bottom: 0,
                       height: `${(loginStreak / 7) * 100}%`,
-                      borderTopLeftRadius: '50%',
-                      borderTopRightRadius: '50%',
                       transition: 'height 1s ease-out'
                     }}
                   >
@@ -160,34 +164,35 @@ const DailyCheckIn = () => {
 
                   {/* Login streak number */}
                   <div className="absolute inset-0 flex items-center justify-center z-10">
-                    {/* MODIFIED: Added opacity-70 class */}
-                    <span className="text-2xl font-bold text-white opacity-70">{loginStreak}</span>
+                    <span className="text-2xl font-bold text-white drop-shadow-lg">{loginStreak}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col">
-              <div className="text-white font-bold">Check In</div>
-              <div className="text-indigo-300 text-sm font-medium">
-                Ngày {currentDay}
-              </div>
-              <div className="mt-1 flex items-center">
-                {/* Progress dots reflect current day */}
-                {[...Array(7)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-4 h-1 rounded-full mr-1 ${
-                      i < currentDay
-                        ? 'bg-gradient-to-r from-purple-400 to-indigo-500'
-                        : 'bg-slate-700'
-                    }`}
-                  />
-                ))}
-              </div>
+            {/* Text and Progress bar on the right */}
+            <div className="flex-1 min-w-0">
+                {/* Title and subtitle */}
+                <div className="flex justify-between items-baseline mb-2">
+                    <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-100 to-slate-300">
+                      Check In Hàng Ngày
+                    </h2>
+                    <div className="text-indigo-300 text-sm font-medium">
+                      Ngày {currentDay}/7
+                    </div>
+                </div>
+
+                {/* New sleek progress bar */}
+                <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${(currentDay / 7) * 100}%` }}
+                    ></div>
+                </div>
             </div>
           </div>
         </div>
+        {/* --- MODIFIED END --- */}
 
         {/* Calendar bar with glowing current day */}
         <div className="mb-6">
