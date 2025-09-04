@@ -118,9 +118,6 @@ const DailyCheckIn = () => {
     setShowTestControls(!showTestControls);
   };
 
-  // Sparkle animation effect REMOVED
-  // useEffect(() => { ... });
-
   // Particle animation classes
   const particleClasses = [
     "animate-float-particle-1",
@@ -131,10 +128,8 @@ const DailyCheckIn = () => {
   ];
 
   return (
-    // <!-- MODIFIED: Đã xóa max-w-md và mx-auto để chiếm toàn chiều rộng -->
-    <div className="bg-black/90 shadow-2xl rounded-xl overflow-hidden relative flex flex-col h-screen">
-      {/* Background effects REMOVED */}
-
+    // <!-- MODIFIED: Đã xóa max-w-md, mx-auto, rounded-xl. Thêm px-4 để nội dung không dính sát cạnh -->
+    <div className="bg-black/90 shadow-2xl overflow-hidden relative flex flex-col h-screen px-4 pt-4"> {/* Thêm padding top */}
       {/* --- PHẦN HEADER CỐ ĐỊNH --- */}
       <div>
         {/* Enhanced Progress info - REDESIGNED WITH WATER LEVEL */}
@@ -195,7 +190,7 @@ const DailyCheckIn = () => {
         </div>
 
         {/* Calendar bar with glowing current day */}
-        <div className="px-6 mb-6">
+        <div className="mb-6">
           {/* Enhanced day indicators */}
           <div className="flex justify-between">
             {dailyRewards.map(reward => {
@@ -215,7 +210,7 @@ const DailyCheckIn = () => {
                 dayClasses += " bg-slate-700 text-slate-400 opacity-70";
               } else if (isCurrent) {
                 dayClasses += " bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg";
-              } else { // isFuture or past but not claimed
+              } else { // isFuture or past not claimed
                 dayClasses += " bg-slate-700 text-slate-400";
               }
 
@@ -260,7 +255,7 @@ const DailyCheckIn = () => {
       </div>
       
       {/* <!-- ADDED: Vùng chứa nội dung có thể cuộn --> */}
-      <div className="flex-1 overflow-y-auto px-6">
+      <div className="flex-1 overflow-y-auto pr-2 -mr-2"> {/* Thêm pr và -mr để tùy chỉnh thanh cuộn */}
         {/* Rewards section */}
         <div className="pb-6">
           <div className="grid grid-cols-1 gap-4">
@@ -357,7 +352,7 @@ const DailyCheckIn = () => {
       {/* --- PHẦN FOOTER CỐ ĐỊNH --- */}
       <div>
         {/* Test Controls Area */}
-        <div className="mx-6 mb-6">
+        <div className="mb-6">
           <div className="relative">
             <button
               onClick={toggleTestControls}
