@@ -1,3 +1,5 @@
+// --- START OF FILE background-game.tsx ---
+
 import React, { useEffect, useRef, Component, lazy, Suspense, useCallback, useState } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './ui/display/coin-display.tsx';
@@ -237,13 +239,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         
         {/* THÊM MỚI: Render Daily Check-in */}
         {isCheckInOpen && (
-            <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center">
                 <ErrorBoundary>
-                    <div className="relative">
+                    <div className="relative w-full h-full">
                         <DailyCheckIn />
                         <button 
                             onClick={toggleCheckIn} 
-                            className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-slate-800 text-white/80 flex items-center justify-center font-bold text-lg hover:bg-red-600 hover:text-white transition-all z-10 border-2 border-slate-700"
+                            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 text-white/80 flex items-center justify-center font-bold text-lg hover:bg-red-600 hover:text-white transition-all z-10 border-2 border-slate-700"
                             aria-label="Đóng"
                         >
                             &times;
@@ -268,3 +270,4 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
+// --- END OF FILE background-game.tsx ---
