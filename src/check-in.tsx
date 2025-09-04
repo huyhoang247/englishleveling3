@@ -354,43 +354,6 @@ const DailyCheckIn = () => {
 
       {/* --- PHẦN FOOTER CỐ ĐỊNH --- */}
       <div>
-        {/* Final day special reward */}
-        <div className="mx-6 mb-6 relative overflow-hidden rounded-xl">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-indigo-500/20 to-purple-400/20 animate-pulse-slow"></div>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl transform translate-x-8 -translate-y-8"></div>
-
-          <div className="relative p-5 bg-gradient-to-br from-slate-800/95 to-slate-900 backdrop-blur-sm border border-purple-500/30">
-            <div className="absolute top-1 right-2">
-              <div className="text-xs font-semibold text-slate-300 bg-slate-700 px-2 py-1 rounded">
-                Còn {7 - currentDay} ngày
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-400 to-indigo-600 p-1 shadow-lg shadow-indigo-500/20">
-                  <div className="w-full h-full bg-indigo-500/20 rounded-lg flex items-center justify-center">
-                    {/* Replaced Crown icon with SVG */}
-                    <svg xmlns="http://www.w3.org/2000/svg" className="text-indigo-300 w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 6l-2 3H5l2-3-2-3h5l2-3 2 3h5l-2 3 2 3h-5l-2-3z"></path>
-                      <path d="M2 15l.9 1.8a6 6 0 0 0 8.2 8.2l1.8.9 1.8-.9a6 6 0 0 0 8.2-8.2L22 15"></path>
-                    </svg>
-                  </div>
-                </div>
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-400 rounded-full text-slate-900 flex items-center justify-center font-bold text-xs">
-                  7
-                </div>
-              </div>
-
-              <div>
-                <div className="text-sm text-indigo-300 font-semibold">PHẦN THƯỞNG ĐẶC BIỆT</div>
-                <div className="text-white font-bold text-lg">Vũ Khí Thần Thánh</div>
-                <div className="text-xs text-slate-400 mt-1">Hiếm có - Chỉ đạt được khi đăng nhập đủ 7 ngày</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Test Controls Area */}
         <div className="mx-6 mb-6">
           <div className="relative">
