@@ -1,3 +1,5 @@
+// --- START OF FILE check-in.tsx ---
+
 import React, { useState, useEffect } from 'react';
 // Removed lucide-react import
 
@@ -129,8 +131,8 @@ const DailyCheckIn = () => {
   ];
 
   return (
-    // <!-- MODIFIED: Removed max-w-md, mx-auto, rounded-xl, shadow-2xl for full-width layout -->
-    <div className="bg-black/90 overflow-hidden relative flex flex-col h-screen">
+    // <!-- MODIFIED: Đã xóa max-w-md và mx-auto để chiếm toàn chiều rộng -->
+    <div className="bg-black/90 shadow-2xl rounded-xl overflow-hidden relative flex flex-col h-screen">
       {/* Background effects REMOVED */}
 
       {/* --- PHẦN HEADER CỐ ĐỊNH --- */}
@@ -570,3 +572,4 @@ const DailyCheckIn = () => {
 };
 
 export default DailyCheckIn;
+// --- END OF FILE check-in.tsx ---
