@@ -129,8 +129,8 @@ const DailyCheckIn = () => {
   ];
 
   return (
-    // <!-- MODIFIED: Thêm flex flex-col h-screen để kiểm soát layout dọc và chiều cao -->
-    <div className="bg-black/90 shadow-2xl rounded-xl max-w-md mx-auto overflow-hidden relative flex flex-col h-screen">
+    // <!-- MODIFIED: Removed max-w-md, mx-auto, rounded-xl, shadow-2xl for full-width layout -->
+    <div className="bg-black/90 overflow-hidden relative flex flex-col h-screen">
       {/* Background effects REMOVED */}
 
       {/* --- PHẦN HEADER CỐ ĐỊNH --- */}
