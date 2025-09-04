@@ -172,13 +172,17 @@ const DailyCheckIn = () => {
 
             {/* Text and Progress bar on the right */}
             <div className="flex-1 min-w-0">
-                {/* Title and subtitle */}
-                <div className="flex justify-between items-baseline mb-2">
-                    <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-100 to-slate-300">
-                      Check In Hàng Ngày
-                    </h2>
-                    <div className="text-indigo-300 text-sm font-medium">
-                      Ngày {currentDay}/7
+                {/* Title and subtitle using tags */}
+                <div className="flex justify-between items-center mb-2">
+                    <div>
+                        <span className="inline-block bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-lg text-lg font-bold">
+                           Check In
+                        </span>
+                    </div>
+                    <div>
+                        <span className="bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full text-xs font-medium">
+                           Ngày {currentDay}/7
+                        </span>
                     </div>
                 </div>
 
