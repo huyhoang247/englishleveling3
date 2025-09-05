@@ -94,6 +94,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   zIndex = 50,
 }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'example' | 'vocabulary'>('basic');
+  const [isZoomed, setIsZoomed] = useState(false); // CHANGED: Add state for zoom
 
   const [audioUrls, setAudioUrls] = useState<{ [key: string]: string } | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<string>('Matilda');
@@ -103,6 +104,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   useEffect(() => {
     if (showVocabDetail && selectedCard) {
       setActiveTab('basic');
+      setIsZoomed(false); // CHANGED: Reset zoom state when modal opens/changes card
       const urls = generateAudioUrlsForWord(selectedCard.vocabulary.word);
       setAudioUrls(urls);
       setSelectedVoice('Matilda');
@@ -204,12 +206,23 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
     switch (activeTab) {
       case 'basic':
+        // --- START: CHANGED BLOCK FOR ZOOM ---
         return (
-          <div className="flex justify-center items-start flex-grow px-4 pt-2 pb-4 overflow-hidden content-transition">
+          <div className={`
+            flex-grow px-4 pt-2 pb-4 content-transition overflow-auto
+            ${isZoomed ? 'bg-gray-100 dark:bg-gray-900' : 'flex justify-center items-center'}
+          `}>
             <img
               src={getImageUrlForStyle(selectedCard, currentVisualStyle)}
               alt="Ảnh Gốc"
-              className="max-h-full max-w-full object-contain rounded-lg shadow-md"
+              onClick={() => setIsZoomed(!isZoomed)}
+              className={`
+                block rounded-lg shadow-md transition-all duration-300 ease-in-out
+                ${isZoomed
+                  ? 'max-w-none cursor-zoom-out' // Allow image to take its natural size, enable zoom out cursor
+                  : 'max-h-full max-w-full object-contain cursor-zoom-in' // Contain within view, enable zoom in cursor
+                }
+              `}
               onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = `https://placehold.co/1024x1536/E0E0E0/333333?text=Lỗi+Ảnh+Gốc`;
@@ -217,6 +230,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             />
           </div>
         );
+        // --- END: CHANGED BLOCK FOR ZOOM ---
       case 'example':
         return (
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
