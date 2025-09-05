@@ -23,8 +23,6 @@ const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http:/
 const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
 const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 const ChevronRightIcon = ({ className }: { className:string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg> );
-const MinusIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" /></svg>);
-const PlusIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>);
 
 const VoiceStepper: React.FC<{
   currentVoice: string;
@@ -66,60 +64,6 @@ const VoiceStepper: React.FC<{
 };
 // --- END: CÁC COMPONENT & ICON ---
 
-// --- START: ZOOM CONTROLS COMPONENT ---
-interface ZoomControlsProps {
-    zoomLevel: number;
-    setZoomLevel: React.Dispatch<React.SetStateAction<number>>;
-    minZoom?: number;
-    maxZoom?: number;
-    step?: number;
-}
-
-const ZoomControls: React.FC<ZoomControlsProps> = ({
-    zoomLevel,
-    setZoomLevel,
-    minZoom = 50,
-    maxZoom = 300,
-    step = 10,
-}) => {
-    const handleZoomChange = (newZoom: number) => {
-        setZoomLevel(Math.max(minZoom, Math.min(maxZoom, newZoom)));
-    };
-
-    return (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 w-full max-w-xs px-4 z-10 animate-fade-in-down">
-            <div className="flex items-center gap-3 bg-black/60 backdrop-blur-sm p-2 rounded-full shadow-lg border border-white/20">
-                <button
-                    onClick={() => handleZoomChange(zoomLevel - step)}
-                    className="p-2 text-white/80 hover:text-white transition-colors"
-                    aria-label="Thu nhỏ"
-                >
-                    <MinusIcon className="w-4 h-4" />
-                </button>
-                <input
-                    type="range"
-                    min={minZoom}
-                    max={maxZoom}
-                    value={zoomLevel}
-                    onChange={(e) => handleZoomChange(parseInt(e.target.value))}
-                    className="w-full h-2 bg-white/30 rounded-lg appearance-none cursor-pointer zoom-slider"
-                    aria-label="Thanh trượt phóng to"
-                />
-                <button
-                    onClick={() => handleZoomChange(zoomLevel + step)}
-                    className="p-2 text-white/80 hover:text-white transition-colors"
-                    aria-label="Phóng to"
-                >
-                    <PlusIcon className="w-4 h-4" />
-                </button>
-                <span className="text-xs font-mono text-white w-12 text-center bg-white/10 px-2 py-1 rounded-md">
-                    {zoomLevel}%
-                </span>
-            </div>
-        </div>
-    );
-};
-// --- END: ZOOM CONTROLS COMPONENT ---
 
 // Animation styles - Clean and minimal
 const animations = `
@@ -127,18 +71,9 @@ const animations = `
   @keyframes modalBackdropIn { 0% { opacity: 0; } 100% { opacity: 0.4; } }
   @keyframes slideUp { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
   @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes fade-in-down { 
-    from { opacity: 0; transform: translateY(-10px) translateX(-50%); } 
-    to { opacity: 1; transform: translateY(0) translateX(-50%); } 
-  }
   
   .content-transition { animation: slideUp 0.3s ease-out; }
   .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; }
-  .animate-fade-in-down { animation: fade-in-down 0.3s ease-out forwards; }
-
-  /* Custom styles for the zoom slider */
-  .zoom-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; background: #ffffff; cursor: pointer; border-radius: 50%; border: 2px solid #555; margin-top: -6px; }
-  .zoom-slider::-moz-range-thumb { width: 18px; height: 18px; background: #ffffff; cursor: pointer; border-radius: 50%; border: 2px solid #555; }
 `;
 
 const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
@@ -150,8 +85,11 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   zIndex = 50,
 }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'example' | 'vocabulary'>('basic');
+  
+  // --- STATE FOR POINT & ZOOM ---
   const [isZoomed, setIsZoomed] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(100);
+  const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 }); // Default to center
+  const ZOOM_LEVEL = 2.5; // Mức độ phóng to (2.5 lần)
 
   const [audioUrls, setAudioUrls] = useState<{ [key: string]: string } | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<string>('Matilda');
@@ -161,8 +99,9 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   useEffect(() => {
     if (showVocabDetail && selectedCard) {
       setActiveTab('basic');
+      // Reset zoom state
       setIsZoomed(false);
-      setZoomLevel(100);
+      
       const urls = generateAudioUrlsForWord(selectedCard.vocabulary.word);
       setAudioUrls(urls);
       setSelectedVoice('Matilda');
@@ -264,45 +203,45 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
     switch (activeTab) {
       case 'basic':
-        const toggleZoom = () => {
-            if (!isZoomed) {
-                setZoomLevel(100);
-            }
-            setIsZoomed(!isZoomed);
+        const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
+          if (isZoomed) {
+            setIsZoomed(false);
+          } else {
+            const { top, left, width, height } = e.currentTarget.getBoundingClientRect();
+            // Tính toán vị trí click tương đối so với ảnh (bằng pixel)
+            const x = e.clientX - left;
+            const y = e.clientY - top;
+            
+            // Chuyển sang dạng phần trăm để dùng cho transform-origin
+            const xPercent = (x / width) * 100;
+            const yPercent = (y / height) * 100;
+            
+            setZoomOrigin({ x: xPercent, y: yPercent });
+            setIsZoomed(true);
+          }
         };
 
         return (
-          <div className={`
-            flex-grow content-transition overflow-auto relative
-            ${isZoomed ? 'bg-gray-100 dark:bg-gray-900 p-8' : 'flex justify-center items-center p-4'}
-          `}>
+          // Container phải có overflow-hidden để tạo hiệu ứng zoom
+          <div className="flex justify-center items-center flex-grow content-transition overflow-hidden p-4 bg-gray-100 dark:bg-gray-900">
             <img
               src={getImageUrlForStyle(selectedCard, currentVisualStyle)}
               alt="Ảnh Gốc"
-              onClick={toggleZoom}
+              onClick={handleImageClick}
               style={{
-                transform: isZoomed ? `scale(${zoomLevel / 100})` : 'scale(1)',
-                transformOrigin: 'center center',
+                transform: isZoomed ? `scale(${ZOOM_LEVEL})` : 'scale(1)',
+                transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
                 transition: 'transform 0.3s ease-out',
               }}
               className={`
-                block rounded-lg shadow-md
-                ${isZoomed
-                  ? 'max-w-none cursor-grab'
-                  : 'max-h-full max-w-full object-contain cursor-zoom-in'
-                }
+                block rounded-lg shadow-md max-h-full max-w-full object-contain
+                ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}
               `}
               onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = `https://placehold.co/1024x1536/E0E0E0/333333?text=Lỗi+Ảnh+Gốc`;
               }}
             />
-            {isZoomed && (
-                <ZoomControls
-                    zoomLevel={zoomLevel}
-                    setZoomLevel={setZoomLevel}
-                />
-            )}
           </div>
         );
       case 'example':
