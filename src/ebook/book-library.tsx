@@ -1,7 +1,7 @@
 // --- START OF FILE BookLibrary.tsx ---
 
 import React from 'react';
-import { Book } from '../books-data.ts'; // Đảm bảo đường dẫn này đúng
+import { Book } from '../books-data.ts'; // Đảm bảo đường dẫn này đúng với cấu trúc dự án của bạn
 
 interface BookLibraryProps {
   books: Book[];
