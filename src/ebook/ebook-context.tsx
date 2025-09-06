@@ -16,7 +16,7 @@ import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 
 // --- DATA IMPORTS ---
-import { defaultVocabulary } from ' ../voca-data/list-vocabulary.ts';
+import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 import { defaultImageUrls as gameImageUrls } from '../voca-data/image-url.ts';
 import { Book, sampleBooks as initialSampleBooks } from '../books-data.ts';
 import { phraseData } from '../phrase-data-2.ts';
