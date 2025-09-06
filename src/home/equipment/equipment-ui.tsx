@@ -15,6 +15,7 @@ import RateLimitToast from '../../thong-bao.tsx';
 import { EquipmentProvider, useEquipment } from './equipment-context.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import EquipmentScreenSkeleton from './equipment-loading.tsx';
+import RarityEffectCanvas from './RarityEffectCanvas.tsx';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
@@ -119,6 +120,7 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
 
 const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { slotType: EquipmentSlotType, ownedItem: OwnedItem | null, onClick: () => void, isProcessing: boolean }) => {
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
+    const shouldShowEffect = itemDef && ['A', 'S', 'SR', 'SSR'].includes(itemDef.rarity); // CẬP NHẬT
 
     if (ownedItem && !itemDef) {
         console.error(`Không tìm thấy định nghĩa cho vật phẩm trang bị với ID: ${ownedItem.itemId}`, ownedItem);
@@ -153,10 +155,13 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
 
     return (
         <div className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} onClick={!isProcessing ? onClick : undefined} title={itemDef ? `${itemDef.name} - Lv.${ownedItem?.level}` : `Ô ${slotType}`}>
+            {shouldShowEffect && itemDef && (
+                <RarityEffectCanvas rarity={itemDef.rarity} className="absolute inset-0 w-full h-full pointer-events-none rounded-lg z-0" />
+            )}
             {ownedItem && itemDef ? (
                 <>
-                    <img src={itemDef.icon} alt={itemDef.name} className="w-12 h-12 sm:w-14 sm:h-14 object-contain transition-all duration-300 group-hover:scale-110" />
-                    <span className="absolute top-1 right-1.5 px-1.5 py-0.5 text-xs font-bold bg-black/60 text-white rounded-md border border-slate-600">
+                    <img src={itemDef.icon} alt={itemDef.name} className="relative z-10 w-12 h-12 sm:w-14 sm:h-14 object-contain transition-all duration-300 group-hover:scale-110" />
+                    <span className="absolute top-1 right-1.5 px-1.5 py-0.5 text-xs font-bold bg-black/60 text-white rounded-md border border-slate-600 z-10">
                         Lv.{ownedItem.level}
                     </span>
                 </>
@@ -172,6 +177,7 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
 
 const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: OwnedItem | undefined; onClick: (item: OwnedItem) => void; isProcessing: boolean; }) => {
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
+    const shouldShowEffect = itemDef && ['A', 'S', 'SR', 'SSR'].includes(itemDef.rarity); // CẬP NHẬT
 
     if (ownedItem && !itemDef) {
         console.error(`Không tìm thấy định nghĩa cho vật phẩm trong kho với ID: ${ownedItem.itemId}`, ownedItem);
@@ -195,15 +201,21 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
             onClick={ownedItem && !isProcessing ? () => onClick(ownedItem) : undefined}
             style={shadowColorStyle}
         >
+            {shouldShowEffect && itemDef && (
+                <RarityEffectCanvas 
+                    rarity={itemDef.rarity} 
+                    className="absolute inset-0 w-full h-full pointer-events-none rounded-lg z-0" 
+                />
+            )}
             {ownedItem && itemDef ? (
                 <>
                     <img 
                         src={itemDef.icon} 
                         alt={itemDef.name} 
-                        className="w-3/4 h-3/4 object-contain transition-transform duration-200 group-hover:scale-110"
+                        className="relative z-10 w-3/4 h-3/4 object-contain transition-transform duration-200 group-hover:scale-110"
                         title={`${itemDef.name} - Lv.${ownedItem.level}`}
                     />
-                    <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">
+                    <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600 z-10">
                         Lv.{ownedItem.level}
                     </span>
                 </>
@@ -213,6 +225,8 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
         </div>
     );
 });
+
+// ... (Các component còn lại giữ nguyên như cũ, không cần thay đổi)
 
 const HpIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/> </svg> );
 const AtkIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M17.46,3.26a1.5,1.5,0,0,0-2.12,0L3.25,15.35a1.5,1.5,0,0,0,0,2.12l2.83,2.83a1.5,1.5,0,0,0,2.12,0L20.29,8.21a1.5,1.5,0,0,0,0-2.12Zm-11,14.31L4.6,15.71,15,5.34l1.83,1.83ZM18,7.5,16.5,6l1.41-1.41a.5.5,0,0,1,.71.71Z"/> </svg> );
