@@ -1,4 +1,3 @@
---- START OF FILE game.tsx ---
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Assuming this path is correct
