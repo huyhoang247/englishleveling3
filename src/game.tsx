@@ -1,4 +1,4 @@
-// --- START OF FILE game.tsx ---
+--- START OF FILE game.tsx ---
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Assuming this path is correct
@@ -43,6 +43,18 @@ const StatsIcon = () => (
   </svg>
 );
 
+// --- START: ICONS FOR VOICE CHANGER ---
+const ChevronLeftIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+);
+const ChevronRightIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+);
+// --- END: ICONS FOR VOICE CHANGER ---
 
 // --- Interfaces ---
 interface Vocabulary {
@@ -105,6 +117,56 @@ const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
     return acc;
   }, {} as Record<string, Book[]>);
 };
+
+// --- START: VOICE STEPPER COMPONENT ---
+const VoiceStepper: React.FC<{
+  currentVoice: string;
+  onNavigate: (direction: 'next' | 'previous') => void;
+  availableVoiceCount: number;
+}> = ({ currentVoice, onNavigate, availableVoiceCount }) => {
+  if (availableVoiceCount <= 1) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
+      <button 
+        onClick={() => onNavigate('previous')} 
+        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200"
+        aria-label="Giọng đọc trước"
+      >
+        <ChevronLeftIcon className="w-3 h-3 text-white/80" />
+      </button>
+      
+      <div className="text-center w-24 overflow-hidden">
+         <span 
+            key={currentVoice}
+            className="text-xs font-semibold text-white animate-fade-in-short"
+         >
+            {currentVoice}
+        </span>
+      </div>
+
+      <button 
+        onClick={() => onNavigate('next')} 
+        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200"
+        aria-label="Giọng đọc tiếp theo"
+      >
+        <ChevronRightIcon className="w-3 h-3 text-white/80" />
+      </button>
+      <style jsx>{`
+        @keyframes fade-in-short {
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-short {
+          animation: fade-in-short 0.25s ease-out forwards;
+        }
+      `}</style>
+    </div>
+  );
+};
+// --- END: VOICE STEPPER COMPONENT ---
 
 // --- Book Sidebar Component ---
 interface BookSidebarProps {
@@ -388,6 +450,9 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   // --- STATE MỚI CHO CHỨC NĂNG CỤM TỪ ---
   const [highlightMode, setHighlightMode] = useState<'word' | 'phrase'>('word');
   const [selectedPhrase, setSelectedPhrase] = useState<PhraseSentence | null>(null);
+  
+  // --- STATE MỚI CHO CHỌN GIỌNG ĐỌC ---
+  const [selectedVoiceKey, setSelectedVoiceKey] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(user => {
@@ -456,6 +521,32 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
   const currentBook = booksData.find(book => book.id === selectedBookId);
   
+  // --- LOGIC CHỌN GIỌNG ĐỌC ---
+  const availableVoices = useMemo(() => currentBook?.audioUrls ? Object.keys(currentBook.audioUrls) : [], [currentBook]);
+  const currentAudioUrl = selectedVoiceKey ? currentBook?.audioUrls?.[selectedVoiceKey] : null;
+
+  useEffect(() => {
+    if (availableVoices.length > 0) {
+      setSelectedVoiceKey(availableVoices[0]);
+    } else {
+      setSelectedVoiceKey(null);
+    }
+  }, [availableVoices]);
+
+  const handleVoiceChange = (direction: 'next' | 'previous') => {
+      if (availableVoices.length <= 1 || !selectedVoiceKey) return;
+      const currentIndex = availableVoices.indexOf(selectedVoiceKey);
+      if (currentIndex === -1) return;
+
+      let nextIndex;
+      if (direction === 'next') {
+        nextIndex = (currentIndex + 1) % availableVoices.length;
+      } else {
+        nextIndex = (currentIndex - 1 + availableVoices.length) % availableVoices.length;
+      }
+      setSelectedVoiceKey(availableVoices[nextIndex]);
+  };
+  
   const bookVocabularyCardIds = useMemo(() => {
     if (!currentBook || vocabMap.size === 0) {
       return [];
@@ -511,31 +602,30 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     };
   }, [currentBook, vocabMap]);
 
-  // --- START: SỬA LỖI AUDIO ---
-  // Xóa useEffect lớn và thay bằng các useEffect chuyên biệt
+  // --- START: SỬA LỖI AUDIO (Đã cập nhật để dùng currentAudioUrl) ---
 
-  // EFFECT 1: Chỉ quản lý việc thay đổi NGUỒN AUDIO khi sách thay đổi
+  // EFFECT 1: Chỉ quản lý việc thay đổi NGUỒN AUDIO khi sách hoặc giọng đọc thay đổi
   useEffect(() => {
     const audio = audioPlayerRef.current;
-    if (selectedBookId && currentBook?.audioUrl && audio) {
-      // Chỉ thay đổi src nếu nó thực sự khác để tránh tải lại không cần thiết
-      if (audio.src !== currentBook.audioUrl) {
-          audio.src = currentBook.audioUrl;
-          audio.load(); // Khuyến khích gọi load() sau khi thay đổi src
-      }
-      // Reset trạng thái cho audio mới
-      setIsAudioPlaying(false);
-      setAudioCurrentTime(0);
-      setAudioDuration(0);
-    } else if (audio) {
-      // Dọn dẹp nếu không có sách hoặc sách không có audio
-      audio.pause();
-      audio.removeAttribute('src');
-      setIsAudioPlaying(false);
-      setAudioCurrentTime(0);
-      setAudioDuration(0);
+    if (currentAudioUrl && audio) {
+        if (audio.src !== currentAudioUrl) {
+            audio.src = currentAudioUrl;
+            audio.load();
+        }
+        // Reset state cho audio mới
+        setIsAudioPlaying(false);
+        setAudioCurrentTime(0);
+        setAudioDuration(0);
+    } else if (audio && !currentAudioUrl) {
+        // Dọn dẹp nếu không có URL audio
+        audio.pause();
+        audio.removeAttribute('src');
+        audio.load();
+        setIsAudioPlaying(false);
+        setAudioCurrentTime(0);
+        setAudioDuration(0);
     }
-  }, [selectedBookId, currentBook?.audioUrl]); // Dependency chỉ là ID sách và URL audio
+  }, [currentAudioUrl]); // Dependency là URL audio cụ thể
 
   // EFFECT 2: Chỉ quản lý TỐC ĐỘ PHÁT
   useEffect(() => {
@@ -893,7 +983,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         onEnded={() => { setIsAudioPlaying(false); setAudioCurrentTime(0);}}
       />
 
-      {selectedBookId && currentBook?.audioUrl && (
+      {selectedBookId && currentBook?.audioUrls && Object.keys(currentBook.audioUrls).length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-md shadow-top-lg p-3 z-30">
           <div className="max-w-3xl mx-auto flex items-center space-x-3 sm:space-x-4">
             <button
@@ -916,6 +1006,11 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
               />
               <span className="text-xs text-gray-600 dark:text-gray-400 w-10 text-center">{formatTime(audioDuration)}</span>
             </div>
+             <VoiceStepper
+                currentVoice={selectedVoiceKey || '...'}
+                onNavigate={handleVoiceChange}
+                availableVoiceCount={availableVoices.length}
+            />
             <button
               onClick={togglePlaybackSpeed}
               className="px-4 py-2 text-sm font-semibold rounded-full border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 shadow-sm hover:bg-blue-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105"
