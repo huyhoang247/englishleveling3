@@ -134,7 +134,10 @@ const EbookReaderContent: React.FC = () => {
             ) : (
               <h2 className="text-xl md:text-2xl font-bold dark:text-white">{category}</h2>
             )}
-            <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline">Xem tất cả →</button>
+            {/* --- NÚT ĐÃ ĐƯỢC THIẾT KẾ LẠI --- */}
+            <button className="text-sm font-medium px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30 transition-colors">
+              Xem tất cả
+            </button>
           </div>
           <div className="flex overflow-x-auto space-x-4 pb-4 -mx-4 px-4">
             {booksInCategory.map(book => (
