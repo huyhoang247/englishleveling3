@@ -1,5 +1,7 @@
+// --- START OF FILE BookLibrary.tsx ---
+
 import React from 'react';
-import { Book } from '../books-data.ts'; // Đảm bảo đường dẫn đúng
+import { Book } from '../books-data.ts'; // Đảm bảo đường dẫn này đúng
 
 interface BookLibraryProps {
   books: Book[];
@@ -39,11 +41,7 @@ const BookLibrary: React.FC<BookLibraryProps> = ({ books, onSelectBook }) => {
                   onKeyPress={(e) => e.key === 'Enter' && onSelectBook(book.id)}
                 >
                   <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg mb-2 transition-shadow group-hover:shadow-xl">
-                    {book.coverImageUrl ? (
-                      <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 p-2 text-center">{book.title}</div>
-                    )}
+                    {book.coverImageUrl ? <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 p-2 text-center">{book.title}</div>}
                   </div>
                   <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">{book.title}</h3>
                   {book.author && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{book.author}</p>}
@@ -58,3 +56,4 @@ const BookLibrary: React.FC<BookLibraryProps> = ({ books, onSelectBook }) => {
 };
 
 export default BookLibrary;
+// --- END OF FILE BookLibrary.tsx ---
