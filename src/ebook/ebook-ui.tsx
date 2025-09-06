@@ -1,7 +1,7 @@
 // --- START OF FILE game.tsx (Refactored) ---
 
 import React, { useMemo } from 'react';
-import { EbookProvider, useEbook, Book, Vocabulary, PhraseSentence, Flashcard } from './EbookContext.tsx';
+import { EbookProvider, useEbook, Book, Vocabulary, PhraseSentence, Flashcard } from './ebook-context.tsx';
 
 // --- COMPONENT & MODAL IMPORTS ---
 import FlashcardDetailModal from '../story/flashcard.tsx';
