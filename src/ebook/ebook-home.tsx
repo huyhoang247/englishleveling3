@@ -1,93 +1,54 @@
-import React, { useState, useEffect } from 'react';
+// --- START OF FILE EbookReader.tsx (formerly game.tsx) ---
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '../firebase.js'; // Đảm bảo đường dẫn đúng
+import { auth, db } from './firebase.js';
+import { Book, sampleBooks as initialSampleBooks } from './books-data';
+import { defaultVocabulary } from './voca-data/list-vocabulary';
+import { phraseData } from './phrase-data-2';
+import BookLibrary from './BookLibrary';
+import BookReaderView from './BookReaderView';
 
-// Import các component con mới
-import BookLibrary from './components/BookLibrary.tsx';
-import BookReaderView from './components/BookReaderView.tsx';
-
-// Import dữ liệu và types
-import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
-import { Book, sampleBooks as initialSampleBooks } from '../books-data.ts';
-
-// --- Interfaces dùng chung ---
-export interface Vocabulary {
-  word: string;
-  meaning: string;
-  example: string;
-  phrases: string[];
-  popularity: "Cao" | "Trung bình" | "Thấp";
-  synonyms: string[];
-  antonyms: string[];
+// --- Interfaces needed by this container component ---
+interface Vocabulary {
+  word: string; meaning: string; example: string; phrases: string[];
+  popularity: "Cao" | "Trung bình" | "Thấp"; synonyms: string[]; antonyms: string[];
 }
-
-export interface Playlist {
-  id: string;
-  name: string;
-  cardIds: number[];
+interface Playlist { id: string; name: string; cardIds: number[]; }
+interface PhraseSentence {
+  parts: { english: string; vietnamese: string; }[]; fullEnglish: string; fullVietnamese: string;
 }
-
 interface EbookReaderProps {
   hideNavBar: () => void;
   showNavBar: () => void;
 }
 
 const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => {
-  const [booksData] = useState<Book[]>(initialSampleBooks);
+  const [booksData, setBooksData] = useState<Book[]>(initialSampleBooks);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
-  
   const [vocabMap, setVocabMap] = useState<Map<string, Vocabulary>>(new Map());
   const [isLoadingVocab, setIsLoadingVocab] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
-
   const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
 
-  // Effect để quản lý NavBar dựa trên việc có sách được chọn hay không
-  useEffect(() => {
-    if (selectedBookId) {
-      hideNavBar();
-    } else {
-      showNavBar();
-    }
-  }, [selectedBookId, hideNavBar, showNavBar]);
-
-  // Effect để quản lý dark mode
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
-
-  // Effect để theo dõi trạng thái đăng nhập
+  // --- Effects for fetching global data ---
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(user => setCurrentUser(user));
     return unsubscribeAuth;
   }, []);
 
-  // Effect để lấy playlist của người dùng
   useEffect(() => {
-    if (!currentUser) {
-      setPlaylists([]);
-      return;
-    }
+    if (!currentUser) { setPlaylists([]); return; }
     const userDocRef = doc(db, 'users', currentUser.uid);
     const unsubscribeFirestore = onSnapshot(userDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setPlaylists(docSnap.data().playlists || []);
-      } else {
-        setPlaylists([]);
-      }
-    }, (error) => {
-      console.error("Lỗi khi lấy dữ liệu playlist:", error);
-    });
+      if (docSnap.exists()) setPlaylists(docSnap.data().playlists || []);
+      else setPlaylists([]);
+    }, (error) => console.error("Firestore snapshot error:", error));
     return unsubscribeFirestore;
   }, [currentUser]);
 
-  // Effect để khởi tạo vocabMap
   useEffect(() => {
     const tempMap = new Map<string, Vocabulary>();
     defaultVocabulary.forEach((word, index) => {
@@ -104,39 +65,62 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     setVocabMap(tempMap);
     setIsLoadingVocab(false);
   }, []);
+
+  useEffect(() => {
+    if (isDarkMode) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  }, [isDarkMode]);
   
-  // --- Handlers để chuyển đổi giữa các view ---
-  const handleSelectBook = (bookId: string) => {
-    setSelectedBookId(bookId);
-  };
+  useEffect(() => {
+    if (selectedBookId) hideNavBar(); else showNavBar();
+  }, [selectedBookId, hideNavBar, showNavBar]);
 
-  const handleBackToLibrary = () => {
-    setSelectedBookId(null);
-  };
+  const { phraseMap, phraseRegex } = useMemo(() => {
+    const sortedPhrases = [...phraseData].sort((a, b) => b.fullEnglish.length - a.fullEnglish.length);
+    const tempMap = new Map<string, PhraseSentence>();
+    const phraseStrings: string[] = [];
+    sortedPhrases.forEach(phrase => {
+      const lowerCasePhrase = phrase.fullEnglish.toLowerCase();
+      tempMap.set(lowerCasePhrase, phrase);
+      phraseStrings.push(lowerCasePhrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    });
+    if (phraseStrings.length === 0) return { phraseMap: tempMap, phraseRegex: null };
+    const regex = new RegExp(`(${phraseStrings.join('|')})`, 'gi');
+    return { phraseMap: tempMap, phraseRegex: regex };
+  }, []);
 
-  const currentBook = booksData.find(book => book.id === selectedBookId);
+  const handleSelectBook = (bookId: string) => setSelectedBookId(bookId);
+  const handleBackToLibrary = () => setSelectedBookId(null);
+  
+  const currentBook = useMemo(() => booksData.find(book => book.id === selectedBookId), [booksData, selectedBookId]);
 
   return (
     <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
-      {currentBook ? (
-        <BookReaderView
-          book={currentBook}
-          onBackToLibrary={handleBackToLibrary}
-          vocabMap={vocabMap}
-          isLoadingVocab={isLoadingVocab}
-          currentUser={currentUser}
-          playlists={playlists}
-          isDarkMode={isDarkMode}
-          toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+      {isLoadingVocab ? (
+        <div className="flex-grow flex items-center justify-center"><p>Đang tải dữ liệu...</p></div>
+      ) : !selectedBookId ? (
+        <BookLibrary 
+            books={booksData} 
+            onSelectBook={handleSelectBook} 
         />
       ) : (
-        <BookLibrary
-          books={booksData}
-          onSelectBook={handleSelectBook}
-        />
+        currentBook && (
+            <BookReaderView
+                book={currentBook}
+                onBackToLibrary={handleBackToLibrary}
+                vocabMap={vocabMap}
+                phraseMap={phraseMap}
+                phraseRegex={phraseRegex}
+                currentUser={currentUser}
+                playlists={playlists}
+                isDarkMode={isDarkMode}
+                toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+            />
+        )
       )}
     </div>
   );
 };
 
 export default EbookReader;
+// --- END OF FILE EbookReader.tsx ---
