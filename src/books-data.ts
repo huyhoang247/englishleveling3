@@ -1,5 +1,3 @@
---- START OF FILE books-data.tcdsss.txt ---
-
 // books-data.ts
 
 // Định nghĩa cấu trúc cho một cuốn sách
