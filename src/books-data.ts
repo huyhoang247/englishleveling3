@@ -1,3 +1,5 @@
+--- START OF FILE books-data.tcdsss.txt ---
+
 // books-data.ts
 
 // Định nghĩa cấu trúc cho một cuốn sách
@@ -8,7 +10,7 @@ export interface Book {
   author?: string;
   category: string;
   coverImageUrl?: string;
-  audioUrl?: string; // Trường chứa URL của file audio cho sách (tùy chọn)
+  audioUrls?: Record<string, string>; // Cập nhật: Hỗ trợ nhiều file audio với tên tùy chỉnh
 }
 
 // Dữ liệu sách mẫu
@@ -19,8 +21,11 @@ export const sampleBooks: Book[] = [
     author: 'Kasley Killam',
     category: 'Technology & Future',
     coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/20250531_2319_Social%20Health%20Anime_simple_compose_01jwkj5nzxf9xtzk5dykvqsw6t.png',
-    // Đã sửa URL audio để trỏ đến file raw trên GitHub
-    audioUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/Why%20Social%20Health%20Is%20Key%20to%20Happiness%20and%20Longevity%20%20Kasley%20Killiam%20%20TED.mp3',
+    // Cập nhật: Sử dụng audioUrls để chứa nhiều giọng đọc
+    audioUrls: {
+      'Kasley Killam': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/Why%20Social%20Health%20Is%20Key%20to%20Happiness%20and%20Longevity%20%20Kasley%20Killiam%20%20TED.mp3',
+      'Matilda': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/elevenlabs-2025-09-06t12-31-47-matilda-pre-sp100-s50-sb75-se0-b-m2_y6yNk68O.mp3',
+    },
     content: `
 So a couple of years ago, a woman I know who I'll call Maya, went through a lot of big changes in a short amount of time. She got married. She and her husband moved for his job to a new city where she didn’t know anyone. She started a new role working from home, all while managing her dad's new diagnosis of dementia.
 And to manage the stress of all this change, Maya doubled down on her physical and mental health. She exercised almost every day, she ate healthy foods, she went to therapy once a week. And these actions really helped. Her body got stronger. Her mind got more resilient, but only up to a point. She was still struggling, often losing sleep in the middle of the night, feeling unfocused, unmotivated during the day.
@@ -62,7 +67,7 @@ Thank you.
     author: 'Code Weaver',
     category: 'Technology & Future',
     coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=Journey+of+Bytes',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/08/04/audio_2dde6b90e0.mp3', // Ví dụ: "Lofi Chill"
+    audioUrls: { 'Default': 'https://cdn.pixabay.com/download/audio/2022/08/04/audio_2dde6b90e0.mp3' }, // Ví dụ: "Lofi Chill"
     content: `
       Chapter 1: The Spark
       Insurance Source In the digital realm, where 'data' flows like rivers and 'algorithms' shape destinies, a small 'program' named Spark came into existence. Spark wasn't just any program; it had a unique 'goal': to understand the meaning of 'creativity'.
@@ -80,7 +85,7 @@ Thank you.
     author: 'Oracle Systems',
     category: 'Technology & Future',
     coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=Echoes+Future',
-    // Sách này không có audioUrl để kiểm tra việc ẩn/hiện trình phát audio
+    // Sách này không có audioUrls để kiểm tra việc ẩn/hiện trình phát audio
     content: `
       Prologue: The Whispers
       The 'network' hummed with a quiet 'energy', a constant flow of 'information' painting a picture of a world on the brink of another 'transformation'. Old 'paradigms' were shattering, making way for new 'ideas'.
@@ -98,7 +103,7 @@ Thank you.
     author: 'Lead Right Inc.',
     category: 'Management & Leadership',
     coverImageUrl: 'https://placehold.co/200x300/F5B041/333333?text=Mgmt+Essentials',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2023/05/07/audio_6bdffe450b.mp3', // Ví dụ: "Corporate Technology"
+    audioUrls: { 'Default': 'https://cdn.pixabay.com/download/audio/2023/05/07/audio_6bdffe450b.mp3' }, // Ví dụ: "Corporate Technology"
     content: `Chapter 1: Leading Teams. To lead a team effectively, one must understand motivation, communication, and conflict resolution. This book explores these 'concepts' in depth.`,
   },
   {
