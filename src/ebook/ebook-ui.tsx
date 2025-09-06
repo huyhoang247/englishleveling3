@@ -1,6 +1,6 @@
 // --- START OF FILE game.tsx (FIXED) ---
 
-import React, { useMemo, useState, useEffect } from 'react'; // <-- LỖI ĐÃ ĐƯỢC SỬA Ở ĐÂY
+import React, { useMemo, useState, useEffect } from 'react'; // <-- LỖI ĐÃ ĐƯỢỢC SỬA Ở ĐÂY
 import { EbookProvider, useEbook, Book, Vocabulary, PhraseSentence } from './ebook-context.tsx';
 
 // --- COMPONENT & MODAL IMPORTS ---
@@ -129,7 +129,11 @@ const EbookReaderContent: React.FC = () => {
       {Object.entries(groupedBooks).map(([category, booksInCategory]) => (
         <section key={category}>
           <div className="flex justify-between items-center mb-3 md:mb-4">
-            <h2 className="text-xl md:text-2xl font-bold dark:text-white">{category}</h2>
+            {category === 'Technology & Future' ? (
+              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/youtube-logo.png" alt="YouTube" className="h-8" />
+            ) : (
+              <h2 className="text-xl md:text-2xl font-bold dark:text-white">{category}</h2>
+            )}
             <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline">Xem tất cả →</button>
           </div>
           <div className="flex overflow-x-auto space-x-4 pb-4 -mx-4 px-4">
