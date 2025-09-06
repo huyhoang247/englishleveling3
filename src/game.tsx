@@ -708,17 +708,6 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
       audioPlayerRef.current.playbackRate = newSpeed;
     }
   };
-  
-  useEffect(() => {
-    const audioElem = audioPlayerRef.current;
-    return () => {
-        if (audioElem) {
-            audioElem.pause();
-            audioElem.removeAttribute('src'); 
-            audioElem.load(); 
-        }
-    };
-  }, [selectedBookId]);
 
   const formatTime = (timeInSeconds: number) => {
     if (isNaN(timeInSeconds) || timeInSeconds === Infinity) return "00:00";
