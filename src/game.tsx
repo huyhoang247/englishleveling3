@@ -511,32 +511,54 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     };
   }, [currentBook, vocabMap]);
 
+  // --- START: SỬA LỖI AUDIO ---
+  // Xóa useEffect lớn và thay bằng các useEffect chuyên biệt
 
+  // EFFECT 1: Chỉ quản lý việc thay đổi NGUỒN AUDIO khi sách thay đổi
+  useEffect(() => {
+    const audio = audioPlayerRef.current;
+    if (selectedBookId && currentBook?.audioUrl && audio) {
+      // Chỉ thay đổi src nếu nó thực sự khác để tránh tải lại không cần thiết
+      if (audio.src !== currentBook.audioUrl) {
+          audio.src = currentBook.audioUrl;
+          audio.load(); // Khuyến khích gọi load() sau khi thay đổi src
+      }
+      // Reset trạng thái cho audio mới
+      setIsAudioPlaying(false);
+      setAudioCurrentTime(0);
+      setAudioDuration(0);
+    } else if (audio) {
+      // Dọn dẹp nếu không có sách hoặc sách không có audio
+      audio.pause();
+      audio.removeAttribute('src');
+      setIsAudioPlaying(false);
+      setAudioCurrentTime(0);
+      setAudioDuration(0);
+    }
+  }, [selectedBookId, currentBook?.audioUrl]); // Dependency chỉ là ID sách và URL audio
+
+  // EFFECT 2: Chỉ quản lý TỐC ĐỘ PHÁT
+  useEffect(() => {
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.playbackRate = playbackSpeed;
+    }
+  }, [playbackSpeed]); // Dependency chỉ là tốc độ phát
+
+  // EFFECT 3: Quản lý các hiệu ứng phụ của UI (NavBar, Sidebar)
   useEffect(() => {
     if (selectedBookId) {
       hideNavBar();
-      if (audioPlayerRef.current && currentBook?.audioUrl) {
-        audioPlayerRef.current.src = currentBook.audioUrl;
-        audioPlayerRef.current.playbackRate = playbackSpeed;
-        setIsAudioPlaying(false);
-        setAudioCurrentTime(0);
-        setAudioDuration(0);
-      } else if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-        audioPlayerRef.current.removeAttribute('src');
-        setIsAudioPlaying(false);
-        setAudioCurrentTime(0);
-        setAudioDuration(0);
-      }
     } else {
       showNavBar();
+      setIsSidebarOpen(false); // Đảm bảo sidebar đóng khi quay về thư viện
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
       }
       setIsAudioPlaying(false);
-      setIsSidebarOpen(false); // Close sidebar when returning to library
     }
-  }, [selectedBookId, currentBook, hideNavBar, showNavBar, playbackSpeed]);
+  }, [selectedBookId, hideNavBar, showNavBar]);
+  
+  // --- END: SỬA LỖI AUDIO ---
 
   useEffect(() => {
     if (isDarkMode) {
@@ -704,10 +726,19 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     const newSpeed = speeds[nextIndex];
     
     setPlaybackSpeed(newSpeed);
-    if (audioPlayerRef.current) {
-      audioPlayerRef.current.playbackRate = newSpeed;
-    }
   };
+  
+  // Giữ lại useEffect dọn dẹp này vì nó vẫn rất hữu ích
+  useEffect(() => {
+    const audioElem = audioPlayerRef.current;
+    return () => {
+        if (audioElem) {
+            audioElem.pause();
+            audioElem.removeAttribute('src'); 
+            audioElem.load(); 
+        }
+    };
+  }, [selectedBookId]);
 
   const formatTime = (timeInSeconds: number) => {
     if (isNaN(timeInSeconds) || timeInSeconds === Infinity) return "00:00";
