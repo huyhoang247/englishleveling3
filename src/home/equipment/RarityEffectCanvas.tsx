@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, memo } from 'react';
-import type { ItemRank } from './item-database.ts';
+import type { ItemRank } from './item-database';
 
 // Cấu hình hiệu ứng cho từng độ hiếm
 const RARITY_EFFECT_CONFIG: { [key in ItemRank]?: { color: string; particleCount: number; speed: number; type: 'glow' | 'sparks' } } = {
+    'A': { color: 'rgba(196, 138, 245, 0.6)', particleCount: 15, speed: 0.3, type: 'glow' }, // THÊM DÒNG NÀY
     'S': { color: 'rgba(255, 235, 59, 0.7)', particleCount: 20, speed: 0.5, type: 'glow' },
     'SR': { color: 'rgba(255, 152, 0, 0.8)', particleCount: 35, speed: 0.8, type: 'glow' },
     'SSR': { color: 'rgba(244, 67, 54, 0.9)', particleCount: 50, speed: 1.2, type: 'sparks' },
@@ -113,9 +114,9 @@ const RarityEffectCanvas: React.FC<RarityEffectCanvasProps> = ({ rarity, classNa
             }
 
             const opacity = particle.life / particle.maxLife;
-            const r = parseInt(config.color.slice(5, 8));
-            const g = parseInt(config.color.slice(10, 13));
-            const b = parseInt(config.color.slice(15, 18));
+            const colorMatch = config.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+            if (!colorMatch) return;
+            const [_, r, g, b] = colorMatch;
 
             ctx.beginPath();
             ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
