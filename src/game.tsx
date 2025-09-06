@@ -1,3 +1,4 @@
+--- START OF FILE game.tsx ---
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Assuming this path is correct
@@ -981,45 +982,58 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         onPause={() => setIsAudioPlaying(false)}
         onEnded={() => { setIsAudioPlaying(false); setAudioCurrentTime(0);}}
       />
-
+      
+      {/* --- START: MODIFIED AUDIO PLAYER LAYOUT --- */}
+      {/* Thay đổi layout để VoiceStepper có hàng riêng, tránh vỡ giao diện */}
       {selectedBookId && currentBook?.audioUrls && Object.keys(currentBook.audioUrls).length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-md shadow-top-lg p-3 z-30">
-          <div className="max-w-3xl mx-auto flex items-center space-x-3 sm:space-x-4">
-            <button
-              onClick={togglePlayPause}
-              className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              aria-label={isAudioPlaying ? "Tạm dừng" : "Phát"}
-            >
-              {isAudioPlaying ? <PauseIcon /> : <PlayIcon />}
-            </button>
-            <div className="flex-grow flex items-center space-x-2">
-              <span className="text-xs text-gray-600 dark:text-gray-400 w-10 text-center">{formatTime(audioCurrentTime)}</span>
-              <input
-                type="range"
-                min="0"
-                max={audioDuration || 0}
-                value={audioCurrentTime}
-                onChange={handleSeek}
-                className="w-full h-2 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-800"
-                aria-label="Tua audio"
-              />
-              <span className="text-xs text-gray-600 dark:text-gray-400 w-10 text-center">{formatTime(audioDuration)}</span>
+          <div className="max-w-3xl mx-auto flex flex-col items-center gap-2">
+            
+            {/* Hàng 1: Bộ chọn giọng đọc (chỉ hiện khi có > 1 giọng) */}
+            {availableVoices.length > 1 && (
+              <div className="flex justify-center w-full">
+                <VoiceStepper
+                    currentVoice={selectedVoiceKey || '...'}
+                    onNavigate={handleVoiceChange}
+                    availableVoiceCount={availableVoices.length}
+                />
+              </div>
+            )}
+
+            {/* Hàng 2: Các nút điều khiển chính */}
+            <div className="flex items-center w-full space-x-3 sm:space-x-4">
+              <button
+                onClick={togglePlayPause}
+                className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label={isAudioPlaying ? "Tạm dừng" : "Phát"}
+              >
+                {isAudioPlaying ? <PauseIcon /> : <PlayIcon />}
+              </button>
+              <div className="flex-grow flex items-center space-x-2">
+                <span className="text-xs text-gray-600 dark:text-gray-400 w-10 text-center">{formatTime(audioCurrentTime)}</span>
+                <input
+                  type="range"
+                  min="0"
+                  max={audioDuration || 0}
+                  value={audioCurrentTime}
+                  onChange={handleSeek}
+                  className="w-full h-2 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-gray-800"
+                  aria-label="Tua audio"
+                />
+                <span className="text-xs text-gray-600 dark:text-gray-400 w-10 text-center">{formatTime(audioDuration)}</span>
+              </div>
+              <button
+                onClick={togglePlaybackSpeed}
+                className="px-4 py-2 text-sm font-semibold rounded-full border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 shadow-sm hover:bg-blue-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105"
+                aria-label={`Tốc độ ${playbackSpeed}x`}
+              >
+                {playbackSpeed}x
+              </button>
             </div>
-             <VoiceStepper
-                currentVoice={selectedVoiceKey || '...'}
-                onNavigate={handleVoiceChange}
-                availableVoiceCount={availableVoices.length}
-            />
-            <button
-              onClick={togglePlaybackSpeed}
-              className="px-4 py-2 text-sm font-semibold rounded-full border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 shadow-sm hover:bg-blue-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-200 ease-in-out transform hover:scale-105"
-              aria-label={`Tốc độ ${playbackSpeed}x`}
-            >
-              {playbackSpeed}x
-            </button>
           </div>
         </div>
       )}
+      {/* --- END: MODIFIED AUDIO PLAYER LAYOUT --- */}
 
       {selectedVocabCard && showVocabDetail && (
         <FlashcardDetailModal
