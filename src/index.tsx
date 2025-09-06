@@ -8,7 +8,7 @@ import NavigationBarBottom from './navigation-bar-bottom.tsx';
 import Story from './VerticalFlashcardGallery.tsx';
 import Profile from './check-in.tsx';
 import QuizAppHome from './courses/course-ui.tsx';
-import GameBrowser from './game.tsx';
+import GameBrowser from './ebook/ebook-ui.tsx';
 import AuthComponent from './auth.js';
 import { auth, db } from './firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
