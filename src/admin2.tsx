@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { uiAssets, equipmentUiAssets } from './game-assets.ts'; 
+import { uiAssets, equipmentUiAssets } from './game-assets'; 
 import { adminUpdateUserData, fetchOrCreateUserGameData, UserGameData, updateJackpotPool, fetchAllUsers, SimpleUser } from './gameDataService.ts';
 
 type ImageSourcePropType = any;
@@ -177,7 +177,7 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
             <input type="text" value={filter} onChange={e => setFilter(e.target.value)} placeholder="Search UID, Username, Email..." className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 mb-4 focus:ring-2 focus:ring-cyan-500 focus:outline-none" />
             <div className="bg-slate-800/50 rounded-lg overflow-hidden">
                 <div className="grid gap-4 px-4 py-2 border-b border-slate-700 bg-slate-900/50 font-semibold text-sm text-slate-300" style={{ gridTemplateColumns }}>
-                    {activeColumns.map(col => <div key={col.key}>{col.label}</div>)}
+                    {activeColumns.map(col => <div key={col.key} className="text-center">{col.label}</div>)}
                     <div className="text-right">Actions</div>
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto">
@@ -186,11 +186,11 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
                             {activeColumns.map(col => {
                                 switch (col.key) {
                                     case 'uid':
-                                        return ( <span key={col.key} className="font-mono text-slate-300 cursor-pointer hover:text-cyan-400 truncate" onClick={() => handleSelectUser(user.uid)} title={`Click to manage\n${user.uid}`}>{user.uid.substring(0, 5)}...</span> );
+                                        return ( <span key={col.key} className="font-mono text-slate-300 cursor-pointer hover:text-cyan-400 truncate text-center" onClick={() => handleSelectUser(user.uid)} title={`Click to manage\n${user.uid}`}>{user.uid.substring(0, 5)}...</span> );
                                     case 'username':
-                                        return ( <span key={col.key} className="text-slate-200 truncate" title={user.username}>{user.username || <span className="text-slate-500">N/A</span>}</span> );
+                                        return ( <span key={col.key} className="text-slate-200 truncate text-center" title={user.username}>{user.username || <span className="text-slate-500">N/A</span>}</span> );
                                     case 'email':
-                                        return ( <span key={col.key} className="text-slate-400 truncate" title={user.email}>{user.email || <span className="text-slate-500">N/A</span>}</span> );
+                                        return ( <span key={col.key} className="text-slate-400 truncate text-center" title={user.email}>{user.email || <span className="text-slate-500">N/A</span>}</span> );
                                     default:
                                         return null;
                                 }
