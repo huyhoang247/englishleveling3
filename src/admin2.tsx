@@ -271,7 +271,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const ActionRow: React.FC<{ label: string; fieldName: keyof typeof updateValues; dbKey: string; }> = ({ label, fieldName, dbKey }) => (
         <div className="flex items-center space-x-2">
             <p className="w-32 flex-shrink-0 text-slate-300">{label}:</p>
-            <input type="number" name={fieldName} value={updateValues[fieldName]} onChange={handleInputChange} className="flex-grow bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none" placeholder="+/-" />
+            <input type="number" name={fieldName} value={updateValues[fieldName]} onChange={handleInputChange} className="flex-grow max-w-48 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none" placeholder="+/-" />
             <button onClick={() => handleUpdate(fieldName, dbKey)} disabled={isUpdating !== null} className="w-24 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
                 {isUpdating === fieldName ? <Spinner /> : 'Cập nhật'}
             </button>
@@ -334,7 +334,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 <div className="bg-slate-800/50 p-4 rounded-lg space-y-4">
                                     <div className="flex items-center space-x-2">
                                         <p className="w-32 flex-shrink-0 text-slate-300">Jackpot Pool:</p>
-                                        <input type="number" name="jackpot" value={updateValues.jackpot} onChange={handleInputChange} className="flex-grow bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none" placeholder="+/-" />
+                                        <input type="number" name="jackpot" value={updateValues.jackpot} onChange={handleInputChange} className="flex-grow max-w-48 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none" placeholder="+/-" />
                                         <button onClick={handleUpdateJackpot} disabled={isUpdating !== null} className="w-24 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
                                             {isUpdating === 'jackpot' ? <Spinner /> : 'Cập nhật'}
                                         </button>
