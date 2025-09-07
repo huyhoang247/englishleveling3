@@ -35,7 +35,6 @@ const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <Icon {...props}><polyline points="20 6 9 17 4 12"></polyline></Icon>
 );
 
-// Header với style chính xác từ shop-ui
 const AdminHeader: React.FC<{ onClose: () => void }> = ({ onClose }) => (
     <header className="sticky top-0 z-40 bg-slate-900 border-b border-white/10">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between h-[53px] px-4 sm:px-6 lg:px-8">
@@ -45,7 +44,6 @@ const AdminHeader: React.FC<{ onClose: () => void }> = ({ onClose }) => (
     </header>
 );
 
-// Tabs với style chính xác từ shop-ui
 const AdminTabs: React.FC<{ activeTab: string; setActiveTab: (tab: string) => void }> = ({ activeTab, setActiveTab }) => {
     const tabs = [
         { name: 'user', label: 'Quản lý Người dùng', icon: UserIcon },
@@ -71,7 +69,6 @@ const AdminTabs: React.FC<{ activeTab: string; setActiveTab: (tab: string) => vo
         </nav>
     );
 };
-// --- END: CÁC COMPONENT GIAO DIỆN ---
 
 // --- START: COMPONENT CHO TAB DANH SÁCH USER ---
 interface UserListTabProps {
@@ -141,14 +138,12 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
             className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 mb-4 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
         />
         <div className="bg-slate-800/50 rounded-lg overflow-hidden">
-            {/* Header */}
             <div className="grid grid-cols-[1.5fr_2fr_3fr_auto] gap-4 px-4 py-2 border-b border-slate-700 bg-slate-900/50 font-semibold text-sm text-slate-300">
                 <div>UID</div>
                 <div>Username</div>
                 <div>Email</div>
                 <div className="text-right">Hành động</div>
             </div>
-            {/* Body */}
             <div className="max-h-[60vh] overflow-y-auto">
                 {filteredUsers.length > 0 ? filteredUsers.map(user => (
                     <div key={user.uid} className="grid grid-cols-[1.5fr_2fr_3fr_auto] gap-4 px-4 py-3 items-center border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors duration-150 text-sm">
@@ -181,6 +176,44 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
 };
 // --- END: COMPONENT CHO TAB DANH SÁCH USER ---
 
+// Define updateValues type to be used in ActionRowProps
+const initialUpdateValues = {
+    coins: 0, gems: 0, ancientBooks: 0, equipmentPieces: 0, pickaxes: 0, hp: 0, atk: 0, def: 0, jackpot: 0,
+};
+type UpdateValuesType = typeof initialUpdateValues;
+
+
+// --- COMPONENT ACTIONROW ĐÃ ĐƯỢC DI CHUYỂN RA NGOÀI ---
+interface ActionRowProps {
+    label: string;
+    fieldName: keyof UpdateValuesType;
+    dbKey: string;
+    value: number;
+    isUpdating: boolean;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onUpdate: (fieldName: keyof UpdateValuesType, dbKey: string) => void;
+}
+
+const ActionRow: React.FC<ActionRowProps> = ({ label, fieldName, dbKey, value, isUpdating, onChange, onUpdate }) => (
+    <div className="flex items-center space-x-3">
+        <p className="w-32 flex-shrink-0 text-slate-300">{label}:</p>
+        <input 
+            type="number" 
+            name={fieldName} 
+            value={value} 
+            onChange={onChange} 
+            className="w-36 text-right font-mono bg-slate-800 border border-slate-600 rounded px-3 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-all duration-150 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        />
+        <div className="flex-grow"></div> 
+        <button 
+            onClick={() => onUpdate(fieldName, dbKey)} 
+            disabled={isUpdating} // Disable all buttons when any update is in progress
+            className="w-28 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
+            {isUpdating ? <Spinner /> : 'Cập nhật'}
+        </button>
+    </div>
+);
+
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const [activeTab, setActiveTab] = useState('user');
@@ -189,10 +222,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const [isFetching, setIsFetching] = useState(false);
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-
-    const [updateValues, setUpdateValues] = useState({
-        coins: 0, gems: 0, ancientBooks: 0, equipmentPieces: 0, pickaxes: 0, hp: 0, atk: 0, def: 0, jackpot: 0,
-    });
+    const [updateValues, setUpdateValues] = useState<UpdateValuesType>(initialUpdateValues);
     
     const showFeedback = useCallback((type: 'success' | 'error', message: string) => {
         setFeedback({ type, message });
@@ -206,7 +236,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         try {
             const data = await fetchOrCreateUserGameData(targetUserId);
             setUserData(data);
-
             setUpdateValues(prev => ({
                 ...prev,
                 coins: data.coins,
@@ -218,7 +247,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 atk: data.stats.atk,
                 def: data.stats.def,
             }));
-
             showFeedback('success', `Đã tải dữ liệu của user: ${targetUserId}`);
         } catch (error) {
             console.error(error); 
@@ -239,11 +267,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         setUpdateValues(prev => ({ ...prev, [name]: Number(value) }));
     };
 
-    const handleUpdate = async (field: keyof typeof updateValues, dbKey: string) => {
+    const handleUpdate = async (field: keyof UpdateValuesType, dbKey: string) => {
         if (!userData || !targetUserId) { showFeedback('error', 'Vui lòng chọn người dùng trước.'); return; }
-
         const newValue = updateValues[field];
-
         let oldValue;
         switch(field) {
             case 'coins':           oldValue = userData.coins; break;
@@ -254,19 +280,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             case 'hp':              oldValue = userData.stats.hp; break;
             case 'atk':             oldValue = userData.stats.atk; break;
             case 'def':             oldValue = userData.stats.def; break;
-            default:
-                showFeedback('error', 'Trường dữ liệu không hợp lệ.');
-                return;
+            default: showFeedback('error', 'Trường dữ liệu không hợp lệ.'); return;
         }
 
         const amountToUpdate = newValue - oldValue;
-
         if (amountToUpdate === 0) { showFeedback('error', 'Giá trị mới phải khác giá trị hiện tại.'); return; }
         
         setIsUpdating(field);
         try {
             const updatedData = await adminUpdateUserData(targetUserId, { [dbKey]: amountToUpdate });
-            
             setUserData(updatedData);
             setUpdateValues(prev => ({
                 ...prev,
@@ -279,7 +301,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 atk: updatedData.stats.atk,
                 def: updatedData.stats.def,
             }));
-
             showFeedback('success', `Đã cập nhật ${field} thành công!`);
         } catch (error) {
             console.error(error); 
@@ -318,36 +339,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             </div>
         );
     };
-    
-    // --- COMPONENT ĐÃ ĐƯỢC CẬP NHẬT GIAO DIỆN ---
-    const ActionRow: React.FC<{ label: string; fieldName: keyof typeof updateValues; dbKey: string; }> = ({ label, fieldName, dbKey }) => (
-        <div className="flex items-center space-x-3">
-            <p className="w-32 flex-shrink-0 text-slate-300">{label}:</p>
-            <input 
-                type="number" 
-                name={fieldName} 
-                value={updateValues[fieldName]} 
-                onChange={handleInputChange} 
-                className="w-36 text-right font-mono bg-slate-800 border border-slate-600 rounded px-3 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-all duration-150 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-            <div className="flex-grow"></div> 
-            <button 
-                onClick={() => handleUpdate(fieldName, dbKey)} 
-                disabled={isUpdating !== null} 
-                className="w-28 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
-                {isUpdating === fieldName ? <Spinner /> : 'Cập nhật'}
-            </button>
-        </div>
-    );
 
     return (
         <div className="fixed inset-0 bg-[#0a0a14] text-white z-[100] flex flex-col">
             <AdminHeader onClose={onClose} />
-            
             <div className="flex-shrink-0 bg-[#0a0a14] border-b border-slate-800/70 shadow-md pt-2">
                 <AdminTabs activeTab={activeTab} setActiveTab={setActiveTab} />
             </div>
-            
             <div className="flex-1 relative overflow-y-auto [background-image:radial-gradient(circle_at_center,_#16213e,_#0a0a14)]">
                 <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24">
                     <div className="max-w-4xl mx-auto">
@@ -366,26 +364,20 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 {userData && (
                                     <div className="mt-6 space-y-4 animate-fade-in">
                                         <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3">Chỉnh sửa tài nguyên</h3>
-                                        <ActionRow label="Coins" fieldName="coins" dbKey="coins" />
-                                        <ActionRow label="Gems" fieldName="gems" dbKey="gems" />
-                                        <ActionRow label="Sách Cổ" fieldName="ancientBooks" dbKey="ancientBooks" />
-                                        <ActionRow label="Mảnh Trang Bị" fieldName="equipmentPieces" dbKey="equipment.pieces" />
-                                        <ActionRow label="Cuốc" fieldName="pickaxes" dbKey="pickaxes" />
+                                        <ActionRow label="Coins" fieldName="coins" dbKey="coins" value={updateValues.coins} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('coins', 'coins')} />
+                                        <ActionRow label="Gems" fieldName="gems" dbKey="gems" value={updateValues.gems} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('gems', 'gems')} />
+                                        <ActionRow label="Sách Cổ" fieldName="ancientBooks" dbKey="ancientBooks" value={updateValues.ancientBooks} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('ancientBooks', 'ancientBooks')} />
+                                        <ActionRow label="Mảnh Trang Bị" fieldName="equipmentPieces" dbKey="equipment.pieces" value={updateValues.equipmentPieces} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('equipmentPieces', 'equipment.pieces')} />
+                                        <ActionRow label="Cuốc" fieldName="pickaxes" dbKey="pickaxes" value={updateValues.pickaxes} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('pickaxes', 'pickaxes')} />
                                         <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3 pt-4">Chỉnh sửa chỉ số</h3>
-                                        <ActionRow label="HP Level" fieldName="hp" dbKey="stats.hp" />
-                                        <ActionRow label="ATK Level" fieldName="atk" dbKey="stats.atk" />
-                                        <ActionRow label="DEF Level" fieldName="def" dbKey="stats.def" />
+                                        <ActionRow label="HP Level" fieldName="hp" dbKey="stats.hp" value={updateValues.hp} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('hp', 'stats.hp')} />
+                                        <ActionRow label="ATK Level" fieldName="atk" dbKey="stats.atk" value={updateValues.atk} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('atk', 'stats.atk')} />
+                                        <ActionRow label="DEF Level" fieldName="def" dbKey="stats.def" value={updateValues.def} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('def', 'stats.def')} />
                                     </div>
                                 )}
                             </div>
                         )}
-                        {activeTab === 'userlist' && (
-                             <UserListTab 
-                                setActiveTab={setActiveTab}
-                                setTargetUserId={setTargetUserId}
-                                showFeedback={showFeedback}
-                             />
-                        )}
+                        {activeTab === 'userlist' && <UserListTab setActiveTab={setActiveTab} setTargetUserId={setTargetUserId} showFeedback={showFeedback} />}
                         {activeTab === 'system' && (
                             <div className="animate-fade-in">
                                 <h3 className="text-xl font-semibold text-cyan-300 pb-2 mb-3">Hệ thống chung</h3>
@@ -403,7 +395,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     </div>
                 </main>
             </div>
-
             {feedback && (
                 <div className={`fixed bottom-5 right-5 p-4 rounded-lg shadow-lg text-white animate-fade-in-up ${feedback.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
                     {feedback.message}
