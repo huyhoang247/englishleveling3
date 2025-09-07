@@ -20,7 +20,7 @@ import VocabularyChestScreen from './home/vocabulary-chest/voca-chest-ui.tsx';
 import MinerChallenge from './bomb.tsx';
 import UpgradeStatsScreen from './home/upgrade-stats/upgrade-ui.tsx';
 import AchievementsScreen from './home/achievements/achievement-ui.tsx'; 
-import AdminPanel from './admin.tsx';
+import AdminPanel from './admin2.tsx';
 import BaseBuildingScreen from './building.tsx';
 import SkillScreen from './home/skill-game/skill-ui.tsx';
 import type { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
