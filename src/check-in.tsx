@@ -1,9 +1,11 @@
 // --- START OF FILE check-in.tsx ---
 
+// MODIFIED: Thêm prop onClose để xử lý việc đóng component
 import React, { useState, useEffect } from 'react';
 // Removed lucide-react import
 
-const DailyCheckIn = () => {
+// MODIFIED: Component giờ sẽ nhận một prop tên là 'onClose'
+const DailyCheckIn = ({ onClose }) => {
   const [currentDay, setCurrentDay] = useState(3);
   const [claimedDays, setClaimedDays] = useState([1, 2]);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
@@ -136,7 +138,8 @@ const DailyCheckIn = () => {
         {/* Enhanced Progress info - REDESIGNED */}
         <div className="flex justify-center mt-6 mb-6">
           {/* The main card for the header info */}
-          <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl px-4 py-4 w-full max-w-sm flex items-center gap-4 border border-slate-700 shadow-lg">
+          {/* MODIFIED: Added 'relative' class for positioning the close button */}
+          <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl px-4 py-4 w-full max-w-sm flex items-center gap-4 border border-slate-700 shadow-lg relative">
             
             {/* Water level circle on the left */}
             <div className="flex-shrink-0">
@@ -188,6 +191,16 @@ const DailyCheckIn = () => {
                     ></div>
                 </div>
             </div>
+            
+            {/* MODIFIED: Thêm sự kiện onClick để gọi hàm onClose */}
+            <button 
+              onClick={onClose} 
+              className="absolute top-3 right-3 text-slate-500 hover:text-white transition-colors p-1 rounded-full hover:bg-slate-700/50"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
           </div>
         </div>
         {/* --- MODIFIED END --- */}
