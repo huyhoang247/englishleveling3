@@ -332,7 +332,7 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
     const userDocRef = doc(db, 'users', userId);
     const totalCost = item.price * quantity;
     return runTransaction(db, async (t) => {
-        const userDoc = await t.get(userDocRef);
+        const userDoc = await t.get(userDoc);
         if (!userDoc.exists()) throw new Error("User document does not exist!");
         const data = userDoc.data();
         const currentCoins = data.coins || 0;
@@ -772,6 +772,23 @@ export const reclaimExpiredAuction = async (userId: string, auctionId: string): 
 // --- END OF FILE gameDataService.ts ---
 
 // --- START: ADMIN PANEL SERVICE FUNCTIONS ---
+export interface SimpleUser {
+  uid: string;
+}
+
+/**
+ * Lấy danh sách ID của tất cả người dùng.
+ * @returns {Promise<SimpleUser[]>} Một mảng các object người dùng đơn giản.
+ */
+export const fetchAllUsers = async (): Promise<SimpleUser[]> => {
+  const usersCollectionRef = collection(db, 'users');
+  const querySnapshot = await getDocs(usersCollectionRef);
+  const users: SimpleUser[] = [];
+  querySnapshot.forEach((doc) => {
+    users.push({ uid: doc.id });
+  });
+  return users;
+};
 
 /**
  * Cập nhật nhiều trường dữ liệu của người dùng cùng lúc cho mục đích quản trị.
