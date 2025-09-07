@@ -175,8 +175,9 @@ const DailyCheckIn = () => {
             <div className="flex-1 min-w-0">
                 {/* MODIFIED: Title section updated as per request */}
                 <div className="mb-2">
-                    <span className="inline-block bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-lg text-lg font-bold">
-                       Day {currentDay}<span className="opacity-70 font-medium text-base">/7</span>
+                    {/* MODIFIED: Redesigned to be more compact and elegant with a dark gray background. */}
+                    <span className="inline-block bg-slate-700 text-slate-300 px-3 py-1 rounded-full text-sm font-medium border border-slate-600">
+                       Day {currentDay}/7
                     </span>
                 </div>
 
