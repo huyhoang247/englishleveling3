@@ -159,7 +159,9 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
 
     const searchTerm = filter.toLowerCase();
     const filteredUsers = users.filter(u => u.uid.toLowerCase().includes(searchTerm) || u.username?.toLowerCase().includes(searchTerm) || u.email?.toLowerCase().includes(searchTerm));
-    const gridTemplateColumns = [ ...visibleColumns.map(colKey => allConfigurableColumns.find(c => c.key === colKey)?.width || '1fr'), 'auto' ].join(' ');
+    
+    const activeColumns = allConfigurableColumns.filter(c => visibleColumns.includes(c.key));
+    const gridTemplateColumns = [ ...activeColumns.map(c => c.width), 'auto' ].join(' ');
 
     return (
         <div className="animate-fade-in">
@@ -175,15 +177,24 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
             <input type="text" value={filter} onChange={e => setFilter(e.target.value)} placeholder="Search UID, Username, Email..." className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 mb-4 focus:ring-2 focus:ring-cyan-500 focus:outline-none" />
             <div className="bg-slate-800/50 rounded-lg overflow-hidden">
                 <div className="grid gap-4 px-4 py-2 border-b border-slate-700 bg-slate-900/50 font-semibold text-sm text-slate-300" style={{ gridTemplateColumns }}>
-                    {allConfigurableColumns.map(col => visibleColumns.includes(col.key) && <div key={col.key}>{col.label}</div>)}
+                    {activeColumns.map(col => <div key={col.key}>{col.label}</div>)}
                     <div className="text-right">Actions</div>
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto">
                     {filteredUsers.length > 0 ? filteredUsers.map(user => (
                         <div key={user.uid} className="grid gap-4 px-4 py-3 items-center border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors duration-150 text-sm" style={{ gridTemplateColumns }}>
-                            {visibleColumns.includes('uid') && ( <span className="font-mono text-slate-300 cursor-pointer hover:text-cyan-400 truncate" onClick={() => handleSelectUser(user.uid)} title={`Click to manage\n${user.uid}`}>{user.uid.substring(0, 5)}...</span> )}
-                            {visibleColumns.includes('username') && ( <span className="text-slate-200 truncate" title={user.username}>{user.username || <span className="text-slate-500">N/A</span>}</span> )}
-                            {visibleColumns.includes('email') && ( <span className="text-slate-400 truncate" title={user.email}>{user.email || <span className="text-slate-500">N/A</span>}</span> )}
+                            {activeColumns.map(col => {
+                                switch (col.key) {
+                                    case 'uid':
+                                        return ( <span key={col.key} className="font-mono text-slate-300 cursor-pointer hover:text-cyan-400 truncate" onClick={() => handleSelectUser(user.uid)} title={`Click to manage\n${user.uid}`}>{user.uid.substring(0, 5)}...</span> );
+                                    case 'username':
+                                        return ( <span key={col.key} className="text-slate-200 truncate" title={user.username}>{user.username || <span className="text-slate-500">N/A</span>}</span> );
+                                    case 'email':
+                                        return ( <span key={col.key} className="text-slate-400 truncate" title={user.email}>{user.email || <span className="text-slate-500">N/A</span>}</span> );
+                                    default:
+                                        return null;
+                                }
+                            })}
                             <div className="flex justify-end"><button onClick={() => handleCopy(user.uid)} className="text-slate-400 hover:text-white transition-colors" title="Copy UID">{copiedUid === user.uid ? <CheckIcon className="w-5 h-5 text-green-400" /> : <CopyIcon className="w-5 h-5" />}</button></div>
                         </div>
                     )) : ( <div className="p-4 text-center text-slate-400">No users found.</div> )}
