@@ -178,20 +178,21 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
 
             {/* Text and Progress bar on the right */}
             <div className="flex-1 min-w-0">
-                {/* MODIFIED: Title section updated as per request */}
-                <div className="mb-3"> {/* MODIFIED: Tăng khoảng cách dưới (margin-bottom) để cân bằng hơn */}
-                    {/* MODIFIED: Redesigned to be more compact and elegant with a dark gray background. */}
-                    <span className="inline-block bg-slate-700 text-slate-300 px-3 py-1 rounded-full text-sm font-medium border border-slate-600">
-                       Day {currentDay}/7
+                <div className="mb-3">
+                    {/* MODIFIED: Changed the "Day X/7" text to a Streak display with an icon, as requested. */}
+                    <span className="inline-flex items-center bg-slate-700 text-slate-300 px-3 py-1 rounded-full text-sm font-medium border border-slate-600">
+                        <img 
+                            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/streak-icon.webp" 
+                            alt="Streak Icon" 
+                            className="w-5 h-5 mr-2"
+                        />
+                        Chuỗi {loginStreak} ngày
                     </span>
                 </div>
 
-                {/* New sleek progress bar */}
+                {/* New sleek progress bar - MODIFIED: Now reflects login streak progress to be logically consistent with the title above */}
                 <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out"
-                      style={{ width: `${(currentDay / 7) * 100}%` }}
-                    ></div>
+                    <div className="h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" style={{ width: `${(loginStreak / 7) * 100}%` }}></div>
                 </div>
             </div>
             
