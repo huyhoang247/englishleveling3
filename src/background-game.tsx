@@ -237,20 +237,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             </ErrorBoundary>
         </div>
         
-        {/* THÊM MỚI: Render Daily Check-in */}
+        {/* <<< THAY ĐỔI: Cách render Daily Check-in đã được cập nhật */}
         {isCheckInOpen && (
             <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center">
                 <ErrorBoundary>
-                    <div className="relative w-full h-full">
-                        <DailyCheckIn />
-                        <button 
-                            onClick={toggleCheckIn} 
-                            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 text-white/80 flex items-center justify-center font-bold text-lg hover:bg-red-600 hover:text-white transition-all z-10 border-2 border-slate-700"
-                            aria-label="Đóng"
-                        >
-                            &times;
-                        </button>
-                    </div>
+                    {/* Truyền hàm `toggleCheckIn` vào component con và xóa nút đóng thừa */}
+                    <DailyCheckIn onClose={toggleCheckIn} />
                 </ErrorBoundary>
             </div>
         )}
