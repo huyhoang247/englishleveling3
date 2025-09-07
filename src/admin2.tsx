@@ -1,5 +1,3 @@
-// --- START OF FILE admin.tsx ---
-
 import React, { useState } from 'react';
 import { adminUpdateUserData, fetchOrCreateUserGameData, UserGameData, updateJackpotPool } from './gameDataService.ts';
 
@@ -143,11 +141,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     );
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-            <div className="relative w-full max-w-3xl bg-slate-900 border border-slate-700 rounded-lg shadow-2xl text-white p-6 max-h-[90vh] overflow-y-auto">
-                <button onClick={onClose} className="absolute top-3 right-3 text-2xl text-slate-400 hover:text-white">&times;</button>
-                <h2 className="text-2xl font-bold text-cyan-400 mb-4 border-b border-slate-700 pb-2">Admin Panel</h2>
-
+        // Thay đổi: Container chính giờ đây chiếm toàn bộ màn hình với nền tối.
+        <div className="fixed inset-0 bg-slate-900 text-white z-[100] overflow-y-auto p-6 md:p-8">
+            {/* Container phụ để giới hạn chiều rộng của nội dung để dễ đọc hơn trên màn hình lớn */}
+            <div className="relative w-full max-w-4xl mx-auto">
+                <button onClick={onClose} className="absolute top-0 right-0 text-4xl text-slate-400 hover:text-white">&times;</button>
+                {/* Tăng kích thước tiêu đề cho phù hợp với chế độ toàn màn hình */}
+                <h2 className="text-3xl font-bold text-cyan-400 mb-6 border-b border-slate-700 pb-3">Admin Panel</h2>
+                
                 <div className="mb-6">
                     <label htmlFor="userIdInput" className="block text-sm font-medium text-slate-300 mb-1">User ID</label>
                     <div className="flex space-x-2">
@@ -204,17 +205,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         </button>
                     </div>
                 </div>
-
-                {feedback && (
-                    <div className={`fixed bottom-5 right-5 p-4 rounded-lg shadow-lg text-white animate-fade-in-up ${feedback.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
-                        {feedback.message}
-                    </div>
-                )}
             </div>
+
+            {feedback && (
+                <div className={`fixed bottom-5 right-5 p-4 rounded-lg shadow-lg text-white animate-fade-in-up ${feedback.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+                    {feedback.message}
+                </div>
+            )}
         </div>
     );
 };
 
 export default AdminPanel;
-
-// --- END OF FILE admin.tsx ---
