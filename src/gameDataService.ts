@@ -770,3 +770,66 @@ export const reclaimExpiredAuction = async (userId: string, auctionId: string): 
     return reclaimedItem!;
 };
 // --- END OF FILE gameDataService.ts ---
+
+// --- START: ADMIN PANEL SERVICE FUNCTIONS ---
+
+/**
+ * Cập nhật nhiều trường dữ liệu của người dùng cùng lúc cho mục đích quản trị.
+ * Hàm này sử dụng dot notation cho các object lồng nhau (vd: 'stats.hp').
+ * @param userId - ID của người dùng cần cập nhật.
+ * @param updates - Object chứa các trường và giá trị cần thay đổi (giá trị là số lượng cộng thêm/trừ đi).
+ * @returns {Promise<UserGameData>} Dữ liệu mới nhất của người dùng sau khi cập nhật.
+ */
+export const adminUpdateUserData = async (userId: string, updates: { [key: string]: number }): Promise<UserGameData> => {
+  if (!userId) throw new Error("User ID is required.");
+  if (Object.keys(updates).length === 0) throw new Error("No updates provided.");
+
+  const userDocRef = doc(db, 'users', userId);
+
+  return runTransaction(db, async (t) => {
+    const userDoc = await t.get(userDocRef);
+    if (!userDoc.exists()) throw new Error("User document does not exist!");
+    
+    const data = userDoc.data() as UserGameData;
+    const updatePayload: { [key: string]: any } = {};
+
+    for (const key in updates) {
+      const valueToAdd = updates[key];
+      // Xử lý các trường lồng nhau như 'stats.hp' hoặc 'equipment.pieces'
+      if (key.includes('.')) {
+        const keys = key.split('.');
+        let currentLevel = data as any;
+        for (let i = 0; i < keys.length - 1; i++) {
+          currentLevel = currentLevel[keys[i]] || {};
+        }
+        const finalKey = keys[keys.length - 1];
+        const currentValue = currentLevel[finalKey] || 0;
+        // Sử dụng dot notation trong payload để Firestore hiểu
+        updatePayload[key] = Math.max(0, currentValue + valueToAdd);
+      } else {
+        // Xử lý các trường ở cấp cao nhất
+        const currentValue = (data as any)[key] || 0;
+        updatePayload[key] = Math.max(0, currentValue + valueToAdd);
+      }
+    }
+    
+    t.update(userDocRef, updatePayload);
+    
+    // Trả về dữ liệu đã được hợp nhất để cập nhật UI ngay lập tức
+    const updatedData = JSON.parse(JSON.stringify(data)); // Deep copy to avoid mutation issues
+    for(const key in updatePayload){
+        if (key.includes('.')) {
+            const keys = key.split('.');
+            let temp = updatedData;
+            for (let i = 0; i < keys.length - 1; i++) {
+                temp = temp[keys[i]];
+            }
+            temp[keys[keys.length - 1]] = updatePayload[key];
+        } else {
+            (updatedData as any)[key] = updatePayload[key];
+        }
+    }
+    return updatedData as UserGameData;
+  });
+};
+// --- END: ADMIN PANEL SERVICE FUNCTIONS ---
