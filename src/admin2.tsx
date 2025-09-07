@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { adminUpdateUserData, fetchOrCreateUserGameData, UserGameData, updateJackpotPool } from './gameDataService.ts';
+import React, { useState, useEffect } from 'react';
+import { adminUpdateUserData, fetchOrCreateUserGameData, UserGameData, updateJackpotPool, fetchAllUsers, SimpleUser } from './gameDataService.ts';
 
 interface AdminPanelProps {
     onClose: () => void;
@@ -23,6 +23,19 @@ const SettingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <Icon {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon>
 );
 
+const ListIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <Icon {...props}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></Icon>
+);
+
+const CopyIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <Icon {...props}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></Icon>
+);
+
+const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <Icon {...props}><polyline points="20 6 9 17 4 12"></polyline></Icon>
+);
+
+
 // Header với style chính xác từ shop-ui
 const AdminHeader: React.FC<{ onClose: () => void }> = ({ onClose }) => (
     <header className="sticky top-0 z-40 bg-slate-900 border-b border-white/10">
@@ -37,10 +50,11 @@ const AdminHeader: React.FC<{ onClose: () => void }> = ({ onClose }) => (
 const AdminTabs: React.FC<{ activeTab: string; setActiveTab: (tab: string) => void }> = ({ activeTab, setActiveTab }) => {
     const tabs = [
         { name: 'user', label: 'Quản lý Người dùng', icon: UserIcon },
+        { name: 'userlist', label: 'Danh sách User', icon: ListIcon },
         { name: 'system', label: 'Hệ thống Chung', icon: SettingsIcon },
     ];
     return (
-        <nav className="max-w-[1600px] mx-auto flex items-center gap-2 px-4 sm:px-6 lg:px-8">
+        <nav className="max-w-[1600px] mx-auto flex items-center gap-2 px-4 sm:px-6 lg:px-8 overflow-x-auto">
             {tabs.map(({ name, label, icon: IconComponent }) => (
                 <button
                     key={name}
@@ -60,6 +74,97 @@ const AdminTabs: React.FC<{ activeTab: string; setActiveTab: (tab: string) => vo
 };
 // --- END: CÁC COMPONENT GIAO DIỆN ---
 
+// --- START: COMPONENT CHO TAB DANH SÁCH USER ---
+interface UserListTabProps {
+  setActiveTab: (tab: string) => void;
+  setTargetUserId: (id: string) => void;
+  showFeedback: (type: 'success' | 'error', message: string) => void;
+}
+
+const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId, showFeedback }) => {
+  const [users, setUsers] = useState<SimpleUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [copiedUid, setCopiedUid] = useState<string | null>(null);
+  const [filter, setFilter] = useState('');
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const userList = await fetchAllUsers();
+        setUsers(userList);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch users.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadUsers();
+  }, []);
+
+  const handleCopy = (uid: string) => {
+    navigator.clipboard.writeText(uid)
+      .then(() => {
+        setCopiedUid(uid);
+        showFeedback('success', `Đã sao chép UID: ${uid}`);
+        setTimeout(() => setCopiedUid(null), 2000);
+      })
+      .catch(err => {
+        showFeedback('error', 'Không thể sao chép.');
+        console.error('Failed to copy: ', err);
+      });
+  };
+
+  const handleSelectUser = (uid: string) => {
+      setTargetUserId(uid);
+      setActiveTab('user');
+  };
+
+  if (isLoading) return <div className="flex justify-center items-center h-32"><Spinner /></div>;
+  if (error) return <div className="text-red-500 text-center p-4 bg-red-900/50 rounded-lg">{error}</div>;
+
+  const filteredUsers = users.filter(u => u.uid.toLowerCase().includes(filter.toLowerCase()));
+
+  return (
+    <div className="animate-fade-in">
+        <h3 className="text-xl font-semibold text-cyan-300 pb-2 mb-3">Danh sách Người dùng ({users.length})</h3>
+        <input 
+            type="text" 
+            value={filter} 
+            onChange={e => setFilter(e.target.value)} 
+            placeholder="Tìm kiếm UID..." 
+            className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 mb-4 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+        />
+        <div className="bg-slate-800/50 rounded-lg max-h-[60vh] overflow-y-auto">
+            <ul className="divide-y divide-slate-700">
+                {filteredUsers.length > 0 ? filteredUsers.map(user => (
+                    <li key={user.uid} className="flex items-center justify-between p-3 hover:bg-slate-700/50 transition-colors duration-150">
+                        <span 
+                            className="font-mono text-slate-300 cursor-pointer hover:text-cyan-400 flex-grow truncate"
+                            onClick={() => handleSelectUser(user.uid)}
+                            title="Chọn và chuyển đến tab quản lý"
+                        >
+                            {user.uid}
+                        </span>
+                        <button 
+                            onClick={() => handleCopy(user.uid)}
+                            className="text-slate-400 hover:text-white transition-colors ml-4 flex-shrink-0"
+                            title="Sao chép UID"
+                        >
+                            {copiedUid === user.uid ? <CheckIcon className="w-5 h-5 text-green-400" /> : <CopyIcon className="w-5 h-5" />}
+                        </button>
+                    </li>
+                )) : (
+                    <li className="p-4 text-center text-slate-400">Không tìm thấy user nào.</li>
+                )}
+            </ul>
+        </div>
+    </div>
+  );
+};
+// --- END: COMPONENT CHO TAB DANH SÁCH USER ---
+
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const [activeTab, setActiveTab] = useState('user');
@@ -72,6 +177,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const [updateValues, setUpdateValues] = useState({
         coins: 0, gems: 0, ancientBooks: 0, equipmentPieces: 0, pickaxes: 0, hp: 0, atk: 0, def: 0, jackpot: 0,
     });
+    
+    // Auto-fetch data if targetUserId is set from another tab
+    useEffect(() => {
+        if (targetUserId) {
+            handleFetchUser();
+        }
+    }, [targetUserId]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -166,8 +278,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 <div className="mb-6">
                                     <label htmlFor="userIdInput" className="block text-sm font-medium text-slate-300 mb-1">User ID</label>
                                     <div className="flex space-x-2">
-                                        <input id="userIdInput" type="text" value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)} placeholder="Nhập User ID của người chơi..." className="flex-grow bg-slate-800 border border-slate-600 rounded px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:outline-none" />
-                                        <button onClick={handleFetchUser} disabled={isFetching} className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-500 text-white font-bold py-2 px-4 rounded transition-colors flex items-center justify-center w-32">
+                                        <input id="userIdInput" type="text" value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)} placeholder="Nhập User ID hoặc chọn từ danh sách..." className="flex-grow bg-slate-800 border border-slate-600 rounded px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:outline-none" />
+                                        <button onClick={handleFetchUser} disabled={isFetching || !targetUserId} className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-500 text-white font-bold py-2 px-4 rounded transition-colors flex items-center justify-center w-32">
                                             {isFetching ? <Spinner /> : 'Tải dữ liệu'}
                                         </button>
                                     </div>
@@ -188,6 +300,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                     </div>
                                 )}
                             </div>
+                        )}
+                        {activeTab === 'userlist' && (
+                             <UserListTab 
+                                setActiveTab={setActiveTab}
+                                setTargetUserId={setTargetUserId}
+                                showFeedback={showFeedback}
+                             />
                         )}
                         {activeTab === 'system' && (
                             <div className="animate-fade-in">
