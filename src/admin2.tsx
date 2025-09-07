@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { uiAssets, equipmentUiAssets } from './game-assets'; 
+import { uiAssets, equipmentUiAssets } from './game-assets.ts'; 
 import { adminUpdateUserData, fetchOrCreateUserGameData, UserGameData, updateJackpotPool, fetchAllUsers, SimpleUser } from './gameDataService.ts';
 
 type ImageSourcePropType = any;
