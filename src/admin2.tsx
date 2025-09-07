@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
+// --- THÊM IMPORT ICON TỪ GAME ASSETS ---
+import { uiAssets, equipmentUiAssets } from './game-assets.ts'; 
 import { adminUpdateUserData, fetchOrCreateUserGameData, UserGameData, updateJackpotPool, fetchAllUsers, SimpleUser } from './gameDataService.ts';
+
+// Giả định kiểu dữ liệu cho icon source, điều chỉnh nếu cần
+type ImageSourcePropType = any;
 
 interface AdminPanelProps {
     onClose: () => void;
 }
 
-// --- START: CÁC COMPONENT GIAO DIỆN ĐƯỢC CHUẨN HÓA GIỐNG SHOP-UI ---
+// --- START: CÁC COMPONENT GIAO DIỆN CHUNG ---
 
 const Spinner: React.FC = () => (
     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
@@ -46,9 +51,9 @@ const AdminHeader: React.FC<{ onClose: () => void }> = ({ onClose }) => (
 
 const AdminTabs: React.FC<{ activeTab: string; setActiveTab: (tab: string) => void }> = ({ activeTab, setActiveTab }) => {
     const tabs = [
-        { name: 'user', label: 'Quản lý Người dùng', icon: UserIcon },
-        { name: 'userlist', label: 'Danh sách User', icon: ListIcon },
-        { name: 'system', label: 'Hệ thống Chung', icon: SettingsIcon },
+        { name: 'user', label: 'User Management', icon: UserIcon },
+        { name: 'userlist', label: 'User List', icon: ListIcon },
+        { name: 'system', label: 'System', icon: SettingsIcon },
     ];
     return (
         <nav className="max-w-[1600px] mx-auto flex items-center gap-2 px-4 sm:px-6 lg:px-8 overflow-x-auto">
@@ -70,13 +75,7 @@ const AdminTabs: React.FC<{ activeTab: string; setActiveTab: (tab: string) => vo
     );
 };
 
-interface UserListTabProps {
-  setActiveTab: (tab: string) => void;
-  setTargetUserId: (id: string) => void;
-  showFeedback: (type: 'success' | 'error', message: string) => void;
-}
-
-const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId, showFeedback }) => {
+const UserListTab: React.FC<{ setActiveTab: (tab: string) => void; setTargetUserId: (id: string) => void; showFeedback: (type: 'success' | 'error', message: string) => void; }> = ({ setActiveTab, setTargetUserId, showFeedback }) => {
   const [users, setUsers] = useState<SimpleUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -174,13 +173,38 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
   );
 };
 
-const initialUpdateValues = {
-    coins: 0, gems: 0, ancientBooks: 0, equipmentPieces: 0, pickaxes: 0, hp: 0, atk: 0, def: 0, jackpot: 0,
-};
+const initialUpdateValues = { coins: 0, gems: 0, ancientBooks: 0, equipmentPieces: 0, pickaxes: 0, hp: 0, atk: 0, def: 0, jackpot: 0 };
 type UpdateValuesType = typeof initialUpdateValues;
 
+// --- COMPONENT MỚI: ICON WITH TOOLTIP ---
+interface IconWithTooltipProps {
+    iconSrc: ImageSourcePropType | string;
+    label: string;
+}
+const IconWithTooltip: React.FC<IconWithTooltipProps> = ({ iconSrc, label }) => {
+    const [tooltipVisible, setTooltipVisible] = useState(false);
+    return (
+        <div className="relative flex items-center justify-center">
+            <button
+                onClick={() => setTooltipVisible(!tooltipVisible)}
+                onBlur={() => setTooltipVisible(false)} // Tự ẩn khi click ra ngoài
+                className="p-1 rounded-full hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+                <img src={iconSrc as string} alt={label} className="w-8 h-8 object-contain" />
+            </button>
+            {tooltipVisible && (
+                <div className="absolute bottom-full mb-2 px-2 py-1 bg-slate-900 border border-slate-600 text-white text-xs font-semibold rounded-md shadow-lg z-10 whitespace-nowrap">
+                    {label}
+                </div>
+            )}
+        </div>
+    );
+};
+
+// --- COMPONENT ACTIONROW ĐÃ ĐƯỢC CẬP NHẬT ---
 interface ActionRowProps {
     label: string;
+    iconSrc: ImageSourcePropType | string;
     fieldName: keyof UpdateValuesType;
     dbKey: string;
     value: number;
@@ -188,27 +212,25 @@ interface ActionRowProps {
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onUpdate: (fieldName: keyof UpdateValuesType, dbKey: string) => void;
 }
-
-const ActionRow: React.FC<ActionRowProps> = ({ label, fieldName, dbKey, value, isUpdating, onChange, onUpdate }) => (
+const ActionRow: React.FC<ActionRowProps> = ({ label, iconSrc, fieldName, dbKey, value, isUpdating, onChange, onUpdate }) => (
     <div className="flex items-center space-x-3">
-        <p className="w-40 flex-shrink-0 text-slate-300">{label}:</p> {/* Tăng chiều rộng để vừa "Equipment Pieces" */}
+        <div className="w-40 flex-shrink-0">
+            <IconWithTooltip iconSrc={iconSrc} label={label} />
+        </div>
         <input 
-            type="number" 
-            name={fieldName} 
-            value={value} 
-            onChange={onChange} 
+            type="number" name={fieldName} value={value} onChange={onChange} 
             className="w-36 text-right font-mono bg-slate-800 border border-slate-600 rounded px-3 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-all duration-150 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
         <div className="flex-grow"></div> 
         <button 
-            onClick={() => onUpdate(fieldName, dbKey)} 
-            disabled={isUpdating}
+            onClick={() => onUpdate(fieldName, dbKey)} disabled={isUpdating}
             className="w-28 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
             {isUpdating ? <Spinner /> : 'Update'}
         </button>
     </div>
 );
 
+// --- COMPONENT ADMINPANEL CHÍNH ---
 const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const [activeTab, setActiveTab] = useState('user');
     const [targetUserId, setTargetUserId] = useState('');
@@ -333,7 +355,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             </div>
         );
     };
-
+    
     return (
         <div className="fixed inset-0 bg-[#0a0a14] text-white z-[100] flex flex-col">
             <AdminHeader onClose={onClose} />
@@ -357,18 +379,18 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 {renderUserData()}
                                 {userData && (
                                     <div className="mt-6 space-y-4 animate-fade-in">
-                                        {/* --- THAY ĐỔI TIÊU ĐỀ VÀ NHÃN --- */}
                                         <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3">Edit Resources</h3>
-                                        <ActionRow label="Coins" fieldName="coins" dbKey="coins" value={updateValues.coins} isUpdating={isUpdating === 'coins'} onChange={handleInputChange} onUpdate={handleUpdate} />
-                                        <ActionRow label="Gems" fieldName="gems" dbKey="gems" value={updateValues.gems} isUpdating={isUpdating === 'gems'} onChange={handleInputChange} onUpdate={handleUpdate} />
-                                        <ActionRow label="Ancient Books" fieldName="ancientBooks" dbKey="ancientBooks" value={updateValues.ancientBooks} isUpdating={isUpdating === 'ancientBooks'} onChange={handleInputChange} onUpdate={handleUpdate} />
-                                        <ActionRow label="Equipment Pieces" fieldName="equipmentPieces" dbKey="equipment.pieces" value={updateValues.equipmentPieces} isUpdating={isUpdating === 'equipmentPieces'} onChange={handleInputChange} onUpdate={handleUpdate} />
-                                        <ActionRow label="Pickaxes" fieldName="pickaxes" dbKey="pickaxes" value={updateValues.pickaxes} isUpdating={isUpdating === 'pickaxes'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="Coins" iconSrc={uiAssets.statCoinIcon} fieldName="coins" dbKey="coins" value={updateValues.coins} isUpdating={isUpdating === 'coins'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="Gems" iconSrc={uiAssets.gemIcon} fieldName="gems" dbKey="gems" value={updateValues.gems} isUpdating={isUpdating === 'gems'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="Ancient Books" iconSrc={uiAssets.bookIcon} fieldName="ancientBooks" dbKey="ancientBooks" value={updateValues.ancientBooks} isUpdating={isUpdating === 'ancientBooks'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="Equipment Pieces" iconSrc={equipmentUiAssets.equipmentPieceIcon} fieldName="equipmentPieces" dbKey="equipment.pieces" value={updateValues.equipmentPieces} isUpdating={isUpdating === 'equipmentPieces'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        {/* LƯU Ý: Icon cho Pickaxes không có, tạm dùng inventoryIcon */}
+                                        <ActionRow label="Pickaxes" iconSrc={uiAssets.inventoryIcon} fieldName="pickaxes" dbKey="pickaxes" value={updateValues.pickaxes} isUpdating={isUpdating === 'pickaxes'} onChange={handleInputChange} onUpdate={handleUpdate} />
                                         
                                         <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3 pt-4">Edit Stats</h3>
-                                        <ActionRow label="HP Level" fieldName="hp" dbKey="stats.hp" value={updateValues.hp} isUpdating={isUpdating === 'hp'} onChange={handleInputChange} onUpdate={handleUpdate} />
-                                        <ActionRow label="ATK Level" fieldName="atk" dbKey="stats.atk" value={updateValues.atk} isUpdating={isUpdating === 'atk'} onChange={handleInputChange} onUpdate={handleUpdate} />
-                                        <ActionRow label="DEF Level" fieldName="def" dbKey="stats.def" value={updateValues.def} isUpdating={isUpdating === 'def'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="HP Level" iconSrc={uiAssets.statHpIcon} fieldName="hp" dbKey="stats.hp" value={updateValues.hp} isUpdating={isUpdating === 'hp'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="ATK Level" iconSrc={uiAssets.statAtkIcon} fieldName="atk" dbKey="stats.atk" value={updateValues.atk} isUpdating={isUpdating === 'atk'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="DEF Level" iconSrc={uiAssets.statDefIcon} fieldName="def" dbKey="stats.def" value={updateValues.def} isUpdating={isUpdating === 'def'} onChange={handleInputChange} onUpdate={handleUpdate} />
                                     </div>
                                 )}
                             </div>
