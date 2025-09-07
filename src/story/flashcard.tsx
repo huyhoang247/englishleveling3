@@ -336,15 +336,43 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                     `}>
                       {selectedCard.vocabulary.popularity}
                     </span>
-                    <div className="flex-1 h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full">
-                      <div
-                        className={`h-full rounded-full ${
-                          selectedCard.vocabulary.popularity === "Cao" ? "bg-green-500 w-4/5" :
-                          selectedCard.vocabulary.popularity === "Trung bình" ? "bg-amber-500 w-1/2" :
-                          "bg-red-500 w-1/5"
-                        }`}
-                      ></div>
-                    </div>
+                    {(() => {
+                      const totalSegments = 40;
+                      const popularity = selectedCard.vocabulary.popularity;
+                      
+                      const config = {
+                        "Cao": {
+                          filled: Math.round(totalSegments * 0.8),
+                          color: 'bg-green-500',
+                          wrapper: 'border-green-400/60 dark:border-green-500/70'
+                        },
+                        "Trung bình": {
+                          filled: Math.round(totalSegments * 0.5),
+                          color: 'bg-amber-500',
+                          wrapper: 'border-amber-400/60 dark:border-amber-500/70'
+                        },
+                        "default": { // Dành cho các trường hợp còn lại (vd: "Thấp")
+                          filled: Math.round(totalSegments * 0.2),
+                          color: 'bg-red-500',
+                          wrapper: 'border-red-400/60 dark:border-red-500/70'
+                        }
+                      };
+                      
+                      const { filled, color, wrapper } = config[popularity as keyof typeof config] || config["default"];
+
+                      return (
+                        <div className={`flex flex-1 items-center gap-px p-1 rounded-lg border bg-gray-200/50 dark:bg-black/20 shadow-inner ${wrapper}`}>
+                          {Array.from({ length: totalSegments }).map((_, i) => (
+                            <div
+                              key={i}
+                              className={`h-4 rounded-[2px] flex-1 ${
+                                i < filled ? color : 'bg-gray-300/80 dark:bg-gray-700/60'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
