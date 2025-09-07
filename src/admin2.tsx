@@ -35,7 +35,6 @@ const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <Icon {...props}><polyline points="20 6 9 17 4 12"></polyline></Icon>
 );
 
-
 // Header với style chính xác từ shop-ui
 const AdminHeader: React.FC<{ onClose: () => void }> = ({ onClose }) => (
     <header className="sticky top-0 z-40 bg-slate-900 border-b border-white/10">
@@ -191,11 +190,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+    // Giá trị khởi tạo vẫn là 0
     const [updateValues, setUpdateValues] = useState({
         coins: 0, gems: 0, ancientBooks: 0, equipmentPieces: 0, pickaxes: 0, hp: 0, atk: 0, def: 0, jackpot: 0,
     });
     
-    // --- FIX START: Wrap functions in useCallback ---
     const showFeedback = useCallback((type: 'success' | 'error', message: string) => {
         setFeedback({ type, message });
         setTimeout(() => setFeedback(null), 3000);
@@ -203,40 +202,103 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
     const handleFetchUser = useCallback(async () => {
         if (!targetUserId) { showFeedback('error', 'Vui lòng nhập User ID.'); return; }
-        setIsFetching(true); setUserData(null);
+        setIsFetching(true); 
+        setUserData(null);
         try {
             const data = await fetchOrCreateUserGameData(targetUserId);
-            setUserData(data); showFeedback('success', `Đã tải dữ liệu của user: ${targetUserId}`);
+            setUserData(data);
+
+            // --- THAY ĐỔI 1: ĐIỀN DỮ LIỆU HIỆN TẠI VÀO FORM ---
+            // Sau khi tải dữ liệu thành công, cập nhật state của các ô input
+            // để chúng hiển thị giá trị hiện tại của người dùng.
+            setUpdateValues(prev => ({
+                ...prev, // Giữ lại giá trị jackpot không liên quan đến user
+                coins: data.coins,
+                gems: data.gems,
+                ancientBooks: data.ancientBooks,
+                equipmentPieces: data.equipment.pieces,
+                pickaxes: data.pickaxes,
+                hp: data.stats.hp,
+                atk: data.stats.atk,
+                def: data.stats.def,
+            }));
+
+            showFeedback('success', `Đã tải dữ liệu của user: ${targetUserId}`);
         } catch (error) {
-            console.error(error); showFeedback('error', error instanceof Error ? error.message : 'Không tìm thấy người dùng.');
-        } finally { setIsFetching(false); }
+            console.error(error); 
+            showFeedback('error', error instanceof Error ? error.message : 'Không tìm thấy người dùng.');
+        } finally { 
+            setIsFetching(false); 
+        }
     }, [targetUserId, showFeedback]);
-    // --- FIX END ---
     
-    // Auto-fetch data if targetUserId is set from another tab
     useEffect(() => {
         if (targetUserId && activeTab === 'user') {
             handleFetchUser();
         }
-    }, [targetUserId, activeTab, handleFetchUser]); // <-- FIX: Add handleFetchUser to dependencies
-
+    }, [targetUserId, activeTab, handleFetchUser]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setUpdateValues(prev => ({ ...prev, [name]: Number(value) }));
     };
 
+    // --- THAY ĐỔI 2: SỬA LẠI LOGIC CẬP NHẬT ---
     const handleUpdate = async (field: keyof typeof updateValues, dbKey: string) => {
         if (!userData || !targetUserId) { showFeedback('error', 'Vui lòng chọn người dùng trước.'); return; }
-        const amount = updateValues[field];
-        if (amount === 0) { showFeedback('error', 'Giá trị phải khác 0.'); return; }
+
+        const newValue = updateValues[field];
+
+        // Lấy giá trị cũ từ state `userData` để so sánh
+        let oldValue;
+        switch(field) {
+            case 'coins':           oldValue = userData.coins; break;
+            case 'gems':            oldValue = userData.gems; break;
+            case 'ancientBooks':    oldValue = userData.ancientBooks; break;
+            case 'equipmentPieces': oldValue = userData.equipment.pieces; break;
+            case 'pickaxes':        oldValue = userData.pickaxes; break;
+            case 'hp':              oldValue = userData.stats.hp; break;
+            case 'atk':             oldValue = userData.stats.atk; break;
+            case 'def':             oldValue = userData.stats.def; break;
+            default:
+                showFeedback('error', 'Trường dữ liệu không hợp lệ.');
+                return;
+        }
+
+        // Tính toán lượng chênh lệch để gửi lên server (vì server dùng logic increment)
+        const amountToUpdate = newValue - oldValue;
+
+        if (amountToUpdate === 0) { showFeedback('error', 'Giá trị mới phải khác giá trị hiện tại.'); return; }
+        
         setIsUpdating(field);
         try {
-            const updatedData = await adminUpdateUserData(targetUserId, { [dbKey]: amount });
-            setUserData(updatedData); showFeedback('success', `Đã cập nhật ${field} thành công!`);
+            // Gửi giá trị chênh lệch, không phải giá trị tuyệt đối
+            const updatedData = await adminUpdateUserData(targetUserId, { [dbKey]: amountToUpdate });
+            
+            // Cập nhật lại cả `userData` và `updateValues` để giao diện đồng bộ
+            setUserData(updatedData);
+            setUpdateValues(prev => ({
+                ...prev,
+                coins: updatedData.coins,
+                gems: updatedData.gems,
+                ancientBooks: updatedData.ancientBooks,
+                equipmentPieces: updatedData.equipment.pieces,
+                pickaxes: updatedData.pickaxes,
+                hp: updatedData.stats.hp,
+                atk: updatedData.stats.atk,
+                def: updatedData.stats.def,
+            }));
+
+            showFeedback('success', `Đã cập nhật ${field} thành công!`);
         } catch (error) {
-            console.error(error); showFeedback('error', `Lỗi khi cập nhật: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
-        } finally { setIsUpdating(null); setUpdateValues(prev => ({ ...prev, [field]: 0 })); }
+            console.error(error); 
+            showFeedback('error', `Lỗi khi cập nhật: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+            // Nếu lỗi, revert lại giá trị trong ô input về giá trị cũ
+            setUpdateValues(prev => ({ ...prev, [field]: oldValue }));
+        } finally { 
+            setIsUpdating(null); 
+            // Không reset về 0 nữa
+        }
     };
     
     const handleUpdateJackpot = async () => {
@@ -271,7 +333,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const ActionRow: React.FC<{ label: string; fieldName: keyof typeof updateValues; dbKey: string; }> = ({ label, fieldName, dbKey }) => (
         <div className="flex items-center space-x-2">
             <p className="w-32 flex-shrink-0 text-slate-300">{label}:</p>
-            <input type="number" name={fieldName} value={updateValues[fieldName]} onChange={handleInputChange} className="w-48 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none" placeholder="+/-" />
+            {/* Loại bỏ placeholder="+/-" vì logic đã thay đổi */}
+            <input type="number" name={fieldName} value={updateValues[fieldName]} onChange={handleInputChange} className="flex-grow bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none" />
             <button onClick={() => handleUpdate(fieldName, dbKey)} disabled={isUpdating !== null} className="w-24 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
                 {isUpdating === fieldName ? <Spinner /> : 'Cập nhật'}
             </button>
@@ -279,19 +342,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     );
 
     return (
-        // Cấu trúc layout chính giống Shop: flex-col để chia header, tabs, và content
         <div className="fixed inset-0 bg-[#0a0a14] text-white z-[100] flex flex-col">
             <AdminHeader onClose={onClose} />
             
-            {/* Vùng chứa Tabs với style chính xác từ shop-ui */}
             <div className="flex-shrink-0 bg-[#0a0a14] border-b border-slate-800/70 shadow-md pt-2">
                 <AdminTabs activeTab={activeTab} setActiveTab={setActiveTab} />
             </div>
             
-            {/* Vùng nội dung có thể cuộn với nền radial-gradient */}
             <div className="flex-1 relative overflow-y-auto [background-image:radial-gradient(circle_at_center,_#16213e,_#0a0a14)]">
                 <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24">
-                    {/* Giới hạn chiều rộng của nội dung chính để dễ đọc */}
                     <div className="max-w-4xl mx-auto">
                         {activeTab === 'user' && (
                             <div className="animate-fade-in">
@@ -334,7 +393,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 <div className="bg-slate-800/50 p-4 rounded-lg space-y-4">
                                     <div className="flex items-center space-x-2">
                                         <p className="w-32 flex-shrink-0 text-slate-300">Jackpot Pool:</p>
-                                        <input type="number" name="jackpot" value={updateValues.jackpot} onChange={handleInputChange} className="w-48 bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none" placeholder="+/-" />
+                                        <input type="number" name="jackpot" value={updateValues.jackpot} onChange={handleInputChange} className="flex-grow bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none" placeholder="+/-" />
                                         <button onClick={handleUpdateJackpot} disabled={isUpdating !== null} className="w-24 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
                                             {isUpdating === 'jackpot' ? <Spinner /> : 'Cập nhật'}
                                         </button>
