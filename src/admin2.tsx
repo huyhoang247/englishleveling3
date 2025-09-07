@@ -124,7 +124,12 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
   if (isLoading) return <div className="flex justify-center items-center h-32"><Spinner /></div>;
   if (error) return <div className="text-red-500 text-center p-4 bg-red-900/50 rounded-lg">{error}</div>;
 
-  const filteredUsers = users.filter(u => u.uid.toLowerCase().includes(filter.toLowerCase()));
+  const searchTerm = filter.toLowerCase();
+  const filteredUsers = users.filter(u => 
+      u.uid.toLowerCase().includes(searchTerm) ||
+      u.username?.toLowerCase().includes(searchTerm) ||
+      u.email?.toLowerCase().includes(searchTerm)
+  );
 
   return (
     <div className="animate-fade-in">
@@ -133,32 +138,44 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
             type="text" 
             value={filter} 
             onChange={e => setFilter(e.target.value)} 
-            placeholder="Tìm kiếm UID..." 
+            placeholder="Tìm kiếm UID, Username, Email..." 
             className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 mb-4 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
         />
-        <div className="bg-slate-800/50 rounded-lg max-h-[60vh] overflow-y-auto">
-            <ul className="divide-y divide-slate-700">
+        <div className="bg-slate-800/50 rounded-lg overflow-hidden">
+            {/* Header */}
+            <div className="grid grid-cols-[1.5fr_2fr_3fr_auto] gap-4 px-4 py-2 border-b border-slate-700 bg-slate-900/50 font-semibold text-sm text-slate-300">
+                <div>UID</div>
+                <div>Username</div>
+                <div>Email</div>
+                <div className="text-right">Hành động</div>
+            </div>
+            {/* Body */}
+            <div className="max-h-[60vh] overflow-y-auto">
                 {filteredUsers.length > 0 ? filteredUsers.map(user => (
-                    <li key={user.uid} className="flex items-center justify-between p-3 hover:bg-slate-700/50 transition-colors duration-150">
+                    <div key={user.uid} className="grid grid-cols-[1.5fr_2fr_3fr_auto] gap-4 px-4 py-3 items-center border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors duration-150 text-sm">
                         <span 
-                            className="font-mono text-slate-300 cursor-pointer hover:text-cyan-400 flex-grow truncate"
+                            className="font-mono text-slate-300 cursor-pointer hover:text-cyan-400 truncate"
                             onClick={() => handleSelectUser(user.uid)}
-                            title="Chọn và chuyển đến tab quản lý"
+                            title={`Click để quản lý\n${user.uid}`}
                         >
-                            {user.uid}
+                            {user.uid.substring(0, 5)}...
                         </span>
-                        <button 
-                            onClick={() => handleCopy(user.uid)}
-                            className="text-slate-400 hover:text-white transition-colors ml-4 flex-shrink-0"
-                            title="Sao chép UID"
-                        >
-                            {copiedUid === user.uid ? <CheckIcon className="w-5 h-5 text-green-400" /> : <CopyIcon className="w-5 h-5" />}
-                        </button>
-                    </li>
+                        <span className="text-slate-200 truncate" title={user.username}>{user.username || <span className="text-slate-500">N/A</span>}</span>
+                        <span className="text-slate-400 truncate" title={user.email}>{user.email || <span className="text-slate-500">N/A</span>}</span>
+                        <div className="flex justify-end">
+                            <button 
+                                onClick={() => handleCopy(user.uid)}
+                                className="text-slate-400 hover:text-white transition-colors"
+                                title="Sao chép UID"
+                            >
+                                {copiedUid === user.uid ? <CheckIcon className="w-5 h-5 text-green-400" /> : <CopyIcon className="w-5 h-5" />}
+                            </button>
+                        </div>
+                    </div>
                 )) : (
-                    <li className="p-4 text-center text-slate-400">Không tìm thấy user nào.</li>
+                    <div className="p-4 text-center text-slate-400">Không tìm thấy user nào.</div>
                 )}
-            </ul>
+            </div>
         </div>
     </div>
   );
@@ -180,10 +197,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     
     // Auto-fetch data if targetUserId is set from another tab
     useEffect(() => {
-        if (targetUserId) {
+        if (targetUserId && activeTab === 'user') {
             handleFetchUser();
         }
-    }, [targetUserId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [targetUserId, activeTab]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
