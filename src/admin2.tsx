@@ -190,7 +190,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const [isUpdating, setIsUpdating] = useState<string | null>(null);
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-    // Giá trị khởi tạo vẫn là 0
     const [updateValues, setUpdateValues] = useState({
         coins: 0, gems: 0, ancientBooks: 0, equipmentPieces: 0, pickaxes: 0, hp: 0, atk: 0, def: 0, jackpot: 0,
     });
@@ -208,11 +207,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             const data = await fetchOrCreateUserGameData(targetUserId);
             setUserData(data);
 
-            // --- THAY ĐỔI 1: ĐIỀN DỮ LIỆU HIỆN TẠI VÀO FORM ---
-            // Sau khi tải dữ liệu thành công, cập nhật state của các ô input
-            // để chúng hiển thị giá trị hiện tại của người dùng.
             setUpdateValues(prev => ({
-                ...prev, // Giữ lại giá trị jackpot không liên quan đến user
+                ...prev,
                 coins: data.coins,
                 gems: data.gems,
                 ancientBooks: data.ancientBooks,
@@ -243,13 +239,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         setUpdateValues(prev => ({ ...prev, [name]: Number(value) }));
     };
 
-    // --- THAY ĐỔI 2: SỬA LẠI LOGIC CẬP NHẬT ---
     const handleUpdate = async (field: keyof typeof updateValues, dbKey: string) => {
         if (!userData || !targetUserId) { showFeedback('error', 'Vui lòng chọn người dùng trước.'); return; }
 
         const newValue = updateValues[field];
 
-        // Lấy giá trị cũ từ state `userData` để so sánh
         let oldValue;
         switch(field) {
             case 'coins':           oldValue = userData.coins; break;
@@ -265,17 +259,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 return;
         }
 
-        // Tính toán lượng chênh lệch để gửi lên server (vì server dùng logic increment)
         const amountToUpdate = newValue - oldValue;
 
         if (amountToUpdate === 0) { showFeedback('error', 'Giá trị mới phải khác giá trị hiện tại.'); return; }
         
         setIsUpdating(field);
         try {
-            // Gửi giá trị chênh lệch, không phải giá trị tuyệt đối
             const updatedData = await adminUpdateUserData(targetUserId, { [dbKey]: amountToUpdate });
             
-            // Cập nhật lại cả `userData` và `updateValues` để giao diện đồng bộ
             setUserData(updatedData);
             setUpdateValues(prev => ({
                 ...prev,
@@ -293,11 +284,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         } catch (error) {
             console.error(error); 
             showFeedback('error', `Lỗi khi cập nhật: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
-            // Nếu lỗi, revert lại giá trị trong ô input về giá trị cũ
             setUpdateValues(prev => ({ ...prev, [field]: oldValue }));
         } finally { 
             setIsUpdating(null); 
-            // Không reset về 0 nữa
         }
     };
     
@@ -330,12 +319,22 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         );
     };
     
+    // --- COMPONENT ĐÃ ĐƯỢC CẬP NHẬT GIAO DIỆN ---
     const ActionRow: React.FC<{ label: string; fieldName: keyof typeof updateValues; dbKey: string; }> = ({ label, fieldName, dbKey }) => (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
             <p className="w-32 flex-shrink-0 text-slate-300">{label}:</p>
-            {/* Loại bỏ placeholder="+/-" vì logic đã thay đổi */}
-            <input type="number" name={fieldName} value={updateValues[fieldName]} onChange={handleInputChange} className="flex-grow bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none" />
-            <button onClick={() => handleUpdate(fieldName, dbKey)} disabled={isUpdating !== null} className="w-24 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
+            <input 
+                type="number" 
+                name={fieldName} 
+                value={updateValues[fieldName]} 
+                onChange={handleInputChange} 
+                className="w-36 text-right font-mono bg-slate-800 border border-slate-600 rounded px-3 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-all duration-150 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <div className="flex-grow"></div> 
+            <button 
+                onClick={() => handleUpdate(fieldName, dbKey)} 
+                disabled={isUpdating !== null} 
+                className="w-28 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
                 {isUpdating === fieldName ? <Spinner /> : 'Cập nhật'}
             </button>
         </div>
