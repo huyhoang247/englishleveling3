@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { uiAssets, equipmentUiAssets } from './game-assets.ts'; 
 import { adminUpdateUserData, fetchOrCreateUserGameData, UserGameData, updateJackpotPool, fetchAllUsers, SimpleUser } from './gameDataService.ts';
 
@@ -18,29 +18,12 @@ const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
 );
 
-const UserIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <Icon {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon>
-);
-
-const SettingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <Icon {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon>
-);
-
-const ListIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <Icon {...props}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></Icon>
-);
-
-const CopyIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <Icon {...props}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></Icon>
-);
-
-const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <Icon {...props}><polyline points="20 6 9 17 4 12"></polyline></Icon>
-);
-
-const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <Icon {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></Icon>
-);
+const UserIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon> );
+const SettingsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon> );
+const ListIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></Icon> );
+const CopyIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></Icon> );
+const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><polyline points="20 6 9 17 4 12"></polyline></Icon> );
+const XIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></Icon> );
 
 const AdminHeader: React.FC<{ onClose: () => void }> = ({ onClose }) => (
     <header className="sticky top-0 z-40 bg-slate-900 border-b border-white/10">
@@ -79,296 +62,162 @@ const AdminTabs: React.FC<{ activeTab: string; setActiveTab: (tab: string) => vo
 
 // --- START: CÁC COMPONENT DÀNH CHO TAB DANH SÁCH USER ---
 
-interface ColumnSettingsPopupProps {
-    isOpen: boolean;
-    onClose: () => void;
-    allColumns: { key: string; label: string }[];
-    visibleColumns: string[];
-    onVisibilityChange: (newVisibleColumns: string[]) => void;
-    anchorRef: React.RefObject<HTMLButtonElement>;
-}
+interface CustomCheckboxProps { label: string; isChecked: boolean; isDisabled: boolean; onToggle: () => void; }
+const CustomCheckbox: React.FC<CustomCheckboxProps> = ({ label, isChecked, isDisabled, onToggle }) => (
+    <label className={`flex items-center p-3 rounded-lg transition-colors duration-200 ${isDisabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:bg-slate-700/50'}`}>
+        <div className="relative flex items-center">
+            <input type="checkbox" checked={isChecked} disabled={isDisabled} onChange={onToggle} className="peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-500 transition-all checked:border-cyan-500 checked:bg-cyan-500" />
+            <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 text-white opacity-0 transition-opacity peer-checked:opacity-100">
+                <CheckIcon className="h-3.5 w-3.5" strokeWidth={3} />
+            </div>
+        </div>
+        <span className="ml-3 text-slate-200">{label}</span>
+    </label>
+);
 
-const ColumnSettingsPopup: React.FC<ColumnSettingsPopupProps> = ({ isOpen, onClose, allColumns, visibleColumns, onVisibilityChange, anchorRef }) => {
-    const popupRef = React.useRef<HTMLDivElement>(null);
+interface ColumnSettingsPopoverProps { isOpen: boolean; onClose: () => void; allColumns: { key: string; label: string }[]; visibleColumns: string[]; onVisibilityChange: (newVisibleColumns: string[]) => void; }
+const ColumnSettingsPopover: React.FC<ColumnSettingsPopoverProps> = ({ isOpen, onClose, allColumns, visibleColumns, onVisibilityChange }) => {
     const [maxReached, setMaxReached] = useState(false);
-
     const handleToggleColumn = (colKey: string) => {
         const isVisible = visibleColumns.includes(colKey);
         let newVisibleColumns;
-
-        if (isVisible) {
-            newVisibleColumns = visibleColumns.filter(key => key !== colKey);
-        } else {
-            if (visibleColumns.length >= 3) {
-                setMaxReached(true);
-                setTimeout(() => setMaxReached(false), 1500);
-                return;
-            }
+        if (isVisible) { newVisibleColumns = visibleColumns.filter(key => key !== colKey); }
+        else {
+            if (visibleColumns.length >= 3) { setMaxReached(true); setTimeout(() => setMaxReached(false), 1500); return; }
             newVisibleColumns = [...visibleColumns, colKey];
         }
         onVisibilityChange(newVisibleColumns);
     };
-    
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (popupRef.current && !popupRef.current.contains(event.target as Node) && anchorRef.current && !anchorRef.current.contains(event.target as Node)) {
-                onClose();
-            }
-        };
-        if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isOpen, onClose, anchorRef]);
-
-    if (!isOpen || !anchorRef.current) return null;
-    
-    const rect = anchorRef.current.getBoundingClientRect();
-
+    if (!isOpen) return null;
     return (
-        <div 
-            ref={popupRef}
-            className="fixed z-50 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl p-4 w-64 animate-fade-in-up"
-            style={{ top: rect.bottom + 8, left: rect.left + rect.width / 2 - 256 + 12 }} // Position based on anchor
-        >
-            <div className="flex justify-between items-center mb-3">
-                <h4 className="font-semibold text-white">Hiển thị cột</h4>
-                <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
-                    <XIcon className="w-5 h-5" />
-                </button>
+        <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-fade-in">
+            <div onClick={(e) => e.stopPropagation()} className="w-full max-w-xs rounded-xl border border-white/10 bg-slate-800/80 p-6 shadow-2xl backdrop-blur-lg animate-scale-in">
+                <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-bold text-white">Customize Columns</h4>
+                    <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"><XIcon className="w-5 h-5" /></button>
+                </div>
+                <p className="text-sm text-slate-400 mb-5">Select up to 3 columns to display.</p>
+                <div className="space-y-2">
+                    {allColumns.map(col => {
+                        const isChecked = visibleColumns.includes(col.key);
+                        const isDisabled = !isChecked && visibleColumns.length >= 3;
+                        return ( <CustomCheckbox key={col.key} label={col.label} isChecked={isChecked} isDisabled={isDisabled} onToggle={() => handleToggleColumn(col.key)} /> );
+                    })}
+                </div>
+                 {maxReached && ( <p className="text-xs text-amber-400 mt-4 text-center animate-fade-in">Maximum of 3 columns reached.</p> )}
             </div>
-            <div className="space-y-2">
-                {allColumns.map(col => {
-                    const isChecked = visibleColumns.includes(col.key);
-                    const isDisabled = !isChecked && visibleColumns.length >= 3;
-                    return (
-                        <label key={col.key} className={`flex items-center space-x-3 p-2 rounded-md transition-colors ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-slate-700/50'}`}>
-                            <input
-                                type="checkbox"
-                                checked={isChecked}
-                                disabled={isDisabled}
-                                onChange={() => handleToggleColumn(col.key)}
-                                className="w-5 h-5 bg-slate-700 border-slate-500 rounded text-cyan-500 focus:ring-cyan-500/50 focus:ring-2"
-                            />
-                            <span className="text-slate-200">{col.label}</span>
-                        </label>
-                    );
-                })}
-            </div>
-            {maxReached && (
-                <p className="text-xs text-amber-400 mt-3 text-center animate-fade-in">
-                    Chỉ được chọn tối đa 3 cột.
-                </p>
-            )}
         </div>
     );
 };
 
-
-interface UserListTabProps {
-  setActiveTab: (tab: string) => void;
-  setTargetUserId: (id: string) => void;
-  showFeedback: (type: 'success' | 'error', message: string) => void;
-}
-
-const allConfigurableColumns = [
-  { key: 'uid', label: 'UID', width: '1.5fr' },
-  { key: 'username', label: 'Username', width: '2fr' },
-  { key: 'email', label: 'Email', width: '3fr' },
-];
-
+interface UserListTabProps { setActiveTab: (tab: string) => void; setTargetUserId: (id: string) => void; showFeedback: (type: 'success' | 'error', message: string) => void; }
+const allConfigurableColumns = [ { key: 'uid', label: 'UID', width: '1.5fr' }, { key: 'username', label: 'Username', width: '2fr' }, { key: 'email', label: 'Email', width: '3fr' } ];
 const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId, showFeedback }) => {
-  const [users, setUsers] = useState<SimpleUser[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [copiedUid, setCopiedUid] = useState<string | null>(null);
-  const [filter, setFilter] = useState('');
-  
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(['uid', 'username', 'email']);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const settingsButtonRef = React.useRef<HTMLButtonElement>(null);
+    const [users, setUsers] = useState<SimpleUser[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [copiedUid, setCopiedUid] = useState<string | null>(null);
+    const [filter, setFilter] = useState('');
+    const [visibleColumns, setVisibleColumns] = useState<string[]>(['uid', 'username', 'email']);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const userList = await fetchAllUsers();
-        setUsers(userList);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch users.');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
+    useEffect(() => {
+        const loadUsers = async () => {
+            try {
+                const userList = await fetchAllUsers();
+                setUsers(userList);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to fetch users.');
+                console.error(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadUsers();
+    }, []);
+
+    const handleCopy = (uid: string) => {
+        navigator.clipboard.writeText(uid)
+            .then(() => {
+                setCopiedUid(uid);
+                showFeedback('success', `Copied UID: ${uid}`);
+                setTimeout(() => setCopiedUid(null), 2000);
+            })
+            .catch(err => {
+                showFeedback('error', 'Failed to copy.');
+                console.error('Failed to copy: ', err);
+            });
     };
-    loadUsers();
-  }, []);
 
-  const handleCopy = (uid: string) => {
-    navigator.clipboard.writeText(uid)
-      .then(() => {
-        setCopiedUid(uid);
-        showFeedback('success', `Copied UID: ${uid}`);
-        setTimeout(() => setCopiedUid(null), 2000);
-      })
-      .catch(err => {
-        showFeedback('error', 'Failed to copy.');
-        console.error('Failed to copy: ', err);
-      });
-  };
+    const handleSelectUser = (uid: string) => {
+        setTargetUserId(uid);
+        setActiveTab('user');
+    };
 
-  const handleSelectUser = (uid: string) => {
-      setTargetUserId(uid);
-      setActiveTab('user');
-  };
+    if (isLoading) return <div className="flex justify-center items-center h-32"><Spinner /></div>;
+    if (error) return <div className="text-red-500 text-center p-4 bg-red-900/50 rounded-lg">{error}</div>;
 
-  if (isLoading) return <div className="flex justify-center items-center h-32"><Spinner /></div>;
-  if (error) return <div className="text-red-500 text-center p-4 bg-red-900/50 rounded-lg">{error}</div>;
+    const searchTerm = filter.toLowerCase();
+    const filteredUsers = users.filter(u => u.uid.toLowerCase().includes(searchTerm) || u.username?.toLowerCase().includes(searchTerm) || u.email?.toLowerCase().includes(searchTerm));
+    const gridTemplateColumns = [ ...visibleColumns.map(colKey => allConfigurableColumns.find(c => c.key === colKey)?.width || '1fr'), 'auto' ].join(' ');
 
-  const searchTerm = filter.toLowerCase();
-  const filteredUsers = users.filter(u => 
-      u.uid.toLowerCase().includes(searchTerm) ||
-      u.username?.toLowerCase().includes(searchTerm) ||
-      u.email?.toLowerCase().includes(searchTerm)
-  );
-
-  const gridTemplateColumns = [
-      ...visibleColumns.map(colKey => allConfigurableColumns.find(c => c.key === colKey)?.width || '1fr'),
-      'auto'
-  ].join(' ');
-
-  return (
-    <div className="animate-fade-in">
-        <div className="flex justify-between items-center mb-3">
-            <h3 className="text-xl font-semibold text-cyan-300">User List ({users.length})</h3>
-            <button
-                ref={settingsButtonRef}
-                onClick={() => setIsSettingsOpen(prev => !prev)}
-                className="p-2 rounded-full text-slate-400 hover:bg-slate-700/50 hover:text-white transition-colors"
-                title="Tùy chỉnh cột"
-            >
-                <SettingsIcon className="w-5 h-5" />
-            </button>
-        </div>
-        
-        <ColumnSettingsPopup
-            isOpen={isSettingsOpen}
-            onClose={() => setIsSettingsOpen(false)}
-            allColumns={allConfigurableColumns}
-            visibleColumns={visibleColumns}
-            onVisibilityChange={setVisibleColumns}
-            anchorRef={settingsButtonRef}
-        />
-
-        <input 
-            type="text" 
-            value={filter} 
-            onChange={e => setFilter(e.target.value)} 
-            placeholder="Search UID, Username, Email..." 
-            className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 mb-4 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
-        />
-        <div className="bg-slate-800/50 rounded-lg overflow-hidden">
-            <div 
-                className="grid gap-4 px-4 py-2 border-b border-slate-700 bg-slate-900/50 font-semibold text-sm text-slate-300"
-                style={{ gridTemplateColumns }}
-            >
-                {allConfigurableColumns.map(col => visibleColumns.includes(col.key) && <div key={col.key}>{col.label}</div>)}
-                <div className="text-right">Actions</div>
+    return (
+        <div className="animate-fade-in">
+            <div className="flex justify-between items-center mb-3">
+                <h3 className="text-xl font-semibold text-cyan-300">User List ({users.length})</h3>
+                <button onClick={() => setIsSettingsOpen(true)} className="p-2 rounded-full text-slate-400 hover:bg-slate-700/50 hover:text-white transition-colors" title="Customize Columns">
+                    <SettingsIcon className="w-5 h-5" />
+                </button>
             </div>
-            <div className="max-h-[60vh] overflow-y-auto">
-                {filteredUsers.length > 0 ? filteredUsers.map(user => (
-                    <div 
-                        key={user.uid} 
-                        className="grid gap-4 px-4 py-3 items-center border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors duration-150 text-sm"
-                        style={{ gridTemplateColumns }}
-                    >
-                        {visibleColumns.includes('uid') && (
-                            <span 
-                                className="font-mono text-slate-300 cursor-pointer hover:text-cyan-400 truncate"
-                                onClick={() => handleSelectUser(user.uid)}
-                                title={`Click to manage\n${user.uid}`}
-                            >
-                                {user.uid.substring(0, 5)}...
-                            </span>
-                        )}
-                        {visibleColumns.includes('username') && (
-                            <span className="text-slate-200 truncate" title={user.username}>{user.username || <span className="text-slate-500">N/A</span>}</span>
-                        )}
-                        {visibleColumns.includes('email') && (
-                            <span className="text-slate-400 truncate" title={user.email}>{user.email || <span className="text-slate-500">N/A</span>}</span>
-                        )}
-                        <div className="flex justify-end">
-                            <button 
-                                onClick={() => handleCopy(user.uid)}
-                                className="text-slate-400 hover:text-white transition-colors"
-                                title="Copy UID"
-                            >
-                                {copiedUid === user.uid ? <CheckIcon className="w-5 h-5 text-green-400" /> : <CopyIcon className="w-5 h-5" />}
-                            </button>
+            
+            <ColumnSettingsPopover isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} allColumns={allConfigurableColumns} visibleColumns={visibleColumns} onVisibilityChange={setVisibleColumns} />
+
+            <input type="text" value={filter} onChange={e => setFilter(e.target.value)} placeholder="Search UID, Username, Email..." className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 mb-4 focus:ring-2 focus:ring-cyan-500 focus:outline-none" />
+            <div className="bg-slate-800/50 rounded-lg overflow-hidden">
+                <div className="grid gap-4 px-4 py-2 border-b border-slate-700 bg-slate-900/50 font-semibold text-sm text-slate-300" style={{ gridTemplateColumns }}>
+                    {allConfigurableColumns.map(col => visibleColumns.includes(col.key) && <div key={col.key}>{col.label}</div>)}
+                    <div className="text-right">Actions</div>
+                </div>
+                <div className="max-h-[60vh] overflow-y-auto">
+                    {filteredUsers.length > 0 ? filteredUsers.map(user => (
+                        <div key={user.uid} className="grid gap-4 px-4 py-3 items-center border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors duration-150 text-sm" style={{ gridTemplateColumns }}>
+                            {visibleColumns.includes('uid') && ( <span className="font-mono text-slate-300 cursor-pointer hover:text-cyan-400 truncate" onClick={() => handleSelectUser(user.uid)} title={`Click to manage\n${user.uid}`}>{user.uid.substring(0, 5)}...</span> )}
+                            {visibleColumns.includes('username') && ( <span className="text-slate-200 truncate" title={user.username}>{user.username || <span className="text-slate-500">N/A</span>}</span> )}
+                            {visibleColumns.includes('email') && ( <span className="text-slate-400 truncate" title={user.email}>{user.email || <span className="text-slate-500">N/A</span>}</span> )}
+                            <div className="flex justify-end"><button onClick={() => handleCopy(user.uid)} className="text-slate-400 hover:text-white transition-colors" title="Copy UID">{copiedUid === user.uid ? <CheckIcon className="w-5 h-5 text-green-400" /> : <CopyIcon className="w-5 h-5" />}</button></div>
                         </div>
-                    </div>
-                )) : (
-                    <div className="p-4 text-center text-slate-400">No users found.</div>
-                )}
+                    )) : ( <div className="p-4 text-center text-slate-400">No users found.</div> )}
+                </div>
             </div>
         </div>
-    </div>
-  );
+    );
 };
 
 // --- START: CÁC COMPONENT DÀNH CHO TAB QUẢN LÝ USER ---
-
 const initialUpdateValues = { coins: 0, gems: 0, ancientBooks: 0, equipmentPieces: 0, pickaxes: 0, hp: 0, atk: 0, def: 0, jackpot: 0 };
 type UpdateValuesType = typeof initialUpdateValues;
 
-interface IconWithTooltipProps {
-    iconSrc: ImageSourcePropType | string;
-    label: string;
-}
+interface IconWithTooltipProps { iconSrc: ImageSourcePropType | string; label: string; }
 const IconWithTooltip: React.FC<IconWithTooltipProps> = ({ iconSrc, label }) => {
     const [tooltipVisible, setTooltipVisible] = useState(false);
     return (
         <div className="relative flex items-center justify-center">
-            <button
-                onClick={() => setTooltipVisible(!tooltipVisible)}
-                onBlur={() => setTooltipVisible(false)}
-                className="p-1 rounded-full hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            >
+            <button onClick={() => setTooltipVisible(!tooltipVisible)} onBlur={() => setTooltipVisible(false)} className="p-1 rounded-full hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-cyan-500">
                 <img src={iconSrc as string} alt={label} className="w-8 h-8 object-contain" />
             </button>
-            {tooltipVisible && (
-                <div className="absolute bottom-full mb-2 px-2 py-1 bg-slate-900 border border-slate-600 text-white text-xs font-semibold rounded-md shadow-lg z-10 whitespace-nowrap">
-                    {label}
-                </div>
-            )}
+            {tooltipVisible && ( <div className="absolute bottom-full mb-2 px-2 py-1 bg-slate-900 border border-slate-600 text-white text-xs font-semibold rounded-md shadow-lg z-10 whitespace-nowrap">{label}</div> )}
         </div>
     );
 };
 
-interface ActionRowProps {
-    label: string;
-    iconSrc: ImageSourcePropType | string;
-    fieldName: keyof UpdateValuesType;
-    dbKey: string;
-    value: number;
-    isUpdating: boolean;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onUpdate: (fieldName: keyof UpdateValuesType, dbKey: string) => void;
-}
+interface ActionRowProps { label: string; iconSrc: ImageSourcePropType | string; fieldName: keyof UpdateValuesType; dbKey: string; value: number; isUpdating: boolean; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; onUpdate: (fieldName: keyof UpdateValuesType, dbKey: string) => void; }
 const ActionRow: React.FC<ActionRowProps> = ({ label, iconSrc, fieldName, dbKey, value, isUpdating, onChange, onUpdate }) => (
     <div className="flex items-center space-x-4">
         <div className="w-16 flex-shrink-0">
             <IconWithTooltip iconSrc={iconSrc} label={label} />
         </div>
-        <input 
-            type="number" name={fieldName} value={value} onChange={onChange} 
-            className="flex-grow w-full min-w-0 text-right font-mono bg-slate-800 border border-slate-600 rounded px-3 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-all duration-150 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-        />
-        <button 
-            onClick={() => onUpdate(fieldName, dbKey)} 
-            disabled={isUpdating}
-            className="w-28 flex-shrink-0 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
+        <input type="number" name={fieldName} value={value} onChange={onChange} className="flex-grow w-full min-w-0 text-right font-mono bg-slate-800 border border-slate-600 rounded px-3 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-all duration-150 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+        <button onClick={() => onUpdate(fieldName, dbKey)} disabled={isUpdating} className="w-28 flex-shrink-0 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
             {isUpdating ? <Spinner /> : 'Update'}
         </button>
     </div>
@@ -396,17 +245,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         try {
             const data = await fetchOrCreateUserGameData(targetUserId);
             setUserData(data);
-            setUpdateValues(prev => ({
-                ...prev,
-                coins: data.coins,
-                gems: data.gems,
-                ancientBooks: data.ancientBooks,
-                equipmentPieces: data.equipment.pieces,
-                pickaxes: data.pickaxes,
-                hp: data.stats.hp,
-                atk: data.stats.atk,
-                def: data.stats.def,
-            }));
+            setUpdateValues(prev => ({ ...prev, coins: data.coins, gems: data.gems, ancientBooks: data.ancientBooks, equipmentPieces: data.equipment.pieces, pickaxes: data.pickaxes, hp: data.stats.hp, atk: data.stats.atk, def: data.stats.def }));
             showFeedback('success', `Loaded data for user: ${targetUserId}`);
         } catch (error) {
             console.error(error); 
@@ -432,14 +271,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         const newValue = updateValues[field];
         let oldValue;
         switch(field) {
-            case 'coins':           oldValue = userData.coins; break;
-            case 'gems':            oldValue = userData.gems; break;
-            case 'ancientBooks':    oldValue = userData.ancientBooks; break;
+            case 'coins': oldValue = userData.coins; break;
+            case 'gems': oldValue = userData.gems; break;
+            case 'ancientBooks': oldValue = userData.ancientBooks; break;
             case 'equipmentPieces': oldValue = userData.equipment.pieces; break;
-            case 'pickaxes':        oldValue = userData.pickaxes; break;
-            case 'hp':              oldValue = userData.stats.hp; break;
-            case 'atk':             oldValue = userData.stats.atk; break;
-            case 'def':             oldValue = userData.stats.def; break;
+            case 'pickaxes': oldValue = userData.pickaxes; break;
+            case 'hp': oldValue = userData.stats.hp; break;
+            case 'atk': oldValue = userData.stats.atk; break;
+            case 'def': oldValue = userData.stats.def; break;
             default: showFeedback('error', 'Invalid data field.'); return;
         }
 
@@ -450,17 +289,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         try {
             const updatedData = await adminUpdateUserData(targetUserId, { [dbKey]: amountToUpdate });
             setUserData(updatedData);
-            setUpdateValues(prev => ({
-                ...prev,
-                coins: updatedData.coins,
-                gems: updatedData.gems,
-                ancientBooks: updatedData.ancientBooks,
-                equipmentPieces: updatedData.equipment.pieces,
-                pickaxes: updatedData.pickaxes,
-                hp: updatedData.stats.hp,
-                atk: updatedData.stats.atk,
-                def: updatedData.stats.def,
-            }));
+            setUpdateValues(prev => ({ ...prev, coins: updatedData.coins, gems: updatedData.gems, ancientBooks: updatedData.ancientBooks, equipmentPieces: updatedData.equipment.pieces, pickaxes: updatedData.pickaxes, hp: updatedData.stats.hp, atk: updatedData.stats.atk, def: updatedData.stats.def }));
             showFeedback('success', `${field} updated successfully!`);
         } catch (error) {
             console.error(error); 
