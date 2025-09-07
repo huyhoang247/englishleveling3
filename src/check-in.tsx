@@ -174,8 +174,8 @@ const DailyCheckIn = () => {
             {/* Text and Progress bar on the right */}
             <div className="flex-1 min-w-0">
                 {/* MODIFIED: Title section updated as per request */}
-                <div className="mb-2">
-                    {/* MODIFIED: Redesigned to be more compact and elegant with a dark gray background. */}
+                <div className="mb-3"> {/* MODIFIED: Changed mb-2 to mb-3 for more space */}
+                    {/* Redesigned to be more compact and elegant with a dark gray background. */}
                     <span className="inline-block bg-slate-700 text-slate-300 px-3 py-1 rounded-full text-sm font-medium border border-slate-600">
                        Day {currentDay}/7
                     </span>
