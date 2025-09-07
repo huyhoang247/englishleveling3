@@ -70,7 +70,6 @@ const AdminTabs: React.FC<{ activeTab: string; setActiveTab: (tab: string) => vo
     );
 };
 
-// --- START: COMPONENT CHO TAB DANH SÁCH USER ---
 interface UserListTabProps {
   setActiveTab: (tab: string) => void;
   setTargetUserId: (id: string) => void;
@@ -174,16 +173,12 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
     </div>
   );
 };
-// --- END: COMPONENT CHO TAB DANH SÁCH USER ---
 
-// Define updateValues type to be used in ActionRowProps
 const initialUpdateValues = {
     coins: 0, gems: 0, ancientBooks: 0, equipmentPieces: 0, pickaxes: 0, hp: 0, atk: 0, def: 0, jackpot: 0,
 };
 type UpdateValuesType = typeof initialUpdateValues;
 
-
-// --- COMPONENT ACTIONROW ĐÃ ĐƯỢC DI CHUYỂN RA NGOÀI ---
 interface ActionRowProps {
     label: string;
     fieldName: keyof UpdateValuesType;
@@ -207,13 +202,12 @@ const ActionRow: React.FC<ActionRowProps> = ({ label, fieldName, dbKey, value, i
         <div className="flex-grow"></div> 
         <button 
             onClick={() => onUpdate(fieldName, dbKey)} 
-            disabled={isUpdating} // Disable all buttons when any update is in progress
+            disabled={isUpdating}
             className="w-28 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
-            {isUpdating ? <Spinner /> : 'Cập nhật'}
+            {isUpdating ? <Spinner /> : 'Update'} {/* <-- THAY ĐỔI 1 */}
         </button>
     </div>
 );
-
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const [activeTab, setActiveTab] = useState('user');
@@ -364,15 +358,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 {userData && (
                                     <div className="mt-6 space-y-4 animate-fade-in">
                                         <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3">Chỉnh sửa tài nguyên</h3>
-                                        <ActionRow label="Coins" fieldName="coins" dbKey="coins" value={updateValues.coins} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('coins', 'coins')} />
-                                        <ActionRow label="Gems" fieldName="gems" dbKey="gems" value={updateValues.gems} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('gems', 'gems')} />
-                                        <ActionRow label="Sách Cổ" fieldName="ancientBooks" dbKey="ancientBooks" value={updateValues.ancientBooks} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('ancientBooks', 'ancientBooks')} />
-                                        <ActionRow label="Mảnh Trang Bị" fieldName="equipmentPieces" dbKey="equipment.pieces" value={updateValues.equipmentPieces} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('equipmentPieces', 'equipment.pieces')} />
-                                        <ActionRow label="Cuốc" fieldName="pickaxes" dbKey="pickaxes" value={updateValues.pickaxes} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('pickaxes', 'pickaxes')} />
+                                        <ActionRow label="Coins" fieldName="coins" dbKey="coins" value={updateValues.coins} isUpdating={isUpdating === 'coins'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="Gems" fieldName="gems" dbKey="gems" value={updateValues.gems} isUpdating={isUpdating === 'gems'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="Sách Cổ" fieldName="ancientBooks" dbKey="ancientBooks" value={updateValues.ancientBooks} isUpdating={isUpdating === 'ancientBooks'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="Mảnh Trang Bị" fieldName="equipmentPieces" dbKey="equipment.pieces" value={updateValues.equipmentPieces} isUpdating={isUpdating === 'equipmentPieces'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="Cuốc" fieldName="pickaxes" dbKey="pickaxes" value={updateValues.pickaxes} isUpdating={isUpdating === 'pickaxes'} onChange={handleInputChange} onUpdate={handleUpdate} />
                                         <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3 pt-4">Chỉnh sửa chỉ số</h3>
-                                        <ActionRow label="HP Level" fieldName="hp" dbKey="stats.hp" value={updateValues.hp} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('hp', 'stats.hp')} />
-                                        <ActionRow label="ATK Level" fieldName="atk" dbKey="stats.atk" value={updateValues.atk} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('atk', 'stats.atk')} />
-                                        <ActionRow label="DEF Level" fieldName="def" dbKey="stats.def" value={updateValues.def} isUpdating={isUpdating !== null} onChange={handleInputChange} onUpdate={() => handleUpdate('def', 'stats.def')} />
+                                        <ActionRow label="HP Level" fieldName="hp" dbKey="stats.hp" value={updateValues.hp} isUpdating={isUpdating === 'hp'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="ATK Level" fieldName="atk" dbKey="stats.atk" value={updateValues.atk} isUpdating={isUpdating === 'atk'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="DEF Level" fieldName="def" dbKey="stats.def" value={updateValues.def} isUpdating={isUpdating === 'def'} onChange={handleInputChange} onUpdate={handleUpdate} />
                                     </div>
                                 )}
                             </div>
@@ -386,7 +380,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                         <p className="w-32 flex-shrink-0 text-slate-300">Jackpot Pool:</p>
                                         <input type="number" name="jackpot" value={updateValues.jackpot} onChange={handleInputChange} className="flex-grow bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none" placeholder="+/-" />
                                         <button onClick={handleUpdateJackpot} disabled={isUpdating !== null} className="w-24 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
-                                            {isUpdating === 'jackpot' ? <Spinner /> : 'Cập nhật'}
+                                            {isUpdating === 'jackpot' ? <Spinner /> : 'Update'} {/* <-- THAY ĐỔI 2 */}
                                         </button>
                                     </div>
                                 </div>
