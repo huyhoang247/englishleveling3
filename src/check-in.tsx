@@ -1,25 +1,30 @@
 // --- START OF FILE check-in.tsx ---
 
 import React, { useState, useEffect } from 'react';
-// Removed lucide-react import
 
-const DailyCheckIn = () => {
+// Định nghĩa kiểu cho props, yêu cầu phải có hàm onClose
+interface DailyCheckInProps {
+  onClose: () => void;
+}
+
+// Component nhận `onClose` từ props
+const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
   const [currentDay, setCurrentDay] = useState(3);
   const [claimedDays, setClaimedDays] = useState([1, 2]);
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
-  const [animatingReward, setAnimatingReward] = useState(null);
+  const [animatingReward, setAnimatingReward] = useState<any>(null); // Bạn có thể định nghĩa một kiểu chặt chẽ hơn cho reward nếu muốn
   const [showTestControls, setShowTestControls] = useState(true);
   // Initialize loginStreak based on the number of already claimed days
   const [loginStreak, setLoginStreak] = useState(claimedDays.length);
 
   // Define SVG icons as components or directly as JSX
-  const StarIcon = ({ className }) => (
+  const StarIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
     </svg>
   );
 
-  const SparklesIcon = ({ className }) => (
+  const SparklesIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 17.8l-2.6-1.5L6.8 18l1.5-2.6-1.5-2.6 2.6-1.5 2.6-1.5 2.6 1.5 2.6 1.5-1.5 2.6 1.5 2.6-2.6 1.5-2.6 1.5z"></path>
       <path d="M12 2v2"></path>
@@ -33,19 +38,19 @@ const DailyCheckIn = () => {
     </svg>
   );
 
-  const ZapIcon = ({ className }) => (
+  const ZapIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
     </svg>
   );
 
-  const ShieldIcon = ({ className }) => (
+  const ShieldIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
     </svg>
   );
 
-  const GiftIcon = ({ className }) => (
+  const GiftIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="20 12 20 22 4 22 4 12"></polyline>
       <rect x="2" y="7" width="20" height="5"></rect>
@@ -55,14 +60,14 @@ const DailyCheckIn = () => {
     </svg>
   );
 
-  const FlameIcon = ({ className }) => (
+  const FlameIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21.27 16.78A9.61 9.61 0 0 0 12 15c-3.6 0-6.73 1.08-9.27 3.22C1.96 18.85 2 22 2 22c0 0 3.22-.04 7.82-2.73C12.43 21.03 15 22 15 22c2.22 0 4.2-.8 5.73-2.11C22.72 18.39 21.27 16.78 21.27 16.78z"></path>
       <path d="M12 15c1.66 0 3-1.34 3-3 0-1.33-.5-2-1-3 0 0-2 2-3 3l-3 3c.5 1 1.66 3 3 3z"></path>
     </svg>
   );
 
-  const CrownIcon = ({ className }) => (
+  const CrownIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 6l-2 3H5l2-3-2-3h5l2-3 2 3h5l-2 3 2 3h-5l-2-3z"></path>
       <path d="M2 15l.9 1.8a6 6 0 0 0 8.2 8.2l1.8.9 1.8-.9a6 6 0 0 0 8.2-8.2L22 15"></path>
@@ -80,7 +85,7 @@ const DailyCheckIn = () => {
     { day: 7, name: "Vũ Khí Thần Thánh", amount: "1", icon: <CrownIcon className="text-yellow-400" /> },
   ];
 
-  const claimReward = (day) => {
+  const claimReward = (day: number) => {
     // Check if the day is the current day and hasn't been claimed yet
     if (day === currentDay && !claimedDays.includes(day)) {
       setAnimatingReward(dailyRewards.find(reward => reward.day === day));
@@ -137,7 +142,7 @@ const DailyCheckIn = () => {
         <div className="flex justify-center mt-6 mb-6">
           {/* The main card for the header info */}
           {/* MODIFIED: Added 'relative' class for positioning the close button */}
-          <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl px-4 py-4 w-full max-w-sm flex items-center gap-4 border border-slate-700 shadow-lg">
+          <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl px-4 py-4 w-full max-w-sm flex items-center gap-4 border border-slate-700 shadow-lg relative">
             
             {/* Water level circle on the left */}
             <div className="flex-shrink-0">
@@ -190,8 +195,12 @@ const DailyCheckIn = () => {
                 </div>
             </div>
             
-            {/* ADDED: Close button */}
-            <button className="text-slate-500 hover:text-white transition-colors p-1 rounded-full hover:bg-slate-700/50">
+            {/* THÊM SỰ KIỆN onClick CHO NÚT NÀY */}
+            <button 
+                onClick={onClose}
+                aria-label="Đóng"
+                className="absolute top-3 right-3 text-slate-500 hover:text-white transition-colors p-1 rounded-full hover:bg-slate-700/50"
+            >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
