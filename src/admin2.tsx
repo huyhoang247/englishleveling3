@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Import useCallback
 import { adminUpdateUserData, fetchOrCreateUserGameData, UserGameData, updateJackpotPool, fetchAllUsers, SimpleUser } from './gameDataService.ts';
 
 interface AdminPanelProps {
@@ -195,25 +195,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         coins: 0, gems: 0, ancientBooks: 0, equipmentPieces: 0, pickaxes: 0, hp: 0, atk: 0, def: 0, jackpot: 0,
     });
     
-    // Auto-fetch data if targetUserId is set from another tab
-    useEffect(() => {
-        if (targetUserId && activeTab === 'user') {
-            handleFetchUser();
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [targetUserId, activeTab]);
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setUpdateValues(prev => ({ ...prev, [name]: Number(value) }));
-    };
-
-    const showFeedback = (type: 'success' | 'error', message: string) => {
+    // --- FIX START: Wrap functions in useCallback ---
+    const showFeedback = useCallback((type: 'success' | 'error', message: string) => {
         setFeedback({ type, message });
         setTimeout(() => setFeedback(null), 3000);
-    };
+    }, []);
 
-    const handleFetchUser = async () => {
+    const handleFetchUser = useCallback(async () => {
         if (!targetUserId) { showFeedback('error', 'Vui lòng nhập User ID.'); return; }
         setIsFetching(true); setUserData(null);
         try {
@@ -222,8 +210,22 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         } catch (error) {
             console.error(error); showFeedback('error', error instanceof Error ? error.message : 'Không tìm thấy người dùng.');
         } finally { setIsFetching(false); }
-    };
+    }, [targetUserId, showFeedback]);
+    // --- FIX END ---
     
+    // Auto-fetch data if targetUserId is set from another tab
+    useEffect(() => {
+        if (targetUserId && activeTab === 'user') {
+            handleFetchUser();
+        }
+    }, [targetUserId, activeTab, handleFetchUser]); // <-- FIX: Add handleFetchUser to dependencies
+
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setUpdateValues(prev => ({ ...prev, [name]: Number(value) }));
+    };
+
     const handleUpdate = async (field: keyof typeof updateValues, dbKey: string) => {
         if (!userData || !targetUserId) { showFeedback('error', 'Vui lòng chọn người dùng trước.'); return; }
         const amount = updateValues[field];
