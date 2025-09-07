@@ -21,7 +21,6 @@ const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children
 const UserIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon> );
 const SettingsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon> );
 const ListIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></Icon> );
-const CopyIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></Icon> );
 const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><polyline points="20 6 9 17 4 12"></polyline></Icon> );
 const XIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></Icon> );
 
@@ -161,7 +160,7 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
     const filteredUsers = users.filter(u => u.uid.toLowerCase().includes(searchTerm) || u.username?.toLowerCase().includes(searchTerm) || u.email?.toLowerCase().includes(searchTerm));
     
     const activeColumns = allConfigurableColumns.filter(c => visibleColumns.includes(c.key));
-    const gridTemplateColumns = [ ...activeColumns.map(c => c.width), 'auto' ].join(' ');
+    const gridTemplateColumns = activeColumns.map(c => c.width).join(' ');
 
     return (
         <div className="animate-fade-in">
@@ -178,7 +177,6 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
             <div className="bg-slate-800/50 rounded-lg overflow-hidden">
                 <div className="grid gap-4 px-4 py-2 border-b border-slate-700 bg-slate-900/50 font-semibold text-sm text-slate-300" style={{ gridTemplateColumns }}>
                     {activeColumns.map(col => <div key={col.key} className="text-center">{col.label}</div>)}
-                    <div className="text-right">Actions</div>
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto">
                     {filteredUsers.length > 0 ? filteredUsers.map(user => (
@@ -195,7 +193,6 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
                                         return null;
                                 }
                             })}
-                            <div className="flex justify-end"><button onClick={() => handleCopy(user.uid)} className="text-slate-400 hover:text-white transition-colors" title="Copy UID">{copiedUid === user.uid ? <CheckIcon className="w-5 h-5 text-green-400" /> : <CopyIcon className="w-5 h-5" />}</button></div>
                         </div>
                     )) : ( <div className="p-4 text-center text-slate-400">No users found.</div> )}
                 </div>
