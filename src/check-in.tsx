@@ -136,8 +136,7 @@ const DailyCheckIn = () => {
         {/* Enhanced Progress info - REDESIGNED */}
         <div className="flex justify-center mt-6 mb-6">
           {/* The main card for the header info */}
-          {/* MODIFIED: Added 'relative' class for positioning the close button */}
-          <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl px-4 py-4 w-full max-w-sm flex items-center gap-4 border border-slate-700 shadow-lg relative">
+          <div className="bg-slate-800/70 backdrop-blur-sm rounded-xl px-4 py-4 w-full max-w-sm flex items-center gap-4 border border-slate-700 shadow-lg">
             
             {/* Water level circle on the left */}
             <div className="flex-shrink-0">
@@ -174,8 +173,8 @@ const DailyCheckIn = () => {
             {/* Text and Progress bar on the right */}
             <div className="flex-1 min-w-0">
                 {/* MODIFIED: Title section updated as per request */}
-                <div className="mb-4"> {/* MODIFIED: Changed mb-3 to mb-4 for better balance */}
-                    {/* Redesigned to be more compact and elegant with a dark gray background. */}
+                <div className="mb-2">
+                    {/* MODIFIED: Redesigned to be more compact and elegant with a dark gray background. */}
                     <span className="inline-block bg-slate-700 text-slate-300 px-3 py-1 rounded-full text-sm font-medium border border-slate-600">
                        Day {currentDay}/7
                     </span>
@@ -189,13 +188,6 @@ const DailyCheckIn = () => {
                     ></div>
                 </div>
             </div>
-            
-            {/* ADDED: Close button */}
-            <button className="absolute top-3 right-3 text-slate-500 hover:text-white transition-colors p-1 rounded-full hover:bg-slate-700/50">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
           </div>
         </div>
         {/* --- MODIFIED END --- */}
