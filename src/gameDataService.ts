@@ -774,18 +774,27 @@ export const reclaimExpiredAuction = async (userId: string, auctionId: string): 
 // --- START: ADMIN PANEL SERVICE FUNCTIONS ---
 export interface SimpleUser {
   uid: string;
+  email?: string;
+  username?: string;
 }
 
 /**
- * Lấy danh sách ID của tất cả người dùng.
- * @returns {Promise<SimpleUser[]>} Một mảng các object người dùng đơn giản.
+ * Lấy danh sách ID, email và username của tất cả người dùng.
+ * @returns {Promise<SimpleUser[]>} Một mảng các object người dùng.
  */
 export const fetchAllUsers = async (): Promise<SimpleUser[]> => {
   const usersCollectionRef = collection(db, 'users');
   const querySnapshot = await getDocs(usersCollectionRef);
   const users: SimpleUser[] = [];
   querySnapshot.forEach((doc) => {
-    users.push({ uid: doc.id });
+    const data = doc.data();
+    // Giả sử user document có chứa trường 'email' và 'username'.
+    // Nếu không có, chúng sẽ là undefined, điều này được xử lý bởi interface.
+    users.push({ 
+        uid: doc.id,
+        email: data.email,
+        username: data.username
+    });
   });
   return users;
 };
