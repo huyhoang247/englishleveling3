@@ -5,11 +5,71 @@ interface AdminPanelProps {
     onClose: () => void;
 }
 
+// --- START: CÁC COMPONENT GIAO DIỆN MƯỢN TỪ SHOP-UI ---
+
+// Spinner không thay đổi
 const Spinner: React.FC = () => (
     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
 );
 
+// Component Icon cơ bản
+const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children: React.ReactNode }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
+);
+
+// Icon cho tab Người dùng
+const UserIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <Icon {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon>
+);
+
+// Icon cho tab Hệ thống
+const SettingsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <Icon {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon>
+);
+
+
+// Component Header
+const AdminHeader: React.FC<{ onClose: () => void }> = ({ onClose }) => (
+    <header className="flex-shrink-0 sticky top-0 z-20 bg-slate-900 border-b border-slate-700/80">
+        <div className="w-full max-w-7xl mx-auto flex items-center justify-between h-[53px] px-4 sm:px-6 lg:px-8">
+            <h2 className="text-xl font-bold text-cyan-400">Admin Panel</h2>
+            <button onClick={onClose} className="text-3xl text-slate-400 hover:text-white transition-colors">&times;</button>
+        </div>
+    </header>
+);
+
+// Component Tabs
+const AdminTabs: React.FC<{ activeTab: string; setActiveTab: (tab: string) => void }> = ({ activeTab, setActiveTab }) => {
+    const tabs = [
+        { name: 'user', label: 'Quản lý Người dùng', icon: UserIcon },
+        { name: 'system', label: 'Hệ thống Chung', icon: SettingsIcon },
+    ];
+    return (
+        <div className="flex-shrink-0 bg-slate-900/70 backdrop-blur-sm border-b border-slate-800 shadow-md">
+            <nav className="max-w-7xl mx-auto flex items-center gap-2 px-4 sm:px-6 lg:px-8">
+                {tabs.map(({ name, label, icon: IconComponent }) => (
+                    <button
+                        key={name}
+                        onClick={() => setActiveTab(name)}
+                        className={`flex items-center gap-2.5 px-4 py-3 font-medium text-sm transition-colors duration-200 border-b-2 ${
+                            activeTab === name
+                                ? 'border-cyan-400 text-white'
+                                : 'border-transparent text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                        }`}
+                    >
+                        <IconComponent className="w-5 h-5" />
+                        <span>{label}</span>
+                    </button>
+                ))}
+            </nav>
+        </div>
+    );
+};
+// --- END: CÁC COMPONENT GIAO DIỆN ---
+
+
 const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
+    const [activeTab, setActiveTab] = useState('user'); // State cho tab hiện tại
     const [targetUserId, setTargetUserId] = useState('');
     const [userData, setUserData] = useState<UserGameData | null>(null);
     const [isFetching, setIsFetching] = useState(false);
@@ -119,7 +179,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         label: string;
         fieldName: keyof typeof updateValues;
         dbKey: string;
-    }> = ({ label, fieldName, dbKey }) => (
+        buttonColor?: string;
+    }> = ({ label, fieldName, dbKey, buttonColor = "cyan" }) => (
         <div className="flex items-center space-x-2">
             <p className="w-32 flex-shrink-0 text-slate-300">{label}:</p>
             <input
@@ -133,7 +194,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             <button
                 onClick={() => handleUpdate(fieldName, dbKey)}
                 disabled={isUpdating !== null}
-                className="w-24 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center"
+                className={`w-24 bg-${buttonColor}-600 hover:bg-${buttonColor}-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center`}
             >
                 {isUpdating === fieldName ? <Spinner /> : 'Cập nhật'}
             </button>
@@ -141,70 +202,79 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     );
 
     return (
-        // Thay đổi: Container chính giờ đây chiếm toàn bộ màn hình với nền tối.
-        <div className="fixed inset-0 bg-slate-900 text-white z-[100] overflow-y-auto p-6 md:p-8">
-            {/* Container phụ để giới hạn chiều rộng của nội dung để dễ đọc hơn trên màn hình lớn */}
-            <div className="relative w-full max-w-4xl mx-auto">
-                <button onClick={onClose} className="absolute top-0 right-0 text-4xl text-slate-400 hover:text-white">&times;</button>
-                {/* Tăng kích thước tiêu đề cho phù hợp với chế độ toàn màn hình */}
-                <h2 className="text-3xl font-bold text-cyan-400 mb-6 border-b border-slate-700 pb-3">Admin Panel</h2>
-                
-                <div className="mb-6">
-                    <label htmlFor="userIdInput" className="block text-sm font-medium text-slate-300 mb-1">User ID</label>
-                    <div className="flex space-x-2">
-                        <input
-                            id="userIdInput"
-                            type="text"
-                            value={targetUserId}
-                            onChange={(e) => setTargetUserId(e.target.value)}
-                            placeholder="Nhập User ID của người chơi..."
-                            className="flex-grow bg-slate-800 border border-slate-600 rounded px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
-                        />
-                        <button onClick={handleFetchUser} disabled={isFetching} className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-500 text-white font-bold py-2 px-4 rounded transition-colors flex items-center justify-center w-32">
-                            {isFetching ? <Spinner /> : 'Tải dữ liệu'}
-                        </button>
-                    </div>
-                </div>
+        <div className="fixed inset-0 bg-slate-900 text-white z-[100] flex flex-col">
+            <AdminHeader onClose={onClose} />
+            <AdminTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+            
+            {/* Vùng nội dung có thể cuộn */}
+            <div className="flex-1 overflow-y-auto">
+                <main className="w-full max-w-4xl mx-auto p-6 md:p-8">
+                    {/* Nội dung Tab Quản lý Người dùng */}
+                    {activeTab === 'user' && (
+                        <div className="animate-fade-in">
+                             <div className="mb-6">
+                                <label htmlFor="userIdInput" className="block text-sm font-medium text-slate-300 mb-1">User ID</label>
+                                <div className="flex space-x-2">
+                                    <input
+                                        id="userIdInput"
+                                        type="text"
+                                        value={targetUserId}
+                                        onChange={(e) => setTargetUserId(e.target.value)}
+                                        placeholder="Nhập User ID của người chơi..."
+                                        className="flex-grow bg-slate-800 border border-slate-600 rounded px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                                    />
+                                    <button onClick={handleFetchUser} disabled={isFetching} className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-500 text-white font-bold py-2 px-4 rounded transition-colors flex items-center justify-center w-32">
+                                        {isFetching ? <Spinner /> : 'Tải dữ liệu'}
+                                    </button>
+                                </div>
+                            </div>
+                            {renderUserData()}
+                            {userData && (
+                                <div className="mt-6 space-y-4 animate-fade-in">
+                                    <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3">Chỉnh sửa tài nguyên</h3>
+                                    <ActionRow label="Coins" fieldName="coins" dbKey="coins" />
+                                    <ActionRow label="Gems" fieldName="gems" dbKey="gems" />
+                                    <ActionRow label="Sách Cổ" fieldName="ancientBooks" dbKey="ancientBooks" />
+                                    <ActionRow label="Mảnh Trang Bị" fieldName="equipmentPieces" dbKey="equipment.pieces" />
+                                    <ActionRow label="Cuốc" fieldName="pickaxes" dbKey="pickaxes" />
+                                    
+                                    <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3 pt-4">Chỉnh sửa chỉ số</h3>
+                                    <ActionRow label="HP Level" fieldName="hp" dbKey="stats.hp" />
+                                    <ActionRow label="ATK Level" fieldName="atk" dbKey="stats.atk" />
+                                    <ActionRow label="DEF Level" fieldName="def" dbKey="stats.def" />
+                                </div>
+                            )}
+                        </div>
+                    )}
 
-                {renderUserData()}
-                
-                {userData && (
-                    <div className="mt-6 space-y-4 animate-fade-in">
-                        <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3">Chỉnh sửa tài nguyên</h3>
-                         <ActionRow label="Coins" fieldName="coins" dbKey="coins" />
-                         <ActionRow label="Gems" fieldName="gems" dbKey="gems" />
-                         <ActionRow label="Sách Cổ" fieldName="ancientBooks" dbKey="ancientBooks" />
-                         <ActionRow label="Mảnh Trang Bị" fieldName="equipmentPieces" dbKey="equipment.pieces" />
-                         <ActionRow label="Cuốc" fieldName="pickaxes" dbKey="pickaxes" />
-                         
-                         <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3 pt-4">Chỉnh sửa chỉ số</h3>
-                         <ActionRow label="HP Level" fieldName="hp" dbKey="stats.hp" />
-                         <ActionRow label="ATK Level" fieldName="atk" dbKey="stats.atk" />
-                         <ActionRow label="DEF Level" fieldName="def" dbKey="stats.def" />
-                    </div>
-                )}
-
-                <div className="mt-6 pt-4 border-t border-slate-700">
-                     <h3 className="text-lg font-semibold text-cyan-300 pb-2 mb-3">Hệ thống chung</h3>
-                     <div className="flex items-center space-x-2">
-                        <p className="w-32 flex-shrink-0 text-slate-300">Jackpot Pool:</p>
-                        <input
-                            type="number"
-                            name="jackpot"
-                            value={updateValues.jackpot}
-                            onChange={handleInputChange}
-                            className="flex-grow bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none"
-                            placeholder="+/-"
-                        />
-                        <button
-                            onClick={handleUpdateJackpot}
-                            disabled={isUpdating !== null}
-                            className="w-24 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center"
-                        >
-                            {isUpdating === 'jackpot' ? <Spinner /> : 'Cập nhật'}
-                        </button>
-                    </div>
-                </div>
+                     {/* Nội dung Tab Hệ thống Chung */}
+                    {activeTab === 'system' && (
+                         <div className="animate-fade-in">
+                             <h3 className="text-xl font-semibold text-cyan-300 pb-2 mb-3">Hệ thống chung</h3>
+                             <div className="bg-slate-800/50 p-4 rounded-lg space-y-4">
+                                <div className="flex items-center space-x-2">
+                                    <p className="w-32 flex-shrink-0 text-slate-300">Jackpot Pool:</p>
+                                    <input
+                                        type="number"
+                                        name="jackpot"
+                                        value={updateValues.jackpot}
+                                        onChange={handleInputChange}
+                                        className="flex-grow bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                                        placeholder="+/-"
+                                    />
+                                    <button
+                                        onClick={handleUpdateJackpot}
+                                        disabled={isUpdating !== null}
+                                        className="w-24 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center"
+                                    >
+                                        {isUpdating === 'jackpot' ? <Spinner /> : 'Cập nhật'}
+                                    </button>
+                                </div>
+                                {/* Thêm các cài đặt hệ thống khác ở đây */}
+                             </div>
+                        </div>
+                    )}
+                </main>
             </div>
 
             {feedback && (
