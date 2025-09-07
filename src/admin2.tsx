@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'; // Import useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import { adminUpdateUserData, fetchOrCreateUserGameData, UserGameData, updateJackpotPool, fetchAllUsers, SimpleUser } from './gameDataService.ts';
 
 interface AdminPanelProps {
@@ -102,11 +102,11 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
     navigator.clipboard.writeText(uid)
       .then(() => {
         setCopiedUid(uid);
-        showFeedback('success', `Đã sao chép UID: ${uid}`);
+        showFeedback('success', `Copied UID: ${uid}`);
         setTimeout(() => setCopiedUid(null), 2000);
       })
       .catch(err => {
-        showFeedback('error', 'Không thể sao chép.');
+        showFeedback('error', 'Failed to copy.');
         console.error('Failed to copy: ', err);
       });
   };
@@ -128,12 +128,12 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
 
   return (
     <div className="animate-fade-in">
-        <h3 className="text-xl font-semibold text-cyan-300 pb-2 mb-3">Danh sách Người dùng ({users.length})</h3>
+        <h3 className="text-xl font-semibold text-cyan-300 pb-2 mb-3">User List ({users.length})</h3>
         <input 
             type="text" 
             value={filter} 
             onChange={e => setFilter(e.target.value)} 
-            placeholder="Tìm kiếm UID, Username, Email..." 
+            placeholder="Search UID, Username, Email..." 
             className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 mb-4 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
         />
         <div className="bg-slate-800/50 rounded-lg overflow-hidden">
@@ -141,7 +141,7 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
                 <div>UID</div>
                 <div>Username</div>
                 <div>Email</div>
-                <div className="text-right">Hành động</div>
+                <div className="text-right">Actions</div>
             </div>
             <div className="max-h-[60vh] overflow-y-auto">
                 {filteredUsers.length > 0 ? filteredUsers.map(user => (
@@ -149,7 +149,7 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
                         <span 
                             className="font-mono text-slate-300 cursor-pointer hover:text-cyan-400 truncate"
                             onClick={() => handleSelectUser(user.uid)}
-                            title={`Click để quản lý\n${user.uid}`}
+                            title={`Click to manage\n${user.uid}`}
                         >
                             {user.uid.substring(0, 5)}...
                         </span>
@@ -159,14 +159,14 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
                             <button 
                                 onClick={() => handleCopy(user.uid)}
                                 className="text-slate-400 hover:text-white transition-colors"
-                                title="Sao chép UID"
+                                title="Copy UID"
                             >
                                 {copiedUid === user.uid ? <CheckIcon className="w-5 h-5 text-green-400" /> : <CopyIcon className="w-5 h-5" />}
                             </button>
                         </div>
                     </div>
                 )) : (
-                    <div className="p-4 text-center text-slate-400">Không tìm thấy user nào.</div>
+                    <div className="p-4 text-center text-slate-400">No users found.</div>
                 )}
             </div>
         </div>
@@ -191,7 +191,7 @@ interface ActionRowProps {
 
 const ActionRow: React.FC<ActionRowProps> = ({ label, fieldName, dbKey, value, isUpdating, onChange, onUpdate }) => (
     <div className="flex items-center space-x-3">
-        <p className="w-32 flex-shrink-0 text-slate-300">{label}:</p>
+        <p className="w-40 flex-shrink-0 text-slate-300">{label}:</p> {/* Tăng chiều rộng để vừa "Equipment Pieces" */}
         <input 
             type="number" 
             name={fieldName} 
@@ -204,7 +204,7 @@ const ActionRow: React.FC<ActionRowProps> = ({ label, fieldName, dbKey, value, i
             onClick={() => onUpdate(fieldName, dbKey)} 
             disabled={isUpdating}
             className="w-28 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
-            {isUpdating ? <Spinner /> : 'Update'} {/* <-- THAY ĐỔI 1 */}
+            {isUpdating ? <Spinner /> : 'Update'}
         </button>
     </div>
 );
@@ -224,7 +224,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     }, []);
 
     const handleFetchUser = useCallback(async () => {
-        if (!targetUserId) { showFeedback('error', 'Vui lòng nhập User ID.'); return; }
+        if (!targetUserId) { showFeedback('error', 'Please enter a User ID.'); return; }
         setIsFetching(true); 
         setUserData(null);
         try {
@@ -241,10 +241,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 atk: data.stats.atk,
                 def: data.stats.def,
             }));
-            showFeedback('success', `Đã tải dữ liệu của user: ${targetUserId}`);
+            showFeedback('success', `Loaded data for user: ${targetUserId}`);
         } catch (error) {
             console.error(error); 
-            showFeedback('error', error instanceof Error ? error.message : 'Không tìm thấy người dùng.');
+            showFeedback('error', error instanceof Error ? error.message : 'User not found.');
         } finally { 
             setIsFetching(false); 
         }
@@ -262,7 +262,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     };
 
     const handleUpdate = async (field: keyof UpdateValuesType, dbKey: string) => {
-        if (!userData || !targetUserId) { showFeedback('error', 'Vui lòng chọn người dùng trước.'); return; }
+        if (!userData || !targetUserId) { showFeedback('error', 'Please select a user first.'); return; }
         const newValue = updateValues[field];
         let oldValue;
         switch(field) {
@@ -274,11 +274,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             case 'hp':              oldValue = userData.stats.hp; break;
             case 'atk':             oldValue = userData.stats.atk; break;
             case 'def':             oldValue = userData.stats.def; break;
-            default: showFeedback('error', 'Trường dữ liệu không hợp lệ.'); return;
+            default: showFeedback('error', 'Invalid data field.'); return;
         }
 
         const amountToUpdate = newValue - oldValue;
-        if (amountToUpdate === 0) { showFeedback('error', 'Giá trị mới phải khác giá trị hiện tại.'); return; }
+        if (amountToUpdate === 0) { showFeedback('error', 'New value must be different from the current value.'); return; }
         
         setIsUpdating(field);
         try {
@@ -295,10 +295,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 atk: updatedData.stats.atk,
                 def: updatedData.stats.def,
             }));
-            showFeedback('success', `Đã cập nhật ${field} thành công!`);
+            showFeedback('success', `${field} updated successfully!`);
         } catch (error) {
             console.error(error); 
-            showFeedback('error', `Lỗi khi cập nhật: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+            showFeedback('error', `Update failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
             setUpdateValues(prev => ({ ...prev, [field]: oldValue }));
         } finally { 
             setIsUpdating(null); 
@@ -319,7 +319,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         if (!userData) return null;
         return (
             <div className="bg-slate-800/50 p-4 rounded-lg mt-4 animate-fade-in">
-                <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3">Dữ liệu hiện tại</h3>
+                <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3">Current Data</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 text-sm">
                     <p><strong>Coins:</strong> {userData.coins.toLocaleString()}</p>
                     <p><strong>Gems:</strong> {userData.gems.toLocaleString()}</p>
@@ -348,22 +348,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                 <div className="mb-6">
                                     <label htmlFor="userIdInput" className="block text-sm font-medium text-slate-300 mb-1">User ID</label>
                                     <div className="flex space-x-2">
-                                        <input id="userIdInput" type="text" value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)} placeholder="Nhập User ID hoặc chọn từ danh sách..." className="flex-grow bg-slate-800 border border-slate-600 rounded px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:outline-none" />
+                                        <input id="userIdInput" type="text" value={targetUserId} onChange={(e) => setTargetUserId(e.target.value)} placeholder="Enter User ID or select from list..." className="flex-grow bg-slate-800 border border-slate-600 rounded px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:outline-none" />
                                         <button onClick={handleFetchUser} disabled={isFetching || !targetUserId} className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-500 text-white font-bold py-2 px-4 rounded transition-colors flex items-center justify-center w-32">
-                                            {isFetching ? <Spinner /> : 'Tải dữ liệu'}
+                                            {isFetching ? <Spinner /> : 'Load Data'}
                                         </button>
                                     </div>
                                 </div>
                                 {renderUserData()}
                                 {userData && (
                                     <div className="mt-6 space-y-4 animate-fade-in">
-                                        <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3">Chỉnh sửa tài nguyên</h3>
+                                        {/* --- THAY ĐỔI TIÊU ĐỀ VÀ NHÃN --- */}
+                                        <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3">Edit Resources</h3>
                                         <ActionRow label="Coins" fieldName="coins" dbKey="coins" value={updateValues.coins} isUpdating={isUpdating === 'coins'} onChange={handleInputChange} onUpdate={handleUpdate} />
                                         <ActionRow label="Gems" fieldName="gems" dbKey="gems" value={updateValues.gems} isUpdating={isUpdating === 'gems'} onChange={handleInputChange} onUpdate={handleUpdate} />
-                                        <ActionRow label="Sách Cổ" fieldName="ancientBooks" dbKey="ancientBooks" value={updateValues.ancientBooks} isUpdating={isUpdating === 'ancientBooks'} onChange={handleInputChange} onUpdate={handleUpdate} />
-                                        <ActionRow label="Mảnh Trang Bị" fieldName="equipmentPieces" dbKey="equipment.pieces" value={updateValues.equipmentPieces} isUpdating={isUpdating === 'equipmentPieces'} onChange={handleInputChange} onUpdate={handleUpdate} />
-                                        <ActionRow label="Cuốc" fieldName="pickaxes" dbKey="pickaxes" value={updateValues.pickaxes} isUpdating={isUpdating === 'pickaxes'} onChange={handleInputChange} onUpdate={handleUpdate} />
-                                        <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3 pt-4">Chỉnh sửa chỉ số</h3>
+                                        <ActionRow label="Ancient Books" fieldName="ancientBooks" dbKey="ancientBooks" value={updateValues.ancientBooks} isUpdating={isUpdating === 'ancientBooks'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="Equipment Pieces" fieldName="equipmentPieces" dbKey="equipment.pieces" value={updateValues.equipmentPieces} isUpdating={isUpdating === 'equipmentPieces'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="Pickaxes" fieldName="pickaxes" dbKey="pickaxes" value={updateValues.pickaxes} isUpdating={isUpdating === 'pickaxes'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        
+                                        <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3 pt-4">Edit Stats</h3>
                                         <ActionRow label="HP Level" fieldName="hp" dbKey="stats.hp" value={updateValues.hp} isUpdating={isUpdating === 'hp'} onChange={handleInputChange} onUpdate={handleUpdate} />
                                         <ActionRow label="ATK Level" fieldName="atk" dbKey="stats.atk" value={updateValues.atk} isUpdating={isUpdating === 'atk'} onChange={handleInputChange} onUpdate={handleUpdate} />
                                         <ActionRow label="DEF Level" fieldName="def" dbKey="stats.def" value={updateValues.def} isUpdating={isUpdating === 'def'} onChange={handleInputChange} onUpdate={handleUpdate} />
@@ -374,13 +376,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         {activeTab === 'userlist' && <UserListTab setActiveTab={setActiveTab} setTargetUserId={setTargetUserId} showFeedback={showFeedback} />}
                         {activeTab === 'system' && (
                             <div className="animate-fade-in">
-                                <h3 className="text-xl font-semibold text-cyan-300 pb-2 mb-3">Hệ thống chung</h3>
+                                <h3 className="text-xl font-semibold text-cyan-300 pb-2 mb-3">General System</h3>
                                 <div className="bg-slate-800/50 p-4 rounded-lg space-y-4">
                                     <div className="flex items-center space-x-2">
                                         <p className="w-32 flex-shrink-0 text-slate-300">Jackpot Pool:</p>
                                         <input type="number" name="jackpot" value={updateValues.jackpot} onChange={handleInputChange} className="flex-grow bg-slate-700 border border-slate-600 rounded px-2 py-1 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none" placeholder="+/-" />
                                         <button onClick={handleUpdateJackpot} disabled={isUpdating !== null} className="w-24 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-500 text-white font-bold py-1 px-3 rounded transition-colors flex items-center justify-center">
-                                            {isUpdating === 'jackpot' ? <Spinner /> : 'Update'} {/* <-- THAY ĐỔI 2 */}
+                                            {isUpdating === 'jackpot' ? <Spinner /> : 'Update'}
                                         </button>
                                     </div>
                                 </div>
