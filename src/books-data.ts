@@ -1,4 +1,3 @@
-
 // books-data.ts
 
 // Định nghĩa cấu trúc cho một cuốn sách
@@ -6,6 +5,7 @@ export interface Book {
   id: string;
   title: string;
   content: string;
+  contentVi?: string; // <-- THÊM MỚI: Nội dung bản dịch tiếng Việt (tùy chọn)
   author?: string;
   category: string;
   coverImageUrl?: string;
@@ -20,7 +20,6 @@ export const sampleBooks: Book[] = [
     author: 'Kasley Killam',
     category: 'Technology & Future',
     coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/20250531_2319_Social%20Health%20Anime_simple_compose_01jwkj5nzxf9xtzk5dykvqsw6t.png',
-    // Cập nhật: Sử dụng audioUrls để chứa nhiều giọng đọc
     audioUrls: {
       'Kasley Killam': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/Why%20Social%20Health%20Is%20Key%20to%20Happiness%20and%20Longevity%20%20Kasley%20Killiam%20%20TED.mp3',
       'Matilda': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/elevenlabs-2025-09-06t12-31-47-matilda-pre-sp100-s50-sb75-se0-b-m2_y6yNk68O.mp3',
@@ -50,28 +49,56 @@ But if you are thinking that one hour a day sounds like way too much because you
 Maya put this into practice by scheduling recurring hangouts with a new local friend that she made, by attending community events and dropping cards off in her neighbors mailboxes, by planning trips to see family and inviting friends in other cities to come visit. And bolstering her social health made more of a difference than focusing solely on her physical and mental health ever could.
 And I know this because Maya is actually me. I am so passionate about sharing tools to be socially healthy because honestly, I need them too. And the 5-3-1 guideline is one way that we can be proactive and intentional about our relationships. And that is really the point. Be proactive and intentional about your social health.
 Shaping a Socially Healthy Society
-<translate>
-<en>
 So zooming out beyond the steps that you and I take individually, together, we need to shape a society that thrives through social health. Over the next decade, I envision educators championing social health in schools. And just like kids build their physical muscles in gym class, they'll exercise their social muscles in connection class.
-
 Over the next decade, I see our cities and neighborhoods being designed with social health in mind, where vibrant gathering places foster unity and community builders are empowered to bring them to life. Over the next decade, I believe that social health will become as ingrained in our collective consciousness as mental health is today.
-
 Because not that long ago, mental health was a taboo topic shrouded in stigma. And now public figures talk openly about it, there's an entire industry to support it, and more and more people think of going to therapy like going to the gym.
-</en>
-<vi>
-Vậy, hãy nhìn xa hơn những bước mà bạn và tôi thực hiện với tư cách cá nhân, chúng ta cần cùng nhau định hình một xã hội phát triển thịnh vượng thông qua sức khỏe xã hội. Trong thập kỷ tới, tôi hình dung các nhà giáo dục sẽ đề cao sức khỏe xã hội trong trường học. Và cũng giống như trẻ em xây dựng cơ bắp thể chất trong lớp thể dục, chúng sẽ rèn luyện các "cơ bắp xã hội" của mình trong "lớp học kết nối".
-
-Trong thập kỷ tới, tôi thấy các thành phố và khu dân cư của chúng ta được thiết kế với sự chú trọng đến sức khỏe xã hội, nơi những nơi tụ họp sôi nổi sẽ thúc đẩy sự đoàn kết và những người xây dựng cộng đồng được trao quyền để biến chúng thành hiện thực. Trong thập kỷ tới, tôi tin rằng sức khỏe xã hội sẽ ăn sâu vào ý thức tập thể của chúng ta như sức khỏe tinh thần ngày nay.
-
-Bởi vì cách đây không lâu, sức khỏe tinh thần là một chủ đề cấm kỵ bị bao trùm bởi sự kỳ thị. Và giờ đây, những nhân vật của công chúng nói về nó một cách cởi mở, có cả một ngành công nghiệp để hỗ trợ nó, và ngày càng nhiều người nghĩ về việc đi trị liệu tâm lý giống như đi tập gym.
-</vi>
-</translate>
 In this future, loneliness will subside, just like smoking subsided when we recognized and treated it as a public health issue. In this future, I hope that social health will become so deeply woven into the fabric of our culture that no one needs the 5-3-1 guideline anymore.
 So to get there, make relationships your priority not only for you, but also for the people you love. Because the beauty of nurturing your own social health is that it naturally enriches the social health of everyone you connect with.
 Thank you.
 (Applause)
-
     `,
+    // --- START: NỘI DUNG DỊCH ĐÃ ĐƯỢC THÊM VÀO ĐÂY ---
+    contentVi: `
+Vài năm trước, một người phụ nữ tôi quen, tôi sẽ gọi cô ấy là Maya, đã trải qua rất nhiều thay đổi lớn trong một khoảng thời gian ngắn. Cô ấy kết hôn. Cô và chồng chuyển đến một thành phố mới vì công việc của anh ấy, một nơi cô không quen biết ai. Cô bắt đầu một công việc mới tại nhà, và tất cả diễn ra trong khi phải chăm sóc người cha vừa được chẩn đoán mắc chứng mất trí nhớ.
+Và để kiểm soát sự căng thẳng từ tất cả những thay đổi này, Maya càng chú trọng hơn vào sức khỏe thể chất và tinh thần của mình. Cô tập thể dục gần như mỗi ngày, ăn những thực phẩm lành mạnh, và đi trị liệu tâm lý mỗi tuần một lần. Và những hành động này thực sự đã giúp ích. Cơ thể cô trở nên khỏe mạnh hơn. Tâm trí cô trở nên kiên cường hơn, nhưng chỉ đến một mức độ nào đó thôi. Cô vẫn gặp khó khăn, thường xuyên mất ngủ giữa đêm, cảm thấy mất tập trung, thiếu động lực vào ban ngày.
+Maya đã làm mọi thứ mà các bác sĩ thường khuyên chúng ta làm để có sức khỏe thể chất và tinh thần tốt, vậy mà vẫn có điều gì đó thiếu sót. Sẽ ra sao nếu tôi nói với bạn rằng điều Maya còn thiếu cũng là điều mà hàng tỷ người trên thế giới đang thiếu, và có thể bạn cũng đang thiếu nó? Sẽ ra sao nếu tôi nói với bạn rằng việc không có nó sẽ làm suy yếu những nỗ lực khác của chúng ta để khỏe mạnh và thậm chí có thể rút ngắn tuổi thọ của bạn?
+Tôi đã nghiên cứu về điều này hơn một thập kỷ, và tôi đã phát hiện ra rằng cách chúng ta nghĩ về sức khỏe theo kiểu truyền thống là chưa hoàn chỉnh. Khi chỉ xem sức khỏe chủ yếu là về thể chất và tinh thần, chúng ta đã bỏ qua điều mà tôi tin là thách thức lớn nhất và cũng là cơ hội lớn nhất của thời đại chúng ta. Sức khỏe xã hội.
+Trong khi sức khỏe thể chất là về cơ thể và sức khỏe tinh thần là về trí óc, thì sức khỏe xã hội là về các mối quan hệ của chúng ta. Và nếu bạn chưa từng nghe đến thuật ngữ này trước đây, đó là vì nó vẫn chưa trở nên phổ biến trong ngôn ngữ hàng ngày, nhưng nó cũng quan trọng không kém.
+Maya vẫn chưa có cảm giác thuộc về một cộng đồng nào ở ngôi nhà mới của mình. Cô không còn gặp gia đình, bạn bè hay đồng nghiệp trực tiếp nữa, và cô ấy thường trải qua nhiều tuần chỉ dành thời gian chất lượng bên chồng mình. Câu chuyện của cô ấy cho chúng ta thấy rằng chúng ta không thể hoàn toàn khỏe mạnh, không thể phát triển tốt, nếu chỉ chăm sóc cho cơ thể và tâm trí, mà bỏ qua các mối quan hệ của mình.
+Tương tự như Maya, hàng trăm triệu người trên thế giới trải qua nhiều tuần liền mà không nói chuyện với một người bạn hay thành viên gia đình nào. Trên toàn cầu, cứ bốn người thì có một người cảm thấy cô đơn. Và 20% người trưởng thành trên toàn thế giới không cảm thấy có ai để tìm đến hỗ trợ. Hãy nghĩ về điều đó. Cứ năm người bạn gặp thì có thể có một người cảm thấy họ không có ai cả.
+Điều này còn hơn cả đau lòng. Nó còn là một cuộc khủng hoảng sức khỏe cộng đồng. Sự mất kết nối gây ra căng thẳng trong cơ thể. Nó làm suy yếu hệ miễn dịch của con người. Nó khiến họ có nguy cơ cao hơn bị đột quỵ, bệnh tim, tiểu đường, mất trí nhớ, trầm cảm và tử vong sớm. Sức khỏe xã hội là yếu tố thiết yếu cho sự trường thọ.
+
+Sức Khỏe Xã Hội Trông Như Thế Nào?
+
+Vậy bạn có thể đang tự hỏi, khỏe mạnh về mặt xã hội trông như thế nào? Điều đó có nghĩa là gì? Vâng, đó là việc phát triển các mối quan hệ thân thiết với gia đình, bạn bè, người bạn đời, và với chính bản thân bạn. Đó là việc tương tác thường xuyên với đồng nghiệp, hàng xóm. Đó là cảm thấy mình thuộc về một cộng đồng. Khỏe mạnh về mặt xã hội là có được số lượng và chất lượng kết nối phù hợp với chính bạn.
+Và câu chuyện của Maya là một ví dụ về cách các thách thức về sức khỏe xã hội xuất hiện. Trong công việc của mình, tôi nghe nhiều câu chuyện khác nữa. Những câu chuyện như Jay, một sinh viên năm nhất đại học háo hức tham gia vào các hoạt động trong trường nhưng lại gặp khó khăn trong việc hòa nhập với mọi người trong ký túc xá và thường cảm thấy nhớ nhà. Hay Serena và Ali, một cặp vợ chồng đang phải xoay xở với những đứa con nhỏ và công việc đòi hỏi cao, họ hiếm khi có thời gian gặp gỡ bạn bè hay dành thời gian riêng cho nhau. Hoặc Henry, vừa nghỉ hưu, người trân trọng thời gian bên người bạn đời nhưng lại cảm thấy mất đi sự gắn kết khi không còn đội ngũ của mình nữa và ước gì ông có thể gặp con cháu thường xuyên hơn. Những câu chuyện này cho thấy rằng sức khỏe xã hội có liên quan đến mỗi chúng ta ở mọi giai đoạn của cuộc đời.
+
+Hướng dẫn 5-3-1
+
+Vậy nếu bạn không biết bắt đầu từ đâu, hãy thử hướng dẫn 5-3-1 từ cuốn sách của tôi. Nó như thế này: Mục tiêu là tương tác với năm người khác nhau mỗi tuần, củng cố ít nhất ba mối quan hệ thân thiết, và dành một giờ mỗi ngày để kết nối. Hãy cùng tìm hiểu sâu hơn.
+1. Tương tác với năm người khác nhau mỗi tuần.
+Cũng giống như việc ăn nhiều loại rau củ và các nhóm thực phẩm khác sẽ bổ dưỡng hơn, nghiên cứu đã chỉ ra rằng việc tương tác với nhiều người khác nhau sẽ mang lại nhiều lợi ích hơn. Vì vậy, năm người của bạn có thể bao gồm những người thân yêu, những người quen biết xã giao, và thậm chí cả những người hoàn toàn xa lạ. Thực tế, trong một nghiên cứu mà tôi rất thích, những người chỉ mỉm cười, giao tiếp bằng mắt và trò chuyện phiếm với nhân viên pha chế, đã cảm thấy hạnh phúc hơn và có cảm giác thuộc về nhiều hơn so với những người chỉ vội vã lấy cà phê rồi đi.
+2. Củng cố ít nhất ba mối quan hệ thân thiết.
+Được rồi, chúng ta đều biết đến danh sách "việc cần làm" (to-do list), nhưng tôi muốn mời bạn viết ra một danh sách "người cần yêu thương" (to-love list). Ai là người quan trọng nhất với bạn? Bạn có thể là chính mình khi ở bên ai? Hãy chắc chắn rằng bạn đầu tư vào ít nhất ba người bạn đã viết ra. Bằng cách lên lịch dành thời gian bên nhau thường xuyên, bằng cách thể hiện sự quan tâm chân thành đến cuộc sống của họ, và cũng bằng cách cởi mở về những trải nghiệm bạn đang trải qua.
+Và tôi thường được hỏi, có nhất thiết phải gặp mặt trực tiếp không? Nhắn tin có được tính không? Các nghiên cứu đã chỉ ra rằng gặp mặt trực tiếp là lý tưởng nhất, vì vậy hãy làm điều đó bất cứ khi nào có thể. Nhưng chắc chắn vẫn có những lợi ích khi duy trì kết nối qua mạng.
+3. Dành một giờ mỗi ngày cho kết nối ý nghĩa.
+Được rồi, nếu bạn là người hướng nội, ngay lúc này có lẽ bạn đang nghĩ một giờ nghe có vẻ nhiều. Tôi hiểu. Có thể sẽ ngạc nhiên, nhưng thực ra tôi cũng là một người hướng nội. Tuy nhiên, hãy nhớ rằng cũng giống như việc ngủ tám tiếng mỗi đêm, lượng thời gian chính xác phù hợp với cá nhân bạn có thể cao hơn hoặc thấp hơn.
+Nhưng nếu bạn nghĩ rằng một giờ mỗi ngày là quá nhiều vì bạn quá bận rộn, tôi thách bạn đấy. Người trưởng thành ở Mỹ dành trung bình 4,5 giờ mỗi ngày cho điện thoại thông minh. Vì vậy, thay vì lướt mạng xã hội, hãy nhắn tin cho một người bạn. Thay vì đọc các tiêu đề tin tức, hãy viết một tấm thiệp cảm ơn. Thay vì nghe podcast, hãy gọi cho một người thân trong gia đình.
+Maya đã áp dụng điều này vào thực tế bằng cách lên lịch gặp gỡ định kỳ với một người bạn mới ở địa phương mà cô quen, bằng cách tham dự các sự kiện cộng đồng và bỏ những tấm thiệp vào hòm thư của hàng xóm, bằng cách lên kế hoạch cho các chuyến đi thăm gia đình và mời bạn bè ở các thành phố khác đến thăm. Và việc củng cố sức khỏe xã hội của cô ấy đã tạo ra sự khác biệt nhiều hơn những gì mà việc chỉ tập trung vào sức khỏe thể chất và tinh thần có thể làm được.
+Và tôi biết điều này bởi vì Maya chính là tôi. Tôi rất tâm huyết với việc chia sẻ các công cụ để có sức khỏe xã hội tốt vì thành thật mà nói, tôi cũng cần chúng. Và hướng dẫn 5-3-1 là một cách để chúng ta có thể chủ động và có chủ đích về các mối quan hệ của mình. Và đó thực sự là điểm mấu chốt. Hãy chủ động và có chủ đích về sức khỏe xã hội của bạn.
+
+Định Hình Một Xã Hội Khỏe Mạnh Về Mặt Xã Hội
+
+Vậy, hãy nhìn xa hơn những bước mà bạn và tôi thực hiện với tư cách cá nhân, chúng ta cần cùng nhau định hình một xã hội phát triển thịnh vượng thông qua sức khỏe xã hội. Trong thập kỷ tới, tôi hình dung các nhà giáo dục sẽ đề cao sức khỏe xã hội trong trường học. Và cũng giống như trẻ em xây dựng cơ bắp thể chất trong lớp thể dục, chúng sẽ rèn luyện các "cơ bắp xã hội" của mình trong "lớp học kết nối".
+Trong thập kỷ tới, tôi thấy các thành phố và khu dân cư của chúng ta được thiết kế với sự chú trọng đến sức khỏe xã hội, nơi những nơi tụ họp sôi nổi sẽ thúc đẩy sự đoàn kết và những người xây dựng cộng đồng được trao quyền để biến chúng thành hiện thực. Trong thập kỷ tới, tôi tin rằng sức khỏe xã hội sẽ ăn sâu vào ý thức tập thể của chúng ta như sức khỏe tinh thần ngày nay.
+Bởi vì cách đây không lâu, sức khỏe tinh thần là một chủ đề cấm kỵ bị bao trùm bởi sự kỳ thị. Và giờ đây, những nhân vật của công chúng nói về nó một cách cởi mở, có cả một ngành công nghiệp để hỗ trợ nó, và ngày càng nhiều người nghĩ về việc đi trị liệu tâm lý giống như đi tập gym.
+Trong tương lai này, sự cô đơn sẽ giảm bớt, cũng như việc hút thuốc đã giảm đi khi chúng ta nhận ra và coi nó là một vấn đề sức khỏe cộng đồng. Trong tương lai này, tôi hy vọng rằng sức khỏe xã hội sẽ được đan cài sâu sắc vào kết cấu văn hóa của chúng ta đến mức không ai cần đến hướng dẫn 5-3-1 nữa.
+Vì vậy, để đạt được điều đó, hãy ưu tiên các mối quan hệ không chỉ cho bạn, mà còn cho những người bạn yêu thương. Bởi vì vẻ đẹp của việc nuôi dưỡng sức khỏe xã hội của chính bạn là nó sẽ tự nhiên làm phong phú thêm sức khỏe xã hội của tất cả những người mà bạn kết nối.
+
+Xin cảm ơn.
+(Vỗ tay)
+    `,
+    // --- END: NỘI DUNG DỊCH ---
   },
   {
     id: 'book2',
