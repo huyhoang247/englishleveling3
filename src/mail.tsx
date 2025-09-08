@@ -163,7 +163,7 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
   );
 };
 
-// --- UPDATED MAILITEM COMPONENT (FIXED) ---
+// --- UPDATED MAILITEM COMPONENT ---
 const MailItem = ({ mail, onSelect, isSelected }) => {
   const typeIcon = mail.type === 'gift' ? 'gift' : mail.type === 'item' ? 'item' : 'mail';
 
@@ -184,23 +184,21 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
       
       {/* Nội dung chính */}
       <div className="flex-1 min-w-0">
-        {/* Hàng 1: Người gửi và Ngày tháng */}
-        <div className="flex justify-between items-center text-xs text-slate-500 mb-1">
-          {/* Style gốc để so sánh: text-xs font-semibold text-slate-300 */}
-          <span className="font-sans font-semibold text-slate-300 truncate pr-2">{mail.sender}</span>
-          <span className="font-sans flex-shrink-0">{new Date(mail.timestamp).toLocaleDateString('vi-VN')}</span>
+        {/* Hàng 1: Tiêu đề và Ngày tháng (đã gộp lại) */}
+        <div className="flex justify-between items-center mb-1.5">
+          <p className={`text-sm font-semibold truncate font-sans pr-2 ${
+              mail.isRead 
+              ? 'text-slate-400'  // Đã đọc: màu mờ
+              : 'text-slate-100'  // Chưa đọc: màu sáng
+            }`}>
+              {mail.subject}
+          </p>
+          <span className="text-xs font-sans flex-shrink-0 text-slate-500">
+            {new Date(mail.timestamp).toLocaleDateString('vi-VN')}
+          </span>
         </div>
         
-        {/* Hàng 2: Tiêu đề - ĐÃ SỬA LẠI STYLE */}
-        <p className={`text-xs truncate font-sans mb-2 ${
-            mail.isRead 
-            ? 'font-normal text-slate-400' // Đã đọc: mờ hơn và không in đậm
-            : 'font-semibold text-slate-100' // Chưa đọc: giống người gửi nhưng sáng hơn một chút
-          }`}>
-            {mail.subject}
-        </p>
-
-        {/* Hàng 3: Danh sách Item dạng Tag */}
+        {/* Hàng 2: Danh sách Item dạng Tag */}
         {mail.items && mail.items.length > 0 && (
           <div className="flex items-center flex-wrap gap-2">
             {mail.items.map((item, index) => (
