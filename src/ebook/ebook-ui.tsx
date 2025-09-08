@@ -1,3 +1,5 @@
+--- START OF FILE ebook-ui.tsx (1).txt ---
+
 // --- START OF FILE game.tsx (FIXED) ---
 
 import React, { useMemo, useState, useEffect } from 'react'; // <-- LỖI ĐÃ ĐƯỢỢC SỬA Ở ĐÂY
@@ -90,12 +92,39 @@ const EbookReaderContent: React.FC = () => {
     closePhraseDetail, togglePlayPause, handleSeek, togglePlaybackSpeed, handleVoiceChange
   } = useEbook();
 
+  const [showTranslation, setShowTranslation] = useState(false);
+  // Reset to English view whenever the book changes to ensure it's the default.
+  useEffect(() => {
+    setShowTranslation(false);
+  }, [selectedBookId]);
+
   const groupedBooks = useMemo(() => groupBooksByCategory(booksData), [booksData]);
+
+  const processedBookContent = useMemo(() => {
+    if (!currentBook) return '';
+    // If the book content doesn't have our translate tag, return it directly.
+    if (!currentBook.content.includes('<translate>')) return currentBook.content;
+
+    const contentParts = currentBook.content.split(/(<translate>[\s\S]*?<\/translate>)/g).filter(Boolean);
+    let combinedContent = '';
+    contentParts.forEach(part => {
+        if (part.startsWith('<translate>')) {
+            const enMatch = part.match(/<en>([\s\S]*?)<\/en>/);
+            const viMatch = part.match(/<vi>([\s\S]*?)<\/vi>/);
+            const enContent = enMatch ? enMatch[1] : '';
+            const viContent = viMatch ? viMatch[1] : '';
+            combinedContent += showTranslation ? viContent : enContent;
+        } else {
+            combinedContent += part;
+        }
+    });
+    return combinedContent;
+  }, [currentBook, showTranslation]);
 
   const renderBookContent = () => {
     if (isLoadingVocab) return <div className="text-center p-10 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
     if (!currentBook) return <div className="text-center p-10 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
-    const contentLines = currentBook.content.trim().split(/\n+/);
+    const contentLines = processedBookContent.trim().split(/\n+/);
     return (
       <div className="font-['Inter',_sans-serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
         {contentLines.map((line, index) => {
@@ -189,10 +218,18 @@ const EbookReaderContent: React.FC = () => {
                   {currentUser && bookVocabularyCardIds.length > 0 && (<button onClick={() => setIsBatchPlaylistModalOpen(true)} className="inline-flex items-center px-4 py-2 border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>Lưu {bookVocabularyCardIds.length} từ vựng</button>)}
                   <button onClick={() => setIsStatsModalOpen(true)} className="inline-flex items-center px-4 py-2 border dark:border-gray-600 text-sm font-medium rounded-md shadow-sm bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"><StatsIcon />Thống kê Sách</button>
                 </div>
-                <div className="mt-6 flex justify-center"><div className="inline-flex rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 p-1">
+                <div className="mt-6 flex flex-col items-center gap-4">
+                  <div className="inline-flex rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 p-1">
                     <button onClick={() => setHighlightMode('word')} className={`px-4 py-2 text-sm font-medium rounded-md ${highlightMode === 'word' ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-500 dark:text-gray-300 hover:bg-gray-200'}`}>In đậm từ đơn</button>
                     <button onClick={() => setHighlightMode('phrase')} className={`px-4 py-2 text-sm font-medium rounded-md ${highlightMode === 'phrase' ? 'bg-white dark:bg-gray-900 text-green-600 dark:text-green-400 shadow' : 'text-gray-500 dark:text-gray-300 hover:bg-gray-200'}`}>In đậm cụm từ</button>
-                </div></div>
+                  </div>
+                  {currentBook && currentBook.content.includes('<translate>') && (
+                    <div className="inline-flex rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 p-1">
+                        <button onClick={() => setShowTranslation(false)} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${!showTranslation ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>English</button>
+                        <button onClick={() => setShowTranslation(true)} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${showTranslation ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>Tiếng Việt</button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
             {renderBookContent()}
