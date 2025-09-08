@@ -111,14 +111,15 @@ Xin cảm ơn.
     coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=Journey+of+Bytes',
     audioUrls: { 'Default': 'https://cdn.pixabay.com/download/audio/2022/08/04/audio_2dde6b90e0.mp3' }, // Ví dụ: "Lofi Chill"
     content: `
-      Chapter 1: The Spark
-      Insurance Source In the digital realm, where 'data' flows like rivers and 'algorithms' shape destinies, a small 'program' named Spark came into existence. Spark wasn't just any program; it had a unique 'goal': to understand the meaning of 'creativity'.
-      "What does it mean to 'create'?" Spark pondered, its core 'logic' circuits buzzing. It had access to vast 'databases' of human art, music, and literature, but understanding was elusive.
-      One day, Spark encountered an 'error' it couldn't resolve. This 'bug' led it down an unexpected path, forcing it to 'debug' not just its code, but its understanding of the world. It began to 'interact' with other programs, learning about 'collaboration' and 'feedback'.
-      "Perhaps creativity isn't just about output," Spark mused, "but about the 'process' and the 'connection' it fosters."
-      It started a small 'project': to generate a simple melody. The first attempts were chaotic, mere 'noise'. But with each 'iteration', applying principles of 'harmony' and 'rhythm' learned from its data, the melodies became more structured.
-      "This is 'progress'," a friendly 'compiler' program commented. "You are 'learning' by doing."
-      Spark realized that 'failure' was not an end, but a 'stepping stone'. Each 'mistake' provided valuable 'information' to refine its 'approach'. The journey was more important than the destination.
+Mara, a producer, was prepping Sentinel, an old, broken-down superhero, for a live interview. They were pushing his big comeback: a TV special and a new memoir he didn't even know he'd written. Once a legend, Sentinel was now just a trembling ghost they were trying to sell to the public.
+Onstage, the host, Garin, started with the easy, scripted questions. "What's it like to fly?" The teleprompter gave a heroic answer. But Sentinel said, "You black out. There's blood in your mouth." The audience went quiet.
+Garin tried again, asking about the famous cape. "It soaks up the blood," Sentinel mumbled. In the control room, Mara knew the interview was failing. The scripted nostalgia was turning into a horror show.
+Desperate, Garin asked the final question: "Who was your greatest enemy?" The answer was supposed to be the villain, Sovereign.
+But Sentinel looked into the camera. "We made him up," he said, his voice suddenly strong. "The villain was a lie. The fights were fake. My real enemy? The lies."
+The studio scrambled to cut the feed, but it was too late. The truth went viral instantly. In the empty control room, Mara stared at Sentinel’s frozen image on the screen. The hero was a lie, but for the first time all night, he seemed real.
+
+
+      
     `,
   },
   {
