@@ -72,8 +72,8 @@ interface MailboxProps {
   onClose: () => void;
 }
 
-// --- UI HELPER COMPONENTS (THEO PHONG CÁCH BOSS.TSX) ---
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1> 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+// --- UI HELPER COMPONENTS (FIXED) ---
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
 const Icon = ({ name, className }: { name: string, className: string }) => {
   const icons = {
@@ -242,8 +242,6 @@ export default function Mailbox({ onClose }: MailboxProps) {
   const handleSelectMail = (id) => {
     setSelectedMailId(id);
     setMails(prev => prev.map(m => {
-      // Logic mới: Chỉ đánh dấu isRead cho mail không có item khi mở ra
-      // Mail có item sẽ được đánh dấu isRead khi nhận quà
       if (m.id === id && (!m.items || m.items.length === 0)) {
         return { ...m, isRead: true };
       }
@@ -253,7 +251,6 @@ export default function Mailbox({ onClose }: MailboxProps) {
   const handleClosePopup = () => setSelectedMailId(null);
   
   const handleClaim = (id) => {
-    // Logic mới: Khi nhận quà, set cả isClaimed và isRead
     setMails(prev => prev.map(m => m.id === id ? { ...m, isClaimed: true, isRead: true } : m));
   };
   
@@ -299,13 +296,13 @@ export default function Mailbox({ onClose }: MailboxProps) {
                 {/* Header -- UPDATED */}
                 <div className="p-4 border-b border-slate-700 flex justify-between items-center">
                     <div>
-                        <h1 className="text-xl font-bold text-cyan-300 text-shadow tracking-wider uppercase">Hộp Thư</h1>
+                        <h1 className="text-xl font-bold text-cyan-300 text-shadow tracking-wider uppercase">MAIL BOX</h1>
                         {mails.length > 0 && (
                             <div className="mt-1 text-xs text-slate-400 font-sans">
-                                <span>Thư mới: </span>
+                                <span>New: </span>
                                 <span className="font-bold text-yellow-300">{unreadCount}</span>
                                 <span className="mx-2 text-slate-600">|</span>
-                                <span>Tổng cộng: </span>
+                                <span>Total: </span>
                                 <span className="font-semibold text-slate-200">{mails.length}</span>
                             </div>
                         )}
