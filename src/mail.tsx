@@ -1,3 +1,5 @@
+// --- START OF FILE mail.tsx ---
+
 import React, { useState, useMemo, useEffect } from 'react';
 
 // --- Dữ liệu mẫu cho hộp thư (giữ nguyên) ---
@@ -349,3 +351,5 @@ export default function Mailbox({ onClose }: MailboxProps) {
     </>
   );
 }
+
+// --- END OF FILE mail.tsx ---
