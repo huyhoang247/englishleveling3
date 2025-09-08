@@ -26,7 +26,8 @@ import SkillScreen from './home/skill-game/skill-ui.tsx';
 import type { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 import EquipmentScreen, { type EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
 import AuctionHouse from './home/auction/auction-house-ui.tsx';
-import DailyCheckIn from './check-in.tsx'; // THÊM MỚI
+import DailyCheckIn from './check-in.tsx';
+import Mailbox from './mail.tsx'; // THÊM MỚI
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 import { useGame } from './GameContext.tsx';
@@ -72,7 +73,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     isBossBattleOpen, isShopOpen, isVocabularyChestOpen, isAchievementsOpen,
     isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
     isAuctionHouseOpen,
-    isCheckInOpen, // THÊM MỚI
+    isCheckInOpen,
+    isMailboxOpen, // THÊM MỚI
     ownedItems, equippedItems, refreshUserData,
     handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
     handleUpdateJackpotPool, handleStatsUpdate, getPlayerBattleStats,
@@ -84,7 +86,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
     toggleAuctionHouse,
-    toggleCheckIn, // THÊM MỚI
+    toggleCheckIn,
+    toggleMailbox, // THÊM MỚI
     toggleBaseBuilding,
   } = useGame();
 
@@ -148,7 +151,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
               {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, { icon: <img src={uiAssets.gavelIcon} alt="Auction House Icon" className="w-full h-full object-contain p-1" />, onClick: toggleAuctionHouse }, { icon: <img src={uiAssets.checkInIcon} alt="Check In Icon" className="w-full h-full object-contain" />, onClick: toggleCheckIn } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
+              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, { icon: <img src={uiAssets.gavelIcon} alt="Auction House Icon" className="w-full h-full object-contain p-1" />, onClick: toggleAuctionHouse }, { icon: <img src={uiAssets.checkInIcon} alt="Check In Icon" className="w-full h-full object-contain" />, onClick: toggleCheckIn }, { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/mail-icon.webp" alt="Mailbox Icon" className="w-full h-full object-contain p-1" />, onClick: toggleMailbox } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
           </div>
         </div>
@@ -237,15 +240,21 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             </ErrorBoundary>
         </div>
         
-        {/* <<< THAY ĐỔI: Cách render Daily Check-in đã được cập nhật */}
+        {/* Render Daily Check-in */}
         {isCheckInOpen && (
             <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center">
                 <ErrorBoundary>
-                    {/* Truyền hàm `toggleCheckIn` vào component con và xóa nút đóng thừa */}
                     <DailyCheckIn onClose={toggleCheckIn} />
                 </ErrorBoundary>
             </div>
         )}
+
+        {/* THÊM MỚI: Render Mailbox */}
+        <div className="fixed inset-0 z-[60]" style={{ display: isMailboxOpen ? 'block' : 'none' }}>
+            <ErrorBoundary>
+                {isMailboxOpen && <Mailbox onClose={toggleMailbox} />}
+            </ErrorBoundary>
+        </div>
 
         {isSystemCheckOpen && (
             <ErrorBoundary fallback={<div className="fixed inset-0 bg-black/70 flex items-center justify-center text-red-400">Lỗi khi tải công cụ System Check.</div>}>
