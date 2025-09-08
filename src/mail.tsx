@@ -169,6 +169,7 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
   
   const hasItems = mail.items && mail.items.length > 0;
 
+  // Trạng thái đã đọc trực quan: Nếu không có item, dựa vào isRead. Nếu có, dựa vào isClaimed.
   const isVisuallyRead = !hasItems ? mail.isRead : mail.isClaimed;
 
   return (
@@ -188,7 +189,6 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
       {hasItems ? (
         // === GIAO DIỆN KHI CÓ ITEMS ===
         <div className="flex-1 min-w-0">
-          {/* Thay đổi ở đây: mb-1.5 -> mb-2.5 để tăng khoảng cách */}
           <div className="flex justify-between items-center mb-2.5">
             <p className={`text-sm font-semibold truncate font-sans pr-2 ${isVisuallyRead ? 'text-slate-400' : 'text-slate-100'}`}>
               {mail.subject}
@@ -207,8 +207,9 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
           </div>
         </div>
       ) : (
-        // === GIAO DIỆN KHI KHÔNG CÓ ITEMS (CĂN GIỮA) ===
-        <div className="flex-1 min-w-0 flex items-center h-full">
+        // === GIAO DIỆN KHI KHÔNG CÓ ITEMS (ĐÃ CĂN GIỮA) ===
+        // Thay đổi ở đây: Thêm `flex items-center h-full` để căn giữa nội dung theo chiều dọc
+        <div className="flex-1 min-w-0 flex items-center h-full"> 
             <div className="w-full flex justify-between items-baseline">
                 <p className={`text-sm font-semibold truncate font-sans pr-2 ${isVisuallyRead ? 'text-slate-400' : 'text-slate-100'}`}>
                     {mail.subject}
