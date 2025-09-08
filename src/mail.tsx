@@ -170,8 +170,16 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
   return (
     <li onClick={() => onSelect(mail.id)} className={`relative p-3 flex items-start space-x-3 cursor-pointer border-l-4 transition-all duration-200 ${isSelected ? 'border-cyan-400 bg-slate-800/70' : 'border-transparent hover:bg-slate-800/40'}`}>
       {/* Icon chính của thư */}
-      <div className="flex-shrink-0 p-3 bg-slate-900/50 rounded-full mt-1">
+      <div className="relative flex-shrink-0 p-3 bg-slate-900/50 rounded-full mt-1">
         <Icon name={typeIcon} className="w-6 h-6 text-slate-400" />
+        {/* Icon báo thư mới */}
+        {!mail.isRead && (
+          <img 
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/exclamation-mark.webp" 
+            alt="Unread" 
+            className="absolute -top-0.5 -right-0.5 w-4 h-4 animate-gentle-bounce"
+          />
+        )}
       </div>
       
       {/* Nội dung chính */}
@@ -210,8 +218,7 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
         )}
       </div>
 
-      {/* Dấu chấm báo thư mới */}
-      {!mail.isRead && <div className="absolute top-3 right-3 w-2.5 h-2.5 bg-teal-400 rounded-full shadow-[0_0_8px_theme(colors.teal.400)] animate-pulse"></div>}
+      {/* Dấu chấm báo thư mới đã được xóa */}
     </li>
   );
 };
@@ -258,6 +265,9 @@ export default function Mailbox({ onClose }: MailboxProps) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
         .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
+        /* Animation mới cho icon báo thư */
+        @keyframes gentle-bounce { 0%, 100% { transform: translateY(-15%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); } 50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); } }
+        .animate-gentle-bounce { animation: gentle-bounce 1.2s infinite; }
       `}</style>
 
       <div className="main-bg relative min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden p-4 sm:p-8">
