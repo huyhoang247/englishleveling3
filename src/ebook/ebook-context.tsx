@@ -1,4 +1,4 @@
-// --- START OF FILE ebook-context.tsx ---
+// --- START OF FILE EbookContext.tsx ---
 
 import React, {
   createContext,
@@ -86,7 +86,7 @@ interface EbookContextType {
   highlightMode: 'word' | 'phrase';
   selectedPhrase: PhraseSentence | null;
   selectedVoiceKey: string | null;
-  subtitleLanguage: 'en' | 'vi'; // <-- STATE FOR LANGUAGE TOGGLE
+  subtitleLanguage: 'en' | 'vi' | 'bilingual'; // <-- UPDATED: Added 'bilingual' state
 
   // Refs
   audioPlayerRef: React.RefObject<HTMLAudioElement>;
@@ -99,8 +99,8 @@ interface EbookContextType {
   bookStats: BookStats | null;
   phraseMap: Map<string, PhraseSentence>;
   phraseRegex: RegExp | null;
-  isViSubAvailable: boolean; // <-- CHECKS IF TRANSLATION EXISTS
-  displayedContent: string; // <-- CONTAINS THE TEXT TO DISPLAY (used by old logic, now superseded by new render logic)
+  isViSubAvailable: boolean;
+  displayedContent: string;
 
   // Functions & State Setters
   handleSelectBook: (bookId: string) => void;
@@ -118,7 +118,7 @@ interface EbookContextType {
   setIsStatsModalOpen: Dispatch<SetStateAction<boolean>>;
   setHighlightMode: Dispatch<SetStateAction<'word' | 'phrase'>>;
   handleVoiceChange: (direction: 'next' | 'previous') => void;
-  toggleSubtitleLanguage: () => void; // <-- FUNCTION TO TOGGLE LANGUAGE
+  toggleSubtitleLanguage: () => void;
 }
 
 // --- CREATE CONTEXT ---
@@ -152,7 +152,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const [highlightMode, setHighlightMode] = useState<'word' | 'phrase'>('word');
   const [selectedPhrase, setSelectedPhrase] = useState<PhraseSentence | null>(null);
   const [selectedVoiceKey, setSelectedVoiceKey] = useState<string | null>(null);
-  const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'vi'>('en');
+  const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'vi' | 'bilingual'>('en'); // <-- UPDATED: Set initial state
 
   // --- HOOKS & LOGIC ---
   useEffect(() => {
@@ -208,6 +208,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const isViSubAvailable = useMemo(() => !!currentBook?.contentVi, [currentBook]);
   
   const displayedContent = useMemo(() => {
+    // This is now only used for 'en' and 'vi' modes. 'bilingual' is handled in the UI component.
     if (subtitleLanguage === 'vi' && currentBook?.contentVi) {
       return currentBook.contentVi;
     }
@@ -215,6 +216,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   }, [currentBook, subtitleLanguage]);
   
   useEffect(() => {
+    // Reset về ngôn ngữ gốc khi chọn sách mới
     setSubtitleLanguage('en');
   }, [selectedBookId]);
 
@@ -380,7 +382,12 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   
   const toggleSubtitleLanguage = () => {
     if (isViSubAvailable) {
-      setSubtitleLanguage(prev => (prev === 'en' ? 'vi' : 'en'));
+      // --- UPDATED: Cycle through en -> vi -> bilingual -> en ---
+      setSubtitleLanguage(prev => {
+        if (prev === 'en') return 'vi';
+        if (prev === 'vi') return 'bilingual';
+        return 'en'; // From 'bilingual', loop back to 'en'
+      });
     }
   };
   
@@ -408,4 +415,4 @@ export const useEbook = (): EbookContextType => {
   return context;
 };
 
-// --- END OF FILE ebook-context.tsx ---
+// --- END OF FILE EbookContext.tsx ---
