@@ -78,7 +78,7 @@ Và câu chuyện của Maya là một ví dụ về cách các thách thức v�
 
 Hướng dẫn 5-3-1
 
-Vậy nếu bạn không biết bắt đầu từ đâu, hãy thử hướng dẫn 5-3-1 từ cuốn sách của tôi. Nó như thế này: Mục tiêu là tương tác với năm người khác nhau mỗi tuần, củng cố ít nhất ba mối quan hệ thân thiết, và dành một giờ mỗi ngày để kết nối. Hãy cùng tìm hiểu sâu hơn.
+Vậy nếu bạn không biết bắt đầu từ đâu, hãy thử hướng dẫn 5-3-1 từ cuốn sách của tôi. Nó như thế này. Mục tiêu là tương tác với năm người khác nhau mỗi tuần, củng cố ít nhất ba mối quan hệ thân thiết, và dành một giờ mỗi ngày để kết nối. Hãy cùng tìm hiểu sâu hơn.
 1: Tương tác với năm người khác nhau mỗi tuần.
 Cũng giống như việc ăn nhiều loại rau củ và các nhóm thực phẩm khác sẽ bổ dưỡng hơn, nghiên cứu đã chỉ ra rằng việc tương tác với nhiều người khác nhau sẽ mang lại nhiều lợi ích hơn. Vì vậy, năm người của bạn có thể bao gồm những người thân yêu, những người quen biết xã giao, và thậm chí cả những người hoàn toàn xa lạ. Thực tế, trong một nghiên cứu mà tôi rất thích, những người chỉ mỉm cười, giao tiếp bằng mắt và trò chuyện phiếm với nhân viên pha chế, đã cảm thấy hạnh phúc hơn và có cảm giác thuộc về nhiều hơn so với những người chỉ vội vã lấy cà phê rồi đi.
 2: Củng cố ít nhất ba mối quan hệ thân thiết.
