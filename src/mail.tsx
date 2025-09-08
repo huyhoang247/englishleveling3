@@ -163,18 +163,18 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
   );
 };
 
-// --- UPDATED MailItem COMPONENT ---
+// --- UPDATED MAILITEM COMPONENT ---
 const MailItem = ({ mail, onSelect, isSelected }) => {
-  // Bổ sung: Chọn icon dựa trên loại thư để trực quan hơn
   const typeIcon = mail.type === 'gift' ? 'gift' : mail.type === 'item' ? 'item' : 'mail';
 
   return (
-    <li onClick={() => onSelect(mail.id)} className={`relative p-3 flex items-center space-x-3 cursor-pointer border-l-4 transition-all duration-200 ${isSelected ? 'border-cyan-400 bg-slate-800/70' : 'border-transparent hover:bg-slate-800/40'}`}>
-      <div className="flex-shrink-0 p-3 bg-slate-900/50 rounded-full">
-        {/* Sử dụng icon đã chọn */}
+    <li onClick={() => onSelect(mail.id)} className={`relative p-3 flex items-start space-x-3 cursor-pointer border-l-4 transition-all duration-200 ${isSelected ? 'border-cyan-400 bg-slate-800/70' : 'border-transparent hover:bg-slate-800/40'}`}>
+      {/* Icon chính của thư */}
+      <div className="flex-shrink-0 p-3 bg-slate-900/50 rounded-full mt-1">
         <Icon name={typeIcon} className="w-6 h-6 text-slate-400" />
       </div>
       
+      {/* Nội dung chính */}
       <div className="flex-1 min-w-0">
         {/* Hàng 1: Người gửi và Ngày tháng */}
         <div className="flex justify-between items-center text-xs text-slate-500 mb-1.5">
@@ -183,7 +183,7 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
         </div>
         
         {/* Hàng 2: Tiêu đề dạng Tag */}
-        <div>
+        <div className="mb-2.5">
           <span className={`inline-block px-3 py-1 rounded-md text-sm font-semibold truncate max-w-full font-sans ${
             mail.isRead 
             ? 'bg-slate-700/60 text-slate-400' 
@@ -192,6 +192,22 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
             {mail.subject}
           </span>
         </div>
+
+        {/* Hàng 3: Danh sách Item dạng Tag */}
+        {mail.items && mail.items.length > 0 && (
+          <div className="flex items-center flex-wrap gap-2">
+            {mail.items.map((item, index) => (
+              <div 
+                key={index} 
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-700/80 text-slate-300 text-xs font-sans border border-slate-600"
+                title={`${item.name} x${item.quantity}`}
+              >
+                <Icon name={item.icon} className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="font-semibold">x{item.quantity}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Dấu chấm báo thư mới */}
@@ -199,6 +215,7 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
     </li>
   );
 };
+
 
 // --- MAIN MAILBOX COMPONENT ---
 export default function Mailbox({ onClose }: MailboxProps) {
