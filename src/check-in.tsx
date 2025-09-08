@@ -283,7 +283,7 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
                 >
                   {/* Day indicator */}
                   <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg font-medium text-slate-300">
-                    Ngày {reward.day}
+                    Day {reward.day}
                   </div>
 
                   {/* Reward icon */}
@@ -326,8 +326,8 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
                     {claimedDays.includes(reward.day)
                       ? 'Đã Nhận'
                       : reward.day === currentDay
-                      ? 'Nhận Ngay'
-                      : 'Chờ'}
+                      ? 'Claim'
+                      : 'Claim'}
                   </button>
 
                   {/* "Claimed" overlay */}
