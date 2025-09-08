@@ -217,8 +217,6 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
           </div>
         )}
       </div>
-
-      {/* Dấu chấm báo thư mới đã được xóa */}
     </li>
   );
 };
@@ -282,10 +280,21 @@ export default function Mailbox({ onClose }: MailboxProps) {
 
         <main className="w-full max-w-3xl mt-14">
             <div className="bg-slate-900/50 rounded-xl shadow-2xl shadow-black/50 flex flex-col border border-slate-700/50 backdrop-blur-sm">
-                {/* Header */}
+                {/* Header -- UPDATED */}
                 <div className="p-4 border-b border-slate-700 flex justify-between items-center">
-                    <h1 className="text-xl font-bold text-cyan-300 text-shadow tracking-wider">MAIL BOX</h1>
-                    {unreadCount > 0 && (<span className="bg-teal-400 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-full animate-pulse">{unreadCount}</span>)}
+                    <div>
+                        <h1 className="text-xl font-bold text-cyan-300 text-shadow tracking-wider uppercase">Hộp Thư</h1>
+                        {mails.length > 0 && (
+                            <div className="mt-1 text-xs text-slate-400 font-sans">
+                                <span>Thư mới: </span>
+                                <span className="font-bold text-yellow-300">{unreadCount}</span>
+                                <span className="mx-2 text-slate-600">|</span>
+                                <span>Tổng cộng: </span>
+                                <span className="font-semibold text-slate-200">{mails.length}</span>
+                            </div>
+                        )}
+                    </div>
+                    <Icon name="mail" className="w-10 h-10 text-slate-700" />
                 </div>
                 
                 {/* Mail List */}
