@@ -284,8 +284,12 @@ const EbookReaderContent: React.FC = () => {
           <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8 md:p-10">
             {currentBook && (
               <div className="mb-8 pb-4 border-b dark:border-gray-700">
-                <h1 className="text-3xl font-bold dark:text-white text-center mb-2">{currentBook.title}</h1>
-                <p className="text-md text-center text-gray-500 dark:text-gray-400">Tác giả: {currentBook.author}</p>
+                <div className="text-center mb-2">
+                  <h1 className="inline-block bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-1.5 text-xl font-semibold text-gray-800 dark:text-gray-200 shadow-sm">
+                    {currentBook.title}
+                  </h1>
+                </div>
+                <p className="text-sm text-center text-gray-500 dark:text-gray-400">Tác giả: {currentBook.author}</p>
                 <div className="mt-6 flex flex-wrap justify-center items-center gap-4">
                   {currentUser && bookVocabularyCardIds.length > 0 && (<button onClick={() => setIsBatchPlaylistModalOpen(true)} className="inline-flex items-center px-4 py-2 border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>Lưu {bookVocabularyCardIds.length} từ vựng</button>)}
                   <button onClick={() => setIsStatsModalOpen(true)} className="inline-flex items-center px-4 py-2 border dark:border-gray-600 text-sm font-medium rounded-md shadow-sm bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"><StatsIcon />Thống kê Sách</button>
