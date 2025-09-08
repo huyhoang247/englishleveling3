@@ -1,4 +1,4 @@
-// --- START OF FILE game.tsx (FIXED) ---
+// --- START OF FILE ebook-ui.tsx ---
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { EbookProvider, useEbook, Book, Vocabulary, PhraseSentence } from './ebook-context.tsx';
@@ -16,7 +16,6 @@ const XIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox
 const StatsIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zM9 9a1 1 0 00-1 1v6a1 1 0 102 0v-6a1 1 0 00-1-1zm4-5a1 1 0 00-1 1v10a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" /></svg>);
 const ChevronLeftIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>);
 const ChevronRightIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>);
-// --- ICON MỚI CHO NÚT DỊCH ---
 const TranslateIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m4 13-4-4-4 4M19 17v-2a2 2 0 00-2-2H5a2 2 0 00-2 2v2a2 2 0 002 2h10a2 2 0 002-2z" /></svg>);
 
 
@@ -86,37 +85,36 @@ const EbookReaderContent: React.FC = () => {
     selectedVocabCard, showVocabDetail, isBatchPlaylistModalOpen, bookVocabularyCardIds,
     currentUser, playlists, selectedPhrase, isStatsModalOpen, bookStats, vocabMap,
     availableVoices, selectedVoiceKey, isLoadingVocab, phraseRegex, phraseMap,
-    // --- LẤY DỮ LIỆU MỚI TỪ CONTEXT ---
-    subtitleLanguage, isViSubAvailable, displayedContent,
+    subtitleLanguage, isViSubAvailable,
 
     // Functions
     handleBackToLibrary, toggleSidebar, setIsDarkMode, handleSelectBook, setIsBatchPlaylistModalOpen,
     setIsStatsModalOpen, setHighlightMode, handleWordClick, closeVocabDetail, handlePhraseClick,
     closePhraseDetail, togglePlayPause, handleSeek, togglePlaybackSpeed, handleVoiceChange,
-    toggleSubtitleLanguage // <-- LẤY HÀM MỚI TỪ CONTEXT
+    toggleSubtitleLanguage
   } = useEbook();
 
   const groupedBooks = useMemo(() => groupBooksByCategory(booksData), [booksData]);
 
+  // --- START: UPDATED BILINGUAL RENDER LOGIC ---
   const renderBookContent = () => {
     if (isLoadingVocab) return <div className="text-center p-10 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
     if (!currentBook) return <div className="text-center p-10 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
     
-    // --- SỬ DỤNG `displayedContent` THAY VÌ `currentBook.content` ---
-    const contentLines = displayedContent.trim().split(/\n+/);
+    // Always use the original English content for structure and highlighting
+    const enLines = currentBook.content.trim().split(/\n+/);
+    
+    // Prepare Vietnamese lines only if translation is available and toggled on
+    const viLines = (subtitleLanguage === 'vi' && isViSubAvailable && currentBook.contentVi) 
+                    ? currentBook.contentVi.trim().split(/\n+/) 
+                    : null;
     
     return (
       <div className="font-['Inter',_sans-serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
-        {contentLines.map((line, index) => {
+        {enLines.map((line, index) => {
           if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
           
-          // --- Logic highlight chỉ hoạt động với bản tiếng Anh ---
-          if (subtitleLanguage === 'vi') {
-            const isChapterTitle = line.length < 60 && !line.includes('?');
-             if (isChapterTitle) return <h3 key={`line-${index}`} className="text-xl font-bold dark:text-white mt-4 mb-4 text-center">{line}</h3>;
-            return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{line}</p>;
-          }
-          
+          // --- Highlighting logic is always applied to the English text ---
           let renderableParts: (JSX.Element | string)[];
           if (highlightMode === 'phrase' && phraseRegex) {
               const parts = line.split(phraseRegex);
@@ -133,13 +131,30 @@ const EbookReaderContent: React.FC = () => {
                 return <span key={`${index}-${partIndex}`}>{part}</span>;
               }).filter(Boolean) as JSX.Element[];
           }
-          const isChapterTitle = index === 0 && line.length < 60;
-          if (isChapterTitle) return <h2 key={`line-${index}`} className="text-2xl sm:text-3xl font-bold dark:text-white mt-2 mb-6 text-center">{renderableParts}</h2>;
-          return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
+
+          const isTitle = line.length < 70 && !['.', '?', '!', '"', '”'].includes(line.trim().slice(-1));
+          const viLine = viLines ? (viLines[index] || null) : null;
+
+          return (
+            <React.Fragment key={`group-${index}`}>
+              {/* Render English Part */}
+              {isTitle ? 
+                <h3 className="text-xl font-bold dark:text-white mt-4 mb-2 text-center">{renderableParts}</h3> :
+                <p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-1 text-left">{renderableParts}</p>
+              }
+              {/* Conditionally Render Vietnamese Part */}
+              {viLine && viLine.trim() !== '' && (
+                isTitle ?
+                <h4 className="text-lg italic font-semibold text-gray-600 dark:text-gray-400 mb-4 text-center">{viLine}</h4> :
+                <p className="italic text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-500 dark:text-gray-400 mb-4 text-left">{viLine}</p>
+              )}
+            </React.Fragment>
+          );
         })}
       </div>
     );
   };
+  // --- END: UPDATED BILINGUAL RENDER LOGIC ---
   
   const renderLibrary = () => (
     <div className="p-4 md:p-6 lg:p-8 space-y-8">
@@ -204,14 +219,12 @@ const EbookReaderContent: React.FC = () => {
                 <div className="mt-6 flex flex-wrap justify-center items-center gap-4">
                   {currentUser && bookVocabularyCardIds.length > 0 && (<button onClick={() => setIsBatchPlaylistModalOpen(true)} className="inline-flex items-center px-4 py-2 border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>Lưu {bookVocabularyCardIds.length} từ vựng</button>)}
                   <button onClick={() => setIsStatsModalOpen(true)} className="inline-flex items-center px-4 py-2 border dark:border-gray-600 text-sm font-medium rounded-md shadow-sm bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"><StatsIcon />Thống kê Sách</button>
-                  {/* --- START: NÚT CHUYỂN NGÔN NGỮ MỚI --- */}
                   {isViSubAvailable && (
                     <button onClick={toggleSubtitleLanguage} className="inline-flex items-center px-4 py-2 border dark:border-gray-600 text-sm font-medium rounded-md shadow-sm bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                       <TranslateIcon />
                       {subtitleLanguage === 'en' ? 'Xem bản dịch' : 'Xem bản gốc'}
                     </button>
                   )}
-                  {/* --- END: NÚT CHUYỂN NGÔN NGỮ MỚI --- */}
                 </div>
                 <div className="mt-6 flex justify-center"><div className="inline-flex rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 p-1">
                     <button onClick={() => setHighlightMode('word')} className={`px-4 py-2 text-sm font-medium rounded-md ${highlightMode === 'word' ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-500 dark:text-gray-300 hover:bg-gray-200'}`}>In đậm từ đơn</button>
@@ -267,4 +280,4 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
 export default EbookReader;
 
-// --- END OF FILE game.tsx (FIXED) ---
+// --- END OF FILE ebook-ui.tsx ---
