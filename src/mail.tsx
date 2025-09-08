@@ -163,22 +163,38 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
   );
 };
 
+// --- UPDATED MailItem COMPONENT ---
 const MailItem = ({ mail, onSelect, isSelected }) => {
+  // Bổ sung: Chọn icon dựa trên loại thư để trực quan hơn
+  const typeIcon = mail.type === 'gift' ? 'gift' : mail.type === 'item' ? 'item' : 'mail';
+
   return (
-    <li onClick={() => onSelect(mail.id)} className={`relative p-4 flex items-center space-x-4 cursor-pointer border-l-4 transition-all duration-200 ${isSelected ? 'border-cyan-400 bg-slate-800/70' : 'border-transparent hover:bg-slate-800/40'}`}>
-      <div className="flex-shrink-0 p-2 bg-slate-900/50 rounded-full">
-        <Icon name="mail" className="w-8 h-8 text-slate-400" />
+    <li onClick={() => onSelect(mail.id)} className={`relative p-3 flex items-center space-x-3 cursor-pointer border-l-4 transition-all duration-200 ${isSelected ? 'border-cyan-400 bg-slate-800/70' : 'border-transparent hover:bg-slate-800/40'}`}>
+      <div className="flex-shrink-0 p-3 bg-slate-900/50 rounded-full">
+        {/* Sử dụng icon đã chọn */}
+        <Icon name={typeIcon} className="w-6 h-6 text-slate-400" />
       </div>
       
       <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-baseline">
-          <p className={`font-sans font-bold text-lg truncate ${mail.isRead ? 'text-slate-400' : 'text-white'}`}>{mail.subject}</p>
-          <p className="text-xs text-slate-500 flex-shrink-0 ml-2 font-sans">{new Date(mail.timestamp).toLocaleDateString('vi-VN')}</p>
+        {/* Hàng 1: Người gửi và Ngày tháng */}
+        <div className="flex justify-between items-center text-xs text-slate-500 mb-1.5">
+          <span className="font-sans font-semibold text-slate-300 truncate pr-2">{mail.sender}</span>
+          <span className="font-sans flex-shrink-0">{new Date(mail.timestamp).toLocaleDateString('vi-VN')}</span>
         </div>
-        <p className="text-sm text-slate-400 truncate font-sans">Từ: {mail.sender}</p>
+        
+        {/* Hàng 2: Tiêu đề dạng Tag */}
+        <div>
+          <span className={`inline-block px-3 py-1 rounded-md text-sm font-semibold truncate max-w-full font-sans ${
+            mail.isRead 
+            ? 'bg-slate-700/60 text-slate-400' 
+            : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+          }`}>
+            {mail.subject}
+          </span>
+        </div>
       </div>
 
-      {/* Dấu chấm báo thư mới được đặt ở góc trên bên phải */}
+      {/* Dấu chấm báo thư mới */}
       {!mail.isRead && <div className="absolute top-3 right-3 w-2.5 h-2.5 bg-teal-400 rounded-full shadow-[0_0_8px_theme(colors.teal.400)] animate-pulse"></div>}
     </li>
   );
