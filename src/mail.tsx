@@ -163,7 +163,7 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
   );
 };
 
-// --- UPDATED MAILITEM COMPONENT (FIXED) ---
+// --- UPDATED MAILITEM COMPONENT ---
 const MailItem = ({ mail, onSelect, isSelected }) => {
   const typeIcon = mail.type === 'gift' ? 'gift' : mail.type === 'item' ? 'item' : 'mail';
   
@@ -173,7 +173,7 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
 
   return (
     <li onClick={() => onSelect(mail.id)} className={`relative p-3 flex items-start space-x-3 cursor-pointer border-l-4 transition-all duration-200 ${isSelected ? 'border-cyan-400 bg-slate-800/70' : 'border-transparent hover:bg-slate-800/40'}`}>
-      {/* Icon chính của thư (Không đổi) */}
+      {/* Icon chính của thư */}
       <div className="relative flex-shrink-0 p-3 bg-slate-900/50 rounded-full mt-1">
         <Icon name={typeIcon} className="w-6 h-6 text-slate-400" />
         {!mail.isRead && (
@@ -185,11 +185,11 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
         )}
       </div>
       
-      {/* --- CẤU TRÚC NỘI DUNG ĐÃ ĐƯỢC THAY ĐỔI --- */}
       {hasItems ? (
-        // === GIAO DIỆN KHI CÓ ITEMS (như cũ) ===
+        // === GIAO DIỆN KHI CÓ ITEMS ===
         <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-center mb-1.5">
+          {/* Thay đổi ở đây: mb-1.5 -> mb-2.5 để tăng khoảng cách */}
+          <div className="flex justify-between items-center mb-2.5">
             <p className={`text-sm font-semibold truncate font-sans pr-2 ${isVisuallyRead ? 'text-slate-400' : 'text-slate-100'}`}>
               {mail.subject}
             </p>
@@ -207,7 +207,7 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
           </div>
         </div>
       ) : (
-        // === GIAO DIỆN MỚI KHI KHÔNG CÓ ITEMS (CĂN GIỮA) ===
+        // === GIAO DIỆN KHI KHÔNG CÓ ITEMS (CĂN GIỮA) ===
         <div className="flex-1 min-w-0 flex items-center h-full">
             <div className="w-full flex justify-between items-baseline">
                 <p className={`text-sm font-semibold truncate font-sans pr-2 ${isVisuallyRead ? 'text-slate-400' : 'text-slate-100'}`}>
