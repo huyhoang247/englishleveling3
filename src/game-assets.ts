@@ -41,6 +41,7 @@ export const uiAssets = {
   luckyGameIcon: require("./assets/images/coin.webp"),
   upgradeIcon: require("./assets/images/upgrade-icon.webp"),
   gavelIcon: require("./assets/images/auction-icon.webp"), // THÊM MỚI ICON ĐẤU GIÁ
+  checkInIcon: require("./assets/images/check-in-icon.webp"), // THÊM MỚI ICON ĐIỂM DANH
 };
 
 // ... (phần còn lại của file giữ nguyên)
@@ -171,3 +172,4 @@ export const allImageUrls = [
     ...Object.values(treasureAssets).filter(url => typeof url === 'string'),
     ...Object.values(bossBattleAssets),
 ];
+// --- END OF FILE game-assets.ts ---
