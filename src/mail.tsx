@@ -173,10 +173,7 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
   };
 
   return (
-    <li onClick={() => onSelect(mail.id)} className={`p-4 flex items-center space-x-4 cursor-pointer border-l-4 transition-all duration-200 ${isSelected ? 'border-cyan-400 bg-slate-800/70' : 'border-transparent hover:bg-slate-800/40'}`}>
-      {!mail.isRead && <div className="flex-shrink-0 w-2.5 h-2.5 bg-teal-400 rounded-full shadow-[0_0_8px_theme(colors.teal.400)] animate-pulse"></div>}
-      {mail.isRead && <div className="flex-shrink-0 w-2.5 h-2.5"></div>}
-      
+    <li onClick={() => onSelect(mail.id)} className={`relative p-4 flex items-center space-x-4 cursor-pointer border-l-4 transition-all duration-200 ${isSelected ? 'border-cyan-400 bg-slate-800/70' : 'border-transparent hover:bg-slate-800/40'}`}>
       <div className="flex-shrink-0 p-2 bg-slate-900/50 rounded-full">{getIconForType(mail.type)}</div>
       
       <div className="flex-1 min-w-0">
@@ -186,6 +183,9 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
         </div>
         <p className="text-sm text-slate-400 truncate font-sans">Từ: {mail.sender}</p>
       </div>
+
+      {/* Dấu chấm báo thư mới được đặt ở góc trên bên phải */}
+      {!mail.isRead && <div className="absolute top-3 right-3 w-2.5 h-2.5 bg-teal-400 rounded-full shadow-[0_0_8px_theme(colors.teal.400)] animate-pulse"></div>}
     </li>
   );
 };
