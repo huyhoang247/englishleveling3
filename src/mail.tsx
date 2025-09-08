@@ -185,21 +185,19 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
       {/* Nội dung chính */}
       <div className="flex-1 min-w-0">
         {/* Hàng 1: Người gửi và Ngày tháng */}
-        <div className="flex justify-between items-center text-xs text-slate-500 mb-1.5">
+        <div className="flex justify-between items-center text-xs text-slate-500 mb-1">
           <span className="font-sans font-semibold text-slate-300 truncate pr-2">{mail.sender}</span>
           <span className="font-sans flex-shrink-0">{new Date(mail.timestamp).toLocaleDateString('vi-VN')}</span>
         </div>
         
-        {/* Hàng 2: Tiêu đề dạng Tag */}
-        <div className="mb-2.5">
-          <span className={`inline-block px-3 py-1 rounded-md text-sm font-semibold truncate max-w-full font-sans ${
+        {/* Hàng 2: Tiêu đề - ĐÃ ĐƯỢC THAY ĐỔI */}
+        <p className={`text-sm truncate font-sans mb-2 ${
             mail.isRead 
-            ? 'bg-slate-700/60 text-slate-400' 
-            : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+            ? 'font-semibold text-slate-400' 
+            : 'font-bold text-white'
           }`}>
             {mail.subject}
-          </span>
-        </div>
+        </p>
 
         {/* Hàng 3: Danh sách Item dạng Tag */}
         {mail.items && mail.items.length > 0 && (
