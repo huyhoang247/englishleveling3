@@ -110,7 +110,7 @@ Xin cảm ơn.
     category: 'Technology & Future',
     coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=Journey+of+Bytes',
     audioUrls: {
-      'Hope': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/book1-hope-voice.mp3',
+      'Hope': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/the-true-show-voice-hope.mp3',
       'Matilda': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/elevenlabs-2025-09-06t12-31-47-matilda-pre-sp100-s50-sb75-se0-b-m2_y6yNk68O.mp3',
       'Hope2': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/book1-hope-voice.mp3',
     },
