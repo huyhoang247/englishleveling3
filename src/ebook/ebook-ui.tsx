@@ -1,4 +1,4 @@
-// --- START OF FILE ebook-ui.tsx ---
+// --- START OF FILE game.tsx (FIXED) ---
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { EbookProvider, useEbook, Book, Vocabulary, PhraseSentence } from './ebook-context.tsx';
@@ -85,7 +85,7 @@ const EbookReaderContent: React.FC = () => {
     selectedVocabCard, showVocabDetail, isBatchPlaylistModalOpen, bookVocabularyCardIds,
     currentUser, playlists, selectedPhrase, isStatsModalOpen, bookStats, vocabMap,
     availableVoices, selectedVoiceKey, isLoadingVocab, phraseRegex, phraseMap,
-    subtitleLanguage, isViSubAvailable,
+    subtitleLanguage, isViSubAvailable, displayedContent,
 
     // Functions
     handleBackToLibrary, toggleSidebar, setIsDarkMode, handleSelectBook, setIsBatchPlaylistModalOpen,
@@ -96,65 +96,129 @@ const EbookReaderContent: React.FC = () => {
 
   const groupedBooks = useMemo(() => groupBooksByCategory(booksData), [booksData]);
 
-  // --- START: UPDATED BILINGUAL RENDER LOGIC ---
+  // --- START: NEW BILINGUAL RENDERING LOGIC ---
+  const pairedSentences = useMemo(() => {
+    if (subtitleLanguage !== 'bilingual' || !currentBook?.content || !currentBook.contentVi) {
+      return [];
+    }
+
+    // Heuristic to split text into sentences while keeping punctuation
+    const splitIntoSentences = (text: string) => text.match(/[^.!?]+[.!?]*/g) || [text];
+
+    // Process paragraphs one by one to maintain structure
+    const enParagraphs = currentBook.content.trim().split(/\n+/).filter(p => p.trim());
+    const viParagraphs = currentBook.contentVi.trim().split(/\n+/).filter(p => p.trim());
+
+    const pairedContent: { en: string; vi: string; isHeader: boolean }[] = [];
+    const minParagraphs = Math.min(enParagraphs.length, viParagraphs.length);
+
+    for (let i = 0; i < minParagraphs; i++) {
+      const enPara = enParagraphs[i].trim();
+      const viPara = viParagraphs[i].trim();
+      
+      const isHeader = enPara.length < 80 && !enPara.includes('.') && !enPara.includes('?');
+
+      if (isHeader) {
+        pairedContent.push({ en: enPara, vi: viPara, isHeader: true });
+      } else {
+        const enSentences = splitIntoSentences(enPara).map(s => s.trim());
+        const viSentences = splitIntoSentences(viPara).map(s => s.trim());
+        const minSentences = Math.min(enSentences.length, viSentences.length);
+
+        for (let j = 0; j < minSentences; j++) {
+            if (enSentences[j] && viSentences[j]) {
+                 pairedContent.push({ en: enSentences[j], vi: viSentences[j], isHeader: false });
+            }
+        }
+      }
+      // Add a spacer for paragraph breaks, except for the last one
+      if (i < minParagraphs - 1) {
+          pairedContent.push({ en: '', vi: '', isHeader: false });
+      }
+    }
+    return pairedContent;
+  }, [currentBook, subtitleLanguage]);
+
+
+  const renderHighlightedText = (line: string) => {
+    let renderableParts: (JSX.Element | string)[];
+    if (highlightMode === 'phrase' && phraseRegex) {
+        const parts = line.split(phraseRegex);
+        renderableParts = parts.map((part, partIndex) => {
+            const foundPhrase = phraseMap.get(part.toLowerCase());
+            if (foundPhrase) return <span key={partIndex} className="font-semibold text-green-600 dark:text-green-400 hover:underline cursor-pointer bg-green-50 dark:bg-green-500/10 rounded px-1" onClick={() => handlePhraseClick(foundPhrase)}>{part}</span>;
+            return part;
+        });
+    } else {
+        const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
+        renderableParts = parts.map((part, partIndex) => {
+          if (!part) return null;
+          if (/^\w+$/.test(part) && vocabMap.has(part.toLowerCase())) return <span key={partIndex} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer" onClick={() => handleWordClick(part)}>{part}</span>;
+          return <span key={partIndex}>{part}</span>;
+        }).filter(Boolean) as JSX.Element[];
+    }
+    return renderableParts;
+  }
+
   const renderBookContent = () => {
     if (isLoadingVocab) return <div className="text-center p-10 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
     if (!currentBook) return <div className="text-center p-10 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
     
-    // Always use the original English content for structure and highlighting
-    const enLines = currentBook.content.trim().split(/\n+/);
-    
-    // Prepare Vietnamese lines only if translation is available and toggled on
-    const viLines = (subtitleLanguage === 'vi' && isViSubAvailable && currentBook.contentVi) 
-                    ? currentBook.contentVi.trim().split(/\n+/) 
-                    : null;
-    
+    // BILINGUAL MODE
+    if (subtitleLanguage === 'bilingual') {
+      return (
+        <div className="font-['Inter',_sans-serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
+          {pairedSentences.map((pair, index) => {
+            if (!pair.en && !pair.vi) { // Render paragraph break
+                return <div key={`spacer-${index}`} className="h-4"></div>;
+            }
+            if (pair.isHeader) {
+                return (
+                    <div key={`pair-${index}`} className="my-6">
+                        <h3 className="text-xl font-bold dark:text-white text-center">{renderHighlightedText(pair.en)}</h3>
+                        <p className="text-lg text-center text-gray-600 dark:text-gray-400 italic mt-1">{pair.vi}</p>
+                    </div>
+                );
+            }
+            return (
+              <div key={`pair-${index}`} className="mb-5">
+                <p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-800 dark:text-gray-200 text-left">
+                  {renderHighlightedText(pair.en)}
+                </p>
+                <p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-600 dark:text-gray-400 italic text-left">
+                  {pair.vi}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // SINGLE LANGUAGE MODE (EN or VI)
+    const contentLines = displayedContent.trim().split(/\n+/);
     return (
       <div className="font-['Inter',_sans-serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
-        {enLines.map((line, index) => {
+        {contentLines.map((line, index) => {
           if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
           
-          // --- Highlighting logic is always applied to the English text ---
-          let renderableParts: (JSX.Element | string)[];
-          if (highlightMode === 'phrase' && phraseRegex) {
-              const parts = line.split(phraseRegex);
-              renderableParts = parts.map((part, partIndex) => {
-                  const foundPhrase = phraseMap.get(part.toLowerCase());
-                  if (foundPhrase) return <span key={`${index}-${partIndex}`} className="font-semibold text-green-600 dark:text-green-400 hover:underline cursor-pointer bg-green-50 dark:bg-green-500/10 rounded px-1" onClick={() => handlePhraseClick(foundPhrase)}>{part}</span>;
-                  return part;
-              });
-          } else {
-              const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
-              renderableParts = parts.map((part, partIndex) => {
-                if (!part) return null;
-                if (/^\w+$/.test(part) && vocabMap.has(part.toLowerCase())) return <span key={`${index}-${partIndex}`} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer" onClick={() => handleWordClick(part)}>{part}</span>;
-                return <span key={`${index}-${partIndex}`}>{part}</span>;
-              }).filter(Boolean) as JSX.Element[];
+          const isHeader = line.length < 80 && !line.includes('.') && !line.includes('?');
+
+          // For Vietnamese text, no highlighting is needed
+          if (subtitleLanguage === 'vi') {
+             if (isHeader) return <h3 key={`line-${index}`} className="text-xl font-bold dark:text-white mt-6 mb-4 text-center">{line}</h3>;
+            return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{line}</p>;
           }
-
-          const isTitle = line.length < 70 && !['.', '?', '!', '"', '”'].includes(line.trim().slice(-1));
-          const viLine = viLines ? (viLines[index] || null) : null;
-
-          return (
-            <React.Fragment key={`group-${index}`}>
-              {/* Render English Part */}
-              {isTitle ? 
-                <h3 className="text-xl font-bold dark:text-white mt-4 mb-2 text-center">{renderableParts}</h3> :
-                <p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-1 text-left">{renderableParts}</p>
-              }
-              {/* Conditionally Render Vietnamese Part */}
-              {viLine && viLine.trim() !== '' && (
-                isTitle ?
-                <h4 className="text-lg italic font-semibold text-gray-600 dark:text-gray-400 mb-4 text-center">{viLine}</h4> :
-                <p className="italic text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-500 dark:text-gray-400 mb-4 text-left">{viLine}</p>
-              )}
-            </React.Fragment>
-          );
+          
+          // For English text, apply highlighting
+          const renderableParts = renderHighlightedText(line);
+          if (isHeader) return <h3 key={`line-${index}`} className="text-xl font-bold dark:text-white mt-6 mb-4 text-center">{renderableParts}</h3>;
+          return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
         })}
       </div>
     );
   };
-  // --- END: UPDATED BILINGUAL RENDER LOGIC ---
+  // --- END: NEW BILINGUAL RENDERING LOGIC ---
   
   const renderLibrary = () => (
     <div className="p-4 md:p-6 lg:p-8 space-y-8">
@@ -192,6 +256,12 @@ const EbookReaderContent: React.FC = () => {
     const seconds = Math.floor(time % 60).toString().padStart(2, '0');
     return `${minutes}:${seconds}`;
   };
+  
+  const getTranslateButtonText = () => {
+    if (subtitleLanguage === 'en') return 'Xem bản dịch';
+    if (subtitleLanguage === 'vi') return 'Xem song ngữ';
+    return 'Xem bản gốc';
+  };
 
   return (
     <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
@@ -222,7 +292,7 @@ const EbookReaderContent: React.FC = () => {
                   {isViSubAvailable && (
                     <button onClick={toggleSubtitleLanguage} className="inline-flex items-center px-4 py-2 border dark:border-gray-600 text-sm font-medium rounded-md shadow-sm bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                       <TranslateIcon />
-                      {subtitleLanguage === 'en' ? 'Xem bản dịch' : 'Xem bản gốc'}
+                      {getTranslateButtonText()}
                     </button>
                   )}
                 </div>
@@ -280,4 +350,4 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
 export default EbookReader;
 
-// --- END OF FILE ebook-ui.tsx ---
+// --- END OF FILE game.tsx (FIXED) ---
