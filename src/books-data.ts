@@ -1,4 +1,3 @@
---- START OF FILE books-data.tjjkdss.txt ---
 
 // books-data.ts
 
