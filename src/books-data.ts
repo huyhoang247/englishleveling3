@@ -1,5 +1,3 @@
-// --- START OF FILE books-data.ts ---
-
 // books-data.ts
 
 // Định nghĩa cấu trúc cho một cuốn sách
@@ -27,8 +25,7 @@ export const sampleBooks: Book[] = [
       'Matilda': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/elevenlabs-2025-09-06t12-31-47-matilda-pre-sp100-s50-sb75-se0-b-m2_y6yNk68O.mp3',
     },
     content: `
-So a couple of years ago, a woman I know who I'll call Maya, went through a lot of big changes in a short amount of time.
-She got married. She and her husband moved for his job to a new city where she didn’t know anyone. She started a new role working from home, all while managing her dad's new diagnosis of dementia.
+So a couple of years ago, a woman I know who I'll call Maya, went through a lot of big changes in a short amount of time. She got married. She and her husband moved for his job to a new city where she didn’t know anyone. She started a new role working from home, all while managing her dad's new diagnosis of dementia.
 And to manage the stress of all this change, Maya doubled down on her physical and mental health. She exercised almost every day, she ate healthy foods, she went to therapy once a week. And these actions really helped. Her body got stronger. Her mind got more resilient, but only up to a point. She was still struggling, often losing sleep in the middle of the night, feeling unfocused, unmotivated during the day.
 Maya was doing everything that doctors typically tell us to do to be physically and mentally healthy, and yet something was missing. What if I told you that what was missing for Maya is also missing for billions of people around the world, and that it might be missing for you? What if I told you that not having it undermines our other efforts to be healthy and can even shorten your lifespan?
 I’ve been studying this for over a decade, and I've discovered that the traditional way we think about health is incomplete. By thinking of our health as primarily physical and mental, we overlook what I believe is the greatest challenge and the greatest opportunity of our time. Social health.
@@ -41,9 +38,7 @@ What Does Social Health Look Like?
 
 So you might be wondering, what does it look like to be socially healthy? What does that even mean? Well it’s about developing close relationships with your family, your friends, your partner, yourself. It's about having regular interaction with your coworkers, your neighbors. It's about feeling like you belong to a community. Being socially healthy is about having the right quantity and quality of connection for you.
 And Maya's story is one example of how social health challenges come up. In my work, I hear many others. Stories like Jay, a freshman in college who’s eager to get involved in campus yet is having a hard time fitting in with people in his dorm and often feels homesick. Or Serena and Ali, a couple juggling the chaos of young kids with demanding jobs, they rarely have time to see friends or spend time one-on-one. Or Henry, recently retired, who cherishes time with his spouse and yet feels untethered without his team anymore and wishes he could see his kids and grandkids more often. These stories show that social health is relevant to each of us at every life stage.
-
 The 5-3-1 Guideline
-
 So if you're not sure where to start, try the 5-3-1 guideline from my book. It goes like this. Aim to interact with five different people each week, to strengthen at least three close relationships overall, and to spend one hour a day connecting. Let's dig into these.
 1. Interact with five different people each week.
 Just like eating a variety of vegetables and other food groups is more nutritious, research has shown that interacting with a variety of people is more rewarding. So your five could include close loved ones, casual acquaintances, even complete strangers. In fact, in one study that I love, people who just smiled, made eye contact and chit-chatted with a barista, felt happier and a greater sense of belonging than people who just rushed to get their coffee and go.
@@ -55,9 +50,7 @@ OK, if you're an introvert, right now you're probably thinking one hour sounds l
 But if you are thinking that one hour a day sounds like way too much because you're just way too busy, I challenge you. Adults in the US spend an average of 4.5 hours each day on their smartphones. So instead of scrolling on social media, text a friend. Instead of reading news headlines, write a thank-you card. Instead of listening to a podcast, call a family member.
 Maya put this into practice by scheduling recurring hangouts with a new local friend that she made, by attending community events and dropping cards off in her neighbors mailboxes, by planning trips to see family and inviting friends in other cities to come visit. And bolstering her social health made more of a difference than focusing solely on her physical and mental health ever could.
 And I know this because Maya is actually me. I am so passionate about sharing tools to be socially healthy because honestly, I need them too. And the 5-3-1 guideline is one way that we can be proactive and intentional about our relationships. And that is really the point. Be proactive and intentional about your social health.
-
 Shaping a Socially Healthy Society
-
 So zooming out beyond the steps that you and I take individually, together, we need to shape a society that thrives through social health. Over the next decade, I envision educators championing social health in schools. And just like kids build their physical muscles in gym class, they'll exercise their social muscles in connection class.
 Over the next decade, I see our cities and neighborhoods being designed with social health in mind, where vibrant gathering places foster unity and community builders are empowered to bring them to life. Over the next decade, I believe that social health will become as ingrained in our collective consciousness as mental health is today.
 Because not that long ago, mental health was a taboo topic shrouded in stigma. And now public figures talk openly about it, there's an entire industry to support it, and more and more people think of going to therapy like going to the gym.
@@ -66,9 +59,9 @@ So to get there, make relationships your priority not only for you, but also for
 Thank you.
 (Applause)
     `,
+    // --- START: NỘI DUNG DỊCH ĐÃ ĐƯỢC THÊM VÀO ĐÂY ---
     contentVi: `
-Vài năm trước, một người phụ nữ tôi quen, tôi sẽ gọi cô ấy là Maya, đã trải qua rất nhiều thay đổi lớn trong một khoảng thời gian ngắn.
-Cô ấy kết hôn. Cô và chồng chuyển đến một thành phố mới vì công việc của anh ấy, một nơi cô không quen biết ai. Cô bắt đầu một công việc mới tại nhà, và tất cả diễn ra trong khi phải chăm sóc người cha vừa được chẩn đoán mắc chứng mất trí nhớ.
+Vài năm trước, một người phụ nữ tôi quen, tôi sẽ gọi cô ấy là Maya, đã trải qua rất nhiều thay đổi lớn trong một khoảng thời gian ngắn. Cô ấy kết hôn. Cô và chồng chuyển đến một thành phố mới vì công việc của anh ấy, một nơi cô không quen biết ai. Cô bắt đầu một công việc mới tại nhà, và tất cả diễn ra trong khi phải chăm sóc người cha vừa được chẩn đoán mắc chứng mất trí nhớ.
 Và để kiểm soát sự căng thẳng từ tất cả những thay đổi này, Maya càng chú trọng hơn vào sức khỏe thể chất và tinh thần của mình. Cô tập thể dục gần như mỗi ngày, ăn những thực phẩm lành mạnh, và đi trị liệu tâm lý mỗi tuần một lần. Và những hành động này thực sự đã giúp ích. Cơ thể cô trở nên khỏe mạnh hơn. Tâm trí cô trở nên kiên cường hơn, nhưng chỉ đến một mức độ nào đó thôi. Cô vẫn gặp khó khăn, thường xuyên mất ngủ giữa đêm, cảm thấy mất tập trung, thiếu động lực vào ban ngày.
 Maya đã làm mọi thứ mà các bác sĩ thường khuyên chúng ta làm để có sức khỏe thể chất và tinh thần tốt, vậy mà vẫn có điều gì đó thiếu sót. Sẽ ra sao nếu tôi nói với bạn rằng điều Maya còn thiếu cũng là điều mà hàng tỷ người trên thế giới đang thiếu, và có thể bạn cũng đang thiếu nó? Sẽ ra sao nếu tôi nói với bạn rằng việc không có nó sẽ làm suy yếu những nỗ lực khác của chúng ta để khỏe mạnh và thậm chí có thể rút ngắn tuổi thọ của bạn?
 Tôi đã nghiên cứu về điều này hơn một thập kỷ, và tôi đã phát hiện ra rằng cách chúng ta nghĩ về sức khỏe theo kiểu truyền thống là chưa hoàn chỉnh. Khi chỉ xem sức khỏe chủ yếu là về thể chất và tinh thần, chúng ta đã bỏ qua điều mà tôi tin là thách thức lớn nhất và cũng là cơ hội lớn nhất của thời đại chúng ta. Sức khỏe xã hội.
@@ -107,6 +100,7 @@ Vì vậy, để đạt được điều đó, hãy ưu tiên các mối quan h�
 Xin cảm ơn.
 (Vỗ tay)
     `,
+    // --- END: NỘI DUNG DỊCH ---
   },
   {
     id: 'book2',
@@ -126,7 +120,55 @@ Xin cảm ơn.
       Spark realized that 'failure' was not an end, but a 'stepping stone'. Each 'mistake' provided valuable 'information' to refine its 'approach'. The journey was more important than the destination.
     `,
   },
-  // ... other books remain the same
+  {
+    id: 'book3',
+    title: 'Echoes of the Future',
+    author: 'Oracle Systems',
+    category: 'Technology & Future',
+    coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=Echoes+Future',
+    // Sách này không có audioUrls để kiểm tra việc ẩn/hiện trình phát audio
+    content: `
+      Prologue: The Whispers
+      The 'network' hummed with a quiet 'energy', a constant flow of 'information' painting a picture of a world on the brink of another 'transformation'. Old 'paradigms' were shattering, making way for new 'ideas'.
+      "The future is not a fixed 'destination'," a historian 'AI' once lectured. "It's a 'spectrum' of possibilities, shaped by our 'choices' today."
+      Young Elara, a 'student' of 'cybernetics', felt this more keenly than most. She believed that 'technology' held the 'key' to solving many of the world's pressing 'issues', from 'climate change' to 'social inequality'.
+      "We need 'innovative' solutions," she often told her peers. "And that requires us to 'think' differently, to challenge the 'status quo'."
+      Her current 'research' focused on 'decentralized' systems, aiming to create more 'resilient' and 'equitable' infrastructures. It was a daunting 'task', filled with 'technical' hurdles and 'ethical' dilemmas.
+      "Every 'line of code' we write, every 'system' we design, has an 'impact'," her mentor, Dr. Aris, reminded her. "We must be 'responsible' for our 'creations'."
+      Elara knew the path ahead was long and arduous, but the 'potential' for positive 'change' fueled her 'determination'. The echoes of the future were calling, and she was ready to answer.
+    `,
+  },
+  {
+    id: 'book4',
+    title: 'Management Essentials',
+    author: 'Lead Right Inc.',
+    category: 'Management & Leadership',
+    coverImageUrl: 'https://placehold.co/200x300/F5B041/333333?text=Mgmt+Essentials',
+    audioUrls: { 'Default': 'https://cdn.pixabay.com/download/audio/2023/05/07/audio_6bdffe450b.mp3' }, // Ví dụ: "Corporate Technology"
+    content: `Chapter 1: Leading Teams. To lead a team effectively, one must understand motivation, communication, and conflict resolution. This book explores these 'concepts' in depth.`,
+  },
+  {
+    id: 'book5',
+    title: 'Marketing Breakthroughs',
+    author: 'Market Wizards',
+    category: 'Marketing & Sales',
+    coverImageUrl: 'https://placehold.co/200x300/76D7C4/333333?text=Marketing+BT',
+    content: `Introduction: The new age of marketing is upon us. 'Digital' strategies and 'data analytics' are key. Learn how to 'innovate' and 'capture' your audience.`,
+  },
+  {
+    id: 'book6',
+    title: 'Advanced Leadership Tactics',
+    author: 'Strategy Gurus',
+    category: 'Management & Leadership',
+    coverImageUrl: 'https://placehold.co/200x300/F5B041/333333?text=Adv+Leadership',
+    content: `Chapter 1: Strategic Vision. Leaders must not only manage but also 'inspire'. This involves 'foresight' and the ability to 'articulate' a compelling future.`,
+  },
+  {
+    id: 'book7',
+    title: 'Sales Mastery',
+    author: 'Closer Co.',
+    category: 'Marketing & Sales',
+    coverImageUrl: 'https://placehold.co/200x300/76D7C4/333333?text=Sales+Mastery',
+    content: `Unlock the secrets to closing any deal. Understand customer 'psychology', master 'negotiation', and build lasting 'relationships'.`,
+  },
 ];
-
-// --- END OF FILE books-data.ts ---
