@@ -294,7 +294,8 @@ export default function Mailbox({ onClose }: MailboxProps) {
             </div>
         </header>
 
-        <main className="w-full max-w-3xl mt-14">
+        {/* --- DÒNG CODE ĐÃ ĐƯỢC CẬP NHẬT --- */}
+        <main className="w-full max-w-3xl mt-14 mb-14">
             <div className="bg-slate-900/50 rounded-xl shadow-2xl shadow-black/50 flex flex-col border border-slate-700/50 backdrop-blur-sm">
                 {/* Header -- UPDATED */}
                 <div className="p-4 border-b border-slate-700 flex justify-between items-center">
