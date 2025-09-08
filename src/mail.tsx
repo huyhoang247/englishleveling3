@@ -164,17 +164,11 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
 };
 
 const MailItem = ({ mail, onSelect, isSelected }) => {
-  const getIconForType = (type) => {
-    switch (type) {
-      case 'gift': return <Icon name="gift" className="w-8 h-8 text-yellow-400" />;
-      case 'item': return <Icon name="item" className="w-8 h-8 text-blue-400" />;
-      default: return <Icon name="mail" className="w-8 h-8 text-slate-500" />;
-    }
-  };
-
   return (
     <li onClick={() => onSelect(mail.id)} className={`relative p-4 flex items-center space-x-4 cursor-pointer border-l-4 transition-all duration-200 ${isSelected ? 'border-cyan-400 bg-slate-800/70' : 'border-transparent hover:bg-slate-800/40'}`}>
-      <div className="flex-shrink-0 p-2 bg-slate-900/50 rounded-full">{getIconForType(mail.type)}</div>
+      <div className="flex-shrink-0 p-2 bg-slate-900/50 rounded-full">
+        <Icon name="mail" className="w-8 h-8 text-slate-400" />
+      </div>
       
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-baseline">
