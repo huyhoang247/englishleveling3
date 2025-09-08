@@ -283,8 +283,9 @@ export default function Mailbox({ onClose }: MailboxProps) {
         @keyframes gentle-bounce { 0%, 100% { transform: translateY(-15%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); } 50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); } }
         .animate-gentle-bounce { animation: gentle-bounce 1.2s infinite; }
       `}</style>
-
-      <div className="main-bg relative min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden p-4 sm:p-8">
+      
+      {/* THAY ĐỔI 1: Thêm pb-20 (padding-bottom: 5rem) vào đây */}
+      <div className="main-bg relative min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden p-4 sm:p-8 pb-20">
         <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
             <div className="w-full max-w-4xl mx-auto flex justify-between items-center h-full">
                 <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Go Home" title="Go Home">
@@ -294,8 +295,8 @@ export default function Mailbox({ onClose }: MailboxProps) {
             </div>
         </header>
 
-        {/* --- DÒNG CODE ĐÃ ĐƯỢC CẬP NHẬT --- */}
-        <main className="w-full max-w-3xl mt-14 mb-14">
+        {/* THAY ĐỔI 2: Xóa mb-14 khỏi đây */}
+        <main className="w-full max-w-3xl mt-14">
             <div className="bg-slate-900/50 rounded-xl shadow-2xl shadow-black/50 flex flex-col border border-slate-700/50 backdrop-blur-sm">
                 {/* Header -- UPDATED */}
                 <div className="p-4 border-b border-slate-700 flex justify-between items-center">
