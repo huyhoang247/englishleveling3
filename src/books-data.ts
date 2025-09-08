@@ -1,3 +1,5 @@
+--- START OF FILE books-data.tjjkdss.txt ---
+
 // books-data.ts
 
 // Định nghĩa cấu trúc cho một cuốn sách
@@ -49,9 +51,22 @@ But if you are thinking that one hour a day sounds like way too much because you
 Maya put this into practice by scheduling recurring hangouts with a new local friend that she made, by attending community events and dropping cards off in her neighbors mailboxes, by planning trips to see family and inviting friends in other cities to come visit. And bolstering her social health made more of a difference than focusing solely on her physical and mental health ever could.
 And I know this because Maya is actually me. I am so passionate about sharing tools to be socially healthy because honestly, I need them too. And the 5-3-1 guideline is one way that we can be proactive and intentional about our relationships. And that is really the point. Be proactive and intentional about your social health.
 Shaping a Socially Healthy Society
+<translate>
+<en>
 So zooming out beyond the steps that you and I take individually, together, we need to shape a society that thrives through social health. Over the next decade, I envision educators championing social health in schools. And just like kids build their physical muscles in gym class, they'll exercise their social muscles in connection class.
+
 Over the next decade, I see our cities and neighborhoods being designed with social health in mind, where vibrant gathering places foster unity and community builders are empowered to bring them to life. Over the next decade, I believe that social health will become as ingrained in our collective consciousness as mental health is today.
+
 Because not that long ago, mental health was a taboo topic shrouded in stigma. And now public figures talk openly about it, there's an entire industry to support it, and more and more people think of going to therapy like going to the gym.
+</en>
+<vi>
+Vậy, hãy nhìn xa hơn những bước mà bạn và tôi thực hiện với tư cách cá nhân, chúng ta cần cùng nhau định hình một xã hội phát triển thịnh vượng thông qua sức khỏe xã hội. Trong thập kỷ tới, tôi hình dung các nhà giáo dục sẽ đề cao sức khỏe xã hội trong trường học. Và cũng giống như trẻ em xây dựng cơ bắp thể chất trong lớp thể dục, chúng sẽ rèn luyện các "cơ bắp xã hội" của mình trong "lớp học kết nối".
+
+Trong thập kỷ tới, tôi thấy các thành phố và khu dân cư của chúng ta được thiết kế với sự chú trọng đến sức khỏe xã hội, nơi những nơi tụ họp sôi nổi sẽ thúc đẩy sự đoàn kết và những người xây dựng cộng đồng được trao quyền để biến chúng thành hiện thực. Trong thập kỷ tới, tôi tin rằng sức khỏe xã hội sẽ ăn sâu vào ý thức tập thể của chúng ta như sức khỏe tinh thần ngày nay.
+
+Bởi vì cách đây không lâu, sức khỏe tinh thần là một chủ đề cấm kỵ bị bao trùm bởi sự kỳ thị. Và giờ đây, những nhân vật của công chúng nói về nó một cách cởi mở, có cả một ngành công nghiệp để hỗ trợ nó, và ngày càng nhiều người nghĩ về việc đi trị liệu tâm lý giống như đi tập gym.
+</vi>
+</translate>
 In this future, loneliness will subside, just like smoking subsided when we recognized and treated it as a public health issue. In this future, I hope that social health will become so deeply woven into the fabric of our culture that no one needs the 5-3-1 guideline anymore.
 So to get there, make relationships your priority not only for you, but also for the people you love. Because the beauty of nurturing your own social health is that it naturally enriches the social health of everyone you connect with.
 Thank you.
