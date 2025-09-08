@@ -109,7 +109,11 @@ Xin cảm ơn.
     author: 'Code Weaver',
     category: 'Technology & Future',
     coverImageUrl: 'https://placehold.co/200x300/A9CCE3/333333?text=Journey+of+Bytes',
-    audioUrls: { 'Default': 'https://cdn.pixabay.com/download/audio/2022/08/04/audio_2dde6b90e0.mp3' }, // Ví dụ: "Lofi Chill"
+    audioUrls: {
+      'Hope': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/book1-hope-voice.mp3',
+      'Matilda': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/elevenlabs-2025-09-06t12-31-47-matilda-pre-sp100-s50-sb75-se0-b-m2_y6yNk68O.mp3',
+      'Hope': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/book1-hope-voice.mp3',
+    },
     content: `
 Mara, a producer, was prepping Sentinel, an old, broken-down superhero, for a live interview. They were pushing his big comeback: a TV special and a new memoir he didn't even know he'd written. Once a legend, Sentinel was now just a trembling ghost they were trying to sell to the public.
 Onstage, the host, Garin, started with the easy, scripted questions. "What's it like to fly?" The teleprompter gave a heroic answer. But Sentinel said, You black out. There's blood in your mouth. The audience went quiet.
