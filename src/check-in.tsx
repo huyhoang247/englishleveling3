@@ -7,6 +7,13 @@ interface DailyCheckInProps {
   onClose: () => void;
 }
 
+// Định nghĩa kiểu cho một hạt animation
+interface Particle {
+  id: number;
+  style: React.CSSProperties;
+  className: string;
+}
+
 // Component nhận `onClose` từ props
 const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
   const [currentDay, setCurrentDay] = useState(3);
@@ -15,6 +22,9 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
   const [animatingReward, setAnimatingReward] = useState<any>(null); // Bạn có thể định nghĩa một kiểu chặt chẽ hơn cho reward nếu muốn
   // Initialize loginStreak based on the number of already claimed days
   const [loginStreak, setLoginStreak] = useState(claimedDays.length);
+  // State để lưu trữ các hạt đã được tạo để tránh giật
+  const [particles, setParticles] = useState<Particle[]>([]);
+
 
   // Define SVG icons as components or directly as JSX
   const StarIcon = ({ className }: { className: string }) => (
@@ -84,22 +94,6 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
     { day: 7, name: "Vũ Khí Thần Thánh", amount: "1", icon: <CrownIcon className="text-yellow-400" /> },
   ];
 
-  const claimReward = (day: number) => {
-    // Check if the day is the current day and hasn't been claimed yet
-    if (day === currentDay && !claimedDays.includes(day)) {
-      setAnimatingReward(dailyRewards.find(reward => reward.day === day));
-      setShowRewardAnimation(true);
-
-      setTimeout(() => {
-        setShowRewardAnimation(false);
-        const newClaimedDays = [...claimedDays, day];
-        setClaimedDays(newClaimedDays);
-        // Update login streak to reflect the total number of claimed days
-        setLoginStreak(newClaimedDays.length);
-      }, 2000);
-    }
-  };
-
   // Particle animation classes
   const particleClasses = [
     "animate-float-particle-1",
@@ -108,6 +102,48 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
     "animate-float-particle-4",
     "animate-float-particle-5"
   ];
+
+  const claimReward = (day: number) => {
+    // Check if the day is the current day and hasn't been claimed yet
+    if (day === currentDay && !claimedDays.includes(day)) {
+      setAnimatingReward(dailyRewards.find(reward => reward.day === day));
+
+      // --- SỬA ĐỔI CHÍNH ---
+      // Tạo ra mảng các hạt với thuộc tính ngẫu nhiên một lần duy nhất
+      const generatedParticles: Particle[] = Array.from({ length: 20 }).map((_, i) => {
+        const randomAnimClass = particleClasses[i % particleClasses.length];
+        return {
+          id: i,
+          className: `absolute w-2 h-2 rounded-full ${randomAnimClass}`,
+          style: {
+            top: `${50 + (Math.random() * 40 - 20)}%`, // Tăng phạm vi một chút
+            left: `${50 + (Math.random() * 40 - 20)}%`, // Tăng phạm vi một chút
+            backgroundColor: i % 2 === 0 ? '#8b5cf6' : '#ffffff',
+            boxShadow: `0 0 10px 2px rgba(255, 255, 255, 0.3)`,
+            opacity: Math.random() * 0.7 + 0.3,
+            animationDuration: `${2 + Math.random() * 2}s`, // Kéo dài animation
+            animationDelay: `${Math.random() * 0.5}s`
+          }
+        };
+      });
+
+      // Lưu các hạt đã tạo vào state
+      setParticles(generatedParticles);
+      
+      // Sau đó mới hiển thị animation
+      setShowRewardAnimation(true);
+
+      setTimeout(() => {
+        setShowRewardAnimation(false);
+        const newClaimedDays = [...claimedDays, day];
+        setClaimedDays(newClaimedDays);
+        // Update login streak to reflect the total number of claimed days
+        setLoginStreak(newClaimedDays.length);
+        // Dọn dẹp state của các hạt sau khi animation kết thúc
+        setParticles([]);
+      }, 2000);
+    }
+  };
 
   return (
     // <!-- MODIFIED: Đã xóa max-w-md, mx-auto, rounded-xl. Thêm px-4 để nội dung không dính sát cạnh -->
@@ -378,26 +414,13 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
 
           {/* Animated particles - Fixed to move around */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(20)].map((_, i) => {
-              // Choose a random animation class from our predefined classes
-              const randomAnimClass = particleClasses[i % particleClasses.length];
-
-              return (
+            {particles.map((particle) => (
                 <div
-                  key={i}
-                  className={`absolute w-2 h-2 rounded-full ${randomAnimClass}`}
-                  style={{
-                    top: `${50 + (Math.random() * 30 - 15)}%`,
-                    left: `${50 + (Math.random() * 30 - 15)}%`,
-                    backgroundColor: i % 2 === 0 ? '#8b5cf6' : '#ffffff',
-                    boxShadow: `0 0 10px 2px rgba(255, 255, 255, 0.3)`,
-                    opacity: Math.random() * 0.7 + 0.3,
-                    animationDuration: `${1 + Math.random() * 3}s`,
-                    animationDelay: `${Math.random() * 0.5}s`
-                  }}
+                    key={particle.id}
+                    className={particle.className}
+                    style={particle.style}
                 />
-              );
-            })}
+            ))}
           </div>
         </div>
       )}
@@ -409,28 +432,28 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
         }
 
         @keyframes float-particle-1 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(-100px, -100px) scale(0); }
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(-100px, -100px) scale(0); opacity: 0; }
         }
 
         @keyframes float-particle-2 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(100px, -100px) scale(0); }
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(100px, -100px) scale(0); opacity: 0; }
         }
 
         @keyframes float-particle-3 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(-50px, 100px) scale(0); }
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(-50px, 100px) scale(0); opacity: 0; }
         }
 
         @keyframes float-particle-4 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(50px, 100px) scale(0); }
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(50px, 100px) scale(0); opacity: 0; }
         }
 
         @keyframes float-particle-5 {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(0, -120px) scale(0); }
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(0, -120px) scale(0); opacity: 0; }
         }
 
         @keyframes pulse-slow {
