@@ -73,7 +73,7 @@ interface MailboxProps {
 }
 
 // --- UI HELPER COMPONENTS (THEO PHONG CÁCH BOSS.TSX) ---
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1> 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
 const Icon = ({ name, className }: { name: string, className: string }) => {
   const icons = {
@@ -163,21 +163,19 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
   );
 };
 
-// --- UPDATED MAILITEM COMPONENT ---
+// --- UPDATED MAILITEM COMPONENT (FIXED) ---
 const MailItem = ({ mail, onSelect, isSelected }) => {
   const typeIcon = mail.type === 'gift' ? 'gift' : mail.type === 'item' ? 'item' : 'mail';
   
-  // Logic mới để xác định trạng thái "đã xem"
-  // - Mail không có item: Dựa vào isRead
-  // - Mail có item: Dựa vào isClaimed
-  const isVisuallyRead = (!mail.items || mail.items.length === 0) ? mail.isRead : mail.isClaimed;
+  const hasItems = mail.items && mail.items.length > 0;
+
+  const isVisuallyRead = !hasItems ? mail.isRead : mail.isClaimed;
 
   return (
     <li onClick={() => onSelect(mail.id)} className={`relative p-3 flex items-start space-x-3 cursor-pointer border-l-4 transition-all duration-200 ${isSelected ? 'border-cyan-400 bg-slate-800/70' : 'border-transparent hover:bg-slate-800/40'}`}>
-      {/* Icon chính của thư */}
+      {/* Icon chính của thư (Không đổi) */}
       <div className="relative flex-shrink-0 p-3 bg-slate-900/50 rounded-full mt-1">
         <Icon name={typeIcon} className="w-6 h-6 text-slate-400" />
-        {/* Icon báo thư mới: Vẫn dựa vào isRead để biết mail đã được mở hay chưa */}
         {!mail.isRead && (
           <img 
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/exclamation-mark.webp" 
@@ -187,40 +185,40 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
         )}
       </div>
       
-      {/* Nội dung chính: Thêm class để căn giữa nếu không có item */}
-      <div className={`flex-1 min-w-0 ${(!mail.items || mail.items.length === 0) ? 'flex items-center h-full' : ''}`}>
-        <div> {/* Bọc nội dung trong 1 div để flexbox hoạt động đúng */}
-          {/* Hàng 1: Tiêu đề và Ngày tháng */}
+      {/* --- CẤU TRÚC NỘI DUNG ĐÃ ĐƯỢC THAY ĐỔI --- */}
+      {hasItems ? (
+        // === GIAO DIỆN KHI CÓ ITEMS (như cũ) ===
+        <div className="flex-1 min-w-0">
           <div className="flex justify-between items-center mb-1.5">
-            <p className={`text-sm font-semibold truncate font-sans pr-2 ${
-                isVisuallyRead
-                ? 'text-slate-400'  // Đã đọc/đã nhận: màu mờ
-                : 'text-slate-100'  // Chưa đọc/chưa nhận: màu sáng
-              }`}>
-                {mail.subject}
+            <p className={`text-sm font-semibold truncate font-sans pr-2 ${isVisuallyRead ? 'text-slate-400' : 'text-slate-100'}`}>
+              {mail.subject}
             </p>
             <span className="text-xs font-sans flex-shrink-0 text-slate-500">
               {new Date(mail.timestamp).toLocaleDateString('vi-VN')}
             </span>
           </div>
-          
-          {/* Hàng 2: Danh sách Item dạng Tag */}
-          {mail.items && mail.items.length > 0 && (
-            <div className="flex items-center flex-wrap gap-2">
-              {mail.items.map((item, index) => (
-                <div 
-                  key={index} 
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-700/80 text-slate-300 text-xs font-sans border border-slate-600"
-                  title={`${item.name} x${item.quantity}`}
-                >
-                  <Icon name={item.icon} className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="font-semibold">x{item.quantity}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="flex items-center flex-wrap gap-2">
+            {mail.items.map((item, index) => (
+              <div key={index} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-700/80 text-slate-300 text-xs font-sans border border-slate-600" title={`${item.name} x${item.quantity}`}>
+                <Icon name={item.icon} className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="font-semibold">x{item.quantity}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        // === GIAO DIỆN MỚI KHI KHÔNG CÓ ITEMS (CĂN GIỮA) ===
+        <div className="flex-1 min-w-0 flex items-center h-full">
+            <div className="w-full flex justify-between items-baseline">
+                <p className={`text-sm font-semibold truncate font-sans pr-2 ${isVisuallyRead ? 'text-slate-400' : 'text-slate-100'}`}>
+                    {mail.subject}
+                </p>
+                <span className="text-xs font-sans flex-shrink-0 text-slate-500">
+                    {new Date(mail.timestamp).toLocaleDateString('vi-VN')}
+                </span>
+            </div>
+        </div>
+      )}
     </li>
   );
 };
@@ -244,6 +242,8 @@ export default function Mailbox({ onClose }: MailboxProps) {
   const handleSelectMail = (id) => {
     setSelectedMailId(id);
     setMails(prev => prev.map(m => {
+      // Logic mới: Chỉ đánh dấu isRead cho mail không có item khi mở ra
+      // Mail có item sẽ được đánh dấu isRead khi nhận quà
       if (m.id === id && (!m.items || m.items.length === 0)) {
         return { ...m, isRead: true };
       }
@@ -253,6 +253,7 @@ export default function Mailbox({ onClose }: MailboxProps) {
   const handleClosePopup = () => setSelectedMailId(null);
   
   const handleClaim = (id) => {
+    // Logic mới: Khi nhận quà, set cả isClaimed và isRead
     setMails(prev => prev.map(m => m.id === id ? { ...m, isClaimed: true, isRead: true } : m));
   };
   
