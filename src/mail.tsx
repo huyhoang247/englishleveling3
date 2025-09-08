@@ -163,7 +163,7 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
   );
 };
 
-// --- UPDATED MAILITEM COMPONENT ---
+// --- UPDATED MAILITEM COMPONENT (FIXED) ---
 const MailItem = ({ mail, onSelect, isSelected }) => {
   const typeIcon = mail.type === 'gift' ? 'gift' : mail.type === 'item' ? 'item' : 'mail';
 
@@ -186,15 +186,16 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
       <div className="flex-1 min-w-0">
         {/* Hàng 1: Người gửi và Ngày tháng */}
         <div className="flex justify-between items-center text-xs text-slate-500 mb-1">
+          {/* Style gốc để so sánh: text-xs font-semibold text-slate-300 */}
           <span className="font-sans font-semibold text-slate-300 truncate pr-2">{mail.sender}</span>
           <span className="font-sans flex-shrink-0">{new Date(mail.timestamp).toLocaleDateString('vi-VN')}</span>
         </div>
         
-        {/* Hàng 2: Tiêu đề - ĐÃ ĐƯỢC THAY ĐỔI */}
-        <p className={`text-sm truncate font-sans mb-2 ${
+        {/* Hàng 2: Tiêu đề - ĐÃ SỬA LẠI STYLE */}
+        <p className={`text-xs truncate font-sans mb-2 ${
             mail.isRead 
-            ? 'font-semibold text-slate-400' 
-            : 'font-bold text-white'
+            ? 'font-normal text-slate-400' // Đã đọc: mờ hơn và không in đậm
+            : 'font-semibold text-slate-100' // Chưa đọc: giống người gửi nhưng sáng hơn một chút
           }`}>
             {mail.subject}
         </p>
