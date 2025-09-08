@@ -27,7 +27,7 @@ import type { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 import EquipmentScreen, { type EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
 import AuctionHouse from './home/auction/auction-house-ui.tsx';
 import DailyCheckIn from './check-in.tsx';
-import Mailbox from './mail.tsx'; // THÊM MỚI
+import Mailbox from './mail.tsx'; 
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 import { useGame } from './GameContext.tsx';
@@ -74,7 +74,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
     isAuctionHouseOpen,
     isCheckInOpen,
-    isMailboxOpen, // THÊM MỚI
+    isMailboxOpen, 
     ownedItems, equippedItems, refreshUserData,
     handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
     handleUpdateJackpotPool, handleStatsUpdate, getPlayerBattleStats,
@@ -87,7 +87,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
     toggleAuctionHouse,
     toggleCheckIn,
-    toggleMailbox, // THÊM MỚI
+    toggleMailbox, 
     toggleBaseBuilding,
   } = useGame();
 
@@ -147,11 +147,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 <div className="flex items-center space-x-1 currency-display-container relative z-10"><GemDisplay displayedGems={gems} /><CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} /></div>
             </div>
             <RateLimitToast show={showRateLimitToast} />
+            {/* <<< CẬP NHẬT: Đã chuyển Mailbox vào đây */}
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
+              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena }, { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/mail-icon.webp" alt="Mailbox Icon" className="w-full h-full object-contain p-1" />, onClick: toggleMailbox } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
+            {/* <<< CẬP NHẬT: Đã xóa Mailbox khỏi đây */}
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, { icon: <img src={uiAssets.gavelIcon} alt="Auction House Icon" className="w-full h-full object-contain p-1" />, onClick: toggleAuctionHouse }, { icon: <img src={uiAssets.checkInIcon} alt="Check In Icon" className="w-full h-full object-contain" />, onClick: toggleCheckIn }, { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/mail-icon.webp" alt="Mailbox Icon" className="w-full h-full object-contain p-1" />, onClick: toggleMailbox } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
+              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, { icon: <img src={uiAssets.gavelIcon} alt="Auction House Icon" className="w-full h-full object-contain p-1" />, onClick: toggleAuctionHouse }, { icon: <img src={uiAssets.checkInIcon} alt="Check In Icon" className="w-full h-full object-contain" />, onClick: toggleCheckIn } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
           </div>
         </div>
@@ -224,7 +226,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             </ErrorBoundary>
         </div>
 
-        {/* THÊM MỚI: Render Sàn Đấu Giá */}
         <div className="fixed inset-0 z-[60]" style={{ display: isAuctionHouseOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isAuctionHouseOpen && currentUser && (
@@ -240,7 +241,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             </ErrorBoundary>
         </div>
         
-        {/* Render Daily Check-in */}
         {isCheckInOpen && (
             <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center">
                 <ErrorBoundary>
@@ -249,7 +249,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             </div>
         )}
 
-        {/* THÊM MỚI: Render Mailbox */}
         <div className="fixed inset-0 z-[60]" style={{ display: isMailboxOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isMailboxOpen && <Mailbox onClose={toggleMailbox} />}
