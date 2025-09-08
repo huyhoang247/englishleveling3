@@ -23,7 +23,7 @@ export const sampleBooks: Book[] = [
     audioUrls: {
       'Kasley Killam': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/Why%20Social%20Health%20Is%20Key%20to%20Happiness%20and%20Longevity%20%20Kasley%20Killiam%20%20TED.mp3',
       'Matilda': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/elevenlabs-2025-09-06t12-31-47-matilda-pre-sp100-s50-sb75-se0-b-m2_y6yNk68O.mp3',
-      'Hope': 'https://github.com/huyhoang247/englishleveling3/blob/main/src/audio-ted/book1-hope-voice.mp3',
+      'Hope': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/book1-hope-voice.mp3',
     },
     content: `
 So a couple of years ago, a woman I know who I'll call Maya, went through a lot of big changes in a short amount of time. She got married. She and her husband moved for his job to a new city where she didn’t know anyone. She started a new role working from home, all while managing her dad's new diagnosis of dementia.
