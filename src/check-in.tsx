@@ -288,8 +288,8 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
         </div>
       </div>
       
-      {/* <!-- ADDED: Vùng chứa nội dung có thể cuộn --> */}
-      <div className="flex-1 overflow-y-auto pr-2 -mr-2 pb-4"> {/* Thêm pr, -mr và pb để tùy chỉnh thanh cuộn và khoảng cách */}
+      {/* <!-- MODIFIED: Đã thêm class `hide-scrollbar` và xóa `pr-2 -mr-2` --> */}
+      <div className="flex-1 overflow-y-auto pb-4 hide-scrollbar">
         {/* Rewards section */}
         <div className="pb-6">
           <div className="grid grid-cols-1 gap-4">
@@ -426,6 +426,15 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
       )}
 
       <style jsx>{`
+        /* MODIFIED: Thêm class để ẩn thanh cuộn */
+        .hide-scrollbar {
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, and Opera */
+        }
+
         @keyframes float {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }
