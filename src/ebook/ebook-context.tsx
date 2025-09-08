@@ -1,4 +1,4 @@
-// --- START OF FILE EbookContext.tsx ---
+// --- START OF FILE ebook-context.tsx ---
 
 import React, {
   createContext,
@@ -86,7 +86,7 @@ interface EbookContextType {
   highlightMode: 'word' | 'phrase';
   selectedPhrase: PhraseSentence | null;
   selectedVoiceKey: string | null;
-  subtitleLanguage: 'en' | 'vi'; // <-- THÊM MỚI
+  subtitleLanguage: 'en' | 'vi'; // <-- STATE FOR LANGUAGE TOGGLE
 
   // Refs
   audioPlayerRef: React.RefObject<HTMLAudioElement>;
@@ -99,8 +99,8 @@ interface EbookContextType {
   bookStats: BookStats | null;
   phraseMap: Map<string, PhraseSentence>;
   phraseRegex: RegExp | null;
-  isViSubAvailable: boolean; // <-- THÊM MỚI
-  displayedContent: string; // <-- THÊM MỚI
+  isViSubAvailable: boolean; // <-- CHECKS IF TRANSLATION EXISTS
+  displayedContent: string; // <-- CONTAINS THE TEXT TO DISPLAY (used by old logic, now superseded by new render logic)
 
   // Functions & State Setters
   handleSelectBook: (bookId: string) => void;
@@ -118,7 +118,7 @@ interface EbookContextType {
   setIsStatsModalOpen: Dispatch<SetStateAction<boolean>>;
   setHighlightMode: Dispatch<SetStateAction<'word' | 'phrase'>>;
   handleVoiceChange: (direction: 'next' | 'previous') => void;
-  toggleSubtitleLanguage: () => void; // <-- THÊM MỚI
+  toggleSubtitleLanguage: () => void; // <-- FUNCTION TO TOGGLE LANGUAGE
 }
 
 // --- CREATE CONTEXT ---
@@ -152,7 +152,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const [highlightMode, setHighlightMode] = useState<'word' | 'phrase'>('word');
   const [selectedPhrase, setSelectedPhrase] = useState<PhraseSentence | null>(null);
   const [selectedVoiceKey, setSelectedVoiceKey] = useState<string | null>(null);
-  const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'vi'>('en'); // <-- THÊM MỚI
+  const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'vi'>('en');
 
   // --- HOOKS & LOGIC ---
   useEffect(() => {
@@ -205,7 +205,6 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
 
   const currentBook = useMemo(() => booksData.find(book => book.id === selectedBookId), [booksData, selectedBookId]);
   
-  // --- START: LOGIC MỚI CHO SUBTITLE ---
   const isViSubAvailable = useMemo(() => !!currentBook?.contentVi, [currentBook]);
   
   const displayedContent = useMemo(() => {
@@ -216,10 +215,8 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   }, [currentBook, subtitleLanguage]);
   
   useEffect(() => {
-    // Reset về ngôn ngữ gốc khi chọn sách mới
     setSubtitleLanguage('en');
   }, [selectedBookId]);
-  // --- END: LOGIC MỚI CHO SUBTITLE ---
 
   const availableVoices = useMemo(() => currentBook?.audioUrls ? Object.keys(currentBook.audioUrls) : [], [currentBook]);
   const currentAudioUrl = useMemo(() => selectedVoiceKey ? currentBook?.audioUrls?.[selectedVoiceKey] : null, [selectedVoiceKey, currentBook]);
@@ -231,7 +228,6 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const bookVocabularyCardIds = useMemo(() => {
     if (!currentBook || vocabMap.size === 0) return [];
     const wordsInBook = new Set<string>();
-    // Luôn phân tích từ vựng từ nội dung gốc tiếng Anh
     const allWords = currentBook.content.match(/\b\w+\b/g) || [];
     allWords.forEach(word => {
         if (vocabMap.has(word.toLowerCase())) wordsInBook.add(word.toLowerCase());
@@ -242,7 +238,6 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
 
   const bookStats = useMemo<BookStats | null>(() => {
     if (!currentBook || vocabMap.size === 0) return null;
-    // Luôn tính toán thống kê từ nội dung gốc tiếng Anh
     const words = currentBook.content.match(/\b\w+\b/g) || [];
     const wordFrequencies = new Map<string, number>();
     const uniqueWords = new Set<string>();
@@ -383,7 +378,6 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
       setSelectedVoiceKey(availableVoices[nextIndex]);
   };
   
-  // --- THÊM MỚI: HÀM CHUYỂN NGÔN NGỮ ---
   const toggleSubtitleLanguage = () => {
     if (isViSubAvailable) {
       setSubtitleLanguage(prev => (prev === 'en' ? 'vi' : 'en'));
@@ -399,7 +393,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     handleWordClick, closeVocabDetail, handlePhraseClick, closePhraseDetail, togglePlayPause, handleSeek,
     togglePlaybackSpeed, setIsDarkMode, toggleSidebar, setIsBatchPlaylistModalOpen,
     setIsStatsModalOpen, setHighlightMode, handleVoiceChange,
-    subtitleLanguage, isViSubAvailable, displayedContent, toggleSubtitleLanguage // <-- THÊM MỚI
+    subtitleLanguage, isViSubAvailable, displayedContent, toggleSubtitleLanguage
   };
 
   return <EbookContext.Provider value={value}>{children}</EbookContext.Provider>;
@@ -414,4 +408,4 @@ export const useEbook = (): EbookContextType => {
   return context;
 };
 
-// --- END OF FILE EbookContext.tsx ---
+// --- END OF FILE ebook-context.tsx ---
