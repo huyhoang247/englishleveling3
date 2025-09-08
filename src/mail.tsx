@@ -237,9 +237,7 @@ export default function Mailbox({ onClose }: MailboxProps) {
   }, [mails, selectedMailId]);
 
   useEffect(() => {
-    if (selectedMailId) document.body.style.overflow = 'hidden';
-    else document.body.style.overflow = 'auto';
-    return () => { document.body.style.overflow = 'auto'; };
+    // Không cần quản lý overflow của body nữa vì component cha đã làm
   }, [selectedMailId]);
 
   const handleSelectMail = (id) => {
@@ -283,18 +281,19 @@ export default function Mailbox({ onClose }: MailboxProps) {
         @keyframes gentle-bounce { 0%, 100% { transform: translateY(-15%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); } 50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); } }
         .animate-gentle-bounce { animation: gentle-bounce 1.2s infinite; }
       `}</style>
-
-      <div className="main-bg relative min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden p-4 sm:p-8">
-        <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
+      
+      {/* <<< CẬP NHẬT Ở ĐÂY: Bỏ các class không cần thiết */}
+      <div className="main-bg relative bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white animate-fade-in-scale-fast w-full max-w-3xl rounded-xl">
+        <header className="absolute top-0 left-0 w-full z-20 p-2 h-14">
             <div className="w-full max-w-4xl mx-auto flex justify-between items-center h-full">
-                <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Go Home" title="Go Home">
-                    <HomeIcon className="w-5 h-5 text-slate-300" />
-                    <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
+                <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-red-500/80 hover:text-white border border-slate-700 transition-all" aria-label="Close Mailbox" title="Close">
+                    <span className="font-sans text-xl">✕</span>
                 </button>
             </div>
         </header>
-
-        <main className="w-full max-w-3xl mt-14 mb-14 sm:mb-8">
+        
+        {/* <<< CẬP NHẬT Ở ĐÂY: Thêm mt, mb và bỏ fixed header */}
+        <main className="w-full max-w-3xl mt-14 mb-4">
             <div className="bg-slate-900/50 rounded-xl shadow-2xl shadow-black/50 flex flex-col border border-slate-700/50 backdrop-blur-sm">
                 {/* Header -- UPDATED */}
                 <div className="p-4 border-b border-slate-700 flex justify-between items-center">
