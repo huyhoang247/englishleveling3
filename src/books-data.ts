@@ -112,20 +112,20 @@ Xin cảm ơn.
     audioUrls: { 'Default': 'https://cdn.pixabay.com/download/audio/2022/08/04/audio_2dde6b90e0.mp3' }, // Ví dụ: "Lofi Chill"
     content: `
 Mara, a producer, was prepping Sentinel, an old, broken-down superhero, for a live interview. They were pushing his big comeback: a TV special and a new memoir he didn't even know he'd written. Once a legend, Sentinel was now just a trembling ghost they were trying to sell to the public.
-Onstage, the host, Garin, started with the easy, scripted questions. "What's it like to fly?" The teleprompter gave a heroic answer. But Sentinel said, "You black out. There's blood in your mouth." The audience went quiet.
+Onstage, the host, Garin, started with the easy, scripted questions. "What's it like to fly?" The teleprompter gave a heroic answer. But Sentinel said, You black out. There's blood in your mouth. The audience went quiet.
 Garin tried again, asking about the famous cape. "It soaks up the blood," Sentinel mumbled. In the control room, Mara knew the interview was failing. The scripted nostalgia was turning into a horror show.
 Desperate, Garin asked the final question: "Who was your greatest enemy?" The answer was supposed to be the villain, Sovereign.
-But Sentinel looked into the camera. "We made him up," he said, his voice suddenly strong. "The villain was a lie, The fights were fake, My real enemy? The lies".
+But Sentinel looked into the camera. "We made him up," he said, his voice suddenly strong. The villain was a lie. The fights were fake. My real enemy? The lies.
 The studio scrambled to cut the feed, but it was too late. The truth went viral instantly. In the empty control room, Mara stared at Sentinel’s frozen image on the screen. The hero was a lie, but for the first time all night, he seemed real.
   
     `,
 contentVi: `
 
 Mara, một nhà sản xuất, đang chuẩn bị cho buổi phỏng vấn trực tiếp với Sentinel, một siêu anh hùng già nua và suy sụp. Họ đang quảng bá cho sự trở lại của ông: một chương trình TV đặc biệt và một cuốn hồi ký mà chính ông cũng không biết mình đã viết. Từng là một huyền thoại, giờ đây Sentinel chỉ còn là một cái bóng run rẩy mà họ đang cố gắng bán cho công chúng.
-Trên sân khấu, người dẫn chương trình Garin bắt đầu với những câu hỏi dễ dãi, có sẵn trong kịch bản. "Cảm giác bay lượn thế nào?" Máy nhắc chữ hiện lên một câu trả lời hào hùng. Nhưng Sentinel đáp: "Bạn sẽ ngất đi. Máu trào ra trong miệng." Khán phòng im lặng.
+Trên sân khấu, người dẫn chương trình Garin bắt đầu với những câu hỏi dễ dãi, có sẵn trong kịch bản. "Cảm giác bay lượn thế nào?" Máy nhắc chữ hiện lên một câu trả lời hào hùng. Nhưng Sentinel đáp: Bạn sẽ ngất đi. Máu trào ra trong miệng. Khán phòng im lặng.
 Garin cố gắng lần nữa, hỏi về chiếc áo choàng nổi tiếng. "Nó dùng để thấm máu," Sentinel lẩm bẩm. Trong phòng điều khiển, Mara biết buổi phỏng vấn đang thất bại. Những hoài niệm được dàn dựng đang biến thành một chương trình kinh dị.
 Trong tuyệt vọng, Garin hỏi câu cuối cùng: "Ai là kẻ thù lớn nhất của ông?" Câu trả lời đáng lẽ phải là kẻ phản diện Sovereign.
-Nhưng Sentinel nhìn thẳng vào máy quay. "Chúng tôi đã bịa ra hắn," ông nói, giọng đột nhiên mạnh mẽ. "Kẻ phản diện đó là một lời nói dối, Những trận chiến đó là giả, Kẻ thù thật sự của tôi ư? Là những lời dối trá".
+Nhưng Sentinel nhìn thẳng vào máy quay. "Chúng tôi đã bịa ra hắn," ông nói, giọng đột nhiên mạnh mẽ. Kẻ phản diện đó là một lời nói dối. Những trận chiến đó là giả. Kẻ thù thật sự của tôi ư? Là những lời dối trá.
 Đài truyền hình vội vã cắt sóng, nhưng đã quá muộn. Sự thật lan truyền trên mạng ngay lập tức. Trong phòng điều khiển trống rỗng, Mara nhìn hình ảnh đông cứng của Sentinel trên màn hình. Vị anh hùng là một lời nói dối, nhưng lần đầu tiên trong cả buổi tối, ông trông thật hơn bao giờ hết.
 
 
