@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom/client';
 import Home from './background-game.tsx';
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
 import Story from './VerticalFlashcardGallery.tsx';
-import Profile from './check-in.tsx';
+import Profile from './mail.tsx';
 import QuizAppHome from './courses/course-ui.tsx';
 import GameBrowser from './ebook/ebook-ui.tsx';
 import AuthComponent from './auth.js';
