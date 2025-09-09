@@ -82,7 +82,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
         </div>
       </header>
 
-      <div className="w-full max-w-4xl mx-auto p-4 sm:p-8 pt-6 overflow-y-auto">
+      <div className="w-full max-w-4xl mx-auto p-4 sm:p-8 pt-6 overflow-y-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
         <section className="mb-6 flex flex-row justify-center items-center gap-4">
           <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
             <VocabularyIcon className="w-7 h-7 flex-shrink-0" />
