@@ -11,6 +11,8 @@
  * Ví dụ: icon menu, shop, nút đóng...
  */
 export const uiAssets = {
+  homeIcon: require("./assets/images/home-icon.webp"), // <--- THÊM MỚI ICON HOME
+  storyIcon: require("./assets/images/story-icon.webp"), // <--- THÊM MỚI ICON STORY
   keyIcon: require("./assets/images/key.webp"),
   menuIcon: require("./assets/images/menu.webp"),
   shopIcon: require("./assets/images/shop-icon.webp"),
