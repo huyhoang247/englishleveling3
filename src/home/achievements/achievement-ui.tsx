@@ -36,7 +36,8 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
   } = useAchievements();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 30;
+  // <<<--- THAY ĐỔI: Chuyển số lượng từ 30 thành 20
+  const ITEMS_PER_PAGE = 20;
   const displayedCoins = useAnimateValue(coins, 1000);
 
   const sortedVocabulary = useMemo(() => [...vocabulary].sort((a, b) => {
