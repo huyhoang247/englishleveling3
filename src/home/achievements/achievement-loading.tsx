@@ -12,11 +12,13 @@ const SkeletonRow = () => (
       <div className="h-5 w-3/4 bg-slate-700 rounded-md animate-pulse"></div>
       <div className="h-3 w-1/2 bg-slate-700 rounded-md animate-pulse"></div>
     </div>
-    {/* Tiến trình */}
-    <div className="col-span-12 md:col-span-3 md:px-2 space-y-2">
+    {/* --- START OF UPDATED BLOCK --- */}
+    {/* Tiến trình: Thay đổi space-y-2 thành mt-1.5 để khớp với layout thật */}
+    <div className="col-span-12 md:col-span-3 md:px-2">
       <div className="h-3 w-full bg-slate-700 rounded-full animate-pulse"></div>
-      <div className="h-3 w-1/3 bg-slate-700 rounded-md animate-pulse ml-auto"></div>
+      <div className="h-3 w-1/3 bg-slate-700 rounded-md animate-pulse ml-auto mt-1.5"></div>
     </div>
+    {/* --- END OF UPDATED BLOCK --- */}
     {/* Thưởng cấp */}
     <div className="col-span-6 md:col-span-3 flex items-center justify-center">
       <div className="h-10 w-full max-w-[180px] bg-slate-700 rounded-xl animate-pulse"></div>
@@ -53,13 +55,11 @@ const AchievementsLoadingSkeleton: React.FC = () => {
       {/* --- Skeleton cho Main Content --- */}
       <div className="w-full max-w-4xl mx-auto p-4 sm:p-8 pt-6">
         
-        {/* --- START OF UPDATED BLOCK --- */}
         {/* Skeleton chi tiết cho các thẻ Stats để tránh lệch layout */}
         <section className="mb-6 flex flex-row justify-center items-center gap-4">
           {/* Card Skeleton 1 */}
           <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg animate-pulse">
             <div className="w-7 h-7 bg-slate-700 rounded-md flex-shrink-0"></div>
-            {/* --- MODIFIED LINE: space-y-2 -> space-y-3 --- */}
             <div className="w-full space-y-3">
               <div className="h-5 w-10 bg-slate-700 rounded-md"></div>
               <div className="h-4 w-20 bg-slate-700 rounded-md"></div>
@@ -68,14 +68,12 @@ const AchievementsLoadingSkeleton: React.FC = () => {
           {/* Card Skeleton 2 */}
           <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg animate-pulse">
             <div className="w-7 h-7 bg-slate-700 rounded-md flex-shrink-0"></div>
-             {/* --- MODIFIED LINE: space-y-2 -> space-y-3 --- */}
             <div className="w-full space-y-3">
               <div className="h-5 w-10 bg-slate-700 rounded-md"></div>
               <div className="h-4 w-16 bg-slate-700 rounded-md"></div>
             </div>
           </div>
         </section>
-        {/* --- END OF UPDATED BLOCK --- */}
 
         {/* Skeleton cho nút "Claim All" */}
         <div className="mb-6 flex justify-center">
