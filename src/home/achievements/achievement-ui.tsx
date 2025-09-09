@@ -1,10 +1,8 @@
-// --- START OF FILE achievement-ui.tsx (5).txt ---
-
 // --- START OF FILE achievement-ui.tsx (FULL CODE - UPDATED) ---
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { User } from 'firebase/auth'; 
-import { AchievementsProvider, useAchievements } from './achievement-context.tsx'; 
+import { User } from 'firebase/auth';
+import { AchievementsProvider, useAchievements } from './achievement-context.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import type { VocabularyItem } from '../../gameDataService.ts';
 import AchievementsLoadingSkeleton from './achievement-loading.tsx';
@@ -17,8 +15,6 @@ const TrophyIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns=
 const MasteryCardIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png" alt="Thẻ thông thạo" className={className} {...props} /> );
 const GoldIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className={className} {...props} /> );
 const VocabularyIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/voca-achievement.webp" alt="Vocabulary" className={className} {...props} /> );
-const GiftIconActive = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/gift-box.webp" alt="Nhận thưởng" className={className} {...props} /> );
-const GiftIconDisabled = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/gift-box-grey.webp" alt="Không có thưởng" className={className} {...props} /> );
 const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" /> </svg> );
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
@@ -49,7 +45,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
   }), [vocabulary]);
 
   const totalPages = Math.ceil(sortedVocabulary.length / ITEMS_PER_PAGE);
-  
+
   const paginatedVocabulary = useMemo(() => {
       const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
       const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -60,7 +56,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
     if(currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
     else if (totalPages === 0 && sortedVocabulary.length > 0) setCurrentPage(1);
   }, [currentPage, totalPages, sortedVocabulary.length]);
-  
+
   if (isInitialLoading) {
     return <AchievementsLoadingSkeleton />;
   }
@@ -114,14 +110,12 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
             >
                 <div className="flex items-center justify-between w-full p-3">
                     <div className="flex items-center gap-3">
-                        {/* <<<--- THAY ĐỔI: Bọc icon trong một div cố định để tránh layout shift --- */}
-                        <div className="w-8 h-8 flex items-center justify-center">
-                            {totalClaimableRewards.masteryCards > 0 && !isUpdating ? (
-                                <GiftIconActive className="w-7 h-7" />
-                            ) : (
-                                <GiftIconDisabled className="w-8 h-8" />
-                            )}
-                        </div>
+                        <img
+                            src={totalClaimableRewards.masteryCards > 0 && !isUpdating
+                                ? 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/gift-box.webp'
+                                : 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/gift-box-grey.webp'}
+                            alt="Claim all rewards"
+                            className="w-8 h-8" />
                         <span className="font-bold text-lg">
                             {isUpdating ? 'Đang xử lý...' : 'Nhận Tất Cả'}
                         </span>
@@ -174,9 +168,9 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
             )}
           </div>
         </main>
-        
+
         <div className="mt-6 mb-4">
-             <PaginationControls 
+             <PaginationControls
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
@@ -201,12 +195,12 @@ const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, i
       <div className="col-span-2 md:col-span-1 text-center flex items-center justify-center"> <span className="text-xl font-bold text-slate-500">{rank}</span> </div>
       <div className="col-span-10 md:col-span-3">
         <p className="font-bold text-lg text-white">{word.charAt(0).toUpperCase() + word.slice(1)}</p>
-        <span className="md:hidden text-xs text-slate-400">{`Cấp ${level}`}</span>
-        <span className="hidden md:block text-xs text-slate-400">{`Cấp ${level}`}</span>
+        <span className="md:hidden text-xs text-slate-400">{`Level ${level}`}</span>
+        <span className="hidden md:block text-xs text-slate-400">{`Level ${level}`}</span>
       </div>
       <div className="col-span-12 md:col-span-3 md:px-2"> <div className="w-full bg-slate-700 rounded-full h-3"> <div className="bg-gradient-to-r from-teal-400 to-cyan-500 h-3 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div> </div> <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p> </div>
       <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">x1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
-      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isAnyClaiming ? 'Đang nhận...' : isClaimable ? 'Nhận' : 'Chưa Đạt'} </button> </div>
+      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isAnyClaiming ? 'Đang nhận...' : 'Claim'} </button> </div>
     </div>
   );
 });
@@ -234,6 +228,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
 };
 
 // --- Component "Lối vào" (Wrapper/Entry Point) ---
+// Cập nhật interface props
 interface AchievementsScreenProps {
   user: User | null;
   onClose: () => void;
