@@ -255,7 +255,7 @@ export default function Mailbox({ onClose }: MailboxProps) {
       `}</style>
       
       <div 
-        className="relative w-full max-w-4xl h-full max-h-[90vh] bg-slate-900/80 rounded-xl shadow-2xl shadow-black/50 flex flex-col border border-slate-700/50 backdrop-blur-md text-white font-lilita animate-fade-in-scale-fast"
+        className="relative w-full max-w-5xl h-full max-h-[90vh] bg-slate-900/80 rounded-xl shadow-2xl shadow-black/50 flex flex-col border border-slate-700/50 backdrop-blur-md text-white font-lilita animate-fade-in-scale-fast"
         onClick={(e) => e.stopPropagation()}
       >
         
