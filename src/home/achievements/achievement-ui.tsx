@@ -17,7 +17,6 @@ const TrophyIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns=
 const MasteryCardIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png" alt="Thẻ thông thạo" className={className} {...props} /> );
 const GoldIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className={className} {...props} /> );
 const VocabularyIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/voca-achievement.webp" alt="Vocabulary" className={className} {...props} /> );
-// <<<--- THAY ĐỔI: Thay thế SVG GiftIcon bằng 2 component hình ảnh ---
 const GiftIconActive = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/gift-box.webp" alt="Nhận thưởng" className={className} {...props} /> );
 const GiftIconDisabled = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/gift-box-grey.webp" alt="Không có thưởng" className={className} {...props} /> );
 const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" /> </svg> );
@@ -38,7 +37,6 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
   } = useAchievements();
 
   const [currentPage, setCurrentPage] = useState(1);
-  // <<<--- THAY ĐỔI: Chuyển số lượng từ 30 thành 20
   const ITEMS_PER_PAGE = 20;
   const displayedCoins = useAnimateValue(coins, 1000);
 
@@ -116,12 +114,14 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
             >
                 <div className="flex items-center justify-between w-full p-3">
                     <div className="flex items-center gap-3">
-                        {/* <<<--- THAY ĐỔI: Sử dụng icon điều kiện --- */}
-                        {totalClaimableRewards.masteryCards > 0 && !isUpdating ? (
-                            <GiftIconActive className="w-8 h-8" />
-                        ) : (
-                            <GiftIconDisabled className="w-8 h-8" />
-                        )}
+                        {/* <<<--- THAY ĐỔI: Bọc icon trong một div cố định để tránh layout shift --- */}
+                        <div className="w-8 h-8 flex items-center justify-center">
+                            {totalClaimableRewards.masteryCards > 0 && !isUpdating ? (
+                                <GiftIconActive className="w-7 h-7" />
+                            ) : (
+                                <GiftIconDisabled className="w-8 h-8" />
+                            )}
+                        </div>
                         <span className="font-bold text-lg">
                             {isUpdating ? 'Đang xử lý...' : 'Nhận Tất Cả'}
                         </span>
@@ -234,13 +234,9 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
 };
 
 // --- Component "Lối vào" (Wrapper/Entry Point) ---
-// <<<--- BƯỚC 2: NHẬN VÀ TRUYỀN PROP `onDataUpdate` ---
-
-// Cập nhật interface props
 interface AchievementsScreenProps {
   user: User | null;
   onClose: () => void;
-  // <<<--- THAY ĐỔI: Thêm prop mới
   onDataUpdate: (updates: { coins?: number, masteryCards?: number }) => void;
 }
 
@@ -251,7 +247,6 @@ export default function AchievementsScreen({ user, onClose, onDataUpdate }: Achi
 
   // Nhiệm vụ của nó là "lắp ráp" Provider và UI lại với nhau.
   return (
-    // <<<--- THAY ĐỔI: Truyền prop onDataUpdate vào Provider
     <AchievementsProvider user={user} onDataUpdate={onDataUpdate}>
       <AchievementsScreenUI onClose={onClose} />
     </AchievementsProvider>
