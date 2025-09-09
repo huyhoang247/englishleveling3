@@ -220,9 +220,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
     if (totalPages <= 1) return null;
     return (
         <nav className="flex items-center justify-center gap-1 sm:gap-2" aria-label="Pagination">
-            <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" aria-label="Previous Page"> <ChevronLeftIcon className="w-5 h-5" /> </button>
             {paginationRange.map((page, index) => typeof page === 'number' ? ( <button key={index} onClick={() => onPageChange(page)} className={`w-9 h-9 sm:w-10 sm:h-10 text-sm font-semibold rounded-lg border border-slate-700 transition-colors flex items-center justify-center ${ currentPage === page ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700' }`} aria-current={currentPage === page ? 'page' : undefined}> {page} </button> ) : ( <span key={index} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-sm text-slate-500" aria-hidden="true"> {page} </span> ) )}
-            <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" aria-label="Next Page"> <ChevronRightIcon className="w-5 h-5" /> </button>
         </nav>
     );
 };
