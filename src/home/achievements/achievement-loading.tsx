@@ -8,17 +8,15 @@ const SkeletonRow = () => (
       <div className="w-8 h-8 bg-slate-700 rounded-md animate-pulse"></div>
     </div>
     {/* Từ vựng & Cấp */}
-    <div className="col-span-10 md:col-span-3 space-y-2">
-      <div className="h-5 w-3/4 bg-slate-700 rounded-md animate-pulse"></div>
-      <div className="h-3 w-1/2 bg-slate-700 rounded-md animate-pulse"></div>
+    <div className="col-span-10 md:col-span-3 space-y-1.5">
+      <div className="h-6 w-3/4 bg-slate-700 rounded-md animate-pulse"></div>
+      <div className="h-4 w-1/2 bg-slate-700 rounded-md animate-pulse"></div>
     </div>
-    {/* --- START OF UPDATED BLOCK --- */}
-    {/* Tiến trình: Thay đổi space-y-2 thành mt-1.5 để khớp với layout thật */}
+    {/* Tiến trình */}
     <div className="col-span-12 md:col-span-3 md:px-2">
       <div className="h-3 w-full bg-slate-700 rounded-full animate-pulse"></div>
-      <div className="h-3 w-1/3 bg-slate-700 rounded-md animate-pulse ml-auto mt-1.5"></div>
+      <div className="h-4 w-1/3 bg-slate-700 rounded-md animate-pulse ml-auto mt-1.5"></div>
     </div>
-    {/* --- END OF UPDATED BLOCK --- */}
     {/* Thưởng cấp */}
     <div className="col-span-6 md:col-span-3 flex items-center justify-center">
       <div className="h-10 w-full max-w-[180px] bg-slate-700 rounded-xl animate-pulse"></div>
@@ -60,7 +58,7 @@ const AchievementsLoadingSkeleton: React.FC = () => {
           {/* Card Skeleton 1 */}
           <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg animate-pulse">
             <div className="w-7 h-7 bg-slate-700 rounded-md flex-shrink-0"></div>
-            <div className="w-full space-y-3">
+            <div className="w-full space-y-2">
               <div className="h-5 w-10 bg-slate-700 rounded-md"></div>
               <div className="h-4 w-20 bg-slate-700 rounded-md"></div>
             </div>
@@ -68,7 +66,7 @@ const AchievementsLoadingSkeleton: React.FC = () => {
           {/* Card Skeleton 2 */}
           <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg animate-pulse">
             <div className="w-7 h-7 bg-slate-700 rounded-md flex-shrink-0"></div>
-            <div className="w-full space-y-3">
+            <div className="w-full space-y-2">
               <div className="h-5 w-10 bg-slate-700 rounded-md"></div>
               <div className="h-4 w-16 bg-slate-700 rounded-md"></div>
             </div>
