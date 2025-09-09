@@ -1,5 +1,5 @@
 import React, { useState } from "react"; // Import React and useState
-import { uiAssets } from "./game-assets";
+import { uiAssets } from "./game-assets.ts";
 
 // Define the props interface for the component
 interface NavigationBarBottomProps {
