@@ -1,6 +1,7 @@
 // --- START OF FILE mail.tsx ---
 
 import React, { useState, useMemo, useEffect } from 'react';
+import HomeButton from './home-button';
 
 // --- Dữ liệu mẫu cho hộp thư (giữ nguyên) ---
 const initialMails = [
@@ -272,7 +273,7 @@ export default function Mailbox({ onClose }: MailboxProps) {
                     </div>
                 )}
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
+            <HomeButton onClick={onClose} />
         </div>
         
         {/* Mail List (Scrollable Area) */}
