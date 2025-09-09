@@ -129,12 +129,12 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
             <h3 className="font-lilita text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-4 uppercase">Items</h3>
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4">
               {mail.items.map((item, index) => (
-                <div key={index} className="bg-slate-800/50 p-3 rounded-lg text-center flex flex-col items-center justify-center transition-transform duration-200 border border-slate-700 hover:border-cyan-500/50 hover:scale-105" title={`${item.name} x${item.quantity}`}>
-                  <div className="relative w-16 h-16 rounded-full flex items-center justify-center mb-2 bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-slate-600">
+                <div key={index} className="bg-slate-800/50 p-2 rounded-lg flex flex-col items-center justify-center transition-transform duration-200 border border-slate-700 hover:border-cyan-500/50 hover:scale-105 aspect-square" title={`${item.name} x${item.quantity}`}>
+                  <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mb-1 bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-slate-600">
                     <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-md"></div>
-                    <Icon name={item.icon} className="w-8 h-8 text-cyan-300 drop-shadow-[0_2px_3px_rgba(34,211,238,0.4)]" />
+                    <Icon name={item.icon} className="w-6 h-6 sm:w-7 sm:h-7 text-cyan-300 drop-shadow-[0_2px_3px_rgba(34,211,238,0.4)]" />
                   </div>
-                  <p className="text-sm font-semibold text-slate-300 font-sans">x{item.quantity}</p>
+                  <p className="text-xs sm:text-sm font-semibold text-slate-300 font-sans">x{item.quantity}</p>
                 </div>
               ))}
             </div>
