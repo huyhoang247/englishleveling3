@@ -1,4 +1,5 @@
 import React, { useState } from "react"; // Import React and useState
+import { uiAssets } from "./game-assets";
 
 // Define the props interface for the component
 interface NavigationBarBottomProps {
@@ -22,20 +23,14 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
       id: "home",
       label: "Trang chủ",
       icon: (props: { size: number; color: string; strokeWidth: number }) => (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
+        <img
+          src={uiAssets.homeIcon}
+          alt="Home Icon"
           width={props.size}
           height={props.size}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={props.color}
-          strokeWidth={props.strokeWidth}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
+          // Simulate inactive state by graying out the image
+          className={props.color === '#ffffff' ? '' : 'grayscale opacity-70'}
+        />
       ),
       gradient: "from-purple-500 to-blue-500"
     },
@@ -58,20 +53,14 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
       id: "story",
       label: "Truyện",
       icon: (props: { size: number; color: string; strokeWidth: number }) => (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
+        <img
+          src={uiAssets.storyIcon}
+          alt="Story Icon"
           width={props.size}
           height={props.size}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={props.color}
-          strokeWidth={props.strokeWidth}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-        </svg>
+          // Simulate inactive state by graying out the image
+          className={props.color === '#ffffff' ? '' : 'grayscale opacity-70'}
+        />
       ),
       gradient: "from-amber-500 to-yellow-300"
     },
