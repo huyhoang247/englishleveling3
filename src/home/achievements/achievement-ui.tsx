@@ -1,5 +1,3 @@
-// --- START OF FILE achievement-ui.tsx (FULL CODE - UPDATED) ---
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { AchievementsProvider, useAchievements } from './achievement-context.tsx';
@@ -96,6 +94,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
           </div>
         </section>
 
+        {/* --- START OF UPDATED BLOCK --- */}
         <div className="mb-6 flex justify-center">
             <button
                 onClick={claimAllAchievements}
@@ -109,6 +108,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                 `}
             >
                 <div className="flex items-center justify-between w-full p-3">
+                    {/* Phần bên trái: Icon và Text */}
                     <div className="flex items-center gap-3">
                         <img
                             src={totalClaimableRewards.masteryCards > 0 && !isUpdating
@@ -121,26 +121,40 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                         </span>
                     </div>
 
-                    {totalClaimableRewards.masteryCards > 0 && !isUpdating ? (
-                        <div className="flex items-center gap-3 bg-black/20 rounded-lg px-3 py-1.5 shadow-inner">
-                            <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.masteryCards} Thẻ Thông Thạo`}>
-                                <MasteryCardIcon className="w-7 h-7" />
-                                <span className="text-base font-semibold">x{totalClaimableRewards.masteryCards}</span>
-                            </div>
-                            <div className="h-6 w-px bg-white/20"></div>
-                            <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.gold} Vàng`}>
-                                <GoldIcon className="w-6 h-6" />
-                                <span className="text-base font-semibold">{totalClaimableRewards.gold}</span>
-                            </div>
-                        </div>
-                    ) : (
-                        !isUpdating && (
-                          <span className="text-sm font-medium text-slate-500 pr-2">Chưa có thưởng</span>
-                        )
-                    )}
+                    {/* Phần bên phải: Hiển thị phần thưởng (Layout ổn định) */}
+                    <div className="flex items-center gap-3 bg-black/20 rounded-lg px-3 py-1.5 shadow-inner">
+                        {totalClaimableRewards.masteryCards > 0 && !isUpdating ? (
+                            // Trạng thái CÓ THƯỞNG
+                            <>
+                                <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.masteryCards} Thẻ Thông Thạo`}>
+                                    <MasteryCardIcon className="w-7 h-7" />
+                                    <span className="text-base font-semibold">x{totalClaimableRewards.masteryCards}</span>
+                                </div>
+                                <div className="h-6 w-px bg-white/20"></div>
+                                <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.gold} Vàng`}>
+                                    <GoldIcon className="w-6 h-6" />
+                                    <span className="text-base font-semibold">{totalClaimableRewards.gold}</span>
+                                </div>
+                            </>
+                        ) : (
+                            // Trạng thái KHÔNG CÓ THƯỞNG hoặc ĐANG XỬ LÝ (placeholder)
+                            <>
+                                <div className="flex items-center gap-1.5 opacity-40" title="Thẻ Thông Thạo">
+                                    <MasteryCardIcon className="w-7 h-7" />
+                                    <span className="text-base font-semibold">x0</span>
+                                </div>
+                                <div className="h-6 w-px bg-slate-600"></div>
+                                <div className="flex items-center gap-1.5 opacity-40" title="Vàng">
+                                    <GoldIcon className="w-6 h-6" />
+                                    <span className="text-base font-semibold">0</span>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
             </button>
         </div>
+        {/* --- END OF UPDATED BLOCK --- */}
 
         <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
           <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
