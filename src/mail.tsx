@@ -1,7 +1,7 @@
 // --- START OF FILE mail.tsx ---
 
 import React, { useState, useMemo, useEffect } from 'react';
-import HomeButton from './home-button';
+import HomeButton from './ui/home-button.tsx';
 
 // --- Dữ liệu mẫu cho hộp thư (giữ nguyên) ---
 const initialMails = [
