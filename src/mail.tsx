@@ -105,11 +105,16 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
 
         {/* Header */}
-        <div className="p-5 border-b border-slate-700 text-center">
-          <h2 className="font-sans text-3xl font-bold text-yellow-300 text-shadow tracking-wide">{mail.subject}</h2>
-          <div className="flex items-center justify-between mt-2 text-sm text-slate-400 font-sans">
-            <span>Từ: <span className="font-semibold text-slate-200">{mail.sender}</span></span>
-            <span>{new Date(mail.timestamp).toLocaleString('vi-VN')}</span>
+        <div className="p-5 border-b border-slate-700">
+          <h2 className="font-sans text-2xl font-bold text-cyan-300 text-shadow tracking-wide mb-3">{mail.subject}</h2>
+          <div className="flex items-center flex-wrap gap-2 text-xs text-slate-400 font-sans">
+            <span className="inline-flex items-center gap-1.5 bg-slate-800/70 text-slate-300 px-3 py-1 rounded-full border border-slate-700">
+              <span>Từ:</span>
+              <span className="font-semibold text-white">{mail.sender}</span>
+            </span>
+            <span className="inline-flex items-center bg-slate-800/70 text-slate-400 px-3 py-1 rounded-full border border-slate-700">
+              {new Date(mail.timestamp).toLocaleString('vi-VN')}
+            </span>
           </div>
         </div>
 
