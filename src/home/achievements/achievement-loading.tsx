@@ -53,22 +53,35 @@ const AchievementsLoadingSkeleton: React.FC = () => {
       {/* --- Skeleton cho Main Content --- */}
       <div className="w-full max-w-4xl mx-auto p-4 sm:p-8 pt-6">
         
-        {/* Skeleton cho các thẻ Stats */}
-        <section className="mb-6 flex flex-row justify-center items-center gap-4">
-          <div className="flex-1 sm:flex-none sm:w-52 h-[76px] p-3 bg-slate-800/50 border border-slate-700 rounded-lg animate-pulse"></div>
-          <div className="flex-1 sm:flex-none sm:w-52 h-[76px] p-3 bg-slate-800/50 border border-slate-700 rounded-lg animate-pulse"></div>
-        </section>
-
         {/* --- START OF UPDATED BLOCK --- */}
-        {/* Skeleton cho nút "Claim All", mô phỏng cấu trúc chi tiết */}
+        {/* Skeleton chi tiết cho các thẻ Stats để tránh lệch layout */}
+        <section className="mb-6 flex flex-row justify-center items-center gap-4">
+          {/* Card Skeleton 1 */}
+          <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg animate-pulse">
+            <div className="w-7 h-7 bg-slate-700 rounded-md flex-shrink-0"></div>
+            <div className="w-full space-y-2">
+              <div className="h-5 w-10 bg-slate-700 rounded-md"></div>
+              <div className="h-4 w-20 bg-slate-700 rounded-md"></div>
+            </div>
+          </div>
+          {/* Card Skeleton 2 */}
+          <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg animate-pulse">
+            <div className="w-7 h-7 bg-slate-700 rounded-md flex-shrink-0"></div>
+            <div className="w-full space-y-2">
+              <div className="h-5 w-10 bg-slate-700 rounded-md"></div>
+              <div className="h-4 w-16 bg-slate-700 rounded-md"></div>
+            </div>
+          </div>
+        </section>
+        {/* --- END OF UPDATED BLOCK --- */}
+
+        {/* Skeleton cho nút "Claim All" */}
         <div className="mb-6 flex justify-center">
           <div className="w-full max-w-md bg-slate-800/80 border border-slate-700 rounded-xl p-3 flex items-center justify-between animate-pulse">
-              {/* Phần bên trái: Icon và Text */}
               <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-slate-700 rounded-md"></div>
                   <div className="h-5 w-24 bg-slate-700 rounded-md"></div>
               </div>
-              {/* Phần bên phải: Hộp phần thưởng */}
               <div className="flex items-center gap-3 bg-slate-900/50 rounded-lg px-3 py-1.5">
                   <div className="flex items-center gap-1.5">
                       <div className="w-7 h-7 bg-slate-700 rounded-md"></div>
@@ -82,8 +95,6 @@ const AchievementsLoadingSkeleton: React.FC = () => {
               </div>
           </div>
         </div>
-        {/* --- END OF UPDATED BLOCK --- */}
-
 
         {/* Skeleton cho bảng danh sách */}
         <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl border border-slate-700">
