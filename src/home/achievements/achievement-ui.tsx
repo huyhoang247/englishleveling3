@@ -17,7 +17,6 @@ const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg x
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
 // --- Component UI chính, nhưng không được export default nữa ---
-// Đây là component "câm", chỉ hiển thị giao diện.
 function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
   const {
     vocabulary,
@@ -94,7 +93,6 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
           </div>
         </section>
 
-        {/* --- START OF UPDATED BLOCK --- */}
         <div className="mb-6 flex justify-center">
             <button
                 onClick={claimAllAchievements}
@@ -108,7 +106,6 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                 `}
             >
                 <div className="flex items-center justify-between w-full p-3">
-                    {/* Phần bên trái: Icon và Text */}
                     <div className="flex items-center gap-3">
                         <img
                             src={totalClaimableRewards.masteryCards > 0 && !isUpdating
@@ -117,18 +114,17 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                             alt="Claim all rewards"
                             className="w-8 h-8" />
                         <span className="font-bold text-lg">
-                            {isUpdating ? 'Đang xử lý...' : 'Nhận Tất Cả'}
+                            {/* --- MODIFIED LINE --- */}
+                            {isUpdating ? 'Claiming...' : 'Claim All'}
                         </span>
                     </div>
 
-                    {/* Phần bên phải: Hiển thị phần thưởng (Layout ổn định) */}
                     <div className="flex items-center gap-3 bg-black/20 rounded-lg px-3 py-1.5 shadow-inner">
                         {totalClaimableRewards.masteryCards > 0 && !isUpdating ? (
-                            // Trạng thái CÓ THƯỞNG
                             <>
                                 <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.masteryCards} Thẻ Thông Thạo`}>
                                     <MasteryCardIcon className="w-7 h-7" />
-                                    <span className="text-base font-semibold">x{totalClaimableRewards.masteryCards}</span>
+                                    <span className="text-base font-semibold">{totalClaimableRewards.masteryCards}</span>
                                 </div>
                                 <div className="h-6 w-px bg-white/20"></div>
                                 <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.gold} Vàng`}>
@@ -137,11 +133,10 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                                 </div>
                             </>
                         ) : (
-                            // Trạng thái KHÔNG CÓ THƯỞNG hoặc ĐANG XỬ LÝ (placeholder)
                             <>
                                 <div className="flex items-center gap-1.5 opacity-40" title="Thẻ Thông Thạo">
                                     <MasteryCardIcon className="w-7 h-7" />
-                                    <span className="text-base font-semibold">x0</span>
+                                    <span className="text-base font-semibold">0</span>
                                 </div>
                                 <div className="h-6 w-px bg-slate-600"></div>
                                 <div className="flex items-center gap-1.5 opacity-40" title="Vàng">
@@ -154,7 +149,6 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                 </div>
             </button>
         </div>
-        {/* --- END OF UPDATED BLOCK --- */}
 
         <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
           <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
@@ -213,8 +207,8 @@ const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, i
         <span className="hidden md:block text-xs text-slate-400">{`Level ${level}`}</span>
       </div>
       <div className="col-span-12 md:col-span-3 md:px-2"> <div className="w-full bg-slate-700 rounded-full h-3"> <div className="bg-gradient-to-r from-teal-400 to-cyan-500 h-3 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div> </div> <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p> </div>
-      <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">x1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
-      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isAnyClaiming ? 'Đang nhận...' : 'Claim'} </button> </div>
+      <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
+      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isAnyClaiming ? 'Claiming...' : 'Claim'} </button> </div>
     </div>
   );
 });
@@ -242,7 +236,6 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
 };
 
 // --- Component "Lối vào" (Wrapper/Entry Point) ---
-// Cập nhật interface props
 interface AchievementsScreenProps {
   user: User | null;
   onClose: () => void;
@@ -254,7 +247,6 @@ export default function AchievementsScreen({ user, onClose, onDataUpdate }: Achi
     return null;
   }
 
-  // Nhiệm vụ của nó là "lắp ráp" Provider và UI lại với nhau.
   return (
     <AchievementsProvider user={user} onDataUpdate={onDataUpdate}>
       <AchievementsScreenUI onClose={onClose} />
