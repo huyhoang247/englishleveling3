@@ -59,7 +59,8 @@ const AchievementsLoadingSkeleton: React.FC = () => {
           {/* Card Skeleton 1 */}
           <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg animate-pulse">
             <div className="w-7 h-7 bg-slate-700 rounded-md flex-shrink-0"></div>
-            <div className="w-full space-y-2">
+            {/* --- MODIFIED LINE: space-y-2 -> space-y-3 --- */}
+            <div className="w-full space-y-3">
               <div className="h-5 w-10 bg-slate-700 rounded-md"></div>
               <div className="h-4 w-20 bg-slate-700 rounded-md"></div>
             </div>
@@ -67,7 +68,8 @@ const AchievementsLoadingSkeleton: React.FC = () => {
           {/* Card Skeleton 2 */}
           <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg animate-pulse">
             <div className="w-7 h-7 bg-slate-700 rounded-md flex-shrink-0"></div>
-            <div className="w-full space-y-2">
+             {/* --- MODIFIED LINE: space-y-2 -> space-y-3 --- */}
+            <div className="w-full space-y-3">
               <div className="h-5 w-10 bg-slate-700 rounded-md"></div>
               <div className="h-4 w-16 bg-slate-700 rounded-md"></div>
             </div>
