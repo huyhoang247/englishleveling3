@@ -102,12 +102,12 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
-      <div className="relative w-full max-w-2xl max-h-[90vh] bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-sans flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="relative w-full max-w-lg max-h-[90vh] bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-sans flex flex-col" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
 
         {/* Header */}
         <div className="p-5 border-b border-slate-700">
-          <h2 className="font-sans text-2xl font-bold text-cyan-300 text-shadow tracking-wide mb-3">{mail.subject}</h2>
+          <h2 className="font-sans text-xl font-bold text-cyan-300 text-shadow tracking-wide mb-2">{mail.subject}</h2>
           <div className="flex items-center flex-wrap gap-2 text-xs text-slate-400 font-sans">
             <span className="inline-flex items-center gap-1.5 bg-slate-800/70 text-slate-300 px-3 py-1 rounded-full border border-slate-700">
               <span>Từ:</span>
@@ -127,15 +127,15 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
         {/* Items */}
         {mail.items && mail.items.length > 0 && (
           <div className="p-5 border-t border-slate-700">
-            <h3 className="font-lilita text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-4 uppercase">Items</h3>
-            <div className="flex flex-wrap justify-center gap-4">
+            <h3 className="font-lilita text-lg font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-4 uppercase">Items</h3>
+            <div className="flex flex-wrap justify-center gap-3">
               {mail.items.map((item, index) => (
-                <div key={index} className="w-24 bg-slate-800/50 p-2 rounded-lg flex flex-col items-center justify-center transition-transform duration-200 border border-slate-700 hover:border-cyan-500/50 hover:scale-105 aspect-square" title={`${item.name} x${item.quantity}`}>
-                  <div className="relative w-14 h-14 rounded-full flex items-center justify-center mb-1 bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-slate-600">
+                <div key={index} className="w-20 bg-slate-800/50 p-2 rounded-lg flex flex-col items-center justify-center transition-transform duration-200 border border-slate-700 hover:border-cyan-500/50 hover:scale-105 aspect-square" title={`${item.name} x${item.quantity}`}>
+                  <div className="relative w-12 h-12 rounded-full flex items-center justify-center mb-1 bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-slate-600">
                     <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-md"></div>
-                    <Icon name={item.icon} className="w-7 h-7 text-cyan-300 drop-shadow-[0_2px_3px_rgba(34,211,238,0.4)]" />
+                    <Icon name={item.icon} className="w-6 h-6 text-cyan-300 drop-shadow-[0_2px_3px_rgba(34,211,238,0.4)]" />
                   </div>
-                  <p className="text-sm font-semibold text-slate-300 font-sans">x{item.quantity}</p>
+                  <p className="text-xs font-semibold text-slate-300 font-sans">x{item.quantity}</p>
                 </div>
               ))}
             </div>
@@ -143,21 +143,21 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
         )}
 
         {/* Actions */}
-        <div className="p-4 flex items-center justify-center space-x-4 bg-slate-900/50 rounded-b-xl border-t border-slate-700">
-          <button onClick={() => onDelete(mail.id)} className="px-6 py-2.5 bg-slate-700/80 text-slate-300 font-bold rounded-lg hover:bg-red-600/80 hover:text-white transition-all duration-300 flex items-center space-x-2 active:scale-95 border border-slate-600 hover:border-red-500">
-            <Icon name="trash" className="w-5 h-5" />
-            <span className="font-sans font-semibold">Xóa</span>
+        <div className="p-3 flex items-center justify-center space-x-3 bg-slate-900/50 rounded-b-xl border-t border-slate-700">
+          <button onClick={() => onDelete(mail.id)} className="px-4 py-2 bg-slate-700/80 text-slate-300 font-bold rounded-lg hover:bg-red-600/80 hover:text-white transition-all duration-300 flex items-center space-x-1.5 active:scale-95 border border-slate-600 hover:border-red-500">
+            <Icon name="trash" className="w-4 h-4" />
+            <span className="font-sans font-semibold text-sm">Xóa</span>
           </button>
           {canClaim && (
-            <button onClick={() => onClaim(mail.id)} className="btn-shine relative overflow-hidden px-8 py-3 bg-teal-600/80 text-white font-bold rounded-lg hover:bg-teal-500 transition-all duration-300 flex items-center space-x-2 shadow-[0_0_20px_theme(colors.teal.600/0.5)] active:scale-95 border border-teal-500 hover:border-teal-400">
-              <Icon name="gift" className="w-5 h-5" />
-              <span className="font-sans font-semibold">Nhận</span>
+            <button onClick={() => onClaim(mail.id)} className="btn-shine relative overflow-hidden px-6 py-2 bg-teal-600/80 text-white font-bold rounded-lg hover:bg-teal-500 transition-all duration-300 flex items-center space-x-1.5 shadow-[0_0_15px_theme(colors.teal.600/0.5)] active:scale-95 border border-teal-500 hover:border-teal-400">
+              <Icon name="gift" className="w-4 h-4" />
+              <span className="font-sans font-semibold text-sm">Nhận</span>
             </button>
           )}
           {mail.isClaimed && (
-             <div className="px-8 py-3 bg-slate-800 text-slate-500 font-bold rounded-lg flex items-center space-x-2 cursor-not-allowed border border-slate-700">
-               <Icon name="check" className="w-5 h-5" />
-              <span className="font-sans font-semibold">Đã Nhận</span>
+             <div className="px-6 py-2 bg-slate-800 text-slate-500 font-bold rounded-lg flex items-center space-x-1.5 cursor-not-allowed border border-slate-700">
+               <Icon name="check" className="w-4 h-4" />
+              <span className="font-sans font-semibold text-sm">Đã Nhận</span>
              </div>
           )}
         </div>
