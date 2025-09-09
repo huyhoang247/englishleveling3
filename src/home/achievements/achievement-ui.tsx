@@ -17,7 +17,9 @@ const TrophyIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns=
 const MasteryCardIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png" alt="Thẻ thông thạo" className={className} {...props} /> );
 const GoldIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Vàng" className={className} {...props} /> );
 const VocabularyIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/voca-achievement.webp" alt="Vocabulary" className={className} {...props} /> );
-const GiftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}> <polyline points="20 12 20 22 4 22 4 12" /> <rect x="2" y="7" width="20" height="5" /> <line x1="12" y1="22" x2="12" y2="7" /> <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" /> <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" /> </svg> );
+// <<<--- THAY ĐỔI: Thay thế SVG GiftIcon bằng 2 component hình ảnh ---
+const GiftIconActive = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/gift-box.webp" alt="Nhận thưởng" className={className} {...props} /> );
+const GiftIconDisabled = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/gift-box-grey.webp" alt="Không có thưởng" className={className} {...props} /> );
 const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" /> </svg> );
 const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
@@ -114,7 +116,12 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
             >
                 <div className="flex items-center justify-between w-full p-3">
                     <div className="flex items-center gap-3">
-                        <GiftIcon className={`w-8 h-8 transition-colors duration-300 ${totalClaimableRewards.masteryCards > 0 && !isUpdating ? 'text-purple-300' : 'text-slate-600'}`} />
+                        {/* <<<--- THAY ĐỔI: Sử dụng icon điều kiện --- */}
+                        {totalClaimableRewards.masteryCards > 0 && !isUpdating ? (
+                            <GiftIconActive className="w-8 h-8" />
+                        ) : (
+                            <GiftIconDisabled className="w-8 h-8" />
+                        )}
                         <span className="font-bold text-lg">
                             {isUpdating ? 'Đang xử lý...' : 'Nhận Tất Cả'}
                         </span>
