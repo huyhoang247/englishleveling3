@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User } from 'firebase/auth';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 import { AchievementsProvider, useAchievements } from './achievement-context.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import type { VocabularyItem } from '../../gameDataService.ts';
-import AchievementsLoadingSkeleton from './achievement-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- Các component icon (Không thay đổi) ---
@@ -55,7 +56,49 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
   }, [currentPage, totalPages, sortedVocabulary.length]);
 
   if (isInitialLoading) {
-    return <AchievementsLoadingSkeleton />;
+    return (
+      <SkeletonTheme baseColor="#1e293b" highlightColor="#334155">
+        <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center">
+          <header className="w-full max-w-5xl flex items-center justify-between py-2.5 px-4 sticky top-0 z-20 bg-slate-900/50 backdrop-blur-sm border-b border-slate-700/50">
+            <Skeleton height={38} width={120} borderRadius={8} />
+            <Skeleton height={38} width={140} borderRadius={8} />
+          </header>
+
+          <div className="w-full max-w-4xl mx-auto p-4 sm:p-8 pt-6 overflow-y-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none] [-ms-overflow-style:none]">
+            <section className="mb-6 flex flex-row justify-center items-center gap-4">
+              <Skeleton containerClassName="flex-1 sm:flex-none sm:w-52" height={80} borderRadius={8} />
+              <Skeleton containerClassName="flex-1 sm:flex-none sm:w-52" height={80} borderRadius={8} />
+            </section>
+
+            <div className="mb-6 flex justify-center">
+              <Skeleton containerClassName="w-full max-w-md" height={60} borderRadius={12} />
+            </div>
+
+            <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
+              <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3">
+                <div className="col-span-1"><Skeleton height={20} /></div>
+                <div className="col-span-3"><Skeleton height={20} /></div>
+                <div className="col-span-3"><Skeleton height={20} /></div>
+                <div className="col-span-3"><Skeleton height={20} /></div>
+                <div className="col-span-2"><Skeleton height={20} /></div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="grid grid-cols-12 gap-x-4 gap-y-3 items-center p-4 bg-slate-800/70 rounded-xl border border-slate-700/80">
+                    <div className="col-span-2 md:col-span-1 flex justify-center"><Skeleton circle height={32} width={32} /></div>
+                    <div className="col-span-10 md:col-span-3"><Skeleton height={24} width="70%" /><Skeleton height={16} width="40%" className="mt-1" /></div>
+                    <div className="col-span-12 md:col-span-3"><Skeleton height={12} borderRadius="999px" /><div className="flex justify-end mt-1.5"><Skeleton height={12} width={80} /></div></div>
+                    <div className="col-span-6 md:col-span-3 flex justify-center"><Skeleton height={44} width={160} borderRadius={12} /></div>
+                    <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"><Skeleton height={40} width={90} borderRadius={8} /></div>
+                  </div>
+                ))}
+              </div>
+            </main>
+          </div>
+        </div>
+      </SkeletonTheme>
+    );
   }
 
   return (
