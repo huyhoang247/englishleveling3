@@ -1,5 +1,3 @@
-// --- START OF FILE thanh-tuu-loading.tsx ---
-
 import React from 'react';
 
 // --- Skeleton cho một dòng từ vựng ---
@@ -37,18 +35,16 @@ const AchievementsLoadingSkeleton: React.FC = () => {
     // Container ngoài cùng, giữ nguyên nền của màn hình chính
     <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center">
       
-      {/* --- Skeleton cho Header (ĐÃ CẬP NHẬT) --- */}
+      {/* --- Skeleton cho Header --- */}
       <header className="w-full max-w-5xl flex items-center justify-between py-2.5 px-4 sticky top-0 z-20 bg-slate-900/50 backdrop-blur-sm border-b border-slate-700/50">
-        {/* Skeleton cho nút "Trang Chính", mô phỏng đúng cấu trúc */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700">
           <div className="w-5 h-5 bg-slate-700 rounded animate-pulse"></div>
           <div className="hidden sm:block h-4 w-20 bg-slate-700 rounded animate-pulse"></div>
         </div>
         
-        {/* Skeleton cho CoinDisplay, mô phỏng đúng cấu trúc */}
         <div className="flex items-center gap-2">
            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700">
-             <div className="w-5 h-5 bg-slate-700 rounded-full animate-pulse"></div> {/* Icon coin thường tròn */}
+             <div className="w-5 h-5 bg-slate-700 rounded-full animate-pulse"></div>
              <div className="h-4 w-12 bg-slate-700 rounded animate-pulse"></div>
            </div>
         </div>
@@ -63,14 +59,34 @@ const AchievementsLoadingSkeleton: React.FC = () => {
           <div className="flex-1 sm:flex-none sm:w-52 h-[76px] p-3 bg-slate-800/50 border border-slate-700 rounded-lg animate-pulse"></div>
         </section>
 
-        {/* Skeleton cho nút "Nhận Tất Cả" */}
+        {/* --- START OF UPDATED BLOCK --- */}
+        {/* Skeleton cho nút "Claim All", mô phỏng cấu trúc chi tiết */}
         <div className="mb-6 flex justify-center">
-          <div className="h-16 w-full max-w-md bg-slate-800 border border-slate-700 rounded-xl animate-pulse"></div>
+          <div className="w-full max-w-md bg-slate-800/80 border border-slate-700 rounded-xl p-3 flex items-center justify-between animate-pulse">
+              {/* Phần bên trái: Icon và Text */}
+              <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-slate-700 rounded-md"></div>
+                  <div className="h-5 w-24 bg-slate-700 rounded-md"></div>
+              </div>
+              {/* Phần bên phải: Hộp phần thưởng */}
+              <div className="flex items-center gap-3 bg-slate-900/50 rounded-lg px-3 py-1.5">
+                  <div className="flex items-center gap-1.5">
+                      <div className="w-7 h-7 bg-slate-700 rounded-md"></div>
+                      <div className="h-4 w-6 bg-slate-700 rounded-md"></div>
+                  </div>
+                  <div className="h-6 w-px bg-slate-700"></div>
+                  <div className="flex items-center gap-1.5">
+                      <div className="w-6 h-6 bg-slate-700 rounded-full"></div>
+                      <div className="h-4 w-10 bg-slate-700 rounded-md"></div>
+                  </div>
+              </div>
+          </div>
         </div>
+        {/* --- END OF UPDATED BLOCK --- */}
+
 
         {/* Skeleton cho bảng danh sách */}
         <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl border border-slate-700">
-          {/* Header của bảng */}
           <div className="grid-cols-12 gap-4 px-4 py-3 hidden md:grid">
             <div className="col-span-1 h-4 bg-slate-700 rounded-md animate-pulse"></div>
             <div className="col-span-3 h-4 bg-slate-700 rounded-md animate-pulse"></div>
@@ -79,9 +95,8 @@ const AchievementsLoadingSkeleton: React.FC = () => {
             <div className="col-span-2 h-4 bg-slate-700 rounded-md animate-pulse"></div>
           </div>
 
-          {/* Các dòng skeleton */}
           <div className="flex flex-col gap-2 mt-0 md:mt-2">
-            {Array(2).fill(0).map((_, index) => ( // Tăng số lượng dòng skeleton để trông thực tế hơn
+            {Array(2).fill(0).map((_, index) => (
                 <SkeletonRow key={index} />
             ))}
           </div>
