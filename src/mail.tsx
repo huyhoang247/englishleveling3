@@ -127,7 +127,12 @@ const MailPopup = ({ mail, onClose, onClaim, onDelete }) => {
         {mail.items && mail.items.length > 0 && (
           <div className="p-5 border-t border-slate-700">
             <h3 className="font-lilita text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-4 uppercase">Items</h3>
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4">
+            <div className={`gap-4 ${
+                mail.items.length <= 4
+                  ? 'flex justify-center'
+                  : 'grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6'
+              }`}
+            >
               {mail.items.map((item, index) => (
                 <div key={index} className="bg-slate-800/50 p-2 rounded-lg flex flex-col items-center justify-center transition-transform duration-200 border border-slate-700 hover:border-cyan-500/50 hover:scale-105 aspect-square" title={`${item.name} x${item.quantity}`}>
                   <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mb-1 bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-slate-600">
