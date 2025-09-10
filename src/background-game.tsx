@@ -17,7 +17,7 @@ import { uiAssets, lottieAssets } from './game-assets.ts';
 import BossBattle from './home/tower/tower-ui.tsx';
 import Shop from './home/shop/shop-ui.tsx';
 import VocabularyChestScreen from './home/vocabulary-chest/voca-chest-ui.tsx';
-import MinerChallenge from './miner-ui.tsx';
+import MinerChallenge from './miner-challenge/miner-ui.tsx';
 import UpgradeStatsScreen from './home/upgrade-stats/upgrade-ui.tsx';
 import AchievementsScreen from './home/achievements/achievement-ui.tsx'; 
 import AdminPanel from './admin2.tsx';
