@@ -1,6 +1,7 @@
 // --- START OF FILE check-in.tsx ---
 
 import React, { useState, useEffect } from 'react';
+import HomeButton from './ui/home-button.tsx'; // ĐÃ THÊM: Nhập HomeButton
 
 // Định nghĩa kiểu cho props, yêu cầu phải có hàm onClose
 interface DailyCheckInProps {
@@ -209,16 +210,12 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
                 </div>
             </div>
             
-            {/* THÊM SỰ KIỆN onClick CHO NÚT NÀY */}
-            <button 
-                onClick={onClose}
-                aria-label="Đóng"
-                className="absolute top-3 right-3 text-slate-500 hover:text-white transition-colors p-1 rounded-full hover:bg-slate-700/50"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+            {/* --- START: THAY ĐỔI --- */}
+            {/* Nút đóng đã được thay thế bằng HomeButton để có thể tái sử dụng */}
+            <div className="absolute top-2 right-2">
+                <HomeButton onClick={onClose} />
+            </div>
+            {/* --- END: THAY ĐỔI --- */}
           </div>
         </div>
         {/* --- MODIFIED END --- */}
