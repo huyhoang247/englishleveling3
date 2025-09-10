@@ -40,7 +40,7 @@ const CustomAnimationStyles = () => (
   `}</style>
 );
 
-// --- COMPONENT CELL (Đã cập nhật) ---
+// --- COMPONENT CELL (Không thay đổi) ---
 const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
     const { isRevealed, isMineRandom, isCoin, isFlagged, isExit, isCollected } = cellData;
     const isCollectableCoin = isRevealed && isCoin && !isCollected;
@@ -48,7 +48,6 @@ const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
         base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
         hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent', 
         revealed: 'bg-slate-800/80 cursor-default border border-slate-700', 
-        // THAY ĐỔI: Sử dụng tông màu tím cho ô exit
         exitRevealed: 'bg-violet-900/60 hover:bg-violet-800/70 cursor-pointer border border-violet-600',
         collectableCoin: 'hover:bg-yellow-500/20 cursor-pointer'
     };
@@ -193,15 +192,12 @@ function BombGameUI() {
       {exitConfirmationPos && (
          <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
-                {/* THAY ĐỔI: Sử dụng gradient tím cho icon */}
-                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 mb-5 shadow-lg">
-                    <img src={minerAssets.exitIcon} alt="Complete" className="h-9 w-9 object-contain" />
-                </div>
+                {/* THAY ĐỔI: Loại bỏ nền tròn và phóng to icon */}
+                <img src={minerAssets.exitIcon} alt="Complete" className="h-16 w-16 object-contain mx-auto mb-5" />
                 <h3 className="text-2xl font-bold text-white">Floor Complete!</h3>
                 <p className="mt-2 text-slate-400">Go to Floor {currentFloor + 1}?</p>
                 <div className="mt-8 grid grid-cols-2 gap-4">
                     <button onClick={() => setExitConfirmationPos(null)} className="inline-flex justify-center rounded-lg border border-slate-600 bg-slate-700 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-slate-600">Stay</button>
-                    {/* THAY ĐỔI: Sử dụng màu tím cho nút Next Floor */}
                     <button onClick={goToNextFloor} className="inline-flex justify-center rounded-lg border border-transparent bg-violet-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-violet-700">Next Floor</button>
                 </div>
             </div>
@@ -211,7 +207,7 @@ function BombGameUI() {
   );
 }
 
-// --- THAY ĐỔI: Props Interface được cập nhật ---
+// --- Props Interface ---
 interface MinerChallengeProps {
   onClose: () => void;
   onGameEnd: (result: {
@@ -221,9 +217,8 @@ interface MinerChallengeProps {
   }) => void;
 }
 
-// --- THAY ĐỔI: Component chính giờ sẽ lấy dữ liệu từ GameContext ---
+// --- Component chính ---
 export default function MinerChallenge(props: MinerChallengeProps) {
-  // Lấy dữ liệu trực tiếp từ GameContext thay vì fetch lại
   const { 
     coins, 
     masteryCards, 
@@ -235,7 +230,6 @@ export default function MinerChallenge(props: MinerChallengeProps) {
     <BombProvider
       onClose={props.onClose}
       onGameEnd={props.onGameEnd}
-      // Truyền dữ liệu từ context vào provider
       initialDisplayedCoins={coins}
       masteryCards={masteryCards}
       initialPickaxes={pickaxes}
