@@ -64,18 +64,12 @@ interface ObstacleRunnerGameProps {
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }: ObstacleRunnerGameProps) {
   
   const {
-    isLoadingUserData, coins, displayedCoins, gems, masteryCards, pickaxes,
-    minerChallengeHighestFloor, bossBattleHighestFloor, jackpotPool,
+    isLoadingUserData, coins, displayedCoins, gems,
     isAnyOverlayOpen, isGamePaused, showRateLimitToast,
-    isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen,
-    isBossBattleOpen, isShopOpen, isVocabularyChestOpen, isAchievementsOpen,
-    isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
-    isAuctionHouseOpen,
-    isCheckInOpen,
-    isMailboxOpen, 
+    isMinerChallengeOpen,
     ownedItems, equippedItems, refreshUserData,
-    handleBossFloorUpdate, handleUpdatePickaxes,
-    handleUpdateJackpotPool, handleStatsUpdate, getPlayerBattleStats,
+    handleMinerChallengeEnd,
+    getPlayerBattleStats,
     getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
     setCoins, updateSkillsState,
     updateEquipmentData,
@@ -87,6 +81,14 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     toggleCheckIn,
     toggleMailbox, 
     toggleBaseBuilding,
+    isRankOpen, isPvpArenaOpen, isLuckyGameOpen,
+    isBossBattleOpen, isShopOpen, isVocabularyChestOpen, isAchievementsOpen,
+    isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
+    isAuctionHouseOpen,
+    isCheckInOpen,
+    isMailboxOpen, 
+    handleBossFloorUpdate, handleUpdatePickaxes, jackpotPool,
+    handleUpdateJackpotPool, handleStatsUpdate,
   } = useGame();
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
@@ -163,9 +165,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         
         <div className="fixed inset-0 z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
-                {isMinerChallengeOpen && (
+                {isMinerChallengeOpen && currentUser && (
                     <MinerChallenge 
-                        onClose={toggleMinerChallenge}
+                        onClose={toggleMinerChallenge} 
+                        onGameEnd={handleMinerChallengeEnd}
+                        // KHÔNG CẦN TRUYỀN PROPS DỮ LIỆU NỮA
                     />
                 )}
             </ErrorBoundary>
@@ -185,12 +189,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> 
             <ErrorBoundary>
-                {isShopOpen && 
-                    <Shop 
-                        onClose={toggleShop} 
-                        onCurrencyUpdate={updateUserCurrency} 
-                    />
-                }
+                {isShopOpen && <Shop onClose={toggleShop} onCurrencyUpdate={updateUserCurrency} />}
             </ErrorBoundary> 
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> 
@@ -229,6 +228,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 )}
             </ErrorBoundary>
         </div>
+
         <div className="fixed inset-0 z-[60]" style={{ display: isAuctionHouseOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isAuctionHouseOpen && currentUser && (
@@ -251,6 +251,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 </ErrorBoundary>
             </div>
         )}
+
         {isMailboxOpen && (
             <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
                 <ErrorBoundary>
@@ -258,6 +259,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 </ErrorBoundary>
             </div>
         )}
+
         {isSystemCheckOpen && (
             <ErrorBoundary fallback={<div className="fixed inset-0 bg-black/70 flex items-center justify-center text-red-400">Lỗi khi tải công cụ System Check.</div>}>
                 <Suspense fallback={<SuspenseLoader />}>
@@ -265,10 +267,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 </Suspense>
             </ErrorBoundary>
         )}
+
         {isAdminPanelOpen && ( <div className="fixed inset-0 z-[70]"> <ErrorBoundary><AdminPanel onClose={toggleAdminPanel} /></ErrorBoundary> </div> )}
 
       </SidebarLayout>
       <GameSkeletonLoader show={isLoadingUserData} />
     </div>
   );
-}
+} 
