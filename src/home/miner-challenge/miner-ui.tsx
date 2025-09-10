@@ -1,5 +1,5 @@
 import React, { useState, memo, useCallback } from 'react';
-import { BombProvider, useBomb } from './bombContext.tsx'; // Import Context
+import { BombProvider, useBomb } from './miner-context.tsx'; // Import Context
 import CoinDisplay from './ui/display/coin-display.tsx';
 
 // --- Các component Icon SVG & IMG (Không thay đổi) ---
