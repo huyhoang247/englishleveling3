@@ -166,7 +166,7 @@ export const minerAssets = {
   bombIcon: require("./assets/images/miner-bomb.webp"),
   coinIcon: require("./assets/images/coin.webp"),
   exitIcon: require("./assets/images/coin.webp"),
-  pickaxeIcon: require("./assets/images/coin.webp"),
+  pickaxeIcon: require("./assets/images/pickaxe-icon.webp"),
 };
 
 
