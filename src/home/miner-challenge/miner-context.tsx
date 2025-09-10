@@ -1,6 +1,4 @@
-// --- START OF FILE BombContext.tsx ---
-
-import React, { createContext, useState, useCallback, useContext, ReactNode, FC } from 'react';
+import React, { createContext, useState, useCallback, useContext, ReactNode, useEffect } from 'react';
 
 // --- Cấu hình game (giữ nguyên từ file gốc) ---
 const BOARD_SIZE = 6;
@@ -8,10 +6,10 @@ const NUM_RANDOM_BOMBS = 4;
 const NUM_COINS = 6;
 const TOTAL_BOMBS = NUM_RANDOM_BOMBS;
 const MAX_PICKAXES = 50;
-const OPEN_CELL_DELAY = 400; // Thời gian delay khi mở ô (ms)
+const OPEN_CELL_DELAY = 400;
 
 // --- Định nghĩa Types ---
-interface CellData {
+type CellData = {
   x: number;
   y: number;
   isMineRandom: boolean;
@@ -20,37 +18,28 @@ interface CellData {
   isRevealed: boolean;
   isFlagged: boolean;
   isCollected: boolean;
-}
+};
 
-interface BombGameState {
-  board: CellData[][];
+type BoardData = CellData[][];
+
+interface BombContextType {
+  board: BoardData;
   currentFloor: number;
-  flagsPlaced: number;
   pickaxes: number;
-  coinsEarnedThisSession: number;
+  flagsPlaced: number;
   animatedDisplayedCoins: number;
-  highestFloorCompletedThisSession: number;
-  isOpening: { x: number, y: number } | null;
+  masteryCards: number;
   exitConfirmationPos: { x: number, y: number } | null;
+  isOpening: { x: number, y: number } | null;
   rewardPerCoin: number;
-}
-
-interface BombGameActions {
   handleCellClick: (x: number, y: number) => void;
   handleRightClick: (e: React.MouseEvent, x: number, y: number) => void;
   goToNextFloor: () => void;
+  setExitConfirmationPos: React.Dispatch<React.SetStateAction<{ x: number, y: number } | null>>;
   handleClose: () => void;
   resetGame: () => void;
-  setExitConfirmationPos: React.Dispatch<React.SetStateAction<{ x: number, y: number } | null>>;
 }
 
-// --- Tạo Context ---
-// Type này kết hợp cả State và Actions
-type BombContextType = BombGameState & BombGameActions;
-
-const BombContext = createContext<BombContextType | undefined>(undefined);
-
-// --- Props cho Provider ---
 interface BombProviderProps {
   children: ReactNode;
   onClose: () => void;
@@ -65,28 +54,32 @@ interface BombProviderProps {
   }) => void;
 }
 
-// --- Component Provider: Chứa toàn bộ logic ---
-export const BombProvider: FC<BombProviderProps> = ({
+// --- Tạo Context ---
+const BombContext = createContext<BombContextType | null>(null);
+
+// --- Tạo Provider Component ---
+export const BombProvider: React.FC<BombProviderProps> = ({
   children,
   onClose,
   initialDisplayedCoins,
   masteryCards,
   initialPickaxes,
   initialHighestFloor,
-  onGameEnd
+  onGameEnd,
 }) => {
-  // --- TẤT CẢ STATE VÀ LOGIC TỪ BOMB.TSX ĐƯỢC CHUYỂN VÀO ĐÂY ---
-
-  const createBoard = () => {
-    const newBoard: CellData[][] = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, isCollected: false })));
+  const createBoard = (): BoardData => {
+    const newBoard: BoardData = Array(BOARD_SIZE).fill(null).map((_, rowIndex) => Array(BOARD_SIZE).fill(null).map((_, colIndex) => ({ x: colIndex, y: rowIndex, isMineRandom: false, isCoin: false, isExit: false, isRevealed: false, isFlagged: false, isCollected: false })));
     const placeItem = (itemType: 'isMineRandom' | 'isCoin' | 'isExit') => {
-        let placed = false;
-        while(!placed) {
-            const x = Math.floor(Math.random() * BOARD_SIZE);
-            const y = Math.floor(Math.random() * BOARD_SIZE);
-            const cell = newBoard[y][x];
-            if (!cell.isMineRandom && !cell.isCoin && !cell.isExit) { cell[itemType] = true; placed = true; }
+      let placed = false;
+      while (!placed) {
+        const x = Math.floor(Math.random() * BOARD_SIZE);
+        const y = Math.floor(Math.random() * BOARD_SIZE);
+        const cell = newBoard[y][x];
+        if (!cell.isMineRandom && !cell.isCoin && !cell.isExit) {
+          cell[itemType] = true;
+          placed = true;
         }
+      }
     };
     for (let i = 0; i < NUM_RANDOM_BOMBS; i++) placeItem('isMineRandom');
     for (let i = 0; i < NUM_COINS; i++) placeItem('isCoin');
@@ -94,7 +87,7 @@ export const BombProvider: FC<BombProviderProps> = ({
     return newBoard;
   };
 
-  const [board, setBoard] = useState<CellData[][]>(() => createBoard());
+  const [board, setBoard] = useState<BoardData>(() => createBoard());
   const [currentFloor, setCurrentFloor] = useState(initialHighestFloor > 0 ? initialHighestFloor + 1 : 1);
   const [flagsPlaced, setFlagsPlaced] = useState(0);
   const [exitConfirmationPos, setExitConfirmationPos] = useState<{ x: number, y: number } | null>(null);
@@ -103,8 +96,6 @@ export const BombProvider: FC<BombProviderProps> = ({
   const [animatedDisplayedCoins, setAnimatedDisplayedCoins] = useState(initialDisplayedCoins);
   const [highestFloorCompletedThisSession, setHighestFloorCompletedThisSession] = useState(initialHighestFloor);
   const [isOpening, setIsOpening] = useState<{ x: number, y: number } | null>(null);
-  
-  const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
 
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
@@ -126,23 +117,25 @@ export const BombProvider: FC<BombProviderProps> = ({
     setBoard(prevBoard => prevBoard.map((row, rowIndex) => rowIndex !== y ? row : row.map((cell, colIndex) => colIndex !== x ? cell : { ...cell, ...newProps })));
   };
 
+  const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
+  
   const collectAllVisibleCoins = useCallback(() => {
-      let totalReward = 0;
-      const newBoard = board.map(row =>
-          row.map(cell => {
-              if(cell.isRevealed && cell.isCoin && !cell.isCollected) {
-                  totalReward += rewardPerCoin;
-                  return { ...cell, isCollected: true };
-              }
-              return cell;
-          })
-      );
-      if(totalReward > 0) {
-          const newTotalCoinsEarned = coinsEarnedThisSession + totalReward;
-          setBoard(newBoard);
-          setCoinsEarnedThisSession(newTotalCoinsEarned);
-          startCoinCountAnimation(animatedDisplayedCoins, initialDisplayedCoins + newTotalCoinsEarned);
-      }
+    let totalReward = 0;
+    const newBoard = board.map(row =>
+      row.map(cell => {
+        if (cell.isRevealed && cell.isCoin && !cell.isCollected) {
+          totalReward += rewardPerCoin;
+          return { ...cell, isCollected: true };
+        }
+        return cell;
+      })
+    );
+    if (totalReward > 0) {
+      const newTotalCoinsEarned = coinsEarnedThisSession + totalReward;
+      setBoard(newBoard);
+      setCoinsEarnedThisSession(newTotalCoinsEarned);
+      startCoinCountAnimation(animatedDisplayedCoins, initialDisplayedCoins + newTotalCoinsEarned);
+    }
   }, [board, rewardPerCoin, coinsEarnedThisSession, animatedDisplayedCoins, initialDisplayedCoins, startCoinCountAnimation]);
 
   const processCellOpening = (x: number, y: number) => {
@@ -153,11 +146,29 @@ export const BombProvider: FC<BombProviderProps> = ({
       if (pickaxes <= 0) return;
       setPickaxes(prev => prev - 1);
     }
-
+    
     if (cell.isMineRandom) {
       const newBoard = JSON.parse(JSON.stringify(board));
       const explosionsQueue = [{ x, y }];
-      //... (logic nổ bom giữ nguyên)
+      while (explosionsQueue.length > 0) {
+        const currentBombPos = explosionsQueue.shift()!;
+        const bombCell = newBoard[currentBombPos.y][currentBombPos.x];
+        if (bombCell.isRevealed) continue;
+        bombCell.isRevealed = true;
+        const unrevealedCells = [];
+        for (let r = 0; r < BOARD_SIZE; r++) {
+          for (let c = 0; c < BOARD_SIZE; c++) {
+            if (!newBoard[r][c].isRevealed) unrevealedCells.push(newBoard[r][c]);
+          }
+        }
+        const cellsToExplode = unrevealedCells.sort(() => 0.5 - Math.random()).slice(0, 4);
+        cellsToExplode.forEach(targetCell => {
+          if (!targetCell.isRevealed) {
+            targetCell.isRevealed = true;
+            if (targetCell.isMineRandom) explosionsQueue.push({ x: targetCell.x, y: targetCell.y });
+          }
+        });
+      }
       setBoard(newBoard);
     } else {
       updateCell(x, y, { isRevealed: true });
@@ -168,19 +179,22 @@ export const BombProvider: FC<BombProviderProps> = ({
     if (isOpening) return;
     const cell = board[y][x];
     if (cell.isRevealed && cell.isExit) {
-        setExitConfirmationPos({ x, y });
-        return;
+      setExitConfirmationPos({ x, y });
+      return;
     }
     if ((cell.isRevealed && !cell.isCoin) || cell.isFlagged) return;
     if (cell.isRevealed && cell.isCoin && !cell.isCollected) {
-        collectAllVisibleCoins();
-        return;
+      collectAllVisibleCoins();
+      return;
     }
-    if (pickaxes <= 0) return;
+    if (pickaxes <= 0) {
+      console.log("Hết cuốc!");
+      return;
+    }
     setIsOpening({ x, y });
     setTimeout(() => {
-        processCellOpening(x, y);
-        setIsOpening(null);
+      processCellOpening(x, y);
+      setIsOpening(null);
     }, OPEN_CELL_DELAY);
   }, [board, collectAllVisibleCoins, pickaxes, isOpening]);
 
@@ -190,14 +204,14 @@ export const BombProvider: FC<BombProviderProps> = ({
     const cell = board[y][x];
     if (cell.isRevealed) return;
     if (!cell.isFlagged && flagsPlaced < TOTAL_BOMBS) {
-        updateCell(x, y, { isFlagged: true });
-        setFlagsPlaced(prev => prev + 1);
+      updateCell(x, y, { isFlagged: true });
+      setFlagsPlaced(prev => prev + 1);
     } else if (cell.isFlagged) {
-        updateCell(x, y, { isFlagged: false });
-        setFlagsPlaced(prev => prev - 1);
+      updateCell(x, y, { isFlagged: false });
+      setFlagsPlaced(prev => prev - 1);
     }
   }, [board, flagsPlaced, isOpening]);
-
+  
   const goToNextFloor = () => {
     setHighestFloorCompletedThisSession(prev => Math.max(prev, currentFloor));
     setCurrentFloor(prev => prev + 1);
@@ -205,7 +219,7 @@ export const BombProvider: FC<BombProviderProps> = ({
     setFlagsPlaced(0);
     setExitConfirmationPos(null);
   };
-
+  
   const handleClose = () => {
     let uncollectedReward = 0;
     board.flat().forEach(cell => {
@@ -214,11 +228,13 @@ export const BombProvider: FC<BombProviderProps> = ({
       }
     });
     const totalCoinsEarned = coinsEarnedThisSession + uncollectedReward;
+
     onGameEnd({
       finalPickaxes: pickaxes,
       coinsEarned: totalCoinsEarned,
       highestFloorCompleted: highestFloorCompletedThisSession
     });
+
     onClose();
   };
 
@@ -232,35 +248,32 @@ export const BombProvider: FC<BombProviderProps> = ({
     setAnimatedDisplayedCoins(initialDisplayedCoins);
   };
 
-  // --- Giá trị cung cấp bởi Context ---
   const value: BombContextType = {
     board,
     currentFloor,
-    flagsPlaced,
     pickaxes,
-    coinsEarnedThisSession,
+    flagsPlaced,
     animatedDisplayedCoins,
-    highestFloorCompletedThisSession,
-    isOpening,
+    masteryCards,
     exitConfirmationPos,
+    isOpening,
     rewardPerCoin,
     handleCellClick,
     handleRightClick,
     goToNextFloor,
+    setExitConfirmationPos,
     handleClose,
     resetGame,
-    setExitConfirmationPos,
   };
 
   return <BombContext.Provider value={value}>{children}</BombContext.Provider>;
 };
 
-// --- Custom Hook để sử dụng Context dễ dàng hơn ---
-export const useBombGame = (): BombContextType => {
+// --- Tạo Custom Hook ---
+export const useBomb = (): BombContextType => {
   const context = useContext(BombContext);
-  if (context === undefined) {
-    throw new Error('useBombGame must be used within a BombProvider');
+  if (!context) {
+    throw new Error('useBomb must be used within a BombProvider');
   }
   return context;
 };
-// --- END OF FILE BombContext.tsx ---
