@@ -219,13 +219,53 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   
   const handleMinerChallengeEnd = async (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
     const userId = auth.currentUser?.uid;
-    if (!userId) { console.error("Cannot update game data: User not authenticated."); return; }
-    if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) { return; }
+    if (!userId) { 
+        console.error("Cannot update game data: User not authenticated."); 
+        return; 
+    }
+    
+    // Nếu không có gì thay đổi thì không làm gì cả
+    if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) { 
+        return; 
+    }
+
+    // --- BẮT ĐẦU KỸ THUẬT OPTIMISTIC UI UPDATE ---
+
+    // 1. Lưu lại state cũ để có thể khôi phục nếu có lỗi
+    const oldCoins = coins;
+    const oldPickaxes = pickaxes;
+    const oldHighestFloor = minerChallengeHighestFloor;
+
+    // 2. Tính toán và cập nhật UI ngay lập tức (Lạc quan)
+    const newOptimisticCoins = oldCoins + result.coinsEarned;
+    const newOptimisticPickaxes = result.finalPickaxes;
+    const newOptimisticHighestFloor = Math.max(oldHighestFloor, result.highestFloorCompleted);
+
+    setCoins(newOptimisticCoins);
+    setPickaxes(newOptimisticPickaxes);
+    setMinerChallengeHighestFloor(newOptimisticHighestFloor);
+    
     setIsSyncingData(true);
     try {
-      const { newCoins, newPickaxes, newHighestFloor } = await processMinerChallengeResult(userId, result);
-      setCoins(newCoins); setPickaxes(newPickaxes); setMinerChallengeHighestFloor(newHighestFloor);
-    } catch (error) { console.error("Service call for Miner Challenge end failed: ", error); } finally { setIsSyncingData(false); }
+      // 3. Gửi yêu cầu lên server trong nền.
+      await processMinerChallengeResult(userId, result);
+      
+      // Nếu server xử lý thành công thì không cần làm gì thêm.
+      // Dữ liệu đã được cập nhật "lạc quan" ở trên.
+      
+    } catch (error) { 
+      console.error("Service call for Miner Challenge end failed, rolling back UI: ", error); 
+      
+      // 4. Nếu có lỗi, khôi phục lại state cũ
+      setCoins(oldCoins);
+      setPickaxes(oldPickaxes);
+      setMinerChallengeHighestFloor(oldHighestFloor);
+      
+      alert("Lỗi khi lưu kết quả. Vui lòng thử lại!");
+
+    } finally { 
+      setIsSyncingData(false); 
+    }
   };
 
   const handleUpdatePickaxes = async (amountToAdd: number) => {
