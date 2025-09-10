@@ -1,7 +1,11 @@
-import React, { useState, memo, useCallback } from 'react';
-import { BombProvider, useBomb } from './miner-context.tsx'; // Import Context
+// --- START OF FILE miner-ui.tsx (1).txt ---
+
+import React, { useState, memo, useCallback, useEffect } from 'react'; // THÊM useEffect
+import { BombProvider, useBomb } from './miner-context.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import MasteryDisplay from '../../ui/display/mastery-display.tsx'; // THAY ĐỔI: Import MasteryDisplay từ file riêng
+import MasteryDisplay from '../../ui/display/mastery-display.tsx';
+import { auth } from '../../firebase.js'; // THÊM MỚI: Import auth để lấy user ID
+import { fetchOrCreateUserGameData } from '../../gameDataService.ts'; // THÊM MỚI: Import hàm fetch dữ liệu
 
 // --- Các component Icon SVG & IMG (Không thay đổi) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
@@ -12,8 +16,6 @@ const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" wi
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
 const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d394622fa7e3b147c6b84a11.png';
-
-// --- THAY ĐỔI: MasteryDisplay Component đã bị xóa khỏi đây ---
 
 // --- Cấu hình game (Đã chuyển sang Context) ---
 const BOARD_SIZE = 6;
@@ -91,9 +93,8 @@ const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
     );
 });
 
-// THAY ĐỔI: Component UI của game, nhận dữ liệu từ Context
+// Component UI của game, nhận dữ liệu từ Context (Không thay đổi)
 function BombGameUI() {
-  // Sử dụng custom hook để lấy tất cả state và hàm cần thiết
   const {
     board,
     currentFloor,
@@ -211,13 +212,9 @@ function BombGameUI() {
   );
 }
 
-// --- Props Interface (Không thay đổi) ---
+// --- THAY ĐỔI: Props Interface được cập nhật ---
 interface MinerChallengeProps {
   onClose: () => void;
-  initialDisplayedCoins: number;
-  masteryCards: number;
-  initialPickaxes: number;
-  initialHighestFloor: number;
   onGameEnd: (result: {
     finalPickaxes: number;
     coinsEarned: number;
@@ -225,11 +222,75 @@ interface MinerChallengeProps {
   }) => void;
 }
 
-// --- Component chính export ra ngoài ---
-// Nó nhận props và bao bọc UI bằng Provider để cung cấp context
+// --- THAY ĐỔI: Component chính để fetch dữ liệu ---
+type InitialData = {
+  coins: number;
+  masteryCards: number;
+  pickaxes: number;
+  highestFloor: number;
+};
+
 export default function MinerChallenge(props: MinerChallengeProps) {
+  const [initialData, setInitialData] = useState<InitialData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        setError("User not authenticated. Please log in.");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const gameData = await fetchOrCreateUserGameData(user.uid);
+        setInitialData({
+          coins: gameData.coins,
+          masteryCards: gameData.masteryCards,
+          pickaxes: gameData.pickaxes,
+          highestFloor: gameData.minerChallengeHighestFloor,
+        });
+      } catch (err) {
+        console.error("Failed to fetch data for Miner Challenge:", err);
+        setError("Could not load game data. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
+        <div className="text-white text-xl animate-pulse">Loading Miner Challenge...</div>
+      </div>
+    );
+  }
+
+  if (error || !initialData) {
+    return (
+      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center p-4">
+        <div className="bg-slate-800 p-8 rounded-lg text-center">
+          <p className="text-red-400 mb-4">{error || "An unknown error occurred."}</p>
+          <button onClick={props.onClose} className="px-4 py-2 bg-slate-700 rounded-md hover:bg-slate-600">Close</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <BombProvider {...props}>
+    <BombProvider
+      onClose={props.onClose}
+      onGameEnd={props.onGameEnd}
+      initialDisplayedCoins={initialData.coins}
+      masteryCards={initialData.masteryCards}
+      initialPickaxes={initialData.pickaxes}
+      initialHighestFloor={initialData.highestFloor}
+    >
       <BombGameUI />
     </BombProvider>
   );
