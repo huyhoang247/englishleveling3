@@ -5,16 +5,13 @@ import { BombProvider, useBomb } from './miner-context.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 import { useGame } from '../../GameContext.tsx'; // THAY ĐỔI: Import useGame
+import { minerAssets } from '../../game-assets.ts'; // THÊM MỚI: Import tài nguyên hình ảnh
 
-// --- Các component Icon SVG & IMG (Không thay đổi) ---
+// --- Các component Icon SVG ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
-const BombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000441c61f7962f3b928212f891.png" alt="Bomb" className={className} /> );
-const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" className={className} /> );
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
-const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
-const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d394622fa7e3b147c6b84a11.png';
 
 // --- Cấu hình game (Đã chuyển sang Context) ---
 const BOARD_SIZE = 6;
@@ -70,13 +67,13 @@ const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
         let finalWrapperClass = wrapperClass;
 
         if (isMineRandom) {
-            iconContent = <BombIcon className={imageIconClass} />;
+            iconContent = <img src={minerAssets.bombIcon} alt="Bomb" className={imageIconClass} />;
         } else if (isExit) {
-            iconContent = <StairsIcon className={imageIconClass} />;
+            iconContent = <img src={minerAssets.exitIcon} alt="Exit" className={imageIconClass} />;
             specificCellStyle = cellStyle.exitRevealed; 
         } else if (isCollectableCoin) {
             finalWrapperClass = "w-[60%] h-[60%]";
-            iconContent = <CircleDollarSignIcon className={`${imageIconClass} animate-gentle-bounce-inline`} />;
+            iconContent = <img src={minerAssets.coinIcon} alt="Coin" className={`${imageIconClass} animate-gentle-bounce-inline`} />;
         }
         content = ( <div className={finalWrapperClass}> {iconContent} </div> );
     }
@@ -136,14 +133,14 @@ function BombGameUI() {
       <div className="w-full max-w-xs sm:max-w-sm mx-auto pt-24">
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
-                <StairsIcon className="w-6 h-6 object-contain opacity-70" />
+                <img src={minerAssets.exitIcon} alt="Floor" className="w-6 h-6 object-contain opacity-70" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Floor</span>
                     <span className="font-mono text-lg font-bold text-white">{currentFloor}</span>
                 </div>
             </div>
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Pickaxes Remaining: ${pickaxes}/${MAX_PICKAXES}`}>
-                <img src={pickaxeIconUrl} alt="Pickaxe" className="w-6 h-6" />
+                <img src={minerAssets.pickaxeIcon} alt="Pickaxe" className="w-6 h-6" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Pickaxe</span>
                     <div className="flex items-baseline" style={{ gap: '2px' }}>
@@ -153,14 +150,14 @@ function BombGameUI() {
                 </div>
             </div>
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title="Bombs Remaining">
-                <BombIcon className="w-6 h-6 object-contain" />
+                <img src={minerAssets.bombIcon} alt="Bombs" className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Bombs</span>
                     <span className="font-mono text-lg font-bold text-white">{TOTAL_BOMBS - flagsPlaced}</span>
                 </div>
             </div>
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Reward per Coin (Mastery Lvl ${masteryCards} x Floor ${currentFloor})`}>
-                <CircleDollarSignIcon className="w-6 h-6 object-contain" />
+                <img src={minerAssets.coinIcon} alt="Rewards" className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Rewards</span>
                     <span className="font-mono text-lg font-bold text-white">{rewardPerCoin}</span>
@@ -196,7 +193,7 @@ function BombGameUI() {
          <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-teal-500 mb-5 shadow-lg">
-                    <StairsIcon className="h-9 w-9 object-contain" />
+                    <img src={minerAssets.exitIcon} alt="Complete" className="h-9 w-9 object-contain" />
                 </div>
                 <h3 className="text-2xl font-bold text-white">Floor Complete!</h3>
                 <p className="mt-2 text-slate-400">Go to Floor {currentFloor + 1}?</p>
