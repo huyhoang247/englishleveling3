@@ -1,3 +1,5 @@
+// --- START OF FILE background-game.tsx ---
+
 import React, { useEffect, useRef, Component, lazy, Suspense, useCallback, useState } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './ui/display/coin-display.tsx';
@@ -64,12 +66,18 @@ interface ObstacleRunnerGameProps {
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }: ObstacleRunnerGameProps) {
   
   const {
-    isLoadingUserData, coins, displayedCoins, gems,
+    isLoadingUserData, coins, displayedCoins, gems, masteryCards, pickaxes,
+    minerChallengeHighestFloor, bossBattleHighestFloor, jackpotPool,
     isAnyOverlayOpen, isGamePaused, showRateLimitToast,
-    isMinerChallengeOpen,
+    isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen,
+    isBossBattleOpen, isShopOpen, isVocabularyChestOpen, isAchievementsOpen,
+    isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
+    isAuctionHouseOpen,
+    isCheckInOpen,
+    isMailboxOpen, 
     ownedItems, equippedItems, refreshUserData,
-    handleMinerChallengeEnd,
-    getPlayerBattleStats,
+    handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
+    handleUpdateJackpotPool, handleStatsUpdate, getPlayerBattleStats,
     getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
     setCoins, updateSkillsState,
     updateEquipmentData,
@@ -81,14 +89,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     toggleCheckIn,
     toggleMailbox, 
     toggleBaseBuilding,
-    isRankOpen, isPvpArenaOpen, isLuckyGameOpen,
-    isBossBattleOpen, isShopOpen, isVocabularyChestOpen, isAchievementsOpen,
-    isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
-    isAuctionHouseOpen,
-    isCheckInOpen,
-    isMailboxOpen, 
-    handleBossFloorUpdate, handleUpdatePickaxes, jackpotPool,
-    handleUpdateJackpotPool, handleStatsUpdate,
   } = useGame();
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
@@ -163,13 +163,13 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> <ErrorBoundary>{currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(currentUser!.uid, amount))} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={handleUpdateJackpotPool} />)}</ErrorBoundary> </div>
         
+        {/* --- ĐÃ SỬA ĐỔI Ở ĐÂY --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isMinerChallengeOpen && currentUser && (
                     <MinerChallenge 
                         onClose={toggleMinerChallenge} 
-                        onGameEnd={handleMinerChallengeEnd}
-                        // KHÔNG CẦN TRUYỀN PROPS DỮ LIỆU NỮA
+                        onGameEnd={handleMinerChallengeEnd} 
                     />
                 )}
             </ErrorBoundary>
@@ -189,7 +189,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> 
             <ErrorBoundary>
-                {isShopOpen && <Shop onClose={toggleShop} onCurrencyUpdate={updateUserCurrency} />}
+                {isShopOpen && 
+                    <Shop 
+                        onClose={toggleShop} 
+                        onCurrencyUpdate={updateUserCurrency} 
+                    />
+                }
             </ErrorBoundary> 
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> 
@@ -274,4 +279,5 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
       <GameSkeletonLoader show={isLoadingUserData} />
     </div>
   );
-} 
+}
+// --- END OF FILE background-game.tsx ---
