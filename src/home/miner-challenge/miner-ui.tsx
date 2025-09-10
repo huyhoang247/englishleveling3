@@ -1,11 +1,11 @@
-// --- START OF FILE miner-ui.tsx ---
+// --- START OF FILE miner-ui.tsx (1).txt ---
 
-import React, { useState, memo, useCallback, useEffect } from 'react';
+import React, { useState, memo, useCallback, useEffect } from 'react'; // KHÔI PHỤC useEffect
 import { BombProvider, useBomb } from './miner-context.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
-import { auth } from '../../firebase.js';
-import { fetchOrCreateUserGameData } from '../../gameDataService.ts';
+import { auth } from '../../firebase.js'; // KHÔI PHỤC
+import { fetchOrCreateUserGameData } from '../../gameDataService.ts'; // KHÔI PHỤC
 
 // --- Các component Icon SVG & IMG (Không thay đổi) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
@@ -17,13 +17,13 @@ const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/sv
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
 const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d394622fa7e3b147c6b84a11.png';
 
-// --- Cấu hình game ---
+// --- Cấu hình game (Đã chuyển sang Context) ---
 const BOARD_SIZE = 6;
-const TOTAL_BOMBS = 4;
-const MAX_PICKAXES = 50;
+const TOTAL_BOMBS = 4; // Chỉ giữ lại để hiển thị
+const MAX_PICKAXES = 50; // Chỉ giữ lại để hiển thị
 const OPEN_CELL_DELAY = 400;
 
-// --- CSS CHO HIỆU ỨNG RUNG Ô VÀ CÁC HIỆU ỨNG KHÁC ---
+// --- CSS CHO HIỆU ỨNG RUNG Ô VÀ CÁC HIỆU ỨNG KHÁC (Không thay đổi) ---
 const CustomAnimationStyles = () => (
   <style>{`
     @keyframes gentle-bounce-inline {
@@ -44,7 +44,7 @@ const CustomAnimationStyles = () => (
   `}</style>
 );
 
-// --- COMPONENT CELL ---
+// --- COMPONENT CELL (Không thay đổi) ---
 const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
     const { isRevealed, isMineRandom, isCoin, isFlagged, isExit, isCollected } = cellData;
     const isCollectableCoin = isRevealed && isCoin && !isCollected;
@@ -93,7 +93,7 @@ const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
     );
 });
 
-// Component UI của game
+// Component UI của game, nhận dữ liệu từ Context (Không thay đổi)
 function BombGameUI() {
   const {
     board,
@@ -212,19 +212,20 @@ function BombGameUI() {
   );
 }
 
-// Props Interface
+// --- THAY ĐỔI: Props Interface được cập nhật ---
 interface MinerChallengeProps {
   onClose: () => void;
   onGameEnd: (result: {
     finalPickaxes: number;
     coinsEarned: number;
     highestFloorCompleted: number;
-  }) => Promise<void>; // <<< ĐÃ SỬA ĐỔI
+  }) => void;
+  // CHỈ GIỮ LẠI initialCoins
+  initialCoins: number;
 }
 
-// Component chính để fetch dữ liệu
+// --- THAY ĐỔI: Component chính để fetch dữ liệu ---
 type InitialData = {
-  coins: number;
   masteryCards: number;
   pickaxes: number;
   highestFloor: number;
@@ -247,7 +248,6 @@ export default function MinerChallenge(props: MinerChallengeProps) {
       try {
         const gameData = await fetchOrCreateUserGameData(user.uid);
         setInitialData({
-          coins: gameData.coins,
           masteryCards: gameData.masteryCards,
           pickaxes: gameData.pickaxes,
           highestFloor: gameData.minerChallengeHighestFloor,
@@ -286,7 +286,9 @@ export default function MinerChallenge(props: MinerChallengeProps) {
     <BombProvider
       onClose={props.onClose}
       onGameEnd={props.onGameEnd}
-      initialDisplayedCoins={initialData.coins}
+      // initialDisplayedCoins sẽ lấy từ prop
+      initialDisplayedCoins={props.initialCoins}
+      // Các dữ liệu còn lại lấy từ state sau khi fetch
       masteryCards={initialData.masteryCards}
       initialPickaxes={initialData.pickaxes}
       initialHighestFloor={initialData.highestFloor}
@@ -295,5 +297,3 @@ export default function MinerChallenge(props: MinerChallengeProps) {
     </BombProvider>
   );
 }
-
-// --- END OF FILE miner-ui.tsx ---
