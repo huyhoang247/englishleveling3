@@ -1,5 +1,3 @@
-// --- START OF FILE miner-context.tsx ---
-
 import React, { createContext, useState, useCallback, useContext, ReactNode, useEffect } from 'react';
 
 // --- Cấu hình game (giữ nguyên từ file gốc) ---
@@ -53,7 +51,7 @@ interface BombProviderProps {
     finalPickaxes: number;
     coinsEarned: number;
     highestFloorCompleted: number;
-  }) => Promise<void>; // <<< ĐÃ SỬA ĐỔI
+  }) => void;
 }
 
 // --- Tạo Context ---
@@ -222,7 +220,7 @@ export const BombProvider: React.FC<BombProviderProps> = ({
     setExitConfirmationPos(null);
   };
   
-  const handleClose = async () => { // <<< ĐÃ SỬA ĐỔI
+  const handleClose = () => {
     let uncollectedReward = 0;
     board.flat().forEach(cell => {
       if (cell.isRevealed && cell.isCoin && !cell.isCollected) {
@@ -231,14 +229,12 @@ export const BombProvider: React.FC<BombProviderProps> = ({
     });
     const totalCoinsEarned = coinsEarnedThisSession + uncollectedReward;
 
-    // Đợi cho việc cập nhật dữ liệu hoàn tất
-    await onGameEnd({ // <<< ĐÃ SỬA ĐỔI
+    onGameEnd({
       finalPickaxes: pickaxes,
       coinsEarned: totalCoinsEarned,
       highestFloorCompleted: highestFloorCompletedThisSession
     });
 
-    // Chỉ đóng màn hình sau khi đã cập nhật xong
     onClose();
   };
 
@@ -281,5 +277,3 @@ export const useBomb = (): BombContextType => {
   }
   return context;
 };
-
-// --- END OF FILE miner-context.tsx ---
