@@ -1,5 +1,3 @@
-// --- START OF FILE background-game.tsx ---
-
 import React, { useEffect, useRef, Component, lazy, Suspense, useCallback, useState } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './ui/display/coin-display.tsx';
@@ -35,7 +33,6 @@ import { updateUserCoins } from './gameDataService.ts';
 
 const SystemCheckScreen = lazy(() => import('./SystemCheckScreen.tsx'));
 
-// ... (Các component phụ không thay đổi) ...
 interface GemIconProps { size?: number; color?: string; className?: string; [key: string]: any; }
 const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
   <div className={`flex items-center justify-center ${className}`} style={{ width: size, height: size }} {...props}>
@@ -64,7 +61,6 @@ interface ObstacleRunnerGameProps {
   showNavBar: () => void;
 }
 
-
 export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }: ObstacleRunnerGameProps) {
   
   const {
@@ -78,7 +74,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     isCheckInOpen,
     isMailboxOpen, 
     ownedItems, equippedItems, refreshUserData,
-    handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
+    handleBossFloorUpdate, handleUpdatePickaxes,
     handleUpdateJackpotPool, handleStatsUpdate, getPlayerBattleStats,
     getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
     setCoins, updateSkillsState,
@@ -140,7 +136,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
       >
         <DungeonCanvasBackground isPaused={isGamePaused} />
         <div style={{ display: isAnyOverlayOpen ? 'none' : 'block', visibility: isLoadingUserData ? 'hidden' : 'visible' }} className="w-full h-full">
-           {/* ... (Phần UI game chính không thay đổi) ... */}
            <div className={`${className ?? ''} relative w-full h-full rounded-lg overflow-hidden shadow-2xl bg-transparent`} onClick={handleTap}>
             {renderCharacter()}
             <div className="absolute top-0 left-0 w-full h-12 flex justify-between items-center z-30 relative px-3 overflow-hidden rounded-b-lg shadow-2xl bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-slate-950 border-b border-l border-r border-slate-700/50">
@@ -166,21 +161,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> <ErrorBoundary>{currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(currentUser!.uid, amount))} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={handleUpdateJackpotPool} />)}</ErrorBoundary> </div>
         
-        {/* --- ĐÃ SỬA ĐỔI Ở ĐÂY --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
-                {isMinerChallengeOpen && currentUser && (
+                {isMinerChallengeOpen && (
                     <MinerChallenge 
-                        onClose={toggleMinerChallenge} 
-                        onGameEnd={handleMinerChallengeEnd}
-                        // Chỉ truyền vào số coin hiện tại để hiển thị
-                        initialCoins={coins}
+                        onClose={toggleMinerChallenge}
                     />
                 )}
             </ErrorBoundary>
         </div>
         
-        {/* ... (Các overlay khác không thay đổi) ... */}
         <div className="fixed inset-0 z-[60]" style={{ display: isBossBattleOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isBossBattleOpen && currentUser && (
@@ -239,7 +229,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 )}
             </ErrorBoundary>
         </div>
-
         <div className="fixed inset-0 z-[60]" style={{ display: isAuctionHouseOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isAuctionHouseOpen && currentUser && (
@@ -262,7 +251,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 </ErrorBoundary>
             </div>
         )}
-
         {isMailboxOpen && (
             <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
                 <ErrorBoundary>
@@ -270,7 +258,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 </ErrorBoundary>
             </div>
         )}
-
         {isSystemCheckOpen && (
             <ErrorBoundary fallback={<div className="fixed inset-0 bg-black/70 flex items-center justify-center text-red-400">Lỗi khi tải công cụ System Check.</div>}>
                 <Suspense fallback={<SuspenseLoader />}>
@@ -278,11 +265,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 </Suspense>
             </ErrorBoundary>
         )}
-
         {isAdminPanelOpen && ( <div className="fixed inset-0 z-[70]"> <ErrorBoundary><AdminPanel onClose={toggleAdminPanel} /></ErrorBoundary> </div> )}
+
       </SidebarLayout>
       <GameSkeletonLoader show={isLoadingUserData} />
     </div>
   );
 }
-// --- END OF FILE background-game.tsx ---
