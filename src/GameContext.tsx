@@ -54,7 +54,7 @@ interface IGameContext {
     isEquipmentOpen: boolean;
     isAuctionHouseOpen: boolean;
     isCheckInOpen: boolean;
-    isMailboxOpen: boolean; // THÊM MỚI
+    isMailboxOpen: boolean;
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
@@ -91,7 +91,7 @@ interface IGameContext {
     toggleEquipmentScreen: () => void;
     toggleAuctionHouse: () => void;
     toggleCheckIn: () => void;
-    toggleMailbox: () => void; // THÊM MỚI
+    toggleMailbox: () => void;
     toggleBaseBuilding: () => void;
     setCoins: React.Dispatch<React.SetStateAction<number>>; // For direct updates from components
 }
@@ -146,7 +146,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
   const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
-  const [isMailboxOpen, setIsMailboxOpen] = useState(false); // THÊM MỚI
+  const [isMailboxOpen, setIsMailboxOpen] = useState(false);
   
   // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
@@ -193,7 +193,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 }); setBossBattleHighestFloor(0); setAncientBooks(0);
         setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]);
         setEquippedItems({ weapon: null, armor: null, Helmet: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
-        setIsMailboxOpen(false); // THÊM MỚI
+        setIsMailboxOpen(false);
       }
     });
     return () => unsubscribe();
@@ -224,19 +224,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         return; 
     }
     
-    // Nếu không có gì thay đổi thì không làm gì cả
     if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) { 
         return; 
     }
 
-    // --- BẮT ĐẦU KỸ THUẬT OPTIMISTIC UI UPDATE ---
-
-    // 1. Lưu lại state cũ để có thể khôi phục nếu có lỗi
     const oldCoins = coins;
     const oldPickaxes = pickaxes;
     const oldHighestFloor = minerChallengeHighestFloor;
 
-    // 2. Tính toán và cập nhật UI ngay lập tức (Lạc quan)
     const newOptimisticCoins = oldCoins + result.coinsEarned;
     const newOptimisticPickaxes = result.finalPickaxes;
     const newOptimisticHighestFloor = Math.max(oldHighestFloor, result.highestFloorCompleted);
@@ -247,22 +242,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     
     setIsSyncingData(true);
     try {
-      // 3. Gửi yêu cầu lên server trong nền.
       await processMinerChallengeResult(userId, result);
-      
-      // Nếu server xử lý thành công thì không cần làm gì thêm.
-      // Dữ liệu đã được cập nhật "lạc quan" ở trên.
-      
     } catch (error) { 
       console.error("Service call for Miner Challenge end failed, rolling back UI: ", error); 
-      
-      // 4. Nếu có lỗi, khôi phục lại state cũ
       setCoins(oldCoins);
       setPickaxes(oldPickaxes);
       setMinerChallengeHighestFloor(oldHighestFloor);
-      
       alert("Lỗi khi lưu kết quả. Vui lòng thử lại!");
-
     } finally { 
       setIsSyncingData(false); 
     }
@@ -281,20 +267,28 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     setCoins(newCoins); setUserStats(newStats);
   };
   
+  // --- UPDATED: Hàm này giờ xử lý tất cả các loại item mua từ shop ---
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) { throw new Error("Người dùng chưa được xác thực."); }
     if (!item || typeof item.price !== 'number' || !item.id || typeof quantity !== 'number' || quantity <= 0) { throw new Error("Dữ liệu vật phẩm hoặc số lượng không hợp lệ."); }
     setIsSyncingData(true);
     try {
-      const { newCoins, newBooks, newCapacity } = await processShopPurchase(userId, item, quantity);
+      const { newCoins, newBooks, newCapacity, newPieces } = await processShopPurchase(userId, item, quantity);
       setCoins(newCoins);
-      if (item.id === 1009) { setAncientBooks(newBooks); } else if (item.id === 2001) { setCardCapacity(newCapacity); }
-      alert(`Mua thành công x${quantity} ${item.name}!`);
+
+      if (item.id === 1009) { setAncientBooks(newBooks); } 
+      else if (item.id === 2001) { setCardCapacity(newCapacity); }
+      else if (item.id === 2002) { setEquipmentPieces(newPieces); }
+      // Thêm các loại item khác ở đây nếu cần
+
+      // Bỏ alert ở đây để UI con (Shop) có thể tự quyết định cách thông báo
+      // alert(`Mua thành công x${quantity} ${item.name}!`); 
     } catch (error) {
       console.error("Shop purchase transaction failed:", error);
-      alert(`Mua thất bại: ${error instanceof Error ? error.message : String(error)}`);
-      throw error;
+      // Bỏ alert, để UI con tự xử lý
+      // alert(`Mua thất bại: ${error instanceof Error ? error.message : String(error)}`);
+      throw error; // Ném lỗi ra ngoài để component gọi nó có thể bắt và xử lý (ví dụ: hiển thị toast)
     } finally { setIsSyncingData(false); }
   };
 
@@ -353,7 +347,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const toggleEquipmentScreen = createToggleFunction(setIsEquipmentOpen);
   const toggleAuctionHouse = createToggleFunction(setIsAuctionHouseOpen);
   const toggleCheckIn = createToggleFunction(setIsCheckInOpen);
-  const toggleMailbox = createToggleFunction(setIsMailboxOpen); // THÊM MỚI
+  const toggleMailbox = createToggleFunction(setIsMailboxOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
   
   const handleSkillScreenClose = (dataUpdated: boolean) => {
@@ -396,7 +390,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     }
   };
 
-  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen; // CẬP NHẬT
+  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen;
   const isLoading = isLoadingUserData || !assetsLoaded;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
@@ -407,7 +401,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
     isAuctionHouseOpen,
     isCheckInOpen,
-    isMailboxOpen, // CẬP NHẬT
+    isMailboxOpen,
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, handleStatsUpdate,
     handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
@@ -417,7 +411,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
     toggleAuctionHouse,
     toggleCheckIn,
-    toggleMailbox, // CẬP NHẬT
+    toggleMailbox,
     toggleBaseBuilding, setCoins
   };
 
