@@ -100,7 +100,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                 className={`
                     w-full max-w-md rounded-xl transition-all duration-300
                     ${totalClaimableRewards.masteryCards > 0 && !isUpdating
-                        ? 'text-white border-transparent bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 bg-[length:200%_auto] animate-[background-pan_3s_linear_infinite] shadow-lg shadow-fuchsia-500/30 transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-fuchsia-500/40 cursor-pointer'
+                        ? 'text-white border border-cyan-400/50 bg-gradient-to-br from-cyan-500 to-teal-500 bg-[length:200%_auto] animate-[background-pan_4s_ease-in-out_infinite] shadow-lg shadow-cyan-500/20 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/30 hover:brightness-110 cursor-pointer'
                         : 'bg-slate-800/80 border border-slate-700 text-slate-500 cursor-not-allowed'
                     }
                 `}
@@ -114,7 +114,6 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                             alt="Claim all rewards"
                             className="w-8 h-8" />
                         <span className="font-bold text-lg">
-                            {/* --- MODIFIED LINE --- */}
                             {isUpdating ? 'Claiming...' : 'Claim All'}
                         </span>
                     </div>
