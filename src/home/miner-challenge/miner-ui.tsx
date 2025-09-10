@@ -2,7 +2,7 @@
 
 import React, { memo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
-import { BombProvider, useBombGame } from './BombContext.tsx'; // Import Context và Provider
+import { BombProvider, useBombGame } from './miner-context.tsx'; // Import Context và Provider
 
 // --- Các component Icon SVG & IMG (Không thay đổi, giữ nguyên) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
