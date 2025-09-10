@@ -97,13 +97,16 @@ const ServerIcon = ({ size = 24, color = 'currentColor', className = '', ...prop
     </svg>
 );
 
-// NEW: Icon for Miner Challenge
-const BombIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-      <circle cx="12" cy="13" r="8" />
-      <path d="M12 9h.01" />
-      <path d="M19 10.5V8.3a2.3 2.3 0 0 0-2-2.3l-2.6-.4a2.3 2.3 0 0 1-2-2.3V2.1" />
-    </svg>
+// THAY ĐỔI: Icon for Miner Challenge, thay thế SVG bằng hình ảnh từ URL
+const BombIcon = ({ size = 24, className = '', ...props }) => (
+    <img
+        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/miner-icon.webp"
+        alt="Miner Challenge Icon"
+        width={size}
+        height={size}
+        className={className}
+        {...props}
+    />
 );
 
 const HomeIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
