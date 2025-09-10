@@ -31,7 +31,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
-  const displayedCoins = useAnimateValue(coins, 1000);
+  const displayedCoins = useAnimateValue(coins, 500);
 
   const sortedVocabulary = useMemo(() => [...vocabulary].sort((a, b) => {
     const aIsClaimable = a.exp >= a.maxExp;
