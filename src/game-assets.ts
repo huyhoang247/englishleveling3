@@ -164,9 +164,9 @@ export const bossBattleAssets = {
  */
 export const minerAssets = {
   bombIcon: require("./assets/images/miner-bomb.webp"),
-  coinIcon: require("./assets/images/miner-coin.webp"),
-  exitIcon: require("./assets/images/miner-exit.webp"),
-  pickaxeIcon: require("./assets/images/miner-pickaxe.webp"),
+  coinIcon: require("./assets/images/coin.webp"),
+  exitIcon: require("./assets/images/coin.webp"),
+  pickaxeIcon: require("./assets/images/coin.webp"),
 };
 
 
