@@ -136,7 +136,8 @@ function BombGameUI() {
                 <img src={minerAssets.exitIcon} alt="Floor" className="w-6 h-6 object-contain opacity-70" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Floor</span>
-                    <span className="font-mono text-lg font-bold text-white">{currentFloor}</span>
+                    {/* THAY ĐỔI: Sử dụng font-lilita */}
+                    <span className="font-lilita text-lg font-bold text-white">{currentFloor}</span>
                 </div>
             </div>
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Pickaxes Remaining: ${pickaxes}/${MAX_PICKAXES}`}>
@@ -144,8 +145,10 @@ function BombGameUI() {
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Pickaxe</span>
                     <div className="flex items-baseline" style={{ gap: '2px' }}>
-                      <span className="font-mono text-lg font-bold text-white">{pickaxes}</span>
-                      <span className="font-mono text-sm font-bold text-slate-500">/ {MAX_PICKAXES}</span>
+                      {/* THAY ĐỔI: Sử dụng font-lilita */}
+                      <span className="font-lilita text-lg font-bold text-white">{pickaxes}</span>
+                      {/* THAY ĐỔI: Loại bỏ font-mono */}
+                      <span className="text-sm font-bold text-slate-500">/ {MAX_PICKAXES}</span>
                     </div>
                 </div>
             </div>
@@ -153,14 +156,16 @@ function BombGameUI() {
                 <img src={minerAssets.bombIcon} alt="Bombs" className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Bombs</span>
-                    <span className="font-mono text-lg font-bold text-white">{TOTAL_BOMBS - flagsPlaced}</span>
+                    {/* THAY ĐỔI: Sử dụng font-lilita */}
+                    <span className="font-lilita text-lg font-bold text-white">{TOTAL_BOMBS - flagsPlaced}</span>
                 </div>
             </div>
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Reward per Coin (Mastery Lvl ${masteryCards} x Floor ${currentFloor})`}>
                 <img src={minerAssets.coinIcon} alt="Rewards" className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Rewards</span>
-                    <span className="font-mono text-lg font-bold text-white">{rewardPerCoin}</span>
+                    {/* THAY ĐỔI: Sử dụng font-lilita */}
+                    <span className="font-lilita text-lg font-bold text-white">{rewardPerCoin}</span>
                 </div>
             </div>
         </div>
@@ -192,7 +197,6 @@ function BombGameUI() {
       {exitConfirmationPos && (
          <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
-                {/* THAY ĐỔI: Loại bỏ nền tròn và phóng to icon */}
                 <img src={minerAssets.exitIcon} alt="Complete" className="h-16 w-16 object-contain mx-auto mb-5" />
                 <h3 className="text-2xl font-bold text-white">Floor Complete!</h3>
                 <p className="mt-2 text-slate-400">Go to Floor {currentFloor + 1}?</p>
