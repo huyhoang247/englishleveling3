@@ -159,6 +159,16 @@ export const bossBattleAssets = {
   defeatIcon: require("./assets/images/defeat-icon.webp"),
 };
 
+/**
+ * Tài nguyên cho mini-game Đào Mỏ (Miner Challenge)
+ */
+export const minerAssets = {
+  bombIcon: require("./assets/images/miner-bomb.webp"),
+  coinIcon: require("./assets/images/miner-coin.webp"),
+  exitIcon: require("./assets/images/miner-exit.webp"),
+  pickaxeIcon: require("./assets/images/miner-pickaxe.webp"),
+};
+
 
 /**
  * Mảng tổng hợp TẤT CẢ CÁC URL HÌNH ẢNH cần được tải trước
@@ -173,5 +183,6 @@ export const allImageUrls = [
     ...Object.values(skillAssets).filter(url => typeof url === 'string'),
     ...Object.values(treasureAssets).filter(url => typeof url === 'string'),
     ...Object.values(bossBattleAssets),
+    ...Object.values(minerAssets),
 ];
 // --- END OF FILE game-assets.ts ---
