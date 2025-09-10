@@ -1,6 +1,7 @@
 import React, { useState, memo, useCallback } from 'react';
 import { BombProvider, useBomb } from './miner-context.tsx'; // Import Context
 import CoinDisplay from '../../ui/display/coin-display.tsx';
+import MasteryDisplay from '../../ui/display/mastery-display.tsx'; // THAY ĐỔI: Import MasteryDisplay từ file riêng
 
 // --- Các component Icon SVG & IMG (Không thay đổi) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
@@ -12,18 +13,7 @@ const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/sv
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
 const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d394622fa7e3b147c6b84a11.png';
 
-// --- MasteryDisplay Component (Không thay đổi) ---
-const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
-const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => (
-    <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
-       <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style>
-      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
-      <div className="relative flex items-center justify-center"><img src={masteryIconUrl} alt="Mastery Icon" className="w-4 h-4" /></div>
-      <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{masteryCount.toLocaleString()}</div>
-      <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
-      <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div>
-    </div>
-));
+// --- THAY ĐỔI: MasteryDisplay Component đã bị xóa khỏi đây ---
 
 // --- Cấu hình game (Đã chuyển sang Context) ---
 const BOARD_SIZE = 6;
