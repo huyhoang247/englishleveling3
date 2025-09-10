@@ -211,8 +211,8 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
             </div>
             
             {/* --- START: THAY ĐỔI --- */}
-            {/* Nút đóng đã được thay thế bằng HomeButton để có thể tái sử dụng */}
-            <div className="absolute top-2 right-2">
+            {/* Đã điều chỉnh vị trí của nút Home */}
+            <div className="absolute top-3 right-3">
                 <HomeButton onClick={onClose} />
             </div>
             {/* --- END: THAY ĐỔI --- */}
