@@ -1,24 +1,28 @@
-import React, { memo } from 'react';
+// --- START OF FILE miner-ui.tsx ---
+
+import React, { memo, useCallback } from 'react';
 import { BombProvider, useBomb } from './miner-context.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
-import { useGame } from '../../GameContext.tsx'; // THÊM MỚI: Import useGame hook
+import { useGame } from '../../GameContext.tsx'; // THAY ĐỔI: Import useGame
 
 // --- Các component Icon SVG & IMG (Không thay đổi) ---
+const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const BombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000441c61f7962f3b928212f891.png" alt="Bomb" className={className} /> );
 const CircleDollarSignIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" alt="Coin" className={className} /> );
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
+const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
 const StairsIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000212461f7b2e51a8e75dcdb7e.png" alt="Exit" className={className} /> );
 const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d394622fa7e3b147c6b84a11.png';
 
-// --- Cấu hình game ---
+// --- Cấu hình game (Đã chuyển sang Context) ---
 const BOARD_SIZE = 6;
 const TOTAL_BOMBS = 4; // Chỉ giữ lại để hiển thị
 const MAX_PICKAXES = 50; // Chỉ giữ lại để hiển thị
 const OPEN_CELL_DELAY = 400;
 
-// --- CSS CHO HIỆU ỨNG (Không thay đổi) ---
+// --- CSS CHO HIỆU ỨNG RUNG Ô VÀ CÁC HIỆU ỨNG KHÁC (Không thay đổi) ---
 const CustomAnimationStyles = () => (
   <style>{`
     @keyframes gentle-bounce-inline {
@@ -26,10 +30,16 @@ const CustomAnimationStyles = () => (
       50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
     }
     .animate-gentle-bounce-inline { animation: gentle-bounce-inline 1s infinite; }
+
     @keyframes gentle-shake-animation {
-      0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-3px); }
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      50% { transform: translateX(3px); }
+      75% { transform: translateX(-3px); }
     }
-    .cell-shake { animation: gentle-shake-animation ${OPEN_CELL_DELAY}ms ease-in-out both; }
+    .cell-shake {
+      animation: gentle-shake-animation ${OPEN_CELL_DELAY}ms ease-in-out both;
+    }
   `}</style>
 );
 
@@ -85,17 +95,34 @@ const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
 // Component UI của game, nhận dữ liệu từ Context (Không thay đổi)
 function BombGameUI() {
   const {
-    board, currentFloor, pickaxes, flagsPlaced, animatedDisplayedCoins,
-    masteryCards, exitConfirmationPos, isOpening, rewardPerCoin,
-    handleCellClick, handleRightClick, goToNextFloor, setExitConfirmationPos, handleClose
+    board,
+    currentFloor,
+    pickaxes,
+    flagsPlaced,
+    animatedDisplayedCoins,
+    masteryCards,
+    exitConfirmationPos,
+    isOpening,
+    rewardPerCoin,
+    handleCellClick,
+    handleRightClick,
+    goToNextFloor,
+    setExitConfirmationPos,
+    handleClose
   } = useBomb();
 
   return (
     <main className="relative bg-slate-900 text-white min-h-screen flex flex-col items-center p-4 font-poppins">
       <CustomAnimationStyles />
+      
       <header className="fixed top-0 left-0 w-full z-10 bg-slate-900/70 backdrop-blur-sm border-b border-slate-700/80">
         <div className="w-full max-w-md mx-auto flex items-center justify-between py-3 px-4">
-          <button onClick={handleClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Home" title="Home">
+          <button
+              onClick={handleClose}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
+              aria-label="Home"
+              title="Home"
+          >
               <HomeIcon className="w-5 h-5 text-slate-300" />
               <span className="hidden sm:inline text-sm font-semibold text-slate-300">Home</span>
           </button>
@@ -105,6 +132,7 @@ function BombGameUI() {
           </div>
         </div>
       </header>
+      
       <div className="w-full max-w-xs sm:max-w-sm mx-auto pt-24">
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
@@ -139,14 +167,31 @@ function BombGameUI() {
                 </div>
             </div>
         </div>
+
         <div className="relative">
           <div className="w-full aspect-square">
-            <div className="grid h-full w-full p-1.5 bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700" style={{ gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`, gap: '6px', pointerEvents: isOpening ? 'none' : 'auto' }}>
-              {board.flat().map((cell) => (<Cell key={`${cell.y}-${cell.x}`} cellData={cell} onCellClick={handleCellClick} onRightClick={handleRightClick} isAnimating={isOpening?.x === cell.x && isOpening?.y === cell.y} />))}
+            <div 
+              className="grid h-full w-full p-1.5 bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700" 
+              style={{ 
+                gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`, 
+                gap: '6px',
+                pointerEvents: isOpening ? 'none' : 'auto' 
+              }}
+            >
+              {board.flat().map((cell) => (
+                <Cell 
+                  key={`${cell.y}-${cell.x}`} 
+                  cellData={cell} 
+                  onCellClick={handleCellClick} 
+                  onRightClick={handleRightClick}
+                  isAnimating={isOpening?.x === cell.x && isOpening?.y === cell.y}
+                />
+              ))}
             </div>
           </div>
         </div>
       </div>
+
       {exitConfirmationPos && (
          <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
@@ -166,7 +211,7 @@ function BombGameUI() {
   );
 }
 
-// --- THAY ĐỔI: Props Interface chỉ còn các hàm callback ---
+// --- THAY ĐỔI: Props Interface được cập nhật ---
 interface MinerChallengeProps {
   onClose: () => void;
   onGameEnd: (result: {
@@ -176,9 +221,9 @@ interface MinerChallengeProps {
   }) => void;
 }
 
-// --- THAY ĐỔI: Component chính sử dụng hook useGame để lấy dữ liệu ---
-export default function MinerChallenge({ onClose, onGameEnd }: MinerChallengeProps) {
-  // Lấy dữ liệu trực tiếp từ GameContext
+// --- THAY ĐỔI: Component chính giờ sẽ lấy dữ liệu từ GameContext ---
+export default function MinerChallenge(props: MinerChallengeProps) {
+  // Lấy dữ liệu trực tiếp từ GameContext thay vì fetch lại
   const { 
     coins, 
     masteryCards, 
@@ -188,9 +233,9 @@ export default function MinerChallenge({ onClose, onGameEnd }: MinerChallengePro
 
   return (
     <BombProvider
-      onClose={onClose}
-      onGameEnd={onGameEnd}
-      // Truyền dữ liệu lấy từ context vào provider của game
+      onClose={props.onClose}
+      onGameEnd={props.onGameEnd}
+      // Truyền dữ liệu từ context vào provider
       initialDisplayedCoins={coins}
       masteryCards={masteryCards}
       initialPickaxes={pickaxes}
