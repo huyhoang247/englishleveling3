@@ -100,7 +100,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                 className={`
                     w-full max-w-md rounded-xl transition-all duration-300
                     ${totalClaimableRewards.masteryCards > 0 && !isUpdating
-                        ? 'bg-gradient-to-br from-purple-600 to-indigo-700 text-white border border-purple-500/60 shadow-lg shadow-purple-600/30 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/40 cursor-pointer'
+                        ? 'text-white border-transparent bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 bg-[length:200%_auto] animate-[background-pan_3s_linear_infinite] shadow-lg shadow-fuchsia-500/30 transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-fuchsia-500/40 cursor-pointer'
                         : 'bg-slate-800/80 border border-slate-700 text-slate-500 cursor-not-allowed'
                     }
                 `}
