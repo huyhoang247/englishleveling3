@@ -1,10 +1,8 @@
-// --- START OF FILE bomb.tsx (refactored) ---
-
-import React, { memo } from 'react';
+import React, { useState, memo, useCallback } from 'react';
+import { BombProvider, useBomb } from './bombContext.tsx'; // Import Context
 import CoinDisplay from './ui/display/coin-display.tsx';
-import { BombProvider, useBombGame } from './miner-context.tsx'; // Import Context và Provider
 
-// --- Các component Icon SVG & IMG (Không thay đổi, giữ nguyên) ---
+// --- Các component Icon SVG & IMG (Không thay đổi) ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const BombIcon = ({ className }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000441c61f7962f3b928212f891.png" alt="Bomb" className={className} /> );
@@ -16,37 +14,112 @@ const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishlev
 
 // --- MasteryDisplay Component (Không thay đổi) ---
 const masteryIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png';
-const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => ( /* ... code không đổi ... */ ));
+const MasteryDisplay: React.FC<{ masteryCount: number; }> = memo(({ masteryCount }) => (
+    <div className="bg-gradient-to-br from-indigo-50 to-purple-100 rounded-lg px-3 py-0.5 flex items-center justify-center shadow-md border border-purple-400 relative overflow-hidden group hover:scale-105 transition-all duration-300 cursor-pointer">
+       <style jsx>{`@keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } .animate-pulse-fast { animation: pulse-fast 1s infinite; }`}</style>
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-purple-300/30 to-transparent transform -skew-x-12 translate-x-full group-hover:translate-x-[-180%] transition-all duration-1000"></div>
+      <div className="relative flex items-center justify-center"><img src={masteryIconUrl} alt="Mastery Icon" className="w-4 h-4" /></div>
+      <div className="font-bold text-gray-800 text-xs tracking-wide ml-1">{masteryCount.toLocaleString()}</div>
+      <div className="absolute top-0 right-0 w-0.5 h-0.5 bg-white rounded-full animate-pulse-fast"></div>
+      <div className="absolute bottom-0.5 left-0.5 w-0.5 h-0.5 bg-indigo-200 rounded-full animate-pulse-fast"></div>
+    </div>
+));
 
-// --- CSS CHO HIỆU ỨNG (Không thay đổi) ---
-const CustomAnimationStyles = () => ( /* ... code không đổi ... */ );
+// --- Cấu hình game (Đã chuyển sang Context) ---
+const BOARD_SIZE = 6;
+const TOTAL_BOMBS = 4; // Chỉ giữ lại để hiển thị
+const MAX_PICKAXES = 50; // Chỉ giữ lại để hiển thị
+const OPEN_CELL_DELAY = 400;
+
+// --- CSS CHO HIỆU ỨNG RUNG Ô VÀ CÁC HIỆU ỨNG KHÁC (Không thay đổi) ---
+const CustomAnimationStyles = () => (
+  <style>{`
+    @keyframes gentle-bounce-inline {
+      0%, 100% { transform: translateY(-10%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+      50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+    }
+    .animate-gentle-bounce-inline { animation: gentle-bounce-inline 1s infinite; }
+
+    @keyframes gentle-shake-animation {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      50% { transform: translateX(3px); }
+      75% { transform: translateX(-3px); }
+    }
+    .cell-shake {
+      animation: gentle-shake-animation ${OPEN_CELL_DELAY}ms ease-in-out both;
+    }
+  `}</style>
+);
 
 // --- COMPONENT CELL (Không thay đổi) ---
-const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => { /* ... code không đổi ... */ });
+const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
+    const { isRevealed, isMineRandom, isCoin, isFlagged, isExit, isCollected } = cellData;
+    const isCollectableCoin = isRevealed && isCoin && !isCollected;
+    const cellStyle = { 
+        base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
+        hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent', 
+        revealed: 'bg-slate-800/80 cursor-default border border-slate-700', 
+        exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600',
+        collectableCoin: 'hover:bg-yellow-500/20 cursor-pointer'
+    };
+    let content = null;
+    let specificCellStyle = '';
+    const wrapperClass = "w-[70%] h-[70%]";
+    const iconClass = "w-full h-full";
+    const imageIconClass = `${iconClass} object-contain`;
 
-// --- Giao diện game chính (Component con) ---
-// Component này không nhận props, nó lấy mọi thứ từ context
-const MinerChallengeUI = ({ masteryCards }) => {
-  // Lấy toàn bộ state và actions từ custom hook
+    if (isFlagged) {
+        content = <div className={wrapperClass}><FlagIcon className={`${iconClass} text-red-500`} /></div>;
+    } 
+    else if (isRevealed) {
+        specificCellStyle = cellStyle.revealed;
+        if(isCollectableCoin) specificCellStyle += ` ${cellStyle.collectableCoin}`;
+        let iconContent = null; 
+        let finalWrapperClass = wrapperClass;
+
+        if (isMineRandom) {
+            iconContent = <BombIcon className={imageIconClass} />;
+        } else if (isExit) {
+            iconContent = <StairsIcon className={imageIconClass} />;
+            specificCellStyle = cellStyle.exitRevealed; 
+        } else if (isCollectableCoin) {
+            finalWrapperClass = "w-[60%] h-[60%]";
+            iconContent = <CircleDollarSignIcon className={`${imageIconClass} animate-gentle-bounce-inline`} />;
+        }
+        content = ( <div className={finalWrapperClass}> {iconContent} </div> );
+    }
+    
+    return ( 
+      <div 
+        className={`${cellStyle.base} ${isRevealed ? specificCellStyle : cellStyle.hidden} ${isAnimating ? 'cell-shake' : ''}`} 
+        onClick={() => onCellClick(cellData.x, cellData.y)} 
+        onContextMenu={(e) => onRightClick(e, cellData.x, cellData.y)}
+      >
+        <div className="absolute inset-0 flex items-center justify-center"> {content} </div>
+      </div> 
+    );
+});
+
+// THAY ĐỔI: Component UI của game, nhận dữ liệu từ Context
+function BombGameUI() {
+  // Sử dụng custom hook để lấy tất cả state và hàm cần thiết
   const {
     board,
     currentFloor,
-    flagsPlaced,
     pickaxes,
+    flagsPlaced,
     animatedDisplayedCoins,
-    isOpening,
+    masteryCards,
     exitConfirmationPos,
+    isOpening,
     rewardPerCoin,
     handleCellClick,
     handleRightClick,
     goToNextFloor,
-    handleClose,
     setExitConfirmationPos,
-  } = useBombGame();
-
-  const BOARD_SIZE = 6; // Hoặc lấy từ context nếu muốn
-  const MAX_PICKAXES = 50;
-  const TOTAL_BOMBS = 4;
+    handleClose
+  } = useBomb();
 
   return (
     <main className="relative bg-slate-900 text-white min-h-screen flex flex-col items-center p-4 font-poppins">
@@ -57,7 +130,8 @@ const MinerChallengeUI = ({ masteryCards }) => {
           <button
               onClick={handleClose}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
-              aria-label="Home" title="Home"
+              aria-label="Home"
+              title="Home"
           >
               <HomeIcon className="w-5 h-5 text-slate-300" />
               <span className="hidden sm:inline text-sm font-semibold text-slate-300">Home</span>
@@ -71,7 +145,6 @@ const MinerChallengeUI = ({ masteryCards }) => {
       
       <div className="w-full max-w-xs sm:max-w-sm mx-auto pt-24">
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
-            {/* Floor Display */}
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
                 <StairsIcon className="w-6 h-6 object-contain opacity-70" />
                 <div className="flex flex-col text-left">
@@ -79,7 +152,6 @@ const MinerChallengeUI = ({ masteryCards }) => {
                     <span className="font-mono text-lg font-bold text-white">{currentFloor}</span>
                 </div>
             </div>
-            {/* Pickaxe Display */}
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Pickaxes Remaining: ${pickaxes}/${MAX_PICKAXES}`}>
                 <img src={pickaxeIconUrl} alt="Pickaxe" className="w-6 h-6" />
                 <div className="flex flex-col text-left">
@@ -90,7 +162,6 @@ const MinerChallengeUI = ({ masteryCards }) => {
                     </div>
                 </div>
             </div>
-            {/* Bomb Display */}
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title="Bombs Remaining">
                 <BombIcon className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
@@ -98,7 +169,6 @@ const MinerChallengeUI = ({ masteryCards }) => {
                     <span className="font-mono text-lg font-bold text-white">{TOTAL_BOMBS - flagsPlaced}</span>
                 </div>
             </div>
-            {/* Reward Display */}
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Reward per Coin (Mastery Lvl ${masteryCards} x Floor ${currentFloor})`}>
                 <CircleDollarSignIcon className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
@@ -112,7 +182,11 @@ const MinerChallengeUI = ({ masteryCards }) => {
           <div className="w-full aspect-square">
             <div 
               className="grid h-full w-full p-1.5 bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700" 
-              style={{ gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`, gap: '6px', pointerEvents: isOpening ? 'none' : 'auto' }}
+              style={{ 
+                gridTemplateColumns: `repeat(${BOARD_SIZE}, 1fr)`, 
+                gap: '6px',
+                pointerEvents: isOpening ? 'none' : 'auto' 
+              }}
             >
               {board.flat().map((cell) => (
                 <Cell 
@@ -145,11 +219,9 @@ const MinerChallengeUI = ({ masteryCards }) => {
       )}
     </main>
   );
-};
+}
 
-// --- Component gốc (Wrapper) ---
-// Đây là component sẽ được export và sử dụng ở nơi khác.
-// Nó nhận props và truyền chúng vào Provider.
+// --- Props Interface (Không thay đổi) ---
 interface MinerChallengeProps {
   onClose: () => void;
   initialDisplayedCoins: number;
@@ -163,11 +235,12 @@ interface MinerChallengeProps {
   }) => void;
 }
 
-export default function App(props: MinerChallengeProps) {
+// --- Component chính export ra ngoài ---
+// Nó nhận props và bao bọc UI bằng Provider để cung cấp context
+export default function MinerChallenge(props: MinerChallengeProps) {
   return (
     <BombProvider {...props}>
-      <MinerChallengeUI masteryCards={props.masteryCards} />
+      <BombGameUI />
     </BombProvider>
   );
 }
-// --- END OF FILE bomb.tsx (refactored) ---
