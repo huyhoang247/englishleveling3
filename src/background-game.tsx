@@ -162,9 +162,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             <ErrorBoundary>{isPvpArenaOpen && currentUser && (<PvpArena onClose={togglePvpArena} userId={currentUser.uid} player1={{ name: currentUser.displayName || "You", avatarUrl: currentUser.photoURL || "", coins: coins, initialStats: getPlayerBattleStats(), equippedSkills: getEquippedSkillsDetails() }} player2={{ name: "Shadow Fiend", avatarUrl: "https://i.imgur.com/kQoG2Yd.png", initialStats: { maxHp: 1500, hp: 1500, atk: 120, def: 55 }, equippedSkills: [] }} onCoinChange={async (amount) => setCoins(await updateUserCoins(currentUser!.uid, amount))} onMatchEnd={(result) => console.log(`Match ended. Winner: ${result.winner}`)} /> )}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> <ErrorBoundary>{currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(currentUser!.uid, amount))} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={handleUpdateJackpotPool} />)}</ErrorBoundary> </div>
+        
+        {/* --- ĐÃ SỬA ĐỔI Ở ĐÂY --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isMinerChallengeOpen && currentUser && (<MinerChallenge onClose={toggleMinerChallenge} initialDisplayedCoins={displayedCoins} masteryCards={masteryCards} initialPickaxes={pickaxes} initialHighestFloor={minerChallengeHighestFloor} onGameEnd={handleMinerChallengeEnd} />)}</ErrorBoundary>
+            <ErrorBoundary>
+                {isMinerChallengeOpen && currentUser && (
+                    <MinerChallenge 
+                        onClose={toggleMinerChallenge} 
+                        onGameEnd={handleMinerChallengeEnd} 
+                    />
+                )}
+            </ErrorBoundary>
         </div>
+        
         <div className="fixed inset-0 z-[60]" style={{ display: isBossBattleOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isBossBattleOpen && currentUser && (
