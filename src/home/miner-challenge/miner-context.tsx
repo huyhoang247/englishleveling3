@@ -1,4 +1,4 @@
-import React, { createContext, useState, useCallback, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useState, useCallback, useContext, ReactNode } from 'react';
 
 // --- Cấu hình game (giữ nguyên từ file gốc) ---
 const BOARD_SIZE = 6;
@@ -31,12 +31,13 @@ interface BombContextType {
   masteryCards: number;
   exitConfirmationPos: { x: number, y: number } | null;
   isOpening: { x: number, y: number } | null;
+  isExiting: boolean; // THÊM MỚI: Trạng thái đang thoát game
   rewardPerCoin: number;
   handleCellClick: (x: number, y: number) => void;
   handleRightClick: (e: React.MouseEvent, x: number, y: number) => void;
   goToNextFloor: () => void;
   setExitConfirmationPos: React.Dispatch<React.SetStateAction<{ x: number, y: number } | null>>;
-  handleClose: () => void;
+  handleGameExit: () => Promise<void>;
   resetGame: () => void;
 }
 
@@ -51,7 +52,7 @@ interface BombProviderProps {
     finalPickaxes: number;
     coinsEarned: number;
     highestFloorCompleted: number;
-  }) => void;
+  }) => Promise<void>;
 }
 
 // --- Tạo Context ---
@@ -96,6 +97,7 @@ export const BombProvider: React.FC<BombProviderProps> = ({
   const [animatedDisplayedCoins, setAnimatedDisplayedCoins] = useState(initialDisplayedCoins);
   const [highestFloorCompletedThisSession, setHighestFloorCompletedThisSession] = useState(initialHighestFloor);
   const [isOpening, setIsOpening] = useState<{ x: number, y: number } | null>(null);
+  const [isExiting, setIsExiting] = useState(false); // THÊM MỚI
 
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
@@ -220,22 +222,32 @@ export const BombProvider: React.FC<BombProviderProps> = ({
     setExitConfirmationPos(null);
   };
   
-  const handleClose = () => {
-    let uncollectedReward = 0;
-    board.flat().forEach(cell => {
-      if (cell.isRevealed && cell.isCoin && !cell.isCollected) {
-        uncollectedReward += rewardPerCoin;
-      }
-    });
-    const totalCoinsEarned = coinsEarnedThisSession + uncollectedReward;
+  const handleGameExit = async () => {
+    if (isExiting) return;
+    setIsExiting(true);
 
-    onGameEnd({
-      finalPickaxes: pickaxes,
-      coinsEarned: totalCoinsEarned,
-      highestFloorCompleted: highestFloorCompletedThisSession
-    });
+    try {
+      let uncollectedReward = 0;
+      board.flat().forEach(cell => {
+        if (cell.isRevealed && cell.isCoin && !cell.isCollected) {
+          uncollectedReward += rewardPerCoin;
+        }
+      });
+      const totalCoinsEarned = coinsEarnedThisSession + uncollectedReward;
 
-    onClose();
+      await onGameEnd({
+        finalPickaxes: pickaxes,
+        coinsEarned: totalCoinsEarned,
+        highestFloorCompleted: Math.max(highestFloorCompletedThisSession, initialHighestFloor)
+      });
+
+      onClose();
+    } catch (error) {
+      console.error("Failed to save miner challenge data:", error);
+      alert("Could not save game data. Please check your connection and try again.");
+    } finally {
+      setIsExiting(false);
+    }
   };
 
   const resetGame = () => {
@@ -257,12 +269,13 @@ export const BombProvider: React.FC<BombProviderProps> = ({
     masteryCards,
     exitConfirmationPos,
     isOpening,
+    isExiting, // THÊM MỚI
     rewardPerCoin,
     handleCellClick,
     handleRightClick,
     goToNextFloor,
     setExitConfirmationPos,
-    handleClose,
+    handleGameExit,
     resetGame,
   };
 
