@@ -4,8 +4,8 @@ import React, { memo, useCallback } from 'react';
 import { BombProvider, useBomb } from './miner-context.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
-import { useGame } from '../../GameContext.tsx'; 
-import { minerAssets } from '../../game-assets.ts'; 
+import { useGame } from '../../GameContext.tsx'; // THAY ĐỔI: Import useGame
+import { minerAssets } from '../../game-assets.ts'; // THÊM MỚI: Import tài nguyên hình ảnh
 
 // --- Các component Icon SVG ---
 const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide-icon ${className}`} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
@@ -48,7 +48,7 @@ const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
         base: 'w-full h-full rounded-lg transition-all duration-200 relative', 
         hidden: 'bg-slate-700 hover:bg-slate-600 cursor-pointer shadow-md border border-transparent', 
         revealed: 'bg-slate-800/80 cursor-default border border-slate-700', 
-        exitRevealed: 'bg-violet-900/60 hover:bg-violet-800/70 cursor-pointer border border-violet-600',
+        exitRevealed: 'bg-green-800/50 hover:bg-green-700/60 cursor-pointer border border-green-600',
         collectableCoin: 'hover:bg-yellow-500/20 cursor-pointer'
     };
     let content = null;
@@ -89,7 +89,7 @@ const Cell = memo(({ cellData, onCellClick, onRightClick, isAnimating }) => {
     );
 });
 
-// Component UI của game, nhận dữ liệu từ Context (Đã cập nhật)
+// Component UI của game, nhận dữ liệu từ Context (Không thay đổi)
 function BombGameUI() {
   const {
     board,
@@ -136,8 +136,7 @@ function BombGameUI() {
                 <img src={minerAssets.exitIcon} alt="Floor" className="w-6 h-6 object-contain opacity-70" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Floor</span>
-                    {/* THAY ĐỔI: Sử dụng font-lilita */}
-                    <span className="font-lilita text-lg font-bold text-white">{currentFloor}</span>
+                    <span className="font-mono text-lg font-bold text-white">{currentFloor}</span>
                 </div>
             </div>
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Pickaxes Remaining: ${pickaxes}/${MAX_PICKAXES}`}>
@@ -145,10 +144,8 @@ function BombGameUI() {
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Pickaxe</span>
                     <div className="flex items-baseline" style={{ gap: '2px' }}>
-                      {/* THAY ĐỔI: Sử dụng font-lilita */}
-                      <span className="font-lilita text-lg font-bold text-white">{pickaxes}</span>
-                      {/* THAY ĐỔI: Loại bỏ font-mono */}
-                      <span className="text-sm font-bold text-slate-500">/ {MAX_PICKAXES}</span>
+                      <span className="font-mono text-lg font-bold text-white">{pickaxes}</span>
+                      <span className="font-mono text-sm font-bold text-slate-500">/ {MAX_PICKAXES}</span>
                     </div>
                 </div>
             </div>
@@ -156,16 +153,14 @@ function BombGameUI() {
                 <img src={minerAssets.bombIcon} alt="Bombs" className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Bombs</span>
-                    {/* THAY ĐỔI: Sử dụng font-lilita */}
-                    <span className="font-lilita text-lg font-bold text-white">{TOTAL_BOMBS - flagsPlaced}</span>
+                    <span className="font-mono text-lg font-bold text-white">{TOTAL_BOMBS - flagsPlaced}</span>
                 </div>
             </div>
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Reward per Coin (Mastery Lvl ${masteryCards} x Floor ${currentFloor})`}>
                 <img src={minerAssets.coinIcon} alt="Rewards" className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Rewards</span>
-                    {/* THAY ĐỔI: Sử dụng font-lilita */}
-                    <span className="font-lilita text-lg font-bold text-white">{rewardPerCoin}</span>
+                    <span className="font-mono text-lg font-bold text-white">{rewardPerCoin}</span>
                 </div>
             </div>
         </div>
@@ -197,12 +192,14 @@ function BombGameUI() {
       {exitConfirmationPos && (
          <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
-                <img src={minerAssets.exitIcon} alt="Complete" className="h-16 w-16 object-contain mx-auto mb-5" />
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-teal-500 mb-5 shadow-lg">
+                    <img src={minerAssets.exitIcon} alt="Complete" className="h-9 w-9 object-contain" />
+                </div>
                 <h3 className="text-2xl font-bold text-white">Floor Complete!</h3>
                 <p className="mt-2 text-slate-400">Go to Floor {currentFloor + 1}?</p>
                 <div className="mt-8 grid grid-cols-2 gap-4">
                     <button onClick={() => setExitConfirmationPos(null)} className="inline-flex justify-center rounded-lg border border-slate-600 bg-slate-700 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-slate-600">Stay</button>
-                    <button onClick={goToNextFloor} className="inline-flex justify-center rounded-lg border border-transparent bg-violet-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-violet-700">Next Floor</button>
+                    <button onClick={goToNextFloor} className="inline-flex justify-center rounded-lg border border-transparent bg-green-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-green-700">Next Floor</button>
                 </div>
             </div>
          </div>
@@ -211,7 +208,7 @@ function BombGameUI() {
   );
 }
 
-// --- Props Interface ---
+// --- THAY ĐỔI: Props Interface được cập nhật ---
 interface MinerChallengeProps {
   onClose: () => void;
   onGameEnd: (result: {
@@ -221,8 +218,9 @@ interface MinerChallengeProps {
   }) => void;
 }
 
-// --- Component chính ---
+// --- THAY ĐỔI: Component chính giờ sẽ lấy dữ liệu từ GameContext ---
 export default function MinerChallenge(props: MinerChallengeProps) {
+  // Lấy dữ liệu trực tiếp từ GameContext thay vì fetch lại
   const { 
     coins, 
     masteryCards, 
@@ -234,6 +232,7 @@ export default function MinerChallenge(props: MinerChallengeProps) {
     <BombProvider
       onClose={props.onClose}
       onGameEnd={props.onGameEnd}
+      // Truyền dữ liệu từ context vào provider
       initialDisplayedCoins={coins}
       masteryCards={masteryCards}
       initialPickaxes={pickaxes}
