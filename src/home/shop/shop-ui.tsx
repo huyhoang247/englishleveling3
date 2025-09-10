@@ -1,4 +1,4 @@
-// --- START OF FILE shop.tsx ---
+// --- START OF FILE shop-ui.tsx ---
 
 import React, { useState, useEffect } from 'react';
 import RateLimitToast from '../../thong-bao.tsx';
@@ -9,9 +9,9 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import GemDisplay from '../../ui/display/gem-display.tsx';
 import HomeButton from '../../ui/home-button.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
-import { ShopProvider, useShop } from './shop-context.tsx'; // Import Context
+import { ShopProvider, useShop } from './shop-context.tsx';
 
-// --- START: HELPERS & COMPONENTS SAO CHÉP TỪ INVENTORY.TSX (Không thay đổi) ---
+// --- START: HELPERS & COMPONENTS (Không thay đổi) ---
 const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; case 'SSR': return 'border-rose-500'; default: return 'border-gray-600'; } };
 const getRarityGradient = (rarity: string) => { switch(rarity) { case 'E': return 'from-gray-800/95 to-gray-900/95'; case 'D': return 'from-green-900/70 to-gray-900'; case 'B': return 'from-blue-800/80 to-gray-900'; case 'A': return 'from-purple-800/80 via-black/30 to-gray-900'; case 'S': return 'from-yellow-800/70 via-black/40 to-gray-900'; case 'SR': return 'from-red-800/80 via-orange-900/30 to-black'; case 'SSR': return 'from-rose-800/80 via-red-900/40 to-black'; default: return 'from-gray-800/95 to-gray-900/95'; } };
 const getRarityTextColor = (rarity: string) => { switch(rarity) { case 'E': return 'text-gray-400'; case 'D': return 'text-green-400'; case 'B': return 'text-blue-400'; case 'A': return 'text-purple-400'; case 'S': return 'text-yellow-300'; case 'SR': return 'text-red-400'; case 'SSR': return 'text-rose-400'; default: return 'text-gray-400'; } };
@@ -20,8 +20,6 @@ const formatStatName = (stat: string) => { const translations: { [key: string]: 
 const getUnlockedSkillCount = (rarity: string) => { switch(rarity) { case 'D': return 1; case 'B': return 2; case 'A': return 3; case 'S': return 4; case 'SR': return 5; case 'SSR': return 5; default: return 0; } };
 const renderItemStats = (item: any) => { if (!item.stats) return null; return ( <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 bg-black/20 p-3 rounded-lg border border-gray-700/50 text-sm"> {Object.entries(item.stats).map(([stat, value]) => ( <div key={stat} className="flex justify-between items-center"> <span className="text-gray-400 capitalize text-xs">{formatStatName(stat)}:</span> <span className={'font-semibold text-gray-300'}>{stat.includes('Chance') || stat === 'lifeSteal' ? `${(Number(value) * 100).toFixed(0)}%` : value}</span> </div> ))} </div> ); };
 const renderItemSkills = (item: any) => { if (!item.skills || item.skills.length === 0) return null; const unlockedCount = getUnlockedSkillCount(item.rarity); const unlockRanks = ['D', 'B', 'A', 'S', 'SR']; return ( <div className="space-y-2.5"> {item.skills.map((skill: any, index: number) => { const isLocked = index >= unlockedCount; const requiredRank = unlockRanks[index]; return ( <div key={index} className={`flex items-center gap-3 bg-black/30 p-3 rounded-lg border transition-all duration-200 ${isLocked ? 'border-gray-800/70' : 'border-gray-700/50'}`}> <div className={`relative flex-shrink-0 w-12 h-12 bg-gray-900/80 rounded-md flex items-center justify-center text-2xl border ${isLocked ? 'border-gray-700' : 'border-gray-600'}`}> {isLocked ? '🔒' : skill.icon} </div> <div className="flex-1"> <div className="flex justify-between items-center"> <h5 className={`font-semibold text-sm ${isLocked ? 'text-gray-500' : 'text-gray-100'}`}>{skill.name}</h5> {isLocked && (<span className="text-xs text-yellow-300 font-medium bg-black/40 px-2 py-1 rounded-md border border-yellow-700/40">{requiredRank} Rank</span>)} </div> <p className="text-xs text-gray-400 mt-0.5">{skill.description}</p> </div> </div> ); })} </div> ); };
-// --- END: HELPERS & COMPONENTS SAO CHÉP ---
-
 // --- SVG Icon Components (Không thay đổi) ---
 const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children: React.ReactNode }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg> );
 const Shield = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></Icon> );
@@ -57,9 +55,8 @@ const ShopHeader = ({ onClose, userGold, userGems, isLoading }: { onClose: () =>
 const ShopCountdown = () => { const [timeLeft, setTimeLeft] = useState({ hours: '00', minutes: '00', seconds: '00' }); useEffect(() => { const timer = setInterval(() => { const now = new Date(); const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)); const difference = tomorrow.getTime() - now.getTime(); if (difference > 0) { const hours = Math.floor((difference / (1000 * 60 * 60)) % 24); const minutes = Math.floor((difference / 1000 / 60) % 60); const seconds = Math.floor((difference / 1000) % 60); setTimeLeft({ hours: hours.toString().padStart(2, '0'), minutes: minutes.toString().padStart(2, '0'), seconds: seconds.toString().padStart(2, '0'), }); } }, 1000); return () => clearInterval(timer); }, []); return ( <div className="flex items-center gap-2 text-sm text-slate-400"> <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '2s' }}/> <span>Làm mới sau:</span> <span className="font-mono font-bold text-slate-200 tracking-wider">{timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}</span> </div> ); };
 const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: string; setActiveCategory: (category: string) => void }) => { const categories = [ { name: 'Nạp Gems', icon: Gem }, { name: 'Đổi Vàng', icon: Coins }, { name: 'Item', icon: Tag }, { name: 'Vũ Khí', icon: Swords }, { name: 'Trang Bị', icon: Shield }, { name: 'Gói Đặc Biệt', icon: Sparkles }, { name: 'Sự Kiện', icon: ArrowRightCircle }, ]; return ( <> <nav className="relative flex items-center gap-2 overflow-x-auto horizontal-scrollbar-hidden px-4 sm:px-6 lg:px-8"> {categories.map(({ name, icon: IconComponent }) => ( <button key={name} onClick={() => setActiveCategory(name)} className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-t-lg font-medium text-sm transition-colors duration-200 border-b-2 ${ activeCategory === name ? 'border-cyan-400 text-white' : 'border-transparent text-slate-400 hover:bg-slate-800/50 hover:text-slate-200' }`}> <IconComponent className="w-5 h-5" /> <span>{name}</span> </button> ))} </nav> <style jsx>{` .horizontal-scrollbar-hidden::-webkit-scrollbar { display: none; } .horizontal-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; } nav::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 50px; background: linear-gradient(to left, #0a0a14, transparent); pointer-events: none; } `}</style> </> ); };
 
-// --- >>> START: COMPONENT CHÍNH CỦA CỬA HÀNG ĐÃ ĐƯỢC CẤU TRÚC LẠI <<< ---
+// --- COMPONENT CHÍNH CỦA CỬA HÀNG ---
 const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
-    // Lấy tất cả state và hàm từ context
     const {
         currentUser,
         coins,
@@ -72,15 +69,13 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
         selectedGemPackage,
         selectedExchangePackage,
         toastState,
-        handleLocalPurchase,
+        handlePurchaseItem, // Cập nhật tên hàm
         handleGemExchange,
         handleSelectItem,
         handleSelectGemPackage,
         handleSelectExchangePackage,
-        handleCloseModals, // Dùng hàm đóng modal chung từ context
+        handleCloseModals,
     } = useShop();
-
-    // Toàn bộ useState, useEffect, và các hàm xử lý đã được chuyển sang context
     
     return (
         <div className="w-full h-screen bg-[#0a0a14] font-sans text-white flex flex-col">
@@ -91,14 +86,12 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
             />
             <ShopHeader onClose={onClose} userGold={coins} userGems={gems} isLoading={isLoading} />
 
-            {/* VÙNG CHỨA TABS - CỐ ĐỊNH, KHÔNG CUỘN DỌC */}
             <div className="flex-shrink-0 bg-[#0a0a14] border-b border-slate-800/70 shadow-md pt-2">
                  <div className="max-w-[1600px] mx-auto">
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
                  </div>
             </div>
             
-            {/* VÙNG NỘI DUNG CHÍNH - CHỈ VÙNG NÀY CUỘN DỌC */}
             <div className="flex-1 relative overflow-y-auto scrollbar-hide [background-image:radial-gradient(circle_at_center,_#16213e,_#0a0a14)]">
                 <main className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24">
                     <section>
@@ -138,8 +131,8 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
                 </main>
             </div>
             
-            {/* Các Modal được cập nhật để sử dụng hàm từ context */}
-            {selectedItem && <ItemDetailModal item={selectedItem} onClose={handleCloseModals} onPurchase={handleLocalPurchase} currentCoins={coins} />}
+            {/* Cập nhật onPurchase để gọi handlePurchaseItem */}
+            {selectedItem && <ItemDetailModal item={selectedItem} onClose={handleCloseModals} onPurchase={handlePurchaseItem} currentCoins={coins} />}
             {selectedGemPackage && <PaymentQRModal pkg={selectedGemPackage} onClose={handleCloseModals} currentUser={currentUser} />}
             {selectedExchangePackage && <ExchangeConfirmationModal pkg={selectedExchangePackage} onClose={handleCloseModals} onConfirm={handleGemExchange} currentGems={gems} />}
         
@@ -150,14 +143,13 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
         </div>
     );
 };
-// --- >>> END: COMPONENT CHÍNH CỦA CỬA HÀNG ĐÃ ĐƯỢC CẤU TRÚC LẠI <<< ---
 
-// --- Cập nhật App component để sử dụng Provider ---
-export default function App({ onClose, onCurrencyUpdate }: { onClose: () => void; onCurrencyUpdate: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void; }) {
+// --- Cập nhật App component, không cần truyền prop onCurrencyUpdate nữa ---
+export default function App({ onClose }: { onClose: () => void; }) {
     return (
-        <ShopProvider onCurrencyUpdate={onCurrencyUpdate} getShopItemsFunction={getShopItems}>
+        <ShopProvider getShopItemsFunction={getShopItems}>
             <GameShopUI onClose={onClose} />
         </ShopProvider>
     );
 } 
-// --- END OF FILE shop.tsx ---
+// --- END OF FILE shop-ui.tsx ---
