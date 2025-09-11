@@ -23,7 +23,6 @@ const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http:/
 const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
 const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 const ChevronRightIcon = ({ className }: { className:string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg> );
-const FunnelIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" /></svg> );
 
 const VoiceStepper: React.FC<{
   currentVoice: string;
@@ -63,81 +62,6 @@ const VoiceStepper: React.FC<{
     </div>
   );
 };
-
-// --- START: COMPONENT LỌC VÍ DỤ ---
-const QUESTION_WORDS = ['Who', 'Whom', 'Whose', 'What', 'Which', 'When', 'Where', 'Why', 'How'];
-
-interface ExampleFilterPopupProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onApplyFilter: (filter: string | null) => void;
-  currentFilter: string | null;
-}
-
-const ExampleFilterPopup: React.FC<ExampleFilterPopupProps> = ({ isOpen, onClose, onApplyFilter, currentFilter }) => {
-  if (!isOpen) return null;
-
-  const handleFilterSelect = (word: string) => {
-    onApplyFilter(word);
-    onClose();
-  };
-
-  const handleClearFilter = () => {
-    onApplyFilter(null);
-    onClose();
-  };
-
-  return (
-    <>
-      <div
-        className="fixed inset-0 bg-black/60 z-[60] animate-fade-in-short"
-        onClick={onClose}
-        aria-hidden="true"
-      ></div>
-      <div
-        className="fixed bottom-0 left-0 right-0 z-[60] bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl p-4 content-transition"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="filter-popup-title"
-      >
-        <div className="max-w-md mx-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h3 id="filter-popup-title" className="text-lg font-bold text-gray-800 dark:text-gray-100">Lọc ví dụ theo câu hỏi</h3>
-            <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Đóng">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          </div>
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {QUESTION_WORDS.map(word => (
-              <button
-                key={word}
-                onClick={() => handleFilterSelect(word)}
-                className={`
-                  p-3 text-sm font-semibold rounded-lg transition-colors duration-200
-                  ${currentFilter === word
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                  }
-                `}
-              >
-                {word}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={handleClearFilter}
-            disabled={!currentFilter}
-            className="w-full p-3 text-sm font-semibold rounded-lg text-red-600 bg-red-100 dark:text-red-300 dark:bg-red-500/20 hover:bg-red-200 dark:hover:bg-red-500/30 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Xóa bộ lọc
-          </button>
-        </div>
-      </div>
-    </>
-  );
-};
-// --- END: COMPONENT LỌC VÍ DỤ ---
-
 // --- END: CÁC COMPONENT & ICON ---
 
 
@@ -161,8 +85,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   zIndex = 50,
 }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'example' | 'vocabulary'>('basic');
-  const [activeFilter, setActiveFilter] = useState<string | null>(null); // State for the question filter
-  const [showFilterPopup, setShowFilterPopup] = useState(false); // State for the filter popup visibility
   
   // --- STATE FOR POINT & ZOOM ---
   const [isZoomed, setIsZoomed] = useState(false);
@@ -177,10 +99,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   useEffect(() => {
     if (showVocabDetail && selectedCard) {
       setActiveTab('basic');
-      // Reset states for new card
+      // Reset zoom state
       setIsZoomed(false);
-      setActiveFilter(null);
-      setShowFilterPopup(false);
       
       const urls = generateAudioUrlsForWord(selectedCard.vocabulary.word);
       setAudioUrls(urls);
@@ -260,19 +180,9 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   const renderModalContent = () => {
     const wordToFind = selectedCard.vocabulary.word;
 
-    const filteredSentences = useMemo(() => {
-        // Filter by the main vocabulary word first
-        let sentences = exampleSentencesData.filter(sentence =>
-            new RegExp(`\\b${wordToFind}\\b`, 'i').test(sentence.english)
-        );
-        // Then, apply the question filter if it exists
-        if (activeFilter) {
-            const filterRegex = new RegExp(`^${activeFilter}\\b`, 'i');
-            sentences = sentences.filter(sentence => filterRegex.test(sentence.english));
-        }
-        return sentences;
-    }, [exampleSentencesData, wordToFind, activeFilter]);
-
+    const filteredSentences = exampleSentencesData.filter(sentence =>
+        new RegExp(`\\b${wordToFind}\\b`, 'i').test(sentence.english)
+    );
 
     const highlightWord = (sentence: string, word: string) => {
         const parts = sentence.split(new RegExp(`(${word})`, 'gi'));
@@ -336,72 +246,41 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         );
       case 'example':
         return (
-          <>
-            <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
-              <div className="max-w-4xl mx-auto">
-                <div className="flex items-center justify-between gap-4 mb-8">
-                   <div className="flex items-center gap-2 flex-shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 dark:text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="font-sans text-base font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                        {wordToFind}
-                      </span>
-                  </div>
-                  <button
-                    onClick={() => setShowFilterPopup(true)}
-                    className={`
-                      inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-full border transition-all duration-200 flex-shrink-0
-                      ${activeFilter
-                        ? 'bg-blue-600 text-white border-transparent shadow'
-                        : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                      }
-                    `}
-                  >
-                    <FunnelIcon className="w-4 h-4" />
-                    <span>{activeFilter || 'Lọc câu hỏi'}</span>
-                  </button>
-                </div>
-
-
-                {filteredSentences.length > 0 ? (
-                  <div className="space-y-4">
-                    {filteredSentences.map((sentence, index) => (
-                      <div key={index} className="bg-gray-50 dark:bg-gray-900/70 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                        <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed font-medium">
-                          {highlightWord(sentence.english, wordToFind)}
-                        </p>
-                        <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm italic">
-                          {sentence.vietnamese}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 px-6 bg-gray-50 dark:bg-gray-900 rounded-xl">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                    </svg>
-                    <h4 className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">
-                      {activeFilter ? "Không tìm thấy ví dụ khớp" : "Không tìm thấy ví dụ"}
-                    </h4>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      {activeFilter
-                        ? `Không có ví dụ nào bắt đầu bằng "${activeFilter}".`
-                        : "Chưa có câu ví dụ nào cho từ này trong danh sách."
-                      }
-                    </p>
-                  </div>
-                )}
+          <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center gap-2 mb-8">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 dark:text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="font-sans text-base font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                  {wordToFind}
+                </span>
               </div>
+
+              {filteredSentences.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredSentences.map((sentence, index) => (
+                    <div key={index} className="bg-gray-50 dark:bg-gray-900/70 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                      <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed font-medium">
+                        {highlightWord(sentence.english, wordToFind)}
+                      </p>
+                      <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm italic">
+                        {sentence.vietnamese}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 px-6 bg-gray-50 dark:bg-gray-900 rounded-xl">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                  <h4 className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">Không tìm thấy ví dụ</h4>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Chưa có câu ví dụ nào cho từ này trong danh sách.</p>
+                </div>
+              )}
             </div>
-            <ExampleFilterPopup
-              isOpen={showFilterPopup}
-              onClose={() => setShowFilterPopup(false)}
-              currentFilter={activeFilter}
-              onApplyFilter={setActiveFilter}
-            />
-          </>
+          </div>
         );
       case 'vocabulary':
         return (
