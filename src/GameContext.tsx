@@ -11,7 +11,7 @@ import {
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processDailyCheckIn
 } from './gameDataService.ts';
-import { processShopPurchase } from './home/shop/shop-service2.ts';
+import { processShopPurchase } from './home/shop/shop-service.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
 // --- Define the shape of the context ---
