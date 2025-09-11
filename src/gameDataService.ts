@@ -242,19 +242,6 @@ export const updateUserPickaxes = async (userId: string, newTotal: number): Prom
     return finalAmount;
 };
 
-export const processMinerChallengeResult = async (userId: string, result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
-    const userDocRef = doc(db, 'users', userId);
-    return runTransaction(db, async (t) => {
-        const userDoc = await t.get(userDocRef);
-        if (!userDoc.exists()) throw new Error("User document does not exist!");
-        const data = userDoc.data();
-        const newCoins = (data.coins || 0) + result.coinsEarned;
-        const newHighestFloor = Math.max(data.minerChallengeHighestFloor || 0, result.highestFloorCompleted);
-        t.update(userDocRef, { coins: newCoins, pickaxes: result.finalPickaxes, minerChallengeHighestFloor: newHighestFloor });
-        return { newCoins, newPickaxes: result.finalPickaxes, newHighestFloor };
-    });
-};
-
 export const upgradeUserStats = async (userId: string, cost: number, newStats: { hp: number; atk: number; def: number; }) => {
     const userDocRef = doc(db, 'users', userId);
     return runTransaction(db, async (t) => {
