@@ -9,7 +9,7 @@ import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrad
 
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
-  updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processShopPurchase
+  updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processShopPurchase, processDailyCheckIn
 } from './gameDataService.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
@@ -35,6 +35,8 @@ interface IGameContext {
     equipmentPieces: number;
     ownedItems: OwnedItem[];
     equippedItems: EquippedItems;
+    loginStreak: number;
+    lastCheckIn: Date | null;
 
     // UI States
     isBackgroundPaused: boolean;
@@ -74,6 +76,7 @@ interface IGameContext {
     updateSkillsState: (data: SkillScreenExitData) => void;
     updateEquipmentData: (data: EquipmentScreenExitData) => void;
     updateUserCurrency: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
+    handleCheckInClaim: () => Promise<any>;
 
 
     // Toggles
@@ -129,6 +132,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [equipmentPieces, setEquipmentPieces] = useState(0);
   const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
   const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
+  const [loginStreak, setLoginStreak] = useState(0);
+  const [lastCheckIn, setLastCheckIn] = useState<Date | null>(null);
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
@@ -175,6 +180,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setEquipmentPieces(gameData.equipment.pieces);
       setOwnedItems(gameData.equipment.owned);
       setEquippedItems(gameData.equipment.equipped);
+      setLoginStreak(gameData.loginStreak || 0);
+      setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
     } catch (error) { console.error("Error refreshing user data:", error);
     } finally { setIsLoadingUserData(false); }
   }, []);
@@ -191,7 +198,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 }); setBossBattleHighestFloor(0); setAncientBooks(0);
-        setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]);
+        setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]); setLoginStreak(0); setLastCheckIn(null);
         setEquippedItems({ weapon: null, armor: null, Helmet: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
         setIsMailboxOpen(false);
       }
@@ -390,6 +397,29 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     }
   };
 
+  const handleCheckInClaim = async () => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) { throw new Error("Người dùng chưa được xác thực."); }
+
+    setIsSyncingData(true);
+    try {
+        const { claimedReward, newStreak } = await processDailyCheckIn(userId);
+        
+        // Optimistically update state. A full refreshUserData() is also an option but less efficient.
+        await refreshUserData(); // Refresh to get the exact new values from server
+
+        setLoginStreak(newStreak);
+        setLastCheckIn(new Date()); // Set to now to prevent multiple claims before refresh completes
+
+        return claimedReward; // Return reward details for UI animation
+    } catch (error) {
+        console.error("Check-in claim failed in context:", error);
+        throw error; // Re-throw to be caught by the UI component
+    } finally {
+        setIsSyncingData(false);
+    }
+  };
+
   const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen;
   const isLoading = isLoadingUserData || !assetsLoaded;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
@@ -397,7 +427,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const value: IGameContext = {
     isLoadingUserData: isLoading, isSyncingData, coins, displayedCoins, gems, masteryCards, pickaxes, minerChallengeHighestFloor, userStats, jackpotPool,
     bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, equipmentPieces, ownedItems, equippedItems,
-    isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
+    loginStreak, lastCheckIn, isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
     isAuctionHouseOpen,
     isCheckInOpen,
@@ -407,6 +437,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
     updateEquipmentData,
     updateUserCurrency,
+    handleCheckInClaim,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
     toggleAuctionHouse,
