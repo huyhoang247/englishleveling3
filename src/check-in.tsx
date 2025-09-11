@@ -1,7 +1,7 @@
 // --- START OF FILE check-in.tsx ---
 
 import React, { useState, useEffect } from 'react';
-import { useGame } from '../GameContext.tsx'; // ĐÃ THÊM: Nhập useGame
+import { useGame } from './GameContext.tsx'; // ĐÃ THÊM: Nhập useGame
 import HomeButton from './ui/home-button.tsx'; // ĐÃ THÊM: Nhập HomeButton
 
 // Định nghĩa kiểu cho props, yêu cầu phải có hàm onClose
