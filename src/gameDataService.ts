@@ -308,71 +308,7 @@ export const updateUserInventory = async (userId: string, updates: { newOwned: O
 
 // --- HÀM processGemToCoinExchange ĐÃ ĐƯỢC XÓA KHỎI ĐÂY ---
 
-// --- START: HÀM ĐÃ CẬP NHẬT ---
-export const processShopPurchase = async (userId: string, item: any, quantity: number) => {
-    const userDocRef = doc(db, 'users', userId);
-    
-    return runTransaction(db, async (t) => {
-        const userDoc = await t.get(userDocRef);
-        if (!userDoc.exists()) {
-            throw new Error("User document does not exist!");
-        }
-        
-        const data = userDoc.data();
-        const currentCoins = data.coins || 0;
-        const totalCost = item.price * quantity;
-
-        if (currentCoins < totalCost) {
-            throw new Error("Không đủ vàng.");
-        }
-
-        const updates: { [key: string]: any } = { coins: currentCoins - totalCost };
-        
-        // Khởi tạo các giá trị trả về với dữ liệu hiện tại
-        let newBooks = data.ancientBooks || 0;
-        let newCapacity = data.cardCapacity || 100;
-        let newPieces = data.equipment?.pieces || 0;
-        let newPickaxes = data.pickaxes || 0;
-
-        // Xử lý logic mua vật phẩm
-        switch (item.id) {
-            case 1009: // Ancient Book
-                newBooks += quantity;
-                updates.ancientBooks = newBooks;
-                break;
-            case 2001: // Card Capacity
-                newCapacity += quantity;
-                updates.cardCapacity = newCapacity;
-                break;
-            case 2002: // Equipment Piece
-                newPieces += quantity;
-                updates['equipment.pieces'] = newPieces; // Sử dụng dot notation cho trường lồng nhau
-                break;
-            case 2003: // Pickaxe
-                newPickaxes += quantity;
-                updates.pickaxes = newPickaxes;
-                break;
-            // Thêm các vật phẩm có thể cộng dồn khác tại đây
-            default:
-                // Đối với vũ khí, trang bị (không stackable), bạn sẽ cần logic khác
-                // để thêm chúng vào mảng `equipment.owned`.
-                // Hiện tại, mặc định chỉ trừ tiền.
-                break;
-        }
-        
-        t.update(userDocRef, updates);
-        
-        // Trả về tất cả các giá trị có thể đã được cập nhật
-        return { 
-            newCoins: updates.coins, 
-            newBooks, 
-            newCapacity,
-            newPieces,
-            newPickaxes
-        };
-    });
-};
-// --- END: HÀM ĐÃ CẬP NHẬT ---
+// --- HÀM processShopPurchase ĐÃ ĐƯỢC CHUYỂN SANG shop-service.ts ---
 
 // --- START: HÀM MỚI CHO ĐIỂM DANH HÀNG NGÀY ---
 export const CHECK_IN_REWARDS = [
