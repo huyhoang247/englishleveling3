@@ -2,7 +2,8 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, FC } from 'react';
 import { auth } from '../../firebase.js';
-import { processGemToCoinExchange } from '../../gameDataService.ts'; 
+// Sửa đổi import: trỏ đến file service mới
+import { processGemToCoinExchange } from '../../shop-service.ts'; 
 import { useGame } from '../../GameContext.tsx'; 
 import { itemDatabase } from '../equipment/item-database.ts';
 import type { User } from 'firebase/auth';
