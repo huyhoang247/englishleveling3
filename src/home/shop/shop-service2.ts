@@ -1,6 +1,6 @@
 // --- START OF FILE shop-service.ts ---
 
-import { db } from './firebase';
+import { db } from '../../firebase';
 import { doc, runTransaction } from 'firebase/firestore';
 
 /**
