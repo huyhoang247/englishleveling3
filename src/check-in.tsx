@@ -1,6 +1,7 @@
 // --- START OF FILE check-in.tsx ---
 
 import React, { useState, useEffect } from 'react';
+import { useGame } from '../GameContext.tsx'; // ĐÃ THÊM: Nhập useGame
 import HomeButton from './ui/home-button.tsx'; // ĐÃ THÊM: Nhập HomeButton
 
 // Định nghĩa kiểu cho props, yêu cầu phải có hàm onClose
@@ -17,15 +18,16 @@ interface Particle {
 
 // Component nhận `onClose` từ props
 const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
-  const [currentDay, setCurrentDay] = useState(3);
-  const [claimedDays, setClaimedDays] = useState([1, 2]);
-  const [showRewardAnimation, setShowRewardAnimation] = useState(false);
-  const [animatingReward, setAnimatingReward] = useState<any>(null); // Bạn có thể định nghĩa một kiểu chặt chẽ hơn cho reward nếu muốn
-  // Initialize loginStreak based on the number of already claimed days
-  const [loginStreak, setLoginStreak] = useState(claimedDays.length);
-  // State để lưu trữ các hạt đã được tạo để tránh giật
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const { loginStreak, lastCheckIn, handleCheckInClaim, isSyncingData } = useGame();
 
+  const [showRewardAnimation, setShowRewardAnimation] = useState(false);
+  const [animatingReward, setAnimatingReward] = useState<any>(null);
+  const [particles, setParticles] = useState<Particle[]>([]);
+  
+  // UI State
+  const [canClaimToday, setCanClaimToday] = useState(false);
+  const [claimableDay, setClaimableDay] = useState(1);
+  const [isClaiming, setIsClaiming] = useState(false);
 
   // Define SVG icons as components or directly as JSX
   const StarIcon = ({ className }: { className: string }) => (
@@ -85,15 +87,17 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
   );
 
 
+  // --- START: CẬP NHẬT PHẦN THƯỞNG ---
   const dailyRewards = [
-    { day: 1, name: "Kim Cương", amount: "100", icon: <StarIcon className="text-blue-400" /> },
-    { day: 2, name: "Vàng", amount: "5000", icon: <SparklesIcon className="text-yellow-400" /> },
-    { day: 3, name: "Thẻ Ma Thuật", amount: "3", icon: <ZapIcon className="text-purple-400" /> },
-    { day: 4, name: "Đá Linh Hồn", amount: "10", icon: <ShieldIcon className="text-emerald-400" /> },
-    { day: 5, name: "Rương Huyền Thoại", amount: "1", icon: <GiftIcon className="text-amber-400" /> },
-    { day: 6, name: "Vé Triệu Hồi", amount: "5", icon: <FlameIcon className="text-red-400" /> },
-    { day: 7, name: "Vũ Khí Thần Thánh", amount: "1", icon: <CrownIcon className="text-yellow-400" /> },
+    { day: 1, name: "Vàng", amount: "1000", icon: <SparklesIcon className="text-yellow-400" /> },
+    { day: 2, name: "Sách Cổ", amount: "10", icon: <ZapIcon className="text-purple-400" /> },
+    { day: 3, name: "Mảnh Trang Bị", amount: "10", icon: <ShieldIcon className="text-emerald-400" /> },
+    { day: 4, name: "Dung Lượng Thẻ", amount: "50", icon: <GiftIcon className="text-amber-400" /> },
+    { day: 5, name: "Cúp", amount: "5", icon: <FlameIcon className="text-red-400" /> },
+    { day: 6, name: "Dung Lượng Thẻ", amount: "50", icon: <GiftIcon className="text-amber-400" /> },
+    { day: 7, name: "Cúp", amount: "10", icon: <CrownIcon className="text-yellow-400" /> },
   ];
+  // --- END: CẬP NHẬT PHẦN THƯỞNG ---
 
   // Particle animation classes
   const particleClasses = [
@@ -104,11 +108,38 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
     "animate-float-particle-5"
   ];
 
-  const claimReward = (day: number) => {
-    // Check if the day is the current day and hasn't been claimed yet
-    if (day === currentDay && !claimedDays.includes(day)) {
-      setAnimatingReward(dailyRewards.find(reward => reward.day === day));
+  // --- START: LOGIC MỚI ĐỂ XÁC ĐỊNH TRẠNG THÁI ĐIỂM DANH ---
+  useEffect(() => {
+    const now = new Date();
+    const last = lastCheckIn; // lastCheckIn from context is a Date object or null
 
+    if (!last) {
+        setCanClaimToday(true);
+        setClaimableDay(1);
+        return;
+    }
+
+    const isSameDay = last.getUTCFullYear() === now.getUTCFullYear() &&
+                      last.getUTCMonth() === now.getUTCMonth() &&
+                      last.getUTCDate() === now.getUTCDate();
+    
+    setCanClaimToday(!isSameDay);
+
+    const yesterday = new Date(now);
+    yesterday.setUTCDate(now.getUTCDate() - 1);
+    const isConsecutive = last.getUTCFullYear() === yesterday.getUTCFullYear() &&
+                          last.getUTCMonth() === yesterday.getUTCMonth() &&
+                          last.getUTCDate() === yesterday.getUTCDate();
+
+    setClaimableDay(isConsecutive ? (loginStreak % 7) + 1 : 1);
+  }, [lastCheckIn, loginStreak]);
+  // --- END: LOGIC MỚI ---
+
+  // --- START: HÀM NHẬN THƯỞNG ĐÃ CẬP NHẬT ---
+  const claimReward = async (day: number) => {
+    if (!canClaimToday || day !== claimableDay || isClaiming || isSyncingData) return;
+    setIsClaiming(true);
+    try {
       // --- SỬA ĐỔI CHÍNH ---
       // Tạo ra mảng các hạt với thuộc tính ngẫu nhiên một lần duy nhất
       const generatedParticles: Particle[] = Array.from({ length: 20 }).map((_, i) => {
@@ -131,18 +162,24 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
       // Lưu các hạt đã tạo vào state
       setParticles(generatedParticles);
       
-      // Sau đó mới hiển thị animation
+      const claimedRewardData = await handleCheckInClaim();
+      const rewardForAnimation = dailyRewards.find(r => r.day === claimedRewardData.day);
+      
+      setAnimatingReward({
+          ...rewardForAnimation,
+          amount: claimedRewardData.amount
+      });
+
       setShowRewardAnimation(true);
 
       setTimeout(() => {
         setShowRewardAnimation(false);
-        const newClaimedDays = [...claimedDays, day];
-        setClaimedDays(newClaimedDays);
-        // Update login streak to reflect the total number of claimed days
-        setLoginStreak(newClaimedDays.length);
-        // Dọn dẹp state của các hạt sau khi animation kết thúc
+        setIsClaiming(false);
         setParticles([]);
       }, 2000);
+    } catch (error: any) {
+        alert(error.message || "Có lỗi xảy ra, vui lòng thử lại.");
+        setIsClaiming(false);
     }
   };
 
@@ -226,20 +263,16 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
           <div className="flex justify-between">
             {dailyRewards.map(reward => {
               // Determine the status and styles for each day indicator
-              const isPast = reward.day < currentDay;
-              const isCurrent = reward.day === currentDay;
-              const isClaimed = claimedDays.includes(reward.day);
-              const isFuture = reward.day > currentDay;
-
+              const isClaimed = reward.day <= loginStreak;
+              const isClaimable = canClaimToday && reward.day === claimableDay;
+              
               // Base classes
               let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 relative";
 
               // Apply status-specific styles
-              if (isPast && isClaimed) {
+              if (isClaimed) {
                 dayClasses += " bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md";
-              } else if (isPast && !isClaimed) {
-                dayClasses += " bg-slate-700 text-slate-400 opacity-70";
-              } else if (isCurrent) {
+              } else if (isClaimable) {
                 dayClasses += " bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg";
               } else { // isFuture or past not claimed
                 dayClasses += " bg-slate-700 text-slate-400";
@@ -253,7 +286,7 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
                     <span className="font-bold z-10">{reward.day}</span>
 
                     {/* Decorative elements */}
-                    {isCurrent && (
+                    {isClaimable && (
                       <>
                         {/* Pulsing ring effect for current day */}
                         <div className="absolute inset-0 rounded-full animate-ping opacity-30 bg-indigo-400"></div>
@@ -291,14 +324,17 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
         <div className="pb-6">
           <div className="grid grid-cols-1 gap-4">
             {dailyRewards.map(reward => (
-              <div
+              <div 
                 key={reward.day}
-                className={`group relative rounded-xl overflow-hidden transition-all duration-300 ${
-                  claimedDays.includes(reward.day) ? 'opacity-60' : 'hover:transform hover:scale-[1.02]'
-                }`}
+                className={`group relative rounded-xl overflow-hidden transition-all duration-300 ${reward.day <= loginStreak ? 'opacity-60' : 'hover:transform hover:scale-[1.02]'}`}
               >
+                {(() => {
+                  const isClaimed = reward.day <= loginStreak;
+                  const isClaimable = canClaimToday && reward.day === claimableDay;
+                  return (
+                    <>
                 {/* Glowing border for current day */}
-                {reward.day === currentDay && !claimedDays.includes(reward.day) && (
+                {isClaimable && (
                   <div className="absolute inset-0 rounded-xl animate-pulse-slow"
                       style={{
                         background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.6), transparent)`,
@@ -308,9 +344,7 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
                 )}
 
                 <div
-                  className={`relative flex items-center gap-4 p-4 rounded-xl ${
-                    reward.day === currentDay && !claimedDays.includes(reward.day)
-                      ? 'bg-gradient-to-r from-slate-800 to-slate-800/95 border border-purple-500/50'
+                  className={`relative flex items-center gap-4 p-4 rounded-xl ${ isClaimable ? 'bg-gradient-to-r from-slate-800 to-slate-800/95 border border-purple-500/50'
                       : 'bg-slate-800'
                   }`}
                 >
@@ -323,15 +357,12 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
                   <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
                     reward.day === 7
                       ? 'bg-gradient-to-br from-purple-400 to-indigo-600'
-                      : reward.day === currentDay && !claimedDays.includes(reward.day)
-                      ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600'
+                      : isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600'
                       : 'bg-gradient-to-br from-slate-700 to-slate-900'
                   } shadow-lg p-1`}>
                     <div className={`w-full h-full rounded-lg flex items-center justify-center ${
-                      reward.day === 7
-                        ? 'bg-indigo-500/20'
-                        : reward.day === currentDay && !claimedDays.includes(reward.day)
-                        ? 'bg-slate-800/80 backdrop-blur-sm'
+                      reward.day === 7 ? 'bg-indigo-500/20'
+                        : isClaimable ? 'bg-slate-800/80 backdrop-blur-sm'
                         : 'bg-slate-800'
                     }`}>
                       <div className="w-8 h-8">{reward.icon}</div>
@@ -347,24 +378,21 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
                   {/* Claim button */}
                   <button
                     onClick={() => claimReward(reward.day)}
-                    disabled={reward.day !== currentDay || claimedDays.includes(reward.day)}
+                    disabled={!isClaimable || isClaiming || isSyncingData}
                     className={`min-w-[90px] py-2 px-3 rounded-lg font-semibold text-sm transition-all ${
-                      claimedDays.includes(reward.day)
-                        ? 'bg-green-600 text-white'
-                        : reward.day === currentDay
-                        ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white hover:shadow-indigo-400/20 hover:shadow-lg'
+                      isClaimed ? 'bg-green-600 text-white'
+                        : isClaimable ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white hover:shadow-indigo-400/20 hover:shadow-lg'
                         : 'bg-slate-700 text-slate-400'
                     }`}
                   >
-                    {claimedDays.includes(reward.day)
-                      ? 'Đã Nhận'
-                      : reward.day === currentDay
-                      ? 'Claim'
-                      : 'Claim'}
+                    { isClaimed ? 'Đã Nhận'
+                      : isClaiming && isClaimable ? '...'
+                      : 'Claim'
+                    }
                   </button>
 
                   {/* "Claimed" overlay */}
-                  {claimedDays.includes(reward.day) && (
+                  {isClaimed && (
                     <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
                       <div className="bg-green-600 rounded-full p-2 transform rotate-12">
                         <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -374,6 +402,9 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
                     </div>
                   )}
                 </div>
+                </>
+                );
+              })()}
               </div>
             ))}
           </div>
