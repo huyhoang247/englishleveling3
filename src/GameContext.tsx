@@ -9,8 +9,9 @@ import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrad
 
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
-  updateUserBossFloor, updateUserPickaxes, processMinerChallengeResult, processDailyCheckIn
+  updateUserBossFloor, updateUserPickaxes, processDailyCheckIn
 } from './gameDataService.ts';
+import { processMinerChallengeResult } from './home/miner-challenge/miner-service.ts';
 import { processShopPurchase } from './home/shop/shop-service.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
