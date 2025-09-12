@@ -4,7 +4,7 @@ import { db } from '../../firebase.js';
 import { collection, getDocs } from 'firebase/firestore';
 import { defaultImageUrls } from '../../voca-data/image-url.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
-import { processVocabularyChestOpening, fetchVocabularyScreenData } from '../../vocabularyService.ts';
+import { processVocabularyChestOpening, fetchVocabularyScreenData } from './voca-chest-service.ts';
 // THAY ĐỔI: Import hằng số từ file UI chính thay vì file constants riêng
 import { CHEST_DEFINITIONS } from './voca-chest-ui.tsx';
 
