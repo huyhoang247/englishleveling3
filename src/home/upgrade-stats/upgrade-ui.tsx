@@ -1,15 +1,14 @@
-// --- START OF FILE upgrade-ui.tsx (đã sửa) ---
+// --- START OF FILE upgrade-ui.tsx (đã sửa hoàn chỉnh) ---
 
 import React from 'react';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets } from '../../game-assets.ts';
 import UpgradeStatsSkeleton from './upgrade-loading.tsx';
 import StatUpgradeToast from './upgrade-toast.tsx';
-// --- IMPORT CONTEXT VÀ PROVIDER ---
 import { UpgradeStatsProvider, useUpgradeStats } from './upgrade-context.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
-// --- ICONS (giữ nguyên) ---
+// --- ICONS ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/2000/svg" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const icons = {
   coin: ( <img src={uiAssets.statCoinIcon} alt="Gold Coin Icon" /> ),
@@ -18,7 +17,7 @@ const icons = {
   sword: ( <img src={uiAssets.statAtkIcon} alt="ATK Icon" /> )
 };
 
-// --- CONFIG & LOGIC (giữ nguyên) ---
+// --- CONFIG & LOGIC ---
 export const statConfig = {
   hp: { name: 'HP', icon: icons.heart, baseUpgradeBonus: 50, color: "from-red-600 to-pink-600", toastColors: { border: 'border-pink-500', text: 'text-pink-400' } },
   atk: { name: 'ATK', icon: icons.sword, baseUpgradeBonus: 5, color: "from-sky-500 to-cyan-500", toastColors: { border: 'border-cyan-400', text: 'text-cyan-300' } },
@@ -29,7 +28,7 @@ export const getBonusForLevel = (level: number, baseBonus: number) => { if (leve
 export const calculateTotalStatValue = (currentLevel: number, baseBonus: number) => { if (currentLevel === 0) return 0; let totalValue = 0; const fullTiers = Math.floor(currentLevel / 10); const remainingLevelsInCurrentTier = currentLevel % 10; for (let i = 0; i < fullTiers; i++) { const bonusInTier = baseBonus * Math.pow(2, i); totalValue += 10 * bonusInTier; } const bonusInCurrentTier = baseBonus * Math.pow(2, fullTiers); totalValue += remainingLevelsInCurrentTier * bonusInCurrentTier; return totalValue; };
 const formatNumber = (num: number) => { if (num < 1000) return num.toString(); if (num < 1000000) { const thousands = num / 1000; return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1)}K`; } if (num < 1000000000) { const millions = num / 1000000; return `${millions % 1 === 0 ? millions : millions.toFixed(1)}M`; } const billions = num / 1000000000; return `${billions % 1 === 0 ? billions : billions.toFixed(1)}B`; };
 
-// --- COMPONENT STAT CARD (không đổi) ---
+// --- COMPONENT STAT CARD ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: any) => void, isProcessing: boolean, isDisabled: boolean }) => {
   const { name, level, icon, color } = stat;
   const upgradeCost = calculateUpgradeCost(level);
@@ -54,7 +53,7 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   );
 };
 
-// SỬA ĐỔI: Xóa onDataUpdated khỏi interface
+// --- INTERFACE PROPS ---
 interface UpgradeStatsScreenProps {
   onClose: () => void;
 }
@@ -83,7 +82,7 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-lilita text-white overflow-hidden">
         {/* Lớp Skeleton */}
-        <div className={`absolute inset-0 z-30 transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`absolute inset-0 z-40 transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <UpgradeStatsSkeleton />
         </div>
 
@@ -114,7 +113,8 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
               </div>
             )}
 
-            <div className="relative z-10 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
+            {/* SỬA LỖI: z-10 -> z-30 để toast nổi lên trên header (z-20) */}
+            <div className="relative z-30 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
                 <div className="relative mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
                     {toastData && (
                         <StatUpgradeToast
@@ -158,7 +158,6 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
 }
 
 // --- COMPONENT CHÍNH (WRAPPER) ---
-// SỬA ĐỔI: Xóa onDataUpdated khỏi props và Provider
 export default function UpgradeStatsScreen({ onClose }: UpgradeStatsScreenProps) {
   return (
     <UpgradeStatsProvider>
