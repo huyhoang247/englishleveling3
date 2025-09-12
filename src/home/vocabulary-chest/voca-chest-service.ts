@@ -1,26 +1,17 @@
+// --- START OF FILE voca-chest-service.tsgff.txt ---
 
 import { db } from '../../firebase';
 import { 
   doc, runTransaction, 
   collection, writeBatch
 } from 'firebase/firestore';
-import { fetchOrCreateUserGameData } from '../../gameDataService.ts'; // Import dependency
+// <<< THAY ĐỔI: Xóa import không còn sử dụng
+// import { fetchOrCreateUserGameData } from '../../gameDataService.ts';
 
 /**
- * Lấy dữ liệu cần thiết cho màn hình Lật Thẻ Từ Vựng.
- * @param userId - ID của người dùng.
- * @returns {Promise<{coins: number, gems: number, totalVocab: number, capacity: number}>} Dữ liệu cần thiết.
+ * <<< THAY ĐỔI: Xóa hoàn toàn hàm `fetchVocabularyScreenData`.
+ * GameContext sẽ là nguồn cung cấp dữ liệu này.
  */
-export const fetchVocabularyScreenData = async (userId: string) => {
-  if (!userId) throw new Error("User ID is required.");
-  const gameData = await fetchOrCreateUserGameData(userId);
-  return {
-    coins: gameData.coins,
-    gems: gameData.gems,
-    totalVocab: gameData.totalVocabCollected,
-    capacity: gameData.cardCapacity,
-  };
-};
 
 /**
  * Ghi lại các từ vựng mới được mở khóa vào subcollection 'openedVocab'.
@@ -45,9 +36,10 @@ const recordNewVocabUnlocks = async (userId: string, newWordsData: { id: number;
 /**
  * Xử lý logic nghiệp vụ khi người dùng mở rương từ vựng.
  * Bao gồm việc trừ tiền, cộng gem, tăng số lượng từ, và ghi lại các từ đã mở.
+ * Hàm này không trả về state mới nữa, vì onSnapshot trong GameContext sẽ tự động cập nhật.
  * @param userId - ID người dùng.
  * @param details - Chi tiết giao dịch (loại tiền, chi phí, thưởng gem, dữ liệu từ mới).
- * @returns {Promise<{newCoins: number, newGems: number, newTotalVocab: number}>} Trạng thái tài nguyên mới của người dùng.
+ * @returns {Promise<void>} Hoàn thành khi giao dịch thành công.
  */
 export const processVocabularyChestOpening = async (
   userId: string, 
@@ -61,7 +53,8 @@ export const processVocabularyChestOpening = async (
     const userDocRef = doc(db, 'users', userId);
     const { currency, cost, gemReward, newWordsData } = details;
 
-    const { newCoins, newGems, newTotalVocab } = await runTransaction(db, async (t) => {
+    // <<< THAY ĐỔI: Giao dịch không cần trả về dữ liệu mới nữa
+    await runTransaction(db, async (t) => {
         const userDoc = await t.get(userDocRef);
         if (!userDoc.exists()) throw new Error("User document does not exist!");
         const data = userDoc.data();
@@ -81,10 +74,9 @@ export const processVocabularyChestOpening = async (
             gems: finalGems,
             totalVocabCollected: finalTotalVocab,
         });
-        return { newCoins: finalCoins, newGems: finalGems, newTotalVocab: finalTotalVocab };
     });
 
     await recordNewVocabUnlocks(userId, newWordsData);
 
-    return { newCoins, newGems, newTotalVocab };
+    // Không cần return gì cả. onSnapshot sẽ lo phần còn lại.
 };
