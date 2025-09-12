@@ -1,11 +1,8 @@
-// --- START OF FILE miner-context.tsx ---
-
-import React, { createContext, useState, useCallback, useContext, ReactNode } from 'react';
-// +++ THÊM: Import service và auth để xử lý lưu game
+import React, { createContext, useState, useCallback, useContext, ReactNode, useEffect } from 'react';
 import { processMinerChallengeResult } from './miner-service.ts';
 import { auth } from '../../firebase.js';
 
-// --- Cấu hình game (giữ nguyên từ file gốc) ---
+// --- Cấu hình game ---
 const BOARD_SIZE = 6;
 const NUM_RANDOM_BOMBS = 4;
 const NUM_COINS = 6;
@@ -102,6 +99,49 @@ export const BombProvider: React.FC<BombProviderProps> = ({
   const [highestFloorCompletedThisSession, setHighestFloorCompletedThisSession] = useState(initialHighestFloor);
   const [isOpening, setIsOpening] = useState<{ x: number, y: number } | null>(null);
 
+  const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      let uncollectedReward = 0;
+      board.flat().forEach(cell => {
+        if (cell.isRevealed && cell.isCoin && !cell.isCollected) {
+          uncollectedReward += rewardPerCoin;
+        }
+      });
+      const totalCoinsEarned = coinsEarnedThisSession + uncollectedReward;
+      const finalHighestFloor = Math.max(highestFloorCompletedThisSession, currentFloor > 1 ? currentFloor - 1 : 0);
+
+      // Chỉ hiển thị cảnh báo nếu người dùng đã có tiến trình chơi
+      const hasUnsavedChanges = 
+        pickaxes !== initialPickaxes || 
+        totalCoinsEarned > 0 || 
+        finalHighestFloor > initialHighestFloor;
+
+      if (hasUnsavedChanges) {
+        // Các trình duyệt hiện đại sẽ hiển thị thông báo mặc định
+        event.preventDefault();
+        event.returnValue = 'Bạn có tiến trình chưa lưu. Bạn có chắc muốn rời đi?';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Dọn dẹp listener khi component bị unmount
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [
+    board,
+    pickaxes,
+    coinsEarnedThisSession,
+    currentFloor,
+    highestFloorCompletedThisSession,
+    initialPickaxes,
+    initialHighestFloor,
+    rewardPerCoin
+  ]);
+
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
     const isCountingUp = endValue > startValue;
@@ -122,8 +162,6 @@ export const BombProvider: React.FC<BombProviderProps> = ({
     setBoard(prevBoard => prevBoard.map((row, rowIndex) => rowIndex !== y ? row : row.map((cell, colIndex) => colIndex !== x ? cell : { ...cell, ...newProps })));
   };
 
-  const rewardPerCoin = Math.max(1, masteryCards) * currentFloor;
-  
   const collectAllVisibleCoins = useCallback(() => {
     let totalReward = 0;
     const newBoard = board.map(row =>
@@ -225,7 +263,6 @@ export const BombProvider: React.FC<BombProviderProps> = ({
     setExitConfirmationPos(null);
   };
   
-  // --- THAY ĐỔI: `handleClose` giờ đây sẽ xử lý việc lưu game ---
   const handleClose = async () => {
     let uncollectedReward = 0;
     board.flat().forEach(cell => {
@@ -235,7 +272,6 @@ export const BombProvider: React.FC<BombProviderProps> = ({
     });
     const totalCoinsEarned = coinsEarnedThisSession + uncollectedReward;
     
-    // Cập nhật tầng cao nhất hoàn thành là tầng hiện tại - 1, hoặc tầng cao nhất đã đạt được trong session
     const finalHighestFloor = Math.max(highestFloorCompletedThisSession, currentFloor > 1 ? currentFloor - 1 : 0);
 
     const result = {
