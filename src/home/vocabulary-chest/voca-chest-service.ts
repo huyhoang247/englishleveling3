@@ -1,10 +1,10 @@
 
-import { db } from './firebase';
+import { db } from '../../firebase';
 import { 
   doc, runTransaction, 
   collection, writeBatch
 } from 'firebase/firestore';
-import { fetchOrCreateUserGameData } from './gameDataService'; // Import dependency
+import { fetchOrCreateUserGameData } from '../../gameDataService.ts'; // Import dependency
 
 /**
  * Lấy dữ liệu cần thiết cho màn hình Lật Thẻ Từ Vựng.
