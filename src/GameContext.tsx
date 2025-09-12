@@ -12,7 +12,6 @@ import {
   updateUserBossFloor, updateUserPickaxes
 } from './gameDataService.ts';
 import { processDailyCheckIn } from './home/check-in/check-in-service.ts';
-import { processMinerChallengeResult } from './home/miner-challenge/miner-service.ts';
 import { processShopPurchase } from './home/shop/shop-service.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
@@ -66,7 +65,8 @@ interface IGameContext {
     // Functions
     refreshUserData: () => Promise<void>;
     handleBossFloorUpdate: (newFloor: number) => Promise<void>;
-    handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => Promise<void>;
+    // --- THAY ĐỔI: Hàm này không còn là async nữa
+    handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => void;
     handleUpdatePickaxes: (amountToAdd: number) => Promise<void>;
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
     handleStatsUpdate: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
@@ -227,41 +227,23 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     } catch (error) { console.error("Firestore update failed for boss floor via service: ", error); }
   };
   
-  const handleMinerChallengeEnd = async (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) { 
-        console.error("Cannot update game data: User not authenticated."); 
-        return; 
-    }
+  // --- THAY ĐỔI: `handleMinerChallengeEnd` được đơn giản hóa ---
+  const handleMinerChallengeEnd = (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
+    // Hàm này chỉ nhận kết quả đã được xác nhận từ miner-context và cập nhật state.
+    // Không cần gọi service, không cần isSyncingData, không cần try/catch/rollback.
     
     if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) { 
         return; 
     }
 
-    const oldCoins = coins;
-    const oldPickaxes = pickaxes;
-    const oldHighestFloor = minerChallengeHighestFloor;
+    // Cập nhật state một cách trực tiếp
+    const newCoins = coins + result.coinsEarned;
+    const newPickaxes = result.finalPickaxes;
+    const newHighestFloor = Math.max(minerChallengeHighestFloor, result.highestFloorCompleted);
 
-    const newOptimisticCoins = oldCoins + result.coinsEarned;
-    const newOptimisticPickaxes = result.finalPickaxes;
-    const newOptimisticHighestFloor = Math.max(oldHighestFloor, result.highestFloorCompleted);
-
-    setCoins(newOptimisticCoins);
-    setPickaxes(newOptimisticPickaxes);
-    setMinerChallengeHighestFloor(newOptimisticHighestFloor);
-    
-    setIsSyncingData(true);
-    try {
-      await processMinerChallengeResult(userId, result);
-    } catch (error) { 
-      console.error("Service call for Miner Challenge end failed, rolling back UI: ", error); 
-      setCoins(oldCoins);
-      setPickaxes(oldPickaxes);
-      setMinerChallengeHighestFloor(oldHighestFloor);
-      alert("Lỗi khi lưu kết quả. Vui lòng thử lại!");
-    } finally { 
-      setIsSyncingData(false); 
-    }
+    setCoins(newCoins);
+    setPickaxes(newPickaxes);
+    setMinerChallengeHighestFloor(newHighestFloor);
   };
 
   const handleUpdatePickaxes = async (amountToAdd: number) => {
@@ -277,7 +259,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     setCoins(newCoins); setUserStats(newStats);
   };
   
-  // --- UPDATED: Hàm này giờ xử lý tất cả các loại item mua từ shop ---
   const handleShopPurchase = async (item: any, quantity: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) { throw new Error("Người dùng chưa được xác thực."); }
@@ -290,15 +271,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       if (item.id === 1009) { setAncientBooks(newBooks); } 
       else if (item.id === 2001) { setCardCapacity(newCapacity); }
       else if (item.id === 2002) { setEquipmentPieces(newPieces); }
-      // Thêm các loại item khác ở đây nếu cần
 
-      // Bỏ alert ở đây để UI con (Shop) có thể tự quyết định cách thông báo
-      // alert(`Mua thành công x${quantity} ${item.name}!`); 
-    } catch (error) {
-      console.error("Shop purchase transaction failed:", error);
-      // Bỏ alert, để UI con tự xử lý
-      // alert(`Mua thất bại: ${error instanceof Error ? error.message : String(error)}`);
-      throw error; // Ném lỗi ra ngoài để component gọi nó có thể bắt và xử lý (ví dụ: hiển thị toast)
+      throw error;
     } finally { setIsSyncingData(false); }
   };
 
@@ -408,16 +382,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     try {
         const { claimedReward, newStreak } = await processDailyCheckIn(userId);
         
-        // Optimistically update state. A full refreshUserData() is also an option but less efficient.
-        await refreshUserData(); // Refresh to get the exact new values from server
+        await refreshUserData(); 
 
         setLoginStreak(newStreak);
-        setLastCheckIn(new Date()); // Set to now to prevent multiple claims before refresh completes
+        setLastCheckIn(new Date());
 
-        return claimedReward; // Return reward details for UI animation
+        return claimedReward;
     } catch (error) {
         console.error("Check-in claim failed in context:", error);
-        throw error; // Re-throw to be caught by the UI component
+        throw error;
     } finally {
         setIsSyncingData(false);
     }
