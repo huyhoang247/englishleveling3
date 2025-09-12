@@ -1,6 +1,6 @@
 // --- START OF FILE achievementService.ts (NEW FILE) ---
 
-import { db } from './firebase';
+import { db } from '../../firebase';
 import { 
   doc, getDoc, setDoc, runTransaction, 
   collection, getDocs
