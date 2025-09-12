@@ -1,6 +1,6 @@
 // --- START OF FILE statsService.ts ---
 
-import { db } from './firebase';
+import { db } from '../../firebase';
 import { doc, runTransaction } from 'firebase/firestore';
 
 /**
