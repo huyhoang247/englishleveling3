@@ -12,7 +12,6 @@ const XIcon = ({ size = 24, color = 'currentColor', className = '', ...props }) 
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const FlagIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg> );
 const RefreshCwIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M3 21v-5h5" /></svg> );
-const LoaderIcon = ({ className = '' }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg> );
 
 // --- Cấu hình game (Đã chuyển sang Context) ---
 const BOARD_SIZE = 6;
@@ -101,7 +100,6 @@ function BombGameUI() {
     masteryCards,
     exitConfirmationPos,
     isOpening,
-    isSaving, // +++ LẤY TRẠNG THÁI isSaving TỪ CONTEXT
     rewardPerCoin,
     handleCellClick,
     handleRightClick,
@@ -118,8 +116,7 @@ function BombGameUI() {
         <div className="w-full max-w-md mx-auto flex items-center justify-between py-3 px-4">
           <button
               onClick={handleClose}
-              disabled={isSaving} // +++ VÔ HIỆU HÓA NÚT KHI ĐANG LƯU
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-700'}`}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
               aria-label="Home"
               title="Home"
           >
@@ -195,6 +192,7 @@ function BombGameUI() {
       {exitConfirmationPos && (
          <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
+                {/* THAY ĐỔI: Loại bỏ nền tròn và phóng to icon */}
                 <img src={minerAssets.exitIcon} alt="Complete" className="h-16 w-16 object-contain mx-auto mb-5" />
                 <h3 className="text-2xl font-bold text-white">Floor Complete!</h3>
                 <p className="mt-2 text-slate-400">Go to Floor {currentFloor + 1}?</p>
@@ -204,16 +202,6 @@ function BombGameUI() {
                 </div>
             </div>
          </div>
-      )}
-
-      {/* +++ THÊM MÀN HÌNH CHỜ LƯU DỮ LIỆU +++ */}
-      {isSaving && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4">
-            <LoaderIcon className="w-10 h-10 text-violet-400 animate-spin" />
-            <p className="text-lg font-semibold text-slate-300">Đang lưu tiến trình...</p>
-          </div>
-        </div>
       )}
     </main>
   );
@@ -251,5 +239,3 @@ export default function MinerChallenge(props: MinerChallengeProps) {
     </BombProvider>
   );
 }
-
-// --- END OF FILE miner-ui.tsx ---
