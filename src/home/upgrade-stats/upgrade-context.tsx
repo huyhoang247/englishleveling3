@@ -2,11 +2,12 @@
 
 // --- START OF FILE upgrade-stats-context.tsx ---
 
+// SỬA ĐỔI: Thêm import useGame và bỏ import không cần thiết
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { auth } from '../../firebase.js';
-// SỬA ĐỔI: Tách import để rõ ràng hơn
-import { fetchOrCreateUserGameData } from '../../gameDataService.ts';
-import { upgradeUserStats } from './upgrade-service.ts'; // SỬA ĐỔI: Import từ file mới
+// SỬA ĐỔI: Import useGame để lấy dữ liệu từ context cha
+import { useGame } from '../../GameContext.tsx'; 
+import { upgradeUserStats } from './upgrade-service.ts';
 
 // --- IMPORT CÁC LOGIC TÍNH TOÁN VÀ CONFIG TỪ FILE GỐC ---
 import { statConfig, calculateUpgradeCost, getBonusForLevel, calculateTotalStatValue } from './upgrade-ui.tsx';
@@ -61,14 +62,18 @@ interface UpgradeStatsContextType {
 const UpgradeStatsContext = createContext<UpgradeStatsContextType | undefined>(undefined);
 
 // --- TẠO PROVIDER COMPONENT (CHỨA TOÀN BỘ LOGIC) ---
+// SỬA ĐỔI: Xóa prop onDataUpdated
 interface UpgradeStatsProviderProps {
   children: ReactNode;
-  onDataUpdated: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
 }
 
-export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsProviderProps) {
-  const [gold, setGold] = useState(0);
+// SỬA ĐỔI: Xóa prop onDataUpdated khỏi signature
+export function UpgradeStatsProvider({ children }: UpgradeStatsProviderProps) {
+  // SỬA ĐỔI: Lấy dữ liệu chính từ GameContext thay vì fetch riêng
+  const { coins, userStats, isLoadingUserData } = useGame();
 
+  // State cục bộ để thực hiện optimistic updates. Dữ liệu sẽ được đồng bộ từ GameContext.
+  const [gold, setGold] = useState(0);
   const [stats, setStats] = useState<Stat[]>([
     { id: 'hp', level: 0, ...statConfig.hp },
     { id: 'atk', level: 0, ...statConfig.atk },
@@ -77,44 +82,21 @@ export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsPr
 
   const [message, setMessage] = useState<ReactNode>('');
   const [upgradingId, setUpgradingId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [toastData, setToastData] = useState<ToastData | null>(null);
 
-  // Effect fetch dữ liệu ban đầu
+  // SỬA ĐỔI: Bỏ useEffect fetch dữ liệu ban đầu, thay bằng useEffect để đồng bộ state từ GameContext
   useEffect(() => {
-    const MIN_LOADING_TIME_MS = 500;
-    const startTime = Date.now();
-
-    const fetchData = async () => {
-      const user = auth.currentUser;
-      if (!user) {
-        setMessage("Lỗi: Người dùng chưa đăng nhập.");
-        setIsLoading(false);
-        return;
-      }
-      try {
-        const gameData = await fetchOrCreateUserGameData(user.uid);
-        setGold(gameData.coins);
+    // Đồng bộ state cục bộ của component này với state từ GameContext.
+    // Điều này đảm bảo component luôn hiển thị dữ liệu mới nhất khi nó thay đổi từ bất kỳ nguồn nào khác.
+    if (!isLoadingUserData) {
+        setGold(coins);
         setStats([
-          { id: 'hp', level: gameData.stats.hp || 0, ...statConfig.hp },
-          { id: 'atk', level: gameData.stats.atk || 0, ...statConfig.atk },
-          { id: 'def', level: gameData.stats.def || 0, ...statConfig.def },
+            { id: 'hp', level: userStats.hp || 0, ...statConfig.hp },
+            { id: 'atk', level: userStats.atk || 0, ...statConfig.atk },
+            { id: 'def', level: userStats.def || 0, ...statConfig.def },
         ]);
-      } catch (error) {
-        console.error("Lỗi khi tải dữ liệu người dùng:", error);
-        setMessage("Không thể tải dữ liệu.");
-      } finally {
-        const elapsedTime = Date.now() - startTime;
-        const remainingTime = MIN_LOADING_TIME_MS - elapsedTime;
-        const delay = Math.max(0, remainingTime);
-        
-        setTimeout(() => {
-            setIsLoading(false);
-        }, delay);
-      }
-    };
-    fetchData();
-  }, []);
+    }
+  }, [coins, userStats, isLoadingUserData]);
 
   // Hàm xử lý nâng cấp (logic chính)
   const handleUpgrade = useCallback(async (statId: 'hp' | 'atk' | 'def') => {
@@ -144,6 +126,7 @@ export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsPr
     });
     setTimeout(() => setToastData(null), 1500);
 
+    // Cập nhật lạc quan (Optimistic Update) trên state cục bộ để UI phản hồi ngay lập tức
     const oldGold = gold;
     const oldStats = JSON.parse(JSON.stringify(stats));
     setGold(prev => prev - upgradeCost);
@@ -157,19 +140,20 @@ export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsPr
     };
 
     try {
-      const { newCoins } = await upgradeUserStats(user.uid, upgradeCost, newStatsForFirestore);
-      setGold(newCoins);
-      onDataUpdated(newCoins, newStatsForFirestore);
+      // SỬA ĐỔI: Chỉ cần gọi service để cập nhật DB. GameContext sẽ tự nhận thay đổi qua onSnapshot.
+      await upgradeUserStats(user.uid, upgradeCost, newStatsForFirestore);
+      // Không cần gọi onDataUpdated hay setGold ở đây nữa.
     } catch (error) {
       console.error("Nâng cấp thất bại, đang khôi phục giao diện.", error);
       setMessage('Nâng cấp thất bại, vui lòng thử lại!');
+      // Rollback lại state cục bộ nếu có lỗi
       setGold(oldGold);
       setStats(oldStats);
       setTimeout(() => setMessage(''), 3000);
     } finally {
       setTimeout(() => setUpgradingId(null), 300);
     }
-  }, [upgradingId, stats, gold, onDataUpdated]);
+  }, [upgradingId, stats, gold]); // SỬA ĐỔI: Bỏ onDataUpdated khỏi dependency array
 
   // Các giá trị được tính toán (dùng useMemo để tối ưu)
   const calculatedValues = useMemo(() => {
@@ -193,7 +177,8 @@ export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsPr
 
   // Giá trị cuối cùng mà Provider sẽ cung cấp
   const value: UpgradeStatsContextType = {
-    isLoading,
+    // SỬA ĐỔI: Dùng isLoading từ GameContext
+    isLoading: isLoadingUserData,
     isUpgrading: upgradingId !== null,
     gold,
     stats,
@@ -207,7 +192,6 @@ export function UpgradeStatsProvider({ children, onDataUpdated }: UpgradeStatsPr
 }
 
 // --- TẠO CUSTOM HOOK ĐỂ DỄ DÀNG SỬ DỤNG ---
-// SỬA ĐỔI: Thêm "export" vào đây
 export const useUpgradeStats = () => {
   const context = useContext(UpgradeStatsContext);
   if (context === undefined) {
