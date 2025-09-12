@@ -1,4 +1,4 @@
-// --- START OF FILE upgrade-stats.tsx (đã refactor) ---
+// --- START OF FILE upgrade-ui.tsx (đã sửa) ---
 
 import React from 'react';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
@@ -7,7 +7,6 @@ import UpgradeStatsSkeleton from './upgrade-loading.tsx';
 import StatUpgradeToast from './upgrade-toast.tsx';
 // --- IMPORT CONTEXT VÀ PROVIDER ---
 import { UpgradeStatsProvider, useUpgradeStats } from './upgrade-context.tsx';
-// SỬA ĐỔI: Import useAnimateValue vào đây
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- ICONS (giữ nguyên) ---
@@ -55,10 +54,9 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   );
 };
 
-// INTERFACE PROPS (không đổi)
+// SỬA ĐỔI: Xóa onDataUpdated khỏi interface
 interface UpgradeStatsScreenProps {
   onClose: () => void;
-  onDataUpdated: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
 }
 
 // --- COMPONENT HIỂN THỊ (VIEW) ---
@@ -85,13 +83,12 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
   return (
     <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-lilita text-white overflow-hidden">
         {/* Lớp Skeleton */}
-        <div className={`absolute inset-0 z-30 ${isLoading ? '' : 'hidden'}`}>
+        <div className={`absolute inset-0 z-30 transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <UpgradeStatsSkeleton />
         </div>
 
         {/* Lớp Nội dung chính */}
-        {/* SỬA ĐỔI: Loại bỏ `transition-opacity duration-300` */}
-        <div className={`w-full h-full p-4 flex flex-col items-center justify-center ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+        <div className={`w-full h-full p-4 flex flex-col items-center justify-center transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
             <style>{`@keyframes breathing-stone { 0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } } .animate-breathing { animation: breathing-stone 4s ease-in-out infinite; }`}</style>
             
             <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
@@ -161,9 +158,10 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
 }
 
 // --- COMPONENT CHÍNH (WRAPPER) ---
-export default function UpgradeStatsScreen({ onClose, onDataUpdated }: UpgradeStatsScreenProps) {
+// SỬA ĐỔI: Xóa onDataUpdated khỏi props và Provider
+export default function UpgradeStatsScreen({ onClose }: UpgradeStatsScreenProps) {
   return (
-    <UpgradeStatsProvider onDataUpdated={onDataUpdated}>
+    <UpgradeStatsProvider>
       <UpgradeStatsView onClose={onClose} />
     </UpgradeStatsProvider>
   );
