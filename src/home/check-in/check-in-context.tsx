@@ -1,7 +1,7 @@
 // --- START OF FILE check-in-context.tsx ---
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
-import { bossBattleAssets, dashboardAssets, equipmentUiAssets, uiAssets } from '../../config/game-assets';
+import { bossBattleAssets, dashboardAssets, equipmentUiAssets, uiAssets } from '../../game-assets.ts';
 import { useGame } from '../../GameContext.tsx';
 
 // --- DỮ LIỆU PHẦN THƯỞNG (được chuyển từ file check-in.tsx) ---
