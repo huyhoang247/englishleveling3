@@ -1,8 +1,12 @@
+// --- START OF FILE upgrade-context.tsx ---
+
 // --- START OF FILE upgrade-stats-context.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { auth } from '../../firebase.js';
-import { fetchOrCreateUserGameData, upgradeUserStats } from '../../gameDataService.ts';
+// SỬA ĐỔI: Tách import để rõ ràng hơn
+import { fetchOrCreateUserGameData } from '../../gameDataService.ts';
+import { upgradeUserStats } from './upgrade-service.ts'; // SỬA ĐỔI: Import từ file mới
 
 // --- IMPORT CÁC LOGIC TÍNH TOÁN VÀ CONFIG TỪ FILE GỐC ---
 import { statConfig, calculateUpgradeCost, getBonusForLevel, calculateTotalStatValue } from './upgrade-ui.tsx';
@@ -211,3 +215,4 @@ export const useUpgradeStats = () => {
   }
   return context;
 };
+// --- END OF FILE upgrade-context.tsx ---
