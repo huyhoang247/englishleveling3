@@ -1,18 +1,24 @@
-// --- START OF FILE check-in-context.tsx ---
+// --- START OF FILE CheckInContext.tsx ---
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
-import { bossBattleAssets, dashboardAssets, equipmentUiAssets, uiAssets } from '../../game-assets.ts';
 import { useGame } from '../../GameContext.tsx';
+// --- THÊM MỚI: Import tài nguyên từ game-assets ---
+import { uiAssets, equipmentUiAssets } from '../../game-assets.ts'; 
 
-// --- DỮ LIỆU PHẦN THƯỞNG (được chuyển từ file check-in.tsx) ---
+// --- BƯỚC 1: XÓA BỎ CÁC ĐỊNH NGHĨA ICON SVG NỘI TUYẾN ---
+// Các component StarIcon, SparklesIcon, ZapIcon, ShieldIcon, GiftIcon, FlameIcon, CrownIcon đã được xóa.
+
+// --- BƯỚC 2: CẬP NHẬT DỮ LIỆU PHẦN THƯỞNG VỚI ICON TỪ game-assets ---
+// Thay thế các component SVG bằng thẻ <img> với src từ file tài nguyên.
+// Một className chung được áp dụng để đảm bảo kích thước đồng nhất.
 export const dailyRewards = [
-  { day: 1, name: "Vàng", amount: "1000", icon: uiAssets.goldIcon },
-  { day: 2, name: "Sách Cổ", amount: "10", icon: uiAssets.bookIcon },
-  { day: 3, name: "Mảnh Trang Bị", amount: "10", icon: equipmentUiAssets.equipmentPieceIcon },
-  { day: 4, name: "Dung Lượng Thẻ", amount: "50", icon: uiAssets.cardCapacityIcon },
-  { day: 5, name: "Cúp", amount: "5", icon: dashboardAssets.masteryIcon },
-  { day: 6, name: "Dung Lượng Thẻ", amount: "50", icon: uiAssets.cardCapacityIcon },
-  { day: 7, name: "Cúp", amount: "10", icon: bossBattleAssets.victoryIcon },
+  { day: 1, name: "Vàng", amount: "1000", icon: <img src={uiAssets.goldIcon} alt="Vàng" className="w-10 h-10 object-contain" /> },
+  { day: 2, name: "Sách Cổ", amount: "10", icon: <img src={uiAssets.bookIcon} alt="Sách Cổ" className="w-10 h-10 object-contain" /> },
+  { day: 3, name: "Mảnh Trang Bị", amount: "10", icon: <img src={equipmentUiAssets.equipmentPieceIcon} alt="Mảnh Trang Bị" className="w-10 h-10 object-contain" /> },
+  { day: 4, name: "Dung Lượng Thẻ", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Dung Lượng Thẻ" className="w-10 h-10 object-contain" /> },
+  { day: 5, name: "Cúp", amount: "5", icon: <img src={uiAssets.pvpIcon} alt="Cúp" className="w-10 h-10 object-contain" /> },
+  { day: 6, name: "Dung Lượng Thẻ", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Dung Lượng Thẻ" className="w-10 h-10 object-contain" /> },
+  { day: 7, name: "Cúp", amount: "10", icon: <img src={uiAssets.gemIcon} alt="Cúp đặc biệt" className="w-10 h-10 object-contain" /> },
 ];
 
 // --- ĐỊNH NGHĨA TYPES ---
