@@ -1,6 +1,3 @@
---- START OF FILE voca-chest-context.tsx ---
-
-// --- START OF FILE lat-the-context.tsx (UPDATED IMPORT PATH) ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { db } from '../../firebase.js';
