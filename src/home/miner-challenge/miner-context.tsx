@@ -1,4 +1,9 @@
-import React, { createContext, useState, useCallback, useContext, ReactNode, useEffect } from 'react';
+// --- START OF FILE miner-context.tsx ---
+
+import React, { createContext, useState, useCallback, useContext, ReactNode } from 'react';
+// +++ THÊM: Import service và auth để xử lý lưu game
+import { processMinerChallengeResult } from './miner-service.ts';
+import { auth } from '../../firebase.js';
 
 // --- Cấu hình game (giữ nguyên từ file gốc) ---
 const BOARD_SIZE = 6;
@@ -220,7 +225,8 @@ export const BombProvider: React.FC<BombProviderProps> = ({
     setExitConfirmationPos(null);
   };
   
-  const handleClose = () => {
+  // --- THAY ĐỔI: `handleClose` giờ đây sẽ xử lý việc lưu game ---
+  const handleClose = async () => {
     let uncollectedReward = 0;
     board.flat().forEach(cell => {
       if (cell.isRevealed && cell.isCoin && !cell.isCollected) {
@@ -228,14 +234,36 @@ export const BombProvider: React.FC<BombProviderProps> = ({
       }
     });
     const totalCoinsEarned = coinsEarnedThisSession + uncollectedReward;
+    
+    // Cập nhật tầng cao nhất hoàn thành là tầng hiện tại - 1, hoặc tầng cao nhất đã đạt được trong session
+    const finalHighestFloor = Math.max(highestFloorCompletedThisSession, currentFloor > 1 ? currentFloor - 1 : 0);
 
-    onGameEnd({
+    const result = {
       finalPickaxes: pickaxes,
       coinsEarned: totalCoinsEarned,
-      highestFloorCompleted: highestFloorCompletedThisSession
-    });
+      highestFloorCompleted: finalHighestFloor
+    };
 
-    onClose();
+    if (result.finalPickaxes === initialPickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= initialHighestFloor) {
+        onClose();
+        return;
+    }
+
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+      console.error("Cannot save game data: User not authenticated.");
+      alert("Lỗi: Không thể lưu tiến trình. Vui lòng đăng nhập lại và thử.");
+      return;
+    }
+
+    try {
+      await processMinerChallengeResult(userId, result);
+      onGameEnd(result);
+      onClose();
+    } catch (error) {
+      console.error("Failed to save miner challenge results:", error);
+      alert("Đã xảy ra lỗi khi lưu kết quả. Vui lòng thử lại.");
+    }
   };
 
   const resetGame = () => {
