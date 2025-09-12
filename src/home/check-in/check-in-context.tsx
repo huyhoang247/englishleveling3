@@ -2,8 +2,8 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
-// --- THÊM MỚI: Import tài nguyên từ game-assets ---
-import { uiAssets, equipmentUiAssets } from '../../game-assets.ts'; 
+// --- THÊM MỚI: Import tài nguyên từ game-assets (thêm minerAssets) ---
+import { uiAssets, equipmentUiAssets, minerAssets } from '../../game-assets.ts'; 
 
 // --- BƯỚC 1: XÓA BỎ CÁC ĐỊNH NGHĨA ICON SVG NỘI TUYẾN ---
 // Các component StarIcon, SparklesIcon, ZapIcon, ShieldIcon, GiftIcon, FlameIcon, CrownIcon đã được xóa.
@@ -16,9 +16,11 @@ export const dailyRewards = [
   { day: 2, name: "Ancient Book", amount: "10", icon: <img src={uiAssets.bookIcon} alt="Ancient Book" className="w-10 h-10 object-contain" /> },
   { day: 3, name: "Equipment Piece", amount: "10", icon: <img src={equipmentUiAssets.equipmentPieceIcon} alt="Equipment Piece" className="w-10 h-10 object-contain" /> },
   { day: 4, name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-10 h-10 object-contain" /> },
-  { day: 5, name: "Pickaxe", amount: "5", icon: <img src={uiAssets.pvpIcon} alt="Pickaxe" className="w-10 h-10 object-contain" /> },
+  // --- SỬA ĐỔI: Thay icon cho Pickaxe ---
+  { day: 5, name: "Pickaxe", amount: "5", icon: <img src={minerAssets.pickaxeIcon} alt="Pickaxe" className="w-10 h-10 object-contain" /> },
   { day: 6, name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-10 h-10 object-contain" /> },
-  { day: 7, name: "Pickaxe", amount: "10", icon: <img src={uiAssets.gemIcon} alt="Special Pickaxe" className="w-10 h-10 object-contain" /> },
+  // --- SỬA ĐỔI: Thay icon cho Pickaxe ---
+  { day: 7, name: "Pickaxe", amount: "10", icon: <img src={minerAssets.pickaxeIcon} alt="Special Pickaxe" className="w-10 h-10 object-contain" /> },
 ];
 
 // --- ĐỊNH NGHĨA TYPES ---
