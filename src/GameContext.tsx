@@ -12,7 +12,6 @@ import {
   updateUserBossFloor, updateUserPickaxes
 } from './gameDataService.ts';
 import { processDailyCheckIn } from './home/check-in/check-in-service.ts';
-import { processShopPurchase } from './home/shop/shop-service.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
 // --- Define the shape of the context ---
@@ -65,12 +64,11 @@ interface IGameContext {
     // Functions
     refreshUserData: () => Promise<void>;
     handleBossFloorUpdate: (newFloor: number) => Promise<void>;
-    // --- THAY ĐỔI: Hàm này không còn là async nữa
     handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => void;
     handleUpdatePickaxes: (amountToAdd: number) => Promise<void>;
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
     handleStatsUpdate: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
-    handleShopPurchase: (item: any, quantity: number) => Promise<void>;
+    // Xóa handleShopPurchase khỏi interface
     getPlayerBattleStats: () => { maxHp: number; hp: number; atk: number; def: number; maxEnergy: number; energy: number; };
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
@@ -100,6 +98,8 @@ interface IGameContext {
     toggleMailbox: () => void;
     toggleBaseBuilding: () => void;
     setCoins: React.Dispatch<React.SetStateAction<number>>; // For direct updates from components
+    // Thêm setter để các context con có thể điều khiển trạng thái loading
+    setIsSyncingData: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 // --- Create the context ---
@@ -227,7 +227,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     } catch (error) { console.error("Firestore update failed for boss floor via service: ", error); }
   };
   
-  // --- THAY ĐỔI: `handleMinerChallengeEnd` được đơn giản hóa ---
   const handleMinerChallengeEnd = (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
     // Hàm này chỉ nhận kết quả đã được xác nhận từ miner-context và cập nhật state.
     // Không cần gọi service, không cần isSyncingData, không cần try/catch/rollback.
@@ -259,23 +258,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     setCoins(newCoins); setUserStats(newStats);
   };
   
-  const handleShopPurchase = async (item: any, quantity: number) => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) { throw new Error("Người dùng chưa được xác thực."); }
-    if (!item || typeof item.price !== 'number' || !item.id || typeof quantity !== 'number' || quantity <= 0) { throw new Error("Dữ liệu vật phẩm hoặc số lượng không hợp lệ."); }
-    setIsSyncingData(true);
-    try {
-      const { newCoins, newBooks, newCapacity, newPieces } = await processShopPurchase(userId, item, quantity);
-      setCoins(newCoins);
-
-      if (item.id === 1009) { setAncientBooks(newBooks); } 
-      else if (item.id === 2001) { setCardCapacity(newCapacity); }
-      else if (item.id === 2002) { setEquipmentPieces(newPieces); }
-
-      // DÒNG BỊ LỖI ĐÃ ĐƯỢC XÓA Ở ĐÂY
-    } finally { setIsSyncingData(false); }
-  };
-
+  // Xóa toàn bộ hàm handleShopPurchase
+  
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
       const isLoading = isLoadingUserData || !assetsLoaded;
       if (isLoading) return;
@@ -410,7 +394,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isMailboxOpen,
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, handleStatsUpdate,
-    handleShopPurchase, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
+    getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
     updateEquipmentData,
     updateUserCurrency,
     handleCheckInClaim,
@@ -419,7 +403,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     toggleAuctionHouse,
     toggleCheckIn,
     toggleMailbox,
-    toggleBaseBuilding, setCoins
+    toggleBaseBuilding, setCoins,
+    // Thêm setIsSyncingData vào value object
+    setIsSyncingData
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
