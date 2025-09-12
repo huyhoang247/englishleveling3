@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import { auth } from '../../firebase.js';
 // <<<--- THAY ĐỔI: Import useGame để lấy dữ liệu và hàm cập nhật toàn cục
-import { useGame } from '../GameContext.tsx';
+import { useGame } from '../../GameContext.tsx';
 import {
   fetchAndSyncVocabularyData,
   updateAchievementData,
