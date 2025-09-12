@@ -1,4 +1,4 @@
-// --- START OF FILE check-in.tsx ---
+// --- START OF FILE check-in-ui.tsx ---
 
 import React from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx';
@@ -104,7 +104,8 @@ const DailyCheckInView = () => {
                   <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg font-medium text-slate-300">Day {reward.day}</div>
                   <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${ reward.day === 7 ? 'bg-gradient-to-br from-purple-400 to-indigo-600' : isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
                     <div className={`w-full h-full rounded-lg flex items-center justify-center ${ reward.day === 7 ? 'bg-indigo-500/20' : isClaimable ? 'bg-slate-800/80 backdrop-blur-sm' : 'bg-slate-800'}`}>
-                      <div className="w-8 h-8">{reward.icon}</div>
+                      {/* --- SỬA LỖI: Thay đổi w-8 h-8 thành w-10 h-10 để khớp với kích thước icon --- */}
+                      <div className="w-10 h-10">{reward.icon}</div>
                     </div>
                   </div>
                   <div className="flex-1">
@@ -190,4 +191,4 @@ const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
 };
 
 export default DailyCheckIn;
-// --- END OF FILE check-in.tsx ---
+// --- END OF FILE check-in-ui.tsx ---
