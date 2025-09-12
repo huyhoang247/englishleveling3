@@ -102,9 +102,10 @@ const DailyCheckInView = () => {
                 {isClaimable && (<div className="absolute inset-0 rounded-xl animate-pulse-slow" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.6), transparent)`, backgroundSize: '200% 200%'}}></div>)}
                 <div className={`relative flex items-center gap-4 p-4 rounded-xl ${ isClaimable ? 'bg-gradient-to-r from-slate-800 to-slate-800/95 border border-purple-500/50' : 'bg-slate-800'}`}>
                   <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg font-medium text-slate-300">Day {reward.day}</div>
-                  <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${ reward.day === 7 ? 'bg-gradient-to-br from-purple-400 to-indigo-600' : isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
-                    <div className={`w-full h-full rounded-lg flex items-center justify-center ${ reward.day === 7 ? 'bg-indigo-500/20' : isClaimable ? 'bg-slate-800/80 backdrop-blur-sm' : 'bg-slate-800'}`}>
-                      {/* --- SỬA LỖI: Thay đổi w-8 h-8 thành w-10 h-10 để khớp với kích thước icon --- */}
+                  {/* --- SỬA ĐỔI 1: Xóa bỏ style đặc biệt cho Day 7 --- */}
+                  <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
+                    {/* --- SỬA ĐỔI 2: Xóa bỏ style đặc biệt cho Day 7 --- */}
+                    <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80 backdrop-blur-sm' : 'bg-slate-800'}`}>
                       <div className="w-10 h-10">{reward.icon}</div>
                     </div>
                   </div>
