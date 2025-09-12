@@ -272,7 +272,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       else if (item.id === 2001) { setCardCapacity(newCapacity); }
       else if (item.id === 2002) { setEquipmentPieces(newPieces); }
 
-      throw error;
+      // DÒNG BỊ LỖI ĐÃ ĐƯỢC XÓA Ở ĐÂY
     } finally { setIsSyncingData(false); }
   };
 
@@ -433,3 +433,4 @@ export const useGame = (): IGameContext => {
   }
   return context;
 };
+// --- END OF FILE GameContext.tsx ---
