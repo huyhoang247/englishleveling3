@@ -2,8 +2,8 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, FC } from 'react';
 import { auth } from '../../firebase.js';
-// Sửa đổi import: trỏ đến file service mới
-import { processGemToCoinExchange } from './shop-service.ts'; 
+// Sửa đổi import: thêm processShopPurchase
+import { processGemToCoinExchange, processShopPurchase } from './shop-service.ts'; 
 import { useGame } from '../../GameContext.tsx'; 
 import { itemDatabase } from '../equipment/item-database.ts';
 import type { User } from 'firebase/auth';
@@ -58,13 +58,13 @@ interface ShopProviderProps {
 export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunction }) => {
   const currentUser = auth.currentUser;
   
-  // --- Lấy state và hàm cập nhật trực tiếp từ GameContext ---
+  // Lấy thêm setIsSyncingData và bỏ handleShopPurchase
   const { 
     coins, 
     gems, 
     isLoadingUserData, 
-    handleShopPurchase,
-    updateUserCurrency
+    updateUserCurrency,
+    setIsSyncingData
   } = useGame();
 
   // --- State cục bộ của ShopContext ---
@@ -93,17 +93,39 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunc
     }
   }, [getShopItemsFunction]);
 
-  // --- Hàm này giờ sẽ gọi handleShopPurchase từ GameContext ---
+  // Hàm này giờ sẽ chứa logic xử lý mua hàng, gọi service và cập nhật state thông qua GameContext
   const handlePurchaseItem = async (item: any, quantity: number) => {
-    if (!currentUser) throw new Error("User not authenticated.");
+    if (!currentUser) {
+      triggerToast("Mua thất bại: Người dùng chưa đăng nhập.", true);
+      throw new Error("User not authenticated.");
+    }
+    if (!item || typeof item.price !== 'number' || !item.id || typeof quantity !== 'number' || quantity <= 0) {
+      throw new Error("Dữ liệu vật phẩm hoặc số lượng không hợp lệ.");
+    }
+
+    setIsSyncingData(true);
     try {
-      await handleShopPurchase(item, quantity); 
+      // Gọi trực tiếp service xử lý nghiệp vụ
+      const { newCoins, newBooks, newCapacity, newPieces } = await processShopPurchase(currentUser.uid, item, quantity);
+      
+      // Tạo object chứa các thay đổi để cập nhật GameContext
+      const updates: { coins?: number; ancientBooks?: number; cardCapacity?: number; equipmentPieces?: number; } = { coins: newCoins };
+      
+      if (item.id === 1009) { updates.ancientBooks = newBooks; } 
+      else if (item.id === 2001) { updates.cardCapacity = newCapacity; }
+      else if (item.id === 2002) { updates.equipmentPieces = newPieces; }
+      
+      // Dùng hàm từ GameContext để cập nhật state tập trung
+      updateUserCurrency(updates);
+      
       triggerToast(`Mua thành công x${quantity} ${item.name}!`, false);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error("Shop purchase failed (relayed from GameContext):", error);
+      console.error("Shop purchase failed in ShopContext:", error);
       triggerToast(`Mua thất bại: ${errorMessage}`, true);
-      throw error;
+      throw error; // Ném lại lỗi để component gọi có thể xử lý (ví dụ: không đóng modal)
+    } finally {
+      setIsSyncingData(false);
     }
   };
 
