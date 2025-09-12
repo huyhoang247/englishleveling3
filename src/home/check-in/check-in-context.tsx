@@ -1,4 +1,4 @@
-// --- START OF FILE CheckInContext.tsx ---
+// --- START OF FILE check-in-context.tsx ---
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
@@ -12,13 +12,13 @@ import { uiAssets, equipmentUiAssets } from '../../game-assets.ts';
 // Thay thế các component SVG bằng thẻ <img> với src từ file tài nguyên.
 // Một className chung được áp dụng để đảm bảo kích thước đồng nhất.
 export const dailyRewards = [
-  { day: 1, name: "Vàng", amount: "1000", icon: <img src={uiAssets.goldIcon} alt="Vàng" className="w-10 h-10 object-contain" /> },
-  { day: 2, name: "Sách Cổ", amount: "10", icon: <img src={uiAssets.bookIcon} alt="Sách Cổ" className="w-10 h-10 object-contain" /> },
-  { day: 3, name: "Mảnh Trang Bị", amount: "10", icon: <img src={equipmentUiAssets.equipmentPieceIcon} alt="Mảnh Trang Bị" className="w-10 h-10 object-contain" /> },
-  { day: 4, name: "Dung Lượng Thẻ", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Dung Lượng Thẻ" className="w-10 h-10 object-contain" /> },
-  { day: 5, name: "Cúp", amount: "5", icon: <img src={uiAssets.pvpIcon} alt="Cúp" className="w-10 h-10 object-contain" /> },
-  { day: 6, name: "Dung Lượng Thẻ", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Dung Lượng Thẻ" className="w-10 h-10 object-contain" /> },
-  { day: 7, name: "Cúp", amount: "10", icon: <img src={uiAssets.gemIcon} alt="Cúp đặc biệt" className="w-10 h-10 object-contain" /> },
+  { day: 1, name: "Gold", amount: "1000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
+  { day: 2, name: "Ancient Book", amount: "10", icon: <img src={uiAssets.bookIcon} alt="Ancient Book" className="w-10 h-10 object-contain" /> },
+  { day: 3, name: "Equipment Piece", amount: "10", icon: <img src={equipmentUiAssets.equipmentPieceIcon} alt="Equipment Piece" className="w-10 h-10 object-contain" /> },
+  { day: 4, name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-10 h-10 object-contain" /> },
+  { day: 5, name: "Pickaxe", amount: "5", icon: <img src={uiAssets.pvpIcon} alt="Pickaxe" className="w-10 h-10 object-contain" /> },
+  { day: 6, name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-10 h-10 object-contain" /> },
+  { day: 7, name: "Pickaxe", amount: "10", icon: <img src={uiAssets.gemIcon} alt="Special Pickaxe" className="w-10 h-10 object-contain" /> },
 ];
 
 // --- ĐỊNH NGHĨA TYPES ---
@@ -156,4 +156,4 @@ export const useCheckIn = (): CheckInContextType => {
   return context;
 };
 
-// --- END OF FILE CheckInContext.tsx ---
+// --- END OF FILE check-in-context.tsx ---
