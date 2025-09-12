@@ -1,3 +1,4 @@
+// --- START OF FILE gameDataService.ts ---
 
 import { db } from './firebase';
 import { 
@@ -219,18 +220,7 @@ export const updateUserPickaxes = async (userId: string, newTotal: number): Prom
     return finalAmount;
 };
 
-export const upgradeUserStats = async (userId: string, cost: number, newStats: { hp: number; atk: number; def: number; }) => {
-    const userDocRef = doc(db, 'users', userId);
-    return runTransaction(db, async (t) => {
-        const userDoc = await t.get(userDocRef);
-        if (!userDoc.exists()) throw new Error("User document does not exist!");
-        const currentCoins = userDoc.data().coins || 0;
-        if (currentCoins < cost) throw new Error("Không đủ vàng trên server.");
-        const newCoins = currentCoins - cost;
-        t.update(userDocRef, { coins: newCoins, stats: newStats });
-        return { newCoins, newStats };
-    });
-};
+// <<<--- HÀM upgradeUserStats ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
 
 export const updateUserSkills = async (userId: string, updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
     const userDocRef = doc(db, 'users', userId);
