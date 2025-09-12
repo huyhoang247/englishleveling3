@@ -9,11 +9,9 @@ import React, {
   ReactNode,
   useMemo
 } from 'react';
-import { User } from 'firebase/auth';
-import {
-  fetchOrCreateUserGameData,
-} from '../../gameDataService.ts';
-// <<<--- THAY ĐỔI: Import từ file service mới
+import { auth } from '../../firebase.js';
+// <<<--- THAY ĐỔI: Import useGame để lấy dữ liệu và hàm cập nhật toàn cục
+import { useGame } from '../GameContext.tsx';
 import {
   fetchAndSyncVocabularyData,
   updateAchievementData,
@@ -24,8 +22,8 @@ import {
 interface AchievementsContextState {
   // --- Dữ liệu ---
   vocabulary: VocabularyItem[];
-  coins: number;
-  masteryCards: number;
+  coins: number; // Vẫn cung cấp, nhưng giờ lấy từ GameContext
+  masteryCards: number; // Vẫn cung cấp, nhưng giờ lấy từ GameContext
   // --- Trạng thái ---
   isInitialLoading: boolean; // Chỉ true trong lần tải đầu tiên
   isUpdating: boolean; // True khi đang thực hiện hành động (nhận thưởng)
@@ -40,56 +38,46 @@ interface AchievementsContextState {
 // Tạo Context với giá trị mặc định
 const AchievementsContext = createContext<AchievementsContextState | undefined>(undefined);
 
-// <<<--- BƯỚC 3: NHẬN VÀ SỬ DỤNG CALLBACK TRONG PROVIDER ---
-
-// Props cho Provider
+// <<<--- THAY ĐỔI: Props của Provider được đơn giản hóa, không cần truyền user hay callback nữa
 interface AchievementsProviderProps {
   children: ReactNode;
-  user: User | null; // Cần user để lấy dữ liệu
-  // <<<--- THAY ĐỔI: Thêm prop onDataUpdate
-  onDataUpdate: (updates: { coins?: number, masteryCards?: number }) => void;
 }
 
 // Component Provider
-export const AchievementsProvider = ({ children, user, onDataUpdate }: AchievementsProviderProps) => {
+export const AchievementsProvider = ({ children }: AchievementsProviderProps) => {
+  // <<<--- THAY ĐỔI: Lấy dữ liệu tiền tệ và hàm cập nhật trực tiếp từ GameContext
+  const { coins, masteryCards, handleAchievementsDataUpdate } = useGame();
+  const user = auth.currentUser; // Lấy user hiện tại từ auth service
+
   const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
-  const [coins, setCoins] = useState(0);
-  const [masteryCards, setMasteryCards] = useState(0);
+  // <<<--- THAY ĐỔI: Bỏ state `coins` và `masteryCards` cục bộ, vì chúng được quản lý bởi GameContext
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Hàm tải/làm mới dữ liệu chính
+  // <<<--- THAY ĐỔI: Hàm loadData chỉ cần fetch dữ liệu vocabulary chuyên biệt
   const loadData = useCallback(async (userId: string) => {
     try {
-      const gameDataPromise = fetchOrCreateUserGameData(userId);
-      const vocabDataPromise = fetchAndSyncVocabularyData(userId);
-
-      const [gameData, vocabData] = await Promise.all([gameDataPromise, vocabDataPromise]);
-
-      setCoins(gameData.coins);
-      setMasteryCards(gameData.masteryCards);
+      // Chỉ cần fetch dữ liệu của achievement, không cần fetch gameData chung nữa
+      const vocabData = await fetchAndSyncVocabularyData(userId);
       setVocabulary(vocabData);
-
     } catch (error) {
-      console.error("Failed to load achievements data in context:", error);
+      console.error("Failed to load vocabulary data in context:", error);
       setVocabulary([]);
-      setCoins(0);
-      setMasteryCards(0);
     }
   }, []);
 
   // Effect để tải dữ liệu lần đầu khi user đăng nhập
   useEffect(() => {
-    if (user && user.uid) {
+    if (user?.uid) {
       setIsInitialLoading(true);
       loadData(user.uid).finally(() => setIsInitialLoading(false));
     } else {
+      // Nếu không có user, reset state của context này
       setIsInitialLoading(true);
       setVocabulary([]);
-      setCoins(0);
-      setMasteryCards(0);
     }
-  }, [user, loadData]);
+    // <<<--- THAY ĐỔI: Phụ thuộc vào user.uid để tránh re-run không cần thiết
+  }, [user?.uid, loadData]);
 
   // Hàm nhận một phần thưởng
   const claimAchievement = useCallback(async (id: number) => {
@@ -122,13 +110,11 @@ export const AchievementsProvider = ({ children, user, onDataUpdate }: Achieveme
         newVocabularyData: updatedList,
       });
 
-      // Cập nhật state nội bộ
+      // Cập nhật state vocabulary nội bộ
       setVocabulary(updatedList);
-      setCoins(newCoins);
-      setMasteryCards(newMasteryCards);
-
-      // <<<--- THAY ĐỔI: Gọi callback để thông báo cho component cha
-      onDataUpdate({ coins: newCoins, masteryCards: newMasteryCards });
+      
+      // <<<--- THAY ĐỔI: Gọi hàm cập nhật của GameContext để đồng bộ state toàn cục
+      handleAchievementsDataUpdate({ coins: newCoins, masteryCards: newMasteryCards });
 
     } catch (error) {
       console.error("Failed to claim single achievement, re-syncing data:", error);
@@ -136,7 +122,7 @@ export const AchievementsProvider = ({ children, user, onDataUpdate }: Achieveme
     } finally {
       setIsUpdating(false);
     }
-  }, [vocabulary, user, isUpdating, loadData, onDataUpdate]); // <<<--- THAY ĐỔI: Thêm onDataUpdate vào dependencies
+  }, [vocabulary, user, isUpdating, loadData, handleAchievementsDataUpdate]);
 
   // Hàm nhận tất cả phần thưởng
   const claimAllAchievements = useCallback(async () => {
@@ -173,13 +159,11 @@ export const AchievementsProvider = ({ children, user, onDataUpdate }: Achieveme
         newVocabularyData: updatedList,
       });
       
-      // Cập nhật state nội bộ
+      // Cập nhật state vocabulary nội bộ
       setVocabulary(updatedList);
-      setCoins(newCoins);
-      setMasteryCards(newMasteryCards);
 
-      // <<<--- THAY ĐỔI: Gọi callback để thông báo cho component cha
-      onDataUpdate({ coins: newCoins, masteryCards: newMasteryCards });
+      // <<<--- THAY ĐỔI: Gọi hàm cập nhật của GameContext để đồng bộ state toàn cục
+      handleAchievementsDataUpdate({ coins: newCoins, masteryCards: newMasteryCards });
 
     } catch (error) {
       console.error("Failed to claim all achievements, re-syncing data:", error);
@@ -187,7 +171,7 @@ export const AchievementsProvider = ({ children, user, onDataUpdate }: Achieveme
     } finally {
       setIsUpdating(false);
     }
-  }, [vocabulary, user, isUpdating, loadData, onDataUpdate]); // <<<--- THAY ĐỔI: Thêm onDataUpdate vào dependencies
+  }, [vocabulary, user, isUpdating, loadData, handleAchievementsDataUpdate]);
 
   const refreshData = useCallback(async () => {
     if (user?.uid && !isUpdating) {
@@ -204,10 +188,11 @@ export const AchievementsProvider = ({ children, user, onDataUpdate }: Achieveme
     return { gold, masteryCards };
   }, [vocabulary]);
 
+  // <<<--- THAY ĐỔI: `coins` và `masteryCards` trong `value` giờ được lấy trực tiếp từ useGame
   const value = useMemo(() => ({
     vocabulary,
-    coins,
-    masteryCards,
+    coins, // từ useGame
+    masteryCards, // từ useGame
     isInitialLoading,
     isUpdating,
     claimAchievement,
@@ -216,8 +201,8 @@ export const AchievementsProvider = ({ children, user, onDataUpdate }: Achieveme
     totalClaimableRewards,
   }), [
     vocabulary,
-    coins,
-    masteryCards,
+    coins, // từ useGame
+    masteryCards, // từ useGame
     isInitialLoading,
     isUpdating,
     claimAchievement,
@@ -241,4 +226,3 @@ export const useAchievements = () => {
   }
   return context;
 };
-// --- END OF FILE achievement-context.tsx ---
