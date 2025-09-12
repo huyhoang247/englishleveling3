@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx';
-import HomeButton from './ui/home-button.tsx';
+import HomeButton from '../../ui/home-button.tsx';
 
 // --- PROPS CHO COMPONENT CHÍNH ---
 interface DailyCheckInProps {
