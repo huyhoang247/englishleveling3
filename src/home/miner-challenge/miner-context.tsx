@@ -1,7 +1,6 @@
 // --- START OF FILE miner-context.tsx ---
 
-import React, { createContext, useState, useCallback, useContext, ReactNode } from 'react';
-// +++ THÊM: Import service và auth để xử lý lưu game
+import React, { createContext, useState, useCallback, useContext, ReactNode, useEffect } from 'react'; // <<< THÊM: Import useEffect
 import { processMinerChallengeResult } from './miner-service.ts';
 import { auth } from '../../firebase.js';
 
@@ -101,6 +100,25 @@ export const BombProvider: React.FC<BombProviderProps> = ({
   const [animatedDisplayedCoins, setAnimatedDisplayedCoins] = useState(initialDisplayedCoins);
   const [highestFloorCompletedThisSession, setHighestFloorCompletedThisSession] = useState(initialHighestFloor);
   const [isOpening, setIsOpening] = useState<{ x: number, y: number } | null>(null);
+
+  // <<< SỬA LỖI: Đồng bộ state nội bộ với props từ bên ngoài
+  // Hook này sẽ chạy mỗi khi component được mount và mỗi khi giá trị của các prop khởi tạo thay đổi.
+  // Điều này đảm bảo rằng nếu người dùng mua thêm cuốc ở ngoài, state sẽ được cập nhật khi họ vào lại game.
+  useEffect(() => {
+    setPickaxes(initialPickaxes);
+    setAnimatedDisplayedCoins(initialDisplayedCoins);
+    setCurrentFloor(initialHighestFloor > 0 ? initialHighestFloor + 1 : 1);
+    setHighestFloorCompletedThisSession(initialHighestFloor);
+    
+    // Reset lại toàn bộ state của phiên chơi để đảm bảo một lượt chơi mới, sạch sẽ.
+    setBoard(createBoard());
+    setFlagsPlaced(0);
+    setCoinsEarnedThisSession(0);
+    setExitConfirmationPos(null);
+    setIsOpening(null);
+
+  }, [initialPickaxes, initialDisplayedCoins, initialHighestFloor]);
+  // <<< KẾT THÚC SỬA LỖI
 
   const startCoinCountAnimation = useCallback((startValue: number, endValue: number) => {
     if (startValue === endValue) return;
@@ -225,8 +243,6 @@ export const BombProvider: React.FC<BombProviderProps> = ({
     setExitConfirmationPos(null);
   };
   
-  // --- THAY ĐỔI: `handleClose` áp dụng Cập nhật lạc quan ---
-  // Hàm này không cần `async` nữa vì nó không `await` trực tiếp
   const handleClose = () => {
     let uncollectedReward = 0;
     board.flat().forEach(cell => {
@@ -236,7 +252,6 @@ export const BombProvider: React.FC<BombProviderProps> = ({
     });
     const totalCoinsEarned = coinsEarnedThisSession + uncollectedReward;
     
-    // Cập nhật tầng cao nhất hoàn thành là tầng hiện tại - 1, hoặc tầng cao nhất đã đạt được trong session
     const finalHighestFloor = Math.max(highestFloorCompletedThisSession, currentFloor > 1 ? currentFloor - 1 : 0);
 
     const result = {
@@ -245,26 +260,18 @@ export const BombProvider: React.FC<BombProviderProps> = ({
       highestFloorCompleted: finalHighestFloor
     };
 
-    // Nếu không có gì thay đổi, chỉ cần đóng lại
     if (result.finalPickaxes === initialPickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= initialHighestFloor) {
         onClose();
         return;
     }
     
-    // --- CẬP NHẬT LẠC QUAN: BƯỚC 1 & 2 ---
-    // Cập nhật state ở component cha (GameContext) và đóng giao diện game NGAY LẬP TỨC.
-    // Người dùng sẽ thấy phản hồi tức thì.
     onGameEnd(result);
     onClose();
 
-    // --- CẬP NHẬT LẠC QUAN: BƯỚC 3 ---
-    // Thực hiện việc lưu dữ liệu lên server trong nền.
-    // Tạo một hàm async riêng để xử lý việc này.
     const saveInBackground = async () => {
       const userId = auth.currentUser?.uid;
       if (!userId) {
         console.error("Cannot save game data: User not authenticated.");
-        // Nếu cần, bạn có thể hiển thị một thông báo lỗi không chen ngang (toast notification) ở đây
         return;
       }
 
@@ -272,18 +279,12 @@ export const BombProvider: React.FC<BombProviderProps> = ({
         await processMinerChallengeResult(userId, result);
         console.log("Miner challenge results saved successfully in the background.");
       } catch (error) {
-        // --- CẬP NHẬT LẠC QUAN: BƯỚC 4 ---
-        // Xử lý lỗi có thể xảy ra. Giao diện đã được cập nhật,
-        // nên chúng ta chỉ cần thông báo cho người dùng về sự cố đồng bộ.
         console.error("Failed to save miner challenge results in the background:", error);
         alert("Lỗi: Không thể đồng bộ tiến trình của bạn với máy chủ. Vui lòng kiểm tra kết nối mạng.");
-        // Lưu ý: State ở client đã thay đổi nhưng server thì chưa.
-        // Với game đơn giản, một thông báo là đủ. Với các ứng dụng phức tạp hơn,
-        // có thể cần cơ chế để "hoàn tác" thay đổi hoặc cho phép "thử lại".
       }
     };
 
-    saveInBackground(); // Gọi hàm mà không cần `await` để nó chạy ngầm.
+    saveInBackground();
   };
 
   const resetGame = () => {
@@ -325,3 +326,5 @@ export const useBomb = (): BombContextType => {
   }
   return context;
 };
+
+// --- END OF FILE miner-context.tsx ---
