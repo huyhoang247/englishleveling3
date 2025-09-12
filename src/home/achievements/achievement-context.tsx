@@ -1,4 +1,4 @@
-// --- START OF FILE achievement-context.tsx (FULL CODE - UPDATED) ---
+// --- START OF FILE achievement-context.tsx (UPDATED) ---
 
 import React, {
   createContext,
@@ -12,10 +12,13 @@ import React, {
 import { User } from 'firebase/auth';
 import {
   fetchOrCreateUserGameData,
+} from '../../gameDataService.ts';
+// <<<--- THAY ĐỔI: Import từ file service mới
+import {
   fetchAndSyncVocabularyData,
   updateAchievementData,
   VocabularyItem
-} from '../../gameDataService.ts';
+} from './achievement-service.ts';
 
 // Định nghĩa shape của Context
 interface AchievementsContextState {
@@ -238,3 +241,4 @@ export const useAchievements = () => {
   }
   return context;
 };
+// --- END OF FILE achievement-context.tsx ---
