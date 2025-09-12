@@ -1,4 +1,3 @@
-// --- START OF FILE gameDataService.ts (UPDATED) ---
 
 import { db } from './firebase';
 import { 
@@ -41,7 +40,7 @@ export interface UserGameData {
   loginStreak?: number;
 }
 
-// <<<--- VocabularyItem interface ĐÃ ĐƯỢC XÓA KHỎI ĐÂY
+// <<<--- VocabularyItem interface ĐÃ ĐƯỢỢC XÓA KHỎI ĐÂY
 
 
 /**
@@ -138,22 +137,6 @@ export const fetchSkillScreenData = async (userId: string) => {
     coins: gameData.coins,
     ancientBooks: gameData.ancientBooks,
     skills: gameData.skills, // Gồm { owned, equipped }
-  };
-};
-
-/**
- * Lấy dữ liệu cần thiết cho màn hình Lật Thẻ Từ Vựng.
- * @param userId - ID của người dùng.
- * @returns {Promise<{coins: number, gems: number, totalVocab: number, capacity: number}>} Dữ liệu cần thiết.
- */
-export const fetchVocabularyScreenData = async (userId: string) => {
-  if (!userId) throw new Error("User ID is required.");
-  const gameData = await fetchOrCreateUserGameData(userId);
-  return {
-    coins: gameData.coins,
-    gems: gameData.gems,
-    totalVocab: gameData.totalVocabCollected,
-    capacity: gameData.cardCapacity,
   };
 };
 
@@ -293,60 +276,7 @@ export const updateUserInventory = async (userId: string, updates: { newOwned: O
 
 // --- HÀM CHO ĐIỂM DANH HÀNG NGÀY ĐÃ ĐƯỢC CHUYỂN SANG checkInService.ts ---
 
-const recordNewVocabUnlocks = async (userId: string, newWordsData: { id: number; word: string; chestType: string }[]) => {
-    if (newWordsData.length === 0) return;
-    const userOpenedVocabColRef = collection(db, 'users', userId, 'openedVocab');
-    const batch = writeBatch(db);
-    newWordsData.forEach(item => {
-        const newVocabDocRef = doc(userOpenedVocabColRef, String(item.id));
-        batch.set(newVocabDocRef, {
-            word: item.word,
-            collectedAt: new Date(),
-            chestType: item.chestType,
-        });
-    });
-    await batch.commit();
-};
-
-export const processVocabularyChestOpening = async (
-  userId: string, 
-  details: {
-    currency: 'gold' | 'gem'; 
-    cost: number; 
-    gemReward: number;
-    newWordsData: { id: number; word: string; chestType: string }[];
-  }
-) => {
-    const userDocRef = doc(db, 'users', userId);
-    const { currency, cost, gemReward, newWordsData } = details;
-
-    const { newCoins, newGems, newTotalVocab } = await runTransaction(db, async (t) => {
-        const userDoc = await t.get(userDocRef);
-        if (!userDoc.exists()) throw new Error("User document does not exist!");
-        const data = userDoc.data();
-
-        if (currency === 'gold' && (data.coins || 0) < cost) throw new Error("Không đủ vàng.");
-        if (currency === 'gem' && (data.gems || 0) < cost) throw new Error("Không đủ gem.");
-        if ((data.totalVocabCollected || 0) + newWordsData.length > (data.cardCapacity || 100)) {
-            throw new Error("Kho thẻ đã đầy.");
-        }
-        
-        const finalCoins = (data.coins || 0) - (currency === 'gold' ? cost : 0);
-        const finalGems = (data.gems || 0) - (currency === 'gem' ? cost : 0) + gemReward;
-        const finalTotalVocab = (data.totalVocabCollected || 0) + newWordsData.length;
-
-        t.update(userDocRef, {
-            coins: finalCoins,
-            gems: finalGems,
-            totalVocabCollected: finalTotalVocab,
-        });
-        return { newCoins: finalCoins, newGems: finalGems, newTotalVocab: finalTotalVocab };
-    });
-
-    await recordNewVocabUnlocks(userId, newWordsData);
-
-    return { newCoins, newGems, newTotalVocab };
-};
+// <<<--- CÁC HÀM VỀ VOCABULARY ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
 
 // <<<--- HÀM fetchAndSyncVocabularyData ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
 
