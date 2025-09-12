@@ -2,7 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import { auth } from './firebase.js';
+// <<< THAY ĐỔI: Import onSnapshot, doc, và db để lắng nghe thời gian thực
+import { auth, db } from './firebase.js'; 
+import { doc, onSnapshot } from 'firebase/firestore';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
 import { OwnedItem, EquippedItems, EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
 import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
@@ -68,7 +70,6 @@ interface IGameContext {
     handleUpdatePickaxes: (amountToAdd: number) => Promise<void>;
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
     handleStatsUpdate: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
-    // Xóa handleShopPurchase khỏi interface
     getPlayerBattleStats: () => { maxHp: number; hp: number; atk: number; def: number; maxEnergy: number; energy: number; };
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
@@ -98,7 +99,6 @@ interface IGameContext {
     toggleMailbox: () => void;
     toggleBaseBuilding: () => void;
     setCoins: React.Dispatch<React.SetStateAction<number>>; // For direct updates from components
-    // Thêm setter để các context con có thể điều khiển trạng thái loading
     setIsSyncingData: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
@@ -189,15 +189,66 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     } finally { setIsLoadingUserData(false); }
   }, []);
 
+  // <<< THAY ĐỔI LỚN: Sử dụng onSnapshot để lắng nghe dữ liệu người dùng theo thời gian thực
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    let unsubscribeFromUserDoc = () => {}; // Hàm để hủy đăng ký listener khi không cần nữa
+
+    const unsubscribeFromAuth = auth.onAuthStateChanged(async (user) => {
+      // Luôn hủy listener cũ trước khi tạo listener mới để tránh memory leak
+      unsubscribeFromUserDoc(); 
+
       if (user) {
         setIsLoadingUserData(true);
+        const userDocRef = doc(db, 'users', user.uid);
+        
+        // Bắt đầu lắng nghe thay đổi trên document của user
+        unsubscribeFromUserDoc = onSnapshot(userDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const gameData = docSnap.data();
+                console.log("Real-time data received from Firestore, updating context state.");
+
+                // Cập nhật tất cả state mỗi khi có thay đổi từ Firestore
+                // Sử dụng '??' để cung cấp giá trị mặc định nếu trường dữ liệu chưa tồn tại
+                setCoins(gameData.coins ?? 0);
+                // Không cập nhật displayedCoins trực tiếp để giữ hiệu ứng animation
+                setGems(gameData.gems ?? 0);
+                setMasteryCards(gameData.masteryCards ?? 0);
+                setPickaxes(gameData.pickaxes ?? 50);
+                setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor ?? 0);
+                setUserStats(gameData.stats ?? { hp: 0, atk: 0, def: 0 });
+                setBossBattleHighestFloor(gameData.bossBattleHighestFloor ?? 0);
+                setAncientBooks(gameData.ancientBooks ?? 0);
+                setOwnedSkills(gameData.skills?.owned ?? []);
+                setEquippedSkillIds(gameData.skills?.equipped ?? [null, null, null]);
+                setTotalVocabCollected(gameData.totalVocabCollected ?? 0);
+                setCardCapacity(gameData.cardCapacity ?? 100);
+                setEquipmentPieces(gameData.equipment?.pieces ?? 0);
+                setOwnedItems(gameData.equipment?.owned ?? []);
+                setEquippedItems(gameData.equipment?.equipped ?? { weapon: null, armor: null, Helmet: null });
+                setLoginStreak(gameData.loginStreak ?? 0);
+                setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
+            } else {
+                // Nếu user đã đăng nhập nhưng document chưa có, tiến hành tạo mới.
+                // onSnapshot sẽ tự động nhận được dữ liệu mới sau khi tạo xong.
+                console.warn("User document not found, attempting to create one.");
+                fetchOrCreateUserGameData(user.uid);
+            }
+            setIsLoadingUserData(false);
+        }, (error) => {
+            console.error("Error listening to user document:", error);
+            setIsLoadingUserData(false);
+        });
+        
+        // Vẫn fetch jackpot pool một lần vì nó là dữ liệu chung, không phải của riêng user
         try {
-            const [_, jackpotData] = await Promise.all([ refreshUserData(), fetchJackpotPool() ]);
+            const jackpotData = await fetchJackpotPool();
             setJackpotPool(jackpotData);
-        } catch (error) { console.error("Error fetching initial user/app data:", error); setIsLoadingUserData(false); }
+        } catch(error) {
+             console.error("Error fetching initial jackpot data:", error);
+        }
+
       } else {
+        // User đăng xuất, reset tất cả state về giá trị ban đầu
         setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 }); setBossBattleHighestFloor(0); setAncientBooks(0);
@@ -206,8 +257,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setIsMailboxOpen(false);
       }
     });
-    return () => unsubscribe();
-  }, [refreshUserData]);
+
+    // Hàm dọn dẹp (cleanup function) sẽ được gọi khi GameProvider unmount
+    return () => {
+      unsubscribeFromAuth();
+      unsubscribeFromUserDoc();
+    };
+  }, []); // Mảng rỗng đảm bảo useEffect này chỉ chạy một lần duy nhất
 
   useEffect(() => {
       const handleVisibilityChange = () => { setIsBackgroundPaused(document.hidden); };
@@ -223,19 +279,17 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     if (!userId) { console.error("Cannot update boss floor: User not authenticated."); return; }
     try {
         await updateUserBossFloor(userId, newFloor, bossBattleHighestFloor);
-        if (newFloor > bossBattleHighestFloor) { setBossBattleHighestFloor(newFloor); }
+        // <<< THAY ĐỔI: Không cần set state ở đây nữa, onSnapshot sẽ tự động làm việc đó.
     } catch (error) { console.error("Firestore update failed for boss floor via service: ", error); }
   };
   
   const handleMinerChallengeEnd = (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
-    // Hàm này chỉ nhận kết quả đã được xác nhận từ miner-context và cập nhật state.
-    // Không cần gọi service, không cần isSyncingData, không cần try/catch/rollback.
-    
+    // Hàm này là Cập nhật lạc quan (Optimistic Update) cho UI mượt mà. 
+    // Dữ liệu thật từ onSnapshot sẽ ghi đè lên sau đó để đảm bảo tính nhất quán.
     if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) { 
         return; 
     }
 
-    // Cập nhật state một cách trực tiếp
     const newCoins = coins + result.coinsEarned;
     const newPickaxes = result.finalPickaxes;
     const newHighestFloor = Math.max(minerChallengeHighestFloor, result.highestFloorCompleted);
@@ -247,7 +301,17 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
   const handleUpdatePickaxes = async (amountToAdd: number) => {
     const userId = auth.currentUser?.uid; if (!userId) return;
-    setPickaxes(await updateUserPickaxes(userId, pickaxes + amountToAdd));
+    const originalPickaxes = pickaxes;
+    // Cập nhật lạc quan để UI phản hồi ngay
+    setPickaxes(prev => prev + amountToAdd);
+    try {
+        await updateUserPickaxes(userId, originalPickaxes + amountToAdd);
+        // Thành công, onSnapshot sẽ tự đồng bộ lại state, đảm bảo dữ liệu chính xác.
+    } catch(error) {
+        console.error("Failed to update pickaxes on server:", error);
+        // Nếu lỗi, rollback lại state trên UI
+        setPickaxes(originalPickaxes);
+    }
   };
   
   const handleUpdateJackpotPool = async (amount: number, reset: boolean = false) => {
@@ -257,8 +321,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const handleStatsUpdate = (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => {
     setCoins(newCoins); setUserStats(newStats);
   };
-  
-  // Xóa toàn bộ hàm handleShopPurchase
   
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
       const isLoading = isLoadingUserData || !assetsLoaded;
@@ -320,7 +382,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   
   const handleSkillScreenClose = (dataUpdated: boolean) => {
     toggleSkillScreen();
-    if (dataUpdated) refreshUserData();
+    // <<< THAY ĐỔI: Không cần gọi refreshUserData() nữa vì onSnapshot đã lo việc đồng bộ.
   };
 
   const updateSkillsState = (data: SkillScreenExitData) => {
@@ -364,13 +426,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
     setIsSyncingData(true);
     try {
-        const { claimedReward, newStreak } = await processDailyCheckIn(userId);
-        
-        await refreshUserData(); 
-
-        setLoginStreak(newStreak);
-        setLastCheckIn(new Date());
-
+        const { claimedReward } = await processDailyCheckIn(userId);
+        // <<< THAY ĐỔI: Không cần gọi refreshUserData() nữa.
+        // onSnapshot sẽ tự động cập nhật coins, streak, lastCheckIn sau khi processDailyCheckIn hoàn tất.
         return claimedReward;
     } catch (error) {
         console.error("Check-in claim failed in context:", error);
@@ -404,7 +462,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     toggleCheckIn,
     toggleMailbox,
     toggleBaseBuilding, setCoins,
-    // Thêm setIsSyncingData vào value object
     setIsSyncingData
   };
 
