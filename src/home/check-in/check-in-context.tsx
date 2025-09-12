@@ -1,6 +1,6 @@
 // --- START OF FILE CheckInContext.tsx ---
 
-import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
 
 // --- ĐỊNH NGHĨA ICON (được chuyển từ file check-in.tsx) ---
@@ -121,11 +121,30 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     }
   }, [canClaimToday, claimableDay, isClaiming, isSyncingData, handleCheckInClaim]);
 
-  const value = {
-    loginStreak, isSyncingData, canClaimToday, claimableDay, isClaiming,
-    showRewardAnimation, animatingReward, particles,
-    claimReward, handleClose: onClose,
-  };
+  // --- TỐI ƯU HÓA: SỬ DỤNG useMemo ĐỂ TRÁNH TẠO LẠI OBJECT 'value' KHÔNG CẦN THIẾT ---
+  const value = useMemo(() => ({
+    loginStreak, 
+    isSyncingData, 
+    canClaimToday, 
+    claimableDay, 
+    isClaiming,
+    showRewardAnimation, 
+    animatingReward, 
+    particles,
+    claimReward, 
+    handleClose: onClose,
+  }), [
+    loginStreak, 
+    isSyncingData, 
+    canClaimToday, 
+    claimableDay, 
+    isClaiming,
+    showRewardAnimation, 
+    animatingReward, 
+    particles,
+    claimReward, 
+    onClose
+  ]);
 
   return <CheckInContext.Provider value={value}>{children}</CheckInContext.Provider>;
 };
