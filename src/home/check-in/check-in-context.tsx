@@ -1,26 +1,18 @@
-// --- START OF FILE CheckInContext.tsx ---
+// --- START OF FILE check-in-context.tsx ---
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
+import { bossBattleAssets, dashboardAssets, equipmentUiAssets, uiAssets } from '../../config/game-assets';
 import { useGame } from '../../GameContext.tsx';
-
-// --- ĐỊNH NGHĨA ICON (được chuyển từ file check-in.tsx) ---
-const StarIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> );
-const SparklesIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 17.8l-2.6-1.5L6.8 18l1.5-2.6-1.5-2.6 2.6-1.5 2.6-1.5 2.6 1.5 2.6 1.5-1.5 2.6 1.5 2.6-2.6 1.5-2.6 1.5z"></path><path d="M12 2v2"></path><path d="M4.2 4.2l1.4 1.4"></path><path d="M2 12h2"></path><path d="M4.2 19.8l1.4-1.4"></path><path d="M12 22v-2"></path><path d="M19.8 19.8l-1.4-1.4"></path><path d="M22 12h-2"></path><path d="M19.8 4.2l-1.4 1.4"></path></svg> );
-const ZapIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> );
-const ShieldIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> );
-const GiftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg> );
-const FlameIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.27 16.78A9.61 9.61 0 0 0 12 15c-3.6 0-6.73 1.08-9.27 3.22C1.96 18.85 2 22 2 22c0 0 3.22-.04 7.82-2.73C12.43 21.03 15 22 15 22c2.22 0 4.2-.8 5.73-2.11C22.72 18.39 21.27 16.78 21.27 16.78z"></path><path d="M12 15c1.66 0 3-1.34 3-3 0-1.33-.5-2-1-3 0 0-2 2-3 3l-3 3c.5 1 1.66 3 3 3z"></path></svg> );
-const CrownIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 6l-2 3H5l2-3-2-3h5l2-3 2 3h5l-2 3 2 3h-5l-2-3z"></path><path d="M2 15l.9 1.8a6 6 0 0 0 8.2 8.2l1.8.9 1.8-.9a6 6 0 0 0 8.2-8.2L22 15"></path></svg> );
 
 // --- DỮ LIỆU PHẦN THƯỞNG (được chuyển từ file check-in.tsx) ---
 export const dailyRewards = [
-  { day: 1, name: "Vàng", amount: "1000", icon: <SparklesIcon className="text-yellow-400" /> },
-  { day: 2, name: "Sách Cổ", amount: "10", icon: <ZapIcon className="text-purple-400" /> },
-  { day: 3, name: "Mảnh Trang Bị", amount: "10", icon: <ShieldIcon className="text-emerald-400" /> },
-  { day: 4, name: "Dung Lượng Thẻ", amount: "50", icon: <GiftIcon className="text-amber-400" /> },
-  { day: 5, name: "Cúp", amount: "5", icon: <FlameIcon className="text-red-400" /> },
-  { day: 6, name: "Dung Lượng Thẻ", amount: "50", icon: <GiftIcon className="text-amber-400" /> },
-  { day: 7, name: "Cúp", amount: "10", icon: <CrownIcon className="text-yellow-400" /> },
+  { day: 1, name: "Vàng", amount: "1000", icon: uiAssets.goldIcon },
+  { day: 2, name: "Sách Cổ", amount: "10", icon: uiAssets.bookIcon },
+  { day: 3, name: "Mảnh Trang Bị", amount: "10", icon: equipmentUiAssets.equipmentPieceIcon },
+  { day: 4, name: "Dung Lượng Thẻ", amount: "50", icon: uiAssets.cardCapacityIcon },
+  { day: 5, name: "Cúp", amount: "5", icon: dashboardAssets.masteryIcon },
+  { day: 6, name: "Dung Lượng Thẻ", amount: "50", icon: uiAssets.cardCapacityIcon },
+  { day: 7, name: "Cúp", amount: "10", icon: bossBattleAssets.victoryIcon },
 ];
 
 // --- ĐỊNH NGHĨA TYPES ---
