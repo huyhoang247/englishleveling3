@@ -9,8 +9,9 @@ import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrad
 
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
-  updateUserBossFloor, updateUserPickaxes, processDailyCheckIn
+  updateUserBossFloor, updateUserPickaxes
 } from './gameDataService.ts';
+import { processDailyCheckIn } from './home/check-in/check-in-service.ts';
 import { processMinerChallengeResult } from './home/miner-challenge/miner-service.ts';
 import { processShopPurchase } from './home/shop/shop-service.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
@@ -459,4 +460,3 @@ export const useGame = (): IGameContext => {
   }
   return context;
 };
-// --- END OF FILE GameContext.tsx ---
