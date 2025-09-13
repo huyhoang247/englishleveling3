@@ -7,7 +7,6 @@ import {
     type ItemRank, 
     RARITY_ORDER 
 } from './item-database.ts';
-// THAY ĐỔI: Import uiAssets để lấy icon
 import { uiAssets, equipmentUiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import RateLimitToast from '../../thong-bao.tsx';
@@ -31,7 +30,6 @@ export type EquippedItems = {
     [key in EquipmentSlotType]: string | null;
 };
 
-// --- THÊM MỚI: Interface để trả dữ liệu về cho GameContext ---
 export interface EquipmentScreenExitData {
     gold: number;
     equipmentPieces: number;
@@ -214,22 +212,22 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
     );
 });
 
-// THAY ĐỔI: Thay thế SVG inline bằng các component render ảnh từ game-assets
 const HpIcon = (props: React.ComponentProps<'img'>) => <img src={uiAssets.statHpIcon} alt="HP Icon" {...props} />;
 const AtkIcon = (props: React.ComponentProps<'img'>) => <img src={uiAssets.statAtkIcon} alt="ATK Icon" {...props} />;
 const DefIcon = (props: React.ComponentProps<'img'>) => <img src={uiAssets.statDefIcon} alt="DEF Icon" {...props} />;
 
-// THAY ĐỔI: Cập nhật type của Icon
 const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.Element; color: string; } } = {
     hp: { name: 'HP', Icon: HpIcon, color: 'text-red-400' },
     atk: { name: 'ATK', Icon: AtkIcon, color: 'text-orange-400' },
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
-const formatBonus = (num: number) => {
+// THÊM MỚI: Hàm định dạng số K/M/B
+const formatStatNumber = (num: number): string => {
     if (num < 1000) return num.toString();
     if (num < 1000000) return `${(num / 1000).toFixed(1).replace('.0', '')}K`;
-    return `${(num / 1000000).toFixed(1).replace('.0', '')}M`;
+    if (num < 1000000000) return `${(num / 1000000).toFixed(1).replace('.0', '')}M`;
+    return `${(num / 1000000000).toFixed(1).replace('.0', '')}B`;
 };
 
 const animationStyle = `
@@ -251,6 +249,11 @@ interface UpgradeStatToastProps {
 
 const UpgradeStatToast: React.FC<UpgradeStatToastProps> = ({ isVisible, icon, bonus, colorClasses }) => {
   if (!isVisible) return null;
+  const formatBonus = (num: number) => {
+    if (num < 1000) return num.toString();
+    if (num < 1000000) return `${(num / 1000).toFixed(1).replace('.0', '')}K`;
+    return `${(num / 1000000).toFixed(1).replace('.0', '')}M`;
+  };
   return (
     <>
       <style>{animationStyle}</style>
@@ -526,7 +529,7 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
     );
 });
 
-// THAY ĐỔI: Modal hiển thị tổng chỉ số trang bị (thiết kế lại)
+// THAY ĐỔI: Modal hiển thị tổng chỉ số trang bị (thiết kế lại hoàn toàn)
 const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onClose: () => void; stats: { hp: number; atk: number; def: number; } }) => {
     if (!isOpen) return null;
 
@@ -539,7 +542,6 @@ const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onC
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-            {/* THAY ĐỔI: Thêm font-lilita */}
             <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-sm z-50 flex flex-col font-lilita">
                 <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
                     <div className="flex justify-between items-center">
@@ -551,19 +553,19 @@ const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onC
                     </div>
                 </div>
 
-                <div className="w-full bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-4 my-2 flex justify-around items-start">
+                <div className="flex-1 space-y-3 py-2">
                     {statsToDisplay.map(({ key, value }) => {
                         const config = STAT_CONFIG[key];
                         if (!config) return null;
                         return (
-                            <div key={key} className="flex flex-col items-center gap-1.5 text-center">
-                                {/* THAY ĐỔI: Render icon từ config */}
-                                <div className={`w-10 h-10 flex items-center justify-center rounded-lg bg-black/30`}>
-                                    <config.Icon className="w-8 h-8 object-contain" />
+                            <div key={key} className="flex items-center justify-between gap-4 bg-slate-800/50 p-2.5 rounded-lg border border-slate-700">
+                                <div className="flex items-center gap-3">
+                                    <config.Icon className="w-9 h-9 object-contain" />
+                                    <span className="text-lg font-semibold text-slate-300">{config.name}</span>
                                 </div>
-                                <span className="text-sm font-semibold text-slate-400">{config.name}</span>
-                                {/* THAY ĐỔI: Bỏ dấu "+" */}
-                                <span className="text-lg font-bold text-white">{value.toLocaleString()}</span>
+                                <span className="font-black text-xl text-white tracking-wider">
+                                    {formatStatNumber(value)}
+                                </span>
                             </div>
                         );
                     })}
