@@ -1,442 +1,351 @@
-// --- START OF FILE GameContext.tsx ---
+// --- START OF FILE equipment-context.tsx ---
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { User } from 'firebase/auth';
-import { auth, db } from './firebase.js'; 
-import { doc, onSnapshot } from 'firebase/firestore';
-import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
-// THAY ĐỔI: Chỉ import những type cần thiết cho state. EquipmentScreenExitData đã bị loại bỏ.
-import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
-
+import React, { createContext, useState, useMemo, useCallback, useContext, type ReactNode, type FC } from 'react';
 import { 
-  fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
-  updateUserBossFloor, updateUserPickaxes
-} from './gameDataService.ts';
-import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
+    getItemDefinition, 
+    itemBlueprints, 
+    generateItemDefinition,
+    getBlueprintByName,
+    type ItemBlueprint,
+    type ItemDefinition, 
+    type ItemRank, 
+    RARITY_ORDER 
+} from './item-database.ts';
+import { updateUserInventory } from './equipment-service.ts';
+import type { OwnedItem, EquippedItems, EquipmentSlotType } from './equipment-ui.tsx';
+// THAY ĐỔI: Import useGame để truy cập state toàn cục và auth để lấy userId
+import { useGame } from '../../GameContext.tsx'; 
+import { auth } from '../../firebase.js';
 
-// --- Define the shape of the context ---
-interface IGameContext {
-    // User Data States
-    isLoadingUserData: boolean;
-    isSyncingData: boolean;
-    coins: number;
-    displayedCoins: number;
-    gems: number;
-    masteryCards: number;
-    pickaxes: number;
-    minerChallengeHighestFloor: number;
-    userStatsLevel: { hp: number; atk: number; def: number; };
-    userStatsValue: { hp: number; atk: number; def: number; };
-    jackpotPool: number;
-    bossBattleHighestFloor: number;
-    ancientBooks: number;
-    ownedSkills: OwnedSkill[];
-    equippedSkillIds: (string | null)[];
-    totalVocabCollected: number;
-    cardCapacity: number;
+// Định nghĩa các hằng số logic
+const CRAFTING_COST = 50;
+const DISMANTLE_RETURN_PIECES = 25;
+const MAX_ITEMS_IN_STORAGE = 50;
+
+const getUpgradeCost = (itemDef: ItemDefinition, level: number): number => {
+    const rarityMultiplier = { E: 1, D: 1.5, B: 2.5, A: 4, S: 7, SR: 12, SSR: 20 };
+    const baseCost = 50;
+    return Math.floor(baseCost * Math.pow(level, 1.2) * rarityMultiplier[itemDef.rarity]);
+};
+
+const getTotalUpgradeCost = (itemDef: ItemDefinition, level: number): number => {
+    let total = 0;
+    for (let i = 1; i < level; i++) {
+        total += getUpgradeCost(itemDef, i);
+    }
+    return total;
+};
+
+const getRandomRank = (): ItemRank => {
+    const rand = Math.random() * 100;
+    if (rand < 0.1) return 'SSR';
+    if (rand < 1) return 'SR';
+    if (rand < 5) return 'S';
+    if (rand < 20) return 'A';
+    if (rand < 50) return 'B';
+    if (rand < 80) return 'D';
+    return 'E';
+};
+
+const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinition): { level: number, refundGold: number } => {
+    if (itemsToForge.length < 3) return { level: 1, refundGold: 0 };
+    const totalInvestedGold = itemsToForge.reduce((total, item) => total + getTotalUpgradeCost(definition, item.level), 0);
+    let finalLevel = 1, remainingGold = totalInvestedGold;
+    while (true) {
+        const costForNextLevel = getUpgradeCost(definition, finalLevel);
+        if (remainingGold >= costForNextLevel) { remainingGold -= costForNextLevel; finalLevel++; } else { break; }
+    }
+    return { level: finalLevel, refundGold: remainingGold };
+};
+
+
+// Interface cho các props của Provider
+// THAY ĐỔI: Xóa userId khỏi props
+interface EquipmentProviderProps {
+    children: ReactNode;
+}
+
+// Interface định nghĩa ForgeGroup để dùng trong hàm handleForgeItems
+interface ForgeGroup { 
+    blueprint: ItemBlueprint;
+    rarity: ItemRank; 
+    items: OwnedItem[]; 
+    nextRank: ItemRank | null; 
+    estimatedResult: { level: number; refundGold: number; }; 
+}
+
+// Interface định nghĩa những gì Context sẽ cung cấp
+interface EquipmentContextType {
+    // State
+    isLoading: boolean;
+    gold: number;
     equipmentPieces: number;
     ownedItems: OwnedItem[];
     equippedItems: EquippedItems;
-    loginStreak: number;
-    lastCheckIn: Date | null;
+    selectedItem: OwnedItem | null;
+    newlyCraftedItem: OwnedItem | null;
+    isForgeModalOpen: boolean;
+    isProcessing: boolean;
+    dismantleSuccessToast: { show: boolean; message: string };
+    
+    // Derived State
+    equippedItemsMap: { [key in EquipmentSlotType]: OwnedItem | null };
+    unequippedItemsSorted: OwnedItem[];
 
-    // UI States
-    isBackgroundPaused: boolean;
-    showRateLimitToast: boolean;
-    isRankOpen: boolean;
-    isPvpArenaOpen: boolean;
-    isLuckyGameOpen: boolean;
-    isMinerChallengeOpen: boolean;
-    isBossBattleOpen: boolean;
-    isShopOpen: boolean;
-    isVocabularyChestOpen: boolean;
-    isAchievementsOpen: boolean;
-    isAdminPanelOpen: boolean;
-    isUpgradeScreenOpen: boolean;
-    isBaseBuildingOpen: boolean;
-    isSkillScreenOpen: boolean;
-    isEquipmentOpen: boolean;
-    isAuctionHouseOpen: boolean;
-    isCheckInOpen: boolean;
-    isMailboxOpen: boolean;
-    isAnyOverlayOpen: boolean;
-    isGamePaused: boolean;
+    // Handlers
+    handleEquipItem: (item: OwnedItem) => Promise<void>;
+    handleUnequipItem: (item: OwnedItem) => Promise<void>;
+    handleCraftItem: () => Promise<void>;
+    handleDismantleItem: (item: OwnedItem) => Promise<void>;
+    handleUpgradeItem: (item: OwnedItem, statKey: string, increase: number) => Promise<void>;
+    handleForgeItems: (group: ForgeGroup) => Promise<void>;
+    
+    // UI Handlers
+    handleSelectItem: (item: OwnedItem) => void;
+    handleSelectSlot: (slot: EquipmentSlotType) => void;
+    handleCloseDetailModal: () => void;
+    handleCloseCraftSuccessModal: () => void;
+    handleOpenForgeModal: () => void;
+    handleCloseForgeModal: () => void;
 
-    // Functions
-    refreshUserData: () => Promise<void>;
-    handleBossFloorUpdate: (newFloor: number) => Promise<void>;
-    handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => void;
-    handleUpdatePickaxes: (amountToAdd: number) => Promise<void>;
-    handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
-    getPlayerBattleStats: () => { maxHp: number; hp: number; atk: number; def: number; maxEnergy: number; energy: number; };
-    getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
-    handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
-    handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
-    handleSkillScreenClose: (dataUpdated: boolean) => void;
-    updateSkillsState: (data: SkillScreenExitData) => void;
-    // THAY ĐỔI: Xóa updateEquipmentData khỏi interface
-    updateUserCurrency: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
-
-    // Toggles
-    toggleRank: () => void;
-    togglePvpArena: () => void;
-    toggleLuckyGame: () => void;
-    toggleMinerChallenge: () => void;
-    toggleBossBattle: () => void;
-    toggleShop: () => void;
-    toggleVocabularyChest: () => void;
-    toggleAchievements: () => void;
-    toggleAdminPanel: () => void;
-    toggleUpgradeScreen: () => void;
-    toggleSkillScreen: () => void;
-    toggleEquipmentScreen: () => void;
-    toggleAuctionHouse: () => void;
-    toggleCheckIn: () => void;
-    toggleMailbox: () => void;
-    toggleBaseBuilding: () => void;
-    setCoins: React.Dispatch<React.SetStateAction<number>>;
-    setIsSyncingData: React.Dispatch<React.SetStateAction<boolean>>;
+    // Constants
+    MAX_ITEMS_IN_STORAGE: number;
+    CRAFTING_COST: number;
 }
 
-// --- Create the context ---
-const GameContext = createContext<IGameContext | undefined>(undefined);
+// Tạo Context
+const EquipmentContext = createContext<EquipmentContextType | undefined>(undefined);
 
-// --- Create the Provider component ---
-interface GameProviderProps {
-    children: ReactNode;
-    hideNavBar: () => void;
-    showNavBar: () => void;
-    assetsLoaded: boolean;
-}
+// Tạo Provider Component
+// THAY ĐỔI: Xóa userId khỏi props
+export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
+    // THAY ĐỔI: Lấy state trực tiếp từ GameContext thay vì state cục bộ
+    const {
+        coins: gold,
+        equipmentPieces,
+        ownedItems,
+        equippedItems,
+        isLoading: isGameDataLoading,
+    } = useGame();
 
-export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar, showNavBar, assetsLoaded }) => {
-  const [isLoadingUserData, setIsLoadingUserData] = useState(true);
+    // THAY ĐỔI: Các state này vẫn là cục bộ vì chúng chỉ liên quan đến UI của màn hình trang bị
+    const [selectedItem, setSelectedItem] = useState<OwnedItem | null>(null);
+    const [newlyCraftedItem, setNewlyCraftedItem] = useState<OwnedItem | null>(null);
+    const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [dismantleSuccessToast, setDismantleSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+    
+    const [message, setMessage] = useState('');
+    const [messageKey, setMessageKey] = useState(0);
 
-  // States for UI and User Data
-  const [isBackgroundPaused, setIsBackgroundPaused] = useState(false);
-  const [coins, setCoins] = useState(0);
-  const [displayedCoins, setDisplayedCoins] = useState(0);
-  const [gems, setGems] = useState(0);
-  const [masteryCards, setMasteryCards] = useState(0);
-  const [pickaxes, setPickaxes] = useState(0);
-  const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
-  const [userStatsLevel, setUserStatsLevel] = useState({ hp: 0, atk: 0, def: 0 });
-  const [userStatsValue, setUserStatsValue] = useState({ hp: 0, atk: 0, def: 0 });
-  const [jackpotPool, setJackpotPool] = useState(0);
-  const [bossBattleHighestFloor, setBossBattleHighestFloor] = useState(0);
-  const [ancientBooks, setAncientBooks] = useState(0);
-  const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([]);
-  const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([null, null, null]);
-  const [totalVocabCollected, setTotalVocabCollected] = useState(0);
-  const [cardCapacity, setCardCapacity] = useState(100);
-  const [equipmentPieces, setEquipmentPieces] = useState(0);
-  const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
-  const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
-  const [loginStreak, setLoginStreak] = useState(0);
-  const [lastCheckIn, setLastCheckIn] = useState<Date | null>(null);
+    // THAY ĐỔI: useEffect fetch dữ liệu đã bị xóa hoàn toàn vì GameContext đã xử lý việc này.
 
-  // States for managing overlay visibility
-  const [isRankOpen, setIsRankOpen] = useState(false);
-  const [isPvpArenaOpen, setIsPvpArenaOpen] = useState(false);
-  const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
-  const [isMinerChallengeOpen, setIsMinerChallengeOpen] = useState(false);
-  const [isBossBattleOpen, setIsBossBattleOpen] = useState(false);
-  const [isShopOpen, setIsShopOpen] = useState(false);
-  const [isVocabularyChestOpen, setIsVocabularyChestOpen] = useState(false);
-  const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
-  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
-  const [isUpgradeScreenOpen, setIsUpgradeScreenOpen] = useState(false);
-  const [isBaseBuildingOpen, setIsBaseBuildingOpen] = useState(false);
-  const [isSkillScreenOpen, setIsSkillScreenOpen] = useState(false);
-  const [isEquipmentOpen, setIsEquipmentOpen] = useState(false);
-  const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false);
-  const [isCheckInOpen, setIsCheckInOpen] = useState(false);
-  const [isMailboxOpen, setIsMailboxOpen] = useState(false);
-  
-  // States for data syncing and rate limiting UI
-  const [isSyncingData, setIsSyncingData] = useState(false);
-  const [showRateLimitToast, setShowRateLimitToast] = useState(false);
-  
-  const refreshUserData = useCallback(async () => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) return;
-    console.log("Refreshing all user data triggered...");
-    setIsLoadingUserData(true);
-    try {
-      const gameData = await fetchOrCreateUserGameData(userId);
-      setCoins(gameData.coins);
-      setDisplayedCoins(gameData.coins);
-      setGems(gameData.gems);
-      setMasteryCards(gameData.masteryCards);
-      setPickaxes(gameData.pickaxes);
-      setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor);
-      setUserStatsLevel(gameData.stats_level || { hp: 0, atk: 0, def: 0 });
-      setUserStatsValue(gameData.stats_value || { hp: 0, atk: 0, def: 0 });
-      setBossBattleHighestFloor(gameData.bossBattleHighestFloor);
-      setAncientBooks(gameData.ancientBooks);
-      setOwnedSkills(gameData.skills.owned);
-      setEquippedSkillIds(gameData.skills.equipped);
-      setTotalVocabCollected(gameData.totalVocabCollected);
-      setCardCapacity(gameData.cardCapacity);
-      setEquipmentPieces(gameData.equipment.pieces);
-      setOwnedItems(gameData.equipment.owned);
-      setEquippedItems(gameData.equipment.equipped);
-      setLoginStreak(gameData.loginStreak || 0);
-      setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
-    } catch (error) { console.error("Error refreshing user data:", error);
-    } finally { setIsLoadingUserData(false); }
-  }, []);
+    const showMessage = useCallback((text: string) => {
+        setMessage(text); setMessageKey(prev => prev + 1);
+        const timer = setTimeout(() => setMessage(''), 4000);
+        return () => clearTimeout(timer);
+    }, []);
 
-  useEffect(() => {
-    let unsubscribeFromUserDoc = () => {};
+    const performInventoryUpdate = useCallback(async (updates: { 
+        newOwned: OwnedItem[]; 
+        newEquipped: EquippedItems; 
+        goldChange: number; 
+        piecesChange: number;
+    }) => {
+        const userId = auth.currentUser?.uid;
+        if (!userId) {
+            showMessage("Lỗi: Người dùng chưa đăng nhập.");
+            return Promise.reject("Not authenticated");
+        }
+        if (isProcessing) {
+            showMessage("Thao tác trước đó đang được xử lý...");
+            return Promise.reject("Processing");
+        }
+        setIsProcessing(true);
+        try {
+            await updateUserInventory(userId, updates);
+            // THAY ĐỔI: Không cần cập nhật state cục bộ ở đây nữa.
+            // onSnapshot trong GameContext sẽ tự động cập nhật state toàn cục.
+        } catch (error: any) { 
+            showMessage(`Lỗi: ${error.message || 'Cập nhật thất bại'}`); 
+            throw error;
+        } finally { 
+            setIsProcessing(false); 
+        }
+    }, [isProcessing, showMessage]); // THAY ĐỔI: Xóa userId khỏi dependencies
 
-    const unsubscribeFromAuth = auth.onAuthStateChanged(async (user) => {
-      unsubscribeFromUserDoc(); 
+    const unequippedItemsSorted = useMemo(() => {
+        const equippedIds = Object.values(equippedItems).filter(id => id !== null);
+        return ownedItems
+            .filter(item => !equippedIds.includes(item.id))
+            .sort((a, b) => {
+                const itemDefA = getItemDefinition(a.itemId);
+                const itemDefB = getItemDefinition(b.itemId);
+                if (!itemDefA) return 1;
+                if (!itemDefB) return -1;
+                const rarityIndexA = RARITY_ORDER.indexOf(itemDefA.rarity);
+                const rarityIndexB = RARITY_ORDER.indexOf(itemDefB.rarity);
+                if (rarityIndexA !== rarityIndexB) return rarityIndexB - rarityIndexA;
+                if (a.level !== b.level) return b.level - a.level;
+                return itemDefA.name.localeCompare(itemDefB.name);
+            });
+    }, [ownedItems, equippedItems]);
 
-      if (user) {
-        setIsLoadingUserData(true);
-        const userDocRef = doc(db, 'users', user.uid);
+    const handleEquipItem = useCallback(async (itemToEquip: OwnedItem) => {
+        const itemDef = getItemDefinition(itemToEquip.itemId);
+        if (!itemDef || !(itemDef.type in { weapon: 1, armor: 1, Helmet: 1 })) { showMessage("Vật phẩm này không thể trang bị."); return; }
+        const slotType = itemDef.type as EquipmentSlotType;
+        if (equippedItems[slotType] === itemToEquip.id) { showMessage("Trang bị đã được mặc."); return; }
         
-        unsubscribeFromUserDoc = onSnapshot(userDocRef, (docSnap) => {
-            if (docSnap.exists()) {
-                const gameData = docSnap.data();
-                console.log("Real-time data received from Firestore, updating context state.");
+        const newEquipped = { ...equippedItems, [slotType]: itemToEquip.id };
+        try {
+            await performInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
+            setSelectedItem(null);
+        } catch (error) { console.error(`Equip failed:`, error); }
+    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage]);
 
-                setCoins(gameData.coins ?? 0);
-                setGems(gameData.gems ?? 0);
-                setMasteryCards(gameData.masteryCards ?? 0);
-                setPickaxes(gameData.pickaxes ?? 50);
-                setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor ?? 0);
-                setUserStatsLevel(gameData.stats_level ?? { hp: 0, atk: 0, def: 0 });
-                setUserStatsValue(gameData.stats_value ?? { hp: 0, atk: 0, def: 0 });
-                setBossBattleHighestFloor(gameData.bossBattleHighestFloor ?? 0);
-                setAncientBooks(gameData.ancientBooks ?? 0);
-                setOwnedSkills(gameData.skills?.owned ?? []);
-                setEquippedSkillIds(gameData.skills?.equipped ?? [null, null, null]);
-                setTotalVocabCollected(gameData.totalVocabCollected ?? 0);
-                setCardCapacity(gameData.cardCapacity ?? 100);
-                setEquipmentPieces(gameData.equipment?.pieces ?? 0);
-                setOwnedItems(gameData.equipment?.owned ?? []);
-                setEquippedItems(gameData.equipment?.equipped ?? { weapon: null, armor: null, Helmet: null });
-                setLoginStreak(gameData.loginStreak ?? 0);
-                setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
-            } else {
-                console.warn("User document not found, attempting to create one.");
-                fetchOrCreateUserGameData(user.uid);
-            }
-            setIsLoadingUserData(false);
-        }, (error) => {
-            console.error("Error listening to user document:", error);
-            setIsLoadingUserData(false);
-        });
+    const handleUnequipItem = useCallback(async (itemToUnequip: OwnedItem) => {
+        const itemDef = getItemDefinition(itemToUnequip.itemId);
+        if (!itemDef) return;
+        const slotType = itemDef.type as EquipmentSlotType;
+        if (equippedItems[slotType] !== itemToUnequip.id) { showMessage("Lỗi: Không tìm thấy trang bị."); return; }
+        
+        const newEquipped = { ...equippedItems, [slotType]: null };
+        try {
+            await performInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
+            setSelectedItem(null);
+        } catch (error) { console.error(`Unequip failed:`, error); }
+    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage]);
+  
+    const handleCraftItem = useCallback(async () => {
+        if (equipmentPieces < CRAFTING_COST) { showMessage(`Không đủ Mảnh Trang Bị. Cần ${CRAFTING_COST}.`); return; }
+        if (unequippedItemsSorted.length >= MAX_ITEMS_IN_STORAGE) { showMessage(`Kho chứa đã đầy.`); return; }
         
         try {
-            const jackpotData = await fetchJackpotPool();
-            setJackpotPool(jackpotData);
-        } catch(error) {
-             console.error("Error fetching initial jackpot data:", error);
+            const randomBlueprint = itemBlueprints[Math.floor(Math.random() * itemBlueprints.length)];
+            const targetRank = getRandomRank();
+            const finalItemDef = generateItemDefinition(randomBlueprint, targetRank, true);
+            
+            const newOwnedItem: OwnedItem = { 
+                id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, 
+                itemId: finalItemDef.id, 
+                level: 1,
+                stats: finalItemDef.stats || {}
+            };
+            const newOwnedList = [...ownedItems, newOwnedItem];
+            
+            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: -CRAFTING_COST });
+            setNewlyCraftedItem(newOwnedItem);
+        } catch(error) { console.error(`Craft failed:`, error); }
+    }, [equipmentPieces, ownedItems, equippedItems, performInventoryUpdate, showMessage, unequippedItemsSorted.length]);
+
+    const handleDismantleItem = useCallback(async (itemToDismantle: OwnedItem) => {
+        if (Object.values(equippedItems).includes(itemToDismantle.id)) { showMessage("Không thể phân rã trang bị đang mặc."); return; }
+        
+        const itemDef = getItemDefinition(itemToDismantle.itemId)!;
+        const goldToReturn = getTotalUpgradeCost(itemDef, itemToDismantle.level);
+        const newOwnedList = ownedItems.filter(s => s.id !== itemToDismantle.id);
+        
+        try {
+            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: goldToReturn, piecesChange: DISMANTLE_RETURN_PIECES });
+            setSelectedItem(null);
+            setDismantleSuccessToast({ show: true, message: 'Đã tái chế thành công.' });
+            setTimeout(() => setDismantleSuccessToast(prev => ({ ...prev, show: false })), 4000);
+        } catch(error) { console.error(`Dismantle failed:`, error); }
+    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage]);
+
+    const handleUpgradeItem = useCallback(async (itemToUpgrade: OwnedItem, statKey: string, increase: number) => {
+        const itemDef = getItemDefinition(itemToUpgrade.itemId)!;
+        const cost = getUpgradeCost(itemDef, itemToUpgrade.level);
+        if (gold < cost) { showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); return; }
+        
+        const newStats = { ...itemToUpgrade.stats };
+        if (newStats.hasOwnProperty(statKey) && typeof newStats[statKey] === 'number') {
+            newStats[statKey] += increase;
+        } else {
+            showMessage("Lỗi: Không thể nâng cấp chỉ số không tồn tại.");
+            return;
         }
 
-      } else {
-        setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
-        setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
-        setPickaxes(0); setMinerChallengeHighestFloor(0); 
-        setUserStatsLevel({ hp: 0, atk: 0, def: 0 }); 
-        setUserStatsValue({ hp: 0, atk: 0, def: 0 });
-        setBossBattleHighestFloor(0); setAncientBooks(0);
-        setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]); setLoginStreak(0); setLastCheckIn(null);
-        setEquippedItems({ weapon: null, armor: null, Helmet: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
-        setIsMailboxOpen(false);
-      }
-    });
+        const updatedItem = { ...itemToUpgrade, level: itemToUpgrade.level + 1, stats: newStats };
+        const newOwnedList = ownedItems.map(s => s.id === itemToUpgrade.id ? updatedItem : s);
+        try {
+            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: -cost, piecesChange: 0 });
+            setSelectedItem(updatedItem);
+        } catch(error) { console.error(`Upgrade failed:`, error); }
+    }, [gold, ownedItems, equippedItems, performInventoryUpdate, showMessage]);
 
-    return () => {
-      unsubscribeFromAuth();
-      unsubscribeFromUserDoc();
-    };
-  }, []);
+    const handleForgeItems = useCallback(async (group: ForgeGroup) => {
+        if (group.items.length < 3 || !group.nextRank) { showMessage("Không đủ điều kiện để hợp nhất."); return; }
+        
+        const itemsToConsume = group.items.slice(0, 3);
+        const itemIdsToConsume = itemsToConsume.map(s => s.id);
+        
+        try {
+            const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
+            const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
+            const upgradedItemDef = generateItemDefinition(group.blueprint, group.nextRank, true);
 
-  useEffect(() => {
-      const handleVisibilityChange = () => { setIsBackgroundPaused(document.hidden); };
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
-  
-  useEffect(() => { if (showRateLimitToast) { const timer = setTimeout(() => { setShowRateLimitToast(false); }, 2500); return () => clearTimeout(timer); } }, [showRateLimitToast]);
-  useEffect(() => { if (displayedCoins === coins) return; const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100); return () => clearTimeout(timeoutId); }, [coins]);
-  
-  const handleBossFloorUpdate = async (newFloor: number) => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) { console.error("Cannot update boss floor: User not authenticated."); return; }
-    try {
-        await updateUserBossFloor(userId, newFloor, bossBattleHighestFloor);
-    } catch (error) { console.error("Firestore update failed for boss floor via service: ", error); }
-  };
-  
-  const handleMinerChallengeEnd = (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
-    if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) return;
-    const newCoins = coins + result.coinsEarned;
-    const newPickaxes = result.finalPickaxes;
-    const newHighestFloor = Math.max(minerChallengeHighestFloor, result.highestFloorCompleted);
-    setCoins(newCoins);
-    setPickaxes(newPickaxes);
-    setMinerChallengeHighestFloor(newHighestFloor);
-  };
+            const newForgedItem: OwnedItem = { 
+                id: `owned-${Date.now()}-${upgradedItemDef.id}`, 
+                itemId: upgradedItemDef.id, 
+                level: finalLevel,
+                stats: upgradedItemDef.stats || {}
+            };
+            const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
+            
+            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: refundGold, piecesChange: 0 });
+            
+            setDismantleSuccessToast({ show: true, message: 'Hợp nhất thành công.' });
+            setTimeout(() => setDismantleSuccessToast(prev => ({ ...prev, show: false })), 4000);
+            
+            setIsForgeModalOpen(false);
+        } catch (error) { console.error(`Forge failed:`, error); }
+    }, [ownedItems, equippedItems, performInventoryUpdate, showMessage]);
 
-  const handleUpdatePickaxes = async (amountToAdd: number) => {
-    const userId = auth.currentUser?.uid; if (!userId) return;
-    const originalPickaxes = pickaxes;
-    setPickaxes(prev => prev + amountToAdd);
-    try {
-        await updateUserPickaxes(userId, originalPickaxes + amountToAdd);
-    } catch(error) {
-        console.error("Failed to update pickaxes on server:", error);
-        setPickaxes(originalPickaxes);
-    }
-  };
-  
-  const handleUpdateJackpotPool = async (amount: number, reset: boolean = false) => {
-      setJackpotPool(await updateJackpotPool(amount, reset));
-  };
-  
-  const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
-      const isLoading = isLoadingUserData || !assetsLoaded;
-      if (isLoading) return;
-      if (isSyncingData) { setShowRateLimitToast(true); return; }
-      setter(prev => {
-          const newState = !prev;
-          if (newState) {
-              hideNavBar();
-              [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen, setIsAuctionHouseOpen, setIsCheckInOpen, setIsMailboxOpen ].forEach(s => { if (s !== setter) s(false); });
-          } else { showNavBar(); }
-          return newState;
-      });
-  };
+    const equippedItemsMap = useMemo(() => {
+        const map: { [key in EquipmentSlotType]: OwnedItem | null } = { weapon: null, armor: null, Helmet: null };
+        for (const slotType of ['weapon', 'armor', 'Helmet'] as EquipmentSlotType[]) {
+            const itemId = equippedItems[slotType];
+            if (itemId) map[slotType] = ownedItems.find(item => item.id === itemId) || null;
+        }
+        return map;
+    }, [equippedItems, ownedItems]);
 
-  const getPlayerBattleStats = () => {
-    const BASE_HP = 0, BASE_ATK = 0, BASE_DEF = 0;
+    const handleSelectItem = useCallback((item: OwnedItem) => setSelectedItem(item), []);
+    const handleSelectSlot = useCallback((slotType: EquipmentSlotType) => {
+        const item = equippedItemsMap[slotType];
+        if (item) setSelectedItem(item);
+    }, [equippedItemsMap]);
+    const handleCloseDetailModal = useCallback(() => setSelectedItem(null), []);
+    const handleCloseCraftSuccessModal = useCallback(() => setNewlyCraftedItem(null), []);
+    const handleCloseForgeModal = useCallback(() => setIsForgeModalOpen(false), []);
+    const handleOpenForgeModal = useCallback(() => setIsForgeModalOpen(true), []);
     
-    const bonusHp = userStatsValue.hp;
-    const bonusAtk = userStatsValue.atk;
-    const bonusDef = userStatsValue.def;
-
-    let itemHpBonus = 0, itemAtkBonus = 0, itemDefBonus = 0;
-    Object.values(equippedItems).forEach(itemId => { 
-        if(itemId){
-            const item = ownedItems.find(i => i.id === itemId);
-            if (item) { 
-                itemHpBonus += item.stats.hp || 0; 
-                itemAtkBonus += item.stats.atk || 0; 
-                itemDefBonus += item.stats.def || 0; 
-            }
-        }
-    });
-    return { 
-        maxHp: BASE_HP + bonusHp + itemHpBonus, 
-        hp: BASE_HP + bonusHp + itemHpBonus, 
-        atk: BASE_ATK + bonusAtk + itemAtkBonus, 
-        def: BASE_DEF + bonusDef + itemDefBonus, 
-        maxEnergy: 50, 
-        energy: 50 
+    const value = {
+        isLoading: isGameDataLoading, // Sử dụng trạng thái loading từ context game
+        gold, equipmentPieces, ownedItems, equippedItems, selectedItem, newlyCraftedItem, isForgeModalOpen, isProcessing, dismantleSuccessToast,
+        equippedItemsMap, unequippedItemsSorted,
+        handleEquipItem, handleUnequipItem, handleCraftItem, handleDismantleItem, handleUpgradeItem, handleForgeItems,
+        handleSelectItem, handleSelectSlot, handleCloseDetailModal, handleCloseCraftSuccessModal, handleOpenForgeModal, handleCloseForgeModal,
+        MAX_ITEMS_IN_STORAGE, CRAFTING_COST,
     };
-  };
 
-  const getEquippedSkillsDetails = () => {
-    if (!ownedSkills || !equippedSkillIds) return [];
-    return equippedSkillIds.map(equippedId => { if (!equippedId) return null; const owned = ownedSkills.find(s => s.id === equippedId); if (!owned) return null; const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId); if (!blueprint) return null; return { ...owned, ...blueprint }; }).filter((skill): skill is OwnedSkill & SkillBlueprint => skill !== null);
-  };
-  
-  const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => { setCoins(updates.newCoins); setGems(updates.newGems); setTotalVocabCollected(updates.newTotalVocab); };
-  const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => { if (updates.coins !== undefined) setCoins(updates.coins); if (updates.masteryCards !== undefined) setMasteryCards(updates.masteryCards); };
-  
-  const toggleRank = createToggleFunction(setIsRankOpen);
-  const togglePvpArena = createToggleFunction(setIsPvpArenaOpen);
-  const toggleLuckyGame = createToggleFunction(setIsLuckyGameOpen);
-  const toggleMinerChallenge = createToggleFunction(setIsMinerChallengeOpen);
-  const toggleBossBattle = createToggleFunction(setIsBossBattleOpen);
-  const toggleShop = createToggleFunction(setIsShopOpen);
-  const toggleVocabularyChest = createToggleFunction(setIsVocabularyChestOpen);
-  const toggleAchievements = createToggleFunction(setIsAchievementsOpen);
-  const toggleAdminPanel = createToggleFunction(setIsAdminPanelOpen);
-  const toggleUpgradeScreen = createToggleFunction(setIsUpgradeScreenOpen);
-  const toggleSkillScreen = createToggleFunction(setIsSkillScreenOpen);
-  const toggleEquipmentScreen = createToggleFunction(setIsEquipmentOpen);
-  const toggleAuctionHouse = createToggleFunction(setIsAuctionHouseOpen);
-  const toggleCheckIn = createToggleFunction(setIsCheckInOpen);
-  const toggleMailbox = createToggleFunction(setIsMailboxOpen);
-  const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
-  
-  const handleSkillScreenClose = (dataUpdated: boolean) => {
-    toggleSkillScreen();
-  };
+    return (
+        <EquipmentContext.Provider value={value}>
+            {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[101]">{message}</div>}
+            {children}
+        </EquipmentContext.Provider>
+    );
+ };
 
-  const updateSkillsState = (data: SkillScreenExitData) => {
-    setCoins(data.gold);
-    setDisplayedCoins(data.gold);
-    setAncientBooks(data.ancientBooks);
-    setOwnedSkills(data.ownedSkills);
-    setEquippedSkillIds(data.equippedSkillIds);
-  };
-
-  // THAY ĐỔI: Hàm updateEquipmentData đã bị xóa hoàn toàn vì không cần thiết
-
-  const updateUserCurrency = (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => {
-    if (updates.coins !== undefined) {
-        setCoins(updates.coins);
-        setDisplayedCoins(updates.coins);
+// Tạo custom hook để sử dụng context
+export const useEquipment = (): EquipmentContextType => {
+    const context = useContext(EquipmentContext);
+    if (context === undefined) {
+        throw new Error('useEquipment must be used within an EquipmentProvider');
     }
-    if (updates.gems !== undefined) {
-        setGems(updates.gems);
-    }
-    if (updates.equipmentPieces !== undefined) {
-        setEquipmentPieces(updates.equipmentPieces);
-    }
-    if (updates.ancientBooks !== undefined) {
-        setAncientBooks(updates.ancientBooks);
-    }
-    if (updates.cardCapacity !== undefined) {
-        setCardCapacity(updates.cardCapacity);
-    }
-  };
-
-  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen;
-  const isLoading = isLoadingUserData || !assetsLoaded;
-  const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
-
-  const value: IGameContext = {
-    isLoadingUserData: isLoading, isSyncingData, coins, displayedCoins, gems, masteryCards, pickaxes, minerChallengeHighestFloor, 
-    userStatsLevel, 
-    userStatsValue,
-    jackpotPool,
-    bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, equipmentPieces, ownedItems, equippedItems,
-    loginStreak, lastCheckIn, isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
-    isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
-    isAuctionHouseOpen,
-    isCheckInOpen,
-    isMailboxOpen,
-    isAnyOverlayOpen, isGamePaused,
-    refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
-    getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
-    // THAY ĐỔI: Xóa updateEquipmentData khỏi object value được cung cấp
-    updateUserCurrency,
-    toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
-    toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
-    toggleAuctionHouse,
-    toggleCheckIn,
-    toggleMailbox,
-    toggleBaseBuilding, setCoins,
-    setIsSyncingData
-  };
-
-  return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
+    return context;
 };
 
-// --- Create a custom hook for easy context access ---
-export const useGame = (): IGameContext => {
-  const context = useContext(GameContext);
-  if (context === undefined) {
-    throw new Error('useGame must be used within a GameProvider');
-  }
-  return context;
-};
-// --- END OF FILE GameContext.tsx ---
+// --- END OF FILE equipment-context.tsx ---
