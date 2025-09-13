@@ -1,6 +1,6 @@
 // --- START OF FILE equipment-context.tsx ---
 
-import React, { createContext, useState, useMemo, useCallback, useContext, useEffect, type ReactNode, type FC } from 'react';
+import React, { createContext, useState, useMemo, useCallback, useContext, type ReactNode, type FC } from 'react';
 import { 
     getItemDefinition, 
     itemBlueprints, 
@@ -11,8 +11,11 @@ import {
     type ItemRank, 
     RARITY_ORDER 
 } from './item-database.ts';
-import { updateUserInventory, fetchEquipmentScreenData } from './equipment-service.ts';
+import { updateUserInventory } from './equipment-service.ts';
 import type { OwnedItem, EquippedItems, EquipmentSlotType } from './equipment-ui.tsx';
+// THAY ĐỔI: Import useGame để truy cập state toàn cục và auth để lấy userId
+import { useGame } from '../../GameContext.tsx'; 
+import { auth } from '../../firebase.js';
 
 // Định nghĩa các hằng số logic
 const CRAFTING_COST = 50;
@@ -57,9 +60,9 @@ const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinit
 
 
 // Interface cho các props của Provider
+// THAY ĐỔI: Xóa userId khỏi props
 interface EquipmentProviderProps {
     children: ReactNode;
-    userId: string;
 }
 
 // Interface định nghĩa ForgeGroup để dùng trong hàm handleForgeItems
@@ -114,16 +117,18 @@ interface EquipmentContextType {
 const EquipmentContext = createContext<EquipmentContextType | undefined>(undefined);
 
 // Tạo Provider Component
-export const EquipmentProvider: FC<EquipmentProviderProps> = ({ 
-    children,
-    userId,
- }) => {
-    const [isLoading, setIsLoading] = useState(true);
-    const [gold, setGold] = useState(0);
-    const [equipmentPieces, setEquipmentPieces] = useState(0);
-    const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
-    const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
+// THAY ĐỔI: Xóa userId khỏi props
+export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
+    // THAY ĐỔI: Lấy state trực tiếp từ GameContext thay vì state cục bộ
+    const {
+        coins: gold,
+        equipmentPieces,
+        ownedItems,
+        equippedItems,
+        isLoading: isGameDataLoading,
+    } = useGame();
 
+    // THAY ĐỔI: Các state này vẫn là cục bộ vì chúng chỉ liên quan đến UI của màn hình trang bị
     const [selectedItem, setSelectedItem] = useState<OwnedItem | null>(null);
     const [newlyCraftedItem, setNewlyCraftedItem] = useState<OwnedItem | null>(null);
     const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
@@ -133,47 +138,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
     const [message, setMessage] = useState('');
     const [messageKey, setMessageKey] = useState(0);
 
-    useEffect(() => {
-        const loadData = async () => {
-            if (!userId) {
-                setIsLoading(false); // Thoát sớm nếu không có userId
-                return;
-            }
-
-            // Ghi lại thời điểm bắt đầu và bắt đầu loading
-            const startTime = Date.now();
-            setIsLoading(true);
-
-            try {
-                // Bắt đầu fetch dữ liệu
-                const data = await fetchEquipmentScreenData(userId);
-
-                // Cập nhật state sau khi có dữ liệu
-                setGold(data.gold);
-                setEquipmentPieces(data.equipmentPieces);
-                setOwnedItems(data.ownedItems);
-                setEquippedItems(data.equippedItems);
-            } catch (error) {
-                console.error("Lỗi khi tải dữ liệu trang bị:", error);
-                showMessage("Không thể tải dữ liệu trang bị.");
-            } finally {
-                // Tính toán thời gian đã trôi qua
-                const elapsedTime = Date.now() - startTime;
-                const minimumLoadingTime = 700; // 0.7 giây, đảm bảo skeleton hiển thị đủ lâu
-
-                if (elapsedTime < minimumLoadingTime) {
-                    // Nếu thời gian fetch quá nhanh, đợi thêm cho đủ 0.7s
-                    setTimeout(() => {
-                        setIsLoading(false);
-                    }, minimumLoadingTime - elapsedTime);
-                } else {
-                    // Nếu thời gian fetch đã đủ lâu, kết thúc loading ngay lập tức
-                    setIsLoading(false);
-                }
-            }
-        };
-        loadData();
-    }, [userId]);
+    // THAY ĐỔI: useEffect fetch dữ liệu đã bị xóa hoàn toàn vì GameContext đã xử lý việc này.
 
     const showMessage = useCallback((text: string) => {
         setMessage(text); setMessageKey(prev => prev + 1);
@@ -187,6 +152,11 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
         goldChange: number; 
         piecesChange: number;
     }) => {
+        const userId = auth.currentUser?.uid;
+        if (!userId) {
+            showMessage("Lỗi: Người dùng chưa đăng nhập.");
+            return Promise.reject("Not authenticated");
+        }
         if (isProcessing) {
             showMessage("Thao tác trước đó đang được xử lý...");
             return Promise.reject("Processing");
@@ -194,17 +164,15 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
         setIsProcessing(true);
         try {
             await updateUserInventory(userId, updates);
-            setOwnedItems(updates.newOwned);
-            setEquippedItems(updates.newEquipped);
-            setGold(prev => prev + updates.goldChange);
-            setEquipmentPieces(prev => prev + updates.piecesChange);
+            // THAY ĐỔI: Không cần cập nhật state cục bộ ở đây nữa.
+            // onSnapshot trong GameContext sẽ tự động cập nhật state toàn cục.
         } catch (error: any) { 
             showMessage(`Lỗi: ${error.message || 'Cập nhật thất bại'}`); 
             throw error;
         } finally { 
             setIsProcessing(false); 
         }
-    }, [isProcessing, userId, showMessage]);
+    }, [isProcessing, showMessage]); // THAY ĐỔI: Xóa userId khỏi dependencies
 
     const unequippedItemsSorted = useMemo(() => {
         const equippedIds = Object.values(equippedItems).filter(id => id !== null);
@@ -355,7 +323,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({
     const handleOpenForgeModal = useCallback(() => setIsForgeModalOpen(true), []);
     
     const value = {
-        isLoading,
+        isLoading: isGameDataLoading, // Sử dụng trạng thái loading từ context game
         gold, equipmentPieces, ownedItems, equippedItems, selectedItem, newlyCraftedItem, isForgeModalOpen, isProcessing, dismantleSuccessToast,
         equippedItemsMap, unequippedItemsSorted,
         handleEquipItem, handleUnequipItem, handleCraftItem, handleDismantleItem, handleUpgradeItem, handleForgeItems,
