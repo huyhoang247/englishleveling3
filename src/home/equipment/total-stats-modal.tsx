@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from 'react';
-import { uiAssets } from '../game-assets.ts';
+import { uiAssets } from '../../game-assets.ts';
 
 // --- Icons and Utility functions needed by the modal ---
 
