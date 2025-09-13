@@ -2,6 +2,10 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
+// --- THAY ĐỔI: Import service và auth để tự quản lý logic check-in ---
+import { processDailyCheckIn } from './check-in-service.ts';
+import { auth } from '../../firebase.js';
+
 // --- THÊM MỚI: Import tài nguyên từ game-assets (thêm minerAssets) ---
 import { uiAssets, equipmentUiAssets, minerAssets } from '../../game-assets.ts'; 
 
@@ -53,7 +57,8 @@ interface CheckInProviderProps {
 }
 
 export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => {
-  const { loginStreak, lastCheckIn, handleCheckInClaim, isSyncingData } = useGame();
+  // --- THAY ĐỔI: Lấy setIsSyncingData thay vì handleCheckInClaim từ GameContext ---
+  const { loginStreak, lastCheckIn, isSyncingData, setIsSyncingData } = useGame();
 
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [animatingReward, setAnimatingReward] = useState<any>(null);
@@ -84,10 +89,22 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     setClaimableDay(isConsecutive ? (loginStreak % 7) + 1 : 1);
   }, [lastCheckIn, loginStreak]);
 
+  // --- THAY ĐỔI LỚN: Logic xử lý nhận thưởng được chuyển từ GameContext vào đây ---
   const claimReward = useCallback(async (day: number) => {
     if (!canClaimToday || day !== claimableDay || isClaiming || isSyncingData) return;
+
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+        alert("Lỗi xác thực người dùng. Vui lòng thử đăng nhập lại.");
+        return;
+    }
+
+    // Quản lý trạng thái local (isClaiming) và global (isSyncingData)
     setIsClaiming(true);
+    setIsSyncingData(true); 
+
     try {
+      // Tạo hiệu ứng hạt bay
       const generatedParticles: Particle[] = Array.from({ length: 20 }).map((_, i) => {
         const randomAnimClass = particleClasses[i % particleClasses.length];
         return {
@@ -104,22 +121,27 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
       });
       setParticles(generatedParticles);
       
-      const claimedRewardData = await handleCheckInClaim();
+      // Gọi trực tiếp service để xử lý check-in trên backend
+      const { claimedReward: claimedRewardData } = await processDailyCheckIn(userId);
       const rewardForAnimation = dailyRewards.find(r => r.day === claimedRewardData.day);
       
+      // Kích hoạt animation hiển thị phần thưởng
       setAnimatingReward({ ...rewardForAnimation, amount: claimedRewardData.amount });
       setShowRewardAnimation(true);
 
+      // Hẹn giờ để tắt animation và reset trạng thái local
       setTimeout(() => {
         setShowRewardAnimation(false);
-        setIsClaiming(false);
+        setIsClaiming(false); // Kết thúc trạng thái "đang nhận" sau khi animation hoàn tất
         setParticles([]);
       }, 2000);
     } catch (error: any) {
         alert(error.message || "Có lỗi xảy ra, vui lòng thử lại.");
-        setIsClaiming(false);
+        setIsClaiming(false); // Reset trạng thái local nếu có lỗi
+    } finally {
+        setIsSyncingData(false); // Luôn đảm bảo reset trạng thái global sau khi thao tác hoàn tất
     }
-  }, [canClaimToday, claimableDay, isClaiming, isSyncingData, handleCheckInClaim]);
+  }, [canClaimToday, claimableDay, isClaiming, isSyncingData, setIsSyncingData]);
 
   // --- TỐI ƯU HÓA: SỬ DỤNG useMemo ĐỂ TRÁNH TẠO LẠI OBJECT 'value' KHÔNG CẦN THIẾT ---
   const value = useMemo(() => ({
