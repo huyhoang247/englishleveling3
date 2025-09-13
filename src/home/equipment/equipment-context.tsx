@@ -11,7 +11,7 @@ import {
     type ItemRank, 
     RARITY_ORDER 
 } from './item-database.ts';
-import { updateUserInventory, fetchEquipmentScreenData } from '../../gameDataService.ts';
+import { updateUserInventory, fetchEquipmentScreenData } from '../../equipment-service.ts';
 import type { OwnedItem, EquippedItems, EquipmentSlotType } from './equipment-ui.tsx';
 
 // Định nghĩa các hằng số logic
