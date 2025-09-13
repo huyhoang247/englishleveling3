@@ -1,4 +1,4 @@
-// --- START OF FILE gameDataService.ts ---
+// --- START OF FILE gameDataService.ts (MODIFIED) ---
 
 import { db } from './firebase';
 import { 
@@ -127,22 +127,7 @@ export const fetchSkillScreenData = async (userId: string) => {
   };
 };
 
-/**
- * Lấy dữ liệu thô cần thiết cho màn hình Đấu Trùm.
- * @param userId - ID của người dùng.
- * @returns Dữ liệu thô cần thiết cho màn hình Đấu Trùm.
- */
-export const fetchBossBattlePrerequisites = async (userId: string) => {
-  if (!userId) throw new Error("User ID is required.");
-  const gameData = await fetchOrCreateUserGameData(userId);
-  return {
-    baseStats: gameData.stats,
-    equipment: gameData.equipment, // Gồm owned và equipped
-    skills: gameData.skills, // Gồm owned và equipped
-    bossBattleHighestFloor: gameData.bossBattleHighestFloor,
-    coins: gameData.coins,
-  };
-};
+// <<<--- HÀM fetchBossBattlePrerequisites ĐÃ ĐƯỢC DI CHUYỂN SANG boss-battle-service.ts --->
 
 export const updateUserCoins = async (userId: string, amount: number): Promise<number> => {
   if (!userId) throw new Error("User ID is required.");
@@ -522,7 +507,7 @@ export const reclaimExpiredAuction = async (userId: string, auctionId: string): 
 
     return reclaimedItem!;
 };
-// --- END OF FILE gameDataService.ts ---
+// --- END OF FILE gameDataService.ts (MODIFIED) ---
 
 // --- START: ADMIN PANEL SERVICE FUNCTIONS ---
 export interface SimpleUser {
