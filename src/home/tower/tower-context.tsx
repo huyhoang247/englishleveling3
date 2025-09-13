@@ -1,4 +1,4 @@
-// --- START OF FILE tower-context.tsx (FIXED) ---
+// --- START OF FILE tower-context.tsx (MODIFIED) ---
 
 import React, { useState, useEffect, useRef, useCallback, createContext, useContext, ReactNode } from 'react';
 import BOSS_DATA from './tower-data.ts';
@@ -9,7 +9,8 @@ import {
     getActivationChance, 
     getRarityTextColor 
 } from '../../home/skill-game/skill-data.tsx';
-import { fetchBossBattlePrerequisites } from '../../gameDataService.ts';
+// --- MODIFICATION: Changed the import source ---
+import { fetchBossBattlePrerequisites } from './tower-service.ts';
 import { calculateTotalStatValue, statConfig } from '../../home/upgrade-stats/upgrade-ui.tsx';
 
 // --- TYPE DEFINITIONS ---
@@ -457,4 +458,4 @@ export const useBossBattle = (): BossBattleContextType => {
     return context;
 };
 
-// --- END OF FILE tower-context.tsx (FIXED) ---
+// --- END OF FILE tower-context.tsx (MODIFIED) ---
