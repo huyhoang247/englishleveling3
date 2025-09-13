@@ -1,4 +1,4 @@
-// --- START OF FILE equipment-context.tsx ---
+
 
 import React, { createContext, useState, useMemo, useCallback, useContext, type ReactNode, type FC } from 'react';
 import { 
@@ -85,12 +85,14 @@ interface EquipmentContextType {
     selectedItem: OwnedItem | null;
     newlyCraftedItem: OwnedItem | null;
     isForgeModalOpen: boolean;
+    isStatsModalOpen: boolean; // THÊM MỚI
     isProcessing: boolean;
     dismantleSuccessToast: { show: boolean; message: string };
     
     // Derived State
     equippedItemsMap: { [key in EquipmentSlotType]: OwnedItem | null };
     unequippedItemsSorted: OwnedItem[];
+    totalEquippedStats: { hp: number; atk: number; def: number; }; // THÊM MỚI
 
     // Handlers
     handleEquipItem: (item: OwnedItem) => Promise<void>;
@@ -107,6 +109,8 @@ interface EquipmentContextType {
     handleCloseCraftSuccessModal: () => void;
     handleOpenForgeModal: () => void;
     handleCloseForgeModal: () => void;
+    handleOpenStatsModal: () => void; // THÊM MỚI
+    handleCloseStatsModal: () => void; // THÊM MỚI
 
     // Constants
     MAX_ITEMS_IN_STORAGE: number;
@@ -132,6 +136,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     const [selectedItem, setSelectedItem] = useState<OwnedItem | null>(null);
     const [newlyCraftedItem, setNewlyCraftedItem] = useState<OwnedItem | null>(null);
     const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
+    const [isStatsModalOpen, setIsStatsModalOpen] = useState(false); // THÊM MỚI
     const [isProcessing, setIsProcessing] = useState(false);
     const [dismantleSuccessToast, setDismantleSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     
@@ -312,6 +317,19 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         return map;
     }, [equippedItems, ownedItems]);
 
+    // THÊM MỚI: Tính toán tổng chỉ số từ trang bị
+    const totalEquippedStats = useMemo(() => {
+        const totals = { hp: 0, atk: 0, def: 0 };
+        Object.values(equippedItemsMap).forEach(item => {
+            if (item && item.stats) {
+                totals.hp += item.stats.hp || 0;
+                totals.atk += item.stats.atk || 0;
+                totals.def += item.stats.def || 0;
+            }
+        });
+        return totals;
+    }, [equippedItemsMap]);
+
     const handleSelectItem = useCallback((item: OwnedItem) => setSelectedItem(item), []);
     const handleSelectSlot = useCallback((slotType: EquipmentSlotType) => {
         const item = equippedItemsMap[slotType];
@@ -321,13 +339,16 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     const handleCloseCraftSuccessModal = useCallback(() => setNewlyCraftedItem(null), []);
     const handleCloseForgeModal = useCallback(() => setIsForgeModalOpen(false), []);
     const handleOpenForgeModal = useCallback(() => setIsForgeModalOpen(true), []);
+    // THÊM MỚI: Handlers cho modal chỉ số
+    const handleOpenStatsModal = useCallback(() => setIsStatsModalOpen(true), []);
+    const handleCloseStatsModal = useCallback(() => setIsStatsModalOpen(false), []);
     
     const value = {
         isLoading: isGameDataLoading, // Sử dụng trạng thái loading từ context game
-        gold, equipmentPieces, ownedItems, equippedItems, selectedItem, newlyCraftedItem, isForgeModalOpen, isProcessing, dismantleSuccessToast,
-        equippedItemsMap, unequippedItemsSorted,
+        gold, equipmentPieces, ownedItems, equippedItems, selectedItem, newlyCraftedItem, isForgeModalOpen, isStatsModalOpen, isProcessing, dismantleSuccessToast,
+        equippedItemsMap, unequippedItemsSorted, totalEquippedStats,
         handleEquipItem, handleUnequipItem, handleCraftItem, handleDismantleItem, handleUpgradeItem, handleForgeItems,
-        handleSelectItem, handleSelectSlot, handleCloseDetailModal, handleCloseCraftSuccessModal, handleOpenForgeModal, handleCloseForgeModal,
+        handleSelectItem, handleSelectSlot, handleCloseDetailModal, handleCloseCraftSuccessModal, handleOpenForgeModal, handleCloseForgeModal, handleOpenStatsModal, handleCloseStatsModal,
         MAX_ITEMS_IN_STORAGE, CRAFTING_COST,
     };
 
@@ -347,5 +368,3 @@ export const useEquipment = (): EquipmentContextType => {
     }
     return context;
 };
-
-// --- END OF FILE equipment-context.tsx ---
