@@ -1,11 +1,10 @@
 // --- START OF FILE GameContext.tsx ---
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { User } from 'firebase/auth';
 import { auth, db } from './firebase.js'; 
 import { doc, onSnapshot } from 'firebase/firestore';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
-// THAY ĐỔI: Chỉ import những type cần thiết cho state. EquipmentScreenExitData đã bị loại bỏ.
 import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
 
 import { 
@@ -37,6 +36,7 @@ interface IGameContext {
     equipmentPieces: number;
     ownedItems: OwnedItem[];
     equippedItems: EquippedItems;
+    totalEquipmentStats: { hp: number; atk: number; def: number; };
     loginStreak: number;
     lastCheckIn: Date | null;
 
@@ -74,7 +74,6 @@ interface IGameContext {
     handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
     handleSkillScreenClose: (dataUpdated: boolean) => void;
     updateSkillsState: (data: SkillScreenExitData) => void;
-    // THAY ĐỔI: Xóa updateEquipmentData khỏi interface
     updateUserCurrency: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
 
     // Toggles
@@ -265,6 +264,28 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   useEffect(() => { if (showRateLimitToast) { const timer = setTimeout(() => { setShowRateLimitToast(false); }, 2500); return () => clearTimeout(timer); } }, [showRateLimitToast]);
   useEffect(() => { if (displayedCoins === coins) return; const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100); return () => clearTimeout(timeoutId); }, [coins]);
   
+  const totalEquipmentStats = useMemo(() => {
+    const totals = { hp: 0, atk: 0, def: 0 };
+    if (!ownedItems || !equippedItems) {
+      return totals;
+    }
+    
+    // Luôn đảm bảo `ownedItems` có `stats` là object để tránh lỗi
+    const safeOwnedItems = ownedItems.map(item => ({ ...item, stats: item.stats || {} }));
+
+    Object.values(equippedItems).forEach(itemId => { 
+        if(itemId){
+            const item = safeOwnedItems.find(i => i.id === itemId);
+            if (item && item.stats) { 
+                totals.hp += item.stats.hp || 0; 
+                totals.atk += item.stats.atk || 0; 
+                totals.def += item.stats.def || 0; 
+            }
+        }
+    });
+    return totals;
+  }, [ownedItems, equippedItems]);
+
   const handleBossFloorUpdate = async (newFloor: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) { console.error("Cannot update boss floor: User not authenticated."); return; }
@@ -320,17 +341,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     const bonusAtk = userStatsValue.atk;
     const bonusDef = userStatsValue.def;
 
-    let itemHpBonus = 0, itemAtkBonus = 0, itemDefBonus = 0;
-    Object.values(equippedItems).forEach(itemId => { 
-        if(itemId){
-            const item = ownedItems.find(i => i.id === itemId);
-            if (item) { 
-                itemHpBonus += item.stats.hp || 0; 
-                itemAtkBonus += item.stats.atk || 0; 
-                itemDefBonus += item.stats.def || 0; 
-            }
-        }
-    });
+    const itemHpBonus = totalEquipmentStats.hp;
+    const itemAtkBonus = totalEquipmentStats.atk;
+    const itemDefBonus = totalEquipmentStats.def;
+
     return { 
         maxHp: BASE_HP + bonusHp + itemHpBonus, 
         hp: BASE_HP + bonusHp + itemHpBonus, 
@@ -378,8 +392,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     setEquippedSkillIds(data.equippedSkillIds);
   };
 
-  // THAY ĐỔI: Hàm updateEquipmentData đã bị xóa hoàn toàn vì không cần thiết
-
   const updateUserCurrency = (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => {
     if (updates.coins !== undefined) {
         setCoins(updates.coins);
@@ -409,6 +421,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     userStatsValue,
     jackpotPool,
     bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, equipmentPieces, ownedItems, equippedItems,
+    totalEquipmentStats,
     loginStreak, lastCheckIn, isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
     isAuctionHouseOpen,
@@ -417,7 +430,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
     getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
-    // THAY ĐỔI: Xóa updateEquipmentData khỏi object value được cung cấp
     updateUserCurrency,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
