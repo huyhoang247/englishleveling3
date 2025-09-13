@@ -5,9 +5,9 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import type { VocabularyItem } from '../../gameDataService.ts';
 import AchievementsLoadingSkeleton from './achievement-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
+import HomeButton from '../../ui/home-button.tsx';
 
-// --- Các component icon (Không thay đổi) ---
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/2000/svg" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+// --- Các component icon (Đã xóa HomeIcon thừa) ---
 const XIcon = ({ className = '', ...props }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
 const TrophyIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}> <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /> </svg> );
 const MasteryCardIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000519861fbacd28634e7b5372b%20(1).png" alt="Thẻ thông thạo" className={className} {...props} /> );
@@ -61,15 +61,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center">
        <header className="w-full max-w-5xl flex items-center justify-between py-2.5 px-4 sticky top-0 z-20 bg-slate-900/50 backdrop-blur-sm border-b border-slate-700/50">
-        <button
-          onClick={onClose}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"
-          aria-label="Quay lại Trang Chính"
-          title="Quay lại Trang Chính"
-        >
-          <HomeIcon className="w-5 h-5 text-slate-300" />
-          <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
-        </button>
+        <HomeButton onClick={onClose} />
         <div className="flex items-center gap-2">
           <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
         </div>
