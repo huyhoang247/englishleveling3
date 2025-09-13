@@ -13,14 +13,14 @@ interface AdminPanelProps {
 }
 
 // --- START: CÁC COMPONENT GIAO DIỆN CHUNG ---
-// (Không có thay đổi trong các component giao diện này, giữ nguyên như cũ)
 
 const Spinner: React.FC = () => (
     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
 );
 
+// <<< SỬA LỖI CÚ PHÁP TẠI ĐÂY
 const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children: React.ReactNode }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
 );
 
 const UserIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon> );
@@ -65,7 +65,7 @@ const AdminTabs: React.FC<{ activeTab: string; setActiveTab: (tab: string) => vo
 };
 
 // --- START: CÁC COMPONENT DÀNH CHO TAB DANH SÁCH USER ---
-// (Không có thay đổi trong các component này, giữ nguyên như cũ)
+
 interface CustomCheckboxProps { label: string; isChecked: boolean; isDisabled: boolean; onToggle: () => void; }
 const CustomCheckbox: React.FC<CustomCheckboxProps> = ({ label, isChecked, isDisabled, onToggle }) => (
     <label className={`flex items-center p-3 rounded-lg transition-colors duration-200 ${isDisabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:bg-slate-700/50'}`}>
@@ -207,7 +207,6 @@ const UserListTab: React.FC<UserListTabProps> = ({ setActiveTab, setTargetUserId
 };
 
 // --- START: CÁC COMPONENT DÀNH CHO TAB QUẢN LÝ USER ---
-// (Không có thay đổi trong các component này, giữ nguyên như cũ)
 const initialUpdateValues = { coins: 0, gems: 0, ancientBooks: 0, equipmentPieces: 0, pickaxes: 0, hp: 0, atk: 0, def: 0, jackpot: 0 };
 type UpdateValuesType = typeof initialUpdateValues;
 
