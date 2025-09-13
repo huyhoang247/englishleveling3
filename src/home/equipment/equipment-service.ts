@@ -35,10 +35,13 @@ export const updateUserInventory = async (userId: string, updates: { newOwned: O
         if (newCoins < 0) throw new Error("Không đủ vàng.");
         if (newPieces < 0) throw new Error("Không đủ Mảnh trang bị.");
 
+        // --- THAY ĐỔI QUAN TRỌNG ---
+        // Bỏ dòng "...currentEquipment," để đảm bảo chỉ ghi dữ liệu mới nhất,
+        // tránh việc vô tình giữ lại các trường cũ hoặc dữ liệu không nhất quán.
+        // Đây là nguyên nhân gốc rễ của lỗi.
         t.update(userDocRef, {
             coins: newCoins,
             equipment: { 
-                ...currentEquipment, 
                 pieces: newPieces, 
                 owned: updates.newOwned, 
                 equipped: updates.newEquipped 
