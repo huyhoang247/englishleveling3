@@ -529,14 +529,38 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 });
 
 // THAY ĐỔI: Modal hiển thị tổng chỉ số trang bị
-const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onClose: () => void; stats: { hp: number; atk: number; def: number; } }) => {
+const TotalStatsModal = memo(({ isOpen, onClose, equipmentStats, upgradeStats }: { 
+    isOpen: boolean; 
+    onClose: () => void; 
+    equipmentStats: { hp: number; atk: number; def: number; };
+    upgradeStats: { hp: number; atk: number; def: number; };
+}) => {
     if (!isOpen) return null;
 
-    const statsToDisplay = [
-        { key: 'hp', value: stats.hp },
-        { key: 'atk', value: stats.atk },
-        { key: 'def', value: stats.def },
-    ];
+    const totalStats = useMemo(() => ({
+        hp: (upgradeStats.hp || 0) + (equipmentStats.hp || 0),
+        atk: (upgradeStats.atk || 0) + (equipmentStats.atk || 0),
+        def: (upgradeStats.def || 0) + (equipmentStats.def || 0),
+    }), [upgradeStats, equipmentStats]);
+
+    const StatDisplayBox = ({ title, stats, tagColor }: { title: string, stats: { hp: number; atk: number; def: number; }, tagColor: string }) => (
+        <div>
+            <span className={`inline-block px-3 py-1 mb-2 text-xs font-semibold uppercase tracking-wider ${tagColor} rounded-full`}>
+                {title}
+            </span>
+            <div className="w-full bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 flex justify-around items-center">
+                {[ { key: 'hp', value: stats.hp }, { key: 'atk', value: stats.atk }, { key: 'def', value: stats.def } ].map(({ key, value }) => {
+                    const config = STAT_CONFIG[key as keyof typeof STAT_CONFIG];
+                    return (
+                        <div key={key} className="flex items-center gap-2">
+                            <config.Icon className="w-7 h-7 object-contain" />
+                            <span className="text-lg font-bold text-white">{formatStatNumber(value)}</span>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
@@ -545,35 +569,26 @@ const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onC
                 <div className="flex-shrink-0 border-b border-slate-700/50 pb-4">
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3">
-                            <StatsIcon className="w-6 h-6 text-cyan-400" />
-                            <h3 className="text-lg font-black uppercase tracking-wider bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">Stats</h3>
+                            <StatsIcon className="w-6 h-6 text-yellow-300" />
+                            <h3 className="text-xl font-black uppercase tracking-wider bg-gradient-to-r from-yellow-300 to-orange-400 bg-clip-text text-transparent">Total Stats</h3>
                         </div>
                         <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
 
-                <div className="mt-4">
-                    <span className="inline-block px-3 py-1 mb-2 text-xs font-semibold uppercase tracking-wider text-cyan-200 bg-cyan-900/50 rounded-full border border-cyan-700/80">
-                        Equipment Bonus
-                    </span>
-                    <div className="w-full bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 flex justify-around items-center">
-                        {statsToDisplay.map(({ key, value }) => {
-                            const config = STAT_CONFIG[key];
-                            if (!config) return null;
-                            return (
-                                <div key={key} className="flex items-center gap-2">
-                                    <config.Icon className="w-7 h-7 object-contain" />
-                                    <span className="text-lg font-bold text-white">
-                                        {formatStatNumber(value)}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
+                <div className="space-y-4 mt-4">
+                    <StatDisplayBox title="Upgrade Stats" stats={upgradeStats} tagColor="text-purple-300 bg-purple-900/50 border border-purple-700/80" />
+                    <StatDisplayBox title="Equipment Stats" stats={equipmentStats} tagColor="text-cyan-300 bg-cyan-900/50 border border-cyan-700/80" />
                 </div>
                 
-                <p className="text-xs text-slate-500 text-center mt-4 pt-4 border-t border-slate-700/50 font-sans">
-                    Bonus stats from all equipped items.
+                <div className="my-4 border-t border-dashed border-slate-600 relative flex justify-center">
+                    <div className="absolute -top-3.5 bg-slate-800 px-2 text-yellow-400 font-black text-xl">+</div>
+                </div>
+
+                <StatDisplayBox title="Total Stats" stats={totalStats} tagColor="text-yellow-300 bg-yellow-900/50 border border-yellow-700/80" />
+
+                <p className="text-xs text-slate-500 text-center mt-5 pt-4 border-t border-slate-700/50 font-sans">
+                    Your character's final combat stats.
                 </p>
             </div>
         </div>
@@ -597,6 +612,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         equippedItemsMap,
         unequippedItemsSorted,
         totalEquippedStats,
+        userStatsValue, // Lấy state mới
         isLoading,
         handleEquipItem,
         handleUnequipItem,
@@ -635,7 +651,12 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
             {selectedItem && <ItemDetailModal ownedItem={selectedItem} onClose={handleCloseDetailModal} onEquip={handleEquipItem} onUnequip={handleUnequipItem} onDismantle={handleDismantleItem} onUpgrade={handleUpgradeItem} isEquipped={Object.values(equippedItems).includes(selectedItem.id)} gold={gold} isProcessing={isProcessing}/>}
             {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
             <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
-            <TotalStatsModal isOpen={isStatsModalOpen} onClose={handleCloseStatsModal} stats={totalEquippedStats} />
+            <TotalStatsModal 
+                isOpen={isStatsModalOpen} 
+                onClose={handleCloseStatsModal} 
+                equipmentStats={totalEquippedStats}
+                upgradeStats={userStatsValue}
+            />
 
             <div className={`absolute inset-0 z-20 ${isLoading ? '' : 'hidden'}`}>
                 <EquipmentScreenSkeleton />
