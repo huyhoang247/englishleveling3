@@ -1,5 +1,3 @@
-
-
 import React, { createContext, useState, useMemo, useCallback, useContext, type ReactNode, type FC } from 'react';
 import { 
     getItemDefinition, 
@@ -60,7 +58,6 @@ const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinit
 
 
 // Interface cho các props của Provider
-// THAY ĐỔI: Xóa userId khỏi props
 interface EquipmentProviderProps {
     children: ReactNode;
 }
@@ -85,14 +82,14 @@ interface EquipmentContextType {
     selectedItem: OwnedItem | null;
     newlyCraftedItem: OwnedItem | null;
     isForgeModalOpen: boolean;
-    isStatsModalOpen: boolean; // THÊM MỚI
+    isStatsModalOpen: boolean;
     isProcessing: boolean;
     dismantleSuccessToast: { show: boolean; message: string };
     
     // Derived State
     equippedItemsMap: { [key in EquipmentSlotType]: OwnedItem | null };
     unequippedItemsSorted: OwnedItem[];
-    totalEquippedStats: { hp: number; atk: number; def: number; }; // THÊM MỚI
+    totalEquippedStats: { hp: number; atk: number; def: number; };
 
     // Handlers
     handleEquipItem: (item: OwnedItem) => Promise<void>;
@@ -109,8 +106,8 @@ interface EquipmentContextType {
     handleCloseCraftSuccessModal: () => void;
     handleOpenForgeModal: () => void;
     handleCloseForgeModal: () => void;
-    handleOpenStatsModal: () => void; // THÊM MỚI
-    handleCloseStatsModal: () => void; // THÊM MỚI
+    handleOpenStatsModal: () => void;
+    handleCloseStatsModal: () => void;
 
     // Constants
     MAX_ITEMS_IN_STORAGE: number;
@@ -121,29 +118,35 @@ interface EquipmentContextType {
 const EquipmentContext = createContext<EquipmentContextType | undefined>(undefined);
 
 // Tạo Provider Component
-// THAY ĐỔI: Xóa userId khỏi props
 export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
-    // THAY ĐỔI: Lấy state trực tiếp từ GameContext thay vì state cục bộ
+    // Lấy state trực tiếp từ GameContext
     const {
         coins: gold,
         equipmentPieces,
-        ownedItems,
+        ownedItems: rawOwnedItems, // SỬA LỖI: Đổi tên biến gốc
         equippedItems,
         isLoading: isGameDataLoading,
     } = useGame();
 
-    // THAY ĐỔI: Các state này vẫn là cục bộ vì chúng chỉ liên quan đến UI của màn hình trang bị
+    // SỬA LỖI: Chuẩn hóa dữ liệu `ownedItems` để đảm bảo mỗi item luôn có thuộc tính `stats`
+    const ownedItems = useMemo(() => {
+        if (!rawOwnedItems) return []; // Xử lý trường hợp mảng chưa tồn tại
+        return rawOwnedItems.map(item => ({
+            ...item,
+            stats: item.stats || {} // Đảm bảo `stats` luôn là một object
+        }));
+    }, [rawOwnedItems]);
+
+    // Các state này vẫn là cục bộ vì chúng chỉ liên quan đến UI của màn hình trang bị
     const [selectedItem, setSelectedItem] = useState<OwnedItem | null>(null);
     const [newlyCraftedItem, setNewlyCraftedItem] = useState<OwnedItem | null>(null);
     const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
-    const [isStatsModalOpen, setIsStatsModalOpen] = useState(false); // THÊM MỚI
+    const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [dismantleSuccessToast, setDismantleSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     
     const [message, setMessage] = useState('');
     const [messageKey, setMessageKey] = useState(0);
-
-    // THAY ĐỔI: useEffect fetch dữ liệu đã bị xóa hoàn toàn vì GameContext đã xử lý việc này.
 
     const showMessage = useCallback((text: string) => {
         setMessage(text); setMessageKey(prev => prev + 1);
@@ -169,15 +172,13 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         setIsProcessing(true);
         try {
             await updateUserInventory(userId, updates);
-            // THAY ĐỔI: Không cần cập nhật state cục bộ ở đây nữa.
-            // onSnapshot trong GameContext sẽ tự động cập nhật state toàn cục.
         } catch (error: any) { 
             showMessage(`Lỗi: ${error.message || 'Cập nhật thất bại'}`); 
             throw error;
         } finally { 
             setIsProcessing(false); 
         }
-    }, [isProcessing, showMessage]); // THAY ĐỔI: Xóa userId khỏi dependencies
+    }, [isProcessing, showMessage]);
 
     const unequippedItemsSorted = useMemo(() => {
         const equippedIds = Object.values(equippedItems).filter(id => id !== null);
@@ -317,7 +318,6 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         return map;
     }, [equippedItems, ownedItems]);
 
-    // THÊM MỚI: Tính toán tổng chỉ số từ trang bị
     const totalEquippedStats = useMemo(() => {
         const totals = { hp: 0, atk: 0, def: 0 };
         Object.values(equippedItemsMap).forEach(item => {
@@ -339,12 +339,11 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     const handleCloseCraftSuccessModal = useCallback(() => setNewlyCraftedItem(null), []);
     const handleCloseForgeModal = useCallback(() => setIsForgeModalOpen(false), []);
     const handleOpenForgeModal = useCallback(() => setIsForgeModalOpen(true), []);
-    // THÊM MỚI: Handlers cho modal chỉ số
     const handleOpenStatsModal = useCallback(() => setIsStatsModalOpen(true), []);
     const handleCloseStatsModal = useCallback(() => setIsStatsModalOpen(false), []);
     
     const value = {
-        isLoading: isGameDataLoading, // Sử dụng trạng thái loading từ context game
+        isLoading: isGameDataLoading,
         gold, equipmentPieces, ownedItems, equippedItems, selectedItem, newlyCraftedItem, isForgeModalOpen, isStatsModalOpen, isProcessing, dismantleSuccessToast,
         equippedItemsMap, unequippedItemsSorted, totalEquippedStats,
         handleEquipItem, handleUnequipItem, handleCraftItem, handleDismantleItem, handleUpgradeItem, handleForgeItems,
