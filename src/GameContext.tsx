@@ -37,6 +37,7 @@ interface IGameContext {
     ownedItems: OwnedItem[];
     equippedItems: EquippedItems;
     totalEquipmentStats: { hp: number; atk: number; def: number; };
+    totalPlayerStats: { hp: number; atk: number; def: number; };
     loginStreak: number;
     lastCheckIn: Date | null;
 
@@ -286,6 +287,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     return totals;
   }, [ownedItems, equippedItems]);
 
+  const totalPlayerStats = useMemo(() => {
+    return {
+      hp: (userStatsValue.hp || 0) + (totalEquipmentStats.hp || 0),
+      atk: (userStatsValue.atk || 0) + (totalEquipmentStats.atk || 0),
+      def: (userStatsValue.def || 0) + (totalEquipmentStats.def || 0),
+    };
+  }, [userStatsValue, totalEquipmentStats]);
+
   const handleBossFloorUpdate = async (newFloor: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) { console.error("Cannot update boss floor: User not authenticated."); return; }
@@ -337,19 +346,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const getPlayerBattleStats = () => {
     const BASE_HP = 0, BASE_ATK = 0, BASE_DEF = 0;
     
-    const bonusHp = userStatsValue.hp;
-    const bonusAtk = userStatsValue.atk;
-    const bonusDef = userStatsValue.def;
-
-    const itemHpBonus = totalEquipmentStats.hp;
-    const itemAtkBonus = totalEquipmentStats.atk;
-    const itemDefBonus = totalEquipmentStats.def;
-
     return { 
-        maxHp: BASE_HP + bonusHp + itemHpBonus, 
-        hp: BASE_HP + bonusHp + itemHpBonus, 
-        atk: BASE_ATK + bonusAtk + itemAtkBonus, 
-        def: BASE_DEF + bonusDef + itemDefBonus, 
+        maxHp: BASE_HP + totalPlayerStats.hp, 
+        hp: BASE_HP + totalPlayerStats.hp, 
+        atk: BASE_ATK + totalPlayerStats.atk, 
+        def: BASE_DEF + totalPlayerStats.def, 
         maxEnergy: 50, 
         energy: 50 
     };
@@ -422,6 +423,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     jackpotPool,
     bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, equipmentPieces, ownedItems, equippedItems,
     totalEquipmentStats,
+    totalPlayerStats,
     loginStreak, lastCheckIn, isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
     isAuctionHouseOpen,
