@@ -1,17 +1,15 @@
-// --- START OF FILE tower-context.tsx (MODIFIED) ---
+// --- START OF FILE tower-context.tsx (REFACTORED) ---
 
 import React, { useState, useEffect, useRef, useCallback, createContext, useContext, ReactNode } from 'react';
 import BOSS_DATA from './tower-data.ts';
 import { 
-    ALL_SKILLS,
     OwnedSkill, 
     SkillBlueprint, 
     getActivationChance, 
     getRarityTextColor 
 } from '../../home/skill-game/skill-data.tsx';
-// --- MODIFICATION: Changed the import source ---
-import { fetchBossBattlePrerequisites } from './tower-service.ts';
-import { calculateTotalStatValue, statConfig } from '../../home/upgrade-stats/upgrade-ui.tsx';
+// --- MODIFICATION: Import useGame to access the global game state ---
+import { useGame } from '../../GameContext.tsx';
 
 // --- TYPE DEFINITIONS ---
 export type ActiveSkill = OwnedSkill & SkillBlueprint;
@@ -21,15 +19,11 @@ export type CombatStats = {
     hp: number;
     atk: number;
     def: number;
-    maxEnergy?: number;
-    energy?: number;
+    maxEnergy: number; // --- MODIFICATION: Changed to non-optional ---
+    energy: number;    // --- MODIFICATION: Changed to non-optional ---
 };
 
-export interface BossBattleProps {
-  userId: string;
-  onBattleEnd: (result: 'win' | 'lose', rewards: { coins: number; energy: number }) => void;
-  onFloorComplete: (newFloor: number) => void;
-}
+// --- MODIFICATION: Removed BossBattleProps as props are now sourced from context ---
 
 // Dữ liệu sự kiện cho mỗi lượt đánh để UI có thể hiển thị hiệu ứng
 export type TurnEvents = {
@@ -70,12 +64,10 @@ type BossBattleContextType = BossBattleState & BossBattleActions;
 const BossBattleContext = createContext<BossBattleContextType | undefined>(undefined);
 
 // --- TẠO PROVIDER COMPONENT ---
-export const BossBattleProvider = ({ 
-    children,
-    userId,
-    onBattleEnd,
-    onFloorComplete
-}: { children: ReactNode } & Omit<BossBattleProps, 'onClose'>) => {
+// --- MODIFICATION: Provider no longer takes props, it gets data from useGame hook ---
+export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
+    // --- MODIFICATION: Use the GameContext ---
+    const game = useGame();
 
     // --- STATE MANAGEMENT ---
     const [isLoading, setIsLoading] = useState(true);
@@ -94,9 +86,7 @@ export const BossBattleProvider = ({
 
     const initialPlayerStatsRef = useRef<CombatStats | null>(null);
     const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    const isEndingGame = useRef(false); // Ref để tránh gọi endGame nhiều lần
-    
-    // --- FIX: Create a ref to hold the latest version of the battle turn callback ---
+    const isEndingGame = useRef(false); 
     const savedCallback = useRef<() => void>();
 
     const currentBossData = BOSS_DATA[currentFloor] || null;
@@ -104,7 +94,7 @@ export const BossBattleProvider = ({
     // --- LOGIC HELPERS ---
     const addLog = (message: string) => setCombatLog(prev => [message, ...prev].slice(0, 50));
 
-    // --- CORE BATTLE LOGIC FUNCTION ---
+    // --- CORE BATTLE LOGIC FUNCTION (No change needed here) ---
     const executeFullTurn = useCallback((currentPlayer: CombatStats, currentBoss: CombatStats, turn: number) => {
         const turnLogs: string[] = [];
         const log = (msg: string) => turnLogs.push(`[Lượt ${turn}] ${msg}`);
@@ -176,6 +166,7 @@ export const BossBattleProvider = ({
         return { player, boss, turnLogs, winner, turnEvents };
     }, [equippedSkills, currentBossData]);
 
+    // --- MODIFICATION: Updated endGame to use GameContext functions ---
     const endGame = useCallback((result: 'win' | 'lose') => {
         if (isEndingGame.current) return;
         isEndingGame.current = true;
@@ -187,7 +178,9 @@ export const BossBattleProvider = ({
         const rewards = currentBossData?.rewards || { coins: 0, energy: 0 };
         const finalRewards = result === 'win' ? rewards : { coins: 0, energy: 0 };
         
-        onBattleEnd(result, finalRewards);
+        if (result === 'win' && finalRewards.coins > 0) {
+            game.updateUserCurrency({ coins: game.coins + finalRewards.coins });
+        }
         
         if (result === 'win') {
             setDisplayedCoins(prev => prev + finalRewards.coins);
@@ -195,11 +188,11 @@ export const BossBattleProvider = ({
                 if (!prev) return null;
                 return {
                     ...prev,
-                    energy: Math.min(prev.maxEnergy!, (prev.energy || 0) + finalRewards.energy)
+                    energy: Math.min(prev.maxEnergy, prev.energy + finalRewards.energy)
                 };
             });
         }
-    }, [currentBossData, onBattleEnd]);
+    }, [currentBossData, game]);
 
     const runBattleTurn = useCallback(() => {
         if (!playerStats || !bossStats) return;
@@ -250,7 +243,7 @@ export const BossBattleProvider = ({
         isEndingGame.current = false;
         setPlayerStats(prev => {
             if (!prev) return null;
-            return { ...prev, energy: (prev.energy || 0) - 10 };
+            return { ...prev, energy: prev.energy - 10 };
         });
         setBattleState('fighting');
     }, [battleState, playerStats]);
@@ -280,13 +273,14 @@ export const BossBattleProvider = ({
         }
     }, [resetAllStateForNewBattle, currentBossData]);
 
+    // --- MODIFICATION: Updated handleNextFloor to use GameContext functions ---
     const handleNextFloor = useCallback(() => {
         if (!initialPlayerStatsRef.current) return;
         const nextIndex = currentFloor + 1;
         if(nextIndex >= BOSS_DATA.length) return;
         
         resetAllStateForNewBattle();
-        onFloorComplete(nextIndex);
+        game.handleBossFloorUpdate(nextIndex); // Update via context
         setCurrentFloor(nextIndex);
         
         setPlayerStats(prev => ({
@@ -294,8 +288,9 @@ export const BossBattleProvider = ({
             hp: initialPlayerStatsRef.current!.maxHp,
             energy: prev!.energy 
         }));
-    }, [currentFloor, resetAllStateForNewBattle, onFloorComplete]);
+    }, [currentFloor, resetAllStateForNewBattle, game]);
 
+    // --- MODIFICATION: Updated handleSweep to use GameContext functions ---
     const handleSweep = useCallback(async () => {
         if (!initialPlayerStatsRef.current || currentFloor <= 0 || (playerStats?.energy || 0) < 10) {
             return { result: 'lose', rewards: { coins: 0, energy: 0 } };
@@ -303,7 +298,7 @@ export const BossBattleProvider = ({
     
         setPlayerStats(prev => {
             if(!prev) return null;
-            return { ...prev, energy: (prev.energy || 0) - 10 }
+            return { ...prev, energy: prev.energy - 10 }
         });
     
         const previousBossData = BOSS_DATA[currentFloor - 1];
@@ -323,66 +318,51 @@ export const BossBattleProvider = ({
     
         const rewards = previousBossData.rewards || { coins: 0, energy: 0 };
         const finalRewards = finalWinner === 'win' ? rewards : { coins: 0, energy: 0 };
-        onBattleEnd(finalWinner, finalRewards);
+        
+        if (finalWinner === 'win' && finalRewards.coins > 0) {
+            game.updateUserCurrency({ coins: game.coins + finalRewards.coins });
+        }
     
         if (finalWinner === 'win') {
           setDisplayedCoins(prev => prev + finalRewards.coins);
           setPlayerStats(prev => {
               if(!prev) return null;
               return {
-                  ...prev!,
-                  energy: Math.min(prev!.maxEnergy!, (prev!.energy || 0) + finalRewards.energy)
+                  ...prev,
+                  energy: Math.min(prev.maxEnergy, prev.energy + finalRewards.energy)
               }
           });
         }
         return { result: finalWinner, rewards: finalRewards };
-    }, [playerStats, currentFloor, executeFullTurn, onBattleEnd]);
+    }, [playerStats, currentFloor, executeFullTurn, game]);
 
     // --- REACT HOOKS ---
-
-    // --- FIX: Store the latest callback in the ref ---
     useEffect(() => {
         savedCallback.current = runBattleTurn;
     }, [runBattleTurn]);
 
+    // --- MODIFICATION: Replaced data fetching with data synchronization from GameContext ---
     useEffect(() => {
-        const loadData = async () => {
-          const startTime = Date.now(); // Record start time for minimum loading
-          try {
+        if (game.isLoadingUserData) {
             setIsLoading(true);
-            const data = await fetchBossBattlePrerequisites(userId);
+            return;
+        }
+        const startTime = Date.now();
+        try {
+            const playerBattleStats = game.getPlayerBattleStats();
+            setPlayerStats(playerBattleStats);
+            initialPlayerStatsRef.current = playerBattleStats;
     
-            const BASE_HP = 0, BASE_ATK = 0, BASE_DEF = 0;
-            const bonusHp = calculateTotalStatValue(data.baseStats.hp, statConfig.hp.baseUpgradeBonus);
-            const bonusAtk = calculateTotalStatValue(data.baseStats.atk, statConfig.atk.baseUpgradeBonus);
-            const bonusDef = calculateTotalStatValue(data.baseStats.def, statConfig.def.baseUpgradeBonus);
-            let itemHpBonus = 0, itemAtkBonus = 0, itemDefBonus = 0;
+            const skillsDetails = game.getEquippedSkillsDetails();
+            setEquippedSkills(skillsDetails as ActiveSkill[]);
     
-            Object.values(data.equipment.equipped).forEach(itemId => { 
-                if(itemId){
-                    const item = data.equipment.owned.find(i => i.id === itemId);
-                    if (item) { 
-                        itemHpBonus += item.stats.hp || 0; 
-                        itemAtkBonus += item.stats.atk || 0; 
-                        itemDefBonus += item.stats.def || 0; 
-                    }
-                }
-            });
-            const calculatedStats: CombatStats = { maxHp: BASE_HP + bonusHp + itemHpBonus, hp: BASE_HP + bonusHp + itemHpBonus, atk: BASE_ATK + bonusAtk + itemAtkBonus, def: BASE_DEF + bonusDef + itemDefBonus, maxEnergy: 50, energy: 50 };
-            setPlayerStats(calculatedStats);
-            initialPlayerStatsRef.current = calculatedStats;
-    
-            const skillsDetails = data.skills.equipped.map(equippedId => { if (!equippedId) return null; const owned = data.skills.owned.find(s => s.id === equippedId); if (!owned) return null; const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId); if (!blueprint) return null; return { ...owned, ...blueprint }; }).filter((skill): skill is ActiveSkill => skill !== null);
-            setEquippedSkills(skillsDetails);
-    
-            setCurrentFloor(data.bossBattleHighestFloor);
-            setDisplayedCoins(data.coins);
-    
-          } catch (e) {
-            console.error("Failed to load boss battle data:", e);
+            setCurrentFloor(game.bossBattleHighestFloor);
+            setDisplayedCoins(game.coins);
+            setError(null);
+        } catch (e) {
+            console.error("Failed to initialize boss battle from context:", e);
             setError(e instanceof Error ? e.message : "An unknown error occurred.");
-          } finally {
-            // --- MODIFIED: Ensure minimum loading time of 0.7s ---
+        } finally {
             const elapsedTime = Date.now() - startTime;
             const remainingTime = 700 - elapsedTime;
 
@@ -391,11 +371,8 @@ export const BossBattleProvider = ({
             } else {
                 setIsLoading(false);
             }
-          }
-        };
-    
-        loadData();
-    }, [userId]);
+        }
+    }, [game.isLoadingUserData, game.bossBattleHighestFloor, game.coins]);
 
     useEffect(() => {
         if (!isLoading && currentBossData) {
@@ -405,10 +382,8 @@ export const BossBattleProvider = ({
         }
     }, [currentFloor, isLoading, currentBossData]);
     
-    // --- FIX: Modified useEffect to use the ref, preventing stale closure ---
     useEffect(() => {
         if (battleState === 'fighting' && !gameOver) {
-          // The interval calls the function from the ref, which is always up-to-date.
           battleIntervalRef.current = setInterval(() => {
               if(savedCallback.current) {
                 savedCallback.current();
@@ -418,7 +393,7 @@ export const BossBattleProvider = ({
         return () => {
           if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
         };
-    }, [battleState, gameOver]); // Removed `runBattleTurn` from dependencies
+    }, [battleState, gameOver]);
 
 
     // --- CUNG CẤP VALUE CHO CONTEXT ---
@@ -458,4 +433,4 @@ export const useBossBattle = (): BossBattleContextType => {
     return context;
 };
 
-// --- END OF FILE tower-context.tsx (MODIFIED) ---
+// --- END OF FILE tower-context.tsx (REFACTORED) ---
