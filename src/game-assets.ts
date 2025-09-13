@@ -44,9 +44,12 @@ export const uiAssets = {
   upgradeIcon: require("./assets/images/upgrade-icon.webp"),
   gavelIcon: require("./assets/images/auction-icon.webp"), // THÊM MỚI ICON ĐẤU GIÁ
   checkInIcon: require("./assets/images/check-in-icon.webp"), // THÊM MỚI ICON ĐIỂM DANH
+  // -- Thêm mới từ achievement-ui.tsx --
+  masteryCardIcon: require("./assets/images/mastery-card.png"),
+  vocaAchievementIcon: require("./assets/images/voca-achievement.webp"),
+  giftBoxIcon: require("./assets/images/gift-box.webp"),
+  giftBoxDisabledIcon: require("./assets/images/gift-box-grey.webp"),
 };
-
-// ... (phần còn lại của file giữ nguyên)
 
 /**
  * Tài nguyên cho màn hình phân tích (Dashboard)
