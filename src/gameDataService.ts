@@ -110,21 +110,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
   }
 };
 
-/**
- * Lấy dữ liệu cần thiết cho màn hình Trang Bị.
- * @param userId - ID của người dùng.
- * @returns Dữ liệu cần thiết cho màn hình trang bị.
- */
-export const fetchEquipmentScreenData = async (userId: string) => {
-  if (!userId) throw new Error("User ID is required.");
-  const gameData = await fetchOrCreateUserGameData(userId);
-  return {
-    gold: gameData.coins,
-    equipmentPieces: gameData.equipment.pieces,
-    ownedItems: gameData.equipment.owned,
-    equippedItems: gameData.equipment.equipped,
-  };
-};
+// <<<--- HÀM fetchEquipmentScreenData ĐÃ ĐƯỢC CHUYỂN SANG equipment-service.ts --->
 
 /**
  * Lấy dữ liệu cần thiết cho màn hình Kỹ năng.
@@ -241,24 +227,7 @@ export const updateUserSkills = async (userId: string, updates: { newOwned: Owne
     });
 };
 
-export const updateUserInventory = async (userId: string, updates: { newOwned: OwnedItem[]; newEquipped: EquippedItems; goldChange: number; piecesChange: number; }) => {
-    const userDocRef = doc(db, 'users', userId);
-    return runTransaction(db, async (t) => {
-        const userDoc = await t.get(userDocRef);
-        if (!userDoc.exists()) throw new Error("User document does not exist!");
-        const data = userDoc.data();
-        const currentEquipment = data.equipment || { pieces: 0, owned: [], equipped: { weapon: null, armor: null, Helmet: null } };
-        const newCoins = (data.coins || 0) + updates.goldChange;
-        const newPieces = (currentEquipment.pieces || 0) + updates.piecesChange;
-        if (newCoins < 0) throw new Error("Không đủ vàng.");
-        if (newPieces < 0) throw new Error("Không đủ Mảnh trang bị.");
-        t.update(userDocRef, {
-            coins: newCoins,
-            equipment: { ...currentEquipment, pieces: newPieces, owned: updates.newOwned, equipped: updates.newEquipped }
-        });
-        return { newCoins, newPieces };
-    });
-};
+// <<<--- HÀM updateUserInventory ĐÃ ĐƯỢC CHUYỂN SANG equipment-service.ts --->
 
 // --- HÀM processGemToCoinExchange ĐÃ ĐƯỢC XÓA KHỎI ĐÂY ---
 
