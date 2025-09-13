@@ -2,12 +2,10 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
-// --- THAY ĐỔI: Import service và auth để tự quản lý logic check-in ---
-import { processDailyCheckIn } from './check-in-service.ts';
-import { auth } from '../../firebase.js';
-
 // --- THÊM MỚI: Import tài nguyên từ game-assets (thêm minerAssets) ---
-import { uiAssets, equipmentUiAssets, minerAssets } from '../../game-assets.ts'; 
+import { uiAssets, equipmentUiAssets, minerAssets } from '../../game-assets.ts';
+import { auth } from '../../firebase.js';
+import { processDailyCheckIn } from './check-in-service.ts';
 
 // --- BƯỚC 1: XÓA BỎ CÁC ĐỊNH NGHĨA ICON SVG NỘI TUYẾN ---
 // Các component StarIcon, SparklesIcon, ZapIcon, ShieldIcon, GiftIcon, FlameIcon, CrownIcon đã được xóa.
@@ -57,7 +55,6 @@ interface CheckInProviderProps {
 }
 
 export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => {
-  // --- THAY ĐỔI: Lấy setIsSyncingData thay vì handleCheckInClaim từ GameContext ---
   const { loginStreak, lastCheckIn, isSyncingData, setIsSyncingData } = useGame();
 
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
@@ -89,22 +86,24 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     setClaimableDay(isConsecutive ? (loginStreak % 7) + 1 : 1);
   }, [lastCheckIn, loginStreak]);
 
-  // --- THAY ĐỔI LỚN: Logic xử lý nhận thưởng được chuyển từ GameContext vào đây ---
   const claimReward = useCallback(async (day: number) => {
     if (!canClaimToday || day !== claimableDay || isClaiming || isSyncingData) return;
 
     const userId = auth.currentUser?.uid;
     if (!userId) {
-        alert("Lỗi xác thực người dùng. Vui lòng thử đăng nhập lại.");
-        return;
+      alert("Người dùng chưa được xác thực.");
+      return;
     }
 
-    // Quản lý trạng thái local (isClaiming) và global (isSyncingData)
     setIsClaiming(true);
-    setIsSyncingData(true); 
-
     try {
-      // Tạo hiệu ứng hạt bay
+      // Bắt đầu đồng bộ dữ liệu, khóa các hành động khác
+      setIsSyncingData(true);
+      const { claimedReward: claimedRewardData } = await processDailyCheckIn(userId);
+      // Kết thúc đồng bộ ngay sau khi API thành công
+      setIsSyncingData(false);
+
+      // Bắt đầu animation sau khi nhận thưởng thành công
       const generatedParticles: Particle[] = Array.from({ length: 20 }).map((_, i) => {
         const randomAnimClass = particleClasses[i % particleClasses.length];
         return {
@@ -120,26 +119,21 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
         };
       });
       setParticles(generatedParticles);
-      
-      // Gọi trực tiếp service để xử lý check-in trên backend
-      const { claimedReward: claimedRewardData } = await processDailyCheckIn(userId);
+
       const rewardForAnimation = dailyRewards.find(r => r.day === claimedRewardData.day);
       
-      // Kích hoạt animation hiển thị phần thưởng
       setAnimatingReward({ ...rewardForAnimation, amount: claimedRewardData.amount });
       setShowRewardAnimation(true);
 
-      // Hẹn giờ để tắt animation và reset trạng thái local
       setTimeout(() => {
         setShowRewardAnimation(false);
-        setIsClaiming(false); // Kết thúc trạng thái "đang nhận" sau khi animation hoàn tất
+        setIsClaiming(false); // Kết thúc trạng thái claiming sau khi animation hoàn tất
         setParticles([]);
       }, 2000);
     } catch (error: any) {
         alert(error.message || "Có lỗi xảy ra, vui lòng thử lại.");
-        setIsClaiming(false); // Reset trạng thái local nếu có lỗi
-    } finally {
-        setIsSyncingData(false); // Luôn đảm bảo reset trạng thái global sau khi thao tác hoàn tất
+        setIsClaiming(false);
+        setIsSyncingData(false); // Đảm bảo gỡ khóa nếu có lỗi
     }
   }, [canClaimToday, claimableDay, isClaiming, isSyncingData, setIsSyncingData]);
 
