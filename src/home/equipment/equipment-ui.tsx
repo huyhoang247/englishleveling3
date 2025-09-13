@@ -546,36 +546,35 @@ const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onC
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <StatsIcon className="w-6 h-6 text-cyan-400" />
-                            {/* THAY ĐỔI: Cập nhật tiêu đề */}
                             <h3 className="text-lg font-black uppercase tracking-wider bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">Stats</h3>
                         </div>
                         <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
 
-                {/* THÊM MỚI: Thẻ tag "Equipment Stats" */}
-                <div className="flex justify-center -mt-3 mb-4">
-                    <span className="px-4 py-1 text-xs font-semibold uppercase tracking-wider text-white bg-gradient-to-r from-cyan-600 to-blue-600 rounded-full border border-cyan-400/50 shadow-md">
-                        Equipment Stats
+                <div className="mt-4">
+                    <span className="inline-block px-3 py-1 mb-2 text-xs font-semibold uppercase tracking-wider text-cyan-200 bg-cyan-900/50 rounded-full border border-cyan-700/80">
+                        Equipment Bonus
                     </span>
-                </div>
-
-                <div className="w-full bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 my-2 flex justify-around items-center">
-                    {statsToDisplay.map(({ key, value }) => {
-                        const config = STAT_CONFIG[key];
-                        if (!config) return null;
-                        return (
-                            <div key={key} className="flex items-center gap-2">
-                                <config.Icon className="w-7 h-7 object-contain" />
-                                <span className="text-lg font-bold text-white">
-                                    {formatStatNumber(value)}
-                                </span>
-                            </div>
-                        );
-                    })}
+                    <div className="w-full bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 flex justify-around items-center">
+                        {statsToDisplay.map(({ key, value }) => {
+                            const config = STAT_CONFIG[key];
+                            if (!config) return null;
+                            return (
+                                <div key={key} className="flex items-center gap-2">
+                                    <config.Icon className="w-7 h-7 object-contain" />
+                                    <span className="text-lg font-bold text-white">
+                                        {formatStatNumber(value)}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
                 
-                <p className="text-xs text-slate-500 text-center mt-4 pt-4 border-t border-slate-700/50 font-sans">Chỉ số cộng thêm từ tất cả trang bị đang mặc.</p>
+                <p className="text-xs text-slate-500 text-center mt-4 pt-4 border-t border-slate-700/50 font-sans">
+                    Bonus stats from all equipped items.
+                </p>
             </div>
         </div>
     );
