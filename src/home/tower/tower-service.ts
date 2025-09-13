@@ -1,6 +1,6 @@
 // --- START OF FILE boss-battle-service.ts ---
 
-import { fetchOrCreateUserGameData } from './gameDataService.ts';
+import { fetchOrCreateUserGameData } from '../../gameDataService.ts';
 
 /**
  * Lấy dữ liệu thô cần thiết cho màn hình Đấu Trùm.
