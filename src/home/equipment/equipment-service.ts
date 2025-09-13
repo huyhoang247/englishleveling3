@@ -1,8 +1,8 @@
 // --- START OF FILE equipment-service.ts ---
 
-import { db } from './firebase';
+import { db } from '../../firebase';
 import { doc, runTransaction } from 'firebase/firestore';
-import { fetchOrCreateUserGameData, type UserGameData } from './gameDataService';
+import { fetchOrCreateUserGameData, type UserGameData } from '../../gameDataService.ts';
 
 // Các interface này nên được định nghĩa ở một nơi tập trung (ví dụ: types.ts) và import vào
 // Tuy nhiên, để file này tự chứa, chúng sẽ được định nghĩa ở đây.
