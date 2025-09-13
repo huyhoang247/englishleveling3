@@ -222,7 +222,6 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
-// THÊM MỚI: Hàm định dạng số K/M/B
 const formatStatNumber = (num: number): string => {
     if (num < 1000) return num.toString();
     if (num < 1000000) return `${(num / 1000).toFixed(1).replace('.0', '')}K`;
@@ -553,17 +552,14 @@ const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onC
                     </div>
                 </div>
 
-                <div className="flex-1 space-y-3 py-2">
+                <div className="w-full bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 my-4 flex justify-around items-center">
                     {statsToDisplay.map(({ key, value }) => {
                         const config = STAT_CONFIG[key];
                         if (!config) return null;
                         return (
-                            <div key={key} className="flex items-center justify-between gap-4 bg-slate-800/50 p-2.5 rounded-lg border border-slate-700">
-                                <div className="flex items-center gap-3">
-                                    <config.Icon className="w-9 h-9 object-contain" />
-                                    <span className="text-lg font-semibold text-slate-300">{config.name}</span>
-                                </div>
-                                <span className="font-black text-xl text-white tracking-wider">
+                            <div key={key} className="flex items-center gap-2">
+                                <config.Icon className="w-7 h-7 object-contain" />
+                                <span className="text-lg font-bold text-white">
                                     {formatStatNumber(value)}
                                 </span>
                             </div>
