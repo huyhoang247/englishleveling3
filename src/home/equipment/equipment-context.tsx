@@ -90,6 +90,8 @@ interface EquipmentContextType {
     equippedItemsMap: { [key in EquipmentSlotType]: OwnedItem | null };
     unequippedItemsSorted: OwnedItem[];
     totalEquippedStats: { hp: number; atk: number; def: number; };
+    // THÊM MỚI: Lấy chỉ số nâng cấp
+    userStatsValue: { hp: number; atk: number; def: number; };
 
     // Handlers
     handleEquipItem: (item: OwnedItem) => Promise<void>;
@@ -123,17 +125,17 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     const {
         coins: gold,
         equipmentPieces,
-        ownedItems: rawOwnedItems, // SỬA LỖI: Đổi tên biến gốc
+        ownedItems: rawOwnedItems,
         equippedItems,
         isLoading: isGameDataLoading,
+        userStatsValue, // THÊM MỚI
     } = useGame();
 
-    // SỬA LỖI: Chuẩn hóa dữ liệu `ownedItems` để đảm bảo mỗi item luôn có thuộc tính `stats`
     const ownedItems = useMemo(() => {
-        if (!rawOwnedItems) return []; // Xử lý trường hợp mảng chưa tồn tại
+        if (!rawOwnedItems) return [];
         return rawOwnedItems.map(item => ({
             ...item,
-            stats: item.stats || {} // Đảm bảo `stats` luôn là một object
+            stats: item.stats || {}
         }));
     }, [rawOwnedItems]);
 
@@ -342,10 +344,10 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     const handleOpenStatsModal = useCallback(() => setIsStatsModalOpen(true), []);
     const handleCloseStatsModal = useCallback(() => setIsStatsModalOpen(false), []);
     
-    const value = {
+    const value: EquipmentContextType = {
         isLoading: isGameDataLoading,
         gold, equipmentPieces, ownedItems, equippedItems, selectedItem, newlyCraftedItem, isForgeModalOpen, isStatsModalOpen, isProcessing, dismantleSuccessToast,
-        equippedItemsMap, unequippedItemsSorted, totalEquippedStats,
+        equippedItemsMap, unequippedItemsSorted, totalEquippedStats, userStatsValue,
         handleEquipItem, handleUnequipItem, handleCraftItem, handleDismantleItem, handleUpgradeItem, handleForgeItems,
         handleSelectItem, handleSelectSlot, handleCloseDetailModal, handleCloseCraftSuccessModal, handleOpenForgeModal, handleCloseForgeModal, handleOpenStatsModal, handleCloseStatsModal,
         MAX_ITEMS_IN_STORAGE, CRAFTING_COST,
