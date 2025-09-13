@@ -13,7 +13,6 @@ import {
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes
 } from './gameDataService.ts';
-import { processDailyCheckIn } from './home/check-in/check-in-service.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
 // --- Define the shape of the context ---
@@ -78,7 +77,6 @@ interface IGameContext {
     updateSkillsState: (data: SkillScreenExitData) => void;
     updateEquipmentData: (data: EquipmentScreenExitData) => void;
     updateUserCurrency: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
-    handleCheckInClaim: () => Promise<any>;
 
 
     // Toggles
@@ -420,24 +418,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     }
   };
 
-  const handleCheckInClaim = async () => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) { throw new Error("Người dùng chưa được xác thực."); }
-
-    setIsSyncingData(true);
-    try {
-        const { claimedReward } = await processDailyCheckIn(userId);
-        // <<< THAY ĐỔI: Không cần gọi refreshUserData() nữa.
-        // onSnapshot sẽ tự động cập nhật coins, streak, lastCheckIn sau khi processDailyCheckIn hoàn tất.
-        return claimedReward;
-    } catch (error) {
-        console.error("Check-in claim failed in context:", error);
-        throw error;
-    } finally {
-        setIsSyncingData(false);
-    }
-  };
-
   const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen;
   const isLoading = isLoadingUserData || !assetsLoaded;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
@@ -455,7 +435,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
     updateEquipmentData,
     updateUserCurrency,
-    handleCheckInClaim,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
     toggleAuctionHouse,
