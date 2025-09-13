@@ -528,7 +528,7 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
     );
 });
 
-// THAY ĐỔI: Modal hiển thị tổng chỉ số trang bị (thiết kế lại hoàn toàn)
+// THAY ĐỔI: Modal hiển thị tổng chỉ số trang bị
 const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onClose: () => void; stats: { hp: number; atk: number; def: number; } }) => {
     if (!isOpen) return null;
 
@@ -542,17 +542,25 @@ const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onC
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
             <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-sm z-50 flex flex-col font-lilita">
-                <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
+                <div className="flex-shrink-0 border-b border-slate-700/50 pb-4">
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <StatsIcon className="w-6 h-6 text-cyan-400" />
-                            <h3 className="text-lg font-black uppercase tracking-wider bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">Tổng Chỉ Số Trang Bị</h3>
+                            {/* THAY ĐỔI: Cập nhật tiêu đề */}
+                            <h3 className="text-lg font-black uppercase tracking-wider bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">Stats</h3>
                         </div>
                         <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
 
-                <div className="w-full bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 my-4 flex justify-around items-center">
+                {/* THÊM MỚI: Thẻ tag "Equipment Stats" */}
+                <div className="flex justify-center -mt-3 mb-4">
+                    <span className="px-4 py-1 text-xs font-semibold uppercase tracking-wider text-white bg-gradient-to-r from-cyan-600 to-blue-600 rounded-full border border-cyan-400/50 shadow-md">
+                        Equipment Stats
+                    </span>
+                </div>
+
+                <div className="w-full bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 my-2 flex justify-around items-center">
                     {statsToDisplay.map(({ key, value }) => {
                         const config = STAT_CONFIG[key];
                         if (!config) return null;
