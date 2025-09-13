@@ -2,41 +2,20 @@
 
 import { db } from '../../firebase';
 import { doc, runTransaction } from 'firebase/firestore';
-import { fetchOrCreateUserGameData, type UserGameData } from '../../gameDataService.ts';
+import type { UserGameData } from '../../gameDataService.ts'; // Chỉ import type
+// Import type từ file định nghĩa tập trung (equipment-ui.tsx) để tránh lặp lại
+import type { OwnedItem, EquippedItems } from './equipment-ui.tsx'; 
 
-// Các interface này nên được định nghĩa ở một nơi tập trung (ví dụ: types.ts) và import vào
-// Tuy nhiên, để file này tự chứa, chúng sẽ được định nghĩa ở đây.
-export interface OwnedItem {
-    id: string;
-    itemId: number;
-    level: number;
-    stats: { [key: string]: any };
-}
-export type EquipmentSlotType = 'weapon' | 'armor' | 'Helmet';
-export type EquippedItems = {
-    [key in EquipmentSlotType]: string | null;
-};
-
-
-/**
- * Lấy dữ liệu cần thiết cho màn hình Trang Bị.
- * @param userId - ID của người dùng.
- * @returns Dữ liệu cần thiết cho màn hình trang bị.
- */
-export const fetchEquipmentScreenData = async (userId: string) => {
-  if (!userId) throw new Error("User ID is required.");
-  const gameData = await fetchOrCreateUserGameData(userId);
-  return {
-    gold: gameData.coins,
-    equipmentPieces: gameData.equipment.pieces,
-    ownedItems: gameData.equipment.owned,
-    equippedItems: gameData.equipment.equipped,
-  };
-};
+// GHI CHÚ: Hàm fetchEquipmentScreenData đã bị xóa.
+// Việc lấy dữ liệu ban đầu giờ đây được quản lý tập trung bởi GameContext.
+// Service này chỉ còn chịu trách nhiệm cho các thao tác GHI (write) dữ liệu,
+// chẳng hạn như các transaction phức tạp để đảm bảo tính toàn vẹn dữ liệu.
 
 
 /**
  * Cập nhật túi đồ và trang bị của người dùng trong một transaction.
+ * Hàm này đảm bảo rằng các thay đổi về vàng, mảnh vỡ và vật phẩm
+ * được áp dụng một cách an toàn và nhất quán.
  * @param userId - ID của người dùng.
  * @param updates - Object chứa các thay đổi về túi đồ, trang bị, vàng và mảnh vỡ.
  * @returns {Promise<{ newCoins: number; newPieces: number; }>} Số vàng và mảnh trang bị mới.
@@ -46,16 +25,26 @@ export const updateUserInventory = async (userId: string, updates: { newOwned: O
     return runTransaction(db, async (t) => {
         const userDoc = await t.get(userDocRef);
         if (!userDoc.exists()) throw new Error("User document does not exist!");
+        
         const data = userDoc.data() as UserGameData;
         const currentEquipment = data.equipment || { pieces: 0, owned: [], equipped: { weapon: null, armor: null, Helmet: null } };
+        
         const newCoins = (data.coins || 0) + updates.goldChange;
         const newPieces = (currentEquipment.pieces || 0) + updates.piecesChange;
+
         if (newCoins < 0) throw new Error("Không đủ vàng.");
         if (newPieces < 0) throw new Error("Không đủ Mảnh trang bị.");
+
         t.update(userDocRef, {
             coins: newCoins,
-            equipment: { ...currentEquipment, pieces: newPieces, owned: updates.newOwned, equipped: updates.newEquipped }
+            equipment: { 
+                ...currentEquipment, 
+                pieces: newPieces, 
+                owned: updates.newOwned, 
+                equipped: updates.newEquipped 
+            }
         });
+
         return { newCoins, newPieces };
     });
 };
