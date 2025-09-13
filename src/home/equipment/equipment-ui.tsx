@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { 
     getItemDefinition, 
@@ -525,7 +523,7 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
     );
 });
 
-// THÊM MỚI: Modal hiển thị tổng chỉ số trang bị
+// THAY ĐỔI: Modal hiển thị tổng chỉ số trang bị (thiết kế lại)
 const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onClose: () => void; stats: { hp: number; atk: number; def: number; } }) => {
     if (!isOpen) return null;
 
@@ -538,34 +536,34 @@ const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onC
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-xs z-50 flex flex-col">
+            <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-sm z-50 flex flex-col">
                 <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <StatsIcon className="w-6 h-6 text-cyan-400" />
-                            <h3 className="text-lg font-black uppercase tracking-wider bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">Tổng Chỉ Số</h3>
+                            <h3 className="text-lg font-black uppercase tracking-wider bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">Tổng Chỉ Số Trang Bị</h3>
                         </div>
                         <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
-                <div className="flex-1 space-y-3">
+
+                <div className="w-full bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-4 my-2 flex justify-around items-start">
                     {statsToDisplay.map(({ key, value }) => {
                         const config = STAT_CONFIG[key];
                         if (!config) return null;
                         return (
-                            <div key={key} className="flex items-center gap-3 bg-slate-800/60 p-2.5 rounded-lg border border-slate-700">
-                                <div className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}>
-                                    <config.Icon className="w-5 h-5" />
+                            <div key={key} className="flex flex-col items-center gap-1.5 text-center">
+                                <div className={`w-10 h-10 flex items-center justify-center rounded-lg bg-black/30 ${config.color}`}>
+                                    <config.Icon className="w-6 h-6" />
                                 </div>
-                                <div className="flex flex-1 items-center justify-between">
-                                    <span className="text-sm font-semibold text-slate-300 capitalize">{config.name}</span>
-                                    <span className="font-bold text-lg text-white">+{value.toLocaleString()}</span>
-                                </div>
+                                <span className="text-sm font-semibold text-slate-400">{config.name}</span>
+                                <span className="text-lg font-bold text-white">+{value.toLocaleString()}</span>
                             </div>
                         );
                     })}
                 </div>
-                <p className="text-xs text-slate-500 text-center mt-4 pt-4 border-t border-slate-700/50">Chỉ số cộng thêm từ các trang bị đang mặc.</p>
+                
+                <p className="text-xs text-slate-500 text-center mt-4 pt-4 border-t border-slate-700/50">Chỉ số cộng thêm từ tất cả trang bị đang mặc.</p>
             </div>
         </div>
     );
