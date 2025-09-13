@@ -7,6 +7,7 @@ import {
     type ItemRank, 
     RARITY_ORDER 
 } from './item-database.ts';
+// THAY ĐỔI: Import uiAssets để lấy icon
 import { uiAssets, equipmentUiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import RateLimitToast from '../../thong-bao.tsx';
@@ -96,7 +97,6 @@ const GoldIcon = ({ className = '' }: { className?: string }) => ( <img src={equ
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4c-1.1 0-2 .9-2 2v4h1.5c1.93 0 3.5 1.57 3.5 3.5S5.43 20 3.5 20H2v-4c0-1.1.9-2 2-2h4v1.5a2.5 2.5 0 0 0 5 0V13h4c1.1 0 2-.9 2 2v4h-1.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5H22v-4c0-1.1-.9-2-2-2z"/> </svg>);
 const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => ( <img src={equipmentUiAssets.equipmentPieceIcon} alt="Mảnh Trang Bị" className={className} /> );
-// THÊM MỚI: Icon cho nút Stats
 const StatsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zm0-8h14V7H7v2z"/> </svg>);
 
 // --- CÁC COMPONENT CON ---
@@ -214,10 +214,13 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
     );
 });
 
-const HpIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/> </svg> );
-const AtkIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M17.46,3.26a1.5,1.5,0,0,0-2.12,0L3.25,15.35a1.5,1.5,0,0,0,0,2.12l2.83,2.83a1.5,1.5,0,0,0,2.12,0L20.29,8.21a1.5,1.5,0,0,0,0-2.12Zm-11,14.31L4.6,15.71,15,5.34l1.83,1.83ZM18,7.5,16.5,6l1.41-1.41a.5.5,0,0,1,.71.71Z"/> </svg> );
-const DefIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M12,1L3,5v6c0,5.55,3.84,10.74,9,12c5.16-1.26,9-6.45,9-12V5L12,1z"/> </svg> );
-const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps<SVGSVGElement>) => JSX.Element; color: string; } } = {
+// THAY ĐỔI: Thay thế SVG inline bằng các component render ảnh từ game-assets
+const HpIcon = (props: React.ComponentProps<'img'>) => <img src={uiAssets.statHpIcon} alt="HP Icon" {...props} />;
+const AtkIcon = (props: React.ComponentProps<'img'>) => <img src={uiAssets.statAtkIcon} alt="ATK Icon" {...props} />;
+const DefIcon = (props: React.ComponentProps<'img'>) => <img src={uiAssets.statDefIcon} alt="DEF Icon" {...props} />;
+
+// THAY ĐỔI: Cập nhật type của Icon
+const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.Element; color: string; } } = {
     hp: { name: 'HP', Icon: HpIcon, color: 'text-red-400' },
     atk: { name: 'ATK', Icon: AtkIcon, color: 'text-orange-400' },
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
@@ -404,7 +407,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                 
                 <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
                     <div className="flex items-center gap-3">
-                        <button onClick={mainActionHandler} disabled={actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${actionDisabled ? mainActionDisabledStyle : mainActionStyle}`}>{mainActionText}</button>
+                        <button onClick={mainActionHandler} disabled={actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : mainActionStyle}`}>{mainActionText}</button>
                         <button onClick={() => onDismantle(ownedItem)} disabled={isEquipped || actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-100'}`}>Recycle</button>
                     </div>
                 </div>
@@ -536,7 +539,8 @@ const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onC
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-sm z-50 flex flex-col">
+            {/* THAY ĐỔI: Thêm font-lilita */}
+            <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-sm z-50 flex flex-col font-lilita">
                 <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
                     <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3">
@@ -553,17 +557,19 @@ const TotalStatsModal = memo(({ isOpen, onClose, stats }: { isOpen: boolean; onC
                         if (!config) return null;
                         return (
                             <div key={key} className="flex flex-col items-center gap-1.5 text-center">
-                                <div className={`w-10 h-10 flex items-center justify-center rounded-lg bg-black/30 ${config.color}`}>
-                                    <config.Icon className="w-6 h-6" />
+                                {/* THAY ĐỔI: Render icon từ config */}
+                                <div className={`w-10 h-10 flex items-center justify-center rounded-lg bg-black/30`}>
+                                    <config.Icon className="w-8 h-8 object-contain" />
                                 </div>
                                 <span className="text-sm font-semibold text-slate-400">{config.name}</span>
-                                <span className="text-lg font-bold text-white">+{value.toLocaleString()}</span>
+                                {/* THAY ĐỔI: Bỏ dấu "+" */}
+                                <span className="text-lg font-bold text-white">{value.toLocaleString()}</span>
                             </div>
                         );
                     })}
                 </div>
                 
-                <p className="text-xs text-slate-500 text-center mt-4 pt-4 border-t border-slate-700/50">Chỉ số cộng thêm từ tất cả trang bị đang mặc.</p>
+                <p className="text-xs text-slate-500 text-center mt-4 pt-4 border-t border-slate-700/50 font-sans">Chỉ số cộng thêm từ tất cả trang bị đang mặc.</p>
             </div>
         </div>
     );
@@ -580,12 +586,12 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         selectedItem,
         newlyCraftedItem,
         isForgeModalOpen,
-        isStatsModalOpen, // Lấy state mới
+        isStatsModalOpen, 
         isProcessing,
         dismantleSuccessToast,
         equippedItemsMap,
         unequippedItemsSorted,
-        totalEquippedStats, // Lấy state dẫn xuất mới
+        totalEquippedStats,
         isLoading,
         handleEquipItem,
         handleUnequipItem,
@@ -599,8 +605,8 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         handleCloseCraftSuccessModal,
         handleOpenForgeModal,
         handleCloseForgeModal,
-        handleOpenStatsModal, // Lấy handler mới
-        handleCloseStatsModal, // Lấy handler mới
+        handleOpenStatsModal,
+        handleCloseStatsModal,
         MAX_ITEMS_IN_STORAGE,
         CRAFTING_COST
     } = useEquipment();
@@ -624,7 +630,6 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
             {selectedItem && <ItemDetailModal ownedItem={selectedItem} onClose={handleCloseDetailModal} onEquip={handleEquipItem} onUnequip={handleUnequipItem} onDismantle={handleDismantleItem} onUpgrade={handleUpgradeItem} isEquipped={Object.values(equippedItems).includes(selectedItem.id)} gold={gold} isProcessing={isProcessing}/>}
             {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
             <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
-            {/* THÊM MỚI: Render modal chỉ số */}
             <TotalStatsModal isOpen={isStatsModalOpen} onClose={handleCloseStatsModal} stats={totalEquippedStats} />
 
             <div className={`absolute inset-0 z-20 ${isLoading ? '' : 'hidden'}`}>
@@ -656,7 +661,6 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                                 <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
                                 <span className="text-sm font-semibold text-slate-300">{unequippedItemsSorted.length}<span className="text-xs text-slate-500"> / {MAX_ITEMS_IN_STORAGE}</span></span>
                             </div>
-                            {/* THAY ĐỔI: Thêm nút Stats và nhóm các nút lại */}
                             <div className="flex items-center gap-2">
                                 <button onClick={handleOpenStatsModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><StatsIcon className="w-4 h-4" />Stats</button>
                                 <button onClick={handleOpenForgeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
