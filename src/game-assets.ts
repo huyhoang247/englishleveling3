@@ -45,7 +45,7 @@ export const uiAssets = {
   gavelIcon: require("./assets/images/auction-icon.webp"), // THÊM MỚI ICON ĐẤU GIÁ
   checkInIcon: require("./assets/images/check-in-icon.webp"), // THÊM MỚI ICON ĐIỂM DANH
   // -- Thêm mới từ achievement-ui.tsx --
-  masteryCardIcon: require("./assets/images/mastery-card.png"),
+  masteryCardIcon: require("./assets/images/mastery-icon.webp"),
   vocaAchievementIcon: require("./assets/images/voca-achievement.webp"),
   giftBoxIcon: require("./assets/images/gift-box.webp"),
   giftBoxDisabledIcon: require("./assets/images/gift-box-grey.webp"),
