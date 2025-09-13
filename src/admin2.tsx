@@ -19,10 +19,10 @@ const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children
 );
 
 const UserIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon> );
-const SettingsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon> );
+const SettingsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1 0 2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon> );
 const ListIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></Icon> );
 const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><polyline points="20 6 9 17 4 12"></polyline></Icon> );
-const XIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></Icon> );
+const XIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></XIcon> );
 
 const AdminHeader: React.FC<{ onClose: () => void }> = ({ onClose }) => (
     <header className="sticky top-0 z-40 bg-slate-900 border-b border-white/10">
@@ -253,7 +253,17 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         try {
             const data = await fetchOrCreateUserGameData(targetUserId);
             setUserData(data);
-            setUpdateValues(prev => ({ ...prev, coins: data.coins, gems: data.gems, ancientBooks: data.ancientBooks, equipmentPieces: data.equipment.pieces, pickaxes: data.pickaxes, hp: data.stats.hp, atk: data.stats.atk, def: data.stats.def }));
+            setUpdateValues(prev => ({ 
+                ...prev, 
+                coins: data.coins, 
+                gems: data.gems, 
+                ancientBooks: data.ancientBooks, 
+                equipmentPieces: data.equipment.pieces, 
+                pickaxes: data.pickaxes, 
+                hp: data.stats_level.hp, 
+                atk: data.stats_level.atk, 
+                def: data.stats_level.def 
+            }));
             showFeedback('success', `Loaded data for user: ${targetUserId}`);
         } catch (error) {
             console.error(error); 
@@ -284,9 +294,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             case 'ancientBooks': oldValue = userData.ancientBooks; break;
             case 'equipmentPieces': oldValue = userData.equipment.pieces; break;
             case 'pickaxes': oldValue = userData.pickaxes; break;
-            case 'hp': oldValue = userData.stats.hp; break;
-            case 'atk': oldValue = userData.stats.atk; break;
-            case 'def': oldValue = userData.stats.def; break;
+            case 'hp': oldValue = userData.stats_level.hp; break;
+            case 'atk': oldValue = userData.stats_level.atk; break;
+            case 'def': oldValue = userData.stats_level.def; break;
             default: showFeedback('error', 'Invalid data field.'); return;
         }
 
@@ -297,7 +307,17 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         try {
             const updatedData = await adminUpdateUserData(targetUserId, { [dbKey]: amountToUpdate });
             setUserData(updatedData);
-            setUpdateValues(prev => ({ ...prev, coins: updatedData.coins, gems: updatedData.gems, ancientBooks: updatedData.ancientBooks, equipmentPieces: updatedData.equipment.pieces, pickaxes: updatedData.pickaxes, hp: updatedData.stats.hp, atk: updatedData.stats.atk, def: updatedData.stats.def }));
+            setUpdateValues(prev => ({ 
+                ...prev, 
+                coins: updatedData.coins, 
+                gems: updatedData.gems, 
+                ancientBooks: updatedData.ancientBooks, 
+                equipmentPieces: updatedData.equipment.pieces, 
+                pickaxes: updatedData.pickaxes, 
+                hp: updatedData.stats_level.hp, 
+                atk: updatedData.stats_level.atk, 
+                def: updatedData.stats_level.def 
+            }));
             showFeedback('success', `${field} updated successfully!`);
         } catch (error) {
             console.error(error); 
@@ -320,18 +340,30 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
     const renderUserData = () => {
         if (!userData) return null;
+        const { stats_level, stats_value } = userData;
+        if (!stats_level || !stats_value) return <p className="text-amber-400">User data is incomplete (missing stats fields).</p>;
+
         return (
             <div className="bg-slate-800/50 p-4 rounded-lg mt-4 animate-fade-in">
                 <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3">Current Data</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 text-sm">
                     <p><strong>Coins:</strong> {userData.coins.toLocaleString()}</p>
                     <p><strong>Gems:</strong> {userData.gems.toLocaleString()}</p>
                     <p><strong>Pickaxes:</strong> {userData.pickaxes.toLocaleString()}</p>
                     <p><strong>Ancient Books:</strong> {userData.ancientBooks.toLocaleString()}</p>
                     <p><strong>Equipment Pieces:</strong> {userData.equipment.pieces.toLocaleString()}</p>
-                    <p><strong>HP Level:</strong> {userData.stats.hp}</p>
-                    <p><strong>ATK Level:</strong> {userData.stats.atk}</p>
-                    <p><strong>DEF Level:</strong> {userData.stats.def}</p>
+                    <div /> 
+                    <div />
+                    <div />
+                    
+                    <p><strong>HP Level:</strong> {stats_level.hp}</p>
+                    <p><strong>ATK Level:</strong> {stats_level.atk}</p>
+                    <p><strong>DEF Level:</strong> {stats_level.def}</p>
+                    <div />
+
+                    <p className="font-bold text-teal-300">HP Value: {stats_value.hp.toLocaleString()}</p>
+                    <p className="font-bold text-teal-300">ATK Value: {stats_value.atk.toLocaleString()}</p>
+                    <p className="font-bold text-teal-300">DEF Value: {stats_value.def.toLocaleString()}</p>
                 </div>
             </div>
         );
@@ -367,10 +399,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                                         <ActionRow label="Equipment Pieces" iconSrc={equipmentUiAssets.equipmentPieceIcon} fieldName="equipmentPieces" dbKey="equipment.pieces" value={updateValues.equipmentPieces} isUpdating={isUpdating === 'equipmentPieces'} onChange={handleInputChange} onUpdate={handleUpdate} />
                                         <ActionRow label="Pickaxes" iconSrc={uiAssets.inventoryIcon} fieldName="pickaxes" dbKey="pickaxes" value={updateValues.pickaxes} isUpdating={isUpdating === 'pickaxes'} onChange={handleInputChange} onUpdate={handleUpdate} />
                                         
-                                        <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3 pt-4">Edit Stats</h3>
-                                        <ActionRow label="HP Level" iconSrc={uiAssets.statHpIcon} fieldName="hp" dbKey="stats.hp" value={updateValues.hp} isUpdating={isUpdating === 'hp'} onChange={handleInputChange} onUpdate={handleUpdate} />
-                                        <ActionRow label="ATK Level" iconSrc={uiAssets.statAtkIcon} fieldName="atk" dbKey="stats.atk" value={updateValues.atk} isUpdating={isUpdating === 'atk'} onChange={handleInputChange} onUpdate={handleUpdate} />
-                                        <ActionRow label="DEF Level" iconSrc={uiAssets.statDefIcon} fieldName="def" dbKey="stats.def" value={updateValues.def} isUpdating={isUpdating === 'def'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <h3 className="text-lg font-semibold text-cyan-300 border-b border-slate-600 pb-2 mb-3 pt-4">Edit Stat Levels</h3>
+                                        <ActionRow label="HP Level" iconSrc={uiAssets.statHpIcon} fieldName="hp" dbKey="stats_level.hp" value={updateValues.hp} isUpdating={isUpdating === 'hp'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="ATK Level" iconSrc={uiAssets.statAtkIcon} fieldName="atk" dbKey="stats_level.atk" value={updateValues.atk} isUpdating={isUpdating === 'atk'} onChange={handleInputChange} onUpdate={handleUpdate} />
+                                        <ActionRow label="DEF Level" iconSrc={uiAssets.statDefIcon} fieldName="def" dbKey="stats_level.def" value={updateValues.def} isUpdating={isUpdating === 'def'} onChange={handleInputChange} onUpdate={handleUpdate} />
                                     </div>
                                 )}
                             </div>
