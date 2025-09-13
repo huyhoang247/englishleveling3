@@ -1,4 +1,4 @@
-// --- START OF FILE gameDataService.ts (MODIFIED) ---
+// --- START OF FILE gameDataService.ts (CORRECTED & COMPLETE) ---
 
 import { db } from './firebase';
 import { 
@@ -507,7 +507,7 @@ export const reclaimExpiredAuction = async (userId: string, auctionId: string): 
 
     return reclaimedItem!;
 };
-// --- END OF FILE gameDataService.ts (MODIFIED) ---
+// --- END OF FILE gameDataService.ts ---
 
 // --- START: ADMIN PANEL SERVICE FUNCTIONS ---
 export interface SimpleUser {
