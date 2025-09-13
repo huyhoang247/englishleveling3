@@ -14,7 +14,7 @@ import { EquipmentProvider, useEquipment } from './equipment-context.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import EquipmentScreenSkeleton from './equipment-loading.tsx';
 // THAY ĐỔI: Import component TotalStatsModal đã được tách ra file mới
-import TotalStatsModal from '../total-stats-modal.tsx';
+import TotalStatsModal from './total-stats-modal.tsx';
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
