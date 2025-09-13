@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { uiAssets, equipmentUiAssets } from './game-assets.ts'; 
 import { adminUpdateUserData, fetchOrCreateUserGameData, UserGameData, updateJackpotPool, fetchAllUsers, SimpleUser } from './gameDataService.ts';
 // <<< THÊM VÀO: Import logic tính toán chỉ số để đảm bảo đồng bộ dữ liệu
-import { calculateTotalStatValue, statConfig } from './home/upgrade/upgrade-ui.tsx'; 
+import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx'; 
 
 type ImageSourcePropType = any;
 
