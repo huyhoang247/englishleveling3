@@ -20,7 +20,6 @@ const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
 );
 
-// SỬA LỖI: Thêm dấu gạch chéo (/) vào cuối các thẻ tự đóng (<path />, <circle />, <line />, <polyline />)
 const UserIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon> );
 const SettingsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1 0 2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon> );
 const ListIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></Icon> );
@@ -263,9 +262,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 ancientBooks: data.ancientBooks, 
                 equipmentPieces: data.equipment.pieces, 
                 pickaxes: data.pickaxes, 
-                hp: data.stats_level.hp, 
-                atk: data.stats_level.atk, 
-                def: data.stats_level.def 
+                hp: data.stats_level?.hp ?? 0, 
+                atk: data.stats_level?.atk ?? 0, 
+                def: data.stats_level?.def ?? 0 
             }));
             showFeedback('success', `Loaded data for user: ${targetUserId}`);
         } catch (error) {
@@ -297,9 +296,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             case 'ancientBooks': oldValue = userData.ancientBooks; break;
             case 'equipmentPieces': oldValue = userData.equipment.pieces; break;
             case 'pickaxes': oldValue = userData.pickaxes; break;
-            case 'hp': oldValue = userData.stats_level.hp; break;
-            case 'atk': oldValue = userData.stats_level.atk; break;
-            case 'def': oldValue = userData.stats_level.def; break;
+            case 'hp': oldValue = userData.stats_level?.hp ?? 0; break;
+            case 'atk': oldValue = userData.stats_level?.atk ?? 0; break;
+            case 'def': oldValue = userData.stats_level?.def ?? 0; break;
             default: showFeedback('error', 'Invalid data field.'); return;
         }
 
@@ -317,9 +316,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 ancientBooks: updatedData.ancientBooks, 
                 equipmentPieces: updatedData.equipment.pieces, 
                 pickaxes: updatedData.pickaxes, 
-                hp: updatedData.stats_level.hp, 
-                atk: updatedData.stats_level.atk, 
-                def: updatedData.stats_level.def 
+                hp: updatedData.stats_level?.hp ?? 0, 
+                atk: updatedData.stats_level?.atk ?? 0, 
+                def: updatedData.stats_level?.def ?? 0 
             }));
             showFeedback('success', `${field} updated successfully!`);
         } catch (error) {
@@ -343,8 +342,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
     const renderUserData = () => {
         if (!userData) return null;
-        const { stats_level, stats_value } = userData;
-        if (!stats_level || !stats_value) return <p className="text-amber-400">User data is incomplete (missing stats fields).</p>;
+        const stats_level = userData.stats_level ?? { hp: 0, atk: 0, def: 0 };
+        const stats_value = userData.stats_value ?? { hp: 0, atk: 0, def: 0 };
 
         return (
             <div className="bg-slate-800/50 p-4 rounded-lg mt-4 animate-fade-in">
