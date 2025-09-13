@@ -1,3 +1,5 @@
+// --- START OF FILE admin2.tsx ---
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { uiAssets, equipmentUiAssets } from './game-assets.ts'; 
 import { adminUpdateUserData, fetchOrCreateUserGameData, UserGameData, updateJackpotPool, fetchAllUsers, SimpleUser } from './gameDataService.ts';
@@ -18,11 +20,12 @@ const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
 );
 
+// SỬA LỖI: Thêm dấu gạch chéo (/) vào cuối các thẻ tự đóng (<path />, <circle />, <line />, <polyline />)
 const UserIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Icon> );
 const SettingsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1 0 2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Icon> );
-const ListIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></Icon> );
-const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><polyline points="20 6 9 17 4 12"></polyline></Icon> );
-const XIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></XIcon> );
+const ListIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></Icon> );
+const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><polyline points="20 6 9 17 4 12" /></Icon> );
+const XIcon = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></Icon> );
 
 const AdminHeader: React.FC<{ onClose: () => void }> = ({ onClose }) => (
     <header className="sticky top-0 z-40 bg-slate-900 border-b border-white/10">
@@ -435,3 +438,5 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 };
 
 export default AdminPanel;
+
+// --- END OF FILE admin2.tsx ---
