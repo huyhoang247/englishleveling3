@@ -7,7 +7,6 @@ import { auth, db } from './firebase.js';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
 import { OwnedItem, EquippedItems, EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
-import { calculateTotalStatValue, statConfig } from './home/upgrade-stats/upgrade-ui.tsx';
 
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
@@ -26,7 +25,9 @@ interface IGameContext {
     masteryCards: number;
     pickaxes: number;
     minerChallengeHighestFloor: number;
-    userStats: { hp: number; atk: number; def: number; };
+    // SỬA ĐỔI: Tách stats thành level và value để tối ưu
+    userStatsLevel: { hp: number; atk: number; def: number; }; // Dành riêng cho màn hình nâng cấp
+    userStatsValue: { hp: number; atk: number; def: number; }; // Dữ liệu global cho toàn bộ game
     jackpotPool: number;
     bossBattleHighestFloor: number;
     ancientBooks: number;
@@ -68,7 +69,7 @@ interface IGameContext {
     handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => void;
     handleUpdatePickaxes: (amountToAdd: number) => Promise<void>;
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
-    handleStatsUpdate: (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => void;
+    // SỬA ĐỔI: Xóa handleStatsUpdate vì onSnapshot sẽ tự động cập nhật state
     getPlayerBattleStats: () => { maxHp: number; hp: number; atk: number; def: number; maxEnergy: number; energy: number; };
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
@@ -122,7 +123,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [masteryCards, setMasteryCards] = useState(0);
   const [pickaxes, setPickaxes] = useState(0);
   const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
-  const [userStats, setUserStats] = useState({ hp: 0, atk: 0, def: 0 });
+  // SỬA ĐỔI: Tách state của stats
+  const [userStatsLevel, setUserStatsLevel] = useState({ hp: 0, atk: 0, def: 0 });
+  const [userStatsValue, setUserStatsValue] = useState({ hp: 0, atk: 0, def: 0 });
   const [jackpotPool, setJackpotPool] = useState(0);
   const [bossBattleHighestFloor, setBossBattleHighestFloor] = useState(0);
   const [ancientBooks, setAncientBooks] = useState(0);
@@ -171,7 +174,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setMasteryCards(gameData.masteryCards);
       setPickaxes(gameData.pickaxes);
       setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor);
-      setUserStats(gameData.stats);
+      // SỬA ĐỔI: Cập nhật hàm refreshUserData để đọc cấu trúc mới (dù ít dùng hơn)
+      setUserStatsLevel(gameData.stats_level || { hp: 0, atk: 0, def: 0 });
+      setUserStatsValue(gameData.stats_value || { hp: 0, atk: 0, def: 0 });
       setBossBattleHighestFloor(gameData.bossBattleHighestFloor);
       setAncientBooks(gameData.ancientBooks);
       setOwnedSkills(gameData.skills.owned);
@@ -206,14 +211,19 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 console.log("Real-time data received from Firestore, updating context state.");
 
                 // Cập nhật tất cả state mỗi khi có thay đổi từ Firestore
-                // Sử dụng '??' để cung cấp giá trị mặc định nếu trường dữ liệu chưa tồn tại
                 setCoins(gameData.coins ?? 0);
-                // Không cập nhật displayedCoins trực tiếp để giữ hiệu ứng animation
                 setGems(gameData.gems ?? 0);
                 setMasteryCards(gameData.masteryCards ?? 0);
                 setPickaxes(gameData.pickaxes ?? 50);
                 setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor ?? 0);
-                setUserStats(gameData.stats ?? { hp: 0, atk: 0, def: 0 });
+
+                // --- ĐÂY LÀ THAY ĐỔI QUAN TRỌNG NHẤT ---
+                // Lấy level của stats, dùng cho màn hình nâng cấp
+                setUserStatsLevel(gameData.stats_level ?? { hp: 0, atk: 0, def: 0 });
+                // Lấy giá trị cuối cùng của stats, dùng cho toàn bộ game
+                setUserStatsValue(gameData.stats_value ?? { hp: 0, atk: 0, def: 0 });
+                // --- KẾT THÚC THAY ĐỔI QUAN TRỌNG ---
+                
                 setBossBattleHighestFloor(gameData.bossBattleHighestFloor ?? 0);
                 setAncientBooks(gameData.ancientBooks ?? 0);
                 setOwnedSkills(gameData.skills?.owned ?? []);
@@ -227,7 +237,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
             } else {
                 // Nếu user đã đăng nhập nhưng document chưa có, tiến hành tạo mới.
-                // onSnapshot sẽ tự động nhận được dữ liệu mới sau khi tạo xong.
                 console.warn("User document not found, attempting to create one.");
                 fetchOrCreateUserGameData(user.uid);
             }
@@ -237,7 +246,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
             setIsLoadingUserData(false);
         });
         
-        // Vẫn fetch jackpot pool một lần vì nó là dữ liệu chung, không phải của riêng user
+        // Vẫn fetch jackpot pool một lần vì nó là dữ liệu chung
         try {
             const jackpotData = await fetchJackpotPool();
             setJackpotPool(jackpotData);
@@ -249,7 +258,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         // User đăng xuất, reset tất cả state về giá trị ban đầu
         setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
-        setPickaxes(0); setMinerChallengeHighestFloor(0); setUserStats({ hp: 0, atk: 0, def: 0 }); setBossBattleHighestFloor(0); setAncientBooks(0);
+        setPickaxes(0); setMinerChallengeHighestFloor(0); 
+        // SỬA ĐỔI: Reset cả hai state stats
+        setUserStatsLevel({ hp: 0, atk: 0, def: 0 }); 
+        setUserStatsValue({ hp: 0, atk: 0, def: 0 });
+        setBossBattleHighestFloor(0); setAncientBooks(0);
         setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]); setLoginStreak(0); setLastCheckIn(null);
         setEquippedItems({ weapon: null, armor: null, Helmet: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
         setIsMailboxOpen(false);
@@ -277,21 +290,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     if (!userId) { console.error("Cannot update boss floor: User not authenticated."); return; }
     try {
         await updateUserBossFloor(userId, newFloor, bossBattleHighestFloor);
-        // <<< THAY ĐỔI: Không cần set state ở đây nữa, onSnapshot sẽ tự động làm việc đó.
     } catch (error) { console.error("Firestore update failed for boss floor via service: ", error); }
   };
   
   const handleMinerChallengeEnd = (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
-    // Hàm này là Cập nhật lạc quan (Optimistic Update) cho UI mượt mà. 
-    // Dữ liệu thật từ onSnapshot sẽ ghi đè lên sau đó để đảm bảo tính nhất quán.
     if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) { 
         return; 
     }
-
     const newCoins = coins + result.coinsEarned;
     const newPickaxes = result.finalPickaxes;
     const newHighestFloor = Math.max(minerChallengeHighestFloor, result.highestFloorCompleted);
-
     setCoins(newCoins);
     setPickaxes(newPickaxes);
     setMinerChallengeHighestFloor(newHighestFloor);
@@ -300,14 +308,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const handleUpdatePickaxes = async (amountToAdd: number) => {
     const userId = auth.currentUser?.uid; if (!userId) return;
     const originalPickaxes = pickaxes;
-    // Cập nhật lạc quan để UI phản hồi ngay
     setPickaxes(prev => prev + amountToAdd);
     try {
         await updateUserPickaxes(userId, originalPickaxes + amountToAdd);
-        // Thành công, onSnapshot sẽ tự đồng bộ lại state, đảm bảo dữ liệu chính xác.
     } catch(error) {
         console.error("Failed to update pickaxes on server:", error);
-        // Nếu lỗi, rollback lại state trên UI
         setPickaxes(originalPickaxes);
     }
   };
@@ -316,9 +321,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setJackpotPool(await updateJackpotPool(amount, reset));
   };
   
-  const handleStatsUpdate = (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => {
-    setCoins(newCoins); setUserStats(newStats);
-  };
+  // SỬA ĐỔI: Xóa hàm handleStatsUpdate vì không còn cần thiết. onSnapshot đã thay thế vai trò của nó.
+  // const handleStatsUpdate = (newCoins: number, newStats: { hp: number; atk: number; def: number; }) => {
+  //   setCoins(newCoins); setUserStats(newStats);
+  // };
   
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
       const isLoading = isLoadingUserData || !assetsLoaded;
@@ -334,11 +340,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       });
   };
 
+  // <<< THAY ĐỔI LỚN: Tối ưu hóa hàm getPlayerBattleStats để sử dụng userStatsValue
   const getPlayerBattleStats = () => {
     const BASE_HP = 0, BASE_ATK = 0, BASE_DEF = 0;
-    const bonusHp = calculateTotalStatValue(userStats.hp, statConfig.hp.baseUpgradeBonus);
-    const bonusAtk = calculateTotalStatValue(userStats.atk, statConfig.atk.baseUpgradeBonus);
-    const bonusDef = calculateTotalStatValue(userStats.def, statConfig.def.baseUpgradeBonus);
+    
+    // Lấy thẳng giá trị đã tính toán sẵn từ state, không cần tính lại
+    const bonusHp = userStatsValue.hp;
+    const bonusAtk = userStatsValue.atk;
+    const bonusDef = userStatsValue.def;
+
     let itemHpBonus = 0, itemAtkBonus = 0, itemDefBonus = 0;
     Object.values(equippedItems).forEach(itemId => { 
         if(itemId){
@@ -350,7 +360,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
             }
         }
     });
-    return { maxHp: BASE_HP + bonusHp + itemHpBonus, hp: BASE_HP + bonusHp + itemHpBonus, atk: BASE_ATK + bonusAtk + itemAtkBonus, def: BASE_DEF + bonusDef + itemDefBonus, maxEnergy: 50, energy: 50 };
+    return { 
+        maxHp: BASE_HP + bonusHp + itemHpBonus, 
+        hp: BASE_HP + bonusHp + itemHpBonus, 
+        atk: BASE_ATK + bonusAtk + itemAtkBonus, 
+        def: BASE_DEF + bonusDef + itemDefBonus, 
+        maxEnergy: 50, 
+        energy: 50 
+    };
   };
 
   const getEquippedSkillsDetails = () => {
@@ -380,7 +397,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   
   const handleSkillScreenClose = (dataUpdated: boolean) => {
     toggleSkillScreen();
-    // <<< THAY ĐỔI: Không cần gọi refreshUserData() nữa vì onSnapshot đã lo việc đồng bộ.
   };
 
   const updateSkillsState = (data: SkillScreenExitData) => {
@@ -423,7 +439,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   const value: IGameContext = {
-    isLoadingUserData: isLoading, isSyncingData, coins, displayedCoins, gems, masteryCards, pickaxes, minerChallengeHighestFloor, userStats, jackpotPool,
+    isLoadingUserData: isLoading, isSyncingData, coins, displayedCoins, gems, masteryCards, pickaxes, minerChallengeHighestFloor, 
+    // SỬA ĐỔI: Cung cấp 2 state mới ra context
+    userStatsLevel, 
+    userStatsValue,
+    jackpotPool,
     bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, equipmentPieces, ownedItems, equippedItems,
     loginStreak, lastCheckIn, isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
@@ -431,7 +451,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isCheckInOpen,
     isMailboxOpen,
     isAnyOverlayOpen, isGamePaused,
-    refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, handleStatsUpdate,
+    refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
+    // SỬA ĐỔI: Xóa handleStatsUpdate khỏi value
     getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
     updateEquipmentData,
     updateUserCurrency,
