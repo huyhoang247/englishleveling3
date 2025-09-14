@@ -1,4 +1,4 @@
-// --- START OF FILE check-in-context.tsx ---
+
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
@@ -41,6 +41,7 @@ interface CheckInContextType {
   showRewardAnimation: boolean;
   animatingReward: any;
   particles: Particle[];
+  countdown: string; // Thêm countdown
   claimReward: (day: number) => Promise<void>;
   handleClose: () => void;
 }
@@ -64,6 +65,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
   const [canClaimToday, setCanClaimToday] = useState(false);
   const [claimableDay, setClaimableDay] = useState(1);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [countdown, setCountdown] = useState('');
 
   const particleClasses = ["animate-float-particle-1", "animate-float-particle-2", "animate-float-particle-3", "animate-float-particle-4", "animate-float-particle-5"];
 
@@ -85,6 +87,36 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     const isConsecutive = last.getUTCFullYear() === yesterday.getUTCFullYear() && last.getUTCMonth() === yesterday.getUTCMonth() && last.getUTCDate() === yesterday.getUTCDate();
     setClaimableDay(isConsecutive ? (loginStreak % 7) + 1 : 1);
   }, [lastCheckIn, loginStreak]);
+
+  // --- THÊM MỚI: useEffect để xử lý countdown ---
+  useEffect(() => {
+    // Nếu có thể nhận thưởng, không cần đếm ngược.
+    if (canClaimToday) {
+      setCountdown('');
+      return;
+    }
+
+    // Nếu không thể nhận thưởng, bắt đầu đếm ngược.
+    const intervalId = setInterval(() => {
+      const now = new Date();
+      // Tính thời gian đến nửa đêm UTC tiếp theo
+      const nextUTCDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0));
+      const diff = nextUTCDay.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setCountdown('00:00:00');
+        setCanClaimToday(true); // Cập nhật trạng thái để cho phép nhận thưởng
+        clearInterval(intervalId); // Dừng bộ đếm
+      } else {
+        const hours = Math.floor((diff / (1000 * 60 * 60))).toString().padStart(2, '0');
+        const minutes = Math.floor((diff / 1000 / 60) % 60).toString().padStart(2, '0');
+        const seconds = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+        setCountdown(`${hours}:${minutes}:${seconds}`);
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId); // Dọn dẹp interval khi component unmount
+  }, [canClaimToday]);
 
   const claimReward = useCallback(async (day: number) => {
     if (!canClaimToday || day !== claimableDay || isClaiming || isSyncingData) return;
@@ -147,6 +179,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     showRewardAnimation, 
     animatingReward, 
     particles,
+    countdown,
     claimReward, 
     handleClose: onClose,
   }), [
@@ -158,6 +191,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     showRewardAnimation, 
     animatingReward, 
     particles,
+    countdown,
     claimReward, 
     onClose
   ]);
@@ -173,5 +207,3 @@ export const useCheckIn = (): CheckInContextType => {
   }
   return context;
 };
-
-// --- END OF FILE check-in-context.tsx ---
