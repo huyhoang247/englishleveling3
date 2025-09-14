@@ -1,4 +1,4 @@
-// --- START OF FILE check-in-ui.tsx ---
+
 
 import React from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx';
@@ -14,7 +14,7 @@ interface DailyCheckInProps {
 const DailyCheckInView = () => {
   const {
     loginStreak, isSyncingData, canClaimToday, claimableDay,
-    isClaiming, showRewardAnimation, animatingReward, particles,
+    isClaiming, showRewardAnimation, animatingReward, particles, countdown,
     claimReward, handleClose,
   } = useCheckIn();
 
@@ -49,6 +49,15 @@ const DailyCheckInView = () => {
                 <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" style={{ width: `${(loginStreak / 7) * 100}%` }}></div>
                 </div>
+                {/* --- THÊM MỚI: HIỂN THỊ COUNTDOWN --- */}
+                {!canClaimToday && countdown && (
+                  <div className="mt-2 text-center">
+                      <span className="text-xs text-slate-400">Next check-in in: </span>
+                      <span className="text-xs font-mono font-semibold text-indigo-300 bg-slate-700/50 px-2 py-1 rounded-md">
+                          {countdown}
+                      </span>
+                  </div>
+                )}
             </div>
             <div className="absolute top-3 right-3">
                 <HomeButton onClick={handleClose} /> {/* SỬ DỤNG handleClose TỪ CONTEXT */}
