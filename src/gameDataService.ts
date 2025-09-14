@@ -1,4 +1,4 @@
-// --- START OF FILE gameDataService.ts (CORRECTED & COMPLETE) ---
+// --- START OF FILE gameDataService.ts ---
 
 import { db } from './firebase';
 import { 
@@ -6,6 +6,7 @@ import {
   collection, getDocs, writeBatch,
   query, where, orderBy, onSnapshot, Timestamp, serverTimestamp, addDoc
 } from 'firebase/firestore';
+import { createWelcomeMail } from './mailService.ts'; // <-- THÊM DÒNG NÀY
 
 // Các interface này nên được định nghĩa ở một nơi tập trung (ví dụ: types.ts) và import vào
 // Tuy nhiên, để file này tự chứa, tôi sẽ định nghĩa chúng ở đây.
@@ -40,8 +41,6 @@ export interface UserGameData {
   lastCheckIn?: Timestamp;
   loginStreak?: number;
 }
-
-// <<<--- VocabularyItem interface ĐÃ ĐƯỢỢC XÓA KHỎI ĐÂY
 
 
 /**
@@ -106,11 +105,10 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       claimedQuizRewards: {}
     };
     await setDoc(userDocRef, newUserData);
+    await createWelcomeMail(userId); // <-- GỌI HÀM TẠO MAIL CHÀO MỪNG TẠI ĐÂY
     return newUserData;
   }
 };
-
-// <<<--- HÀM fetchEquipmentScreenData ĐÃ ĐƯỢC CHUYỂN SANG equipment-service.ts --->
 
 /**
  * Lấy dữ liệu cần thiết cho màn hình Kỹ năng.
@@ -126,8 +124,6 @@ export const fetchSkillScreenData = async (userId: string) => {
     skills: gameData.skills, // Gồm { owned, equipped }
   };
 };
-
-// <<<--- HÀM fetchBossBattlePrerequisites ĐÃ ĐƯỢC DI CHUYỂN SANG boss-battle-service.ts --->
 
 export const updateUserCoins = async (userId: string, amount: number): Promise<number> => {
   if (!userId) throw new Error("User ID is required.");
@@ -191,8 +187,6 @@ export const updateUserPickaxes = async (userId: string, newTotal: number): Prom
     return finalAmount;
 };
 
-// <<<--- HÀM upgradeUserStats ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
-
 export const updateUserSkills = async (userId: string, updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
     const userDocRef = doc(db, 'users', userId);
     return runTransaction(db, async (t) => {
@@ -211,20 +205,6 @@ export const updateUserSkills = async (userId: string, updates: { newOwned: Owne
         return { newCoins, newBooks };
     });
 };
-
-// <<<--- HÀM updateUserInventory ĐÃ ĐƯỢC CHUYỂN SANG equipment-service.ts --->
-
-// --- HÀM processGemToCoinExchange ĐÃ ĐƯỢC XÓA KHỎI ĐÂY ---
-
-// --- HÀM processShopPurchase ĐÃ ĐƯỢC CHUYỂN SANG shop-service.ts ---
-
-// --- HÀM CHO ĐIỂM DANH HÀNG NGÀY ĐÃ ĐƯỢC CHUYỂN SANG checkInService.ts ---
-
-// <<<--- CÁC HÀM VỀ VOCABULARY ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
-
-// <<<--- HÀM fetchAndSyncVocabularyData ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
-
-// <<<--- HÀM updateAchievementData ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
 
 // --- START: AUCTION HOUSE SERVICE FUNCTIONS ---
 
@@ -507,7 +487,7 @@ export const reclaimExpiredAuction = async (userId: string, auctionId: string): 
 
     return reclaimedItem!;
 };
-// --- END OF FILE gameDataService.ts ---
+// --- END: AUCTION HOUSE SERVICE FUNCTIONS ---
 
 // --- START: ADMIN PANEL SERVICE FUNCTIONS ---
 export interface SimpleUser {
@@ -597,3 +577,5 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
   });
 };
 // --- END: ADMIN PANEL SERVICE FUNCTIONS ---
+
+// --- END OF FILE gameDataService.ts ---
