@@ -1,7 +1,7 @@
 // --- START OF FILE: src/flashcard.tsx ---
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import BackButton from '../footer-back.tsx';
+import BackButton from '../ui/back-button.tsx';
 import { ExampleSentence, Flashcard as CoreFlashcard } from './flashcard-data.ts';
 import { generateAudioUrlsForWord } from '../voca-data/audio-quiz-generator.ts';
 
@@ -153,9 +153,9 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   }
 
   const tabs = [
-    { key: 'basic' as const, label: 'Ảnh Gốc' },
-    { key: 'example' as const, label: 'Ví Dụ' },
-    { key: 'vocabulary' as const, label: 'Từ Vựng' },
+    { key: 'basic' as const, label: 'Image' },
+    { key: 'example' as const, label: 'Exam' },
+    { key: 'vocabulary' as const, label: 'Vocabulary' },
   ];
 
   const renderModalContent = () => {
@@ -413,7 +413,10 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                zIndex: zIndex
            }}
       >
-          <div className="flex justify-center bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 flex-shrink-0 px-4 py-3">
+          <div className="relative flex items-center justify-center bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 flex-shrink-0 px-4 py-3">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                <BackButton onClick={onClose} />
+            </div>
             <div className="inline-flex bg-gray-900 dark:bg-black rounded-xl p-1 space-x-1 border border-transparent dark:border-gray-800">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.key;
@@ -443,7 +446,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
           {renderModalContent()}
 
-          <BackButton onClick={onClose} />
       </div>
     </>
   );
