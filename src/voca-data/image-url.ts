@@ -1,7 +1,7 @@
 // --- START OF REFACTORED FILE image-url.ts ---
 
 // Phần URL cơ sở không thay đổi
-const baseUrl = "https://raw.githubusercontent.com/englishleveling46/Flashcard/main/image-anime";
+const baseUrl = "https://raw.githubusercontent.com/englishleveling46/Flashcard/main/image-anime/";
 
 /**
  * Hàm trợ giúp để tạo ra một chuỗi các URL theo một quy tắc nhất định.
