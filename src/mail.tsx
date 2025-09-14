@@ -11,7 +11,7 @@ import {
   markMailAsRead,
   claimMailAttachments,
   deleteMails
-} from './mail-service'; // Import service mới
+} from './mail-service.ts'; // Import service mới
 
 // Dữ liệu item mẫu cho Admin Panel (thay thế bằng dữ liệu game thực tế của bạn)
 const ALL_GAME_ITEMS_MOCK = [
