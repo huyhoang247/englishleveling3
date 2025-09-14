@@ -1,4 +1,4 @@
-// --- START OF FILE gameDataService.ts (FULL & COMPLETE) ---
+// --- START OF FILE gameDataService.ts (CORRECTED & COMPLETE) ---
 
 import { db } from './firebase';
 import { 
@@ -6,37 +6,31 @@ import {
   collection, getDocs, writeBatch,
   query, where, orderBy, onSnapshot, Timestamp, serverTimestamp, addDoc
 } from 'firebase/firestore';
-import { sendWelcomeMail } from './mailService.ts'; // Import để gửi mail chào mừng
 
-// --- INTERFACES & TYPE DEFINITIONS ---
 // Các interface này nên được định nghĩa ở một nơi tập trung (ví dụ: types.ts) và import vào
-// Tuy nhiên, để file này tự chứa, chúng sẽ được định nghĩa ở đây.
-
+// Tuy nhiên, để file này tự chứa, tôi sẽ định nghĩa chúng ở đây.
 export type Rarity = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' | 'SSR';
 export interface OwnedSkill { id: string; skillId: string; level: number; rarity: Rarity; }
 
+// Sửa lại interface OwnedItem và EquippedItems để khớp với equipment.tsx
 export interface OwnedItem {
     id: string;
     itemId: number;
     level: number;
     stats: { [key: string]: any };
 }
-
 export type EquipmentSlotType = 'weapon' | 'armor' | 'Helmet';
 export type EquippedItems = {
     [key in EquipmentSlotType]: string | null;
 };
 
 export interface UserGameData {
-  // Cho phép truy cập động bằng key string, hữu ích cho các hàm cập nhật chung
-  [key: string]: any; 
   coins: number;
   gems: number;
   masteryCards: number;
   pickaxes: number;
   minerChallengeHighestFloor: number;
-  stats_level: { hp: number; atk: number; def: number; }; // Khớp với GameContext
-  stats_value: { hp: number; atk: number; def: number; }; // Khớp với GameContext
+  stats: { hp: number; atk: number; def: number; };
   bossBattleHighestFloor: number;
   ancientBooks: number;
   skills: { owned: OwnedSkill[]; equipped: (string | null)[] };
@@ -46,6 +40,8 @@ export interface UserGameData {
   lastCheckIn?: Timestamp;
   loginStreak?: number;
 }
+
+// <<<--- VocabularyItem interface ĐÃ ĐƯỢỢC XÓA KHỎI ĐÂY
 
 
 /**
@@ -61,13 +57,22 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
 
   if (docSnap.exists()) {
     const data = docSnap.data();
-    // Đảm bảo dữ liệu skills và equipment có cấu trúc đúng
+    // Đảm bảo dữ liệu skills có cấu trúc đúng
     const skillsData = data.skills || { owned: [], equipped: [null, null, null] };
     if (!Array.isArray(skillsData.equipped) || skillsData.equipped.length !== 3) {
       skillsData.equipped = [null, null, null];
     }
+
+    // --- SỬA ĐỔI BẮT ĐẦU ---
+    // 1. Định nghĩa một cấu trúc mặc định đầy đủ.
     const defaultEquipment = { pieces: 100, owned: [], equipped: { weapon: null, armor: null, Helmet: null } };
+
+    // 2. Hợp nhất object mặc định với dữ liệu thực tế.
+    //    - Đặt object mặc định làm nền.
+    //    - Dữ liệu từ `data.equipment` (nếu có) sẽ ghi đè lên các giá trị mặc định.
+    //    - Nếu `data.equipment` thiếu thuộc tính `pieces`, giá trị `pieces: 100` từ `defaultEquipment` sẽ được giữ lại.
     const equipmentData = { ...defaultEquipment, ...(data.equipment || {}) };
+    // --- SỬA ĐỔI KẾT THÚC ---
 
     return {
       coins: data.coins || 0,
@@ -75,8 +80,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       masteryCards: data.masteryCards || 0,
       pickaxes: typeof data.pickaxes === 'number' ? data.pickaxes : 50,
       minerChallengeHighestFloor: data.minerChallengeHighestFloor || 0,
-      stats_level: data.stats_level || { hp: 0, atk: 0, def: 0 },
-      stats_value: data.stats_value || { hp: 100, atk: 10, def: 5 }, // Thêm giá trị cơ bản nếu chưa có
+      stats: data.stats || { hp: 0, atk: 0, def: 0 },
       bossBattleHighestFloor: data.bossBattleHighestFloor || 0,
       ancientBooks: data.ancientBooks || 0,
       skills: skillsData,
@@ -87,15 +91,12 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       loginStreak: data.loginStreak || 0,
     };
   } else {
-    console.log(`Creating new user document for ${userId}...`);
     const newUserData: UserGameData & { createdAt: Date; claimedDailyGoals: object; claimedVocabMilestones: any[], claimedQuizRewards: object; } = {
       coins: 0, gems: 0, masteryCards: 0, pickaxes: 50,
-      minerChallengeHighestFloor: 0, 
-      stats_level: { hp: 0, atk: 0, def: 0 },
-      stats_value: { hp: 100, atk: 10, def: 5 }, // Chỉ số khởi đầu
+      minerChallengeHighestFloor: 0, stats: { hp: 0, atk: 0, def: 0 },
       bossBattleHighestFloor: 0, ancientBooks: 0,
       skills: { owned: [], equipped: [null, null, null] },
-      totalVocabCollected: 0, cardCapacity: 100, // Sức chứa thẻ ban đầu
+      totalVocabCollected: 0, cardCapacity: 100,
       equipment: { pieces: 100, owned: [], equipped: { weapon: null, armor: null, Helmet: null } },
       lastCheckIn: null,
       loginStreak: 0,
@@ -105,19 +106,11 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       claimedQuizRewards: {}
     };
     await setDoc(userDocRef, newUserData);
-    
-    // Gửi mail chào mừng sau khi tạo tài liệu người dùng
-    try {
-        await sendWelcomeMail(userId);
-        console.log(`Welcome mail sent to ${userId}.`);
-    } catch (error) {
-        console.error("Failed to send welcome mail:", error);
-    }
-    
     return newUserData;
   }
 };
 
+// <<<--- HÀM fetchEquipmentScreenData ĐÃ ĐƯỢC CHUYỂN SANG equipment-service.ts --->
 
 /**
  * Lấy dữ liệu cần thiết cho màn hình Kỹ năng.
@@ -134,12 +127,8 @@ export const fetchSkillScreenData = async (userId: string) => {
   };
 };
 
-/**
- * Cập nhật số Vàng của người dùng.
- * @param userId - ID của người dùng.
- * @param amount - Số lượng cần thay đổi (có thể âm).
- * @returns Số Vàng mới.
- */
+// <<<--- HÀM fetchBossBattlePrerequisites ĐÃ ĐƯỢC DI CHUYỂN SANG boss-battle-service.ts --->
+
 export const updateUserCoins = async (userId: string, amount: number): Promise<number> => {
   if (!userId) throw new Error("User ID is required.");
   if (amount === 0) {
@@ -156,12 +145,6 @@ export const updateUserCoins = async (userId: string, amount: number): Promise<n
   });
 };
 
-/**
- * Cập nhật số Gems của người dùng.
- * @param userId - ID của người dùng.
- * @param amount - Số lượng cần thay đổi (có thể âm).
- * @returns Số Gems mới.
- */
 export const updateUserGems = async (userId: string, amount: number): Promise<number> => {
     if (!userId) throw new Error("User ID is required.");
     if (amount === 0) {
@@ -178,10 +161,6 @@ export const updateUserGems = async (userId: string, amount: number): Promise<nu
     });
 };
 
-/**
- * Lấy giá trị Jackpot Pool hiện tại.
- * @returns Giá trị pool.
- */
 export const fetchJackpotPool = async (): Promise<number> => {
     const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
     const docSnap = await getDoc(jackpotDocRef);
@@ -190,12 +169,6 @@ export const fetchJackpotPool = async (): Promise<number> => {
     return 200;
 };
 
-/**
- * Cập nhật giá trị Jackpot Pool.
- * @param amount - Số tiền cần thêm vào pool.
- * @param reset - Nếu true, đặt lại pool về giá trị ban đầu.
- * @returns Giá trị pool mới.
- */
 export const updateJackpotPool = async (amount: number, reset: boolean = false): Promise<number> => {
     const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
     return runTransaction(db, async (t) => {
@@ -207,35 +180,19 @@ export const updateJackpotPool = async (amount: number, reset: boolean = false):
     });
 };
 
-/**
- * Cập nhật tầng Boss cao nhất người dùng đã vượt qua.
- * @param userId - ID người dùng.
- * @param newFloor - Tầng mới đạt được.
- * @param currentHighest - Tầng cao nhất hiện tại.
- */
 export const updateUserBossFloor = async (userId: string, newFloor: number, currentHighest: number): Promise<void> => {
     if (newFloor <= currentHighest) return;
     await setDoc(doc(db, 'users', userId), { bossBattleHighestFloor: newFloor }, { merge: true });
 };
 
-/**
- * Cập nhật số cuốc của người dùng.
- * @param userId - ID người dùng.
- * @param newTotal - Tổng số cuốc mới.
- * @returns Số cuốc cuối cùng.
- */
 export const updateUserPickaxes = async (userId: string, newTotal: number): Promise<number> => {
     const finalAmount = Math.max(0, newTotal);
     await setDoc(doc(db, 'users', userId), { pickaxes: finalAmount }, { merge: true });
     return finalAmount;
 };
 
-/**
- * Cập nhật trạng thái kỹ năng của người dùng (kỹ năng sở hữu, trang bị, vàng và sách cổ).
- * @param userId - ID người dùng.
- * @param updates - Object chứa các thay đổi.
- * @returns Vàng và Sách cổ mới.
- */
+// <<<--- HÀM upgradeUserStats ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
+
 export const updateUserSkills = async (userId: string, updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
     const userDocRef = doc(db, 'users', userId);
     return runTransaction(db, async (t) => {
@@ -255,8 +212,21 @@ export const updateUserSkills = async (userId: string, updates: { newOwned: Owne
     });
 };
 
+// <<<--- HÀM updateUserInventory ĐÃ ĐƯỢC CHUYỂN SANG equipment-service.ts --->
 
-// --- AUCTION HOUSE SERVICE FUNCTIONS ---
+// --- HÀM processGemToCoinExchange ĐÃ ĐƯỢC XÓA KHỎI ĐÂY ---
+
+// --- HÀM processShopPurchase ĐÃ ĐƯỢC CHUYỂN SANG shop-service.ts ---
+
+// --- HÀM CHO ĐIỂM DANH HÀNG NGÀY ĐÃ ĐƯỢC CHUYỂN SANG checkInService.ts ---
+
+// <<<--- CÁC HÀM VỀ VOCABULARY ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
+
+// <<<--- HÀM fetchAndSyncVocabularyData ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
+
+// <<<--- HÀM updateAchievementData ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
+
+// --- START: AUCTION HOUSE SERVICE FUNCTIONS ---
 
 export interface AuctionItem {
   id: string; // Document ID from Firestore
@@ -344,6 +314,7 @@ export const listenToUserAuctions = (userId: string, callback: (auctions: Auctio
  * @param startingBid - Giá khởi điểm.
  * @param buyoutPrice - Giá mua ngay (có thể null).
  * @param durationHours - Thời gian đấu giá (giờ).
+ * @returns Promise<void>
  */
 export const listAuctionItem = async (
   userId: string, 
@@ -367,14 +338,17 @@ export const listAuctionItem = async (
     const itemIndex = currentEquipment.owned.findIndex((i: OwnedItem) => i.id === itemToList.id);
     if (itemIndex === -1) throw new Error("Vật phẩm không còn trong túi đồ.");
 
+    // Xóa vật phẩm khỏi túi đồ của người dùng
     const newOwnedItems = [...currentEquipment.owned];
     newOwnedItems.splice(itemIndex, 1);
     
+    // Cập nhật dữ liệu người dùng
     t.update(userDocRef, {
       gems: (userData.gems || 0) - LISTING_FEE_GEMS,
       'equipment.owned': newOwnedItems,
     });
     
+    // Tạo document đấu giá mới
     const endTime = new Date();
     endTime.setHours(endTime.getHours() + durationHours);
 
@@ -401,6 +375,7 @@ export const listAuctionItem = async (
  * @param userName - Tên người đấu giá.
  * @param auctionId - ID của phiên đấu giá.
  * @param bidAmount - Số vàng muốn đặt.
+ * @returns Promise<void>
  */
 export const placeBidOnAuction = async (
   userId: string, 
@@ -426,6 +401,7 @@ export const placeBidOnAuction = async (
     if (bidAmount <= auctionData.currentBid) throw new Error("Giá đặt phải cao hơn giá hiện tại.");
     if ((userData.coins || 0) < bidAmount) throw new Error("Không đủ vàng để đặt giá.");
 
+    // Logic hoàn trả tiền cho người giữ giá trước (nếu có)
     if (auctionData.highestBidderId) {
       const previousBidderDocRef = doc(db, 'users', auctionData.highestBidderId);
       const prevBidderDoc = await t.get(previousBidderDocRef);
@@ -435,8 +411,10 @@ export const placeBidOnAuction = async (
       }
     }
 
+    // Trừ tiền người đấu giá mới
     t.update(userDocRef, { coins: (userData.coins || 0) - bidAmount });
 
+    // Cập nhật phiên đấu giá
     t.update(auctionDocRef, {
       currentBid: bidAmount,
       highestBidderId: userId,
@@ -449,7 +427,7 @@ export const placeBidOnAuction = async (
  * Người thắng nhận vật phẩm sau khi đấu giá kết thúc.
  * @param userId - ID người nhận.
  * @param auctionId - ID phiên đấu giá.
- * @returns Vật phẩm đã nhận.
+ * @returns Promise<OwnedItem> Vật phẩm đã nhận.
  */
 export const claimAuctionWin = async (userId: string, auctionId: string): Promise<OwnedItem> => {
   const userDocRef = doc(db, 'users', userId);
@@ -466,15 +444,17 @@ export const claimAuctionWin = async (userId: string, auctionId: string): Promis
     const auctionData = auctionDoc.data() as Omit<AuctionItem, 'id'>;
 
     if (auctionData.highestBidderId !== userId) throw new Error("Bạn không phải người thắng phiên đấu giá này.");
-    if (auctionData.status !== 'sold') throw new Error("Vật phẩm đã được nhận hoặc trạng thái không hợp lệ.");
+    if (auctionData.status !== 'active') throw new Error("Vật phẩm đã được nhận hoặc đã hết hạn.");
     if (Timestamp.now().toMillis() < auctionData.endTime.toMillis()) throw new Error("Phiên đấu giá chưa kết thúc.");
 
+    // Thêm vật phẩm vào túi người thắng
     const currentEquipment = userData.equipment || { owned: [] };
     const newOwnedItems = [...currentEquipment.owned, auctionData.item];
     claimedItem = auctionData.item;
 
     t.update(userDocRef, { 'equipment.owned': newOwnedItems });
     
+    // Gửi tiền cho người bán
     const sellerDocRef = doc(db, 'users', auctionData.sellerId);
     const sellerDoc = await t.get(sellerDocRef);
     if(sellerDoc.exists()){
@@ -482,6 +462,7 @@ export const claimAuctionWin = async (userId: string, auctionId: string): Promis
         t.update(sellerDocRef, { coins: (sellerData.coins || 0) + auctionData.currentBid });
     }
 
+    // Cập nhật trạng thái phiên đấu giá
     t.update(auctionDocRef, { status: 'claimed' });
   });
 
@@ -492,7 +473,7 @@ export const claimAuctionWin = async (userId: string, auctionId: string): Promis
  * Người bán nhận lại vật phẩm nếu không có ai đấu giá.
  * @param userId - ID người bán.
  * @param auctionId - ID phiên đấu giá.
- * @returns Vật phẩm đã nhận lại.
+ * @returns Promise<OwnedItem> Vật phẩm đã nhận lại.
  */
 export const reclaimExpiredAuction = async (userId: string, auctionId: string): Promise<OwnedItem> => {
     const userDocRef = doc(db, 'users', userId);
@@ -513,20 +494,22 @@ export const reclaimExpiredAuction = async (userId: string, auctionId: string): 
         if (auctionData.status !== 'active') throw new Error("Vật phẩm không thể nhận lại.");
         if (Timestamp.now().toMillis() < auctionData.endTime.toMillis()) throw new Error("Phiên đấu giá chưa kết thúc.");
 
+        // Thêm vật phẩm lại vào túi người bán
         const currentEquipment = userData.equipment || { owned: [] };
         const newOwnedItems = [...currentEquipment.owned, auctionData.item];
         reclaimedItem = auctionData.item;
         
         t.update(userDocRef, { 'equipment.owned': newOwnedItems });
         
+        // Cập nhật trạng thái phiên đấu giá
         t.update(auctionDocRef, { status: 'expired' });
     });
 
     return reclaimedItem!;
 };
+// --- END OF FILE gameDataService.ts ---
 
-
-// --- ADMIN PANEL SERVICE FUNCTIONS ---
+// --- START: ADMIN PANEL SERVICE FUNCTIONS ---
 export interface SimpleUser {
   uid: string;
   email?: string;
@@ -535,7 +518,7 @@ export interface SimpleUser {
 
 /**
  * Lấy danh sách ID, email và username của tất cả người dùng.
- * @returns Một mảng các object người dùng.
+ * @returns {Promise<SimpleUser[]>} Một mảng các object người dùng.
  */
 export const fetchAllUsers = async (): Promise<SimpleUser[]> => {
   const usersCollectionRef = collection(db, 'users');
@@ -543,6 +526,8 @@ export const fetchAllUsers = async (): Promise<SimpleUser[]> => {
   const users: SimpleUser[] = [];
   querySnapshot.forEach((doc) => {
     const data = doc.data();
+    // Giả sử user document có chứa trường 'email' và 'username'.
+    // Nếu không có, chúng sẽ là undefined, điều này được xử lý bởi interface.
     users.push({ 
         uid: doc.id,
         email: data.email,
@@ -554,9 +539,10 @@ export const fetchAllUsers = async (): Promise<SimpleUser[]> => {
 
 /**
  * Cập nhật nhiều trường dữ liệu của người dùng cùng lúc cho mục đích quản trị.
+ * Hàm này sử dụng dot notation cho các object lồng nhau (vd: 'stats.hp').
  * @param userId - ID của người dùng cần cập nhật.
  * @param updates - Object chứa các trường và giá trị cần thay đổi (giá trị là số lượng cộng thêm/trừ đi).
- * @returns Dữ liệu mới nhất của người dùng sau khi cập nhật.
+ * @returns {Promise<UserGameData>} Dữ liệu mới nhất của người dùng sau khi cập nhật.
  */
 export const adminUpdateUserData = async (userId: string, updates: { [key: string]: number }): Promise<UserGameData> => {
   if (!userId) throw new Error("User ID is required.");
@@ -573,6 +559,7 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
 
     for (const key in updates) {
       const valueToAdd = updates[key];
+      // Xử lý các trường lồng nhau như 'stats.hp' hoặc 'equipment.pieces'
       if (key.includes('.')) {
         const keys = key.split('.');
         let currentLevel = data as any;
@@ -581,8 +568,10 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
         }
         const finalKey = keys[keys.length - 1];
         const currentValue = currentLevel[finalKey] || 0;
+        // Sử dụng dot notation trong payload để Firestore hiểu
         updatePayload[key] = Math.max(0, currentValue + valueToAdd);
       } else {
+        // Xử lý các trường ở cấp cao nhất
         const currentValue = (data as any)[key] || 0;
         updatePayload[key] = Math.max(0, currentValue + valueToAdd);
       }
@@ -590,7 +579,8 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
     
     t.update(userDocRef, updatePayload);
     
-    const updatedData = JSON.parse(JSON.stringify(data)); // Deep copy
+    // Trả về dữ liệu đã được hợp nhất để cập nhật UI ngay lập tức
+    const updatedData = JSON.parse(JSON.stringify(data)); // Deep copy to avoid mutation issues
     for(const key in updatePayload){
         if (key.includes('.')) {
             const keys = key.split('.');
@@ -606,4 +596,4 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
     return updatedData as UserGameData;
   });
 };
-// --- END OF FILE gameDataService.ts ---
+// --- END: ADMIN PANEL SERVICE FUNCTIONS ---
