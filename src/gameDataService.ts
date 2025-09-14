@@ -1,4 +1,4 @@
-// --- START OF FILE gameDataService.ts ---
+// --- START OF FILE gameDataService.ts (CORRECTED & COMPLETE) ---
 
 import { db } from './firebase';
 import { 
@@ -30,8 +30,7 @@ export interface UserGameData {
   masteryCards: number;
   pickaxes: number;
   minerChallengeHighestFloor: number;
-  stats_level: { hp: number; atk: number; def: number; }; // Thêm stats_level để khớp GameContext
-  stats_value: { hp: number; atk: number; def: number; }; // Thêm stats_value để khớp GameContext
+  stats: { hp: number; atk: number; def: number; };
   bossBattleHighestFloor: number;
   ancientBooks: number;
   skills: { owned: OwnedSkill[]; equipped: (string | null)[] };
@@ -41,6 +40,9 @@ export interface UserGameData {
   lastCheckIn?: Timestamp;
   loginStreak?: number;
 }
+
+// <<<--- VocabularyItem interface ĐÃ ĐƯỢỢC XÓA KHỎI ĐÂY
+
 
 /**
  * Lấy dữ liệu game của người dùng. Nếu chưa có, tạo mới với giá trị mặc định.
@@ -61,8 +63,16 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       skillsData.equipped = [null, null, null];
     }
 
+    // --- SỬA ĐỔI BẮT ĐẦU ---
+    // 1. Định nghĩa một cấu trúc mặc định đầy đủ.
     const defaultEquipment = { pieces: 100, owned: [], equipped: { weapon: null, armor: null, Helmet: null } };
+
+    // 2. Hợp nhất object mặc định với dữ liệu thực tế.
+    //    - Đặt object mặc định làm nền.
+    //    - Dữ liệu từ `data.equipment` (nếu có) sẽ ghi đè lên các giá trị mặc định.
+    //    - Nếu `data.equipment` thiếu thuộc tính `pieces`, giá trị `pieces: 100` từ `defaultEquipment` sẽ được giữ lại.
     const equipmentData = { ...defaultEquipment, ...(data.equipment || {}) };
+    // --- SỬA ĐỔI KẾT THÚC ---
 
     return {
       coins: data.coins || 0,
@@ -70,8 +80,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       masteryCards: data.masteryCards || 0,
       pickaxes: typeof data.pickaxes === 'number' ? data.pickaxes : 50,
       minerChallengeHighestFloor: data.minerChallengeHighestFloor || 0,
-      stats_level: data.stats_level || { hp: 0, atk: 0, def: 0 },
-      stats_value: data.stats_value || { hp: 0, atk: 0, def: 0 },
+      stats: data.stats || { hp: 0, atk: 0, def: 0 },
       bossBattleHighestFloor: data.bossBattleHighestFloor || 0,
       ancientBooks: data.ancientBooks || 0,
       skills: skillsData,
@@ -82,11 +91,9 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       loginStreak: data.loginStreak || 0,
     };
   } else {
-    const newUserData = {
+    const newUserData: UserGameData & { createdAt: Date; claimedDailyGoals: object; claimedVocabMilestones: any[], claimedQuizRewards: object; } = {
       coins: 0, gems: 0, masteryCards: 0, pickaxes: 50,
-      minerChallengeHighestFloor: 0, 
-      stats_level: { hp: 0, atk: 0, def: 0 },
-      stats_value: { hp: 0, atk: 0, def: 0 },
+      minerChallengeHighestFloor: 0, stats: { hp: 0, atk: 0, def: 0 },
       bossBattleHighestFloor: 0, ancientBooks: 0,
       skills: { owned: [], equipped: [null, null, null] },
       totalVocabCollected: 0, cardCapacity: 100,
@@ -99,9 +106,28 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       claimedQuizRewards: {}
     };
     await setDoc(userDocRef, newUserData);
-    return newUserData as UserGameData;
+    return newUserData;
   }
 };
+
+// <<<--- HÀM fetchEquipmentScreenData ĐÃ ĐƯỢC CHUYỂN SANG equipment-service.ts --->
+
+/**
+ * Lấy dữ liệu cần thiết cho màn hình Kỹ năng.
+ * @param userId - ID của người dùng.
+ * @returns Dữ liệu cần thiết cho màn hình kỹ năng.
+ */
+export const fetchSkillScreenData = async (userId: string) => {
+  if (!userId) throw new Error("User ID is required.");
+  const gameData = await fetchOrCreateUserGameData(userId);
+  return {
+    coins: gameData.coins,
+    ancientBooks: gameData.ancientBooks,
+    skills: gameData.skills, // Gồm { owned, equipped }
+  };
+};
+
+// <<<--- HÀM fetchBossBattlePrerequisites ĐÃ ĐƯỢC DI CHUYỂN SANG boss-battle-service.ts --->
 
 export const updateUserCoins = async (userId: string, amount: number): Promise<number> => {
   if (!userId) throw new Error("User ID is required.");
@@ -135,60 +161,6 @@ export const updateUserGems = async (userId: string, amount: number): Promise<nu
     });
 };
 
-/**
- * Cập nhật dữ liệu kỹ năng của người dùng trong một transaction.
- * Hàm này xử lý việc thay đổi danh sách kỹ năng, vàng, và sách cổ trên Firestore.
- * @param userId - ID của người dùng.
- * @param updates - Một object chứa các thay đổi cần áp dụng.
- * @returns Promise chứa số vàng và sách mới sau khi cập nhật thành công.
- */
-export const updateUserSkills = async (
-  userId: string,
-  updates: {
-    newOwned: OwnedSkill[];
-    newEquippedIds: (string | null)[];
-    goldChange: number;
-    booksChange: number;
-  }
-): Promise<{ newCoins: number; newBooks: number; }> => {
-    const userDocRef = doc(db, 'users', userId);
-
-    return runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) {
-            throw new Error("User document does not exist!");
-        }
-
-        const data = userDoc.data();
-        
-        // Tính toán giá trị mới của tiền tệ
-        const newCoins = (data.coins || 0) + updates.goldChange;
-        const newBooks = (data.ancientBooks || 0) + updates.booksChange;
-
-        // Kiểm tra điều kiện (server-side validation)
-        if (newCoins < 0) {
-            throw new Error("Không đủ vàng.");
-        }
-        if (newBooks < 0) {
-            throw new Error("Không đủ Sách Cổ.");
-        }
-        
-        // Thực hiện cập nhật trong transaction
-        transaction.update(userDocRef, {
-            coins: newCoins,
-            ancientBooks: newBooks,
-            skills: { 
-                owned: updates.newOwned, 
-                equipped: updates.newEquippedIds 
-            }
-        });
-
-        // Trả về dữ liệu mới để cập nhật state ở client
-        return { newCoins, newBooks };
-    });
-};
-
-
 export const fetchJackpotPool = async (): Promise<number> => {
     const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
     const docSnap = await getDoc(jackpotDocRef);
@@ -218,6 +190,41 @@ export const updateUserPickaxes = async (userId: string, newTotal: number): Prom
     await setDoc(doc(db, 'users', userId), { pickaxes: finalAmount }, { merge: true });
     return finalAmount;
 };
+
+// <<<--- HÀM upgradeUserStats ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
+
+export const updateUserSkills = async (userId: string, updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
+    const userDocRef = doc(db, 'users', userId);
+    return runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if (!userDoc.exists()) throw new Error("User document does not exist!");
+        const data = userDoc.data();
+        const newCoins = (data.coins || 0) + updates.goldChange;
+        const newBooks = (data.ancientBooks || 0) + updates.booksChange;
+        if (newCoins < 0) throw new Error("Không đủ vàng.");
+        if (newBooks < 0) throw new Error("Không đủ Sách Cổ.");
+        t.update(userDocRef, {
+            coins: newCoins,
+            ancientBooks: newBooks,
+            skills: { owned: updates.newOwned, equipped: updates.newEquippedIds }
+        });
+        return { newCoins, newBooks };
+    });
+};
+
+// <<<--- HÀM updateUserInventory ĐÃ ĐƯỢC CHUYỂN SANG equipment-service.ts --->
+
+// --- HÀM processGemToCoinExchange ĐÃ ĐƯỢC XÓA KHỎI ĐÂY ---
+
+// --- HÀM processShopPurchase ĐÃ ĐƯỢC CHUYỂN SANG shop-service.ts ---
+
+// --- HÀM CHO ĐIỂM DANH HÀNG NGÀY ĐÃ ĐƯỢC CHUYỂN SANG checkInService.ts ---
+
+// <<<--- CÁC HÀM VỀ VOCABULARY ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
+
+// <<<--- HÀM fetchAndSyncVocabularyData ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
+
+// <<<--- HÀM updateAchievementData ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
 
 // --- START: AUCTION HOUSE SERVICE FUNCTIONS ---
 
@@ -500,7 +507,7 @@ export const reclaimExpiredAuction = async (userId: string, auctionId: string): 
 
     return reclaimedItem!;
 };
-// --- END: AUCTION HOUSE SERVICE FUNCTIONS ---
+// --- END OF FILE gameDataService.ts ---
 
 // --- START: ADMIN PANEL SERVICE FUNCTIONS ---
 export interface SimpleUser {
@@ -519,6 +526,8 @@ export const fetchAllUsers = async (): Promise<SimpleUser[]> => {
   const users: SimpleUser[] = [];
   querySnapshot.forEach((doc) => {
     const data = doc.data();
+    // Giả sử user document có chứa trường 'email' và 'username'.
+    // Nếu không có, chúng sẽ là undefined, điều này được xử lý bởi interface.
     users.push({ 
         uid: doc.id,
         email: data.email,
@@ -588,5 +597,3 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
   });
 };
 // --- END: ADMIN PANEL SERVICE FUNCTIONS ---
-
-// --- END OF FILE gameDataService.ts ---
