@@ -1,4 +1,3 @@
-// --- START OF FILE src/home/skill-game/skill-context.tsx (UPDATED) ---
 
 import React, { createContext, useState, useMemo, useCallback, useEffect, useContext, ReactNode } from 'react';
 import {
@@ -12,9 +11,7 @@ import {
     type SkillBlueprint,
     getNextRarity,
 } from './skill-data.tsx';
-import { updateUserSkills } from './skill-service.ts';
-import { useGame } from '../../GameContext.tsx'; // THÊM DÒNG NÀY
-import { auth } from '../../firebase'; // THÊM DÒNG NÀY
+import { useGame } from '../../GameContext.tsx';
 
 // --- INTERFACES & TYPES ---
 
@@ -35,7 +32,6 @@ interface SkillContextType {
     ownedSkills: OwnedSkill[];
     equippedSkillIds: (string | null)[];
     isLoading: boolean;
-    isProcessing: boolean;
     selectedSkill: OwnedSkill | null;
     newlyCraftedSkill: OwnedSkill | null;
     isMergeModalOpen: boolean;
@@ -115,7 +111,6 @@ export const SkillProvider = ({ children, onClose }: SkillProviderProps) => {
 
     // --- STATE QUẢN LÝ GIAO DIỆN ---
     const [isLoading, setIsLoading] = useState(true);
-    const [isProcessing, setIsProcessing] = useState(false);
     const [dataHasChanged, setDataHasChanged] = useState(false);
     const [selectedSkill, setSelectedSkill] = useState<OwnedSkill | null>(null);
     const [newlyCraftedSkill, setNewlyCraftedSkill] = useState<OwnedSkill | null>(null);
@@ -139,7 +134,6 @@ export const SkillProvider = ({ children, onClose }: SkillProviderProps) => {
     }, []);
 
     // --- KHỞI TẠO COMPONENT ---
-    // Thay thế useEffect fetch dữ liệu bằng một hiệu ứng tải đơn giản cho chuyển cảnh
     useEffect(() => {
         const timer = setTimeout(() => {
             setIsLoading(false);
@@ -196,29 +190,9 @@ export const SkillProvider = ({ children, onClose }: SkillProviderProps) => {
             .sort((a, b) => a.blueprint.name.localeCompare(b.blueprint.name));
     }, [ownedSkills, equippedSkillIds]);
 
-    // --- CORE LOGIC & UI HANDLERS ---
-    const handleUpdateDatabase = useCallback(async (updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
-        const userId = auth.currentUser?.uid;
-        if (!userId) return false;
-        setIsProcessing(true);
-        try {
-            const { newCoins, newBooks } = await updateUserSkills(userId, updates);
-            setGold(newCoins);
-            setAncientBooks(newBooks);
-            setOwnedSkills(updates.newOwned);
-            setEquippedSkillIds(updates.newEquippedIds);
-            setDataHasChanged(true);
-            return true;
-        } catch (error: any) {
-            showMessage(`Lỗi: ${error.message || 'Cập nhật thất bại'}`);
-            return false;
-        } finally {
-            setIsProcessing(false);
-        }
-    }, [showMessage]);
+    // --- CORE LOGIC & UI HANDLERS (UPDATED to be synchronous) ---
 
-    const handleEquipSkill = useCallback(async (skillToEquip: OwnedSkill) => {
-        if (isProcessing) return;
+    const handleEquipSkill = useCallback((skillToEquip: OwnedSkill) => {
         const firstEmptySlotIndex = equippedSkills.findIndex(slot => slot === null);
         if (firstEmptySlotIndex === -1) {
             setEquipErrorToast({ show: true, message: 'Các ô kỹ năng đã đầy.' });
@@ -227,22 +201,25 @@ export const SkillProvider = ({ children, onClose }: SkillProviderProps) => {
         }
         const newEquippedIds = [...equippedSkillIds];
         newEquippedIds[firstEmptySlotIndex] = skillToEquip.id;
-        const success = await handleUpdateDatabase({ newOwned: ownedSkills, newEquippedIds: newEquippedIds, goldChange: 0, booksChange: 0 });
-        if (success) setSelectedSkill(null);
-    }, [isProcessing, equippedSkills, equippedSkillIds, ownedSkills, handleUpdateDatabase]);
+        
+        setEquippedSkillIds(newEquippedIds);
+        setDataHasChanged(true);
+        setSelectedSkill(null);
+    }, [equippedSkills, equippedSkillIds]);
 
-    const handleUnequipSkill = useCallback(async (skillToUnequip: OwnedSkill) => {
-        if (isProcessing) return;
+    const handleUnequipSkill = useCallback((skillToUnequip: OwnedSkill) => {
         const slotIndex = equippedSkillIds.findIndex(id => id === skillToUnequip.id);
         if (slotIndex === -1) return;
+        
         const newEquippedIds = [...equippedSkillIds];
         newEquippedIds[slotIndex] = null;
-        const success = await handleUpdateDatabase({ newOwned: ownedSkills, newEquippedIds: newEquippedIds, goldChange: 0, booksChange: 0 });
-        if (success) setSelectedSkill(null);
-    }, [isProcessing, equippedSkillIds, ownedSkills, handleUpdateDatabase]);
+        
+        setEquippedSkillIds(newEquippedIds);
+        setDataHasChanged(true);
+        setSelectedSkill(null);
+    }, [equippedSkillIds]);
 
-    const handleCraftSkill = useCallback(async () => {
-        if (isProcessing) return;
+    const handleCraftSkill = useCallback(() => {
         if (ancientBooks < CRAFTING_COST) { showMessage(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`); return; }
         if (ownedSkills.length >= MAX_SKILLS_IN_STORAGE) {
             setCraftErrorToast({ show: true, message: 'Kho kỹ năng đã đầy...' });
@@ -252,51 +229,59 @@ export const SkillProvider = ({ children, onClose }: SkillProviderProps) => {
         const newSkillBlueprint = ALL_SKILLS[Math.floor(Math.random() * ALL_SKILLS.length)];
         const newRarity = getRandomRarity();
         const newOwnedSkill: OwnedSkill = { id: `owned-${Date.now()}-${newSkillBlueprint.id}-${Math.random()}`, skillId: newSkillBlueprint.id, level: 1, rarity: newRarity };
-        const newOwnedList = [...ownedSkills, newOwnedSkill];
-        const success = await handleUpdateDatabase({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: 0, booksChange: -CRAFTING_COST });
-        if (success) setNewlyCraftedSkill(newOwnedSkill);
-    }, [isProcessing, ancientBooks, ownedSkills, equippedSkillIds, handleUpdateDatabase, showMessage, MAX_SKILLS_IN_STORAGE]);
+        
+        setOwnedSkills(prev => [...prev, newOwnedSkill]);
+        setAncientBooks(prev => prev - CRAFTING_COST);
+        setDataHasChanged(true);
+        setNewlyCraftedSkill(newOwnedSkill);
+    }, [ancientBooks, ownedSkills, showMessage, MAX_SKILLS_IN_STORAGE]);
 
-    const handleDisenchantSkill = useCallback(async (skillToDisenchant: OwnedSkill) => {
-        if (isProcessing || equippedSkills.some(s => s?.id === skillToDisenchant.id)) return;
+    const handleDisenchantSkill = useCallback((skillToDisenchant: OwnedSkill) => {
+        if (equippedSkills.some(s => s?.id === skillToDisenchant.id)) return;
+        
         const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToDisenchant.skillId)!;
         const booksToReturn = Math.floor(CRAFTING_COST / 2);
         const goldToReturn = getTotalUpgradeCost(skillBlueprint, skillToDisenchant.level);
-        const newOwnedList = ownedSkills.filter(s => s.id !== skillToDisenchant.id);
-        const success = await handleUpdateDatabase({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: goldToReturn, booksChange: booksToReturn });
-        if (success) {
-            setSelectedSkill(null);
-            setDisenchantSuccessToast({ show: true, message: 'Đã tái chế thành công.' });
-            setTimeout(() => setDisenchantSuccessToast(prev => ({ ...prev, show: false })), 4000);
-        }
-    }, [isProcessing, equippedSkills, ownedSkills, equippedSkillIds, handleUpdateDatabase]);
+        
+        setOwnedSkills(prev => prev.filter(s => s.id !== skillToDisenchant.id));
+        setGold(prev => prev + goldToReturn);
+        setAncientBooks(prev => prev + booksToReturn);
+        setDataHasChanged(true);
+        setSelectedSkill(null);
+        setDisenchantSuccessToast({ show: true, message: 'Đã tái chế thành công.' });
+        setTimeout(() => setDisenchantSuccessToast(prev => ({ ...prev, show: false })), 4000);
+    }, [equippedSkills, ownedSkills]);
 
-    const handleUpgradeSkill = useCallback(async (skillToUpgrade: OwnedSkill) => {
-        if (isProcessing) return;
+    const handleUpgradeSkill = useCallback((skillToUpgrade: OwnedSkill) => {
         const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToUpgrade.skillId);
         if (!skillBlueprint || skillBlueprint.upgradeCost === undefined) { showMessage("Kỹ năng này không thể nâng cấp."); return; }
+        
         const cost = getUpgradeCost(skillBlueprint.upgradeCost, skillToUpgrade.level);
         if (gold < cost) { showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); return; }
+        
         const updatedSkill = { ...skillToUpgrade, level: skillToUpgrade.level + 1 };
-        const newOwnedList = ownedSkills.map(s => s.id === skillToUpgrade.id ? updatedSkill : s);
-        const success = await handleUpdateDatabase({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: -cost, booksChange: 0 });
-        if (success) setSelectedSkill(updatedSkill);
-    }, [isProcessing, gold, ownedSkills, equippedSkillIds, handleUpdateDatabase, showMessage]);
+        
+        setOwnedSkills(prev => prev.map(s => s.id === skillToUpgrade.id ? updatedSkill : s));
+        setGold(prev => prev - cost);
+        setDataHasChanged(true);
+        setSelectedSkill(updatedSkill);
+    }, [gold, ownedSkills, showMessage]);
 
-    const handleMergeSkills = useCallback(async (group: MergeGroup) => {
-        if (isProcessing || group.skills.length < 3 || !group.nextRarity) return;
+    const handleMergeSkills = useCallback((group: MergeGroup) => {
+        if (group.skills.length < 3 || !group.nextRarity) return;
+        
         const skillsToConsume = group.skills.slice(0, 3);
         const skillIdsToConsume = skillsToConsume.map(s => s.id);
         const { level: finalLevel, refundGold } = calculateMergeResult(skillsToConsume, group.blueprint);
         const newUpgradedSkill: OwnedSkill = { id: `owned-${Date.now()}-${group.skillId}-${Math.random()}`, skillId: group.skillId, level: finalLevel, rarity: group.nextRarity };
-        const newOwnedList = ownedSkills.filter(s => !skillIdsToConsume.includes(s.id)).concat(newUpgradedSkill);
-        const success = await handleUpdateDatabase({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: refundGold, booksChange: 0 });
-        if (success) {
-            setMergeToast({ show: true, message: 'Hợp nhất thành công!' });
-            setTimeout(() => setMergeToast(prev => ({...prev, show: false})), 4000);
-            setIsMergeModalOpen(false);
-        }
-    }, [isProcessing, ownedSkills, equippedSkillIds, handleUpdateDatabase]);
+        
+        setOwnedSkills(prev => prev.filter(s => !skillIdsToConsume.includes(s.id)).concat(newUpgradedSkill));
+        setGold(prev => prev + refundGold);
+        setDataHasChanged(true);
+        setIsMergeModalOpen(false);
+        setMergeToast({ show: true, message: 'Hợp nhất thành công!' });
+        setTimeout(() => setMergeToast(prev => ({...prev, show: false})), 4000);
+    }, [ownedSkills]);
 
     const handleClose = useCallback(() => {
         if (dataHasChanged) {
@@ -319,7 +304,7 @@ export const SkillProvider = ({ children, onClose }: SkillProviderProps) => {
     const handleOpenMergeModal = useCallback(() => setIsMergeModalOpen(true), []);
 
     const value = {
-        gold, ancientBooks, ownedSkills, equippedSkillIds, isLoading, isProcessing,
+        gold, ancientBooks, ownedSkills, equippedSkillIds, isLoading,
         selectedSkill, newlyCraftedSkill, isMergeModalOpen,
         equippedSkills, unequippedSkillsSorted, MAX_SKILLS_IN_STORAGE, mergeableGroups,
         message, messageKey, mergeToast, craftErrorToast, equipErrorToast, disenchantSuccessToast,
@@ -334,3 +319,5 @@ export const SkillProvider = ({ children, onClose }: SkillProviderProps) => {
         </SkillContext.Provider>
     );
 };
+
+// --- END OF FILE src/home/skill-game/skill-context.tsx (UPDATED) ---
