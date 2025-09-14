@@ -8,9 +8,7 @@ import { doc, updateDoc, onSnapshot, collection, query, orderBy } from 'firebase
 import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
 
-// <<< THAY ĐỔI: IMPORT DỮ LIỆU VÀ ASSETS >>>
 import { ALL_CARDS_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
-// Giả sử file game-assets.ts nằm cùng cấp với thư mục chứa file này
 import { quizHomeAssets } from './game-assets.ts';
 
 
@@ -46,7 +44,7 @@ const animations = `
 // --- START: ICONS SAO CHÉP TỪ course-ui.tsx ---
 const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> );
 const BackIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
-const SettingsIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> );
+const SettingsIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> );
 const MenuIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>);
 // --- END: ICONS ---
 
@@ -62,13 +60,11 @@ interface GalleryHeaderProps {
 
 function GalleryHeader({ activeScreen, onGoBack, onGoHome, toggleSidebar, setShowSettings }: GalleryHeaderProps) {
   const headerTitle = useMemo(() => {
-    // <<< THAY ĐỔI: Ẩn tiêu đề ở màn hình home >>>
     if (activeScreen === 'home') return null;
     return activeScreen.charAt(0).toUpperCase() + activeScreen.slice(1);
   }, [activeScreen]);
 
   return (
-    // <<< THAY ĐỔI: Xóa class sticky, top-0, z-50 >>>
     <header className="bg-slate-900/95 backdrop-blur-sm shadow-md">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center">
@@ -113,10 +109,13 @@ interface FlashcardItemProps {
   getImageUrlForStyle: (card: Flashcard, style: string) => string;
 }
 
+// --- THAY ĐỔI LỚN BẮT ĐẦU TẠI ĐÂY ---
 const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFavoriteClick, getImageUrlForStyle }: FlashcardItemProps) => {
   const comicDotPattern = {
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Ccircle cx='2' cy='2' r='0.5' fill='rgba(0,0,0,0.2)'/%3E%3C/svg%3E")`,
   };
+
+  const isPhotography = visualStyle === 'photography';
 
   return (
     <div id={`flashcard-${card.id}`} className="flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group">
@@ -129,15 +128,28 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
         </button>
       </div>
       <div className="w-full">
-        <div className={`relative w-full ${visualStyle === 'realistic' ? 'p-2 bg-amber-50/70 dark:bg-gray-800' : ''}`}>
+        {/* Container cho ảnh */}
+        <div className={`relative w-full ${visualStyle === 'realistic' || isPhotography ? 'p-2 bg-amber-50/70 dark:bg-gray-800' : ''}`}>
           {visualStyle === 'anime' && <div className="absolute inset-0 bg-pink-300/20 dark:bg-purple-400/10 pointer-events-none"></div>}
           {visualStyle === 'comic' && <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" style={comicDotPattern}></div>}
-          {visualStyle === 'realistic' && <div className="absolute inset-2 shadow-inner rounded-md pointer-events-none"></div>}
+          {(visualStyle === 'realistic' || isPhotography) && <div className="absolute inset-2 shadow-inner rounded-md pointer-events-none"></div>}
+          
+          {/* Thẻ ảnh với logic động */}
           <img
             src={getImageUrlForStyle(card, visualStyle)}
             alt={`Flashcard ${card.id}`}
-            className={`w-full h-auto ${visualStyle === 'anime' ? 'saturate-150 contrast-105' : visualStyle === 'comic' ? 'contrast-125 brightness-105' : visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' : ''} cursor-pointer`}
-            style={{aspectRatio: '1024/1536', filter: visualStyle === 'comic' ? 'grayscale(0.1)' : 'none'}}
+            className={`
+              w-full h-auto
+              ${isPhotography ? 'object-cover' : ''}
+              ${visualStyle === 'anime' ? 'saturate-150 contrast-105' : ''}
+              ${visualStyle === 'comic' ? 'contrast-125 brightness-105' : ''}
+              ${visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' : ''}
+              cursor-pointer
+            `}
+            style={{
+              aspectRatio: isPhotography ? '1 / 1' : '1024 / 1536',
+              filter: visualStyle === 'comic' ? 'grayscale(0.1)' : 'none'
+            }}
             onClick={() => onImageClick(card)}
             onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = card.imageUrl.default; }}
             loading="lazy"
@@ -147,6 +159,8 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
     </div>
   );
 });
+// --- THAY ĐỔI LỚN KẾT THÚC TẠI ĐÂY ---
+
 
 export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
   // --- States ---
@@ -293,7 +307,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     hideNavBar();
   }, [hideNavBar]);
 
-  // --- THAY ĐỔI 1: CẬP NHẬT HÀM LẤY URL ẢNH ---
   const getImageUrlForStyle = useCallback((card: Flashcard, style: string): string => {
     switch (style) {
         case 'photography': return card.imageUrl.photography || card.imageUrl.default;
@@ -448,7 +461,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       onShowHelp={handleShowHelp}
       activeScreen={activeScreen}
     >
-      {/* <<< THAY ĐỔI: Xóa h-screen để toàn bộ trang cuộn >>> */}
       <div className="flex flex-col bg-white dark:bg-gray-900">
         <style>{animations}</style>
         <style>{scrollbarHide}</style>
@@ -461,7 +473,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
           setShowSettings={setShowSettings}
         />
 
-        {/* <<< THAY ĐỔI: Xóa flex-grow và overflow-y-auto >>> */}
         <main ref={mainContainerRef}>
           {activeScreen === 'home' && (
             <>
@@ -612,13 +623,12 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
                         </div>
                         <div className="mb-4">
                           <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-indigo-500 dark:text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd" /></svg>Phong cách hiển thị</h4>
-                          {/* --- THAY ĐỔI 2: THÊM NÚT CHỌN PHOTOGRAPHY --- */}
                           <div className="grid grid-cols-2 gap-2">
                             <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'default' ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-900' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-200'}`} onClick={() => setVisualStyle('default')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'default' ? 'bg-indigo-100 dark:bg-indigo-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'default' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z" /></svg></div><span className={`text-xs ${visualStyle === 'default' ? 'text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Mặc định</span></div>
-                            <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'anime' ? 'border-pink-500 bg-pink-50 dark:border-pink-900' : 'border-gray-200 dark:border-gray-700 hover:border-pink-200'}`} onClick={() => setVisualStyle('anime')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'anime' ? 'bg-pink-100 dark:bg-pink-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'anime' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" /></svg></div><span className={`text-xs ${visualStyle === 'anime' ? 'text-pink-700 dark:text-pink-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Anime</span></div>
-                            <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'comic' ? 'border-blue-500 bg-blue-50 dark:border-blue-900' : 'border-gray-200 dark:border-gray-700 hover:border-blue-200'}`} onClick={() => setVisualStyle('comic')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'comic' ? 'bg-blue-100 dark:bg-blue-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'comic' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" /></svg></div><span className={`text-xs ${visualStyle === 'comic' ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Comic</span></div>
-                            <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'realistic' ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-900' : 'border-gray-200 dark:border-gray-700 hover:border-emerald-200'}`} onClick={() => setVisualStyle('realistic')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'realistic' ? 'bg-emerald-100 dark:bg-emerald-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'realistic' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg></div><span className={`text-xs ${visualStyle === 'realistic' ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Realistic</span></div>
-                            <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'photography' ? 'border-amber-500 bg-amber-50 dark:border-amber-900' : 'border-gray-200 dark:border-gray-700 hover:border-amber-200'}`} onClick={() => setVisualStyle('photography')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'photography' ? 'bg-amber-100 dark:bg-amber-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'photography' ? 'text-amber-600 dark:text-amber-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg></div><span className={`text-xs ${visualStyle === 'photography' ? 'text-amber-700 dark:text-amber-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Photography</span></div>
+                            <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'photography' ? 'border-amber-500 bg-amber-50 dark:border-amber-400 dark:bg-amber-900' : 'border-gray-200 dark:border-gray-700 hover:border-amber-200 dark:hover:border-amber-600'}`} onClick={() => setVisualStyle('photography')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'photography' ? 'bg-amber-100 dark:bg-amber-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'photography' ? 'text-amber-600 dark:text-amber-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg></div><span className={`text-xs ${visualStyle === 'photography' ? 'text-amber-700 dark:text-amber-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Photography</span></div>
+                            <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'anime' ? 'border-pink-500 bg-pink-50 dark:border-pink-400 dark:bg-pink-900' : 'border-gray-200 dark:border-gray-700 hover:border-pink-200 dark:hover:border-pink-600'}`} onClick={() => setVisualStyle('anime')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'anime' ? 'bg-pink-100 dark:bg-pink-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'anime' ? 'text-pink-600 dark:text-pink-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" /></svg></div><span className={`text-xs ${visualStyle === 'anime' ? 'text-pink-700 dark:text-pink-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Anime</span></div>
+                            <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'comic' ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900' : 'border-gray-200 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-600'}`} onClick={() => setVisualStyle('comic')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'comic' ? 'bg-blue-100 dark:bg-blue-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'comic' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" /></svg></div><span className={`text-xs ${visualStyle === 'comic' ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Comic</span></div>
+                            <div className={`p-2 border-2 rounded-lg cursor-pointer transition-all flex items-center ${visualStyle === 'realistic' ? 'border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-900' : 'border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-600'}`} onClick={() => setVisualStyle('realistic')}><div className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${visualStyle === 'realistic' ? 'bg-emerald-100 dark:bg-emerald-800' : 'bg-gray-100 dark:bg-gray-700'}`}><svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 ${visualStyle === 'realistic' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg></div><span className={`text-xs ${visualStyle === 'realistic' ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>Realistic</span></div>
                           </div>
                         </div>
                       </div>
