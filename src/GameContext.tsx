@@ -2,17 +2,15 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { User } from 'firebase/auth';
-import { auth, db } from './firebase.js'; 
+import { auth, db } from './firebase.js';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
+import { OwnedSkill, ALL_SKILLS, SkillBlueprint, CRAFTING_COST, getUpgradeCost, getTotalUpgradeCost, getRandomRarity, Rarity } from './home/skill-game/skill-data.tsx';
 import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
 
-import { 
+import {
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
-  updateUserBossFloor, updateUserPickaxes, updateUserSkills // <-- ĐÃ THÊM updateUserSkills VÀO ĐÂY
+  updateUserBossFloor, updateUserPickaxes, updateUserSkills
 } from './gameDataService.ts';
-import { type SkillScreenExitData } from './home/skill-game/skill-context.tsx';
-// DÒNG IMPORT TỪ skill-service.ts ĐÃ BỊ XÓA
 
 // --- Define the shape of the context ---
 interface IGameContext {
@@ -74,8 +72,15 @@ interface IGameContext {
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
     handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
-    handleSkillScreenClose: (dataUpdated: boolean, data?: SkillScreenExitData) => void;
     updateUserCurrency: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
+    
+    // THÊM MỚI: Các hàm xử lý kỹ năng tức thì
+    handleSkillCraft: () => Promise<OwnedSkill | null>;
+    handleSkillUpgrade: (skillToUpgrade: OwnedSkill) => Promise<OwnedSkill | null>;
+    handleSkillDisenchant: (skillToDisenchant: OwnedSkill) => Promise<boolean>;
+    handleSkillEquip: (skillToEquip: OwnedSkill) => Promise<boolean>;
+    handleSkillUnequip: (skillToUnequip: OwnedSkill) => Promise<boolean>;
+    handleSkillMerge: (skillsToConsume: OwnedSkill[], newSkillData: { skillId: string; rarity: Rarity; level: number}, refundGold: number) => Promise<OwnedSkill | null>;
 
     // Toggles
     toggleRank: () => void;
@@ -270,10 +275,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     if (!ownedItems || !equippedItems) {
       return totals;
     }
-    
-    // Luôn đảm bảo `ownedItems` có `stats` là object để tránh lỗi
     const safeOwnedItems = ownedItems.map(item => ({ ...item, stats: item.stats || {} }));
-
     Object.values(equippedItems).forEach(itemId => { 
         if(itemId){
             const item = safeOwnedItems.find(i => i.id === itemId);
@@ -364,6 +366,165 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => { setCoins(updates.newCoins); setGems(updates.newGems); setTotalVocabCollected(updates.newTotalVocab); };
   const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => { if (updates.coins !== undefined) setCoins(updates.coins); if (updates.masteryCards !== undefined) setMasteryCards(updates.masteryCards); };
   
+  // --- START: CÁC HÀM XỬ LÝ KỸ NĂNG TỨC THÌ ---
+  const handleSkillCraft = async (): Promise<OwnedSkill | null> => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return null;
+
+      if (ancientBooks < CRAFTING_COST) throw new Error(`Không đủ Sách Cổ. Cần ${CRAFTING_COST}.`);
+      if (ownedSkills.length >= 50) throw new Error('Kho kỹ năng đã đầy.');
+
+      const newSkillBlueprint = ALL_SKILLS[Math.floor(Math.random() * ALL_SKILLS.length)];
+      const newRarity = getRandomRarity();
+      const newOwnedSkill: OwnedSkill = { id: `owned-${Date.now()}-${Math.random()}`, skillId: newSkillBlueprint.id, level: 1, rarity: newRarity };
+
+      try {
+          setIsSyncingData(true);
+          await updateUserSkills(userId, {
+              newOwned: [...ownedSkills, newOwnedSkill],
+              newEquippedIds: equippedSkillIds,
+              goldChange: 0,
+              booksChange: -CRAFTING_COST
+          });
+          return newOwnedSkill;
+      } catch (error) {
+          console.error("Failed to craft skill:", error);
+          throw error;
+      } finally {
+          setIsSyncingData(false);
+      }
+  };
+
+  const handleSkillUpgrade = async (skillToUpgrade: OwnedSkill): Promise<OwnedSkill | null> => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return null;
+
+      const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToUpgrade.skillId);
+      if (!skillBlueprint?.upgradeCost) throw new Error("Kỹ năng này không thể nâng cấp.");
+
+      const cost = getUpgradeCost(skillBlueprint.upgradeCost, skillToUpgrade.level);
+      if (coins < cost) throw new Error(`Không đủ vàng. Cần ${cost.toLocaleString()}.`);
+
+      const updatedSkill = { ...skillToUpgrade, level: skillToUpgrade.level + 1 };
+      const newOwnedSkills = ownedSkills.map(s => s.id === skillToUpgrade.id ? updatedSkill : s);
+
+      try {
+          setIsSyncingData(true);
+          await updateUserSkills(userId, {
+              newOwned: newOwnedSkills,
+              newEquippedIds: equippedSkillIds,
+              goldChange: -cost,
+              booksChange: 0
+          });
+          return updatedSkill;
+      } catch (error) {
+          console.error("Failed to upgrade skill:", error);
+          throw error;
+      } finally {
+          setIsSyncingData(false);
+      }
+  };
+
+  const handleSkillDisenchant = async (skillToDisenchant: OwnedSkill): Promise<boolean> => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return false;
+      if (equippedSkillIds.includes(skillToDisenchant.id)) throw new Error("Không thể tái chế kỹ năng đang trang bị.");
+
+      const skillBlueprint = ALL_SKILLS.find(s => s.id === skillToDisenchant.skillId)!;
+      const booksToReturn = Math.floor(CRAFTING_COST / 2);
+      const goldToReturn = getTotalUpgradeCost(skillBlueprint, skillToDisenchant.level);
+      const newOwnedSkills = ownedSkills.filter(s => s.id !== skillToDisenchant.id);
+
+      try {
+          setIsSyncingData(true);
+          await updateUserSkills(userId, {
+              newOwned: newOwnedSkills,
+              newEquippedIds: equippedSkillIds,
+              goldChange: goldToReturn,
+              booksChange: booksToReturn
+          });
+          return true;
+      } catch (error) {
+          console.error("Failed to disenchant skill:", error);
+          throw error;
+      } finally {
+          setIsSyncingData(false);
+      }
+  };
+
+  const handleSkillEquip = async (skillToEquip: OwnedSkill): Promise<boolean> => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return false;
+      
+      const firstEmptySlotIndex = equippedSkillIds.findIndex(id => id === null);
+      if (firstEmptySlotIndex === -1) throw new Error("Các ô kỹ năng đã đầy.");
+      
+      const newEquippedIds = [...equippedSkillIds];
+      newEquippedIds[firstEmptySlotIndex] = skillToEquip.id;
+
+      try {
+          setIsSyncingData(true);
+          await updateUserSkills(userId, { newOwned: ownedSkills, newEquippedIds, goldChange: 0, booksChange: 0 });
+          return true;
+      } catch (error) {
+          console.error("Failed to equip skill:", error); throw error;
+      } finally {
+          setIsSyncingData(false);
+      }
+  };
+
+  const handleSkillUnequip = async (skillToUnequip: OwnedSkill): Promise<boolean> => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return false;
+
+      const slotIndex = equippedSkillIds.findIndex(id => id === skillToUnequip.id);
+      if (slotIndex === -1) return false;
+
+      const newEquippedIds = [...equippedSkillIds];
+      newEquippedIds[slotIndex] = null;
+      
+      try {
+          setIsSyncingData(true);
+          await updateUserSkills(userId, { newOwned: ownedSkills, newEquippedIds, goldChange: 0, booksChange: 0 });
+          return true;
+      } catch (error) {
+          console.error("Failed to unequip skill:", error); throw error;
+      } finally {
+          setIsSyncingData(false);
+      }
+  };
+  
+  const handleSkillMerge = async (skillsToConsume: OwnedSkill[], newSkillData: { skillId: string; rarity: Rarity; level: number}, refundGold: number): Promise<OwnedSkill | null> => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return null;
+
+      const idsToConsume = skillsToConsume.map(s => s.id);
+      let newOwnedSkills = ownedSkills.filter(s => !idsToConsume.includes(s.id));
+      
+      const newMergedSkill: OwnedSkill = {
+          id: `owned-${Date.now()}-${Math.random()}`,
+          ...newSkillData
+      };
+      newOwnedSkills.push(newMergedSkill);
+      
+      try {
+          setIsSyncingData(true);
+          await updateUserSkills(userId, {
+              newOwned: newOwnedSkills,
+              newEquippedIds: equippedSkillIds,
+              goldChange: refundGold,
+              booksChange: 0
+          });
+          return newMergedSkill;
+      } catch (error) {
+          console.error("Failed to merge skills:", error);
+          throw error;
+      } finally {
+          setIsSyncingData(false);
+      }
+  };
+  // --- END: CÁC HÀM XỬ LÝ KỸ NĂNG TỨC THÌ ---
+
   const toggleRank = createToggleFunction(setIsRankOpen);
   const togglePvpArena = createToggleFunction(setIsPvpArenaOpen);
   const toggleLuckyGame = createToggleFunction(setIsLuckyGameOpen);
@@ -381,54 +542,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const toggleMailbox = createToggleFunction(setIsMailboxOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
 
-  const saveSkillChanges = async (data: SkillScreenExitData) => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) {
-        console.error("User not authenticated. Cannot save skill changes.");
-        return;
-    }
-    setIsSyncingData(true);
-    try {
-        const goldChange = data.gold - coins;
-        const booksChange = data.ancientBooks - ancientBooks;
-
-        await updateUserSkills(userId, {
-            newOwned: data.ownedSkills,
-            newEquippedIds: data.equippedSkillIds,
-            goldChange,
-            booksChange,
-        });
-    } catch (error) {
-        console.error("Failed to save skill changes:", error);
-    } finally {
-        setIsSyncingData(false);
-    }
-  };
-  
-  const handleSkillScreenClose = (dataUpdated: boolean, data?: SkillScreenExitData) => {
-    toggleSkillScreen();
-    if (dataUpdated && data) {
-        saveSkillChanges(data);
-    }
-  };
-
   const updateUserCurrency = (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => {
     if (updates.coins !== undefined) {
         setCoins(updates.coins);
         setDisplayedCoins(updates.coins);
     }
-    if (updates.gems !== undefined) {
-        setGems(updates.gems);
-    }
-    if (updates.equipmentPieces !== undefined) {
-        setEquipmentPieces(updates.equipmentPieces);
-    }
-    if (updates.ancientBooks !== undefined) {
-        setAncientBooks(updates.ancientBooks);
-    }
-    if (updates.cardCapacity !== undefined) {
-        setCardCapacity(updates.cardCapacity);
-    }
+    if (updates.gems !== undefined) setGems(updates.gems);
+    if (updates.equipmentPieces !== undefined) setEquipmentPieces(updates.equipmentPieces);
+    if (updates.ancientBooks !== undefined) setAncientBooks(updates.ancientBooks);
+    if (updates.cardCapacity !== undefined) setCardCapacity(updates.cardCapacity);
   };
 
   const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen;
@@ -450,8 +572,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isMailboxOpen,
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
-    getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose,
+    getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate,
     updateUserCurrency,
+    handleSkillCraft, handleSkillUpgrade, handleSkillDisenchant, handleSkillEquip, handleSkillUnequip, handleSkillMerge,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
     toggleAuctionHouse,
