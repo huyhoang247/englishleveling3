@@ -8,16 +8,12 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import HomeButton from '../../ui/home-button.tsx';
 import { uiAssets } from '../../game-assets.ts';
 
-// --- Các component icon (Đã xóa HomeIcon thừa) ---
-const XIcon = ({ className = '', ...props }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}> <line x1="18" y1="6" x2="6" y2="18" /> <line x1="6" y1="6" x2="18" y2="18" /> </svg> );
-const TrophyIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}> <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /> </svg> );
+// --- Các component icon ---
 const MasteryCardIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src={uiAssets.masteryCardIcon} alt="Thẻ thông thạo" className={className} {...props} /> );
 const GoldIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src={uiAssets.goldIcon} alt="Vàng" className={className} {...props} /> );
 const VocabularyIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src={uiAssets.vocaAchievementIcon} alt="Vocabulary" className={className} {...props} /> );
-const ChevronLeftIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" /> </svg> );
-const ChevronRightIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> </svg> );
 
-// --- Component UI chính, nhưng không được export default nữa ---
+// --- Component UI chính ---
 function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
   const {
     vocabulary,
@@ -142,7 +138,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
             </button>
         </div>
 
-        <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-cyan-500/20 border border-slate-700">
+        <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-blue-500/20 border border-slate-700">
           <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
             <div className="col-span-1 text-center">HẠNG</div>
             <div className="col-span-3">TỪ VỰNG</div>
@@ -191,16 +187,49 @@ const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, i
     onClaim(id);
   }, [id, isClaimable, isAnyClaiming, onClaim]);
   return (
-    <div className="grid grid-cols-12 gap-x-4 gap-y-3 items-center p-4 bg-slate-800/70 rounded-xl border border-slate-700/80 hover:bg-slate-700/60 hover:border-cyan-500/50 transition-all duration-300">
+    <div className="grid grid-cols-12 gap-x-4 gap-y-3 items-center p-4 bg-slate-800/70 rounded-xl border border-slate-700/80 hover:bg-slate-700/60 hover:border-blue-500/50 transition-all duration-300">
       <div className="col-span-2 md:col-span-1 text-center flex items-center justify-center"> <span className="text-xl font-bold text-slate-500">{rank}</span> </div>
       <div className="col-span-10 md:col-span-3">
         <p className="font-bold text-lg text-white">{word.charAt(0).toUpperCase() + word.slice(1)}</p>
         <span className="md:hidden text-xs text-slate-400">{`Level ${level}`}</span>
         <span className="hidden md:block text-xs text-slate-400">{`Level ${level}`}</span>
       </div>
-      <div className="col-span-12 md:col-span-3 md:px-2"> <div className="w-full bg-slate-700 rounded-full h-3"> <div className="bg-gradient-to-r from-teal-400 to-cyan-500 h-3 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div> </div> <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p> </div>
-      <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
-      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-b from-slate-800 to-slate-900 border-slate-700 text-white hover:from-slate-700 hover:to-slate-800 hover:border-cyan-500 shadow-lg shadow-cyan-500/10 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isAnyClaiming ? 'Claiming...' : 'Claim'} </button> </div>
+
+      <div className="col-span-12 md:col-span-3 md:px-2">
+        <div className="h-4 w-full bg-slate-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
+          <div
+            className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-indigo-500 rounded-full transition-all duration-500 ease-out relative"
+            style={{ width: `${progressPercentage}%` }}
+          >
+            <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-full"></div>
+          </div>
+        </div>
+        <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p>
+      </div>
+
+      <div className="col-span-6 md:col-span-3 flex items-center justify-center">
+        <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700">
+          <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">1</span> </div>
+          <div className="h-6 w-px bg-slate-600"></div>
+          <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div>
+        </div>
+      </div>
+      
+      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center">
+        <button
+          onClick={handleClaimClick}
+          disabled={!isClaimable || isAnyClaiming}
+          className={`
+            flex items-center justify-center w-full px-3 py-2 rounded-xl font-semibold text-sm transition-all duration-300 shadow-inner
+            ${isClaimable && !isAnyClaiming
+              ? 'bg-black/20 border border-slate-600 text-white hover:border-blue-500 cursor-pointer transform hover:scale-105'
+              : 'bg-black/20 border border-slate-700 text-slate-600 cursor-not-allowed opacity-60'
+            }
+          `}
+        >
+          {isAnyClaiming ? 'Claiming...' : 'Claim'}
+        </button>
+      </div>
     </div>
   );
 });
@@ -222,7 +251,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
     if (totalPages <= 1) return null;
     return (
         <nav className="flex items-center justify-center gap-1 sm:gap-2" aria-label="Pagination">
-            {paginationRange.map((page, index) => typeof page === 'number' ? ( <button key={index} onClick={() => onPageChange(page)} className={`w-9 h-9 sm:w-10 sm:h-10 text-sm font-semibold rounded-lg border border-slate-700 transition-colors flex items-center justify-center ${ currentPage === page ? 'bg-cyan-500 text-white border-cyan-400' : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700' }`} aria-current={currentPage === page ? 'page' : undefined}> {page} </button> ) : ( <span key={index} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-sm text-slate-500" aria-hidden="true"> {page} </span> ) )}
+            {paginationRange.map((page, index) => typeof page === 'number' ? ( <button key={index} onClick={() => onPageChange(page)} className={`w-9 h-9 sm:w-10 sm:h-10 text-sm font-semibold rounded-lg border border-slate-700 transition-colors flex items-center justify-center ${ currentPage === page ? 'bg-blue-500 text-white border-blue-400' : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700' }`} aria-current={currentPage === page ? 'page' : undefined}> {page} </button> ) : ( <span key={index} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-sm text-slate-500" aria-hidden="true"> {page} </span> ) )}
         </nav>
     );
 };
@@ -234,7 +263,7 @@ interface AchievementsScreenProps {
   onDataUpdate: (updates: { coins?: number, masteryCards?: number }) => void;
 }
 
-export default function AchievementsScreen({ user, onClose, onDataUpdate }: AchievementsScreenProps) {
+export default function AchievementsScreen({ user, onClose, onPageChange }: AchievementsScreenProps) {
   if (!user) {
     return null;
   }
