@@ -1,4 +1,4 @@
-// --- START OF FILE gameDataService.ts (CORRECTED & COMPLETE) ---
+// --- START OF FILE gameDataService.ts (UPDATED) ---
 
 import { db } from './firebase';
 import { 
@@ -112,20 +112,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
 
 // <<<--- HÀM fetchEquipmentScreenData ĐÃ ĐƯỢC CHUYỂN SANG equipment-service.ts --->
 
-/**
- * Lấy dữ liệu cần thiết cho màn hình Kỹ năng.
- * @param userId - ID của người dùng.
- * @returns Dữ liệu cần thiết cho màn hình kỹ năng.
- */
-export const fetchSkillScreenData = async (userId: string) => {
-  if (!userId) throw new Error("User ID is required.");
-  const gameData = await fetchOrCreateUserGameData(userId);
-  return {
-    coins: gameData.coins,
-    ancientBooks: gameData.ancientBooks,
-    skills: gameData.skills, // Gồm { owned, equipped }
-  };
-};
+// <<<--- HÀM fetchSkillScreenData ĐÃ ĐƯỢC CHUYỂN SANG skill-service.ts --->
 
 // <<<--- HÀM fetchBossBattlePrerequisites ĐÃ ĐƯỢC DI CHUYỂN SANG boss-battle-service.ts --->
 
@@ -193,24 +180,7 @@ export const updateUserPickaxes = async (userId: string, newTotal: number): Prom
 
 // <<<--- HÀM upgradeUserStats ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
 
-export const updateUserSkills = async (userId: string, updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
-    const userDocRef = doc(db, 'users', userId);
-    return runTransaction(db, async (t) => {
-        const userDoc = await t.get(userDocRef);
-        if (!userDoc.exists()) throw new Error("User document does not exist!");
-        const data = userDoc.data();
-        const newCoins = (data.coins || 0) + updates.goldChange;
-        const newBooks = (data.ancientBooks || 0) + updates.booksChange;
-        if (newCoins < 0) throw new Error("Không đủ vàng.");
-        if (newBooks < 0) throw new Error("Không đủ Sách Cổ.");
-        t.update(userDocRef, {
-            coins: newCoins,
-            ancientBooks: newBooks,
-            skills: { owned: updates.newOwned, equipped: updates.newEquippedIds }
-        });
-        return { newCoins, newBooks };
-    });
-};
+// <<<--- HÀM updateUserSkills ĐÃ ĐƯỢC CHUYỂN SANG skill-service.ts --->
 
 // <<<--- HÀM updateUserInventory ĐÃ ĐƯỢC CHUYỂN SANG equipment-service.ts --->
 
