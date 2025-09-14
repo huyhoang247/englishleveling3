@@ -7,7 +7,7 @@ import {
     SkillBlueprint, 
     getActivationChance, 
     getRarityTextColor 
-} from '../../home/skill-game/skill-data.tsx';
+} from '../skill-game/skill-data.tsx';
 // --- MODIFICATION: Import useGame to access the global game state ---
 import { useGame } from '../../GameContext.tsx';
 
