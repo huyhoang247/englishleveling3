@@ -1,6 +1,3 @@
---- START OF FILE GameContext.tsx (31).txt ---
-
-// --- START OF FILE GameContext.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { User } from 'firebase/auth';
