@@ -1,17 +1,29 @@
-// --- START OF FILE src/components/mail.tsx ---
+// --- START OF FILE mail.tsx (MODIFIED & DYNAMIC) ---
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { auth } from './firebase'; // Điều chỉnh đường dẫn nếu cần
-import * as mailService from './mailService.ts'; // Điều chỉnh đường dẫn nếu cần
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import HomeButton from './ui/home-button.tsx';
+import { useGame } from './GameContext.tsx';
+import { auth } from '../firebase';
+import { Mail, fetchUserMails, markMailAsRead, claimMailRewards, deleteMail, claimAllAndClearRead } from './mailService.ts';
+import { Timestamp } from 'firebase/firestore';
 
+// --- INTERFACE & TYPE DEFINITIONS ---
 interface MailboxProps {
   onClose: () => void;
 }
 
-// --- UI HELPER COMPONENTS (GIỮ NGUYÊN) ---
+// Map reward icons to display icons in the UI component
+const rewardIconMap: { [key: string]: string } = {
+    coin: 'coin',
+    gem: 'gem',
+    sword: 'sword',
+    badge: 'badge',
+    chest: 'chest',
+};
+
+// --- UI HELPER COMPONENTS (Unchanged from original) ---
 const Icon = ({ name, className }: { name: string, className: string }) => {
-  const icons = {
+  const icons: { [key: string]: JSX.Element } = {
     mail: <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />,
     gift: <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.25v8.25a2.25 2.25 0 01-2.25 2.25H5.25a2.25 2.25 0 01-2.25-2.25v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />,
     item: <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />,
@@ -30,192 +42,169 @@ const Icon = ({ name, className }: { name: string, className: string }) => {
   );
 };
 
-const MailPopup = ({ mail, onClose, onClaim, onDelete }: { mail: mailService.Mail | null, onClose: () => void, onClaim: (id: string, items: mailService.MailItemReward[]) => void, onDelete: (id: string) => void }) => {
+const MailPopup = ({ mail, onClose, onClaim, onDelete }: { mail: Mail | null, onClose: () => void, onClaim: (id: string) => void, onDelete: (id: string) => void }) => {
   if (!mail) return null;
-
-  const canClaim = mail.items && mail.items.length > 0 && !mail.isClaimed;
-
-  const handleClaimClick = () => {
-    onClaim(mail.id, mail.items);
-    onClose(); // Đóng popup ngay sau khi nhấn nhận
-  };
-
-  const handleDeleteClick = () => {
-    onDelete(mail.id);
-    onClose();
-  };
+  const canClaim = mail.rewards && mail.rewards.length > 0 && !mail.isClaimed;
+  const mailTimestamp = mail.timestamp instanceof Timestamp ? mail.timestamp.toDate() : new Date();
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in p-4" onClick={onClose}>
       <div className="relative w-full max-w-lg max-h-full bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-sans flex flex-col" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
-
-        {/* Header */}
         <div className="p-5 border-b border-slate-700">
           <h2 className="font-sans text-xl font-bold text-cyan-300 text-shadow tracking-wide mb-2">{mail.subject}</h2>
           <div className="flex items-center flex-wrap gap-2 text-xs text-slate-400 font-sans">
             <span className="inline-flex items-center gap-1.5 bg-slate-800/70 text-slate-300 px-3 py-1 rounded-full border border-slate-700">
-              <span>Từ:</span>
-              <span className="font-semibold text-white">{mail.sender}</span>
+              <span>Từ:</span><span className="font-semibold text-white">{mail.sender}</span>
             </span>
             <span className="inline-flex items-center bg-slate-800/70 text-slate-400 px-3 py-1 rounded-full border border-slate-700">
-              {mail.timestamp?.toDate().toLocaleString('vi-VN')}
+              {mailTimestamp.toLocaleString('vi-VN')}
             </span>
           </div>
         </div>
-
-        {/* Body */}
-        <div className="flex-grow p-6 overflow-y-auto text-slate-300 leading-relaxed font-sans scrollbar-thin">
-          <p>{mail.body}</p>
-        </div>
-
-        {/* Items */}
-        {mail.items && mail.items.length > 0 && (
+        <div className="flex-grow p-6 overflow-y-auto text-slate-300 leading-relaxed font-sans scrollbar-thin"><p>{mail.body}</p></div>
+        {mail.rewards && mail.rewards.length > 0 && (
           <div className="p-5 border-t border-slate-700">
-            <h3 className="font-lilita text-lg font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-4 uppercase">Vật phẩm</h3>
+            <h3 className="font-lilita text-lg font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-4 uppercase">Items</h3>
             <div className="flex flex-wrap justify-center gap-3">
-              {mail.items.map((item, index) => (
-                <div key={index} className="w-20 bg-slate-800/50 p-2 rounded-lg flex flex-col items-center justify-center transition-transform duration-200 border border-slate-700 hover:border-cyan-500/50 hover:scale-105 aspect-square" title={`${item.name} x${item.quantity}`}>
+              {mail.rewards.map((reward, index) => (
+                <div key={index} className="w-20 bg-slate-800/50 p-2 rounded-lg flex flex-col items-center justify-center transition-transform duration-200 border border-slate-700 hover:border-cyan-500/50 hover:scale-105 aspect-square" title={`${reward.name} x${reward.quantity}`}>
                   <div className="relative w-12 h-12 rounded-full flex items-center justify-center mb-1 bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-slate-600">
                     <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-md"></div>
-                    <Icon name={item.icon} className="w-6 h-6 text-cyan-300 drop-shadow-[0_2px_3px_rgba(34,211,238,0.4)]" />
+                    <Icon name={rewardIconMap[reward.icon] || 'gift'} className="w-6 h-6 text-cyan-300 drop-shadow-[0_2px_3px_rgba(34,211,238,0.4)]" />
                   </div>
-                  <p className="text-xs font-semibold text-slate-300 font-sans">x{item.quantity.toLocaleString()}</p>
+                  <p className="text-xs font-semibold text-slate-300 font-sans">x{reward.quantity}</p>
                 </div>
               ))}
             </div>
           </div>
         )}
-
-        {/* Actions */}
         <div className="p-3 flex items-center justify-center space-x-3 bg-slate-900/50 rounded-b-xl border-t border-slate-700">
-          <button onClick={handleDeleteClick} className="px-4 py-2 bg-slate-700/80 text-slate-300 font-bold rounded-lg hover:bg-red-600/80 hover:text-white transition-all duration-300 flex items-center space-x-1.5 active:scale-95 border border-slate-600 hover:border-red-500">
-            <Icon name="trash" className="w-4 h-4" />
-            <span className="font-sans font-semibold text-sm">Xóa</span>
-          </button>
-          {canClaim && (
-            <button onClick={handleClaimClick} className="btn-shine relative overflow-hidden px-6 py-2 bg-teal-600/80 text-white font-bold rounded-lg hover:bg-teal-500 transition-all duration-300 flex items-center space-x-1.5 shadow-[0_0_15px_theme(colors.teal.600/0.5)] active:scale-95 border border-teal-500 hover:border-teal-400">
-              <Icon name="gift" className="w-4 h-4" />
-              <span className="font-sans font-semibold text-sm">Nhận</span>
-            </button>
-          )}
-          {mail.isClaimed && (
-             <div className="px-6 py-2 bg-slate-800 text-slate-500 font-bold rounded-lg flex items-center space-x-1.5 cursor-not-allowed border border-slate-700">
-               <Icon name="check" className="w-4 h-4" />
-              <span className="font-sans font-semibold text-sm">Đã Nhận</span>
-             </div>
-          )}
+          <button onClick={() => onDelete(mail.id)} className="px-4 py-2 bg-slate-700/80 text-slate-300 font-bold rounded-lg hover:bg-red-600/80 hover:text-white transition-all duration-300 flex items-center space-x-1.5 active:scale-95 border border-slate-600 hover:border-red-500"><Icon name="trash" className="w-4 h-4" /><span className="font-sans font-semibold text-sm">Xóa</span></button>
+          {canClaim && <button onClick={() => onClaim(mail.id)} className="btn-shine relative overflow-hidden px-6 py-2 bg-teal-600/80 text-white font-bold rounded-lg hover:bg-teal-500 transition-all duration-300 flex items-center space-x-1.5 shadow-[0_0_15px_theme(colors.teal.600/0.5)] active:scale-95 border border-teal-500 hover:border-teal-400"><Icon name="gift" className="w-4 h-4" /><span className="font-sans font-semibold text-sm">Nhận</span></button>}
+          {mail.isClaimed && <div className="px-6 py-2 bg-slate-800 text-slate-500 font-bold rounded-lg flex items-center space-x-1.5 cursor-not-allowed border border-slate-700"><Icon name="check" className="w-4 h-4" /><span className="font-sans font-semibold text-sm">Đã Nhận</span></div>}
         </div>
       </div>
     </div>
   );
 };
 
-const MailItem = ({ mail, onSelect, isSelected }: { mail: mailService.Mail, onSelect: (id: string) => void, isSelected: boolean }) => {
-  const typeIcon = mail.type === 'gift' ? 'gift' : mail.type === 'item' ? 'item' : 'mail';
-  const hasItems = mail.items && mail.items.length > 0;
-  // Thư có vật phẩm chỉ được coi là "đã đọc" sau khi đã nhận
-  const isVisuallyRead = hasItems ? mail.isClaimed : mail.isRead;
+const MailItem = ({ mail, onSelect, isSelected }: { mail: Mail, onSelect: (id: string) => void, isSelected: boolean }) => {
+  const hasItems = mail.rewards && mail.rewards.length > 0;
+  const isVisuallyRead = !hasItems ? mail.isRead : mail.isClaimed;
+  const mailTimestamp = mail.timestamp instanceof Timestamp ? mail.timestamp.toDate() : new Date();
 
   return (
     <li onClick={() => onSelect(mail.id)} className={`relative p-3 flex items-start space-x-3 cursor-pointer border-l-4 transition-all duration-200 ${isSelected ? 'border-cyan-400 bg-slate-800/70' : 'border-transparent hover:bg-slate-800/40'}`}>
       <div className="relative flex-shrink-0 p-3 bg-slate-900/50 rounded-full mt-1">
-        <Icon name={typeIcon} className="w-6 h-6 text-slate-400" />
-        {!mail.isRead && (
-          <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/exclamation-mark.webp" alt="Unread" className="absolute -top-0.5 -right-0.5 w-4 h-4 animate-gentle-bounce" />
-        )}
+        <Icon name={hasItems ? 'gift' : 'mail'} className="w-6 h-6 text-slate-400" />
+        {!mail.isRead && <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/exclamation-mark.webp" alt="Unread" className="absolute -top-0.5 -right-0.5 w-4 h-4 animate-gentle-bounce" />}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-center mb-1">
           <p className={`text-sm font-semibold truncate font-sans pr-2 ${isVisuallyRead ? 'text-slate-400' : 'text-slate-100'}`}>{mail.subject}</p>
-          <span className="text-xs font-sans flex-shrink-0 text-slate-500">{mail.timestamp?.toDate().toLocaleDateString('vi-VN')}</span>
+          <span className="text-xs font-sans flex-shrink-0 text-slate-500">{mailTimestamp.toLocaleDateString('vi-VN')}</span>
         </div>
-        {hasItems ? (
-          <div className="flex items-center flex-wrap gap-2 mt-2">
-            {mail.items.map((item, index) => (
-              <div key={index} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-700/80 text-slate-300 text-xs font-sans border border-slate-600" title={`${item.name} x${item.quantity}`}>
-                <Icon name={item.icon} className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="font-semibold">x{item.quantity.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-slate-500 font-sans truncate pr-2">{mail.body}</p>
-        )}
+        <p className={`text-xs text-slate-500 truncate pr-2 font-sans ${isVisuallyRead ? '' : 'text-slate-400'}`}>{mail.body}</p>
       </div>
     </li>
   );
 };
 
+
 // --- MAIN MAILBOX COMPONENT ---
 export default function Mailbox({ onClose }: MailboxProps) {
-  const [mails, setMails] = useState<mailService.Mail[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { updateUserCurrency } = useGame();
+  const [mails, setMails] = useState<Mail[]>([]);
   const [selectedMailId, setSelectedMailId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const userId = auth.currentUser?.uid;
 
-  const currentUser = auth.currentUser;
+  const fetchMails = useCallback(async () => {
+    if (!userId) return;
+    setIsLoading(true);
+    try {
+      const userMails = await fetchUserMails(userId);
+      setMails(userMails);
+    } catch (error) {
+      console.error("Failed to fetch mails:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userId]);
 
   useEffect(() => {
-    if (!currentUser) {
-        setIsLoading(false);
-        return;
-    };
-
-    setIsLoading(true);
-    const unsubscribe = mailService.listenToUserMails(currentUser.uid, (fetchedMails) => {
-      setMails(fetchedMails);
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [currentUser]);
+    fetchMails();
+  }, [fetchMails]);
 
   const selectedMail = useMemo(() => {
     return mails.find(m => m.id === selectedMailId) || null;
   }, [mails, selectedMailId]);
 
-  const handleSelectMail = (id: string) => {
+  const handleSelectMail = async (id: string) => {
     setSelectedMailId(id);
-    const mail = mails.find(m => m.id === id);
-    // Tự động đánh dấu đã đọc cho các thư thông báo (không có quà)
-    if (currentUser && mail && !mail.isRead && (!mail.items || mail.items.length === 0)) {
-        mailService.markMailAsRead(currentUser.uid, id).catch(console.error);
+    const mailToRead = mails.find(m => m.id === id);
+    if (mailToRead && !mailToRead.isRead) {
+      try {
+        await markMailAsRead(userId!, id);
+        setMails(prev => prev.map(m => m.id === id ? { ...m, isRead: true } : m));
+      } catch (error) {
+        console.error("Failed to mark mail as read:", error);
+      }
     }
   };
-  
+
   const handleClosePopup = () => setSelectedMailId(null);
-  
-  const handleClaim = (id: string, items: mailService.MailItemReward[]) => {
-    if (!currentUser) return;
-    mailService.claimMail(currentUser.uid, id, items).catch(err => console.error("Lỗi khi nhận thư:", err));
-  };
-  
-  const handleDelete = (id: string) => {
-    if (!currentUser) return;
-    mailService.deleteMail(currentUser.uid, id).catch(err => console.error("Lỗi khi xóa thư:", err));
-  };
-  
-  const handleClaimAll = () => {
-    if (!currentUser) return;
-    const claimableMails = mails.filter(m => m.items?.length > 0 && !m.isClaimed);
-    if (claimableMails.length > 0) {
-        mailService.claimAllMails(currentUser.uid, claimableMails).catch(err => console.error("Lỗi khi nhận tất cả:", err));
+
+  const handleClaim = async (id: string) => {
+    if (!userId || isProcessing) return;
+    const mailToClaim = mails.find(m => m.id === id);
+    if (!mailToClaim) return;
+    
+    setIsProcessing(true);
+    try {
+      const newTotals = await claimMailRewards(userId, mailToClaim);
+      updateUserCurrency(newTotals); // Update global state
+      setMails(prev => prev.map(m => m.id === id ? { ...m, isClaimed: true, isRead: true } : m));
+    } catch (error) {
+      console.error("Failed to claim mail:", error);
+      // You could show a toast message here
+    } finally {
+      setIsProcessing(false);
     }
   };
-  
-  const handleDeleteAllRead = () => {
-    if (!currentUser) return;
-    const deletableMailIds = mails
-        .filter(m => (m.isRead && (!m.items || m.items.length === 0)) || m.isClaimed)
-        .map(m => m.id);
-    if (deletableMailIds.length > 0) {
-        mailService.deleteAllReadMails(currentUser.uid, deletableMailIds).catch(err => console.error("Lỗi khi xóa tất cả:", err));
+
+  const handleDelete = async (id: string) => {
+    if (!userId || isProcessing) return;
+    setIsProcessing(true);
+    try {
+      await deleteMail(userId, id);
+      setMails(prev => prev.filter(m => m.id !== id));
+      handleClosePopup();
+    } catch (error) {
+      console.error("Failed to delete mail:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleClaimAllAndClear = async () => {
+    if (!userId || isProcessing) return;
+    setIsProcessing(true);
+    try {
+        await claimAllAndClearRead(userId, mails);
+        // Re-fetch for the simplest state update
+        await fetchMails(); 
+    } catch (error) {
+        console.error("Failed to process all mails:", error);
+    } finally {
+        setIsProcessing(false);
     }
   };
   
   const unreadCount = mails.filter(m => !m.isRead).length;
-  const canClaimAny = mails.some(m => m.items?.length > 0 && !m.isClaimed);
-  const canDeleteAny = mails.some(m => (m.isRead && (!m.items || m.items.length === 0)) || m.isClaimed);
+  const canClaimAny = mails.some(m => m.rewards?.length > 0 && !m.isClaimed);
 
   return (
     <>
@@ -225,34 +214,22 @@ export default function Mailbox({ onClose }: MailboxProps) {
         .animate-gentle-bounce { animation: gentle-bounce 1.2s infinite; }
       `}</style>
       
-      <div 
-        className="relative w-full max-w-5xl h-full max-h-[90vh] bg-slate-900/80 rounded-xl shadow-2xl shadow-black/50 flex flex-col border border-slate-700/50 backdrop-blur-md text-white font-lilita animate-fade-in-scale-fast"
-        onClick={(e) => e.stopPropagation()}
-      >
-        
-        {/* Header (Title + Close Button) */}
+      <div className="relative w-full max-w-5xl h-full max-h-[90vh] bg-slate-900/80 rounded-xl shadow-2xl shadow-black/50 flex flex-col border border-slate-700/50 backdrop-blur-md text-white font-lilita animate-fade-in-scale-fast" onClick={(e) => e.stopPropagation()}>
         <div className="p-4 border-b border-slate-700 flex justify-between items-center flex-shrink-0">
             <div>
-                <h1 className="text-xl font-bold text-cyan-300 text-shadow tracking-wider uppercase">HỘP THƯ</h1>
-                {!isLoading && mails.length > 0 && (
-                    <div className="mt-1 text-xs text-slate-400 font-sans">
-                        <span>Thư mới: </span>
-                        <span className="font-bold text-yellow-300">{unreadCount}</span>
-                        <span className="mx-2 text-slate-600">|</span>
-                        <span>Tổng cộng: </span>
-                        <span className="font-semibold text-slate-200">{mails.length}</span>
-                    </div>
-                )}
+                <h1 className="text-xl font-bold text-cyan-300 text-shadow tracking-wider uppercase">MAIL BOX</h1>
+                <div className="mt-1 text-xs text-slate-400 font-sans">
+                    <span>New: </span><span className="font-bold text-yellow-300">{unreadCount}</span>
+                    <span className="mx-2 text-slate-600">|</span>
+                    <span>Total: </span><span className="font-semibold text-slate-200">{mails.length}</span>
+                </div>
             </div>
             <HomeButton onClick={onClose} />
         </div>
         
-        {/* Mail List (Scrollable Area) */}
         <ul className="flex-grow overflow-y-auto divide-y divide-slate-800 scrollbar-thin">
             {isLoading ? (
-                <div className="flex items-center justify-center h-full text-slate-500">
-                    <p className="font-sans">Đang tải thư...</p>
-                </div>
+                <div className="flex items-center justify-center h-full text-slate-500 font-sans">Đang tải thư...</div>
             ) : mails.length > 0 ? (
                 mails.map(mail => (<MailItem key={mail.id} mail={mail} onSelect={handleSelectMail} isSelected={selectedMailId === mail.id} />))
             ) : (
@@ -263,21 +240,13 @@ export default function Mailbox({ onClose }: MailboxProps) {
             )}
         </ul>
         
-        {/* Footer Actions */}
         <div className="p-3 border-t border-slate-700 flex-shrink-0 flex items-center justify-around gap-3 bg-slate-900/60 rounded-b-xl">
             <button 
-              onClick={handleDeleteAllRead} 
-              disabled={!canDeleteAny}
-              className="flex-1 px-4 py-2.5 bg-slate-700/80 text-slate-300 font-bold rounded-lg hover:bg-red-600/80 hover:text-white transition-all duration-300 flex items-center justify-center space-x-2 active:scale-95 border border-slate-600 hover:border-red-500 disabled:bg-slate-800/50 disabled:border-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed">
-              <Icon name="trash" className="w-5 h-5" />
-              <span className="font-sans font-semibold text-sm">Xóa đã đọc</span>
-            </button>
-            <button 
-              onClick={handleClaimAll} 
-              disabled={!canClaimAny}
+              onClick={handleClaimAllAndClear}
+              disabled={!canClaimAny || isProcessing}
               className="btn-shine relative overflow-hidden flex-1 px-4 py-2.5 bg-teal-600/80 text-white font-bold rounded-lg hover:bg-teal-500 transition-all duration-300 flex items-center justify-center space-x-2 shadow-[0_0_20px_theme(colors.teal.600/0.5)] active:scale-95 border border-teal-500 hover:border-teal-400 disabled:bg-slate-800/50 disabled:border-slate-700 disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed">
               <Icon name="gift" className="w-5 h-5" />
-              <span className="font-sans font-semibold text-sm">Nhận tất cả</span>
+              <span className="font-sans font-semibold text-sm">{isProcessing ? "Processing..." : "Nhận & Dọn dẹp"}</span>
             </button>
         </div>
       </div>
@@ -287,4 +256,4 @@ export default function Mailbox({ onClose }: MailboxProps) {
   );
 }
 
-// --- END OF FILE src/components/mail.tsx ---
+// --- END OF FILE mail.tsx ---
