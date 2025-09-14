@@ -9,7 +9,6 @@ import HomeButton from '../../ui/home-button.tsx';
 import { uiAssets } from '../../game-assets.ts';
 
 // --- Các component icon ---
-const TrophyIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}> <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /> </svg> );
 const MasteryCardIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src={uiAssets.masteryCardIcon} alt="Thẻ thông thạo" className={className} {...props} /> );
 const GoldIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src={uiAssets.goldIcon} alt="Vàng" className={className} {...props} /> );
 const VocabularyIcon = ({ className = '', ...props }: { className?: string; [key: string]: any }) => ( <img src={uiAssets.vocaAchievementIcon} alt="Vocabulary" className={className} {...props} /> );
@@ -139,7 +138,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
             </button>
         </div>
 
-        <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-blue-500/20 border border-slate-700"> {/* Thay đổi nhỏ: shadow-blue-500 */}
+        <main className="bg-slate-900/40 p-2 sm:p-3 rounded-2xl shadow-2xl shadow-blue-500/20 border border-slate-700">
           <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-semibold text-slate-400 hidden md:grid">
             <div className="col-span-1 text-center">HẠNG</div>
             <div className="col-span-3">TỪ VỰNG</div>
@@ -209,7 +208,22 @@ const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, i
       </div>
 
       <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
-      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isAnyClaiming ? 'Claiming...' : 'Claim'} </button> </div>
+      
+      <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center">
+        <button
+          onClick={handleClaimClick}
+          disabled={!isClaimable || isAnyClaiming}
+          className={`
+            flex items-center justify-center w-auto px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border
+            ${isClaimable && !isAnyClaiming
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-500 border-blue-500/50 text-white shadow-lg shadow-blue-500/30 transform hover:scale-105 hover:from-blue-500 hover:to-indigo-400 cursor-pointer'
+              : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70'
+            }
+          `}
+        >
+          {isAnyClaiming ? 'Claiming...' : 'Claim'}
+        </button>
+      </div>
     </div>
   );
 });
