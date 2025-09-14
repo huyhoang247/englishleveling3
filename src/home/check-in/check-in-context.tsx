@@ -1,21 +1,29 @@
-
-
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
+// --- THÊM MỚI: Import tài nguyên từ game-assets (thêm minerAssets) ---
 import { uiAssets, equipmentUiAssets, minerAssets } from '../../game-assets.ts';
 import { auth } from '../../firebase.js';
 import { processDailyCheckIn } from './check-in-service.ts';
 
+// --- BƯỚC 1: XÓA BỎ CÁC ĐỊNH NGHĨA ICON SVG NỘI TUYẾN ---
+// Các component StarIcon, SparklesIcon, ZapIcon, ShieldIcon, GiftIcon, FlameIcon, CrownIcon đã được xóa.
+
+// --- BƯỚC 2: CẬP NHẬT DỮ LIỆU PHẦN THƯỞNG VỚI ICON TỪ game-assets ---
+// Thay thế các component SVG bằng thẻ <img> với src từ file tài nguyên.
+// Một className chung được áp dụng để đảm bảo kích thước đồng nhất.
 export const dailyRewards = [
   { day: 1, name: "Gold", amount: "1000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
   { day: 2, name: "Ancient Book", amount: "10", icon: <img src={uiAssets.bookIcon} alt="Ancient Book" className="w-10 h-10 object-contain" /> },
   { day: 3, name: "Equipment Piece", amount: "10", icon: <img src={equipmentUiAssets.equipmentPieceIcon} alt="Equipment Piece" className="w-10 h-10 object-contain" /> },
   { day: 4, name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-10 h-10 object-contain" /> },
+  // --- SỬA ĐỔI: Thay icon cho Pickaxe ---
   { day: 5, name: "Pickaxe", amount: "5", icon: <img src={minerAssets.pickaxeIcon} alt="Pickaxe" className="w-10 h-10 object-contain" /> },
   { day: 6, name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-10 h-10 object-contain" /> },
+  // --- SỬA ĐỔI: Thay icon cho Pickaxe ---
   { day: 7, name: "Pickaxe", amount: "10", icon: <img src={minerAssets.pickaxeIcon} alt="Special Pickaxe" className="w-10 h-10 object-contain" /> },
 ];
 
+// --- ĐỊNH NGHĨA TYPES ---
 interface Particle {
   id: number;
   style: React.CSSProperties;
@@ -31,14 +39,15 @@ interface CheckInContextType {
   showRewardAnimation: boolean;
   animatingReward: any;
   particles: Particle[];
-  status: 'initializing' | 'ready'; // Thêm status
-  countdown: string;
+  countdown: string; // Thêm countdown
   claimReward: (day: number) => Promise<void>;
   handleClose: () => void;
 }
 
+// --- KHỞI TẠO CONTEXT ---
 const CheckInContext = createContext<CheckInContextType | undefined>(undefined);
 
+// --- PROVIDER COMPONENT ---
 interface CheckInProviderProps {
   children: ReactNode;
   onClose: () => void;
@@ -54,8 +63,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
   const [canClaimToday, setCanClaimToday] = useState(false);
   const [claimableDay, setClaimableDay] = useState(1);
   const [isClaiming, setIsClaiming] = useState(false);
-  const [status, setStatus] = useState<'initializing' | 'ready'>('initializing');
-  const [countdown, setCountdown] = useState('');
+  const [countdown, setCountdown] = useState('00:00:00');
 
   const particleClasses = ["animate-float-particle-1", "animate-float-particle-2", "animate-float-particle-3", "animate-float-particle-4", "animate-float-particle-5"];
 
@@ -64,10 +72,8 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     const last = lastCheckIn;
 
     if (!last) {
-        // Nếu không có lastCheckIn, ta biết ngay trạng thái
         setCanClaimToday(true);
         setClaimableDay(1);
-        setStatus('ready'); // Đánh dấu là đã sẵn sàng
         return;
     }
 
@@ -78,15 +84,13 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     yesterday.setUTCDate(now.getUTCDate() - 1);
     const isConsecutive = last.getUTCFullYear() === yesterday.getUTCFullYear() && last.getUTCMonth() === yesterday.getUTCMonth() && last.getUTCDate() === yesterday.getUTCDate();
     setClaimableDay(isConsecutive ? (loginStreak % 7) + 1 : 1);
-
-    setStatus('ready'); // Sau khi tính toán xong, đánh dấu là đã sẵn sàng
   }, [lastCheckIn, loginStreak]);
 
-  // --- CẬP NHẬT: useEffect của countdown sẽ chờ status 'ready' ---
+  // --- THÊM MỚI: useEffect để xử lý countdown ---
   useEffect(() => {
-    // Chỉ chạy khi đã khởi tạo xong và không thể claim.
-    if (status !== 'ready' || canClaimToday) {
-      setCountdown('');
+    // Nếu có thể nhận thưởng, không cần đếm ngược.
+    if (canClaimToday) {
+      setCountdown('00:00:00');
       return;
     }
 
@@ -110,7 +114,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     }, 1000);
 
     return () => clearInterval(intervalId); // Dọn dẹp interval khi component unmount
-  }, [canClaimToday, status]);
+  }, [canClaimToday]);
 
   const claimReward = useCallback(async (day: number) => {
     if (!canClaimToday || day !== claimableDay || isClaiming || isSyncingData) return;
@@ -123,10 +127,13 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
 
     setIsClaiming(true);
     try {
+      // Bắt đầu đồng bộ dữ liệu, khóa các hành động khác
       setIsSyncingData(true);
       const { claimedReward: claimedRewardData } = await processDailyCheckIn(userId);
+      // Kết thúc đồng bộ ngay sau khi API thành công
       setIsSyncingData(false);
 
+      // Bắt đầu animation sau khi nhận thưởng thành công
       const generatedParticles: Particle[] = Array.from({ length: 20 }).map((_, i) => {
         const randomAnimClass = particleClasses[i % particleClasses.length];
         return {
@@ -150,16 +157,17 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
 
       setTimeout(() => {
         setShowRewardAnimation(false);
-        setIsClaiming(false);
+        setIsClaiming(false); // Kết thúc trạng thái claiming sau khi animation hoàn tất
         setParticles([]);
       }, 2000);
     } catch (error: any) {
         alert(error.message || "Có lỗi xảy ra, vui lòng thử lại.");
         setIsClaiming(false);
-        setIsSyncingData(false);
+        setIsSyncingData(false); // Đảm bảo gỡ khóa nếu có lỗi
     }
   }, [canClaimToday, claimableDay, isClaiming, isSyncingData, setIsSyncingData]);
 
+  // --- TỐI ƯU HÓA: SỬ DỤNG useMemo ĐỂ TRÁNH TẠO LẠI OBJECT 'value' KHÔNG CẦN THIẾT ---
   const value = useMemo(() => ({
     loginStreak, 
     isSyncingData, 
@@ -169,7 +177,6 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     showRewardAnimation, 
     animatingReward, 
     particles,
-    status,
     countdown,
     claimReward, 
     handleClose: onClose,
@@ -182,7 +189,6 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     showRewardAnimation, 
     animatingReward, 
     particles,
-    status,
     countdown,
     claimReward, 
     onClose
@@ -191,6 +197,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
   return <CheckInContext.Provider value={value}>{children}</CheckInContext.Provider>;
 };
 
+// --- CUSTOM HOOK ---
 export const useCheckIn = (): CheckInContextType => {
   const context = useContext(CheckInContext);
   if (context === undefined) {
@@ -198,5 +205,3 @@ export const useCheckIn = (): CheckInContextType => {
   }
   return context;
 };
-
-// --- END OF FILE check-in-context.tsx ---
