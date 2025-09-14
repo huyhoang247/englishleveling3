@@ -1,6 +1,7 @@
 // --- START OF FILE src/home/skill-game/skill-context.tsx ---
 
 import React, { createContext, useState, useMemo, useCallback, useEffect, useContext, ReactNode } from 'react';
+import { useGame } from '../../GameContext.tsx'; // IMPORT useGame hook
 import {
     ALL_SKILLS,
     CRAFTING_COST,
@@ -12,7 +13,7 @@ import {
     type SkillBlueprint,
     getNextRarity,
 } from './skill-data.tsx';
-import { fetchSkillScreenData, updateUserSkills } from '../../gameDataService.ts';
+import { updateUserSkills } from '../../gameDataService.ts';
 
 // --- INTERFACES & TYPES ---
 
@@ -42,7 +43,7 @@ interface SkillContextType {
     equippedSkills: (OwnedSkill | null)[];
     unequippedSkillsSorted: OwnedSkill[];
     MAX_SKILLS_IN_STORAGE: number;
-    mergeableGroups: MergeGroup[]; // THÊM DÒNG NÀY
+    mergeableGroups: MergeGroup[];
 
     // Toast Messages
     message: string;
@@ -94,18 +95,26 @@ const calculateMergeResult = (skillsToMerge: OwnedSkill[], blueprint: SkillBluep
 interface SkillProviderProps {
     children: ReactNode;
     userId: string;
-    onClose: (dataUpdated: boolean, data?: SkillScreenExitData) => void;
+    onClose: (data: SkillScreenExitData | null) => void;
 }
 
 export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps) => {
-    // --- STATE QUẢN LÝ DỮ LIỆU ---
-    const [gold, setGold] = useState(0);
-    const [ancientBooks, setAncientBooks] = useState(0);
-    const [ownedSkills, setOwnedSkills] = useState<OwnedSkill[]>([]);
-    const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([]);
+    // --- LẤY DỮ LIỆU BAN ĐẦU TỪ GAMECONTEXT ---
+    const { 
+        coins: initialGold, 
+        ancientBooks: initialAncientBooks, 
+        ownedSkills: initialOwnedSkills, 
+        equippedSkillIds: initialEquippedSkillIds 
+    } = useGame();
+
+    // --- STATE QUẢN LÝ DỮ LIỆU (KHỞI TẠO TỪ GAMECONTEXT) ---
+    const [gold, setGold] = useState(initialGold);
+    const [ancientBooks, setAncientBooks] = useState(initialAncientBooks);
+    const [ownedSkills, setOwnedSkills] = useState(initialOwnedSkills);
+    const [equippedSkillIds, setEquippedSkillIds] = useState(initialEquippedSkillIds);
 
     // --- STATE QUẢN LÝ GIAO DIỆN ---
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false); // No longer needs to load
     const [isProcessing, setIsProcessing] = useState(false);
     const [dataHasChanged, setDataHasChanged] = useState(false);
     const [selectedSkill, setSelectedSkill] = useState<OwnedSkill | null>(null);
@@ -129,34 +138,7 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
         return () => clearTimeout(timer);
     }, []);
 
-    // --- FETCH DỮ LIỆU KHI MỞ COMPONENT ---
-    useEffect(() => {
-        const MIN_LOADING_TIME_MS = 500;
-        const startTime = Date.now();
-
-        const fetchData = async () => {
-            if (!userId) return;
-            try {
-                const data = await fetchSkillScreenData(userId);
-                setGold(data.coins);
-                setAncientBooks(data.ancientBooks);
-                setOwnedSkills(data.skills.owned);
-                setEquippedSkillIds(data.skills.equipped);
-            } catch (error) {
-                console.error("Failed to fetch skill screen data:", error);
-                showMessage("Lỗi: Không thể tải dữ liệu kỹ năng.");
-            } finally {
-                const elapsedTime = Date.now() - startTime;
-                const remainingTime = MIN_LOADING_TIME_MS - elapsedTime;
-                const delay = Math.max(0, remainingTime);
-                
-                setTimeout(() => {
-                    setIsLoading(false);
-                }, delay);
-            }
-        };
-        fetchData();
-    }, [userId, showMessage]);
+    // --- FETCH useEffect ĐÃ ĐƯỢC XÓA BỎ ---
 
     // --- DERIVED STATE ---
     const equippedSkills = useMemo(() => {
@@ -316,9 +298,9 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
                 ownedSkills,
                 equippedSkillIds,
             };
-            onClose(true, exitData);
+            onClose(exitData);
         } else {
-            onClose(false);
+            onClose(null);
         }
     }, [onClose, dataHasChanged, gold, ancientBooks, ownedSkills, equippedSkillIds]);
 
@@ -331,7 +313,7 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
     const value = {
         gold, ancientBooks, ownedSkills, equippedSkillIds, isLoading, isProcessing,
         selectedSkill, newlyCraftedSkill, isMergeModalOpen,
-        equippedSkills, unequippedSkillsSorted, MAX_SKILLS_IN_STORAGE, mergeableGroups, // THÊM mergeableGroups VÀO ĐÂY
+        equippedSkills, unequippedSkillsSorted, MAX_SKILLS_IN_STORAGE, mergeableGroups,
         message, messageKey, mergeToast, craftErrorToast, equipErrorToast, disenchantSuccessToast,
         handleEquipSkill, handleUnequipSkill, handleCraftSkill, handleDisenchantSkill,
         handleUpgradeSkill, handleMergeSkills, handleClose, handleSelectSkill,
