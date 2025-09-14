@@ -38,21 +38,18 @@ const DailyCheckInView = () => {
               </div>
             </div>
             <div className="flex-1 min-w-0">
-                <div className="mb-2"> {/* Giảm margin bottom một chút */}
+                {/* --- SỬA ĐỔI: Nhóm Streak và Countdown lại gần nhau --- */}
+                <div className="flex flex-col items-start gap-1 mb-2">
                     <span className="inline-flex items-center bg-slate-700 text-slate-300 px-3 py-1 rounded-full text-sm font-medium border border-slate-600">
                         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/streak-icon.webp" alt="Streak Icon" className="w-5 h-5 mr-2" />
                         {loginStreak} Day Streak
                     </span>
-                </div>
-                {/* --- ĐÃ DI CHUYỂN COUNTDOWN LÊN ĐÂY --- */}
-                {!canClaimToday && (
-                  <div className="mb-2 text-center"> {/* Thêm margin bottom */}
-                      <span className="text-xs text-slate-400">Next check-in in: </span>
+                    {!canClaimToday && (
                       <span className="text-xs font-mono font-semibold text-indigo-300 bg-slate-700/50 px-2 py-1 rounded-md">
                           {countdown}
                       </span>
-                  </div>
-                )}
+                    )}
+                </div>
                 <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" style={{ width: `${(loginStreak / 7) * 100}%` }}></div>
                 </div>
