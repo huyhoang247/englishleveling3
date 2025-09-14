@@ -1,4 +1,4 @@
-// --- START OF FILE mail.tsx (FULL CODE) ---
+// --- START OF FILE mail.tsx (FULL CODE, ADMIN EMAIL UPDATED) ---
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { auth } from './firebase'; // Để lấy userId
@@ -11,7 +11,7 @@ import {
   markMailAsRead,
   claimMailAttachments,
   deleteMails
-} from './mail-service.ts'; // Import service mới
+} from './mail-service'; // Import service mới
 
 // Dữ liệu item mẫu cho Admin Panel (thay thế bằng dữ liệu game thực tế của bạn)
 const ALL_GAME_ITEMS_MOCK = [
@@ -299,8 +299,7 @@ export default function Mailbox({ onClose }: { onClose: () => void }) {
 
   const currentUser = auth.currentUser;
   
-  // !!! QUAN TRỌNG: Thay thế logic kiểm tra admin này bằng logic của riêng bạn.
-  const isUserAdmin = currentUser?.email === "admin@example.com"; // VÍ DỤ
+  const isUserAdmin = currentUser?.email === "vanlongt309@gmail.com";
 
   useEffect(() => {
     if (!currentUser) return;
