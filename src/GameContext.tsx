@@ -1,3 +1,5 @@
+--- START OF FILE GameContext.tsx (31).txt ---
+
 // --- START OF FILE GameContext.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
@@ -11,7 +13,8 @@ import {
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes
 } from './gameDataService.ts';
-import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
+import { type SkillScreenExitData } from './home/skill-game/skill-context.tsx';
+import { updateUserSkills } from './home/skill-game/skill-service.ts';
 
 // --- Define the shape of the context ---
 interface IGameContext {
@@ -73,8 +76,7 @@ interface IGameContext {
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
     handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
-    handleSkillScreenClose: (dataUpdated: boolean) => void;
-    updateSkillsState: (data: SkillScreenExitData) => void;
+    handleSkillScreenClose: (dataUpdated: boolean, data?: SkillScreenExitData) => void;
     updateUserCurrency: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
 
     // Toggles
@@ -380,17 +382,36 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const toggleCheckIn = createToggleFunction(setIsCheckInOpen);
   const toggleMailbox = createToggleFunction(setIsMailboxOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
-  
-  const handleSkillScreenClose = (dataUpdated: boolean) => {
-    toggleSkillScreen();
-  };
 
-  const updateSkillsState = (data: SkillScreenExitData) => {
-    setCoins(data.gold);
-    setDisplayedCoins(data.gold);
-    setAncientBooks(data.ancientBooks);
-    setOwnedSkills(data.ownedSkills);
-    setEquippedSkillIds(data.equippedSkillIds);
+  const saveSkillChanges = async (data: SkillScreenExitData) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+        console.error("User not authenticated. Cannot save skill changes.");
+        return;
+    }
+    setIsSyncingData(true);
+    try {
+        const goldChange = data.gold - coins;
+        const booksChange = data.ancientBooks - ancientBooks;
+
+        await updateUserSkills(userId, {
+            newOwned: data.ownedSkills,
+            newEquippedIds: data.equippedSkillIds,
+            goldChange,
+            booksChange,
+        });
+    } catch (error) {
+        console.error("Failed to save skill changes:", error);
+    } finally {
+        setIsSyncingData(false);
+    }
+  };
+  
+  const handleSkillScreenClose = (dataUpdated: boolean, data?: SkillScreenExitData) => {
+    toggleSkillScreen();
+    if (dataUpdated && data) {
+        saveSkillChanges(data);
+    }
   };
 
   const updateUserCurrency = (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => {
@@ -431,7 +452,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isMailboxOpen,
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
-    getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
+    getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose,
     updateUserCurrency,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
