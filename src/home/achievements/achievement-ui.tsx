@@ -207,23 +207,17 @@ const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, i
         <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p>
       </div>
 
-      <div className="col-span-6 md:col-span-3 flex items-center justify-center">
-        <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700">
-          <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">1</span> </div>
-          <div className="h-6 w-px bg-slate-600"></div>
-          <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div>
-        </div>
-      </div>
+      <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
       
       <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center">
         <button
           onClick={handleClaimClick}
           disabled={!isClaimable || isAnyClaiming}
           className={`
-            flex items-center justify-center w-full px-3 py-2 rounded-xl font-semibold text-sm transition-all duration-300 shadow-inner
+            flex items-center justify-center w-auto px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border
             ${isClaimable && !isAnyClaiming
-              ? 'bg-black/20 border border-slate-600 text-white hover:border-blue-500 cursor-pointer transform hover:scale-105'
-              : 'bg-black/20 border border-slate-700 text-slate-600 cursor-not-allowed opacity-60'
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-500 border-blue-500/50 text-white shadow-lg shadow-blue-500/30 transform hover:scale-105 hover:from-blue-500 hover:to-indigo-400 cursor-pointer'
+              : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70'
             }
           `}
         >
@@ -263,7 +257,7 @@ interface AchievementsScreenProps {
   onDataUpdate: (updates: { coins?: number, masteryCards?: number }) => void;
 }
 
-export default function AchievementsScreen({ user, onClose, onPageChange }: AchievementsScreenProps) {
+export default function AchievementsScreen({ user, onClose, onDataUpdate }: AchievementsScreenProps) {
   if (!user) {
     return null;
   }
