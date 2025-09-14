@@ -162,6 +162,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   const getImageUrlForStyle = (card: FlashcardData, style: string): string => {
     const url = (() => {
         switch (style) {
+            case 'photography': return card.imageUrl.photography || card.imageUrl.default; // <--- THÊM DÒNG NÀY
             case 'anime': return card.imageUrl.anime || card.imageUrl.default;
             case 'comic': return card.imageUrl.comic || card.imageUrl.default;
             case 'realistic': return card.imageUrl.realistic || card.imageUrl.default;
@@ -178,6 +179,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   ];
 
   const renderModalContent = () => {
+    // ... (Toàn bộ phần còn lại của file giữ nguyên không đổi)
     const wordToFind = selectedCard.vocabulary.word;
 
     const filteredSentences = exampleSentencesData.filter(sentence =>
@@ -283,6 +285,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           </div>
         );
       case 'vocabulary':
+        // ... (phần code của tab vocabulary giữ nguyên)
         return (
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
             <audio ref={audioRef} src={currentAudioUrl || ''} key={currentAudioUrl} preload="auto" className="hidden" />
