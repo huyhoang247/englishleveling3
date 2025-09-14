@@ -14,7 +14,7 @@ interface FlashcardDetailModalProps {
   showVocabDetail: boolean;
   exampleSentencesData: ExampleSentence[];
   onClose: () => void;
-  currentVisualStyle: string;
+  currentVisualStyle: string; // Vẫn giữ lại để biết ảnh nào hiển thị đầu tiên nếu cần
   zIndex?: number;
 }
 
@@ -81,16 +81,11 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   showVocabDetail,
   exampleSentencesData,
   onClose,
-  currentVisualStyle,
+  currentVisualStyle, // Giữ lại prop này nhưng không cần state cục bộ cho style ảnh nữa
   zIndex = 50,
 }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'example' | 'vocabulary'>('basic');
   
-  // --- STATE FOR POINT & ZOOM ---
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 }); // Default to center
-  const ZOOM_LEVEL = 2.5; // Mức độ phóng to (2.5 lần)
-
   const [audioUrls, setAudioUrls] = useState<{ [key: string]: string } | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<string>('Matilda');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -99,8 +94,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   useEffect(() => {
     if (showVocabDetail && selectedCard) {
       setActiveTab('basic');
-      // Reset zoom state
-      setIsZoomed(false);
       
       const urls = generateAudioUrlsForWord(selectedCard.vocabulary.word);
       setAudioUrls(urls);
@@ -159,19 +152,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     return null;
   }
 
-  const getImageUrlForStyle = (card: FlashcardData, style: string): string => {
-    const url = (() => {
-        switch (style) {
-            case 'photography': return card.imageUrl.photography || card.imageUrl.default; // <--- THÊM DÒNG NÀY
-            case 'anime': return card.imageUrl.anime || card.imageUrl.default;
-            case 'comic': return card.imageUrl.comic || card.imageUrl.default;
-            case 'realistic': return card.imageUrl.realistic || card.imageUrl.default;
-            default: return card.imageUrl.default;
-        }
-    })();
-    return url;
-  };
-
   const tabs = [
     { key: 'basic' as const, label: 'Ảnh Gốc' },
     { key: 'example' as const, label: 'Ví Dụ' },
@@ -179,7 +159,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   ];
 
   const renderModalContent = () => {
-    // ... (Toàn bộ phần còn lại của file giữ nguyên không đổi)
     const wordToFind = selectedCard.vocabulary.word;
 
     const filteredSentences = exampleSentencesData.filter(sentence =>
@@ -192,12 +171,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             <>
                 {parts.map((part, index) =>
                     part.toLowerCase() === word.toLowerCase() ? (
-                        <strong key={index} className="text-blue-500 dark:text-blue-400 font-semibold">
-                            {part}
-                        </strong>
-                    ) : (
-                        part
-                    )
+                        <strong key={index} className="text-blue-500 dark:text-blue-400 font-semibold">{part}</strong>
+                    ) : (part)
                 )}
             </>
         );
@@ -205,45 +180,49 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
     switch (activeTab) {
       case 'basic':
-        const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
-          if (isZoomed) {
-            setIsZoomed(false);
-          } else {
-            const { top, left, width, height } = e.currentTarget.getBoundingClientRect();
-            // Tính toán vị trí click tương đối so với ảnh (bằng pixel)
-            const x = e.clientX - left;
-            const y = e.clientY - top;
-            
-            // Chuyển sang dạng phần trăm để dùng cho transform-origin
-            const xPercent = (x / width) * 100;
-            const yPercent = (y / height) * 100;
-            
-            setZoomOrigin({ x: xPercent, y: yPercent });
-            setIsZoomed(true);
-          }
+        // Nhãn cho các style ảnh để hiển thị đẹp hơn
+        const styleLabels: Record<string, string> = {
+            default: 'Ảnh Gốc (Default)',
+            photography: 'Nhiếp Ảnh (Photography)',
+            anime: 'Anime',
+            comic: 'Comic',
+            realistic: 'Realistic',
         };
 
+        // Lấy tất cả các entry [style, url] từ object imageUrl và lọc ra những entry có url hợp lệ
+        const availableImages = Object.entries(selectedCard.imageUrl).filter(
+            ([_, url]) => url && typeof url === 'string'
+        );
+
         return (
-          // Container phải có overflow-hidden để tạo hiệu ứng zoom
-          <div className="flex justify-center items-center flex-grow content-transition overflow-hidden p-4 bg-gray-100 dark:bg-gray-900">
-            <img
-              src={getImageUrlForStyle(selectedCard, currentVisualStyle)}
-              alt="Ảnh Gốc"
-              onClick={handleImageClick}
-              style={{
-                transform: isZoomed ? `scale(${ZOOM_LEVEL})` : 'scale(1)',
-                transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
-                transition: 'transform 0.3s ease-out',
-              }}
-              className={`
-                block rounded-lg shadow-md max-h-full max-w-full object-contain
-                ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}
-              `}
-              onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = `https://placehold.co/1024x1536/E0E0E0/333333?text=Lỗi+Ảnh+Gốc`;
-              }}
-            />
+          // Container chính cho phép cuộn dọc
+          <div className="flex-grow overflow-y-auto bg-gray-100 dark:bg-gray-900 p-4 md:p-6 content-transition">
+            <div className="max-w-xl mx-auto space-y-8">
+              {availableImages.length > 0 ? (
+                availableImages.map(([styleKey, imageUrl]) => (
+                  <div key={styleKey}>
+                    {/* Tiêu đề cho mỗi loại ảnh */}
+                    <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">
+                      {styleLabels[styleKey] || styleKey}
+                    </h4>
+                    {/* Thẻ ảnh */}
+                    <img
+                      src={imageUrl}
+                      alt={`${selectedCard.vocabulary.word} - ${styleKey}`}
+                      className="w-full h-auto rounded-lg shadow-lg object-contain bg-black/10 dark:bg-white/5"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = `https://placehold.co/1024x1536/E0E0E0/333333?text=Lỗi+Ảnh`;
+                      }}
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  Không có ảnh nào cho từ này.
+                </div>
+              )}
+            </div>
           </div>
         );
       case 'example':
@@ -285,7 +264,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           </div>
         );
       case 'vocabulary':
-        // ... (phần code của tab vocabulary giữ nguyên)
         return (
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
             <audio ref={audioRef} src={currentAudioUrl || ''} key={currentAudioUrl} preload="auto" className="hidden" />
