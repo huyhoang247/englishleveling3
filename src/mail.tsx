@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import HomeButton from './ui/home-button.tsx';
 import { useGame } from './GameContext.tsx';
-import { auth } from '../firebase';
+import { auth } from './firebase';
 import { Mail, fetchUserMails, markMailAsRead, claimMailRewards, deleteMail, claimAllAndClearRead } from './mailService.ts';
 import { Timestamp } from 'firebase/firestore';
 
