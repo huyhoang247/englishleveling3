@@ -413,10 +413,11 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                zIndex: zIndex
            }}
       >
-          <div className="relative flex items-center justify-center bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 flex-shrink-0 px-4 py-3">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                <BackButton onClick={onClose} />
-            </div>
+          {/* --- HEADER START: APPLIED FLEXBOX LAYOUT --- */}
+          <div className="flex items-center justify-between bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 flex-shrink-0 px-4 py-2">
+            
+            <BackButton onClick={onClose} />
+            
             <div className="inline-flex bg-gray-900 dark:bg-black rounded-xl p-1 space-x-1 border border-transparent dark:border-gray-800">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.key;
@@ -442,7 +443,9 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                 );
               })}
             </div>
+            
           </div>
+          {/* --- HEADER END --- */}
 
           {renderModalContent()}
 
