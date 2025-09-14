@@ -12,6 +12,7 @@ import {
     getNextRarity,
 } from './skill-data.tsx';
 import { useGame } from '../../GameContext.tsx';
+import { auth } from '../../firebase.js';
 
 // --- INTERFACES & TYPES ---
 
