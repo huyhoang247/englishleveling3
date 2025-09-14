@@ -12,7 +12,7 @@ import {
     type SkillBlueprint,
     getNextRarity,
 } from './skill-data.tsx';
-import { fetchSkillScreenData, updateUserSkills } from '../../skill-service.ts';
+import { fetchSkillScreenData, updateUserSkills } from './skill-service.ts';
 
 // --- INTERFACES & TYPES ---
 
