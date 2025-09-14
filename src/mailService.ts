@@ -1,208 +1,238 @@
 // --- START OF FILE mailService.ts ---
 
 import { db } from './firebase';
-import {
-  collection,
-  doc,
-  addDoc,
-  getDocs,
-  writeBatch,
-  runTransaction,
-  query,
-  where,
-  orderBy,
-  serverTimestamp,
-  Timestamp,
-  FieldValue,
+import { 
+  doc, getDoc, setDoc, runTransaction, 
+  collection, getDocs, writeBatch,
+  query, orderBy, onSnapshot, Timestamp, serverTimestamp, deleteDoc, where
 } from 'firebase/firestore';
-import { UserGameData, OwnedItem } from './gameDataService.ts'; // Assuming types are exported from here
+import { fetchAllUsers } from './gameDataService.ts'; // Tái sử dụng hàm lấy user từ file cũ
+import { UserGameData } from './gameDataService.ts'; // Tái sử dụng interface
 
-// --- TYPE DEFINITIONS ---
-
-export interface MailReward {
-  type: 'currency' | 'item';
-  // For 'currency': 'coins', 'gems', 'cardCapacity', etc.
-  // For 'item': a unique identifier for the item blueprint.
-  id: string; 
-  quantity: number;
-  name: string; // Display name
-  icon: string; // Icon identifier for the UI
-  // For 'item' type, this would contain the full item data
-  itemData?: OwnedItem;
-}
-
-export interface Mail {
-  id: string; // Firestore document ID
+// Định nghĩa cấu trúc của một thư
+export interface MailItem {
+  id: string; // Document ID
   sender: string;
   subject: string;
   body: string;
-  rewards: MailReward[];
+  items: MailAttachment[];
   isRead: boolean;
   isClaimed: boolean;
   timestamp: Timestamp;
 }
 
-// --- SERVICE FUNCTIONS ---
+// Định nghĩa cấu trúc vật phẩm đính kèm
+export interface MailAttachment {
+    type: 'currency' | 'item'; // 'currency' cho vàng, gem, sách... 'item' cho trang bị
+    id: 'coins' | 'gems' | 'ancientBooks' | 'pickaxes' | 'masteryCards' | 'equipmentPieces' | number; // 'id' của currency hoặc itemId
+    quantity: number;
+    name: string; // Tên hiển thị
+    icon: string; // Tên icon để hiển thị
+}
+
+// === USER-FACING FUNCTIONS ===
 
 /**
- * Sends the welcome mail to a newly registered user.
- * This should be called once upon user account creation.
- * @param userId - The ID of the new user.
+ * Lắng nghe Hộp thư của người dùng theo thời gian thực.
+ * @param userId - ID của người dùng.
+ * @param callback - Hàm sẽ được gọi mỗi khi có cập nhật thư.
+ * @returns Hàm để hủy lắng nghe.
  */
-export const sendWelcomeMail = async (userId: string): Promise<void> => {
-  const mailCollectionRef = collection(db, 'users', userId, 'mail');
+export const listenToUserMails = (userId: string, callback: (mails: MailItem[]) => void) => {
+  if (!userId) return () => {};
   
-  const welcomeMail = {
-    sender: 'Hệ Thống',
-    subject: 'Chào mừng tân thủ!',
-    body: 'Chào mừng bạn đã đến với thế giới của chúng tôi! Đây là một món quà nhỏ để giúp bạn bắt đầu cuộc hành trình.',
-    rewards: [
-      { type: 'currency', id: 'coins', quantity: 5000, name: 'Vàng', icon: 'coin' },
-      { type: 'currency', id: 'cardCapacity', quantity: 100, name: 'Sức chứa Thẻ', icon: 'chest' }
-    ],
-    isRead: false,
-    isClaimed: false,
-    timestamp: serverTimestamp(),
-  };
-
-  await addDoc(mailCollectionRef, welcomeMail);
-};
-
-/**
- * Fetches all mails for a specific user.
- * @param userId - The user's ID.
- * @returns A promise that resolves to an array of Mail objects.
- */
-export const fetchUserMails = async (userId: string): Promise<Mail[]> => {
   const mailCollectionRef = collection(db, 'users', userId, 'mail');
   const q = query(mailCollectionRef, orderBy('timestamp', 'desc'));
-  const querySnapshot = await getDocs(q);
-  
-  return querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-  } as Mail));
+
+  const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    const mails: MailItem[] = [];
+    querySnapshot.forEach((doc) => {
+      mails.push({ id: doc.id, ...doc.data() } as MailItem);
+    });
+    callback(mails);
+  });
+
+  return unsubscribe;
 };
 
 /**
- * Marks a specific mail as read.
- * @param userId - The user's ID.
- * @param mailId - The mail's document ID.
+ * Đánh dấu một thư là đã đọc.
+ * @param userId - ID của người dùng.
+ * @param mailId - ID của thư.
  */
 export const markMailAsRead = async (userId: string, mailId: string): Promise<void> => {
+    if (!userId || !mailId) return;
     const mailDocRef = doc(db, 'users', userId, 'mail', mailId);
-    const batch = writeBatch(db);
-    batch.update(mailDocRef, { isRead: true });
-    await batch.commit();
+    await setDoc(mailDocRef, { isRead: true }, { merge: true });
 };
 
 
 /**
- * Claims the rewards from a single mail. This is a transactional operation.
- * @param userId - The ID of the user claiming the rewards.
- * @param mail - The Mail object to be claimed.
- * @returns A promise that resolves with an object containing the new totals for currency.
+ * Người dùng nhận vật phẩm từ một thư.
+ * @param userId - ID của người dùng.
+ * @param mailId - ID của thư.
  */
-export const claimMailRewards = async (userId: string, mail: Mail): Promise<{ [key: string]: number }> => {
+export const claimMailItems = async (userId: string, mailId: string): Promise<void> => {
   const userDocRef = doc(db, 'users', userId);
-  const mailDocRef = doc(db, 'users', userId, 'mail', mail.id);
+  const mailDocRef = doc(db, 'users', userId, 'mail', mailId);
 
-  return runTransaction(db, async (transaction) => {
-    const userDoc = await transaction.get(userDocRef);
-    const mailDoc = await transaction.get(mailDocRef);
-
-    if (!userDoc.exists()) throw new Error("User document not found.");
-    if (!mailDoc.exists() || mailDoc.data().isClaimed) {
-      throw new Error("Mail already claimed or does not exist.");
-    }
+  await runTransaction(db, async (t) => {
+    const [userDoc, mailDoc] = await Promise.all([t.get(userDocRef), t.get(mailDocRef)]);
+    
+    if (!userDoc.exists()) throw new Error("User not found.");
+    if (!mailDoc.exists()) throw new Error("Mail not found.");
 
     const userData = userDoc.data() as UserGameData;
-    const userUpdates: { [key: string]: any } = {};
-    const newTotals: { [key: string]: number } = {};
+    const mailData = mailDoc.data() as Omit<MailItem, 'id'>;
 
-    mail.rewards.forEach(reward => {
-      if (reward.type === 'currency') {
-        const currentValue = (userData[reward.id as keyof UserGameData] as number) || 0;
-        const newValue = currentValue + reward.quantity;
-        userUpdates[reward.id] = newValue;
-        newTotals[reward.id] = newValue;
-      }
-      // Future logic for 'item' type can be added here
-      // else if (reward.type === 'item' && reward.itemData) { ... }
+    if (mailData.isClaimed) throw new Error("Items already claimed.");
+
+    const updates: { [key: string]: any } = {};
+    mailData.items.forEach(item => {
+        const field = item.id as keyof UserGameData;
+        updates[field] = (userData[field] || 0) + item.quantity;
     });
 
-    transaction.update(userDocRef, userUpdates);
-    transaction.update(mailDocRef, { isClaimed: true, isRead: true });
-
-    return newTotals;
+    // Cập nhật tài nguyên cho người dùng
+    t.update(userDocRef, updates);
+    // Đánh dấu thư là đã nhận và đã đọc
+    t.update(mailDocRef, { isClaimed: true, isRead: true });
   });
 };
 
+
 /**
- * Claims rewards from all available mails and deletes all read/claimed mails.
- * @param userId - The user's ID.
- * @returns A promise resolving with total rewards and a list of updated mail IDs.
+ * Xóa một thư.
+ * @param userId - ID của người dùng.
+ * @param mailId - ID của thư.
  */
-export const claimAllAndClearRead = async (userId: string, mails: Mail[]): Promise<{ updates: { [key: string]: number }, claimedIds: string[] }> => {
+export const deleteMail = async (userId: string, mailId: string): Promise<void> => {
+    if (!userId || !mailId) return;
+    const mailDocRef = doc(db, 'users', userId, 'mail', mailId);
+    await deleteDoc(mailDocRef);
+};
+
+
+/**
+ * Nhận tất cả các thư chưa nhận.
+ * @param userId - ID của người dùng.
+ */
+export const claimAllUnclaimedMail = async (userId: string): Promise<void> => {
+    const mailCollectionRef = collection(db, 'users', userId, 'mail');
+    const q = query(mailCollectionRef, where('isClaimed', '==', false));
+    const querySnapshot = await getDocs(q);
+
+    const unclaimedMails: MailItem[] = [];
+    querySnapshot.forEach(doc => {
+        if (doc.data().items && doc.data().items.length > 0) {
+            unclaimedMails.push({ id: doc.id, ...doc.data() } as MailItem);
+        }
+    });
+
+    if (unclaimedMails.length === 0) return;
+
     const userDocRef = doc(db, 'users', userId);
-
-    return runTransaction(db, async (transaction) => {
-        const userDoc = await transaction.get(userDocRef);
-        if (!userDoc.exists()) throw new Error("User document not found.");
-
-        const userData = userDoc.data() as UserGameData;
-        const userUpdates: { [key: string]: number } = {};
-        const newTotals: { [key: string]: number } = {};
-        const claimedMailIds: string[] = [];
+    await runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if (!userDoc.exists()) throw new Error("User not found.");
+        const userData = userDoc.data();
         
-        const claimableMails = mails.filter(m => m.rewards.length > 0 && !m.isClaimed);
+        const totalUpdates: { [key: string]: number } = {};
 
-        claimableMails.forEach(mail => {
-            mail.rewards.forEach(reward => {
-                if (reward.type === 'currency') {
-                    userUpdates[reward.id] = (userUpdates[reward.id] || 0) + reward.quantity;
-                }
+        unclaimedMails.forEach(mail => {
+            mail.items.forEach(item => {
+                const field = item.id as string;
+                totalUpdates[field] = (totalUpdates[field] || 0) + item.quantity;
             });
-            claimedMailIds.push(mail.id);
+            // Chuẩn bị cập nhật trạng thái cho thư
+            const mailDocRef = doc(db, 'users', userId, 'mail', mail.id);
+            t.update(mailDocRef, { isClaimed: true, isRead: true });
         });
-
-        // Calculate new totals for context update
-        for (const key in userUpdates) {
-            const currentValue = (userData[key as keyof UserGameData] as number) || 0;
-            newTotals[key] = currentValue + userUpdates[key];
+        
+        // Gộp các cập nhật tài nguyên vào một object duy nhất
+        const finalUserUpdate: { [key: string]: number } = {};
+        for (const key in totalUpdates) {
+            finalUserUpdate[key] = (userData[key] || 0) + totalUpdates[key];
         }
 
-        // Apply increments to user data
-        transaction.update(userDocRef, newTotals);
-
-        // Batch update/delete mails
-        const batch = writeBatch(db);
-        const mailsToDelete = mails.filter(m => m.isRead && (!m.rewards || m.rewards.length === 0 || m.isClaimed));
-
-        mailsToDelete.forEach(mail => {
-            batch.delete(doc(db, 'users', userId, 'mail', mail.id));
-        });
-        
-        claimableMails.forEach(mail => {
-            batch.update(doc(db, 'users', userId, 'mail', mail.id), { isClaimed: true, isRead: true });
-        });
-
-        await batch.commit();
-
-        return { updates: newTotals, claimedIds };
+        t.update(userDocRef, finalUserUpdate);
     });
 };
 
+/**
+ * Xóa tất cả thư đã đọc (và không có vật phẩm chưa nhận).
+ * @param userId - ID của người dùng.
+ */
+export const deleteAllReadAndClaimedMail = async (userId: string): Promise<void> => {
+    const mailCollectionRef = collection(db, 'users', userId, 'mail');
+    const querySnapshot = await getDocs(mailCollectionRef);
+
+    const batch = writeBatch(db);
+    let count = 0;
+
+    querySnapshot.forEach(doc => {
+        const mail = doc.data();
+        const hasUnclaimedItems = mail.items?.length > 0 && !mail.isClaimed;
+        if (mail.isRead && !hasUnclaimedItems) {
+            batch.delete(doc.ref);
+            count++;
+        }
+    });
+
+    if (count > 0) {
+        await batch.commit();
+    }
+};
+
+
+// === ADMIN-FACING FUNCTIONS ===
 
 /**
- * Deletes a single mail.
- * @param userId - The user's ID.
- * @param mailId - The mail's document ID.
+ * Gửi thư từ hệ thống đến tất cả người dùng.
+ * @param sender - Tên người gửi (vd: 'Hệ Thống', 'Admin').
+ * @param subject - Tiêu đề thư.
+ * @param body - Nội dung thư.
+ * @param items - Mảng các vật phẩm đính kèm.
+ * @returns {Promise<number>} Số lượng người dùng đã gửi thành công.
  */
-export const deleteMail = async (userId: string, mailId: string): Promise<void> => {
-  const mailDocRef = doc(db, 'users', userId, 'mail', mailId);
-  const batch = writeBatch(db);
-  batch.delete(mailDocRef);
-  await batch.commit();
+export const sendSystemMailToAllUsers = async (
+    sender: string, 
+    subject: string, 
+    body: string, 
+    items: MailAttachment[]
+): Promise<number> => {
+    const allUsers = await fetchAllUsers();
+    if (allUsers.length === 0) return 0;
+
+    const newMailPayload = {
+        sender,
+        subject,
+        body,
+        items,
+        isRead: false,
+        isClaimed: false,
+        timestamp: serverTimestamp() // Sử dụng serverTimestamp cho nhất quán
+    };
+    
+    // Firestore batch có giới hạn 500 operations.
+    // Chúng ta sẽ chia thành nhiều batch nếu cần.
+    const BATCH_SIZE = 499;
+    let usersSent = 0;
+
+    for (let i = 0; i < allUsers.length; i += BATCH_SIZE) {
+        const batch = writeBatch(db);
+        const userChunk = allUsers.slice(i, i + BATCH_SIZE);
+
+        userChunk.forEach(user => {
+            const mailDocRef = doc(collection(db, 'users', user.uid, 'mail'));
+            batch.set(mailDocRef, newMailPayload);
+        });
+
+        await batch.commit();
+        usersSent += userChunk.length;
+    }
+
+    return usersSent;
 };
+
 // --- END OF FILE mailService.ts ---
