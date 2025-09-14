@@ -14,7 +14,7 @@ interface FlashcardDetailModalProps {
   showVocabDetail: boolean;
   exampleSentencesData: ExampleSentence[];
   onClose: () => void;
-  currentVisualStyle: string; // Vẫn giữ lại để biết ảnh nào hiển thị đầu tiên nếu cần
+  currentVisualStyle: string;
   zIndex?: number;
 }
 
@@ -81,7 +81,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   showVocabDetail,
   exampleSentencesData,
   onClose,
-  currentVisualStyle, // Giữ lại prop này nhưng không cần state cục bộ cho style ảnh nữa
+  currentVisualStyle,
   zIndex = 50,
 }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'example' | 'vocabulary'>('basic');
@@ -180,42 +180,37 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
     switch (activeTab) {
       case 'basic':
-        // Nhãn cho các style ảnh để hiển thị đẹp hơn
-        const styleLabels: Record<string, string> = {
-            default: 'Ảnh Gốc (Default)',
-            photography: 'Nhiếp Ảnh (Photography)',
-            anime: 'Anime',
-            comic: 'Comic',
-            realistic: 'Realistic',
-        };
+        // Đây là danh sách các style bạn MUỐN hiển thị.
+        const stylesToShow = ['default', 'photography'];
 
-        // Lấy tất cả các entry [style, url] từ object imageUrl và lọc ra những entry có url hợp lệ
+        // Lọc qua tất cả các ảnh có sẵn, nhưng chỉ giữ lại những ảnh có tên style nằm trong danh sách stylesToShow
         const availableImages = Object.entries(selectedCard.imageUrl).filter(
-            ([_, url]) => url && typeof url === 'string'
+            ([styleKey, url]) => {
+                const isStyleAllowed = stylesToShow.includes(styleKey);
+                const isUrlValid = url && typeof url === 'string';
+                return isStyleAllowed && isUrlValid;
+            }
         );
-
+        
         return (
           // Container chính cho phép cuộn dọc
           <div className="flex-grow overflow-y-auto bg-gray-100 dark:bg-gray-900 p-4 md:p-6 content-transition">
             <div className="max-w-xl mx-auto space-y-8">
               {availableImages.length > 0 ? (
                 availableImages.map(([styleKey, imageUrl]) => (
-                  <div key={styleKey}>
-                    {/* Tiêu đề cho mỗi loại ảnh */}
-                    <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">
-                      {styleLabels[styleKey] || styleKey}
-                    </h4>
-                    {/* Thẻ ảnh */}
-                    <img
-                      src={imageUrl}
-                      alt={`${selectedCard.vocabulary.word} - ${styleKey}`}
-                      className="w-full h-auto rounded-lg shadow-lg object-contain bg-black/10 dark:bg-white/5"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = `https://placehold.co/1024x1536/E0E0E0/333333?text=Lỗi+Ảnh`;
-                      }}
-                    />
-                  </div>
+                  // --- THAY ĐỔI QUAN TRỌNG ---
+                  // Đã xóa thẻ <h4> chứa tiêu đề. Giờ chỉ còn thẻ <img>.
+                  // key được đặt trực tiếp trên thẻ img
+                  <img
+                    key={styleKey}
+                    src={imageUrl}
+                    alt={`${selectedCard.vocabulary.word} - ${styleKey}`}
+                    className="w-full h-auto rounded-lg shadow-lg object-contain bg-black/10 dark:bg-white/5"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = `https://placehold.co/1024x1536/E0E0E0/333333?text=Lỗi+Ảnh`;
+                    }}
+                  />
                 ))
               ) : (
                 <div className="text-center py-12 text-gray-500">
