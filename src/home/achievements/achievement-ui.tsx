@@ -198,7 +198,24 @@ const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, i
         <span className="md:hidden text-xs text-slate-400">{`Level ${level}`}</span>
         <span className="hidden md:block text-xs text-slate-400">{`Level ${level}`}</span>
       </div>
-      <div className="col-span-12 md:col-span-3 md:px-2"> <div className="w-full bg-slate-700 rounded-full h-3"> <div className="bg-gradient-to-r from-teal-400 to-cyan-500 h-3 rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div> </div> <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p> </div>
+
+      {/* === PHẦN ĐƯỢC THIẾT KẾ LẠI BẮT ĐẦU TỪ ĐÂY === */}
+      <div className="col-span-12 md:col-span-3 md:px-2">
+        {/* Container cho thanh progress, giống hệt profile.tsx */}
+        <div className="h-4 w-full bg-slate-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
+          {/* Thanh progress bar thực tế */}
+          <div
+            className="h-full bg-gradient-to-r from-teal-400 to-cyan-500 rounded-full transition-all duration-500 ease-out relative"
+            style={{ width: `${progressPercentage}%` }}
+          >
+            {/* Lớp highlight tạo hiệu ứng 3D/bóng */}
+            <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-full"></div>
+          </div>
+        </div>
+        <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p>
+      </div>
+      {/* === KẾT THÚC PHẦN THIẾT KẾ LẠI === */}
+
       <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
       <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center"> <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming} className={` flex items-center justify-center gap-2 w-auto px-3 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-r from-emerald-400 to-teal-400 border-emerald-500/50 text-white hover:opacity-90 shadow-lg shadow-emerald-500/20 transform hover:scale-105 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70' } `}> <TrophyIcon className="w-4 h-4" /> {isAnyClaiming ? 'Claiming...' : 'Claim'} </button> </div>
     </div>
