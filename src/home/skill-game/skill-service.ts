@@ -8,7 +8,7 @@ import {
 
 // Import các hàm và kiểu dữ liệu cần thiết từ service chính
 // Lưu ý: Trong một dự án lớn, các kiểu dữ liệu như OwnedSkill nên được đặt ở file types.ts chung
-import { fetchOrCreateUserGameData, OwnedSkill, UserGameData } from './gameDataService';
+import { fetchOrCreateUserGameData, OwnedSkill, UserGameData } from '../../gameDataService.ts';
 
 /**
  * Lấy dữ liệu cần thiết cho màn hình Kỹ năng.
