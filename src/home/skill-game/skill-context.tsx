@@ -1,4 +1,4 @@
-// --- START OF FILE src/home/skill-game/skill-context.tsx ---
+// --- START OF FILE src/home/skill-game/skill-context.tsx (UPDATED) ---
 
 import React, { createContext, useState, useMemo, useCallback, useEffect, useContext, ReactNode } from 'react';
 import {
@@ -12,7 +12,7 @@ import {
     type SkillBlueprint,
     getNextRarity,
 } from './skill-data.tsx';
-import { fetchSkillScreenData, updateUserSkills } from '../../gameDataService.ts';
+import { fetchSkillScreenData, updateUserSkills } from '../../skill-service.ts';
 
 // --- INTERFACES & TYPES ---
 
