@@ -1,6 +1,6 @@
 // --- START OF FILE src/services/mailService.ts ---
 
-import { db } from '../firebase'; // Điều chỉnh đường dẫn nếu cần
+import { db } from './firebase'; // Điều chỉnh đường dẫn nếu cần
 import {
   doc,
   collection,
@@ -15,7 +15,7 @@ import {
   orderBy,
   onSnapshot,
 } from 'firebase/firestore';
-import { UserGameData } from './gameDataService'; // Điều chỉnh đường dẫn nếu cần
+import { UserGameData } from './gameDataService.ts'; // Điều chỉnh đường dẫn nếu cần
 
 // Định nghĩa cấu trúc của một phần thưởng trong thư
 export interface MailItemReward {
