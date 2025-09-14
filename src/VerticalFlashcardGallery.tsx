@@ -109,7 +109,6 @@ interface FlashcardItemProps {
   getImageUrlForStyle: (card: Flashcard, style: string) => string;
 }
 
-// --- THAY ĐỔI LỚN BẮT ĐẦU TẠI ĐÂY ---
 const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFavoriteClick, getImageUrlForStyle }: FlashcardItemProps) => {
   const comicDotPattern = {
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Ccircle cx='2' cy='2' r='0.5' fill='rgba(0,0,0,0.2)'/%3E%3C/svg%3E")`,
@@ -128,13 +127,13 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
         </button>
       </div>
       <div className="w-full">
-        {/* Container cho ảnh */}
-        <div className={`relative w-full ${visualStyle === 'realistic' || isPhotography ? 'p-2 bg-amber-50/70 dark:bg-gray-800' : ''}`}>
+        {/* --- THAY ĐỔI 1: XÓA ĐIỀU KIỆN 'isPhotography' KHỎI CONTAINER --- */}
+        <div className={`relative w-full ${visualStyle === 'realistic' ? 'p-2 bg-amber-50/70 dark:bg-gray-800' : ''}`}>
           {visualStyle === 'anime' && <div className="absolute inset-0 bg-pink-300/20 dark:bg-purple-400/10 pointer-events-none"></div>}
           {visualStyle === 'comic' && <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" style={comicDotPattern}></div>}
-          {(visualStyle === 'realistic' || isPhotography) && <div className="absolute inset-2 shadow-inner rounded-md pointer-events-none"></div>}
+          {/* --- THAY ĐỔI 2: XÓA ĐIỀU KIỆN 'isPhotography' KHỎI SHADOW --- */}
+          {visualStyle === 'realistic' && <div className="absolute inset-2 shadow-inner rounded-md pointer-events-none"></div>}
           
-          {/* Thẻ ảnh với logic động */}
           <img
             src={getImageUrlForStyle(card, visualStyle)}
             alt={`Flashcard ${card.id}`}
@@ -159,7 +158,6 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
     </div>
   );
 });
-// --- THAY ĐỔI LỚN KẾT THÚC TẠI ĐÂY ---
 
 
 export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, currentUser }: VerticalFlashcardGalleryProps) {
