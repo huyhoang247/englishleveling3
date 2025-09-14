@@ -1,3 +1,4 @@
+// --- START OF FILE GameContext.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { User } from 'firebase/auth';
@@ -8,10 +9,10 @@ import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
 
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
-  updateUserBossFloor, updateUserPickaxes
+  updateUserBossFloor, updateUserPickaxes, updateUserSkills // <-- ĐÃ THÊM updateUserSkills VÀO ĐÂY
 } from './gameDataService.ts';
 import { type SkillScreenExitData } from './home/skill-game/skill-context.tsx';
-import { updateUserSkills } from './home/skill-game/skill-service.ts';
+// DÒNG IMPORT TỪ skill-service.ts ĐÃ BỊ XÓA
 
 // --- Define the shape of the context ---
 interface IGameContext {
