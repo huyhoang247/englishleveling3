@@ -1,22 +1,25 @@
 import React, { useState, useMemo, useEffect } from 'react';
 
-// --- DỮ LIỆU CẤU HÌNH CÂY KỸ NĂNG (Đã tối ưu cho chiều dọc) ---
+// --- DỮ LIỆU CẤU HÌNH CÂY KỸ NĂNG (Layout 1-2-1-2-1) ---
 const INITIAL_SKILL_DATA = {
   'root': { id: 'root', name: 'Khởi Nguyên', description: 'Nguồn gốc của mọi sức mạnh.', icon: '✨', cost: 0, dependencies: [], position: { x: '50%', y: '100px' }, status: 'activated' },
-  // Nhánh sức mạnh
-  'str1': { id: 'str1', name: 'Sức Mạnh Cơ Bản', description: '+5 Sức mạnh.', icon: '⚔️', cost: 1, dependencies: ['root'], position: { x: 'calc(50% - 100px)', y: '230px' }, status: 'available' },
-  'str2': { id: 'str2', name: 'Đấu Sĩ', description: '+10 Sức mạnh, +5% tốc độ đánh.', icon: '💪', cost: 2, dependencies: ['str1'], position: { x: 'calc(50% - 150px)', y: '360px' }, status: 'locked' },
-  'str3': { id: 'str3', name: 'Cuồng Nộ', description: '+15 Sức mạnh, 10% gây choáng.', icon: '🔥', cost: 3, dependencies: ['str2'], position: { x: 'calc(50% - 200px)', y: '490px' }, status: 'locked' },
-  // Nhánh trí tuệ
-  'int1': { id: 'int1', name: 'Trí Tuệ Sơ Cấp', description: '+5 Trí tuệ.', icon: '🔮', cost: 1, dependencies: ['root'], position: { x: 'calc(50% + 100px)', y: '230px' }, status: 'available' },
-  'int2': { id: 'int2', name: 'Pháp Sư', description: '+10 Trí tuệ, +5% năng lượng.', icon: '📜', cost: 2, dependencies: ['int1'], position: { x: 'calc(50% + 150px)', y: '360px' }, status: 'locked' },
-  'int3': { id: 'int3', name: 'Bão Điện Từ', description: '+15 Trí tuệ, 10% giảm hồi chiêu.', icon: '⚡', cost: 3, dependencies: ['int2'], position: { x: 'calc(50% + 200px)', y: '490px' }, status: 'locked' },
-  // Nhánh chung
-  'def1': { id: 'def1', name: 'Phòng Ngự Vững Chắc', description: '+10 Giáp & Kháng phép.', icon: '🛡️', cost: 2, dependencies: ['str2', 'int2'], position: { x: '50%', y: '490px' }, status: 'locked' },
-  'ult1': { id: 'ult1', name: 'Thần Lực', description: '+20 tất cả chỉ số.', icon: '🌟', cost: 5, dependencies: ['def1', 'str3', 'int3'], position: { x: '50%', y: '680px' }, status: 'locked' },
+  
+  // Hàng 2: Nhánh cơ bản
+  'str1': { id: 'str1', name: 'Sức Mạnh Sơ Cấp', description: '+5 Sức mạnh.', icon: '⚔️', cost: 1, dependencies: ['root'], position: { x: 'calc(50% - 120px)', y: '230px' }, status: 'available' },
+  'int1': { id: 'int1', name: 'Trí Tuệ Sơ Cấp', description: '+5 Trí tuệ.', icon: '🔮', cost: 1, dependencies: ['root'], position: { x: 'calc(50% + 120px)', y: '230px' }, status: 'available' },
+  
+  // Hàng 3: Nút thắt trung tâm
+  'fortitude': { id: 'fortitude', name: 'Kiên Cố', description: '+10 Giáp & +10 Kháng phép.', icon: '🧱', cost: 2, dependencies: ['str1', 'int1'], position: { x: '50%', y: '360px' }, status: 'locked' },
+  
+  // Hàng 4: Nhánh nâng cao
+  'berserker': { id: 'berserker', name: 'Chiến Binh Điên Cuồng', description: '+20 Sức mạnh, +10% Tốc độ đánh.', icon: '🔥', cost: 3, dependencies: ['fortitude'], position: { x: 'calc(50% - 120px)', y: '490px' }, status: 'locked' },
+  'archmage': { id: 'archmage', name: 'Đại Pháp Sư', description: '+20 Trí tuệ, -10% Năng lượng tiêu hao.', icon: '⚡', cost: 3, dependencies: ['fortitude'], position: { x: 'calc(50% + 120px)', y: '490px' }, status: 'locked' },
+  
+  // Hàng 5: Ngọc cuối cùng
+  'ult1': { id: 'ult1', name: 'Thần Lực', description: '+25 tất cả chỉ số.', icon: '🌟', cost: 5, dependencies: ['berserker', 'archmage'], position: { x: '50%', y: '620px' }, status: 'locked' },
 };
 
-const INITIAL_POINTS = 10;
+const INITIAL_POINTS = 15; // Tăng điểm để có thể nâng hết cây
 
 // Mô phỏng âm thanh
 const playSfx = (type) => console.log(`Playing sound: ${type}`);
@@ -106,12 +109,17 @@ export default function App() {
 
   const totalStats = useMemo(() => {
     let stats = { str: 0, int: 0, def: 0, res: 0 };
-    Object.values(skills).filter(s => s.status === 'activated').forEach(s => {
-        if (s.id.startsWith('str')) stats.str += parseInt(s.description.match(/\+(\d+)\s+Sức mạnh/)?.[1] || 0);
-        if (s.id.startsWith('int')) stats.int += parseInt(s.description.match(/\+(\d+)\s+Trí tuệ/)?.[1] || 0);
-        if (s.id === 'def1') { stats.def += 10; stats.res += 10; }
-        if (s.id === 'ult1') { stats.str += 20; stats.int += 20; stats.def += 20; stats.res += 20; }
-    });
+    const activatedSkills = Object.values(skills).filter(s => s.status === 'activated');
+    for (const s of activatedSkills) {
+        switch(s.id) {
+            case 'str1': stats.str += 5; break;
+            case 'int1': stats.int += 5; break;
+            case 'fortitude': stats.def += 10; stats.res += 10; break;
+            case 'berserker': stats.str += 20; break;
+            case 'archmage': stats.int += 20; break;
+            case 'ult1': stats.str += 25; stats.int += 25; stats.def += 25; stats.res += 25; break;
+        }
+    }
     return stats;
   }, [skills]);
 
@@ -136,7 +144,6 @@ export default function App() {
         {isResetModalOpen && <ConfirmationModal onConfirm={handleReset} onCancel={() => setIsResetModalOpen(false)}/>}
         {toastMessage && <Toast message={toastMessage} onDone={() => setToastMessage(null)}/>}
 
-        {/* --- HEADER (CỐ ĐỊNH) --- */}
         <header className="w-full text-center p-4 bg-black bg-opacity-20 backdrop-blur-sm z-20 shrink-0">
           <h1 className="text-3xl font-bold text-yellow-300 tracking-wider [text-shadow:0_0_15px_rgba(253,224,71,0.5)]">BẢNG NGỌC</h1>
           <div className="flex items-center justify-center gap-6 mt-2">
@@ -145,9 +152,8 @@ export default function App() {
           </div>
         </header>
 
-        {/* --- BẢNG NGỌC (CUỘN ĐƯỢC) --- */}
         <main className="w-full flex-grow relative overflow-y-auto custom-scrollbar">
-            <div className="relative w-full h-[850px] p-4 box-border">
+            <div className="relative w-full h-[780px] p-4 box-border">
                 {hoveredSkill && <Tooltip skill={hoveredSkill.skill} position={hoveredSkill.pos} />}
                 <svg className="absolute top-0 left-0 w-full h-full pointer-events-none" z-index="1">
                 {Object.values(skills).map(skill => skill.dependencies.map(depId => {
@@ -177,7 +183,6 @@ export default function App() {
             </div>
         </main>
 
-        {/* --- FOOTER (CỐ ĐỊNH) --- */}
         <footer className="w-full p-3 bg-black bg-opacity-20 backdrop-blur-sm z-20 shrink-0">
             <h2 className="text-sm font-bold text-center text-yellow-300 mb-2">Chỉ Số Cộng Thêm</h2>
             <div className="grid grid-cols-4 gap-2 text-center text-xs">
