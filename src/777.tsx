@@ -36,7 +36,7 @@ const payouts = {
 };
 
 // --- COMPONENT REEL ---
-const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }) => {
+const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymbol: string; spinning: boolean; onSpinEnd: () => void; index: number; isWinner: boolean; }) => {
     const reelRef = useRef<HTMLDivElement>(null);
     const [reelSymbols, setReelSymbols] = useState<string[]>([]);
     
@@ -204,7 +204,7 @@ export default function App() {
         setBet(prev => {
             const newBet = prev + amount;
             if (newBet > 0 && newBet <= balance) return newBet;
-            if (newBet > balance) return balance;
+            if (newBet > balance) return balance; // prevent bet from exceeding balance
             return prev;
         });
     }
@@ -246,22 +246,18 @@ export default function App() {
                     </p>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center items-center mb-6">
+                <div className="grid grid-cols-2 gap-4 text-center items-center mb-6">
                     <div className="bg-slate-900/50 p-3 rounded-lg">
                         <p className="text-sm text-slate-400">SỐ DƯ</p>
                         <p className="text-xl md:text-2xl font-bold text-green-400">{balance.toLocaleString()}</p>
                     </div>
-                     <div className="bg-slate-900/50 p-3 rounded-lg col-span-2 md:col-span-1">
+                     <div className="bg-slate-900/50 p-3 rounded-lg">
                         <p className="text-sm text-slate-400">MỨC CƯỢC</p>
                          <div className="flex items-center justify-center gap-4">
                              <button onClick={() => handleBetChange(-10)} disabled={spinning || bet <= 10} className="px-2 py-0.5 bg-red-600 rounded-md disabled:opacity-50">-</button>
                              <p className="text-xl md:text-2xl font-bold text-yellow-400">{bet}</p>
                              <button onClick={() => handleBetChange(10)} disabled={spinning || balance < bet + 10} className="px-2 py-0.5 bg-green-600 rounded-md disabled:opacity-50">+</button>
                          </div>
-                    </div>
-                     <div className="bg-slate-900/50 p-3 rounded-lg">
-                        <p className="text-sm text-slate-400">THẮNG</p>
-                        <p className="text-xl md:text-2xl font-bold text-cyan-400">{winnings.toLocaleString()}</p>
                     </div>
                 </div>
 
@@ -276,11 +272,19 @@ export default function App() {
                 >
                     {spinning ? 'ĐANG QUAY...' : 'QUAY'}
                 </button>
+                
+                {balance < bet && !spinning && (<p className="text-red-400 text-sm mt-3 font-semibold text-center">Bạn không đủ xu để quay!</p>)}
+
 
                 <footer className="text-center text-slate-500 mt-6 text-sm">
                     Tạo bởi Gemini. Chỉ mang tính chất giải trí.
                 </footer>
             </div>
+            
+            <style jsx global>{`
+              @keyframes win-pulse { 0%, 100% { transform: scale(1); filter: brightness(1.5); } 50% { transform: scale(1.1); filter: brightness(1.75); } }
+              .animate-win-pulse { animation: win-pulse 0.8s ease-in-out infinite; }
+            `}</style>
         </div>
     );
 }
