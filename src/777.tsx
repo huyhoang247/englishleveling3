@@ -53,15 +53,12 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }) => {
             });
         });
 
-    }, [spinning, finalSymbol, index]); // Bỏ reelSymbols ra khỏi dependency array để tránh trigger lại ngoài ý muốn
+    }, [spinning, finalSymbol, index]);
 
     // Lắng nghe sự kiện kết thúc transition
     useEffect(() => {
         const reelElement = reelRef.current;
         const handleTransitionEnd = () => {
-            // SỬA LỖI Ở ĐÂY:
-            // Điều kiện phải là `if(spinning)` vì chúng ta muốn gửi tín hiệu
-            // KHI VÀ CHỈ KHI vòng quay kết thúc.
             if (spinning) {
                 onSpinEnd();
             }
@@ -69,7 +66,7 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }) => {
         
         reelElement.addEventListener('transitionend', handleTransitionEnd);
         return () => reelElement.removeEventListener('transitionend', handleTransitionEnd);
-    }, [onSpinEnd, spinning]); // Giữ dependency array này
+    }, [onSpinEnd, spinning]);
 
     return (
         <div className="h-28 w-24 md:h-40 md:w-32 bg-slate-800/50 backdrop-blur-sm border-2 border-slate-600 rounded-xl shadow-lg overflow-hidden">
@@ -105,7 +102,6 @@ export default function App() {
 
     const handleSpin = () => {
         if (spinning || balance < bet) {
-            setMessage('Không đủ số dư để cược!');
             return;
         }
 
@@ -119,10 +115,8 @@ export default function App() {
         setReelsResult(generateRandomReels());
     };
     
-    // Callback được gọi mỗi khi một Reel quay xong
     const handleSpinEnd = useCallback(() => {
         finishedReelsCount.current += 1;
-        // Khi tất cả các reel đã dừng
         if (finishedReelsCount.current === reelsResult.length) {
             setSpinning(false);
             checkWin(reelsResult);
@@ -189,8 +183,9 @@ export default function App() {
 
                 <div className="relative flex justify-center items-center gap-4 mb-6 p-4 bg-black/30 rounded-2xl ring-2 ring-yellow-500/30 shadow-2xl">
                     <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60 rounded-2xl z-10 pointer-events-none"></div>
-                    <div className="absolute inset-x-0 top-1/2 h-0.5 bg-red-500/70 shadow-lg z-20 pointer-events-none -translate-y-1/2"></div>
                     
+                    {/* Dòng kẻ đỏ đã được xóa khỏi đây */}
+
                     {reelsResult.map((symbol, index) => (
                         <Reel 
                             key={index} 
