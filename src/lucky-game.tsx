@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 
 // SVG Icons
@@ -260,6 +260,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
   const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
+  const animationFrameId = useRef<number>();
 
   const items: Item[] = useMemo(() => [
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '', value: 150, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 150 },
@@ -284,54 +285,69 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   ], []);
 
   const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
+  
+  // Clean up animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, []);
 
   const spinChest = useCallback(() => {
     if (isSpinning || currentCoins < 100) return;
+
     onUpdateCoins(-100);
     const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
     onUpdateJackpotPool(randomCoinsToAdd);
+
     setIsSpinning(true);
     setSelectedIndex(-1);
     setFinalLandedItemIndex(-1);
     setHasSpun(false);
     setJackpotWon(false);
     setShowRewardPopup(false);
+
+    // Determine the winning item
     let targetLandedItemIndex: number;
     const jackpotItemArrayIndex = items.findIndex(item => item.rarity === 'jackpot');
-    if (jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && Math.random() < 0.01) {
-        targetLandedItemIndex = jackpotItemArrayIndex;
+    if (jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && Math.random() < 0.01) { // 1% chance to hit jackpot
+      targetLandedItemIndex = jackpotItemArrayIndex;
     } else {
-        const otherItemIndicesOnWheel = Array.from({ length: NUM_WHEEL_SLOTS }, (_, i) => i).filter(i => i !== jackpotItemArrayIndex);
-        if (otherItemIndicesOnWheel.length > 0) {
-            targetLandedItemIndex = otherItemIndicesOnWheel[Math.floor(Math.random() * otherItemIndicesOnWheel.length)];
-        } else {
-            targetLandedItemIndex = 0;
-        }
+      const otherItemIndicesOnWheel = Array.from({ length: NUM_WHEEL_SLOTS }, (_, i) => i).filter(i => i !== jackpotItemArrayIndex);
+      targetLandedItemIndex = otherItemIndicesOnWheel[Math.floor(Math.random() * otherItemIndicesOnWheel.length)];
     }
+
     setFinalLandedItemIndex(targetLandedItemIndex);
-    const numFullRotations = 2;
-    const totalVisualSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
-    let currentVisualStepIndex = 0;
-    const finalPauseDuration = 700;
-    const spinAnimation = () => {
-      const currentHighlightIndex = currentVisualStepIndex % NUM_WHEEL_SLOTS;
+
+    const numFullRotations = 3; // Spin more for visual appeal
+    const totalSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
+    const totalDuration = 4000; // Total animation time in ms (e.g., 4 seconds)
+    const startTime = performance.now();
+
+    // Easing function for a smooth slowdown (ease-out)
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
+    const animate = (currentTime: number) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / totalDuration, 1); // Progress from 0 to 1
+      const easedProgress = easeOutCubic(progress);
+
+      const currentStep = Math.floor(easedProgress * totalSteps);
+      const currentHighlightIndex = currentStep % NUM_WHEEL_SLOTS;
+      
       setSelectedIndex(currentHighlightIndex);
-      if (currentVisualStepIndex < totalVisualSteps) {
-        const remainingVisualSteps = totalVisualSteps - currentVisualStepIndex;
-        const fastSpeed = 50; const moderateSpeed = 120; const finalSlowdownSpeeds = [650, 500, 400, 300, 220, 160];
-        let currentSpeed;
-        if (remainingVisualSteps <= finalSlowdownSpeeds.length) {
-          currentSpeed = finalSlowdownSpeeds[remainingVisualSteps - 1];
-        } else if (remainingVisualSteps <= NUM_WHEEL_SLOTS + Math.floor(NUM_WHEEL_SLOTS / 2)) {
-          currentSpeed = moderateSpeed;
-        } else {
-          currentSpeed = fastSpeed;
-        }
-        currentVisualStepIndex++;
-        setTimeout(spinAnimation, currentSpeed);
+
+      if (progress < 1) {
+        animationFrameId.current = requestAnimationFrame(animate);
       } else {
+        // Animation finished
+        setSelectedIndex(targetLandedItemIndex); // Ensure the final item is correctly highlighted
+        
         setTimeout(() => {
-          setIsSpinning(false); setHasSpun(true);
+          setIsSpinning(false);
+          setHasSpun(true);
           const wonItem = { ...items[targetLandedItemIndex] };
           
           let actualWonValue = 0;
@@ -341,7 +357,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             actualWonValue = wonItem.rewardAmount;
           } else if (wonItem.rarity === 'jackpot') {
             actualWonValue = currentJackpotPool;
-            setJackpotWon(true); setJackpotAnimation(true);
+            setJackpotWon(true);
+            setJackpotAnimation(true);
             onUpdateCoins(actualWonValue);
             onUpdateJackpotPool(0, true);
             setTimeout(() => setJackpotAnimation(false), 3000);
@@ -352,7 +369,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             actualWonValue = wonItem.value;
           }
           
-          // Clear name for all items except jackpot
           const finalWonItem = {
               ...wonItem,
               value: actualWonValue,
@@ -361,10 +377,12 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
           setWonRewardDetails(finalWonItem);
           setShowRewardPopup(true);
-        }, finalPauseDuration);
+        }, 500); // Wait 0.5s before showing popup
       }
     };
-    spinAnimation();
+
+    animationFrameId.current = requestAnimationFrame(animate);
+
   }, [isSpinning, currentCoins, onUpdateCoins, onUpdatePickaxes, onUpdateJackpotPool, items, NUM_WHEEL_SLOTS, currentJackpotPool]);
   
   return (
