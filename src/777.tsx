@@ -16,7 +16,7 @@ const payouts = {
     '🍒🍒🍒': 5,
 };
 
-// --- COMPONENT REEL ĐƯỢC NÂNG CẤP VỚI LOGIC LIỀN MẠCH ---
+// --- COMPONENT REEL ---
 const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }) => {
     const reelRef = useRef(null);
     const [reelSymbols, setReelSymbols] = useState([]);
@@ -31,24 +31,21 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }) => {
     useEffect(() => {
         if (!spinning || !reelRef.current) return;
 
-        // Tạo ra một dải biểu tượng mới cho vòng quay này, kết thúc bằng finalSymbol
         const newSymbols = Array.from({ length: REEL_ITEM_COUNT -1 }, () => symbols[Math.floor(Math.random() * symbols.length)]);
         newSymbols.push(finalSymbol);
         
-        // Cập nhật dải biểu tượng mới
         setReelSymbols(prevSymbols => [...prevSymbols.slice(-REEL_ITEM_COUNT), ...newSymbols]);
         
-        // Delay một chút để React render dải symbols mới trước khi bắt đầu transition
         requestAnimationFrame(() => {
             const reelElement = reelRef.current;
+            if (!reelElement || !reelElement.firstChild) return;
+            
             const symbolHeight = reelElement.firstChild.clientHeight;
             const targetPosition = (reelSymbols.length - REEL_ITEM_COUNT) * symbolHeight;
             
-            // Đặt lại vị trí ban đầu mà không có animation
             reelElement.style.transition = 'none';
             reelElement.style.transform = `translateY(-${targetPosition}px)`;
 
-            // Bắt đầu animation quay
             requestAnimationFrame(() => {
                 const spinDuration = 2500 + index * 600; // ms
                 reelElement.style.transition = `transform ${spinDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
@@ -56,18 +53,23 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }) => {
             });
         });
 
-    }, [spinning]);
+    }, [spinning, finalSymbol, index]); // Bỏ reelSymbols ra khỏi dependency array để tránh trigger lại ngoài ý muốn
 
     // Lắng nghe sự kiện kết thúc transition
     useEffect(() => {
         const reelElement = reelRef.current;
         const handleTransitionEnd = () => {
-            if(!spinning) onSpinEnd();
+            // SỬA LỖI Ở ĐÂY:
+            // Điều kiện phải là `if(spinning)` vì chúng ta muốn gửi tín hiệu
+            // KHI VÀ CHỈ KHI vòng quay kết thúc.
+            if (spinning) {
+                onSpinEnd();
+            }
         };
         
         reelElement.addEventListener('transitionend', handleTransitionEnd);
         return () => reelElement.removeEventListener('transitionend', handleTransitionEnd);
-    }, [onSpinEnd, spinning]);
+    }, [onSpinEnd, spinning]); // Giữ dependency array này
 
     return (
         <div className="h-28 w-24 md:h-40 md:w-32 bg-slate-800/50 backdrop-blur-sm border-2 border-slate-600 rounded-xl shadow-lg overflow-hidden">
@@ -75,9 +77,9 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }) => {
                 {reelSymbols.map((s, i) => (
                     <div 
                         key={i} 
-                        className={`flex items-center justify-center h-28 w-full md:h-40 ${isWinner && i === reelSymbols.length -1 ? 'animate-win-pulse' : ''}`}
+                        className={`flex items-center justify-center h-28 w-full md:h-40 ${isWinner && i === reelSymbols.length - 1 ? 'animate-win-pulse' : ''}`}
                     >
-                        <span className={`text-5xl md:text-7xl drop-shadow-lg ${isWinner && i === reelSymbols.length -1 ? 'scale-110' : ''} transition-transform duration-300`}>{s}</span>
+                        <span className={`text-5xl md:text-7xl drop-shadow-lg ${isWinner && i === reelSymbols.length - 1 ? 'scale-110' : ''} transition-transform duration-300`}>{s}</span>
                     </div>
                 ))}
             </div>
@@ -102,7 +104,7 @@ export default function App() {
     };
 
     const handleSpin = () => {
-        if (balance < bet) {
+        if (spinning || balance < bet) {
             setMessage('Không đủ số dư để cược!');
             return;
         }
