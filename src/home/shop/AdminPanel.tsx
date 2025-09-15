@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchTransactionsByStatus, approveGemTransaction, rejectGemTransaction } from './shop-service';
-import { uiAssets } from '../../game-assets';
+import { uiAssets } from '../../game-assets.ts';
 
 const AdminPanel = ({ onClose }: { onClose: () => void }) => {
     const [transactions, setTransactions] = useState<any[]>([]);
