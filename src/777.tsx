@@ -125,8 +125,11 @@ export default function App() {
     }
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen text-white font-sans p-4">
-            <div className="w-full max-w-2xl bg-slate-800/70 backdrop-blur-md rounded-3xl shadow-2xl p-6 md:p-8">
+        // Container chính giờ đây sẽ là nền full-screen
+        <div className="flex flex-col items-center justify-center min-h-screen w-full bg-slate-800/70 backdrop-blur-md text-white font-sans">
+            
+            {/* Wrapper này chỉ để giới hạn chiều rộng nội dung cho dễ nhìn trên màn hình lớn */}
+            <div className="w-full max-w-2xl flex flex-col p-6 md:p-8">
                 
                 {/* Header */}
                 <div className="text-center mb-6">
@@ -183,10 +186,11 @@ export default function App() {
                 >
                     {spinning ? 'ĐANG QUAY...' : 'QUAY'}
                 </button>
+
+                <footer className="text-center text-slate-500 mt-6 text-sm">
+                    Tạo bởi Gemini. Chỉ mang tính chất giải trí.
+                </footer>
             </div>
-             <footer className="text-center text-slate-500 mt-6 text-sm">
-                Tạo bởi Gemini. Chỉ mang tính chất giải trí.
-            </footer>
         </div>
     );
 }
