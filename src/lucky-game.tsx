@@ -26,7 +26,7 @@ const ZapIcon = ({ className }: { className?: string }) => ( <svg className={cla
 const TrophyIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M10 2a2 2 0 00-2 2v2H6a2 2 0 00-2 2v2a2 2 0 002 2h2v2a2 2 0 002 2h4a2 2 0 002-2v-2h2a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2h-4zm0 2h4v2h-4V4zm-2 4h12v2H8V8z"></path> </svg> );
 const HeartIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"></path> </svg> );
 const GiftIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M12 0H8a2 2 0 00-2 2v2H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-4V2a2 2 0 00-2-2zm-2 2h4v2h-4V2zm-6 6h16v8H2V8z"></path> </svg> );
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
 // --- Interfaces ---
 interface Item {
@@ -250,7 +250,7 @@ const SpinningWheelGrid = React.memo(({
 });
 
 
-// --- MAIN PARENT COMPONENT (REFACTORED WITH 2-PHASE ANIMATION) ---
+// --- MAIN PARENT COMPONENT ---
 const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins, onUpdatePickaxes, currentJackpotPool, onUpdateJackpotPool }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -285,123 +285,86 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
   const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
 
-  const spinTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-
-  // Cleanup timeout on component unmount
-  useEffect(() => {
-    return () => {
-      if (spinTimeoutRef.current) {
-        clearTimeout(spinTimeoutRef.current);
-      }
-    };
-  }, []);
-
   const spinChest = useCallback(() => {
     if (isSpinning || currentCoins < 100) return;
     onUpdateCoins(-100);
     const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
     onUpdateJackpotPool(randomCoinsToAdd);
-
     setIsSpinning(true);
     setSelectedIndex(-1);
     setFinalLandedItemIndex(-1);
     setHasSpun(false);
     setJackpotWon(false);
     setShowRewardPopup(false);
-
-    // 1. DETERMINE THE TARGET
     let targetLandedItemIndex: number;
     const jackpotItemArrayIndex = items.findIndex(item => item.rarity === 'jackpot');
-    
-    if (jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && Math.random() < 0.01) { // 1% chance for jackpot
+    if (jackpotItemArrayIndex >= 0 && jackpotItemArrayIndex < NUM_WHEEL_SLOTS && Math.random() < 0.01) {
         targetLandedItemIndex = jackpotItemArrayIndex;
     } else {
         const otherItemIndicesOnWheel = Array.from({ length: NUM_WHEEL_SLOTS }, (_, i) => i).filter(i => i !== jackpotItemArrayIndex);
-        targetLandedItemIndex = otherItemIndicesOnWheel[Math.floor(Math.random() * otherItemIndicesOnWheel.length)];
+        if (otherItemIndicesOnWheel.length > 0) {
+            targetLandedItemIndex = otherItemIndicesOnWheel[Math.floor(Math.random() * otherItemIndicesOnWheel.length)];
+        } else {
+            targetLandedItemIndex = 0;
+        }
     }
     setFinalLandedItemIndex(targetLandedItemIndex);
-
-    // =================================================================================
-    // ===== 2-PHASE ANIMATION LOGIC =====
-    // =================================================================================
-
-    // --- PHASE 1: FAST SPIN ---
-    const fastSpinDuration = 2000; // 2 seconds of fast spinning
-    const fastSpinInterval = 60;   // Update every 60ms
-    let currentFastSpinIndex = Math.floor(Math.random() * NUM_WHEEL_SLOTS);
-
-    const intervalId = setInterval(() => {
-        currentFastSpinIndex = (currentFastSpinIndex + 1) % NUM_WHEEL_SLOTS;
-        setSelectedIndex(currentFastSpinIndex);
-    }, fastSpinInterval);
-
-    // --- TRANSITION TO PHASE 2 ---
-    spinTimeoutRef.current = setTimeout(() => {
-        clearInterval(intervalId);
-
-        // --- PHASE 2: CONTROLLED SLOWDOWN ---
-        const stepsToTarget = (targetLandedItemIndex - currentFastSpinIndex + NUM_WHEEL_SLOTS) % NUM_WHEEL_SLOTS;
-        // Ensure at least one full rotation during slowdown for a better effect
-        const totalSlowdownSteps = NUM_WHEEL_SLOTS + stepsToTarget; 
-        
-        let step = 0;
-        let currentDelay = 80; // Start with a quick delay
-        const slowdownFactor = 1.1; // Increase delay by 10% each step for a smooth deceleration
-
-        function executeSlowdownStep() {
-            if (spinTimeoutRef.current) clearTimeout(spinTimeoutRef.current);
-
-            // Calculate the next index to highlight
-            const currentIndex = (currentFastSpinIndex + step + 1) % NUM_WHEEL_SLOTS;
-            setSelectedIndex(currentIndex);
-            step++;
-            
-            if (step > totalSlowdownSteps) {
-                // --- ANIMATION ENDED ---
-                setIsSpinning(false);
-                setHasSpun(true);
-                
-                // Final reward logic after a brief pause
-                spinTimeoutRef.current = setTimeout(() => {
-                    const wonItem = { ...items[targetLandedItemIndex] };
-                    let actualWonValue = 0;
-
-                    if (wonItem.rewardType === 'pickaxe' && wonItem.rewardAmount) {
-                        onUpdatePickaxes(wonItem.rewardAmount);
-                        actualWonValue = wonItem.rewardAmount;
-                    } else if (wonItem.rarity === 'jackpot') {
-                        actualWonValue = currentJackpotPool;
-                        setJackpotWon(true); setJackpotAnimation(true);
-                        onUpdateCoins(actualWonValue);
-                        onUpdateJackpotPool(0, true);
-                        setTimeout(() => setJackpotAnimation(false), 3000);
-                    } else if (wonItem.rewardType === 'coin') {
-                        onUpdateCoins(wonItem.value);
-                        actualWonValue = wonItem.value;
-                    } else { // Other item types
-                        actualWonValue = wonItem.value;
-                    }
-
-                    const finalWonItem = {
-                        ...wonItem,
-                        value: actualWonValue,
-                        name: wonItem.rarity === 'jackpot' ? wonItem.name : ''
-                    };
-                    setWonRewardDetails(finalWonItem);
-                    setShowRewardPopup(true);
-                }, 500);
-                return;
-            }
-
-            // Increase delay for the next step and schedule it
-            currentDelay *= slowdownFactor;
-            spinTimeoutRef.current = setTimeout(executeSlowdownStep, currentDelay);
+    const numFullRotations = 2;
+    const totalVisualSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
+    let currentVisualStepIndex = 0;
+    const finalPauseDuration = 700;
+    const spinAnimation = () => {
+      const currentHighlightIndex = currentVisualStepIndex % NUM_WHEEL_SLOTS;
+      setSelectedIndex(currentHighlightIndex);
+      if (currentVisualStepIndex < totalVisualSteps) {
+        const remainingVisualSteps = totalVisualSteps - currentVisualStepIndex;
+        const fastSpeed = 50; const moderateSpeed = 120; const finalSlowdownSpeeds = [650, 500, 400, 300, 220, 160];
+        let currentSpeed;
+        if (remainingVisualSteps <= finalSlowdownSpeeds.length) {
+          currentSpeed = finalSlowdownSpeeds[remainingVisualSteps - 1];
+        } else if (remainingVisualSteps <= NUM_WHEEL_SLOTS + Math.floor(NUM_WHEEL_SLOTS / 2)) {
+          currentSpeed = moderateSpeed;
+        } else {
+          currentSpeed = fastSpeed;
         }
+        currentVisualStepIndex++;
+        setTimeout(spinAnimation, currentSpeed);
+      } else {
+        setTimeout(() => {
+          setIsSpinning(false); setHasSpun(true);
+          const wonItem = { ...items[targetLandedItemIndex] };
+          
+          let actualWonValue = 0;
+          
+          if (wonItem.rewardType === 'pickaxe' && wonItem.rewardAmount) {
+            onUpdatePickaxes(wonItem.rewardAmount);
+            actualWonValue = wonItem.rewardAmount;
+          } else if (wonItem.rarity === 'jackpot') {
+            actualWonValue = currentJackpotPool;
+            setJackpotWon(true); setJackpotAnimation(true);
+            onUpdateCoins(actualWonValue);
+            onUpdateJackpotPool(0, true);
+            setTimeout(() => setJackpotAnimation(false), 3000);
+          } else if (wonItem.rewardType === 'coin') {
+            onUpdateCoins(wonItem.value);
+            actualWonValue = wonItem.value;
+          } else { // Other item types
+            actualWonValue = wonItem.value;
+          }
+          
+          // Clear name for all items except jackpot
+          const finalWonItem = {
+              ...wonItem,
+              value: actualWonValue,
+              name: wonItem.rarity === 'jackpot' ? wonItem.name : ''
+          };
 
-        executeSlowdownStep();
-
-    }, fastSpinDuration);
-
+          setWonRewardDetails(finalWonItem);
+          setShowRewardPopup(true);
+        }, finalPauseDuration);
+      }
+    };
+    spinAnimation();
   }, [isSpinning, currentCoins, onUpdateCoins, onUpdatePickaxes, onUpdateJackpotPool, items, NUM_WHEEL_SLOTS, currentJackpotPool]);
   
   return (
