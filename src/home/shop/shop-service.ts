@@ -99,7 +99,10 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
  * Tạo một bản ghi giao dịch nạp Gem.
  */
 export const createGemTransaction = async (userId: string, userEmail: string | null, pkg: any) => {
-    const transactionId = `ELG${Date.now()}${Math.random().toString(36).substring(2, 8)}`.toUpperCase();
+    // --- THAY ĐỔI: Rút ngắn ID giao dịch xuống còn 10 ký tự ---
+    const timestampPart = Date.now().toString().slice(-4); // Lấy 4 số cuối của timestamp
+    const randomPart = Math.random().toString(36).substring(2, 6); // Lấy 4 ký tự ngẫu nhiên
+    const transactionId = `EL${timestampPart}${randomPart}`.toUpperCase(); // Ghép lại: EL + 4 + 4 = 10 ký tự
     
     const transactionData = {
         transactionId,
