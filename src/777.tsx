@@ -16,57 +16,80 @@ const payouts = {
     '🍒🍒🍒': 5,
 };
 
-// --- COMPONENT REEL ---
+// --- COMPONENT REEL (ĐÃ ĐƯỢC SỬA ĐỂ LIỀN MẠCH) ---
 const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }) => {
     const reelRef = useRef(null);
     const [reelSymbols, setReelSymbols] = useState([]);
-    
+
     // Khởi tạo dải biểu tượng ban đầu
+    // Đảm bảo biểu tượng ban đầu (finalSymbol) được đặt ở vị trí cuối cùng để hiển thị đúng
     useEffect(() => {
-        const initialSymbols = Array.from({ length: REEL_ITEM_COUNT }, () => symbols[Math.floor(Math.random() * symbols.length)]);
+        const initialSymbols = Array.from({ length: REEL_ITEM_COUNT - 1 }, () => symbols[Math.floor(Math.random() * symbols.length)]);
+        // Lấy symbol từ state ban đầu của App component để khởi tạo
+        const initialFinalSymbol = ['7️⃣', '7️⃣', '7️⃣'][index];
+        initialSymbols.push(initialFinalSymbol); 
         setReelSymbols(initialSymbols);
-    }, []);
+    }, [index]); // Chỉ chạy một lần khi component được tạo
 
-    // Hiệu ứng quay
+    // Hiệu ứng quay mượt mà
     useEffect(() => {
-        if (!spinning || !reelRef.current) return;
-
-        const newSymbols = Array.from({ length: REEL_ITEM_COUNT -1 }, () => symbols[Math.floor(Math.random() * symbols.length)]);
-        newSymbols.push(finalSymbol);
-        
-        setReelSymbols(prevSymbols => [...prevSymbols.slice(-REEL_ITEM_COUNT), ...newSymbols]);
-        
-        requestAnimationFrame(() => {
+        // Chỉ thực hiện khi `spinning` được kích hoạt
+        if (spinning) {
             const reelElement = reelRef.current;
             if (!reelElement || !reelElement.firstChild) return;
-            
-            const symbolHeight = reelElement.firstChild.clientHeight;
-            const targetPosition = (reelSymbols.length - REEL_ITEM_COUNT) * symbolHeight;
-            
-            reelElement.style.transition = 'none';
-            reelElement.style.transform = `translateY(-${targetPosition}px)`;
 
+            // 1. Tạo một bộ biểu tượng mới cho vòng quay này
+            const newSpinSymbols = Array.from({ length: REEL_ITEM_COUNT }, () => symbols[Math.floor(Math.random() * symbols.length)]);
+            // Đảm bảo biểu tượng kết quả nằm ở cuối bộ mới này
+            newSpinSymbols[newSpinSymbols.length - 1] = finalSymbol;
+
+            // 2. NỐI bộ mới này vào cuối danh sách hiện tại
+            const newReelState = [...reelSymbols, ...newSpinSymbols];
+            setReelSymbols(newReelState);
+
+            // 3. Chạy animation để cuộn đến cuối danh sách mới
+            // Dùng requestAnimationFrame để đảm bảo React đã render các symbol mới vào DOM
             requestAnimationFrame(() => {
+                const symbolHeight = reelElement.firstChild.clientHeight;
+                const targetPosition = (newReelState.length - REEL_ITEM_COUNT) * symbolHeight;
                 const spinDuration = 2500 + index * 600; // ms
+
                 reelElement.style.transition = `transform ${spinDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
-                reelElement.style.transform = `translateY(-${(reelSymbols.length -1) * symbolHeight}px)`;
+                reelElement.style.transform = `translateY(-${targetPosition}px)`;
             });
-        });
+        }
+    }, [spinning, finalSymbol, index]); // Phụ thuộc vào trigger `spinning` và kết quả `finalSymbol`
 
-    }, [spinning, finalSymbol, index]);
+    // Lắng nghe sự kiện kết thúc transition để dọn dẹp
+    const handleTransitionEnd = useCallback(() => {
+        if (spinning) { // Chỉ xử lý khi đang trong trạng thái quay
+            const reelElement = reelRef.current;
+            if (!reelElement) return;
 
-    // Lắng nghe sự kiện kết thúc transition
+            // Báo cho component cha là vòng quay này đã xong
+            onSpinEnd();
+
+            // 4. Dọn dẹp: Cắt danh sách, chỉ giữ lại các biểu tượng cuối cùng đang hiển thị
+            const finalVisibleSymbols = reelSymbols.slice(-REEL_ITEM_COUNT);
+            setReelSymbols(finalVisibleSymbols);
+
+            // 5. Reset vị trí transform về 0 một cách "im lặng" (không có transition)
+            // để chuẩn bị cho lần quay tiếp theo
+            reelElement.style.transition = 'none';
+            reelElement.style.transform = 'translateY(0)';
+        }
+    }, [spinning, onSpinEnd, reelSymbols]); 
+
     useEffect(() => {
         const reelElement = reelRef.current;
-        const handleTransitionEnd = () => {
-            if (spinning) {
-                onSpinEnd();
-            }
-        };
-        
-        reelElement.addEventListener('transitionend', handleTransitionEnd);
-        return () => reelElement.removeEventListener('transitionend', handleTransitionEnd);
-    }, [onSpinEnd, spinning]);
+        if (reelElement) {
+            reelElement.addEventListener('transitionend', handleTransitionEnd);
+            return () => reelElement.removeEventListener('transitionend', handleTransitionEnd);
+        }
+    }, [handleTransitionEnd]);
+
+    // Điều chỉnh logic className để hiệu ứng win chỉ áp dụng cho biểu tượng cuối cùng có thể thấy được
+    const lastVisibleIndex = reelSymbols.length - 1;
 
     return (
         <div className="h-28 w-24 md:h-40 md:w-32 bg-slate-800/50 backdrop-blur-sm border-2 border-slate-600 rounded-xl shadow-lg overflow-hidden">
@@ -74,9 +97,9 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }) => {
                 {reelSymbols.map((s, i) => (
                     <div 
                         key={i} 
-                        className={`flex items-center justify-center h-28 w-full md:h-40 ${isWinner && i === reelSymbols.length - 1 ? 'animate-win-pulse' : ''}`}
+                        className={`flex items-center justify-center h-28 w-full md:h-40 ${isWinner && i === lastVisibleIndex ? 'animate-win-pulse' : ''}`}
                     >
-                        <span className={`text-5xl md:text-7xl drop-shadow-lg ${isWinner && i === reelSymbols.length - 1 ? 'scale-110' : ''} transition-transform duration-300`}>{s}</span>
+                        <span className={`text-5xl md:text-7xl drop-shadow-lg ${isWinner && i === lastVisibleIndex ? 'scale-110' : ''} transition-transform duration-300`}>{s}</span>
                     </div>
                 ))}
             </div>
@@ -117,11 +140,15 @@ export default function App() {
     
     const handleSpinEnd = useCallback(() => {
         finishedReelsCount.current += 1;
-        if (finishedReelsCount.current === reelsResult.length) {
+        if (finishedReelsCount.current === 3) { // Hardcode to 3 reels
             setSpinning(false);
-            checkWin(reelsResult);
+            // Phải truyền kết quả hiện tại vào checkWin vì state có thể chưa cập nhật ngay
+            setReelsResult(currentReels => {
+                checkWin(currentReels);
+                return currentReels;
+            });
         }
-    }, [reelsResult]);
+    }, []);
 
     const checkWin = (currentReels) => {
         const [r1, r2, r3] = currentReels;
@@ -184,8 +211,6 @@ export default function App() {
                 <div className="relative flex justify-center items-center gap-4 mb-6 p-4 bg-black/30 rounded-2xl ring-2 ring-yellow-500/30 shadow-2xl">
                     <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60 rounded-2xl z-10 pointer-events-none"></div>
                     
-                    {/* Dòng kẻ đỏ đã được xóa khỏi đây */}
-
                     {reelsResult.map((symbol, index) => (
                         <Reel 
                             key={index} 
