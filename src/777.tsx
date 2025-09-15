@@ -261,19 +261,43 @@ export default function App() {
                     </div>
                 </div>
 
-                <button
+                <div className="flex flex-col items-center justify-center mt-2">
+                  <button
                     onClick={handleSpin}
                     disabled={spinning || balance < bet}
-                    className="w-full py-4 text-2xl font-bold tracking-widest text-slate-900 bg-gradient-to-b from-yellow-400 to-amber-500 rounded-xl shadow-lg
-                               transform transition-all duration-150 ease-in-out 
-                               hover:from-yellow-300 hover:to-amber-400 hover:shadow-xl
-                               active:scale-95 active:shadow-inner
-                               disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:from-slate-600 disabled:to-slate-700 disabled:text-slate-400"
-                >
-                    {spinning ? 'ĐANG QUAY...' : 'QUAY'}
-                </button>
-                
-                {balance < bet && !spinning && (<p className="text-red-400 text-sm mt-3 font-semibold text-center">Bạn không đủ xu để quay!</p>)}
+                    className="group w-36 h-20 rounded-xl bg-slate-900/60 border-2 border-cyan-500/60 backdrop-blur-sm
+                               flex flex-col items-center justify-center p-1
+                               transition-all duration-200
+                               hover:enabled:border-cyan-400 hover:enabled:bg-slate-900/80 hover:enabled:scale-105
+                               active:enabled:scale-[0.98]
+                               focus:outline-none focus:ring-4 focus:ring-cyan-500/50
+                               disabled:cursor-not-allowed"
+                  >
+                    {spinning ? (
+                      <div className="flex flex-col items-center font-lilita text-slate-400">
+                        <svg className="animate-spin h-6 w-6 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle> <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg>
+                        <span className="text-base tracking-wider uppercase">Đang quay...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="font-lilita text-3xl uppercase text-cyan-400 drop-shadow-[0_0_6px_rgba(100,220,255,0.7)] group-disabled:text-slate-500 group-disabled:drop-shadow-none">
+                          QUAY
+                        </span>
+                        <div className="flex items-center mt-1 group-disabled:opacity-50">
+                          {balance < bet ? (
+                            <span className="font-lilita text-base text-red-400/80 tracking-wide">Hết xu</span>
+                          ) : (
+                            <div className="flex items-center">
+                              <span className="font-lilita text-lg text-sky-400">{bet}</span>
+                              <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 ml-1.5 drop-shadow-md" />
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </button>
+                  {balance < bet && !spinning && (<p className="text-red-400 text-sm mt-3 font-semibold">Bạn không đủ xu để quay!</p>)}
+                </div>
 
 
                 <footer className="text-center text-slate-500 mt-6 text-sm">
@@ -282,6 +306,8 @@ export default function App() {
             </div>
             
             <style jsx global>{`
+              @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+              .font-lilita { font-family: 'Lilita One', cursive; }
               @keyframes win-pulse { 0%, 100% { transform: scale(1); filter: brightness(1.5); } 50% { transform: scale(1.1); filter: brightness(1.75); } }
               .animate-win-pulse { animation: win-pulse 0.8s ease-in-out infinite; }
             `}</style>
