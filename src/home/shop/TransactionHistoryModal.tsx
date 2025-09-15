@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { auth } from '../../firebase';
-import { fetchUserTransactions } from './shop-service';
-import { uiAssets } from '../../game-assets';
+import { fetchUserTransactions } from './shop-service.ts';
+import { uiAssets } from '../../game-assets.ts';
 
 // Component nhỏ để hiển thị trạng thái giao dịch với màu sắc
 const StatusBadge = ({ status }: { status: string }) => {
