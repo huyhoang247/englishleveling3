@@ -280,40 +280,63 @@ const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedIt
 };
 // --- END: REFACTORED CreateAuctionView ---
 
+// --- NEW ICONS FOR TABS ---
+const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children: React.ReactNode }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg> );
+const Gavel = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="m14 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 9"/><path d="M15 13 9 7l4-4 6 6h3l-4 4z"/></Icon> );
+const ClipboardList = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></Icon> );
+const ArrowUpCircle = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></Icon> );
+// --- END NEW ICONS ---
+
+// --- NEW TABS COMPONENT ---
+const AuctionTabs = ({ activeTab, setActiveTab }: { activeTab: 'browse' | 'my_auctions' | 'create'; setActiveTab: (tab: 'browse' | 'my_auctions' | 'create') => void; }) => {
+    const tabs = [
+        { id: 'browse', name: 'Sàn Đấu Giá', icon: Gavel },
+        { id: 'my_auctions', name: 'Đấu Giá Của Tôi', icon: ClipboardList },
+        { id: 'create', name: 'Đăng Bán', icon: ArrowUpCircle },
+    ];
+    return (
+        <>
+            <nav className="relative flex items-center gap-2 overflow-x-auto horizontal-scrollbar-hidden px-4 sm:px-6 lg:px-8">
+                {tabs.map(({ id, name, icon: IconComponent }) => (
+                    <button
+                        key={id}
+                        onClick={() => setActiveTab(id as any)}
+                        className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-t-lg font-medium text-sm transition-colors duration-200 border-b-2 ${
+                            activeTab === id ? 'border-cyan-400 text-white' : 'border-transparent text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                        }`}
+                    >
+                        <IconComponent className="w-5 h-5" />
+                        <span>{name}</span>
+                    </button>
+                ))}
+            </nav>
+            <style jsx>{`
+                .horizontal-scrollbar-hidden::-webkit-scrollbar { display: none; }
+                .horizontal-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
+                nav::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 50px; background: linear-gradient(to left, #1e293b, transparent); pointer-events: none; }
+            `}</style>
+        </>
+    );
+};
+// --- END NEW TABS COMPONENT ---
 
 interface AuctionHeaderProps {
-    onClose: () => void; userCoins: number; userGems: number; activeTab: 'browse' | 'my_auctions' | 'create';
-    setActiveTab: (tab: 'browse' | 'my_auctions' | 'create') => void;
+    onClose: () => void; userCoins: number; userGems: number;
 }
-
-const AuctionHeader: FC<AuctionHeaderProps> = ({ onClose, userCoins, userGems, activeTab, setActiveTab }) => {
+const AuctionHeader: FC<AuctionHeaderProps> = ({ onClose, userCoins, userGems }) => {
     const animatedCoins = useAnimateValue(userCoins);
     const animatedGems = useAnimateValue(userGems);
-    const TabButton: FC<{tabId: typeof activeTab, text: string}> = ({ tabId, text }) => (
-        <button onClick={() => setActiveTab(tabId)} className={`px-4 py-2 text-sm font-bold transition-colors relative rounded-md ${activeTab === tabId ? 'text-cyan-300 bg-white/10' : 'text-slate-400 hover:text-white'}`}>{text}</button>
-    );
 
     return (
         <header className="flex-shrink-0 bg-slate-900 border-b border-white/10 shadow-lg z-10">
             <div className="max-w-[1700px] mx-auto flex items-center justify-between h-[52px] px-4">
                 <div className="flex items-center gap-4">
                     <HomeButton onClick={onClose} label="" title="Về trang chính" />
-                    <div className="hidden md:flex items-center gap-2 p-1 bg-slate-800/50 rounded-lg">
-                        <TabButton tabId="browse" text="Sàn Đấu Giá"/>
-                        <TabButton tabId="my_auctions" text="Đấu Giá Của Tôi"/>
-                        <TabButton tabId="create" text="Đăng Bán"/>
-                    </div>
+                    <h1 className="text-lg font-bold text-white hidden sm:block">Nhà Đấu Giá</h1>
                 </div>
                 <div className="flex items-center gap-3">
                     <GemDisplay displayedGems={animatedGems} />
                     <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
-                </div>
-            </div>
-             <div className="md:hidden flex justify-center p-2 border-t border-slate-800 bg-black/20">
-                 <div className="flex items-center gap-2 p-1 bg-slate-800/50 rounded-lg">
-                    <TabButton tabId="browse" text="Sàn"/>
-                    <TabButton tabId="my_auctions" text="Của Tôi"/>
-                    <TabButton tabId="create" text="Bán"/>
                 </div>
             </div>
         </header>
@@ -380,8 +403,14 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
             {isLoading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-[101]"><div className="text-white text-xl animate-pulse">Đang xử lý...</div></div>}
             
             <div className="w-full h-full bg-gradient-to-br from-slate-900 to-[#110f21] flex flex-col">
-                <AuctionHeader onClose={onClose} userCoins={coins} userGems={gems} activeTab={activeTab} setActiveTab={setActiveTab} />
+                <AuctionHeader onClose={onClose} userCoins={coins} userGems={gems} />
                 
+                <div className="flex-shrink-0 bg-slate-900 border-b border-slate-800/70 shadow-md">
+                    <div className="max-w-[1700px] mx-auto">
+                         <AuctionTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+                    </div>
+                </div>
+
                 <main className="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 relative">
                     {message && <div className={`absolute top-4 left-1/2 -translate-x-1/2 p-3 rounded-lg text-white font-bold text-sm shadow-lg z-50 animate-pulse ${message.type === 'error' ? 'bg-red-600/90' : 'bg-green-600/90'}`}>{message.text}</div>}
                     
