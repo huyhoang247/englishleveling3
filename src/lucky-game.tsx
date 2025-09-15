@@ -1,4 +1,4 @@
-import React, from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 
 // --- ICONS (Giữ nguyên) ---
@@ -12,7 +12,7 @@ const ZapIcon = ({ className }: { className?: string }) => ( <svg className={cla
 const TrophyIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M10 2a2 2 0 00-2 2v2H6a2 2 0 00-2 2v2a2 2 0 002 2h2v2a2 2 0 002 2h4a2 2 0 002-2v-2h2a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2h-4zm0 2h4v2h-4V4zm-2 4h12v2H8V8z"></path> </svg> );
 const HeartIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"></path> </svg> );
 const GiftIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M12 0H8a2 2 0 00-2 2v2H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-4V2a2 2 0 00-2-2zm-2 2h4v2h-4V2zm-6 6h16v8H2V8z"></path> </svg> );
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
+const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 
 
 // --- INTERFACES (Giữ nguyên) ---
@@ -97,7 +97,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 };
 
 
-// --- [ĐÃ CẬP NHẬT] COMPONENT VÒNG QUAY DẠNG LƯỚI ---
+// --- COMPONENT VÒNG QUAY DẠNG LƯỚI ---
 interface SpinningWheelGridProps {
   items: Item[];
   itemPositionsOnWheel: { row: number; col: number }[];
@@ -178,7 +178,7 @@ const SpinningWheelGrid = React.memo(({
 });
 
 
-// --- [ĐÃ CẬP NHẬT] MAIN PARENT COMPONENT ---
+// --- MAIN PARENT COMPONENT ---
 const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins, onUpdatePickaxes, currentJackpotPool, onUpdateJackpotPool }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -242,13 +242,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     const numFullRotations = 3;
     const totalSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
     totalStepsRef.current = totalSteps;
-
-    const container = document.getElementById('spinning-grid-container');
-    if (container) {
-        container.style.setProperty('--total-steps', totalSteps.toString());
-        // Trigger reflow to apply style before adding class
-        void container.offsetWidth; 
-    }
     
     setIsSpinning(true);
 
@@ -287,17 +280,16 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   useEffect(() => {
     const updateSelection = () => {
       const container = document.getElementById('spinning-grid-container');
-      if (!container) return;
+      if (!container || !isSpinning) {
+          if(animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+          return;
+      };
 
       const progress = parseFloat(getComputedStyle(container).getPropertyValue('--spin-progress'));
       const currentStep = Math.floor(progress * totalStepsRef.current);
       const newIndex = currentStep % NUM_WHEEL_SLOTS;
       
-      setSelectedIndex(prevIndex => {
-        // Chỉ cập nhật state nếu index thực sự thay đổi để tránh re-render không cần thiết
-        if (prevIndex !== newIndex) return newIndex;
-        return prevIndex;
-      });
+      setSelectedIndex(prevIndex => (prevIndex !== newIndex ? newIndex : prevIndex));
 
       animationFrameId.current = requestAnimationFrame(updateSelection);
     };
