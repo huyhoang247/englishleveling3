@@ -390,10 +390,11 @@ export default function Mailbox({ onClose }: { onClose: () => void }) {
                         {isUserAdmin && (
                             <button
                                 onClick={() => setIsAdminMode(true)}
-                                className="w-10 h-10 flex items-center justify-center bg-slate-800/80 hover:bg-yellow-600/80 rounded-full transition-colors duration-200"
+                                className="px-4 py-2 bg-slate-800/80 hover:bg-yellow-600/80 rounded-lg transition-colors duration-200 text-sm font-sans font-semibold text-slate-300"
                                 title="Admin Panel">
-                                <Icon name="wrench" className="w-5 h-5 text-slate-300" />
-                            </button>)}
+                                Admin
+                            </button>
+                        )}
                         <HomeButton onClick={onClose} label="" title="Về Trang chính"/>
                     </div>
                 </div>
