@@ -6,17 +6,13 @@ import type { User } from 'firebase/auth';
 
 /**
  * Xử lý giao dịch đổi Gem lấy Vàng cho người dùng.
- * @param userId - ID của người dùng.
- * @param gemCost - Số lượng Gem người dùng muốn đổi.
- * @returns {Promise<{ newGems: number; newCoins: number }>} Số Gem và Vàng mới của người dùng.
- * @throws {Error} Nếu người dùng không tồn tại hoặc không đủ Gem.
  */
 export const processGemToCoinExchange = async (userId: string, gemCost: number): Promise<{ newGems: number; newCoins: number }> => {
     if (!userId) throw new Error("User ID is required.");
     if (gemCost <= 0) throw new Error("Gem cost must be positive.");
 
     const userDocRef = doc(db, 'users', userId);
-    const coinReward = gemCost * 1000; // Tỷ lệ 1 Gem = 1000 Coins
+    const coinReward = gemCost * 1000;
 
     return runTransaction(db, async (t) => {
         const userDoc = await t.get(userDocRef);
@@ -39,6 +35,9 @@ export const processGemToCoinExchange = async (userId: string, gemCost: number):
     });
 };
 
+/**
+ * Xử lý logic mua vật phẩm trong cửa hàng.
+ */
 export const processShopPurchase = async (userId: string, item: any, quantity: number) => {
     const userDocRef = doc(db, 'users', userId);
     
@@ -96,6 +95,9 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
     });
 };
 
+/**
+ * Tạo một bản ghi giao dịch nạp Gem.
+ */
 export const createGemTransaction = async (userId: string, userEmail: string | null, pkg: any) => {
     const transactionId = `ELG${Date.now()}${Math.random().toString(36).substring(2, 8)}`.toUpperCase();
     
@@ -117,6 +119,9 @@ export const createGemTransaction = async (userId: string, userEmail: string | n
     return { ...transactionData, firestoreId: docRef.id };
 };
 
+/**
+ * Người dùng xác nhận đã chuyển tiền.
+ */
 export const confirmUserPayment = async (transactionId: string): Promise<void> => {
     if (!transactionId) throw new Error("Transaction ID is required.");
     
@@ -137,12 +142,8 @@ export const confirmUserPayment = async (transactionId: string): Promise<void> =
     console.log(`Transaction ${transactionId} confirmed by user.`);
 };
 
-// --- START: HÀM MỚI CHO ADMIN PANEL ---
-
 /**
- * Lấy danh sách các giao dịch từ Firestore, lọc theo trạng thái.
- * @param status - Trạng thái cần lọc ('user_confirmed', 'completed', 'failed', 'pending').
- * @returns {Promise<any[]>} Mảng các giao dịch.
+ * Lấy danh sách các giao dịch từ Firestore, lọc theo trạng thái (cho Admin).
  */
 export const fetchTransactionsByStatus = async (status: string): Promise<any[]> => {
     const transactionsRef = collection(db, 'gem_transactions');
@@ -161,10 +162,7 @@ export const fetchTransactionsByStatus = async (status: string): Promise<any[]> 
 };
 
 /**
- * Admin duyệt một giao dịch, cộng Gem cho người dùng và cập nhật trạng thái.
- * Đây là một transaction của Firestore để đảm bảo tính toàn vẹn dữ liệu.
- * @param transaction - Object giao dịch cần duyệt.
- * @returns {Promise<void>}
+ * Admin duyệt một giao dịch, cộng Gem cho người dùng.
  */
 export const approveGemTransaction = async (transaction: any): Promise<void> => {
     const userDocRef = doc(db, 'users', transaction.userId);
@@ -184,10 +182,8 @@ export const approveGemTransaction = async (transaction: any): Promise<void> => 
         const currentGems = userDoc.data().gems || 0;
         const newGems = currentGems + transaction.gems;
 
-        // Cập nhật số Gem của người dùng
         t.update(userDocRef, { gems: newGems });
         
-        // Cập nhật trạng thái giao dịch
         t.update(transactionDocRef, { 
             status: 'completed',
             processedAt: serverTimestamp() 
@@ -198,8 +194,6 @@ export const approveGemTransaction = async (transaction: any): Promise<void> => 
 
 /**
  * Admin từ chối một giao dịch.
- * @param transactionFirestoreId - ID của document giao dịch trong Firestore.
- * @returns {Promise<void>}
  */
 export const rejectGemTransaction = async (transactionFirestoreId: string): Promise<void> => {
     const transactionDocRef = doc(db, 'gem_transactions', transactionFirestoreId);
@@ -208,6 +202,28 @@ export const rejectGemTransaction = async (transactionFirestoreId: string): Prom
         processedAt: serverTimestamp()
     });
     console.log(`Transaction ${transactionFirestoreId} has been rejected.`);
+};
+
+/**
+ * Lấy lịch sử giao dịch của một người dùng cụ thể.
+ */
+export const fetchUserTransactions = async (userId: string): Promise<any[]> => {
+    if (!userId) {
+        throw new Error("User ID is required to fetch transaction history.");
+    }
+    const transactionsRef = collection(db, 'gem_transactions');
+    const q = query(transactionsRef, where("userId", "==", userId), orderBy("createdAt", "desc"));
+
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        return [];
+    }
+
+    return querySnapshot.docs.map(doc => ({
+        firestoreId: doc.id,
+        ...doc.data()
+    }));
 };
 
 // --- END OF FILE shop-service.ts ---
