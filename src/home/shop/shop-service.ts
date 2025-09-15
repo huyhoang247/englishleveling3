@@ -1,7 +1,9 @@
 // --- START OF FILE shop-service.ts ---
 
 import { db } from '../../firebase';
-import { doc, runTransaction } from 'firebase/firestore';
+// Thêm các import cần thiết từ Firestore
+import { doc, runTransaction, collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc, limit } from 'firebase/firestore';
+import type { User } from 'firebase/auth'; // Import User type nếu cần
 
 /**
  * Xử lý giao dịch đổi Gem lấy Vàng cho người dùng.
@@ -57,13 +59,11 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
 
         const updates: { [key: string]: any } = { coins: currentCoins - totalCost };
         
-        // Khởi tạo các giá trị trả về với dữ liệu hiện tại
         let newBooks = data.ancientBooks || 0;
         let newCapacity = data.cardCapacity || 100;
         let newPieces = data.equipment?.pieces || 0;
         let newPickaxes = data.pickaxes || 0;
 
-        // Xử lý logic mua vật phẩm
         switch (item.id) {
             case 1009: // Ancient Book
                 newBooks += quantity;
@@ -75,23 +75,18 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
                 break;
             case 2002: // Equipment Piece
                 newPieces += quantity;
-                updates['equipment.pieces'] = newPieces; // Sử dụng dot notation cho trường lồng nhau
+                updates['equipment.pieces'] = newPieces; 
                 break;
             case 2003: // Pickaxe
                 newPickaxes += quantity;
                 updates.pickaxes = newPickaxes;
                 break;
-            // Thêm các vật phẩm có thể cộng dồn khác tại đây
             default:
-                // Đối với vũ khí, trang bị (không stackable), bạn sẽ cần logic khác
-                // để thêm chúng vào mảng `equipment.owned`.
-                // Hiện tại, mặc định chỉ trừ tiền.
                 break;
         }
         
         t.update(userDocRef, updates);
         
-        // Trả về tất cả các giá trị có thể đã được cập nhật
         return { 
             newCoins: updates.coins, 
             newBooks, 
@@ -100,6 +95,61 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
             newPickaxes
         };
     });
+};
+
+// --- START: LOGIC MỚI CHO GIAO DỊCH GEMS ---
+
+/**
+ * Tạo một bản ghi giao dịch nạp Gem trong Firestore.
+ * @param userId - ID của người dùng.
+ * @param userEmail - Email của người dùng.
+ * @param pkg - Gói Gem người dùng chọn.
+ * @returns {Promise<any>} Đối tượng giao dịch vừa được tạo.
+ */
+export const createGemTransaction = async (userId: string, userEmail: string | null, pkg: any) => {
+    const transactionId = `ELG${Date.now()}${Math.random().toString(36).substring(2, 8)}`.toUpperCase();
+    
+    const transactionData = {
+        transactionId,
+        userId,
+        userEmail: userEmail || 'Không rõ',
+        gemPackageId: pkg.id,
+        gems: pkg.gems,
+        amount: pkg.price,
+        status: 'pending', // 'pending', 'user_confirmed', 'completed', 'failed'
+        createdAt: serverTimestamp(),
+        userConfirmedAt: null,
+        processedAt: null,
+    };
+
+    const docRef = await addDoc(collection(db, 'gem_transactions'), transactionData);
+    console.log("Transaction created with ID: ", docRef.id);
+    return { ...transactionData, firestoreId: docRef.id };
+};
+
+/**
+ * Cập nhật trạng thái giao dịch khi người dùng xác nhận đã chuyển tiền.
+ * @param transactionId - ID giao dịch (nội dung chuyển khoản).
+ * @returns {Promise<void>}
+ */
+export const confirmUserPayment = async (transactionId: string): Promise<void> => {
+    if (!transactionId) throw new Error("Transaction ID is required.");
+    
+    const transactionsRef = collection(db, 'gem_transactions');
+    const q = query(transactionsRef, where("transactionId", "==", transactionId), limit(1));
+    
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        throw new Error("Không tìm thấy giao dịch.");
+    }
+
+    const transactionDoc = querySnapshot.docs[0];
+    await updateDoc(transactionDoc.ref, {
+        status: 'user_confirmed',
+        userConfirmedAt: serverTimestamp(),
+    });
+    console.log(`Transaction ${transactionId} confirmed by user.`);
 };
 
 // --- END OF FILE shop-service.ts ---
