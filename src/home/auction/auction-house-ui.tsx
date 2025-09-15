@@ -1,6 +1,6 @@
 // --- START OF FILE auction-house-ui.tsx (MODIFIED) ---
 
-import React, { useState, useEffect, useMemo, FC, useRef, memo } from 'react';
+import React, { useState, useEffect, useMemo, FC, memo } from 'react'; // Đã xóa useRef và useLayoutEffect
 import { Timestamp } from 'firebase/firestore';
 import { 
     listenToActiveAuctions, listenToUserAuctions, listAuctionItem, placeBidOnAuction, 
@@ -294,6 +294,7 @@ const AuctionTabs = ({ activeTab, setActiveTab }: { activeTab: 'browse' | 'my_au
         { id: 'my_auctions', name: 'Đấu Giá Của Tôi', icon: ClipboardList },
         { id: 'create', name: 'Đăng Bán', icon: ArrowUpCircle },
     ];
+
     return (
         <>
             <nav className="relative flex items-center gap-2 overflow-x-auto horizontal-scrollbar-hidden px-4 sm:px-6 lg:px-8">
@@ -313,7 +314,6 @@ const AuctionTabs = ({ activeTab, setActiveTab }: { activeTab: 'browse' | 'my_au
             <style jsx>{`
                 .horizontal-scrollbar-hidden::-webkit-scrollbar { display: none; }
                 .horizontal-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
-                nav::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 50px; background: linear-gradient(to left, #0a0a14, transparent); pointer-events: none; }
             `}</style>
         </>
     );
