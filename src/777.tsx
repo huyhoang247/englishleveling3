@@ -125,8 +125,8 @@ export default function App() {
     }
 
     return (
-        // Container chính giờ đây sẽ là nền full-screen
-        <div className="flex flex-col items-center justify-center min-h-screen w-full bg-slate-800/70 backdrop-blur-md text-white font-sans">
+        // Container chính giờ đây sẽ là nền full-screen màu đen
+        <div className="flex flex-col items-center justify-center min-h-screen w-full bg-black text-white font-sans">
             
             {/* Wrapper này chỉ để giới hạn chiều rộng nội dung cho dễ nhìn trên màn hình lớn */}
             <div className="w-full max-w-2xl flex flex-col p-6 md:p-8">
