@@ -2,13 +2,12 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, FC } from 'react';
 import { auth } from '../../firebase.js';
-// Thêm import cho các service mới
 import { processGemToCoinExchange, processShopPurchase, createGemTransaction, confirmUserPayment } from './shop-service.ts'; 
 import { useGame } from '../../GameContext.tsx'; 
 import { itemDatabase } from '../equipment/item-database.ts';
 import type { User } from 'firebase/auth';
 
-// --- Static Data (Không thay đổi) ---
+// --- Static Data ---
 const sampleItemsNonWeapons = [
   { id: 1002, name: 'Giáp Thiên Thần', type: 'Trang bị', rarity: 'S', price: 1820, image: 'https://placehold.co/600x600/1a1a2e/87ceeb?text=🛡️', description: 'Bộ giáp mang lại sự bảo vệ tối thượng và khả năng hồi phục máu theo thời gian.' },
   { id: 1006, name: 'Khiên Bất Diệt', type: 'Trang bị', rarity: 'SR', price: 2000, image: 'https://placehold.co/600x600/1a1a2e/c0c0c0?text=🛡️', description: 'Một chiếc khiên không thể bị phá hủy, chặn mọi đòn tấn công từ phía trước.' },
@@ -31,14 +30,14 @@ interface ShopContextType {
   selectedItem: any | null;
   selectedGemPackage: any | null;
   selectedExchangePackage: any | null;
-  activeTransaction: any | null; // Thêm state cho giao dịch đang hoạt động
+  activeTransaction: any | null;
   toastState: ToastState;
   triggerToast: (message: string, showIcon?: boolean, duration?: number) => void;
   handlePurchaseItem: (item: any, quantity: number) => Promise<void>;
   handleGemExchange: (pkg: any) => Promise<void>;
   handleSelectItem: (shopItem: any) => void;
-  handleSelectGemPackage: (pkg: any) => Promise<void>; // Chuyển sang async
-  handleConfirmPayment: () => Promise<void>; // Thêm hàm xác nhận thanh toán
+  handleSelectGemPackage: (pkg: any) => Promise<void>;
+  handleConfirmPayment: () => Promise<void>;
   handleSelectExchangePackage: (pkg: any) => void;
   handleCloseModals: () => void;
 }
@@ -55,7 +54,7 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunc
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [selectedGemPackage, setSelectedGemPackage] = useState<any | null>(null);
   const [selectedExchangePackage, setSelectedExchangePackage] = useState<any | null>(null);
-  const [activeTransaction, setActiveTransaction] = useState<any | null>(null); // State mới
+  const [activeTransaction, setActiveTransaction] = useState<any | null>(null);
   const [toastState, setToastState] = useState<ToastState>({ show: false, message: '', showIcon: true });
 
   const triggerToast = (message: string, showIcon = true, duration = 3000) => {
@@ -68,7 +67,6 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunc
     setAllItems([...dailyWeapons, ...sampleItemsNonWeapons]);
   }, [getShopItemsFunction]);
   
-  // (handlePurchaseItem và handleGemExchange không đổi)
   const handlePurchaseItem = async (item: any, quantity: number) => {
     if (!currentUser) { triggerToast("Mua thất bại: Người dùng chưa đăng nhập.", true); throw new Error("User not authenticated."); }
     if (!item || typeof item.price !== 'number' || !item.id || typeof quantity !== 'number' || quantity <= 0) { throw new Error("Dữ liệu vật phẩm hoặc số lượng không hợp lệ."); }
@@ -81,6 +79,7 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunc
       triggerToast(`Mua thành công x${quantity} ${item.name}!`, false);
     } catch (error) { const errorMessage = error instanceof Error ? error.message : String(error); console.error("Shop purchase failed:", error); triggerToast(`Mua thất bại: ${errorMessage}`, true); throw error; } finally { setIsSyncingData(false); }
   };
+  
   const handleGemExchange = async (pkg: any) => {
     if (!currentUser) throw new Error("User not authenticated.");
     try {
@@ -90,7 +89,6 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunc
     } catch (error) { const errorMessage = error instanceof Error ? error.message : String(error); console.error("Gem exchange failed:", error); triggerToast(`Đổi thất bại: ${errorMessage}`, true); throw error; }
   };
   
-  // --- LOGIC MỚI ĐƯỢC THÊM ---
   const handleSelectGemPackage = async (pkg: any) => {
     if (!currentUser) { triggerToast("Vui lòng đăng nhập để nạp Gem.", true); return; }
     triggerToast("Đang tạo giao dịch, vui lòng chờ...", true);
@@ -128,14 +126,13 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunc
     setSelectedItem(null);
     setSelectedGemPackage(null);
     setSelectedExchangePackage(null);
-    setActiveTransaction(null); // Dọn dẹp transaction khi đóng modal
+    setActiveTransaction(null);
   };
 
   const value = {
     currentUser, coins, gems, isLoading: isLoadingUserData, activeCategory, setActiveCategory, allItems,
     selectedItem, selectedGemPackage, selectedExchangePackage, toastState, triggerToast,
     handlePurchaseItem, handleGemExchange, handleSelectItem, handleSelectExchangePackage, handleCloseModals,
-    // Thêm các state và hàm mới
     activeTransaction,
     handleSelectGemPackage,
     handleConfirmPayment,
