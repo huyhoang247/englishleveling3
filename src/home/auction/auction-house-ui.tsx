@@ -313,7 +313,7 @@ const AuctionTabs = ({ activeTab, setActiveTab }: { activeTab: 'browse' | 'my_au
             <style jsx>{`
                 .horizontal-scrollbar-hidden::-webkit-scrollbar { display: none; }
                 .horizontal-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
-                nav::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 50px; background: linear-gradient(to left, #1e293b, transparent); pointer-events: none; }
+                nav::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 50px; background: linear-gradient(to left, #0a0a14, transparent); pointer-events: none; }
             `}</style>
         </>
     );
@@ -405,8 +405,8 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
             <div className="w-full h-full bg-gradient-to-br from-slate-900 to-[#110f21] flex flex-col">
                 <AuctionHeader onClose={onClose} userCoins={coins} userGems={gems} />
                 
-                <div className="flex-shrink-0 bg-slate-900 border-b border-slate-800/70 shadow-md">
-                    <div className="max-w-[1700px] mx-auto">
+                <div className="flex-shrink-0 bg-[#0a0a14] border-b border-slate-800/70 shadow-md">
+                    <div className="max-w-[1700px] mx-auto pt-2">
                          <AuctionTabs activeTab={activeTab} setActiveTab={setActiveTab} />
                     </div>
                 </div>
