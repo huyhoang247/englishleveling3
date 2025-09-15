@@ -13,7 +13,7 @@ import { ShopProvider, useShop } from './shop-context.tsx';
 import AdminPanel from './AdminPanel.tsx';
 import TransactionHistoryModal from './TransactionHistoryModal.tsx';
 
-// --- START: HELPERS & COMPONENTS ---
+// --- START: HELPERS & COMPONENTS (KHÔNG THAY ĐỔI) ---
 const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; case 'SSR': return 'border-rose-500'; default: return 'border-gray-600'; } };
 const getRarityGradient = (rarity: string) => { switch(rarity) { case 'E': return 'from-gray-800/95 to-gray-900/95'; case 'D': return 'from-green-900/70 to-gray-900'; case 'B': return 'from-blue-800/80 to-gray-900'; case 'A': return 'from-purple-800/80 via-black/30 to-gray-900'; case 'S': return 'from-yellow-800/70 via-black/40 to-gray-900'; case 'SR': return 'from-red-800/80 via-orange-900/30 to-black'; case 'SSR': return 'from-rose-800/80 via-red-900/40 to-black'; default: return 'from-gray-800/95 to-gray-900/95'; } };
 const getRarityTextColor = (rarity: string) => { switch(rarity) { case 'E': return 'text-gray-400'; case 'D': return 'text-green-400'; case 'B': return 'text-blue-400'; case 'A': return 'text-purple-400'; case 'S': return 'text-yellow-300'; case 'SR': return 'text-red-400'; case 'SSR': return 'text-rose-400'; default: return 'text-gray-400'; } };
@@ -169,11 +169,13 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
             <RateLimitToast show={toastState.show} message={toastState.message} showIcon={toastState.showIcon} />
             <ShopHeader onClose={onClose} userGold={coins} userGems={gems} isLoading={isLoading} />
 
-            <div className="flex-shrink-0 bg-[#0a0a14] border-b border-slate-800/70 shadow-md pt-2">
-                 <div className="max-w-[1600px] mx-auto">
+            {/* --- THAY ĐỔI: TÁCH BIỆT THANH TAB VÀ CÁC NÚT CHỨC NĂNG --- */}
+            <div className="flex-shrink-0 bg-[#0a0a14] border-b border-slate-800/70 shadow-md">
+                <div className="max-w-[1600px] mx-auto pt-2">
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
-                    
-                    <div className="px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-3">
+                </div>
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-2 border-t border-slate-800/50">
+                    <div className="flex items-center gap-3">
                         <button onClick={() => setShowHistoryModal(true)} className="text-xs font-semibold text-slate-400 hover:text-cyan-300 transition-colors px-3 py-1.5 rounded-md bg-slate-800/50 hover:bg-slate-800">
                             Lịch sử giao dịch
                         </button>
@@ -183,8 +185,7 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
                             </button>
                         )}
                     </div>
-
-                 </div>
+                </div>
             </div>
             
             <div className="flex-1 relative overflow-y-auto scrollbar-hide [background-image:radial-gradient(circle_at_center,_#16213e,_#0a0a14)]">
