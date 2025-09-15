@@ -10,7 +10,8 @@ import GemDisplay from '../../ui/display/gem-display.tsx';
 import HomeButton from '../../ui/home-button.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import { ShopProvider, useShop } from './shop-context.tsx';
-import AdminPanel from './AdminPanel.tsx'; // Import Admin Panel
+import AdminPanel from './AdminPanel.tsx';
+import TransactionHistoryModal from './TransactionHistoryModal.tsx';
 
 // --- START: HELPERS & COMPONENTS ---
 const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; case 'SSR': return 'border-rose-500'; default: return 'border-gray-600'; } };
@@ -155,9 +156,9 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
     
     const [isAdmin, setIsAdmin] = useState(false);
     const [showAdminPanel, setShowAdminPanel] = useState(false);
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
 
     useEffect(() => {
-      // Logic kiểm tra quyền admin bằng email
       if (auth.currentUser?.email === 'vanlongt309@gmail.com') {
           setIsAdmin(true);
       }
@@ -173,7 +174,7 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
                     
                     <div className="px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-3">
-                        <button onClick={() => alert('Chức năng Lịch sử giao dịch đang được phát triển!')} className="text-xs font-semibold text-slate-400 hover:text-cyan-300 transition-colors px-3 py-1.5 rounded-md bg-slate-800/50 hover:bg-slate-800">
+                        <button onClick={() => setShowHistoryModal(true)} className="text-xs font-semibold text-slate-400 hover:text-cyan-300 transition-colors px-3 py-1.5 rounded-md bg-slate-800/50 hover:bg-slate-800">
                             Lịch sử giao dịch
                         </button>
                         {isAdmin && (
@@ -230,6 +231,7 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
             {selectedExchangePackage && <ExchangeConfirmationModal pkg={selectedExchangePackage} onClose={handleCloseModals} onConfirm={handleGemExchange} currentGems={gems} />}
             
             {isAdmin && showAdminPanel && <AdminPanel onClose={() => setShowAdminPanel(false)} />}
+            {showHistoryModal && <TransactionHistoryModal onClose={() => setShowHistoryModal(false)} />}
 
             <style jsx>{`
                 .scrollbar-hide::-webkit-scrollbar { display: none; }
