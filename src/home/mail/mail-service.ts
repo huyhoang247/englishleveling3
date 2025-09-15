@@ -1,6 +1,6 @@
 // --- START OF FILE mail-service.ts ---
 
-import { db } from './firebase';
+import { db } from '../../firebase';
 import {
   collection,
   doc,
@@ -13,7 +13,7 @@ import {
   Timestamp,
   writeBatch,
 } from 'firebase/firestore';
-import { UserGameData, OwnedItem } from './gameDataService.ts'; // Giả sử các type này được export
+import { UserGameData, OwnedItem } from '../../gameDataService.ts'; // Giả sử các type này được export
 
 // --- INTERFACES ---
 
