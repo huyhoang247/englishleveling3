@@ -169,23 +169,26 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
             <RateLimitToast show={toastState.show} message={toastState.message} showIcon={toastState.showIcon} />
             <ShopHeader onClose={onClose} userGold={coins} userGems={gems} isLoading={isLoading} />
 
-            {/* --- THAY ĐỔI: TÁCH BIỆT THANH TAB VÀ CÁC NÚT CHỨC NĂNG --- */}
             <div className="flex-shrink-0 bg-[#0a0a14] border-b border-slate-800/70 shadow-md">
                 <div className="max-w-[1600px] mx-auto pt-2">
                     <CategoryTabs activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
                 </div>
-                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-2 border-t border-slate-800/50">
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => setShowHistoryModal(true)} className="text-xs font-semibold text-slate-400 hover:text-cyan-300 transition-colors px-3 py-1.5 rounded-md bg-slate-800/50 hover:bg-slate-800">
-                            Lịch sử giao dịch
-                        </button>
-                        {isAdmin && (
-                             <button onClick={() => setShowAdminPanel(true)} className="text-xs font-semibold text-slate-400 hover:text-yellow-300 transition-colors px-3 py-1.5 rounded-md bg-slate-800/50 hover:bg-slate-800">
-                                Admin Panel
+                
+                {/* --- THAY ĐỔI: Chỉ hiển thị khu vực này khi ở tab 'Nạp Gems' --- */}
+                {activeCategory === 'Nạp Gems' && (
+                    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-2 border-t border-slate-800/50">
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setShowHistoryModal(true)} className="text-xs font-semibold text-slate-400 hover:text-cyan-300 transition-colors px-3 py-1.5 rounded-md bg-slate-800/50 hover:bg-slate-800">
+                                Lịch sử giao dịch
                             </button>
-                        )}
+                            {isAdmin && (
+                                <button onClick={() => setShowAdminPanel(true)} className="text-xs font-semibold text-slate-400 hover:text-yellow-300 transition-colors px-3 py-1.5 rounded-md bg-slate-800/50 hover:bg-slate-800">
+                                    Admin Panel
+                                </button>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
             
             <div className="flex-1 relative overflow-y-auto scrollbar-hide [background-image:radial-gradient(circle_at_center,_#16213e,_#0a0a14)]">
