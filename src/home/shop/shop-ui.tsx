@@ -10,8 +10,9 @@ import GemDisplay from '../../ui/display/gem-display.tsx';
 import HomeButton from '../../ui/home-button.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import { ShopProvider, useShop } from './shop-context.tsx';
+import AdminPanel from './AdminPanel.tsx'; // Import Admin Panel
 
-// --- START: HELPERS & COMPONENTS (Không thay đổi) ---
+// --- START: HELPERS & COMPONENTS ---
 const getRarityColor = (rarity: string) => { switch(rarity) { case 'E': return 'border-gray-600'; case 'D': return 'border-green-700'; case 'B': return 'border-blue-500'; case 'A': return 'border-purple-500'; case 'S': return 'border-yellow-400'; case 'SR': return 'border-red-500'; case 'SSR': return 'border-rose-500'; default: return 'border-gray-600'; } };
 const getRarityGradient = (rarity: string) => { switch(rarity) { case 'E': return 'from-gray-800/95 to-gray-900/95'; case 'D': return 'from-green-900/70 to-gray-900'; case 'B': return 'from-blue-800/80 to-gray-900'; case 'A': return 'from-purple-800/80 via-black/30 to-gray-900'; case 'S': return 'from-yellow-800/70 via-black/40 to-gray-900'; case 'SR': return 'from-red-800/80 via-orange-900/30 to-black'; case 'SSR': return 'from-rose-800/80 via-red-900/40 to-black'; default: return 'from-gray-800/95 to-gray-900/95'; } };
 const getRarityTextColor = (rarity: string) => { switch(rarity) { case 'E': return 'text-gray-400'; case 'D': return 'text-green-400'; case 'B': return 'text-blue-400'; case 'A': return 'text-purple-400'; case 'S': return 'text-yellow-300'; case 'SR': return 'text-red-400'; case 'SSR': return 'text-rose-400'; default: return 'text-gray-400'; } };
@@ -20,7 +21,6 @@ const formatStatName = (stat: string) => { const translations: { [key: string]: 
 const getUnlockedSkillCount = (rarity: string) => { switch(rarity) { case 'D': return 1; case 'B': return 2; case 'A': return 3; case 'S': return 4; case 'SR': return 5; case 'SSR': return 5; default: return 0; } };
 const renderItemStats = (item: any) => { if (!item.stats) return null; return ( <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 bg-black/20 p-3 rounded-lg border border-gray-700/50 text-sm"> {Object.entries(item.stats).map(([stat, value]) => ( <div key={stat} className="flex justify-between items-center"> <span className="text-gray-400 capitalize text-xs">{formatStatName(stat)}:</span> <span className={'font-semibold text-gray-300'}>{stat.includes('Chance') || stat === 'lifeSteal' ? `${(Number(value) * 100).toFixed(0)}%` : value}</span> </div> ))} </div> ); };
 const renderItemSkills = (item: any) => { if (!item.skills || item.skills.length === 0) return null; const unlockedCount = getUnlockedSkillCount(item.rarity); const unlockRanks = ['D', 'B', 'A', 'S', 'SR']; return ( <div className="space-y-2.5"> {item.skills.map((skill: any, index: number) => { const isLocked = index >= unlockedCount; const requiredRank = unlockRanks[index]; return ( <div key={index} className={`flex items-center gap-3 bg-black/30 p-3 rounded-lg border transition-all duration-200 ${isLocked ? 'border-gray-800/70' : 'border-gray-700/50'}`}> <div className={`relative flex-shrink-0 w-12 h-12 bg-gray-900/80 rounded-md flex items-center justify-center text-2xl border ${isLocked ? 'border-gray-700' : 'border-gray-600'}`}> {isLocked ? '🔒' : skill.icon} </div> <div className="flex-1"> <div className="flex justify-between items-center"> <h5 className={`font-semibold text-sm ${isLocked ? 'text-gray-500' : 'text-gray-100'}`}>{skill.name}</h5> {isLocked && (<span className="text-xs text-yellow-300 font-medium bg-black/40 px-2 py-1 rounded-md border border-yellow-700/40">{requiredRank} Rank</span>)} </div> <p className="text-xs text-gray-400 mt-0.5">{skill.description}</p> </div> </div> ); })} </div> ); };
-// --- SVG Icon Components (Không thay đổi) ---
 const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children: React.ReactNode }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg> );
 const Shield = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></Icon> );
 const Gem = (props: any) => ( <img src={uiAssets.gemIcon} alt="Gems" {...props} /> );
@@ -34,7 +34,7 @@ const RefreshCw = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><
 const ArrowUpCircle = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></Icon> );
 const ClipboardCopy = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></Icon> );
 
-// --- Dữ liệu tĩnh (Không thay đổi) ---
+// --- Dữ liệu tĩnh ---
 const SHOP_WEAPON_RANKS: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR'];
 const SHOP_WEAPON_PRICES: { [key in ItemRank]?: number } = { 'E': 100, 'D': 500, 'B': 1000, 'A': 2000, 'S': 5000, 'SR': 10000 };
 const gemPackages = [ { id: 'gem_1', gems: 100, price: 20000, label: 'Gói Tiểu' }, { id: 'gem_2', gems: 260, price: 50000, label: 'Gói Nhỏ', bonus: '4% bonus' }, { id: 'gem_3', gems: 525, price: 100000, label: 'Gói Trung', bonus: '5% bonus' }, { id: 'gem_4', gems: 1100, price: 200000, label: 'Gói Đại', bonus: '10% bonus' }, { id: 'gem_5', gems: 2875, price: 500000, label: 'Gói Khổng Lồ', bonus: '15% bonus' }, { id: 'gem_6', gems: 6000, price: 1000000, label: 'Gói Thần Thánh', bonus: '20% bonus' }, ];
@@ -44,7 +44,7 @@ const shuffleArray = (array: any[]) => { let currentIndex = array.length, random
 const generateDailyShopWeapons = () => { const allWeapons = Array.from(itemDatabase.values()).filter(item => item.type === 'weapon'); const selectedWeapons = shuffleArray(allWeapons).slice(0, 10); return selectedWeapons.map(weapon => { const randomRank = SHOP_WEAPON_RANKS[Math.floor(Math.random() * SHOP_WEAPON_RANKS.length)]; const price = SHOP_WEAPON_PRICES[randomRank] || 100; const trimmedIcon = weapon.icon ? weapon.icon.trim() : ''; const imageUrl = trimmedIcon.startsWith('http') ? trimmedIcon : `https://placehold.co/600x600/1a1a2e/ffffff?text=${encodeURIComponent(trimmedIcon || '❓')}`; return { id: weapon.id, name: weapon.name, type: 'Vũ khí', rarity: randomRank, price: price, image: imageUrl, description: weapon.description, }; }); };
 const getShopItems = () => { try { const storedData = localStorage.getItem('dailyShopData'); const storedTimestamp = localStorage.getItem('dailyShopTimestamp'); const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); if (storedData && storedTimestamp && parseInt(storedTimestamp, 10) === today) { return JSON.parse(storedData); } else { const newItems = generateDailyShopWeapons(); localStorage.setItem('dailyShopData', JSON.stringify(newItems)); localStorage.setItem('dailyShopTimestamp', today.toString()); return newItems; } } catch (error) { console.error("Could not access localStorage. Generating temporary shop data.", error); return generateDailyShopWeapons(); } };
 
-// --- Components Card, Header (Không thay đổi) ---
+// --- Components Card, Header ---
 const ShopItemCard = ({ item, onSelect }: { item: any; onSelect: (item: any) => void }) => { const rarityTextColor = getRarityTextColor(item.rarity); const rarityBorderColor = getRarityColor(item.rarity); return ( <div className="group relative overflow-hidden rounded-lg bg-slate-800/60 border border-slate-700 transition-all duration-300 hover:border-cyan-400 hover:shadow-2xl hover:shadow-cyan-500/20 cursor-pointer" onClick={() => onSelect(item)}> <div className="relative"> <img src={item.image} alt={item.name} className="w-full h-40 object-contain object-center p-4" /> <div className={`absolute top-2 right-2 px-2 py-0.5 text-xs font-bold rounded-full bg-slate-900/80 ${rarityTextColor} ${rarityBorderColor}`}> {item.rarity} </div> </div> <div className="p-4"> <h3 className="text-base font-bold text-white truncate">{item.name}</h3> <div className="flex items-center justify-between mt-3"> <div className="flex items-center space-x-1.5"> <Coins className="w-4 h-4" /> <span className="text-lg font-bold text-white">{item.price.toLocaleString()}</span> </div> <button className="text-xs font-semibold text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity"> CHI TIẾT </button> </div> </div> </div> ); };
 const GemPackageCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => void }) => { return ( <div className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-800/80 to-purple-900/40 border border-slate-700 transition-all duration-300 hover:border-purple-500 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer flex flex-col" onClick={() => onSelect(pkg)}> <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10"> <div className="flex items-center gap-1.5 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-600/50"> <Gem className="w-4 h-4" /> <span className="text-sm font-bold text-white">{pkg.gems.toLocaleString()}</span> </div> {pkg.bonus && ( <div className="px-2.5 py-1 text-xs font-bold bg-yellow-400/20 text-yellow-200 rounded-full border border-yellow-500/40"> -{pkg.bonus.replace(' bonus', '')} </div> )} </div> <div className="relative flex-grow flex items-center justify-center px-8 pt-14 pb-6"> <Gem className="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110" /> </div> <div className="p-4 bg-black/40 border-t border-slate-700 group-hover:border-purple-500 transition-colors duration-300 mt-auto"> <p className="text-lg font-semibold text-purple-300 text-center"> {pkg.price.toLocaleString('vi-VN')} VNĐ </p> </div> </div> ); };
 const GemExchangeCard = ({ pkg, onSelect }: { pkg: any; onSelect: (pkg: any) => void }) => { return ( <div className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-800/80 to-yellow-900/40 border border-slate-700 transition-all duration-300 hover:border-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/20 cursor-pointer flex flex-col" onClick={() => onSelect(pkg)}> <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10"> <div className="flex items-center gap-1.5 bg-slate-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-600/50"> <Gem className="w-4 h-4" /> <span className="text-sm font-bold text-white">{pkg.gems.toLocaleString()}</span> </div> <div className="px-2.5 py-1 text-xs font-bold bg-green-400/20 text-green-200 rounded-full border border-green-500/40"> ĐỔI </div> </div> <div className="relative flex-grow flex items-center justify-center px-8 pt-14 pb-6"> <Coins className="w-20 h-20 object-contain transition-transform duration-300 group-hover:scale-110" /> </div> <div className="p-4 bg-black/40 border-t border-slate-700 group-hover:border-yellow-500 transition-colors duration-300 mt-auto"> <div className="flex items-center justify-center gap-1.5 text-lg font-semibold text-yellow-300"> <span>{pkg.coins.toLocaleString('vi-VN')}</span> <Coins className="w-5 h-5" /> </div> </div> </div> ); };
@@ -52,7 +52,7 @@ const ShopHeader = ({ onClose, userGold, userGems, isLoading }: { onClose: () =>
 const ShopCountdown = () => { const [timeLeft, setTimeLeft] = useState({ hours: '00', minutes: '00', seconds: '00' }); useEffect(() => { const timer = setInterval(() => { const now = new Date(); const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)); const difference = tomorrow.getTime() - now.getTime(); if (difference > 0) { const hours = Math.floor((difference / (1000 * 60 * 60)) % 24); const minutes = Math.floor((difference / 1000 / 60) % 60); const seconds = Math.floor((difference / 1000) % 60); setTimeLeft({ hours: hours.toString().padStart(2, '0'), minutes: minutes.toString().padStart(2, '0'), seconds: seconds.toString().padStart(2, '0'), }); } }, 1000); return () => clearInterval(timer); }, []); return ( <div className="flex items-center gap-2 text-sm text-slate-400"> <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '2s' }}/> <span>Làm mới sau:</span> <span className="font-mono font-bold text-slate-200 tracking-wider">{timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}</span> </div> ); };
 const CategoryTabs = ({ activeCategory, setActiveCategory }: { activeCategory: string; setActiveCategory: (category: string) => void }) => { const categories = [ { name: 'Nạp Gems', icon: Gem }, { name: 'Đổi Vàng', icon: Coins }, { name: 'Item', icon: Tag }, { name: 'Vũ Khí', icon: Swords }, { name: 'Trang Bị', icon: Shield }, { name: 'Gói Đặc Biệt', icon: Sparkles }, { name: 'Sự Kiện', icon: ArrowRightCircle }, ]; return ( <> <nav className="relative flex items-center gap-2 overflow-x-auto horizontal-scrollbar-hidden px-4 sm:px-6 lg:px-8"> {categories.map(({ name, icon: IconComponent }) => ( <button key={name} onClick={() => setActiveCategory(name)} className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-t-lg font-medium text-sm transition-colors duration-200 border-b-2 ${ activeCategory === name ? 'border-cyan-400 text-white' : 'border-transparent text-slate-400 hover:bg-slate-800/50 hover:text-slate-200' }`}> <IconComponent className="w-5 h-5" /> <span>{name}</span> </button> ))} </nav> <style jsx>{` .horizontal-scrollbar-hidden::-webkit-scrollbar { display: none; } .horizontal-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; } nav::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 50px; background: linear-gradient(to left, #0a0a14, transparent); pointer-events: none; } `}</style> </> ); };
 
-// --- MODAL COMPONENTS (Cập nhật PaymentQRModal, giữ nguyên các Modal khác) ---
+// --- MODAL COMPONENTS ---
 const PaymentQRModal = ({ pkg, transaction, onClose, onConfirmPayment }: { pkg: any | null; transaction: any | null; onClose: () => void; onConfirmPayment: () => void; }) => {
     const [qrCodeUrl, setQrCodeUrl] = useState('');
     const [copyText, setCopyText] = useState('SAO CHÉP');
@@ -146,40 +146,26 @@ const ExchangeConfirmationModal = ({ pkg, onClose, onConfirm, currentGems }: { p
 // --- COMPONENT CHÍNH CỦA CỬA HÀNG ---
 const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
     const {
-        coins,
-        gems,
-        isLoading,
-        activeCategory,
-        setActiveCategory,
-        allItems,
-        selectedItem,
-        selectedGemPackage,
-        selectedExchangePackage,
-        activeTransaction,
-        toastState,
-        handlePurchaseItem,
-        handleGemExchange,
-        handleSelectItem,
-        handleSelectGemPackage,
-        handleConfirmPayment,
-        handleSelectExchangePackage,
-        handleCloseModals,
+        coins, gems, isLoading, activeCategory, setActiveCategory, allItems,
+        selectedItem, selectedGemPackage, selectedExchangePackage,
+        activeTransaction, toastState, handlePurchaseItem, handleGemExchange,
+        handleSelectItem, handleSelectGemPackage, handleConfirmPayment,
+        handleSelectExchangePackage, handleCloseModals,
     } = useShop();
     
-    // Giả sử có 1 state để kiểm tra người dùng có phải admin không
     const [isAdmin, setIsAdmin] = useState(false);
+    const [showAdminPanel, setShowAdminPanel] = useState(false);
+
     useEffect(() => {
-      // Logic kiểm tra quyền admin, ví dụ:
-      // if (auth.currentUser?.uid === 'YOUR_ADMIN_UID') setIsAdmin(true);
+      // Logic kiểm tra quyền admin bằng email
+      if (auth.currentUser?.email === 'vanlongt309@gmail.com') {
+          setIsAdmin(true);
+      }
     }, []);
 
     return (
         <div className="w-full h-screen bg-[#0a0a14] font-sans text-white flex flex-col">
-            <RateLimitToast
-                show={toastState.show}
-                message={toastState.message}
-                showIcon={toastState.showIcon}
-            />
+            <RateLimitToast show={toastState.show} message={toastState.message} showIcon={toastState.showIcon} />
             <ShopHeader onClose={onClose} userGold={coins} userGems={gems} isLoading={isLoading} />
 
             <div className="flex-shrink-0 bg-[#0a0a14] border-b border-slate-800/70 shadow-md pt-2">
@@ -191,7 +177,7 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
                             Lịch sử giao dịch
                         </button>
                         {isAdmin && (
-                             <button onClick={() => alert('Mở bảng điều khiển Admin!')} className="text-xs font-semibold text-slate-400 hover:text-yellow-300 transition-colors px-3 py-1.5 rounded-md bg-slate-800/50 hover:bg-slate-800">
+                             <button onClick={() => setShowAdminPanel(true)} className="text-xs font-semibold text-slate-400 hover:text-yellow-300 transition-colors px-3 py-1.5 rounded-md bg-slate-800/50 hover:bg-slate-800">
                                 Admin Panel
                             </button>
                         )}
@@ -242,7 +228,9 @@ const GameShopUI = ({ onClose }: { onClose: () => void; }) => {
             {selectedItem && <ItemDetailModal item={selectedItem} onClose={handleCloseModals} onPurchase={handlePurchaseItem} currentCoins={coins} />}
             {selectedGemPackage && activeTransaction && <PaymentQRModal pkg={selectedGemPackage} transaction={activeTransaction} onClose={handleCloseModals} onConfirmPayment={handleConfirmPayment} />}
             {selectedExchangePackage && <ExchangeConfirmationModal pkg={selectedExchangePackage} onClose={handleCloseModals} onConfirm={handleGemExchange} currentGems={gems} />}
-        
+            
+            {isAdmin && showAdminPanel && <AdminPanel onClose={() => setShowAdminPanel(false)} />}
+
             <style jsx>{`
                 .scrollbar-hide::-webkit-scrollbar { display: none; }
                 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
