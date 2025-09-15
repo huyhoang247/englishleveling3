@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 
 // --- ICONS (Giữ nguyên) ---
@@ -51,11 +51,6 @@ const getRarityGlow = (rarity: Item['rarity']) => {
       case 'common': return 'shadow-gray-500/50'; case 'uncommon': return 'shadow-emerald-500/50'; case 'rare': return 'shadow-sky-500/50'; case 'epic': return 'shadow-violet-500/50'; case 'legendary': return 'shadow-amber-400/60'; case 'jackpot': return 'shadow-yellow-400/80'; default: return 'shadow-gray-500/50';
     }
 }
-const getRarityBg = (rarity: Item['rarity']) => {
-    switch(rarity) {
-      case 'common': return 'bg-slate-800/60 border-slate-700'; case 'uncommon': return 'bg-emerald-800/50 border-emerald-700'; case 'rare': return 'bg-sky-800/50 border-sky-700'; case 'epic': return 'bg-violet-800/50 border-violet-700'; case 'legendary': return 'bg-amber-700/40 border-amber-600'; case 'jackpot': return 'bg-gradient-to-br from-yellow-500 via-amber-600 to-red-600 border-4 border-yellow-300'; default: return 'bg-slate-800/60 border-slate-700';
-    }
-};
 
 // --- Reward Popup Component (Giữ nguyên) ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
@@ -102,79 +97,102 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 };
 
 
-// --- [MỚI] COMPONENT DẢI QUAY (SPINNING REEL) ---
-const ITEM_WIDTH = 100; // Chiều rộng của 1 item (w-24)
-const ITEM_GAP = 8; // Khoảng cách giữa các item (gap-2)
-const TOTAL_ITEM_WIDTH = ITEM_WIDTH + ITEM_GAP;
-
-interface SpinningReelProps {
+// --- [ĐÃ CẬP NHẬT] COMPONENT VÒNG QUAY DẠNG LƯỚI ---
+interface SpinningWheelGridProps {
   items: Item[];
-  reelStyle: React.CSSProperties;
-  onTransitionEnd: () => void;
-  finalLandedItem: Item | null;
+  itemPositionsOnWheel: { row: number; col: number }[];
+  selectedIndex: number;
+  isSpinning: boolean;
+  hasSpun: boolean;
+  finalLandedItemIndex: number;
+  onAnimationEnd: () => void;
 }
 
-const SpinningReel = ({ items, reelStyle, onTransitionEnd, finalLandedItem }: SpinningReelProps) => {
-  return (
-    <div className="relative w-full h-32 overflow-hidden bg-slate-900/50 rounded-2xl border border-slate-700/50 shadow-inner-strong">
-      {/* Lớp phủ mờ ở 2 bên */}
-      <div className="absolute top-0 left-0 w-1/4 h-full bg-gradient-to-r from-slate-900 via-slate-900/50 to-transparent z-10 pointer-events-none"></div>
-      <div className="absolute top-0 right-0 w-1/4 h-full bg-gradient-to-l from-slate-900 via-slate-900/50 to-transparent z-10 pointer-events-none"></div>
-      
-      {/* Vạch chỉ thị ở giữa */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-full bg-cyan-400 z-20 shadow-lg shadow-cyan-500/50"></div>
-      <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-28 h-28 border-2 border-cyan-400/80 rounded-2xl z-20 pointer-events-none opacity-50"></div>
+const SpinningWheelGrid = React.memo(({
+  items,
+  itemPositionsOnWheel,
+  selectedIndex,
+  isSpinning,
+  hasSpun,
+  finalLandedItemIndex,
+  onAnimationEnd,
+}: SpinningWheelGridProps) => {
+  const grid: ({ item: Item; isWheelItem: boolean } | null)[][] = Array(4).fill(null).map(() => Array(4).fill(null));
 
-      {/* Dải vật phẩm */}
-      <div
-        className="flex items-center h-full absolute top-0 left-0"
-        style={reelStyle}
-        onTransitionEnd={onTransitionEnd}
-      >
-        {items.map((item, index) => {
-          const isLanded = finalLandedItem === item && reelStyle.transitionDuration !== '0s';
-          return (
-            <div key={index} className="flex-shrink-0" style={{ width: `${TOTAL_ITEM_WIDTH}px`, paddingLeft: `${ITEM_GAP / 2}px`, paddingRight: `${ITEM_GAP / 2}px` }}>
-              <div className={`w-24 h-24 flex flex-col items-center justify-center rounded-lg p-2 transition-all duration-300
-                ${isLanded ? `scale-110 shadow-2xl ${getRarityGlow(item.rarity)}` : 'scale-90 opacity-60'} 
-                ${getRarityBg(item.rarity)}`
-              }>
-                {typeof item.icon === 'string' ? (
-                  <img src={item.icon} alt={item.name} className="w-10 h-10 drop-shadow-lg" />
-                ) : (
-                  <item.icon className={`w-10 h-10 ${item.color} drop-shadow-lg`} />
-                )}
-                {item.rarity !== 'jackpot' && typeof item.rewardAmount === 'number' && (
-                  <span className="text-sm font-bold text-center text-amber-300 mt-1">
-                    {item.rewardType === 'coin' ? item.rewardAmount : `x${item.rewardAmount}`}
-                  </span>
-                )}
-                {item.rarity === 'jackpot' && (
-                  <span className="text-sm font-black uppercase text-yellow-300 mt-1">JACKPOT</span>
-                )}
+  itemPositionsOnWheel.forEach((pos, indexOnWheel) => {
+    if (indexOnWheel < items.length && items[indexOnWheel]) {
+      grid[pos.row][pos.col] = { item: items[indexOnWheel], isWheelItem: true, };
+    }
+  });
+
+  return (
+    <div 
+      id="spinning-grid-container"
+      className={`grid grid-cols-4 gap-2 p-3 bg-slate-900/50 rounded-2xl shadow-2xl border border-slate-700/50 backdrop-blur-sm ${isSpinning ? 'is-spinning' : ''}`}
+      onAnimationEnd={onAnimationEnd}
+    >
+      {grid.map((row, rowIndex) =>
+        row.map((cell, colIndex) => {
+          if (rowIndex === 1 && colIndex === 1) {
+            return (
+              <div key={`chest-pedestal`} className="col-span-2 row-span-2 flex items-center justify-center rounded-full bg-slate-800/80 relative shadow-inner-strong">
+                <div className="absolute inset-0 bg-radial-glow animate-glow-pulse z-0"></div>
+                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/treasure-chest.png" alt="Treasure Chest" className={`w-24 h-24 transform transition-transform duration-500 z-10 drop-shadow-2xl ${isSpinning ? 'animate-bounce-subtle' : ''}`} onError={(e) => { e.currentTarget.src = 'https://placehold.co/96x96/cccccc/000000?text=Lỗi'; }}/>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          }
+          if ((rowIndex === 1 && colIndex === 2) || (rowIndex === 2 && colIndex === 1) || (rowIndex === 2 && colIndex === 2)) {
+            return null;
+          }
+
+          if (cell && cell.isWheelItem) {
+            const item = cell.item;
+            const wheelIndexOfCurrentCell = itemPositionsOnWheel.findIndex(p => p.row === rowIndex && p.col === colIndex);
+            const isSelected = isSpinning && selectedIndex === wheelIndexOfCurrentCell;
+            const isLandedOn = !isSpinning && hasSpun && finalLandedItemIndex === wheelIndexOfCurrentCell;
+
+            const rarityColor = getRarityColor(item.rarity);
+            const rarityGlow = getRarityGlow(item.rarity);
+            const isHighlighted = isSelected || isLandedOn;
+
+            return (
+              <div key={`item-border-${rowIndex}-${colIndex}`} style={{ '--rarity-color': rarityColor } as React.CSSProperties} className={`group item-cell-shape aspect-square p-[2px] shadow-lg relative transition-all duration-200 ${isSelected ? `scale-110 z-20 shadow-2xl ${rarityGlow} animate-pulse-bright` : ''} ${isLandedOn ? 'scale-110 z-30' : 'hover:scale-105 hover:z-20'} ${isHighlighted ? 'bg-gradient-to-br from-[var(--rarity-color)] via-slate-500 to-[var(--rarity-color)]' : 'bg-gradient-to-br from-slate-600 to-slate-800'}`}>
+                <div className="item-cell-shape w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center p-1 relative overflow-hidden">
+                    {isLandedOn && ( <div className={`absolute inset-0 z-20 animate-landed-flash`} style={{ background: `radial-gradient(circle, ${rarityColor}33 0%, transparent 70%)` }}></div> )}
+                    {isLandedOn && item.rarity === 'jackpot' && ( <div className="absolute inset-0 z-20 animate-jackpot-celebrate" style={{'--jackpot-color': rarityColor}}></div> )}
+                    <div className="flex flex-col items-center justify-center h-full gap-0.5">
+                        {typeof item.icon === 'string' ? (<img src={item.icon} alt={item.name} className="w-8 h-8 drop-shadow-lg" onError={(e) => { e.currentTarget.src = 'https://placehold.co/32x32/cccccc/000000?text=Lỗi'; }} />) : (<item.icon className={`w-8 h-8 ${item.color} drop-shadow-lg`} />)}
+                        {item.rarity !== 'jackpot' && typeof item.rewardAmount === 'number' && (<span className="text-xs font-bold text-center text-amber-300">{item.rewardType === 'coin' ? item.rewardAmount : `x${item.rewardAmount}`}</span>)}
+                        {item.rarity === 'jackpot' && (<span className="text-xs font-black uppercase text-yellow-300">JACKPOT</span>)}
+                    </div>
+                    <div className="absolute inset-0 item-cell-shape opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: `radial-gradient(circle at 50% 50%, ${rarityColor}20, transparent 70%)` }}></div>
+                </div>
+              </div>
+            );
+          }
+          return <div key={`empty-outer-${rowIndex}-${colIndex}`} className="aspect-square bg-transparent"></div>;
+        })
+      )}
     </div>
   );
-};
+});
 
 
-// --- MAIN PARENT COMPONENT (ĐÃ CẬP NHẬT) ---
+// --- [ĐÃ CẬP NHẬT] MAIN PARENT COMPONENT ---
 const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins, onUpdatePickaxes, currentJackpotPool, onUpdateJackpotPool }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [finalLandedItemIndex, setFinalLandedItemIndex] = useState(-1);
+  const [hasSpun, setHasSpun] = useState(false);
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
   const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
-  const [reelStyle, setReelStyle] = useState<React.CSSProperties>({ transform: 'translateX(0px)', transition: 'none' });
-  const [finalLandedItem, setFinalLandedItem] = useState<Item | null>(null);
+  
+  const animationFrameId = useRef<number | null>(null);
+  const totalStepsRef = useRef(0);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const baseItems: Item[] = useMemo(() => [
+  const items: Item[] = useMemo(() => [
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '', value: 150, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 150 },
     { icon: ZapIcon, name: 'Tia chớp', value: 0, rarity: 'uncommon', color: 'text-cyan-400', rewardType: 'other', rewardAmount: 1 },
     { icon: pickaxeIconUrl, name: '', value: 0, rarity: 'uncommon', color: '', rewardType: 'pickaxe', rewardAmount: 5 },
@@ -189,109 +207,115 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: '', value: 100, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 100 },
   ], []);
 
-  const reelItems = useMemo(() => {
-    // Lặp lại danh sách vật phẩm để tạo cảm giác "vô tận"
-    const repeated = [];
-    for (let i = 0; i < 10; i++) {
-        repeated.push(...baseItems);
-    }
-    return repeated;
-  }, [baseItems]);
-  
+  const itemPositionsOnWheel = useMemo(() => [
+    { row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 2 }, { row: 0, col: 3 },
+    { row: 1, col: 3 }, { row: 2, col: 3 },
+    { row: 3, col: 3 }, { row: 3, col: 2 }, { row: 3, col: 1 }, { row: 3, col: 0 },
+    { row: 2, col: 0 }, { row: 1, col: 0 }
+  ], []);
+
+  const NUM_WHEEL_SLOTS = itemPositionsOnWheel.length;
+
   const spinChest = useCallback(() => {
-    if (isSpinning || currentCoins < 100 || !containerRef.current) return;
+    if (isSpinning || currentCoins < 100) return;
 
     onUpdateCoins(-100);
     const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
     onUpdateJackpotPool(randomCoinsToAdd);
 
-    setIsSpinning(true);
+    setHasSpun(false);
     setJackpotWon(false);
     setShowRewardPopup(false);
     setWonRewardDetails(null);
-    setFinalLandedItem(null);
 
-    // Xác định vật phẩm trúng thưởng
-    let targetBaseItemIndex: number;
-    const jackpotItemIndex = baseItems.findIndex(item => item.rarity === 'jackpot');
-    if (jackpotItemIndex !== -1 && Math.random() < 0.01) { // 1% chance for jackpot
-        targetBaseItemIndex = jackpotItemIndex;
+    let targetLandedItemIndex: number;
+    const jackpotItemArrayIndex = items.findIndex(item => item.rarity === 'jackpot');
+    if (jackpotItemArrayIndex !== -1 && Math.random() < 0.01) { // 1% chance
+        targetLandedItemIndex = jackpotItemArrayIndex;
     } else {
-        const nonJackpotIndices = baseItems.map((_, i) => i).filter(i => i !== jackpotItemIndex);
-        targetBaseItemIndex = nonJackpotIndices[Math.floor(Math.random() * nonJackpotIndices.length)];
+        const otherItemIndices = Array.from({ length: NUM_WHEEL_SLOTS }, (_, i) => i).filter(i => i !== jackpotItemArrayIndex);
+        targetLandedItemIndex = otherItemIndices[Math.floor(Math.random() * otherItemIndices.length)];
     }
 
-    // Chọn một mục tiêu ở giữa dải băng (ví dụ: ở vòng lặp thứ 5) để có đủ không gian quay
-    const targetReelIndex = (5 * baseItems.length) + targetBaseItemIndex;
-    const containerWidth = containerRef.current.offsetWidth;
-    
-    // Tính toán vị trí cuối cùng để vật phẩm trúng thưởng nằm chính giữa
-    const targetPosition = (targetReelIndex * TOTAL_ITEM_WIDTH) + (TOTAL_ITEM_WIDTH / 2) - (containerWidth / 2);
-    
-    // Thêm một chút ngẫu nhiên vào vị trí cuối cùng để trông tự nhiên hơn
-    const randomOffset = (Math.random() - 0.5) * (ITEM_WIDTH * 0.6);
-    const finalPosition = targetPosition + randomOffset;
-    
-    setFinalLandedItem(reelItems[targetReelIndex]);
+    setFinalLandedItemIndex(targetLandedItemIndex);
 
-    // Áp dụng CSS để bắt đầu animation
-    setReelStyle({
-        transform: `translateX(-${finalPosition}px)`,
-        transition: `transform 5s cubic-bezier(0.2, 0.8, 0.2, 1)`,
-    });
+    const numFullRotations = 3;
+    const totalSteps = (NUM_WHEEL_SLOTS * numFullRotations) + targetLandedItemIndex;
+    totalStepsRef.current = totalSteps;
 
-  }, [isSpinning, currentCoins, onUpdateCoins, onUpdateJackpotPool, baseItems, reelItems]);
+    const container = document.getElementById('spinning-grid-container');
+    if (container) {
+        container.style.setProperty('--total-steps', totalSteps.toString());
+        // Trigger reflow to apply style before adding class
+        void container.offsetWidth; 
+    }
+    
+    setIsSpinning(true);
 
-  const handleTransitionEnd = () => {
-      if (!isSpinning) return;
+  }, [isSpinning, currentCoins, onUpdateCoins, onUpdateJackpotPool, items, NUM_WHEEL_SLOTS]);
+
+  const handleAnimationEnd = useCallback(() => {
+    setIsSpinning(false);
+    setHasSpun(true);
+    setSelectedIndex(finalLandedItemIndex); // Ensure final selection is correct
+
+    const wonItem = items[finalLandedItemIndex];
+    if (!wonItem) return;
+
+    let actualWonValue = 0;
+    if (wonItem.rewardType === 'pickaxe' && wonItem.rewardAmount) {
+      onUpdatePickaxes(wonItem.rewardAmount);
+      actualWonValue = wonItem.rewardAmount;
+    } else if (wonItem.rarity === 'jackpot') {
+      actualWonValue = currentJackpotPool;
+      setJackpotWon(true); setJackpotAnimation(true);
+      onUpdateCoins(actualWonValue);
+      onUpdateJackpotPool(0, true);
+      setTimeout(() => setJackpotAnimation(false), 3000);
+    } else if (wonItem.rewardType === 'coin' && wonItem.value) {
+      onUpdateCoins(wonItem.value);
+      actualWonValue = wonItem.value;
+    } else {
+      actualWonValue = wonItem.value;
+    }
+
+    const finalWonItem = { ...wonItem, value: actualWonValue, name: wonItem.rarity === 'jackpot' ? wonItem.name : '' };
+    setWonRewardDetails(finalWonItem);
+    setShowRewardPopup(true);
+  }, [finalLandedItemIndex, items, onUpdatePickaxes, onUpdateCoins, onUpdateJackpotPool, currentJackpotPool]);
+
+  useEffect(() => {
+    const updateSelection = () => {
+      const container = document.getElementById('spinning-grid-container');
+      if (!container) return;
+
+      const progress = parseFloat(getComputedStyle(container).getPropertyValue('--spin-progress'));
+      const currentStep = Math.floor(progress * totalStepsRef.current);
+      const newIndex = currentStep % NUM_WHEEL_SLOTS;
       
-      const wonItem = finalLandedItem;
-      if (!wonItem) {
-        setIsSpinning(false);
-        return;
+      setSelectedIndex(prevIndex => {
+        // Chỉ cập nhật state nếu index thực sự thay đổi để tránh re-render không cần thiết
+        if (prevIndex !== newIndex) return newIndex;
+        return prevIndex;
+      });
+
+      animationFrameId.current = requestAnimationFrame(updateSelection);
+    };
+
+    if (isSpinning) {
+      animationFrameId.current = requestAnimationFrame(updateSelection);
+    } else {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
       }
-      
-      let actualWonValue = 0;
-      
-      if (wonItem.rewardType === 'pickaxe' && wonItem.rewardAmount) {
-        onUpdatePickaxes(wonItem.rewardAmount);
-        actualWonValue = wonItem.rewardAmount;
-      } else if (wonItem.rarity === 'jackpot') {
-        actualWonValue = currentJackpotPool;
-        setJackpotWon(true); setJackpotAnimation(true);
-        onUpdateCoins(actualWonValue);
-        onUpdateJackpotPool(0, true);
-        setTimeout(() => setJackpotAnimation(false), 3000);
-      } else if (wonItem.rewardType === 'coin' && wonItem.value) {
-        onUpdateCoins(wonItem.value);
-        actualWonValue = wonItem.value;
-      } else {
-        actualWonValue = wonItem.value;
+    }
+
+    return () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
       }
-      
-      const finalWonItem = {
-          ...wonItem,
-          value: actualWonValue,
-          name: wonItem.rarity === 'jackpot' ? wonItem.name : ''
-      };
-
-      setWonRewardDetails(finalWonItem);
-      setShowRewardPopup(true);
-
-      // Reset silently for next spin
-      const targetBaseItemIndex = baseItems.findIndex(item => item === finalLandedItem);
-      const resetReelIndex = (2 * baseItems.length) + targetBaseItemIndex; // Reset to an early position
-      const containerWidth = containerRef.current?.offsetWidth ?? 0;
-      const resetPosition = (resetReelIndex * TOTAL_ITEM_WIDTH) + (TOTAL_ITEM_WIDTH / 2) - (containerWidth / 2);
-      
-      setTimeout(() => {
-        setReelStyle({
-            transform: `translateX(-${resetPosition}px)`,
-            transition: 'none',
-        });
-        setIsSpinning(false);
-      }, 500); // Delay to allow popup to show
-  };
+    };
+  }, [isSpinning, NUM_WHEEL_SLOTS]);
   
   return (
     <div className="min-h-screen bg-slate-900 bg-grid-pattern flex flex-col items-center font-sans pb-4">
@@ -308,9 +332,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent"></div>
       </header>
 
-      <div ref={containerRef} className="max-w-xl w-full px-4 pt-6">
+      <div className="max-w-lg w-full px-4 pt-6">
         <div className="text-center mb-6">
-            <div className={`mt-2 p-3 rounded-xl border-4 transition-all duration-500 relative ${ jackpotAnimation ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl' : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg' }`}>
+             <div className={`mt-2 p-3 rounded-xl border-4 transition-all duration-500 relative ${ jackpotAnimation ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl' : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg' }`}>
               <div className="text-yellow-200 text-base font-bold mb-1 tracking-wider"> JACKPOT POOL </div>
               <div className={`text-4xl font-black text-white drop-shadow-lg flex items-center justify-center gap-1 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
                 {currentJackpotPool.toLocaleString()}
@@ -320,51 +344,48 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
               {jackpotAnimation && ( <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-ping rounded-xl"></div> )}
             </div>
         </div>
-        
-          <>
-            <div className="flex justify-center mb-6">
-              <SpinningReel
-                items={reelItems}
-                reelStyle={reelStyle}
-                onTransitionEnd={handleTransitionEnd}
-                finalLandedItem={finalLandedItem}
-              />
-            </div>
-            <div className="flex flex-col items-center justify-center mb-6">
-              <button
-                onClick={spinChest}
-                disabled={isSpinning || currentCoins < 100}
-                className="group w-48 h-20 rounded-xl bg-slate-900/60 border-2 border-cyan-500/60 backdrop-blur-sm
-                           flex flex-col items-center justify-center p-1 transition-all duration-200
-                           hover:enabled:border-cyan-400 hover:enabled:bg-slate-900/80 hover:enabled:scale-105
-                           active:enabled:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-cyan-500/50
-                           disabled:cursor-not-allowed"
-              >
-                {isSpinning ? (
-                  <div className="flex flex-col items-center font-lilita text-slate-400">
-                    <span className="text-xl tracking-wider uppercase">Đang quay...</span>
+          <div className="flex justify-center mb-6">
+            <SpinningWheelGrid
+              items={items}
+              itemPositionsOnWheel={itemPositionsOnWheel}
+              selectedIndex={selectedIndex}
+              isSpinning={isSpinning}
+              hasSpun={hasSpun}
+              finalLandedItemIndex={finalLandedItemIndex}
+              onAnimationEnd={handleAnimationEnd}
+            />
+          </div>
+          <div className="flex flex-col items-center justify-center mb-6">
+            <button
+              onClick={spinChest}
+              disabled={isSpinning || currentCoins < 100}
+              className="group w-36 h-20 rounded-xl bg-slate-900/60 border-2 border-cyan-500/60 backdrop-blur-sm
+                         flex flex-col items-center justify-center p-1 transition-all duration-200
+                         hover:enabled:border-cyan-400 hover:enabled:bg-slate-900/80 hover:enabled:scale-105
+                         active:enabled:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-cyan-500/50
+                         disabled:cursor-not-allowed"
+            >
+              {isSpinning ? (
+                <div className="flex flex-col items-center font-lilita text-slate-400">
+                  <svg className="animate-spin h-6 w-6 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle> <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg>
+                  <span className="text-base tracking-wider uppercase">Spinning...</span>
+                </div>
+              ) : (
+                <>
+                  <span className="font-lilita text-3xl uppercase text-cyan-400 drop-shadow-[0_0_6px_rgba(100,220,255,0.7)] group-disabled:text-slate-500 group-disabled:drop-shadow-none">SPIN</span>
+                  <div className="flex items-center mt-1 group-disabled:opacity-50">
+                    {currentCoins < 100 ? (<span className="font-lilita text-base text-red-400/80 tracking-wide">Hết xu</span>) : (
+                      <div className="flex items-center">
+                        <span className="font-lilita text-lg text-sky-400">100</span>
+                        <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 ml-1.5 drop-shadow-md" />
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <>
-                    <span className="font-lilita text-3xl uppercase text-cyan-400 drop-shadow-[0_0_6px_rgba(100,220,255,0.7)] group-disabled:text-slate-500 group-disabled:drop-shadow-none">
-                      QUAY
-                    </span>
-                    <div className="flex items-center mt-1 group-disabled:opacity-50">
-                      {currentCoins < 100 ? (
-                        <span className="font-lilita text-base text-red-400/80 tracking-wide">Hết xu</span>
-                      ) : (
-                        <div className="flex items-center">
-                          <span className="font-lilita text-lg text-sky-400">100</span>
-                          <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 ml-1.5 drop-shadow-md" />
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </button>
-              {currentCoins < 100 && !isSpinning && (<p className="text-red-400 text-sm mt-3 font-semibold">Bạn không đủ xu để quay!</p>)}
-            </div>
-          </>
+                </>
+              )}
+            </button>
+            {currentCoins < 100 && !isSpinning && (<p className="text-red-400 text-sm mt-3 font-semibold">Bạn không đủ xu để quay!</p>)}
+          </div>
       </div>
 
       {showRewardPopup && wonRewardDetails && ( <RewardPopup item={wonRewardDetails} jackpotWon={jackpotWon} onClose={() => setShowRewardPopup(false)} /> )}
@@ -378,13 +399,42 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
           background-size: 2rem 2rem;
         }
+        .item-cell-shape {
+          clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);
+        }
         .shadow-inner-strong { box-shadow: inset 0 0 20px 0 rgba(0,0,0,0.5); }
+        .bg-radial-glow { background: radial-gradient(circle, rgba(79, 70, 229, 0.25) 0%, rgba(15, 23, 42, 0) 65%); }
         .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } 
         .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } 
         
-        /* Animations */
+        /* --- [MỚI] CSS ANIMATION CHO VÒNG QUAY --- */
+        @property --spin-progress {
+          syntax: '<number>';
+          inherits: false;
+          initial-value: 0;
+        }
+
+        @keyframes spin-animation {
+          from { --spin-progress: 0; }
+          to { --spin-progress: 1; }
+        }
+
+        #spinning-grid-container.is-spinning {
+          --spin-duration: 5s; /* Thời gian quay */
+          animation: spin-animation var(--spin-duration) cubic-bezier(0.2, 0.85, 0.3, 1) forwards;
+        }
+        
+        /* --- CÁC ANIMATION KHÁC GIỮ NGUYÊN --- */
+        @keyframes glow-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } }
+        .animate-glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
         @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
         .animate-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
+        @keyframes pulse-bright { 0%, 100% { box-shadow: 0 0 20px 5px var(--rarity-color); } 50% { box-shadow: 0 0 35px 10px var(--rarity-color); } }
+        .animate-pulse-bright { animation: pulse-bright 1s ease-in-out infinite; }
+        @keyframes landed-flash { 0% { transform: scale(0); opacity: 0.7; } 80% { transform: scale(1.5); opacity: 0.2; } 100% { transform: scale(2); opacity: 0; } }
+        .animate-landed-flash { animation: landed-flash 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        @keyframes jackpot-celebrate { 0% { box-shadow: inset 0 0 0 0px var(--jackpot-color); } 25% { box-shadow: inset 0 0 0 4px var(--jackpot-color), 0 0 20px 5px var(--jackpot-color); } 100% { box-shadow: inset 0 0 0 0px var(--jackpot-color); } }
+        .animate-jackpot-celebrate { animation: jackpot-celebrate 0.8s ease-in-out; }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
         @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
