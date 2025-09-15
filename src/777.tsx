@@ -125,8 +125,8 @@ export default function App() {
     }
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white font-sans p-4 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
-            <div className="w-full max-w-2xl bg-slate-800/70 backdrop-blur-md rounded-3xl shadow-2xl p-6 md:p-8 border-4 border-yellow-500/50">
+        <div className="flex flex-col items-center justify-center min-h-screen text-white font-sans p-4">
+            <div className="w-full max-w-2xl bg-slate-800/70 backdrop-blur-md rounded-3xl shadow-2xl p-6 md:p-8">
                 
                 {/* Header */}
                 <div className="text-center mb-6">
@@ -190,4 +190,3 @@ export default function App() {
         </div>
     );
 }
-
