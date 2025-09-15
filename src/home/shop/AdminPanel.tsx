@@ -1,7 +1,7 @@
 // --- START OF FILE AdminPanel.tsx ---
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { fetchTransactionsByStatus, approveGemTransaction, rejectGemTransaction } from './shop-service';
+import { fetchTransactionsByStatus, approveGemTransaction, rejectGemTransaction } from './shop-service.ts';
 import { uiAssets } from '../../game-assets.ts';
 
 const AdminPanel = ({ onClose }: { onClose: () => void }) => {
