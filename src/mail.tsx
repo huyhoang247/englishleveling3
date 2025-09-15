@@ -1,6 +1,7 @@
 // --- START OF FILE mail.tsx (FULL CODE, ADMIN EMAIL UPDATED) ---
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import HomeButton from './ui/home-button.tsx'; // Import HomeButton component
 import { auth } from './firebase'; // Để lấy userId
 
 import {
@@ -39,6 +40,7 @@ const Icon = ({ name, className }: { name: string, className: string }) => {
     check: <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />,
     send: <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />,
     plus: <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />,
+    wrench: <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.83-5.83M11.42 15.17L4.842 8.592a3.75 3.75 0 010-5.303 3.75 3.75 0 015.304 0L15.17 8.592M11.42 15.17L8.592 12.34m2.828 2.828l2.828-2.828" />,
   };
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
@@ -148,7 +150,7 @@ const MailItem = ({ mail, onSelect, isSelected }) => {
           </div>
         </div>
       ) : (
-        <div className="flex-1 min-w-0 flex items-center h-full"> 
+        <div className="flex-1 min-w-0 flex items-center h-full">
             <div className="w-full flex justify-between items-baseline">
                 <p className={`text-sm font-semibold truncate font-sans pr-2 ${isVisuallyRead ? 'text-slate-400' : 'text-slate-100'}`}>{mail.subject}</p>
                 <span className="text-xs font-sans flex-shrink-0 text-slate-500">{mail.timestamp ? new Date(mail.timestamp.toDate()).toLocaleDateString('vi-VN') : ''}</span>
@@ -184,7 +186,7 @@ const AddAttachmentModal = ({ onClose, onAddAttachment }) => {
         onAddAttachment(attachment);
         onClose();
     };
-    
+
     return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
         <div className="bg-slate-800 border border-slate-600 p-6 rounded-lg w-full max-w-md" onClick={e => e.stopPropagation()}>
@@ -241,7 +243,7 @@ const AdminMailView = ({ onBack }) => {
             setIsSending(false);
         }
     };
-    
+
     useEffect(() => {
         if(toast) { const timer = setTimeout(() => setToast(null), 3000); return () => clearTimeout(timer); }
     }, [toast]);
@@ -260,7 +262,7 @@ const AdminMailView = ({ onBack }) => {
             <input type="text" value={sender} onChange={e => setSender(e.target.value)} placeholder="Người gửi" className="w-full p-3 bg-slate-800 rounded-md border border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500" />
             <input type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Tiêu đề" className="w-full p-3 bg-slate-800 rounded-md border border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500" />
             <textarea value={body} onChange={e => setBody(e.target.value)} placeholder="Nội dung thư..." rows={8} className="w-full p-3 bg-slate-800 rounded-md border border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500"></textarea>
-            
+
             <div>
                 <h3 className="text-slate-400 mb-2">Vật phẩm đính kèm:</h3>
                 <div className="space-y-2">
@@ -298,7 +300,7 @@ export default function Mailbox({ onClose }: { onClose: () => void }) {
   const [isAdminMode, setIsAdminMode] = useState(false);
 
   const currentUser = auth.currentUser;
-  
+
   const isUserAdmin = currentUser?.email === "vanlongt309@gmail.com";
 
   useEffect(() => {
@@ -322,28 +324,28 @@ export default function Mailbox({ onClose }: { onClose: () => void }) {
   }, [mails, currentUser]);
 
   const handleClosePopup = () => setSelectedMailId(null);
-  
+
   const handleClaim = useCallback(async (mail: Mail) => {
     if (!currentUser || !mail) return;
-    try { await claimMailAttachments(currentUser.uid, mail); } 
+    try { await claimMailAttachments(currentUser.uid, mail); }
     catch (error) { console.error("Failed to claim items:", error); }
   }, [currentUser]);
-  
+
   const handleDelete = useCallback(async (id: string) => {
     if (!currentUser) return;
     await deleteMails(currentUser.uid, [id]);
     handleClosePopup();
   }, [currentUser]);
-  
+
   const handleClaimAll = useCallback(async () => {
     if (!currentUser) return;
     const claimableMails = mails.filter(m => m.attachments.length > 0 && !m.isClaimed);
     for (const mail of claimableMails) {
-        try { await claimMailAttachments(currentUser.uid, mail); } 
+        try { await claimMailAttachments(currentUser.uid, mail); }
         catch (error) { console.error(`Failed to claim mail ${mail.id}:`, error); }
     }
   }, [currentUser, mails]);
-  
+
   const handleDeleteAllRead = useCallback(async () => {
     if (!currentUser) return;
     const readMailIds = mails
@@ -354,7 +356,7 @@ export default function Mailbox({ onClose }: { onClose: () => void }) {
     }
     handleClosePopup();
   }, [currentUser, mails]);
-  
+
   const unreadCount = mails.filter(m => !m.isRead).length;
   const canClaimAny = mails.some(m => m.attachments.length > 0 && !m.isClaimed);
   const hasAnyDeletable = mails.some(m => m.isRead && !(m.attachments.length > 0 && !m.isClaimed));
@@ -366,8 +368,8 @@ export default function Mailbox({ onClose }: { onClose: () => void }) {
         @keyframes gentle-bounce { 0%, 100% { transform: translateY(-15%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); } 50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); } }
         .animate-gentle-bounce { animation: gentle-bounce 1.2s infinite; }
       `}</style>
-      
-      <div 
+
+      <div
         className="relative w-full max-w-5xl h-full max-h-[90vh] bg-slate-900/80 rounded-xl shadow-2xl shadow-black/50 flex flex-col border border-slate-700/50 backdrop-blur-md text-white font-lilita animate-fade-in-scale-fast"
         onClick={(e) => e.stopPropagation()}
       >
@@ -377,19 +379,25 @@ export default function Mailbox({ onClose }: { onClose: () => void }) {
             <>
                 <div className="p-4 border-b border-slate-700 flex justify-between items-center flex-shrink-0">
                     <div>
-                        <h1 className="text-xl font-bold text-cyan-300 text-shadow tracking-wider uppercase">HỘP THƯ</h1>
+                        <h1 className="text-xl font-bold text-cyan-300 text-shadow tracking-wider uppercase">MAIL BOX</h1>
                         {!isLoading && <div className="mt-1 text-xs text-slate-400 font-sans">
-                            <span>Mới: </span><span className="font-bold text-yellow-300">{unreadCount}</span>
+                            <span>New: </span><span className="font-bold text-yellow-300">{unreadCount}</span>
                             <span className="mx-2 text-slate-600">|</span>
-                            <span>Tổng: </span><span className="font-semibold text-slate-200">{mails.length}</span>
+                            <span>Total: </span><span className="font-semibold text-slate-200">{mails.length}</span>
                         </div>}
                     </div>
                      <div className="flex items-center gap-2">
-                        {isUserAdmin && <button onClick={() => setIsAdminMode(true)} className="px-3 py-2 bg-yellow-600/80 hover:bg-yellow-500 rounded-lg text-sm font-sans font-semibold">Admin Panel</button>}
-                        <button onClick={onClose} className="w-10 h-10 flex items-center justify-center bg-slate-800/80 hover:bg-red-500/80 rounded-full transition-colors duration-200 text-xl font-sans">✕</button>
+                        {isUserAdmin && (
+                            <button
+                                onClick={() => setIsAdminMode(true)}
+                                className="w-10 h-10 flex items-center justify-center bg-slate-800/80 hover:bg-yellow-600/80 rounded-full transition-colors duration-200"
+                                title="Admin Panel">
+                                <Icon name="wrench" className="w-5 h-5 text-slate-300" />
+                            </button>)}
+                        <HomeButton onClick={onClose} label="" title="Về Trang chính"/>
                     </div>
                 </div>
-                
+
                 <ul className="flex-grow overflow-y-auto divide-y divide-slate-800 scrollbar-thin">
                     {isLoading ? <div className="flex items-center justify-center h-full text-slate-500">Đang tải thư...</div>
                     : mails.length > 0 ? (
@@ -401,17 +409,17 @@ export default function Mailbox({ onClose }: { onClose: () => void }) {
                         </div>
                     )}
                 </ul>
-                
+
                 <div className="p-3 border-t border-slate-700 flex-shrink-0 flex items-center justify-around gap-3 bg-slate-900/60 rounded-b-xl">
-                    <button 
-                      onClick={handleDeleteAllRead} 
+                    <button
+                      onClick={handleDeleteAllRead}
                       disabled={!hasAnyDeletable}
                       className="flex-1 px-4 py-2.5 bg-slate-700/80 text-slate-300 font-bold rounded-lg hover:bg-red-600/80 hover:text-white transition-all duration-300 flex items-center justify-center space-x-2 active:scale-95 border border-slate-600 hover:border-red-500 disabled:bg-slate-800/50 disabled:border-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed">
                       <Icon name="trash" className="w-5 h-5" />
                       <span className="font-sans font-semibold text-sm">Xóa đã đọc</span>
                     </button>
-                    <button 
-                      onClick={handleClaimAll} 
+                    <button
+                      onClick={handleClaimAll}
                       disabled={!canClaimAny}
                       className="btn-shine relative overflow-hidden flex-1 px-4 py-2.5 bg-teal-600/80 text-white font-bold rounded-lg hover:bg-teal-500 transition-all duration-300 flex items-center justify-center space-x-2 shadow-[0_0_20px_theme(colors.teal.600/0.5)] active:scale-95 border border-teal-500 hover:border-teal-400 disabled:bg-slate-800/50 disabled:border-slate-700 disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed">
                       <Icon name="gift" className="w-5 h-5" />
@@ -421,7 +429,7 @@ export default function Mailbox({ onClose }: { onClose: () => void }) {
             </>
         )}
       </div>
-      
+
       {selectedMail && <MailPopup mail={selectedMail} onClose={handleClosePopup} onClaim={handleClaim} onDelete={handleDelete} />}
     </>
   );
