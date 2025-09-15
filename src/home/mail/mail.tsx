@@ -1,8 +1,8 @@
 // --- START OF FILE mail.tsx (FULL CODE, ADMIN EMAIL UPDATED) ---
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import HomeButton from './ui/home-button.tsx'; // Import HomeButton component
-import { auth } from './firebase'; // Để lấy userId
+import HomeButton from '../../ui/home-button.tsx'; // Import HomeButton component
+import { auth } from '../../firebase'; // Để lấy userId
 
 import {
   Mail,
