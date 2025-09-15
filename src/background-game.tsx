@@ -27,7 +27,7 @@ import type { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 import EquipmentScreen, { type EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
 import AuctionHouse from './home/auction/auction-house-ui.tsx';
 import DailyCheckIn from './home/check-in/check-in-ui.tsx';
-import Mailbox from './mail.tsx'; 
+import Mailbox from './home/mail/mail.tsx'; 
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 import { useGame } from './GameContext.tsx';
