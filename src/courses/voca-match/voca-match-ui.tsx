@@ -53,7 +53,7 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
         key={definition.english}
         className="bg-white/80 backdrop-blur-sm border border-indigo-100 rounded-xl p-4 shadow-md animate-fade-in-up"
       >
-        <div className="flex items-baseline mb-2">
+        <div className="flex items-center mb-2">
           <BookmarkIcon className="w-5 h-5 text-indigo-500 mr-2 flex-shrink-0" />
           <h3 className="text-lg font-bold text-gray-800">{definition.english}</h3>
           <span className="text-gray-500 font-medium ml-2">/ {definition.vietnamese}</span>
