@@ -148,6 +148,7 @@ const QuizAppContent: React.FC = () => {
 }
 
 // --- START: UNIFIED HEADER COMPONENT ---
+// <<< THAY ĐỔI: HomeIcon và BackIcon đã bị xóa vì chúng ta đang sử dụng các component nút chuyên dụng
 const AnalysisIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg> );
 
 function AppHeader() {
@@ -175,7 +176,7 @@ function AppHeader() {
                  <img src={quizHomeAssets.logoLarge} alt="Quiz App Logo" className="h-10 w-auto" />
               </a>
             ) : (
-              <BackButton onClick={goBack} />
+              <BackButton onClick={goBack} /> // <<< THAY ĐỔI: SỬ DỤNG BACKBUTTON COMPONENT
             )}
           </div>
           <div className="flex-1 flex justify-center px-4">
@@ -185,7 +186,7 @@ function AppHeader() {
               {currentView === 'main' ? (
                 <button onClick={() => setCurrentView('analysis')} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Xem phân tích"><AnalysisIcon /></button>
               ) : (
-                 <HomeButton onClick={goHome} />
+                 <HomeButton onClick={goHome} /> // <<< THAY ĐỔI: SỬ DỤNG HOMEBUTTON COMPONENT
               )}
           </div>
         </div>
@@ -220,7 +221,7 @@ const CircularProgress = memo(({ percentage, size, strokeWidth, trackColor }) =>
     );
 });
 
-const colorClasses = { indigo: { border: 'hover:border-indigo-300', bg: 'bg-indigo-100', text: 'text-indigo-600', hoverBg: 'group-hover:bg-indigo-200', arrow: 'group-hover:text-indigo-500' }, pink: { border: 'hover:border-pink-300', bg: 'bg-pink-100', text: 'text-pink-600', hoverBg: 'group-hover:bg-pink-200', arrow: 'group-hover:text-pink-500' }, teal: { border: 'hover:border-teal-300', bg: 'bg-teal-100', text: 'text-teal-600', hoverBg: 'group-hover:bg-teal-200', arrow: 'group-hover:text-teal-500' }, orange: { border: 'hover:border-orange-300', bg: 'bg-orange-100', text: 'text-orange-600', hoverBg: 'group-hover:bg-orange-200', arrow: 'group-hover:text-orange-500' }, purple: { border: 'hover:border-purple-300', bg: 'bg-purple-100', text: 'text-purple-600', hoverBg: 'group-hover:bg-purple-200', arrow: 'group-hover:text-purple-500' }, red: { border: 'hover:border-red-300', bg: 'bg-red-100', text: 'text-red-600', hoverBg: 'group-hover:bg-red-200', arrow: 'group-hover:text-red-500' }, green: { border: 'hover:border-green-300', bg: 'bg-green-100', text: 'text-green-600', hoverBg: 'group-hover:bg-green-200', arrow: 'group-hover:text-green-500' }, yellow: { border: 'hover:border-yellow-300', bg: 'bg-yellow-100', text: 'text-yellow-600', hoverBg: 'group-hover:bg-yellow-200', arrow: 'group-hover:text-yellow-500' }, gray: { border: 'border-gray-300', bg: 'bg-gray-200', text: 'text-gray-500', hoverBg: 'group-hover:bg-gray-200', arrow: 'group-hover:text-gray-400' },};
+const colorClasses = { indigo: { border: 'hover:border-indigo-300', bg: 'bg-indigo-100', text: 'text-indigo-600', hoverBg: 'group-hover:bg-indigo-200', arrow: 'group-hover:text-indigo-500' }, pink: { border: 'hover:border-pink-300', bg: 'bg-pink-100', text: 'text-pink-600', hoverBg: 'group-hover:bg-pink-200', arrow: 'group-hover:text-pink-500' }, teal: { border: 'hover:border-teal-300', bg: 'bg-teal-100', text: 'text-teal-600', hoverBg: 'group-hover:bg-teal-200', arrow: 'group-hover:text-teal-500' }, orange: { border: 'hover:border-orange-300', bg: 'bg-orange-100', text: 'text-orange-600', hoverBg: 'group-hover:bg-orange-200', arrow: 'group-hover:text-orange-500' }, purple: { border: 'hover:border-purple-300', bg: 'bg-purple-100', text: 'text-purple-600', hoverBg: 'group-hover:bg-purple-200', arrow: 'group-hover:text-purple-500' }, red: { border: 'hover:border-red-300', bg: 'bg-red-100', text: 'text-red-600', hoverBg: 'group-hover:bg-red-200', arrow: 'group-hover:text-red-500' }, green: { border: 'hover:border-green-300', bg: 'bg-green-100', text: 'text-green-600', hoverBg: 'group-hover:bg-green-200', arrow: 'group-hover:text-green-500' }, yellow: { border: 'hover:border-yellow-300', bg: 'bg-yellow-100', text: 'text-yellow-600', hoverBg: 'group-hover:bg-yellow-200', arrow: 'group-hover:text-yellow-500' }, cyan: { border: 'hover:border-cyan-300', bg: 'bg-cyan-100', text: 'text-cyan-600', hoverBg: 'group-hover:bg-cyan-200', arrow: 'group-hover:text-cyan-500' }, gray: { border: 'border-gray-300', bg: 'bg-gray-200', text: 'text-gray-500', hoverBg: 'group-hover:bg-gray-200', arrow: 'group-hover:text-gray-400' },};
 
 const PracticeCard = memo(({ practiceNumber, details, progress, onRewardsClick, onReviewClick }) => {
     const { handlePracticeSelect } = useQuizApp();
@@ -297,7 +298,7 @@ function PracticeList() {
     },
     vocaMatch: {
         '1': { title: 'Practice 1', desc: ['Match Words'], color: 'green' },
-        '2': { title: 'Practice 2', desc: ['Listening Match'], color: 'teal' },
+        '2': { title: 'Practice 2', desc: ['Match Audio'], color: 'cyan' }, // <<< THÊM MỚI
     },
     dienTu: {
         '1': { title: 'Practice 1', desc: ['Type Word', 'Picture'], color: 'indigo' },
@@ -313,6 +314,7 @@ function PracticeList() {
   const handleReviewClick = useCallback((practiceNumber) => { setSelectedPracticeForReview(practiceNumber); setView('reviews'); }, []);
   const handleRewardsClick = useCallback((practiceNumber, practiceTitle) => { setSelectedPracticeForRewards({ number: practiceNumber, title: practiceTitle }); setIsRewardsPopupOpen(true); }, []);
 
+  // <<< THAY ĐỔI TẠI ĐÂY
   if (loading) {
     return <PracticeListLoadingSkeleton />;
   }
