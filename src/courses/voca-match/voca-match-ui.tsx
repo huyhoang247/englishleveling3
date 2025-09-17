@@ -62,7 +62,7 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
   );
 };
 
-// --- MODIFIED: AudioButton now has its own state for playing animation ---
+// --- MODIFIED: AudioButton with playing state and adjusted size ---
 const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disabled: boolean, isSelected: boolean, isIncorrect: boolean }> = 
 ({ audioUrl, onClick, disabled, isSelected, isIncorrect }) => {
     const [isPlaying, setIsPlaying] = useState(false);
@@ -92,7 +92,7 @@ const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disa
             }}
             disabled={disabled || !audioUrl}
             // --- CSS MODIFIED for size and animation ---
-            className={`w-full px-3 py-4 text-center rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center
+            className={`w-full p-3 text-center rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center
                 ${disabled ? correctStyle : 'bg-white text-gray-800 hover:bg-indigo-50'}
                 ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''}
                 ${isIncorrect ? incorrectStyle : ''}
@@ -100,7 +100,7 @@ const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disa
                 ${isPlaying ? 'animate-pulse ring-2 ring-indigo-400' : ''}
             `}
         >
-            <AudioIcon className={`w-5 h-5 sm:w-6 sm:h-6 ${disabled ? 'text-gray-400' : 'text-indigo-600'}`} />
+            <AudioIcon className={`w-5 h-5 ${disabled ? 'text-gray-400' : 'text-indigo-600'}`} />
         </button>
     );
 };
@@ -236,8 +236,8 @@ const VocaMatchUI: React.FC = () => {
                   key={item.word}
                   onClick={() => handleLeftSelect(item.word)}
                   disabled={isCorrect}
-                  // --- CSS MODIFIED for size consistency ---
-                  className={`w-full px-3 py-4 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800 hover:bg-indigo-50'} ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''} ${isIncorrect ? incorrectStyle : ''}`}>
+                  // --- CSS REVERTED to original padding ---
+                  className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800 hover:bg-indigo-50'} ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''} ${isIncorrect ? incorrectStyle : ''}`}>
                   {item.word}
                 </button>
               );
@@ -253,8 +253,8 @@ const VocaMatchUI: React.FC = () => {
                   key={word}
                   onClick={() => handleRightSelect(word)}
                   disabled={isCorrect || !selectedLeft}
-                  // --- CSS MODIFIED for size consistency ---
-                  className={`w-full px-3 py-4 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800'} ${isIncorrect ? incorrectStyle : ''} ${selectedLeft && !isCorrect ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'} ${!isCorrect && 'disabled:opacity-50'}`}>
+                  // --- CSS REVERTED to original padding ---
+                  className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800'} ${isIncorrect ? incorrectStyle : ''} ${selectedLeft && !isCorrect ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'} ${!isCorrect && 'disabled:opacity-50'}`}>
                   {word}
                 </button>
               );
