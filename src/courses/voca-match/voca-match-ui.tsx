@@ -53,7 +53,7 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
         key={definition.english}
         className="bg-white/80 backdrop-blur-sm border border-indigo-100 rounded-xl p-4 shadow-md animate-fade-in-up"
       >
-        <div className="flex items-center mb-2">
+        <div className="flex items-baseline mb-2">
           <BookmarkIcon className="w-5 h-5 text-indigo-500 mr-2 flex-shrink-0" />
           <h3 className="text-lg font-bold text-gray-800">{definition.english}</h3>
           <span className="text-gray-500 font-medium ml-2">/ {definition.vietnamese}</span>
@@ -124,8 +124,7 @@ const VoiceSelector: React.FC = () => {
             <button onClick={handlePrev} className="p-1 text-white/80 hover:text-white rounded-full hover:bg-white/20 transition-colors">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
             </button>
-            <div className="flex items-center gap-1.5 text-white text-xs font-semibold px-1 select-none">
-                 <VoiceIcon className="w-3.5 h-3.5" />
+            <div className="flex items-center text-white text-xs font-semibold px-1 select-none">
                  <span>{selectedVoice}</span>
             </div>
             <button onClick={handleNext} className="p-1 text-white/80 hover:text-white rounded-full hover:bg-white/20 transition-colors">
