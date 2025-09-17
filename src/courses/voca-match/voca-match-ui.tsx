@@ -32,7 +32,6 @@ const RefreshIcon = ({ className }: { className: string }) => (
 const BookmarkIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="http://www.w3.org/2000/svg" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" /></svg>
 );
-// --- NEW: Audio Icon ---
 const AudioIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"> <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.108 12 5v14c0 .892-1.077 1.337-1.707.707L5.586 15z" /> </svg>
 );
@@ -63,11 +62,15 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
   );
 };
 
-// --- NEW: Audio Button Component ---
-const AudioButton: React.FC<{ word: string, onClick: () => void, disabled: boolean, isSelected: boolean, isIncorrect: boolean }> = 
-({ word, onClick, disabled, isSelected, isIncorrect }) => {
-    const audioUrl = `https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/public/audios/${word}.mp3`;
+// --- MODIFIED: AudioButton now accepts a direct URL ---
+const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disabled: boolean, isSelected: boolean, isIncorrect: boolean }> = 
+({ audioUrl, onClick, disabled, isSelected, isIncorrect }) => {
+    
     const playAudio = () => {
+        if (!audioUrl) {
+            console.warn("Audio URL is not available.");
+            return;
+        }
         const audio = new Audio(audioUrl);
         audio.play().catch(e => console.error("Error playing audio:", e));
     };
@@ -81,11 +84,12 @@ const AudioButton: React.FC<{ word: string, onClick: () => void, disabled: boole
                 playAudio();
                 onClick();
             }}
-            disabled={disabled}
+            disabled={disabled || !audioUrl}
             className={`w-full p-3 text-center rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center
                 ${disabled ? correctStyle : 'bg-white text-gray-800 hover:bg-indigo-50'}
                 ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''}
                 ${isIncorrect ? incorrectStyle : ''}
+                ${!audioUrl ? 'opacity-50 cursor-not-allowed' : ''}
             `}
         >
             <AudioIcon className={`w-6 h-6 sm:w-7 sm:h-7 ${disabled ? 'text-gray-400' : 'text-indigo-600'}`} />
@@ -114,7 +118,7 @@ const VocaMatchUI: React.FC = () => {
     masteryCount,
     streak,
     streakAnimation,
-    isAudioMatch, // <<< NEW
+    isAudioMatch,
     handleLeftSelect,
     handleRightSelect,
     resetGame,
@@ -123,7 +127,7 @@ const VocaMatchUI: React.FC = () => {
   } = useVocaMatch();
 
   const matchedVietnameseWords = useMemo(() => {
-    if (isAudioMatch) return new Set(); // Not needed for audio match
+    if (isAudioMatch) return new Set();
     const matchedSet = new Set<string>();
     correctPairs.forEach(englishWord => {
       const pair = allWordPairs.find(p => p.english === englishWord);
@@ -201,18 +205,18 @@ const VocaMatchUI: React.FC = () => {
 
         <main className="flex-grow grid grid-cols-2 gap-4 sm:gap-6">
           <div className="flex flex-col gap-3">
-            {leftColumn.map(word => {
-              const isSelected = selectedLeft === word;
-              const isCorrect = correctPairs.includes(word);
-              const isIncorrect = incorrectPair?.left === word;
+            {/* --- MODIFIED: Rendering logic for left column --- */}
+            {leftColumn.map(item => {
+              const isSelected = selectedLeft === item.word;
+              const isCorrect = correctPairs.includes(item.word);
+              const isIncorrect = incorrectPair?.left === item.word;
 
-              // --- MODIFIED: Conditional Rendering for Left Column ---
               if (isAudioMatch) {
                 return (
                   <AudioButton
-                    key={word}
-                    word={word}
-                    onClick={() => handleLeftSelect(word)}
+                    key={item.word}
+                    audioUrl={item.audioUrls?.Matilda ?? null} // Use Matilda's voice, fallback to null
+                    onClick={() => handleLeftSelect(item.word)}
                     disabled={isCorrect}
                     isSelected={isSelected}
                     isIncorrect={isIncorrect}
@@ -222,18 +226,17 @@ const VocaMatchUI: React.FC = () => {
 
               return (
                 <button
-                  key={word}
-                  onClick={() => handleLeftSelect(word)}
+                  key={item.word}
+                  onClick={() => handleLeftSelect(item.word)}
                   disabled={isCorrect}
                   className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800 hover:bg-indigo-50'} ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''} ${isIncorrect ? incorrectStyle : ''}`}>
-                  {word}
+                  {item.word}
                 </button>
               );
             })}
           </div>
           <div className="flex flex-col gap-3">
             {rightColumn.map(word => {
-              // --- MODIFIED: Conditional check for correctness in Right Column ---
               const isCorrect = isAudioMatch ? correctPairs.includes(word) : matchedVietnameseWords.has(word);
               const isIncorrect = incorrectPair?.right === word;
                                             
