@@ -23,8 +23,17 @@ interface VocaMatchGameProps {
 }
 
 // --- Icons (kept here as they are pure UI) ---
+const SpeakerIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
+);
+
+const generateAudioUrl = (word: string) => {
+  const formattedWord = word.trim().toLowerCase().replace(/ /g, '_');
+  return `https://storage.googleapis.com/english-voca-audio/audio/${formattedWord}.mp3`;
+};
+
 const TrophyIcon = ({ className }: { className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V22h4v-7.34" /><path d="M12 14.66L15.45 8.3A3 3 0 0 0 12.95 4h-1.9a3 3 0 0 0-2.5 4.3Z" /></svg>
+    <svg xmlns="http://www.w.3.org/2000/svg" className={className} viewBox="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V22h4v-7.34" /><path d="M12 14.66L15.45 8.3A3 3 0 0 0 12.95 4h-1.9a3 3 0 0 0-2.5 4.3Z" /></svg>
 );
 const RefreshIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path><path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path></svg>
@@ -79,6 +88,7 @@ const VocaMatchUI: React.FC = () => {
     masteryCount,
     streak,
     streakAnimation,
+    isAudioMode,
     handleLeftSelect,
     handleRightSelect,
     resetGame,
@@ -86,18 +96,10 @@ const VocaMatchUI: React.FC = () => {
     allWordPairs
   } = useVocaMatch();
 
-  // Logic mới để tìm các từ tiếng Việt đã được ghép đúng
-  const matchedVietnameseWords = useMemo(() => {
-    const matchedSet = new Set<string>();
-    correctPairs.forEach(englishWord => {
-      const pair = allWordPairs.find(p => p.english === englishWord);
-      if (pair) {
-        matchedSet.add(pair.vietnamese);
-      }
-    });
-    return matchedSet;
-  }, [correctPairs, allWordPairs]);
-
+  const handlePlayAudio = (word: string) => {
+    const audio = new Audio(generateAudioUrl(word));
+    audio.play().catch(e => console.error("Audio playback failed for " + word, e));
+  };
 
   if (loading) {
     return <VocaMatchLoadingSkeleton />;
@@ -121,8 +123,7 @@ const VocaMatchUI: React.FC = () => {
       </div>
     );
   }
-
-  // <<<--- THAY ĐỔI DUY NHẤT: Quay lại style màu xám như cũ ---
+  
   const correctStyle = 'bg-gray-200 text-gray-400 line-through cursor-default';
   const incorrectStyle = 'bg-red-200 ring-2 ring-red-500 animate-shake';
 
@@ -183,16 +184,22 @@ const VocaMatchUI: React.FC = () => {
           </div>
           <div className="flex flex-col gap-3">
             {rightColumn.map(word => {
-              const isCorrect = matchedVietnameseWords.has(word);
+              const correspondingPair = allWordPairs.find(p => 
+                  isAudioMode ? p.english === word : p.vietnamese === word
+              );
+              const isCorrect = correspondingPair ? correctPairs.includes(correspondingPair.english) : false;
               const isIncorrect = incorrectPair?.right === word;
                                             
               return (
                 <button
                   key={word}
-                  onClick={() => handleRightSelect(word)}
+                  onClick={() => {
+                    if (isAudioMode) handlePlayAudio(word);
+                    handleRightSelect(word);
+                  }}
                   disabled={isCorrect || !selectedLeft}
-                  className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800'} ${isIncorrect ? incorrectStyle : ''} ${selectedLeft && !isCorrect ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'} ${!isCorrect && 'disabled:opacity-50'}`}>
-                  {word}
+                  className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center ${isCorrect ? correctStyle : 'bg-white text-gray-800'} ${isIncorrect ? incorrectStyle : ''} ${selectedLeft && !isCorrect ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'} ${!isCorrect && 'disabled:opacity-50'}`}>
+                  {isAudioMode ? <SpeakerIcon className="w-6 h-6 text-gray-700"/> : word}
                 </button>
               );
             })}
