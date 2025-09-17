@@ -75,7 +75,7 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
 // --- COMPONENT: LobbyScreen ---
 const LobbyScreen = ({ balance, onEnterRoom }: { balance: number; onEnterRoom: (roomId: number) => void; }) => {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans p-4">
+        <div className="flex flex-col items-center justify-start min-h-screen w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans p-4 pt-12">
             <div className="text-center mb-8">
                 <h1 className="text-4xl md:text-6xl font-bold font-lilita uppercase tracking-wider text-cyan-300 drop-shadow-[0_0_10px_rgba(100,220,255,0.6)]">
                     Casino Royale
@@ -88,8 +88,7 @@ const LobbyScreen = ({ balance, onEnterRoom }: { balance: number; onEnterRoom: (
                 </div>
             </div>
 
-            {/* === CHANGED HERE ===: Removed max-w-4xl and added responsive padding (px-*) */}
-            <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-4 sm:px-6 lg:px-8">
+            <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {rooms.map(room => {
                     const isAffordable = balance >= room.minBalance;
                     return (
@@ -253,9 +252,8 @@ const GameScreen = ({ room, balance, jackpot, onExit, onBalanceUpdate, onJackpot
 
 
     return (
-        <div className={`flex flex-col items-center justify-center min-h-screen w-full bg-slate-900 bg-gradient-to-br ${room.bgGradient} text-white font-sans transition-all duration-500`}>
-            {/* === CHANGED HERE ===: Removed max-w-2xl */}
-            <div className="w-full flex flex-col p-6 md:p-8 relative">
+        <div className={`flex flex-col items-center justify-start min-h-screen w-full bg-slate-900 bg-gradient-to-br ${room.bgGradient} text-white font-sans transition-all duration-500 pt-8`}>
+            <div className="w-full max-w-2xl flex flex-col p-6 md:p-8 relative">
                  <button onClick={onExit} className="absolute top-4 left-4 text-slate-400 hover:text-white transition-colors flex items-center gap-2 z-20">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                     Rời phòng
