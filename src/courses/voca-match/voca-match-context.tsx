@@ -10,7 +10,7 @@ import React, {
 } from 'react';
 import { auth } from '../../firebase.js';
 import { fetchOrCreateUser, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../course-data-service.ts';
-import { generateAudioUrlsForWord } from '../voca-data/audio-quiz-generator.ts';
+import { generateAudioUrlsForWord } from '../../voca-data/audio-quiz-generator.ts';
 import { allWordPairs, shuffleArray } from './voca-match-data.ts';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
