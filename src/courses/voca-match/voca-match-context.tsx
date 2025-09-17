@@ -10,6 +10,8 @@ import React, {
 } from 'react';
 import { auth } from '../../firebase.js';
 import { fetchOrCreateUser, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../course-data-service.ts';
+// --- MODIFIED: Import the generator function ---
+import { generateAudioUrlsForWord } from '../../voca-data/audio-quiz-generator.ts';
 import { allWordPairs, shuffleArray } from './voca-match-data.ts';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
@@ -21,6 +23,12 @@ interface Definition {
   explanation: string;
 }
 
+// --- MODIFIED: Update the type for leftColumn to include audio URLs ---
+interface LeftColumnItem {
+  word: string;
+  audioUrls: { [key: string]: string } | null;
+}
+
 interface VocaMatchContextType {
   loading: boolean;
   showEndScreen: boolean;
@@ -29,7 +37,7 @@ interface VocaMatchContextType {
   gameProgress: number;
   pairsCompletedInSession: number;
   totalPairsInSession: number;
-  leftColumn: string[];
+  leftColumn: LeftColumnItem[]; // <<< UPDATED TYPE
   rightColumn: string[];
   selectedLeft: string | null;
   correctPairs: string[];
@@ -39,9 +47,9 @@ interface VocaMatchContextType {
   masteryCount: number;
   streak: number;
   streakAnimation: boolean;
-  isAudioMatch: boolean; // <<< THÊM MỚI
+  isAudioMatch: boolean;
   handleLeftSelect: (englishWord: string) => void;
-  handleRightSelect: (selectedWord: string) => Promise<void>; // <<< THAY ĐỔI
+  handleRightSelect: (selectedWord: string) => Promise<void>;
   resetGame: () => void;
   onGoBack: () => void;
   allWordPairs: { english: string; vietnamese: string }[];
@@ -72,7 +80,6 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   onGoBack,
   selectedPractice,
 }) => {
-  // All state and logic from the original component are moved here
   const [user] = useState(auth.currentUser);
   const [loading, setLoading] = useState(true);
   const [playablePairs, setPlayablePairs] = useState<any[]>([]);
@@ -86,7 +93,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   const [score, setScore] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
 
-  const [leftColumn, setLeftColumn] = useState<string[]>([]);
+  const [leftColumn, setLeftColumn] = useState<LeftColumnItem[]>([]); // <<< UPDATED TYPE
   const [rightColumn, setRightColumn] = useState<string[]>([]);
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [correctPairs, setCorrectPairs] = useState<string[]>([]);
@@ -96,7 +103,6 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   const [showConfetti, setShowConfetti] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
 
-  // --- NEW: Determine game mode from selectedPractice ---
   const isAudioMatch = useMemo(() => selectedPractice % 100 === 2, [selectedPractice]);
   const gameModeId = useMemo(() => `match-${selectedPractice % 100}`, [selectedPractice]);
 
@@ -159,14 +165,22 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       return;
     }
     
-    // --- MODIFIED: Setup columns based on game mode ---
     const englishWords = roundPairs.map(p => p.english);
-    setLeftColumn(englishWords);
+
+    // --- MODIFIED: Generate audio URLs here ---
     if (isAudioMatch) {
-      // For Audio match, right column is shuffled English words
+      const leftColumnData = englishWords.map(word => ({
+        word: word,
+        audioUrls: generateAudioUrlsForWord(word)
+      }));
+      setLeftColumn(leftColumnData);
       setRightColumn(shuffleArray(englishWords));
     } else {
-      // For classic match, right column is shuffled Vietnamese words
+      const leftColumnData = englishWords.map(word => ({
+        word: word,
+        audioUrls: null // No audio needed for classic match
+      }));
+      setLeftColumn(leftColumnData);
       setRightColumn(shuffleArray(roundPairs.map(p => p.vietnamese)));
     }
 
@@ -191,7 +205,6 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   const handleRightSelect = async (selectedWord: string) => {
     if (!selectedLeft) return;
 
-    // --- MODIFIED: Check correctness based on game mode ---
     let isCorrect = false;
     if (isAudioMatch) {
       isCorrect = selectedLeft === selectedWord;
@@ -269,7 +282,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     masteryCount,
     streak,
     streakAnimation,
-    isAudioMatch, // <<< THÊM MỚI
+    isAudioMatch,
     handleLeftSelect,
     handleRightSelect,
     resetGame,
