@@ -1,5 +1,5 @@
 // VocaMatchGame.tsx (Refactored to use Context)
-import React, { useMemo, useState } from 'react'; // <<< THÊM: useState
+import React, { useMemo, useState } from 'react';
 import { VocaMatchProvider, useVocaMatch } from './voca-match-context.tsx'; // Import context
 import Confetti from '../../ui/fireworks-effect.tsx';
 import VocaMatchLoadingSkeleton from './voca-match-loading.tsx';
@@ -62,7 +62,6 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
   );
 };
 
-// --- MODIFIED: AudioButton with playing state and adjusted size ---
 const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disabled: boolean, isSelected: boolean, isIncorrect: boolean }> = 
 ({ audioUrl, onClick, disabled, isSelected, isIncorrect }) => {
     const [isPlaying, setIsPlaying] = useState(false);
@@ -91,7 +90,6 @@ const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disa
                 onClick();
             }}
             disabled={disabled || !audioUrl}
-            // --- CSS MODIFIED for size and animation ---
             className={`w-full p-3 text-center rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center
                 ${disabled ? correctStyle : 'bg-white text-gray-800 hover:bg-indigo-50'}
                 ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''}
@@ -105,6 +103,31 @@ const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disa
     );
 };
 
+// --- NEW: Voice Selector Component ---
+const VoiceSelector: React.FC = () => {
+    const { availableVoices, selectedVoice, setSelectedVoice } = useVocaMatch();
+
+    if (availableVoices.length <= 1) return null;
+
+    return (
+        <div className="relative">
+            <select
+                value={selectedVoice}
+                onChange={(e) => setSelectedVoice(e.target.value)}
+                className="appearance-none bg-white/20 backdrop-blur-sm text-white text-xs font-semibold rounded-md py-1 pl-2 pr-6 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"
+            >
+                {availableVoices.map(voice => (
+                    <option key={voice} value={voice} className="text-black">
+                        {voice}
+                    </option>
+                ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-white/80">
+                <svg className="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            </div>
+        </div>
+    );
+}
 
 // --- Main UI Component that consumes context ---
 const VocaMatchUI: React.FC = () => {
@@ -127,6 +150,7 @@ const VocaMatchUI: React.FC = () => {
     streak,
     streakAnimation,
     isAudioMatch,
+    selectedVoice, // <<< Get from context
     handleLeftSelect,
     handleRightSelect,
     resetGame,
@@ -202,7 +226,8 @@ const VocaMatchUI: React.FC = () => {
                 </div>
               </div>
             </div>
-            <p className="text-sm font-semibold text-white/90">Tiến Độ</p>
+            {/* --- MODIFIED: Conditional rendering of VoiceSelector --- */}
+            {isAudioMatch ? <VoiceSelector /> : <p className="text-sm font-semibold text-white/90">Tiến Độ</p>}
           </div>
           <div className="w-full h-3 bg-gray-700/80 rounded-full overflow-hidden relative">
             <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${gameProgress}%` }}>
@@ -222,7 +247,8 @@ const VocaMatchUI: React.FC = () => {
                 return (
                   <AudioButton
                     key={item.word}
-                    audioUrl={item.audioUrls?.Matilda ?? null}
+                    // --- MODIFIED: Use selectedVoice to pick the correct URL ---
+                    audioUrl={item.audioUrls?.[selectedVoice] ?? null}
                     onClick={() => handleLeftSelect(item.word)}
                     disabled={isCorrect}
                     isSelected={isSelected}
@@ -236,7 +262,6 @@ const VocaMatchUI: React.FC = () => {
                   key={item.word}
                   onClick={() => handleLeftSelect(item.word)}
                   disabled={isCorrect}
-                  // --- CSS REVERTED to original padding ---
                   className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800 hover:bg-indigo-50'} ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''} ${isIncorrect ? incorrectStyle : ''}`}>
                   {item.word}
                 </button>
@@ -253,7 +278,6 @@ const VocaMatchUI: React.FC = () => {
                   key={word}
                   onClick={() => handleRightSelect(word)}
                   disabled={isCorrect || !selectedLeft}
-                  // --- CSS REVERTED to original padding ---
                   className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800'} ${isIncorrect ? incorrectStyle : ''} ${selectedLeft && !isCorrect ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-default'} ${!isCorrect && 'disabled:opacity-50'}`}>
                   {word}
                 </button>
