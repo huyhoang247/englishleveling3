@@ -39,11 +39,12 @@ interface VocaMatchContextType {
   masteryCount: number;
   streak: number;
   streakAnimation: boolean;
+  isAudioMode: boolean; // <<< THAY ĐỔI 1: Thêm isAudioMode vào interface
   handleLeftSelect: (englishWord: string) => void;
-  handleRightSelect: (vietnameseWord: string) => Promise<void>;
+  handleRightSelect: (selectedValue: string) => Promise<void>; // Thay đổi tên param cho rõ nghĩa
   resetGame: () => void;
   onGoBack: () => void;
-  allWordPairs: { english: string; vietnamese: string }[]; // <<< THÊM VÀO
+  allWordPairs: { english: string; vietnamese: string }[];
 }
 
 const GAME_SIZE = 5;
@@ -96,6 +97,8 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   const [showEndScreen, setShowEndScreen] = useState(false);
 
   const gameModeId = useMemo(() => `match-${selectedPractice}`, [selectedPractice]);
+  // <<< THAY ĐỔI 2: Xác định chế độ chơi dựa trên selectedPractice
+  const isAudioMode = useMemo(() => selectedPractice === 2, [selectedPractice]);
 
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
@@ -156,12 +159,18 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       return;
     }
     setLeftColumn(roundPairs.map(p => p.english));
-    setRightColumn(shuffleArray(roundPairs.map(p => p.vietnamese)));
+    
+    // <<< THAY ĐỔI 3: Tạo dữ liệu cho cột phải tùy theo chế độ chơi
+    const rightColumnData = isAudioMode
+      ? roundPairs.map(p => p.english) // Chế độ audio, cột phải là từ tiếng Anh (để UI tạo audio)
+      : roundPairs.map(p => p.vietnamese); // Chế độ thường, cột phải là tiếng Việt
+
+    setRightColumn(shuffleArray(rightColumnData));
     setCorrectPairs([]);
     setSelectedLeft(null);
     setIncorrectPair(null);
     setLastCorrectDefinition(null);
-  }, [currentRound, playablePairs, loading]);
+  }, [currentRound, playablePairs, loading, isAudioMode]); // Thêm isAudioMode vào dependency
 
   useEffect(() => {
     if (!loading) {
@@ -175,11 +184,16 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     setIncorrectPair(null);
   };
 
-  const handleRightSelect = async (vietnameseWord: string) => {
+  const handleRightSelect = async (selectedValue: string) => {
     if (!selectedLeft) return;
 
+    // <<< THAY ĐỔI 4: Logic kiểm tra câu trả lời linh hoạt
     const originalPair = allWordPairs.find(p => p.english === selectedLeft);
-    if (originalPair?.vietnamese === vietnameseWord) {
+    const isMatch = isAudioMode
+      ? selectedLeft === selectedValue // Chế độ audio: từ tiếng Anh ở cột trái phải khớp với từ tiếng Anh đại diện cho audio ở cột phải
+      : originalPair?.vietnamese === selectedValue; // Chế độ thường: nghĩa tiếng Việt phải khớp
+
+    if (isMatch) {
       setCorrectPairs(prev => [...prev, selectedLeft]);
       setSelectedLeft(null);
       setScore(prev => prev + 1);
@@ -210,7 +224,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
         }, 2500);
       }
     } else {
-      setIncorrectPair({ left: selectedLeft, right: vietnameseWord });
+      setIncorrectPair({ left: selectedLeft, right: selectedValue });
       setSelectedLeft(null);
       setStreak(0);
       setLastCorrectDefinition(null);
@@ -248,11 +262,12 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     masteryCount,
     streak,
     streakAnimation,
+    isAudioMode, // <<< THAY ĐỔI 5: Cung cấp isAudioMode cho UI
     handleLeftSelect,
     handleRightSelect,
     resetGame,
     onGoBack,
-    allWordPairs, // <<< THÊM VÀO
+    allWordPairs,
   };
 
   return <VocaMatchContext.Provider value={value}>{children}</VocaMatchContext.Provider>;
