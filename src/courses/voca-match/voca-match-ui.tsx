@@ -1,5 +1,5 @@
 // VocaMatchGame.tsx (Refactored to use Context)
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { VocaMatchProvider, useVocaMatch } from './voca-match-context.tsx'; // Import context
 import Confetti from '../../ui/fireworks-effect.tsx';
 import VocaMatchLoadingSkeleton from './voca-match-loading.tsx';
@@ -9,7 +9,6 @@ import BackButton from '../../ui/back-button.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 import StreakDisplay from '../../ui/display/streak-display.tsx';
-// uiAssets is not needed for the arrow design, so it can be removed if not used elsewhere.
 
 // --- Interfaces (can be shared or defined here) ---
 interface Definition {
@@ -33,12 +32,6 @@ const RefreshIcon = ({ className }: { className: string }) => (
 const BookmarkIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="http://www.w3.org/2000/svg" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" /></svg>
 );
-const AudioIcon = ({ className }: { className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"> <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.108 12 5v14c0 .892-1.077 1.337-1.707.707L5.586 15z" /> </svg>
-);
-const VoiceIcon = ({ className }: { className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-);
 
 // --- UI Sub-components ---
 const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ definition }) => {
@@ -53,11 +46,9 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
         key={definition.english}
         className="bg-white/80 backdrop-blur-sm border border-indigo-100 rounded-xl p-4 shadow-md animate-fade-in-up"
       >
-        <div className="flex items-baseline mb-2">
-          <h3 className="flex items-center text-lg font-bold text-gray-800">
-            <BookmarkIcon className="w-5 h-5 text-indigo-500 mr-2 flex-shrink-0" />
-            <span>{definition.english}</span>
-          </h3>
+        <div className="flex items-center mb-2">
+          <BookmarkIcon className="w-5 h-5 text-indigo-500 mr-2 flex-shrink-0" />
+          <h3 className="text-lg font-bold text-gray-800">{definition.english}</h3>
           <span className="text-gray-500 font-medium ml-2">/ {definition.vietnamese}</span>
         </div>
         <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
@@ -68,96 +59,50 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
   );
 };
 
-const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disabled: boolean, isSelected: boolean, isIncorrect: boolean }> =
-({ audioUrl, onClick, disabled, isSelected, isIncorrect }) => {
-    const [isPlaying, setIsPlaying] = useState(false);
-
-    const playAudio = () => {
-        if (!audioUrl || isPlaying) return;
-        const audio = new Audio(audioUrl);
-        setIsPlaying(true);
-        audio.play().catch(e => {
-            console.error("Error playing audio:", e);
-            setIsPlaying(false);
-        });
-        audio.onended = () => setIsPlaying(false);
-    };
-
-    const correctStyle = 'bg-gray-200 text-gray-400 line-through cursor-default';
-    const incorrectStyle = 'bg-red-200 ring-2 ring-red-500 animate-shake';
-
-    return (
-        <button
-            onClick={() => { playAudio(); onClick(); }}
-            disabled={disabled || !audioUrl}
-            className={`w-full p-3 text-center rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center
-                ${disabled ? correctStyle : 'bg-white text-gray-800 hover:bg-indigo-50'}
-                ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''}
-                ${isIncorrect ? incorrectStyle : ''}
-                ${!audioUrl ? 'opacity-50 cursor-not-allowed' : ''}
-                ${isPlaying ? 'animate-pulse ring-2 ring-indigo-400' : ''}
-            `}
-        >
-            <AudioIcon className={`w-5 h-5 ${disabled ? 'text-gray-400' : 'text-indigo-600'}`} />
-        </button>
-    );
-};
-
-// --- NEW/MODIFIED: Voice Selector with Arrows ---
-const VoiceSelector: React.FC = () => {
-    const { availableVoices, selectedVoice, setSelectedVoice } = useVocaMatch();
-
-    if (availableVoices.length <= 1) return <div className="w-28 h-6"></div>; // Placeholder to keep layout consistent
-
-    const currentIndex = availableVoices.indexOf(selectedVoice);
-
-    const handlePrev = () => {
-        const newIndex = (currentIndex - 1 + availableVoices.length) % availableVoices.length;
-        setSelectedVoice(availableVoices[newIndex]);
-    };
-
-    const handleNext = () => {
-        const newIndex = (currentIndex + 1) % availableVoices.length;
-        setSelectedVoice(availableVoices[newIndex]);
-    };
-
-    return (
-        <div className="flex items-center justify-center gap-1 bg-white/20 backdrop-blur-sm rounded-md border border-white/30 px-1 py-0.5">
-            <button onClick={handlePrev} className="p-1 text-white/80 hover:text-white rounded-full hover:bg-white/20 transition-colors">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
-            </button>
-            <div className="flex items-center text-white text-xs font-semibold px-1 select-none">
-                 <span>{selectedVoice}</span>
-            </div>
-            <button onClick={handleNext} className="p-1 text-white/80 hover:text-white rounded-full hover:bg-white/20 transition-colors">
-                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
-            </button>
-        </div>
-    );
-};
-
-
 // --- Main UI Component that consumes context ---
 const VocaMatchUI: React.FC = () => {
   const {
-    loading, showEndScreen, showConfetti, score, gameProgress, pairsCompletedInSession, totalPairsInSession,
-    leftColumn, rightColumn, selectedLeft, correctPairs, incorrectPair, lastCorrectDefinition, displayedCoins,
-    masteryCount, streak, streakAnimation, isAudioMatch, selectedVoice, handleLeftSelect, handleRightSelect,
-    resetGame, onGoBack, allWordPairs
+    loading,
+    showEndScreen,
+    showConfetti,
+    score,
+    gameProgress,
+    pairsCompletedInSession,
+    totalPairsInSession,
+    leftColumn,
+    rightColumn,
+    selectedLeft,
+    correctPairs,
+    incorrectPair,
+    lastCorrectDefinition,
+    displayedCoins,
+    masteryCount,
+    streak,
+    streakAnimation,
+    handleLeftSelect,
+    handleRightSelect,
+    resetGame,
+    onGoBack,
+    allWordPairs
   } = useVocaMatch();
 
+  // Logic mới để tìm các từ tiếng Việt đã được ghép đúng
   const matchedVietnameseWords = useMemo(() => {
-    if (isAudioMatch) return new Set();
     const matchedSet = new Set<string>();
     correctPairs.forEach(englishWord => {
       const pair = allWordPairs.find(p => p.english === englishWord);
-      if (pair) matchedSet.add(pair.vietnamese);
+      if (pair) {
+        matchedSet.add(pair.vietnamese);
+      }
     });
     return matchedSet;
-  }, [correctPairs, allWordPairs, isAudioMatch]);
+  }, [correctPairs, allWordPairs]);
 
 
-  if (loading) return <VocaMatchLoadingSkeleton />;
+  if (loading) {
+    return <VocaMatchLoadingSkeleton />;
+  }
+
   if (showEndScreen) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-4 bg-white">
@@ -177,6 +122,7 @@ const VocaMatchUI: React.FC = () => {
     );
   }
 
+  // <<<--- THAY ĐỔI DUY NHẤT: Quay lại style màu xám như cũ ---
   const correctStyle = 'bg-gray-200 text-gray-400 line-through cursor-default';
   const incorrectStyle = 'bg-red-200 ring-2 ring-red-500 animate-shake';
 
@@ -209,7 +155,7 @@ const VocaMatchUI: React.FC = () => {
                 </div>
               </div>
             </div>
-            {isAudioMatch ? <VoiceSelector /> : <p className="text-sm font-semibold text-white/90">Tiến Độ</p>}
+            <p className="text-sm font-semibold text-white/90">Tiến Độ</p>
           </div>
           <div className="w-full h-3 bg-gray-700/80 rounded-full overflow-hidden relative">
             <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${gameProgress}%` }}>
@@ -220,40 +166,26 @@ const VocaMatchUI: React.FC = () => {
 
         <main className="flex-grow grid grid-cols-2 gap-4 sm:gap-6">
           <div className="flex flex-col gap-3">
-            {leftColumn.map(item => {
-              const isSelected = selectedLeft === item.word;
-              const isCorrect = correctPairs.includes(item.word);
-              const isIncorrect = incorrectPair?.left === item.word;
-
-              if (isAudioMatch) {
-                return (
-                  <AudioButton
-                    key={item.word}
-                    audioUrl={item.audioUrls?.[selectedVoice] ?? null}
-                    onClick={() => handleLeftSelect(item.word)}
-                    disabled={isCorrect}
-                    isSelected={isSelected}
-                    isIncorrect={isIncorrect}
-                  />
-                );
-              }
-
+            {leftColumn.map(word => {
+              const isSelected = selectedLeft === word;
+              const isCorrect = correctPairs.includes(word);
+              const isIncorrect = incorrectPair?.left === word;
               return (
                 <button
-                  key={item.word}
-                  onClick={() => handleLeftSelect(item.word)}
+                  key={word}
+                  onClick={() => handleLeftSelect(word)}
                   disabled={isCorrect}
                   className={`w-full p-3 text-center text-sm sm:text-base font-semibold rounded-xl transition-all duration-200 shadow-sm ${isCorrect ? correctStyle : 'bg-white text-gray-800 hover:bg-indigo-50'} ${isSelected ? 'ring-2 ring-blue-500 scale-105' : ''} ${isIncorrect ? incorrectStyle : ''}`}>
-                  {item.word}
+                  {word}
                 </button>
               );
             })}
           </div>
           <div className="flex flex-col gap-3">
             {rightColumn.map(word => {
-              const isCorrect = isAudioMatch ? correctPairs.includes(word) : matchedVietnameseWords.has(word);
+              const isCorrect = matchedVietnameseWords.has(word);
               const isIncorrect = incorrectPair?.right === word;
-
+                                            
               return (
                 <button
                   key={word}
@@ -266,7 +198,7 @@ const VocaMatchUI: React.FC = () => {
             })}
           </div>
         </main>
-
+        
         <DefinitionDisplay definition={lastCorrectDefinition} />
       </div>
 
