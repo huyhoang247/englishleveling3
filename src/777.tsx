@@ -95,30 +95,43 @@ const LobbyScreen = ({ balance, onEnterRoom }: { balance: number; onEnterRoom: (
                         <div key={room.id} className={`rounded-xl border-2 transition-all duration-300 ${isAffordable ? 'border-slate-600 hover:border-cyan-400 hover:scale-[1.03]' : 'border-slate-700'}`}>
                            <div className={`relative p-6 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
                                
-                                {/* --- CHANGE START --- */}
-                                <span className={`inline-block self-start bg-slate-800 ${room.color} text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
+                                <span className={`inline-block self-start bg-slate-800 ${room.color} text-sm font-bold px-3 py-1 mb-6 rounded-full uppercase tracking-wider`}>
                                     {room.name}
                                 </span>
+
+                                {/* --- CHANGE START --- */}
+                                <div className="mt-auto pt-4 flex items-end justify-between border-t border-slate-700/50">
+                                    {/* Cụm thông tin bên trái */}
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs text-slate-400 uppercase font-semibold">Cược</span>
+                                            <span className="font-bold text-white">{room.baseBet.toLocaleString()}+</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs text-slate-400 uppercase font-semibold">Cần</span>
+                                            <span className="font-bold text-white flex items-center gap-1">
+                                                {room.minBalance.toLocaleString()}
+                                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5" />
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Nút bấm nhỏ gọn bên phải */}
+                                    <div>
+                                        <button
+                                            onClick={() => onEnterRoom(room.id)}
+                                            disabled={!isAffordable}
+                                            className="bg-cyan-600 text-white font-bold px-5 py-2 rounded-lg text-sm uppercase tracking-wider
+                                                        transition-all duration-200
+                                                        hover:enabled:bg-cyan-500 hover:enabled:shadow-lg hover:enabled:shadow-cyan-500/20
+                                                        focus:outline-none focus:ring-4 focus:ring-cyan-500/50
+                                                        disabled:bg-slate-700 disabled:cursor-not-allowed disabled:text-slate-400"
+                                        >
+                                            {isAffordable ? 'Chơi' : 'Khóa'}
+                                        </button>
+                                    </div>
+                                </div>
                                 {/* --- CHANGE END --- */}
-
-                               <div className="my-6 space-y-2 text-sm">
-                                   <div className="flex justify-between"><span>Mức cược:</span> <span className="font-semibold">{room.baseBet.toLocaleString()}+</span></div>
-                                   <div className="flex justify-between"><span>Yêu cầu:</span> <span className="font-semibold">{room.minBalance.toLocaleString()} xu</span></div>
-                               </div>
-
-                               <div className="mt-auto">
-                                   <button
-                                       onClick={() => onEnterRoom(room.id)}
-                                       disabled={!isAffordable}
-                                       className="w-full bg-cyan-600 text-white font-bold py-3 rounded-lg uppercase tracking-wider
-                                                  transition-all duration-200
-                                                  hover:enabled:bg-cyan-500 hover:enabled:shadow-lg hover:enabled:shadow-cyan-500/20
-                                                  focus:outline-none focus:ring-4 focus:ring-cyan-500/50
-                                                  disabled:bg-slate-700 disabled:cursor-not-allowed"
-                                   >
-                                       {isAffordable ? 'Vào Phòng' : 'Không đủ xu'}
-                                   </button>
-                               </div>
                            </div>
                         </div>
                     );
