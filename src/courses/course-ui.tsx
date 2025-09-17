@@ -148,7 +148,6 @@ const QuizAppContent: React.FC = () => {
 }
 
 // --- START: UNIFIED HEADER COMPONENT ---
-// <<< THAY ĐỔI: HomeIcon và BackIcon đã bị xóa vì chúng ta đang sử dụng các component nút chuyên dụng
 const AnalysisIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg> );
 
 function AppHeader() {
@@ -176,7 +175,7 @@ function AppHeader() {
                  <img src={quizHomeAssets.logoLarge} alt="Quiz App Logo" className="h-10 w-auto" />
               </a>
             ) : (
-              <BackButton onClick={goBack} /> // <<< THAY ĐỔI: SỬ DỤNG BACKBUTTON COMPONENT
+              <BackButton onClick={goBack} />
             )}
           </div>
           <div className="flex-1 flex justify-center px-4">
@@ -186,7 +185,7 @@ function AppHeader() {
               {currentView === 'main' ? (
                 <button onClick={() => setCurrentView('analysis')} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Xem phân tích"><AnalysisIcon /></button>
               ) : (
-                 <HomeButton onClick={goHome} /> // <<< THAY ĐỔI: SỬ DỤNG HOMEBUTTON COMPONENT
+                 <HomeButton onClick={goHome} />
               )}
           </div>
         </div>
@@ -298,6 +297,7 @@ function PracticeList() {
     },
     vocaMatch: {
         '1': { title: 'Practice 1', desc: ['Match Words'], color: 'green' },
+        '2': { title: 'Practice 2', desc: ['Listening Match'], color: 'teal' },
     },
     dienTu: {
         '1': { title: 'Practice 1', desc: ['Type Word', 'Picture'], color: 'indigo' },
@@ -313,7 +313,6 @@ function PracticeList() {
   const handleReviewClick = useCallback((practiceNumber) => { setSelectedPracticeForReview(practiceNumber); setView('reviews'); }, []);
   const handleRewardsClick = useCallback((practiceNumber, practiceTitle) => { setSelectedPracticeForRewards({ number: practiceNumber, title: practiceTitle }); setIsRewardsPopupOpen(true); }, []);
 
-  // <<< THAY ĐỔI TẠI ĐÂY
   if (loading) {
     return <PracticeListLoadingSkeleton />;
   }
