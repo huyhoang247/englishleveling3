@@ -39,9 +39,9 @@ interface VocaMatchContextType {
   masteryCount: number;
   streak: number;
   streakAnimation: boolean;
-  isAudioMode: boolean; // <<< THAY ĐỔI 1: Thêm isAudioMode vào interface
+  isAudioMatch: boolean; // <<< THÊM MỚI
   handleLeftSelect: (englishWord: string) => void;
-  handleRightSelect: (selectedValue: string) => Promise<void>; // Thay đổi tên param cho rõ nghĩa
+  handleRightSelect: (selectedWord: string) => Promise<void>; // <<< THAY ĐỔI
   resetGame: () => void;
   onGoBack: () => void;
   allWordPairs: { english: string; vietnamese: string }[];
@@ -96,9 +96,9 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   const [showConfetti, setShowConfetti] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
 
-  const gameModeId = useMemo(() => `match-${selectedPractice}`, [selectedPractice]);
-  // <<< THAY ĐỔI 2: Xác định chế độ chơi dựa trên selectedPractice
-  const isAudioMode = useMemo(() => selectedPractice === 2, [selectedPractice]);
+  // --- NEW: Determine game mode from selectedPractice ---
+  const isAudioMatch = useMemo(() => selectedPractice % 100 === 2, [selectedPractice]);
+  const gameModeId = useMemo(() => `match-${selectedPractice % 100}`, [selectedPractice]);
 
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
@@ -158,19 +158,23 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       setShowEndScreen(true);
       return;
     }
-    setLeftColumn(roundPairs.map(p => p.english));
     
-    // <<< THAY ĐỔI 3: Tạo dữ liệu cho cột phải tùy theo chế độ chơi
-    const rightColumnData = isAudioMode
-      ? roundPairs.map(p => p.english) // Chế độ audio, cột phải là từ tiếng Anh (để UI tạo audio)
-      : roundPairs.map(p => p.vietnamese); // Chế độ thường, cột phải là tiếng Việt
+    // --- MODIFIED: Setup columns based on game mode ---
+    const englishWords = roundPairs.map(p => p.english);
+    setLeftColumn(englishWords);
+    if (isAudioMatch) {
+      // For Audio match, right column is shuffled English words
+      setRightColumn(shuffleArray(englishWords));
+    } else {
+      // For classic match, right column is shuffled Vietnamese words
+      setRightColumn(shuffleArray(roundPairs.map(p => p.vietnamese)));
+    }
 
-    setRightColumn(shuffleArray(rightColumnData));
     setCorrectPairs([]);
     setSelectedLeft(null);
     setIncorrectPair(null);
     setLastCorrectDefinition(null);
-  }, [currentRound, playablePairs, loading, isAudioMode]); // Thêm isAudioMode vào dependency
+  }, [currentRound, playablePairs, loading, isAudioMatch]);
 
   useEffect(() => {
     if (!loading) {
@@ -184,16 +188,19 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     setIncorrectPair(null);
   };
 
-  const handleRightSelect = async (selectedValue: string) => {
+  const handleRightSelect = async (selectedWord: string) => {
     if (!selectedLeft) return;
 
-    // <<< THAY ĐỔI 4: Logic kiểm tra câu trả lời linh hoạt
-    const originalPair = allWordPairs.find(p => p.english === selectedLeft);
-    const isMatch = isAudioMode
-      ? selectedLeft === selectedValue // Chế độ audio: từ tiếng Anh ở cột trái phải khớp với từ tiếng Anh đại diện cho audio ở cột phải
-      : originalPair?.vietnamese === selectedValue; // Chế độ thường: nghĩa tiếng Việt phải khớp
+    // --- MODIFIED: Check correctness based on game mode ---
+    let isCorrect = false;
+    if (isAudioMatch) {
+      isCorrect = selectedLeft === selectedWord;
+    } else {
+      const originalPair = allWordPairs.find(p => p.english === selectedLeft);
+      isCorrect = originalPair?.vietnamese === selectedWord;
+    }
 
-    if (isMatch) {
+    if (isCorrect) {
       setCorrectPairs(prev => [...prev, selectedLeft]);
       setSelectedLeft(null);
       setScore(prev => prev + 1);
@@ -224,7 +231,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
         }, 2500);
       }
     } else {
-      setIncorrectPair({ left: selectedLeft, right: selectedValue });
+      setIncorrectPair({ left: selectedLeft, right: selectedWord });
       setSelectedLeft(null);
       setStreak(0);
       setLastCorrectDefinition(null);
@@ -262,7 +269,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     masteryCount,
     streak,
     streakAnimation,
-    isAudioMode, // <<< THAY ĐỔI 5: Cung cấp isAudioMode cho UI
+    isAudioMatch, // <<< THÊM MỚI
     handleLeftSelect,
     handleRightSelect,
     resetGame,
