@@ -53,9 +53,11 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
         key={definition.english}
         className="bg-white/80 backdrop-blur-sm border border-indigo-100 rounded-xl p-4 shadow-md animate-fade-in-up"
       >
-        <div className="flex items-center mb-2">
-          <BookmarkIcon className="w-5 h-5 text-indigo-500 mr-2 flex-shrink-0" />
-          <h3 className="text-lg font-bold text-gray-800">{definition.english}</h3>
+        <div className="flex items-baseline mb-2">
+          <h3 className="flex items-center text-lg font-bold text-gray-800">
+            <BookmarkIcon className="w-5 h-5 text-indigo-500 mr-2 flex-shrink-0" />
+            <span>{definition.english}</span>
+          </h3>
           <span className="text-gray-500 font-medium ml-2">/ {definition.vietnamese}</span>
         </div>
         <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
@@ -66,7 +68,7 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
   );
 };
 
-const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disabled: boolean, isSelected: boolean, isIncorrect: boolean }> = 
+const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disabled: boolean, isSelected: boolean, isIncorrect: boolean }> =
 ({ audioUrl, onClick, disabled, isSelected, isIncorrect }) => {
     const [isPlaying, setIsPlaying] = useState(false);
 
@@ -251,7 +253,7 @@ const VocaMatchUI: React.FC = () => {
             {rightColumn.map(word => {
               const isCorrect = isAudioMatch ? correctPairs.includes(word) : matchedVietnameseWords.has(word);
               const isIncorrect = incorrectPair?.right === word;
-                                            
+
               return (
                 <button
                   key={word}
@@ -264,7 +266,7 @@ const VocaMatchUI: React.FC = () => {
             })}
           </div>
         </main>
-        
+
         <DefinitionDisplay definition={lastCorrectDefinition} />
       </div>
 
