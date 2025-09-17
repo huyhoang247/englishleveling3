@@ -1,6 +1,6 @@
-import React, from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// --- ICONS, CONFIGS & SHARED COMPONENTS (Không thay đổi nhiều) ---
+// --- ICONS, CONFIGS & SHARED COMPONENTS ---
 
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
@@ -17,7 +17,6 @@ const symbols = ['🍒', '🍋', '🍊', '🍉', '🔔', '⭐', '💎', '7️⃣
 const REEL_ITEM_COUNT = 30;
 const basePayouts = { '💎💎💎': 80, '⭐⭐⭐': 60, '🔔🔔🔔': 40, '🍉🍉🍉': 20, '🍊🍊🍊': 15, '🍋🍋🍋': 10, '🍒🍒🍒': 5 };
 
-// Cấu hình phòng chơi (thêm trường `bgGradient` để trang trí)
 const rooms = [
     { id: 1, name: 'Phòng Đồng', minBalance: 0, baseBet: 10, betStep: 10, initialJackpot: 10000, payoutMultiplier: 1, color: 'text-orange-400', bgGradient: 'from-orange-900/50 to-slate-900' },
     { id: 2, name: 'Phòng Bạc', minBalance: 5000, baseBet: 100, betStep: 50, initialJackpot: 100000, payoutMultiplier: 10, color: 'text-slate-300', bgGradient: 'from-slate-800/50 to-slate-900' },
@@ -29,7 +28,7 @@ rooms.forEach(room => { (room as any).payouts = generatePayouts(room.payoutMulti
 // @ts-ignore
 type Room = typeof rooms[0] & { payouts: typeof basePayouts };
 
-// --- COMPONENT: Reel (Không thay đổi) ---
+// --- COMPONENT: Reel ---
 const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymbol: string; spinning: boolean; onSpinEnd: () => void; index: number; isWinner: boolean; }) => {
     const reelRef = useRef<HTMLDivElement>(null);
     const [reelSymbols, setReelSymbols] = useState<string[]>([]);
@@ -72,7 +71,6 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
         </div>
     );
 };
-
 
 // --- COMPONENT: LobbyScreen ---
 const LobbyScreen = ({ balance, onEnterRoom }: { balance: number; onEnterRoom: (roomId: number) => void; }) => {
@@ -127,7 +125,6 @@ const LobbyScreen = ({ balance, onEnterRoom }: { balance: number; onEnterRoom: (
     );
 };
 
-
 // --- COMPONENT: GameScreen ---
 const GameScreen = ({ room, balance, jackpot, onExit, onBalanceUpdate, onJackpotUpdate }: {
     room: Room;
@@ -151,9 +148,9 @@ const GameScreen = ({ room, balance, jackpot, onExit, onBalanceUpdate, onJackpot
         
         const contribution = Math.ceil(bet * 0.1);
         onJackpotUpdate(room.id, jackpot + contribution);
+        onBalanceUpdate(balance - bet);
 
         setSpinning(true);
-        onBalanceUpdate(balance - bet);
         setMessage('Vòng quay đang diễn ra...');
         setWinnings(0);
         setWinningLine([false, false, false]);
@@ -191,7 +188,10 @@ const GameScreen = ({ room, balance, jackpot, onExit, onBalanceUpdate, onJackpot
             else if (diamonds === 2) { winAmount = bet; winMessage = `Tuyệt! Thắng ${winAmount.toLocaleString()} xu!`; setWinningLine(currentReels.map(s => s === '💎')); isWin = true; }
         }
 
-        if (isWin) { onBalanceUpdate(balance - bet + winAmount); setWinnings(winAmount); } // Cập nhật lại balance đúng
+        if (isWin) { 
+            onBalanceUpdate(balance - bet + winAmount); // balance ở đây là balance CŨ trước khi quay
+            setWinnings(winAmount); 
+        }
         setMessage(winMessage);
     }, [bet, jackpot, room, balance, onBalanceUpdate, onJackpotUpdate]);
 
@@ -199,9 +199,43 @@ const GameScreen = ({ room, balance, jackpot, onExit, onBalanceUpdate, onJackpot
         finishedReelsCount.current += 1;
         if (finishedReelsCount.current === reelsResult.length) {
             setSpinning(false);
-            checkWin(reelsResult);
+            const currentBalanceAfterBet = balance - bet; // Tính balance sau khi đã trừ tiền cược
+            const [r1, r2, r3] = reelsResult;
+            let winAmount = 0;
+            let winMessage = 'Chúc bạn may mắn lần sau!';
+            let isWin = false;
+    
+            if (r1 === '7️⃣' && r2 === '7️⃣' && r3 === '7️⃣') {
+                winAmount = jackpot;
+                winMessage = `🎉 JACKPOT! BẠN THẮNG ${winAmount.toLocaleString()} XU! 🎉`;
+                setWinningLine([true, true, true]);
+                isWin = true;
+                setJackpotAnimation(true);
+                setTimeout(() => setJackpotAnimation(false), 3000);
+                onJackpotUpdate(room.id, room.initialJackpot);
+            } else if (r1 === r2 && r2 === r3) {
+                const key = `${r1}${r2}${r3}` as keyof typeof room.payouts;
+                winAmount = (room.payouts[key] || 0) * (bet / room.baseBet);
+                if (winAmount > 0) {
+                    winMessage = `🎉 CHÚC MỪNG! BẠN THẮNG ${winAmount.toLocaleString()} XU! 🎉`;
+                    setWinningLine([true, true, true]);
+                    isWin = true;
+                }
+            } else {
+                const sevens = reelsResult.filter(s => s === '7️⃣').length;
+                const diamonds = reelsResult.filter(s => s === '💎').length;
+                if (sevens === 2) { winAmount = bet * 2; winMessage = `May mắn! Thắng ${winAmount.toLocaleString()} xu!`; setWinningLine(reelsResult.map(s => s === '7️⃣')); isWin = true; }
+                else if (diamonds === 2) { winAmount = bet; winMessage = `Tuyệt! Thắng ${winAmount.toLocaleString()} xu!`; setWinningLine(reelsResult.map(s => s === '💎')); isWin = true; }
+            }
+    
+            if (isWin) {
+                onBalanceUpdate(currentBalanceAfterBet + winAmount);
+                setWinnings(winAmount);
+            }
+            setMessage(winMessage);
         }
-    }, [reelsResult, checkWin]);
+    }, [reelsResult, bet, jackpot, room, balance, onBalanceUpdate, onJackpotUpdate]);
+
     
     const handleBetChange = (amount: number) => {
         setBet(prev => {
@@ -211,17 +245,16 @@ const GameScreen = ({ room, balance, jackpot, onExit, onBalanceUpdate, onJackpot
             return prev;
         });
     };
-    // Đảm bảo mức cược không vượt quá số dư khi số dư thay đổi
     useEffect(() => {
-        if (bet > balance) setBet(balance);
-        if (bet < room.baseBet && balance >= room.baseBet) setBet(room.baseBet);
+        if (bet > balance) setBet(balance > room.baseBet ? balance : room.baseBet);
+        if (balance < room.baseBet && balance > 0) setBet(balance);
     }, [balance, bet, room.baseBet]);
 
 
     return (
         <div className={`flex flex-col items-center justify-center min-h-screen w-full bg-slate-900 bg-gradient-to-br ${room.bgGradient} text-white font-sans transition-all duration-500`}>
-            <div className="w-full max-w-2xl flex flex-col p-6 md:p-8">
-                 <button onClick={onExit} className="absolute top-4 left-4 text-slate-400 hover:text-white transition-colors flex items-center gap-2">
+            <div className="w-full max-w-2xl flex flex-col p-6 md:p-8 relative">
+                 <button onClick={onExit} className="absolute top-4 left-4 text-slate-400 hover:text-white transition-colors flex items-center gap-2 z-20">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                     Rời phòng
                  </button>
@@ -266,21 +299,20 @@ const GameScreen = ({ room, balance, jackpot, onExit, onBalanceUpdate, onJackpot
                     {balance < bet && !spinning && (<p className="text-red-400 text-sm mt-3 font-semibold">Bạn không đủ xu để quay!</p>)}
                 </div>
             </div>
-            
         </div>
     );
 }
 
 // --- COMPONENT CHÍNH: App ---
 export default function App() {
-    const [balance, setBalance] = useState(50000); // Số dư khởi đầu
+    const [balance, setBalance] = useState(50000);
     const [jackpotPools, setJackpotPools] = useState(() => {
         const pools: { [key: number]: number } = {};
         rooms.forEach(room => { pools[room.id] = room.initialJackpot; });
         return pools;
     });
 
-    const [currentView, setCurrentView] = useState('lobby'); // 'lobby' hoặc 'game'
+    const [currentView, setCurrentView] = useState('lobby');
     const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
 
     const handleEnterRoom = (roomId: number) => {
@@ -301,34 +333,33 @@ export default function App() {
         setJackpotPools(prev => ({...prev, [roomId]: newJackpot }));
     };
 
-    if (currentView === 'lobby') {
-        return <LobbyScreen balance={balance} onEnterRoom={handleEnterRoom} />;
-    }
+    return (
+        <>
+            <GlobalStyles />
+            {currentView === 'lobby' && (
+                <LobbyScreen balance={balance} onEnterRoom={handleEnterRoom} />
+            )}
 
-    if (currentView === 'game' && selectedRoomId) {
-        const roomData = rooms.find(r => r.id === selectedRoomId) as Room;
-        return (
-            <GameScreen
-                room={roomData}
-                balance={balance}
-                jackpot={jackpotPools[selectedRoomId]}
-                onExit={handleExitRoom}
-                onBalanceUpdate={handleBalanceUpdate}
-                onJackpotUpdate={handleJackpotUpdate}
-            />
-        );
-    }
-    
-    // Fallback view in case of weird state
-    return <div>Đang tải...</div>;
+            {currentView === 'game' && selectedRoomId && (
+                <GameScreen
+                    room={rooms.find(r => r.id === selectedRoomId) as Room}
+                    balance={balance}
+                    jackpot={jackpotPools[selectedRoomId]}
+                    onExit={handleExitRoom}
+                    onBalanceUpdate={handleBalanceUpdate}
+                    onJackpotUpdate={handleJackpotUpdate}
+                />
+            )}
+        </>
+    );
 }
 
-// Thêm CSS global vào đây nếu cần
+// Component chứa các style global
 const GlobalStyles = () => (
     <style jsx global>{`
-      @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;600;700&display=swap');
       body {
-        font-family: 'Inter', sans-serif; /* Hoặc font bạn chọn */
+        font-family: 'Inter', sans-serif;
       }
       .font-lilita { font-family: 'Lilita One', cursive; }
       @keyframes win-pulse { 0%, 100% { transform: scale(1); filter: brightness(1.5); } 50% { transform: scale(1.1); filter: brightness(1.75); } }
