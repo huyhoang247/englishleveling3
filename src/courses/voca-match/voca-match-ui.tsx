@@ -9,6 +9,7 @@ import BackButton from '../../ui/back-button.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 import StreakDisplay from '../../ui/display/streak-display.tsx';
+// uiAssets is not needed for the arrow design, so it can be removed if not used elsewhere.
 
 // --- Interfaces (can be shared or defined here) ---
 interface Definition {
@@ -34,6 +35,9 @@ const BookmarkIcon = ({ className }: { className: string }) => (
 );
 const AudioIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"> <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.108 12 5v14c0 .892-1.077 1.337-1.707.707L5.586 15z" /> </svg>
+);
+const VoiceIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
 );
 
 // --- UI Sub-components ---
@@ -68,16 +72,13 @@ const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disa
 
     const playAudio = () => {
         if (!audioUrl || isPlaying) return;
-
         const audio = new Audio(audioUrl);
         setIsPlaying(true);
         audio.play().catch(e => {
             console.error("Error playing audio:", e);
             setIsPlaying(false);
         });
-        audio.onended = () => {
-            setIsPlaying(false);
-        };
+        audio.onended = () => setIsPlaying(false);
     };
 
     const correctStyle = 'bg-gray-200 text-gray-400 line-through cursor-default';
@@ -85,10 +86,7 @@ const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disa
 
     return (
         <button
-            onClick={() => {
-                playAudio();
-                onClick();
-            }}
+            onClick={() => { playAudio(); onClick(); }}
             disabled={disabled || !audioUrl}
             className={`w-full p-3 text-center rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center
                 ${disabled ? correctStyle : 'bg-white text-gray-800 hover:bg-indigo-50'}
@@ -103,59 +101,48 @@ const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disa
     );
 };
 
-// --- NEW: Voice Selector Component ---
+// --- NEW/MODIFIED: Voice Selector with Arrows ---
 const VoiceSelector: React.FC = () => {
     const { availableVoices, selectedVoice, setSelectedVoice } = useVocaMatch();
 
-    if (availableVoices.length <= 1) return null;
+    if (availableVoices.length <= 1) return <div className="w-28 h-6"></div>; // Placeholder to keep layout consistent
+
+    const currentIndex = availableVoices.indexOf(selectedVoice);
+
+    const handlePrev = () => {
+        const newIndex = (currentIndex - 1 + availableVoices.length) % availableVoices.length;
+        setSelectedVoice(availableVoices[newIndex]);
+    };
+
+    const handleNext = () => {
+        const newIndex = (currentIndex + 1) % availableVoices.length;
+        setSelectedVoice(availableVoices[newIndex]);
+    };
 
     return (
-        <div className="relative">
-            <select
-                value={selectedVoice}
-                onChange={(e) => setSelectedVoice(e.target.value)}
-                className="appearance-none bg-white/20 backdrop-blur-sm text-white text-xs font-semibold rounded-md py-1 pl-2 pr-6 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"
-            >
-                {availableVoices.map(voice => (
-                    <option key={voice} value={voice} className="text-black">
-                        {voice}
-                    </option>
-                ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-white/80">
-                <svg className="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+        <div className="flex items-center justify-center gap-1 bg-white/20 backdrop-blur-sm rounded-md border border-white/30 px-1 py-0.5">
+            <button onClick={handlePrev} className="p-1 text-white/80 hover:text-white rounded-full hover:bg-white/20 transition-colors">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <div className="flex items-center gap-1.5 text-white text-xs font-semibold px-1 select-none">
+                 <VoiceIcon className="w-3.5 h-3.5" />
+                 <span>{selectedVoice}</span>
             </div>
+            <button onClick={handleNext} className="p-1 text-white/80 hover:text-white rounded-full hover:bg-white/20 transition-colors">
+                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+            </button>
         </div>
     );
-}
+};
+
 
 // --- Main UI Component that consumes context ---
 const VocaMatchUI: React.FC = () => {
   const {
-    loading,
-    showEndScreen,
-    showConfetti,
-    score,
-    gameProgress,
-    pairsCompletedInSession,
-    totalPairsInSession,
-    leftColumn,
-    rightColumn,
-    selectedLeft,
-    correctPairs,
-    incorrectPair,
-    lastCorrectDefinition,
-    displayedCoins,
-    masteryCount,
-    streak,
-    streakAnimation,
-    isAudioMatch,
-    selectedVoice, // <<< Get from context
-    handleLeftSelect,
-    handleRightSelect,
-    resetGame,
-    onGoBack,
-    allWordPairs
+    loading, showEndScreen, showConfetti, score, gameProgress, pairsCompletedInSession, totalPairsInSession,
+    leftColumn, rightColumn, selectedLeft, correctPairs, incorrectPair, lastCorrectDefinition, displayedCoins,
+    masteryCount, streak, streakAnimation, isAudioMatch, selectedVoice, handleLeftSelect, handleRightSelect,
+    resetGame, onGoBack, allWordPairs
   } = useVocaMatch();
 
   const matchedVietnameseWords = useMemo(() => {
@@ -163,18 +150,13 @@ const VocaMatchUI: React.FC = () => {
     const matchedSet = new Set<string>();
     correctPairs.forEach(englishWord => {
       const pair = allWordPairs.find(p => p.english === englishWord);
-      if (pair) {
-        matchedSet.add(pair.vietnamese);
-      }
+      if (pair) matchedSet.add(pair.vietnamese);
     });
     return matchedSet;
   }, [correctPairs, allWordPairs, isAudioMatch]);
 
 
-  if (loading) {
-    return <VocaMatchLoadingSkeleton />;
-  }
-
+  if (loading) return <VocaMatchLoadingSkeleton />;
   if (showEndScreen) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-4 bg-white">
@@ -226,7 +208,6 @@ const VocaMatchUI: React.FC = () => {
                 </div>
               </div>
             </div>
-            {/* --- MODIFIED: Conditional rendering of VoiceSelector --- */}
             {isAudioMatch ? <VoiceSelector /> : <p className="text-sm font-semibold text-white/90">Tiến Độ</p>}
           </div>
           <div className="w-full h-3 bg-gray-700/80 rounded-full overflow-hidden relative">
@@ -247,7 +228,6 @@ const VocaMatchUI: React.FC = () => {
                 return (
                   <AudioButton
                     key={item.word}
-                    // --- MODIFIED: Use selectedVoice to pick the correct URL ---
                     audioUrl={item.audioUrls?.[selectedVoice] ?? null}
                     onClick={() => handleLeftSelect(item.word)}
                     disabled={isCorrect}
