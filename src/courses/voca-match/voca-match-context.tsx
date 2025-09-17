@@ -10,8 +10,7 @@ import React, {
 } from 'react';
 import { auth } from '../../firebase.js';
 import { fetchOrCreateUser, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../course-data-service.ts';
-// --- MODIFIED: Import the generator function ---
-import { generateAudioUrlsForWord } from '../../voca-data/audio-quiz-generator.ts';
+import { generateAudioUrlsForWord } from '../voca-data/audio-quiz-generator.ts';
 import { allWordPairs, shuffleArray } from './voca-match-data.ts';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
@@ -23,7 +22,6 @@ interface Definition {
   explanation: string;
 }
 
-// --- MODIFIED: Update the type for leftColumn to include audio URLs ---
 interface LeftColumnItem {
   word: string;
   audioUrls: { [key: string]: string } | null;
@@ -37,7 +35,7 @@ interface VocaMatchContextType {
   gameProgress: number;
   pairsCompletedInSession: number;
   totalPairsInSession: number;
-  leftColumn: LeftColumnItem[]; // <<< UPDATED TYPE
+  leftColumn: LeftColumnItem[];
   rightColumn: string[];
   selectedLeft: string | null;
   correctPairs: string[];
@@ -48,6 +46,9 @@ interface VocaMatchContextType {
   streak: number;
   streakAnimation: boolean;
   isAudioMatch: boolean;
+  availableVoices: string[]; // <<< THÊM MỚI
+  selectedVoice: string; // <<< THÊM MỚI
+  setSelectedVoice: (voice: string) => void; // <<< THÊM MỚI
   handleLeftSelect: (englishWord: string) => void;
   handleRightSelect: (selectedWord: string) => Promise<void>;
   resetGame: () => void;
@@ -93,7 +94,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   const [score, setScore] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
 
-  const [leftColumn, setLeftColumn] = useState<LeftColumnItem[]>([]); // <<< UPDATED TYPE
+  const [leftColumn, setLeftColumn] = useState<LeftColumnItem[]>([]);
   const [rightColumn, setRightColumn] = useState<string[]>([]);
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [correctPairs, setCorrectPairs] = useState<string[]>([]);
@@ -102,6 +103,10 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
 
   const [showConfetti, setShowConfetti] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
+  
+  // --- NEW: State for voice selection ---
+  const [availableVoices, setAvailableVoices] = useState<string[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState('Matilda'); // Default voice
 
   const isAudioMatch = useMemo(() => selectedPractice % 100 === 2, [selectedPractice]);
   const gameModeId = useMemo(() => `match-${selectedPractice % 100}`, [selectedPractice]);
@@ -141,6 +146,15 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
           const remainingPairs = allEligiblePairs.filter(pair => !completedSet.has(pair.english.toLowerCase()));
           setPlayablePairs(shuffleArray(remainingPairs));
           setTotalEligiblePairs(allEligiblePairs);
+
+          // --- NEW: Set available voices from the first generated URL ---
+          if (isAudioMatch && remainingPairs.length > 0) {
+            const firstWordUrls = generateAudioUrlsForWord(remainingPairs[0].english);
+            if (firstWordUrls) {
+              setAvailableVoices(Object.keys(firstWordUrls));
+            }
+          }
+
         } catch (error) {
           console.error("Error fetching data for Voca Match:", error);
         } finally {
@@ -151,7 +165,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       }
     };
     fetchData();
-  }, [user, gameModeId]);
+  }, [user, gameModeId, isAudioMatch]);
 
   const setupNewRound = useCallback(() => {
     const roundStart = currentRound * GAME_SIZE;
@@ -167,7 +181,6 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     
     const englishWords = roundPairs.map(p => p.english);
 
-    // --- MODIFIED: Generate audio URLs here ---
     if (isAudioMatch) {
       const leftColumnData = englishWords.map(word => ({
         word: word,
@@ -178,7 +191,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     } else {
       const leftColumnData = englishWords.map(word => ({
         word: word,
-        audioUrls: null // No audio needed for classic match
+        audioUrls: null
       }));
       setLeftColumn(leftColumnData);
       setRightColumn(shuffleArray(roundPairs.map(p => p.vietnamese)));
@@ -283,6 +296,9 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     streak,
     streakAnimation,
     isAudioMatch,
+    availableVoices, // <<< THÊM MỚI
+    selectedVoice,   // <<< THÊM MỚI
+    setSelectedVoice, // <<< THÊM MỚI
     handleLeftSelect,
     handleRightSelect,
     resetGame,
