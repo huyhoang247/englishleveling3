@@ -530,14 +530,16 @@ export const fetchPracticeListProgress = async (
               }
           });
       } 
-      else if (selectedType === 'vocaMatch') { // CORRECTED
+      else if (selectedType === 'vocaMatch') { // <<< MODIFIED
           const relevantPairs = allWordPairs.filter(pair => userVocabSet.has(pair.english.toLowerCase()));
           const totalWords = relevantPairs.length;
           
-          const practiceModeId = 'match-1';
-          const completedSet = completedWordsByGameMode[practiceModeId] || new Set();
-          
-          newProgressData[1] = { completed: completedSet.size, total: totalWords };
+          // Calculate progress for both Practice 1 and 2
+          [1, 2].forEach(num => {
+              const practiceModeId = `match-${num}`;
+              const completedSet = completedWordsByGameMode[practiceModeId] || new Set();
+              newProgressData[num] = { completed: completedSet.size, total: totalWords };
+          });
       }
       else if (selectedType === 'dienTu') {
           const sentenceToUserVocab = new Map<any, string[]>();
