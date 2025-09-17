@@ -18,10 +18,10 @@ const REEL_ITEM_COUNT = 30;
 const basePayouts = { '💎💎💎': 80, '⭐⭐⭐': 60, '🔔🔔🔔': 40, '🍉🍉🍉': 20, '🍊🍊🍊': 15, '🍋🍋🍋': 10, '🍒🍒🍒': 5 };
 
 const rooms = [
-    { id: 1, name: 'Phòng Đồng', minBalance: 0, baseBet: 10, betStep: 10, initialJackpot: 10000, payoutMultiplier: 1, color: 'text-orange-400', bgGradient: 'from-orange-900/50 to-slate-900' },
-    { id: 2, name: 'Phòng Bạc', minBalance: 5000, baseBet: 100, betStep: 50, initialJackpot: 100000, payoutMultiplier: 10, color: 'text-slate-300', bgGradient: 'from-slate-800/50 to-slate-900' },
-    { id: 3, name: 'Phòng Vàng', minBalance: 50000, baseBet: 1000, betStep: 500, initialJackpot: 1000000, payoutMultiplier: 100, color: 'text-yellow-400', bgGradient: 'from-yellow-900/50 to-slate-900' },
-    { id: 4, name: 'Phòng Kim Cương', minBalance: 500000, baseBet: 10000, betStep: 1000, initialJackpot: 10000000, payoutMultiplier: 1000, color: 'text-cyan-300', bgGradient: 'from-cyan-800/50 to-slate-900' }
+    { id: 1, name: 'Floor 1', minBalance: 0, baseBet: 10, betStep: 10, initialJackpot: 10000, payoutMultiplier: 1, color: 'text-orange-400', bgGradient: 'from-orange-900/50 to-slate-900' },
+    { id: 2, name: 'Floor 2', minBalance: 5000, baseBet: 100, betStep: 50, initialJackpot: 100000, payoutMultiplier: 10, color: 'text-slate-300', bgGradient: 'from-slate-800/50 to-slate-900' },
+    { id: 3, name: 'Floor 3', minBalance: 50000, baseBet: 1000, betStep: 500, initialJackpot: 1000000, payoutMultiplier: 100, color: 'text-yellow-400', bgGradient: 'from-yellow-900/50 to-slate-900' },
+    { id: 4, name: 'Floor 4', minBalance: 500000, baseBet: 10000, betStep: 1000, initialJackpot: 10000000, payoutMultiplier: 1000, color: 'text-cyan-300', bgGradient: 'from-cyan-800/50 to-slate-900' }
 ];
 const generatePayouts = (multiplier: number) => { const newPayouts: { [key: string]: number } = {}; for (const key in basePayouts) { newPayouts[key] = basePayouts[key as keyof typeof basePayouts] * multiplier; } return newPayouts; };
 rooms.forEach(room => { (room as any).payouts = generatePayouts(room.payoutMultiplier); });
@@ -94,8 +94,12 @@ const LobbyScreen = ({ balance, onEnterRoom }: { balance: number; onEnterRoom: (
                     return (
                         <div key={room.id} className={`rounded-xl border-2 transition-all duration-300 ${isAffordable ? 'border-slate-600 hover:border-cyan-400 hover:scale-[1.03]' : 'border-slate-700'}`}>
                            <div className={`relative p-6 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
-                               <h2 className={`text-2xl font-bold ${room.color}`}>{room.name}</h2>
-                               <p className="text-sm text-slate-400 mt-1">Sảnh dành cho các tay chơi</p>
+                               
+                                {/* --- CHANGE START --- */}
+                                <span className={`inline-block self-start bg-slate-800 ${room.color} text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
+                                    {room.name}
+                                </span>
+                                {/* --- CHANGE END --- */}
 
                                <div className="my-6 space-y-2 text-sm">
                                    <div className="flex justify-between"><span>Mức cược:</span> <span className="font-semibold">{room.baseBet.toLocaleString()}+</span></div>
