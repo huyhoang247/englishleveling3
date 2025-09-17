@@ -43,12 +43,10 @@ const DailyCheckInView = () => {
                         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/streak-icon.webp" alt="Streak Icon" className="w-5 h-5 mr-2" />
                         {loginStreak} Day Streak
                     </span>
-                    {/* --- SỬA ĐỔI: Xóa background, padding và giảm cỡ chữ của countdown --- */}
-                    {!canClaimToday && (
-                      <span className="text-[11px] font-mono font-semibold text-slate-400">
-                          {countdown}
-                      </span>
-                    )}
+                    {/* --- SỬA ĐỔI: Luôn hiển thị countdown để tránh vỡ layout. Khi có thể claim, nó sẽ là "00:00:00" --- */}
+                    <span className="text-[11px] font-mono font-semibold text-slate-400">
+                        {countdown}
+                    </span>
                 </div>
                 <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" style={{ width: `${(loginStreak / 7) * 100}%` }}></div>
