@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx';
 import HomeButton from '../../ui/home-button.tsx';
@@ -40,19 +39,16 @@ const DailyCheckInView = () => {
               </div>
             </div>
             <div className="flex-1 min-w-0">
-                <div className="flex flex-col items-start gap-1 mb-2">
+                <div className="flex flex-col items-start gap-1"> {/* Bỏ mb-2 ở đây để khoảng cách đều hơn */}
                     <span className="inline-flex items-center bg-slate-700 text-slate-300 px-3 py-1 rounded-full text-sm font-medium border border-slate-600">
                         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/streak-icon.webp" alt="Streak Icon" className="w-5 h-5 mr-2" />
                         {loginStreak} Day Streak
                     </span>
-                    {/* --- SỬA ĐỔI: Luôn hiển thị countdown để tránh vỡ layout. Khi có thể claim, nó sẽ là "00:00:00" --- */}
                     <span className="text-[11px] font-mono font-semibold text-slate-400">
                         {countdown}
                     </span>
                 </div>
-                <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" style={{ width: `${(loginStreak / (nextStreakGoal?.streakGoal || 7)) * 100}%` }}></div>
-                </div>
+                {/* --- ĐÃ XÓA THANH PROGRESS BAR Ở ĐÂY --- */}
             </div>
             <div className="absolute top-3 right-3">
                 <HomeButton onClick={handleClose} /> {/* SỬ DỤNG handleClose TỪ CONTEXT */}
@@ -62,9 +58,6 @@ const DailyCheckInView = () => {
         <div className="mb-6">
           <div className="flex justify-between">
             {dailyRewards.map(reward => {
-              // --- SỬA ĐỔI LOGIC: Xác định ngày đã nhận trong chu kỳ 7 ngày ---
-              // `claimableDay` là ngày SẼ nhận. Nếu hôm nay chưa nhận, thì các ngày < claimableDay đã hoàn thành.
-              // Nếu hôm nay đã nhận rồi (`!canClaimToday`), thì các ngày <= claimableDay đã hoàn thành.
               const lastCompletedDayInCycle = canClaimToday ? claimableDay - 1 : claimableDay;
               const isClaimed = reward.day <= lastCompletedDayInCycle && loginStreak > 0;
               
@@ -103,7 +96,7 @@ const DailyCheckInView = () => {
       <div className="flex-1 overflow-y-auto pb-4 hide-scrollbar">
         <div className="pb-6">
           <div className="grid grid-cols-1 gap-4">
-            {/* --- THÊM MỚI: Ô PHẦN THƯỞNG MỐC STREAK --- */}
+            {/* --- Ô PHẦN THƯỞNG MỐC STREAK (Không đổi) --- */}
             {nextStreakGoal && (
                 <div className="group relative rounded-xl overflow-hidden bg-slate-800 border border-slate-700 shadow-lg p-4">
                     <div className="flex items-center gap-4">
@@ -126,6 +119,7 @@ const DailyCheckInView = () => {
                 </div>
             )}
 
+            {/* --- DANH SÁCH PHẦN THƯỞNG HÀNG NGÀY (Không đổi) --- */}
             {dailyRewards.map(reward => {
               const lastCompletedDayInCycle = canClaimToday ? claimableDay - 1 : claimableDay;
               const isClaimed = reward.day <= lastCompletedDayInCycle && loginStreak > 0;
@@ -163,25 +157,22 @@ const DailyCheckInView = () => {
       </div>
 
       <div> {/* Footer */} </div>
-
+        
+      {/* --- MODAL HIỂN THỊ PHẦN THƯỞNG (Không đổi) --- */}
       {showRewardAnimation && animatingReward && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="relative max-w-xs w-full bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-6 shadow-2xl animate-float">
             <div className="absolute -top-20 left-1/2 transform -translate-x-1/2">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 p-1 shadow-lg shadow-indigo-500/50">
                 <div className="w-full h-full rounded-full bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
-                   {/* --- SỬA ĐỔI: Hiển thị icon của phần thưởng hàng ngày --- */}
                   <div className="w-12 h-12 animate-pulse">{animatingReward.daily?.icon}</div>
                 </div>
               </div>
             </div>
             <div className="mt-14 text-center">
               <div className="text-indigo-400 text-lg font-bold mb-1">Nhận Thưởng Thành Công!</div>
-              {/* --- SỬA ĐỔI: Hiển thị thông tin phần thưởng hàng ngày --- */}
               <div className="text-white text-xl font-bold mb-1">{animatingReward.daily?.name}</div>
               <div className="text-indigo-200 text-3xl font-bold mb-4">x{animatingReward.daily?.amount}</div>
-
-              {/* --- THÊM MỚI: Hiển thị phần thưởng mốc streak nếu có --- */}
               {animatingReward.streak && (
                   <div className="border-t border-slate-700 pt-4 mt-4">
                       <div className="text-green-400 text-sm font-bold mb-1">Thưởng Chuỗi Đăng Nhập!</div>
@@ -189,7 +180,6 @@ const DailyCheckInView = () => {
                       <div className="text-green-200 text-2xl font-bold">+{animatingReward.streak?.amount}</div>
                   </div>
               )}
-
               <div className="mt-6 text-sm text-slate-400">Phần thưởng đã được thêm vào kho đồ</div>
             </div>
           </div>
@@ -199,6 +189,7 @@ const DailyCheckInView = () => {
         </div>
       )}
 
+      {/* --- CSS (Không đổi) --- */}
       <style jsx>{`
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
