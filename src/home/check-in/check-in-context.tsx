@@ -1,26 +1,35 @@
+--- START OF FILE check-in-context.tsx (9).txt ---
+
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
+// --- THÊM MỚI: Import tài nguyên từ game-assets (thêm minerAssets) ---
 import { uiAssets, equipmentUiAssets, minerAssets } from '../../game-assets.ts';
 import { auth } from '../../firebase.js';
 import { processDailyCheckIn } from './check-in-service.ts';
 
-// Dữ liệu phần thưởng hàng ngày
+// --- BƯỚC 1: XÓA BỎ CÁC ĐỊNH NGHĨA ICON SVG NỘI TUYẾN ---
+// Các component StarIcon, SparklesIcon, ZapIcon, ShieldIcon, GiftIcon, FlameIcon, CrownIcon đã được xóa.
+
+// --- BƯỚC 2: CẬP NHẬT DỮ LIỆU PHẦN THƯỞNG VỚI ICON TỪ game-assets ---
+// Thay thế các component SVG bằng thẻ <img> với src từ file tài nguyên.
+// Một className chung được áp dụng để đảm bảo kích thước đồng nhất.
 export const dailyRewards = [
-  { day: 1, name: "Vàng", type: 'coins', amount: "1000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
-  { day: 2, name: "Sách Cổ", type: 'ancientBooks', amount: "10", icon: <img src={uiAssets.bookIcon} alt="Ancient Book" className="w-10 h-10 object-contain" /> },
-  { day: 3, name: "Mảnh Trang Bị", type: 'equipmentPieces', amount: "10", icon: <img src={equipmentUiAssets.equipmentPieceIcon} alt="Equipment Piece" className="w-10 h-10 object-contain" /> },
-  { day: 4, name: "Dung Lượng Thẻ", type: 'cardCapacity', amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-10 h-10 object-contain" /> },
-  { day: 5, name: "Cúp", type: 'pickaxes', amount: "5", icon: <img src={minerAssets.pickaxeIcon} alt="Pickaxe" className="w-10 h-10 object-contain" /> },
-  { day: 6, name: "Dung Lượng Thẻ", type: 'cardCapacity', amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-10 h-10 object-contain" /> },
-  { day: 7, name: "Cúp", type: 'pickaxes', amount: "10", icon: <img src={minerAssets.pickaxeIcon} alt="Special Pickaxe" className="w-10 h-10 object-contain" /> },
+  { day: 1, name: "Gold", amount: "1000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
+  { day: 2, name: "Ancient Book", amount: "10", icon: <img src={uiAssets.bookIcon} alt="Ancient Book" className="w-10 h-10 object-contain" /> },
+  { day: 3, name: "Equipment Piece", amount: "10", icon: <img src={equipmentUiAssets.equipmentPieceIcon} alt="Equipment Piece" className="w-10 h-10 object-contain" /> },
+  { day: 4, name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-10 h-10 object-contain" /> },
+  // --- SỬA ĐỔI: Thay icon cho Pickaxe ---
+  { day: 5, name: "Pickaxe", amount: "5", icon: <img src={minerAssets.pickaxeIcon} alt="Pickaxe" className="w-10 h-10 object-contain" /> },
+  { day: 6, name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-10 h-10 object-contain" /> },
+  // --- SỬA ĐỔI: Thay icon cho Pickaxe ---
+  { day: 7, name: "Pickaxe", amount: "10", icon: <img src={minerAssets.pickaxeIcon} alt="Special Pickaxe" className="w-10 h-10 object-contain" /> },
 ];
 
-// --- THÊM MỚI: Định nghĩa phần thưởng mốc chuỗi cho UI ---
+// --- THÊM MỚI: ĐỊNH NGHĨA PHẦN THƯỞNG MỐC STREAK CHO UI ---
 export const streakMilestoneRewards = [
-  { day: 7, name: "Thưởng Chuỗi 7 Ngày", type: 'coins', amount: "5000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
-  { day: 14, name: "Thưởng Chuỗi 14 Ngày", type: 'coins', amount: "10000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
+    { streakGoal: 7, name: "5,000 Gold", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
+    { streakGoal: 14, name: "10,000 Gold", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
 ];
-
 
 // --- ĐỊNH NGHĨA TYPES ---
 interface Particle {
@@ -29,9 +38,15 @@ interface Particle {
   className: string;
 }
 
+// --- THÊM MỚI: Type cho mốc streak ---
+interface StreakMilestone {
+    streakGoal: number;
+    name: string;
+    icon: React.ReactNode;
+}
+
 interface CheckInContextType {
-  loginStreak: number; // Chuỗi trong chu kỳ 7 ngày
-  totalLoginStreak: number; // Tổng chuỗi
+  loginStreak: number;
   isSyncingData: boolean;
   canClaimToday: boolean;
   claimableDay: number;
@@ -39,7 +54,8 @@ interface CheckInContextType {
   showRewardAnimation: boolean;
   animatingReward: any;
   particles: Particle[];
-  countdown: string;
+  countdown: string; 
+  nextStreakGoal: StreakMilestone | null; // Thêm mốc streak tiếp theo
   claimReward: (day: number) => Promise<void>;
   handleClose: () => void;
 }
@@ -54,8 +70,7 @@ interface CheckInProviderProps {
 }
 
 export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => {
-  // --- SỬA ĐỔI: Lấy thêm totalLoginStreak từ GameContext ---
-  const { loginStreak, totalLoginStreak, lastCheckIn, isSyncingData, setIsSyncingData } = useGame();
+  const { loginStreak, lastCheckIn, isSyncingData, setIsSyncingData } = useGame();
 
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [animatingReward, setAnimatingReward] = useState<any>(null);
@@ -74,7 +89,8 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
 
     if (!last) {
         setCanClaimToday(true);
-        setClaimableDay(1);
+        // --- SỬA ĐỔI: Tính claimableDay dựa trên loginStreak ---
+        setClaimableDay((loginStreak % 7) + 1);
         return;
     }
 
@@ -84,24 +100,23 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     const yesterday = new Date(now);
     yesterday.setUTCDate(now.getUTCDate() - 1);
     const isConsecutive = last.getUTCFullYear() === yesterday.getUTCFullYear() && last.getUTCMonth() === yesterday.getUTCMonth() && last.getUTCDate() === yesterday.getUTCDate();
+    // --- SỬA ĐỔI: Tính claimableDay dựa trên loginStreak, reset về 1 nếu gián đoạn ---
     setClaimableDay(isConsecutive ? (loginStreak % 7) + 1 : 1);
   }, [lastCheckIn, loginStreak]);
 
-  // --- useEffect để xử lý countdown ---
+  // --- useEffect để xử lý countdown (Không đổi) ---
   useEffect(() => {
     if (canClaimToday) {
       setCountdown('00:00:00');
       return;
     }
-
     const intervalId = setInterval(() => {
       const now = new Date();
       const nextUTCDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0));
       const diff = nextUTCDay.getTime() - now.getTime();
-
       if (diff <= 0) {
         setCountdown('00:00:00');
-        setCanClaimToday(true); 
+        setCanClaimToday(true);
         clearInterval(intervalId);
       } else {
         const hours = Math.floor((diff / (1000 * 60 * 60))).toString().padStart(2, '0');
@@ -110,7 +125,6 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
         setCountdown(`${hours}:${minutes}:${seconds}`);
       }
     }, 1000);
-
     return () => clearInterval(intervalId);
   }, [canClaimToday]);
 
@@ -126,13 +140,21 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     setIsClaiming(true);
     try {
       setIsSyncingData(true);
-      const { claimedReward: claimedRewardData, milestoneRewardClaimed } = await processDailyCheckIn(userId);
+      // --- SỬA ĐỔI: Xử lý response mới từ service ---
+      const { dailyReward, streakReward } = await processDailyCheckIn(userId);
       setIsSyncingData(false);
 
-      if (milestoneRewardClaimed) {
-          // Bạn có thể thêm một thông báo toast ở đây để người dùng biết đã nhận thêm thưởng mốc
-          console.log(`Nhận được phần thưởng mốc: ${milestoneRewardClaimed.name} x${milestoneRewardClaimed.amount}`);
+      // --- SỬA ĐỔI: Chuẩn bị dữ liệu animation cho cả hai loại thưởng ---
+      const dailyRewardForAnimation = dailyRewards.find(r => r.day === dailyReward.day);
+      let streakRewardForAnimation = null;
+      if (streakReward) {
+          streakRewardForAnimation = streakMilestoneRewards.find(r => r.streakGoal === streakReward.streakGoal);
       }
+      
+      setAnimatingReward({ 
+          daily: { ...dailyRewardForAnimation, amount: dailyReward.amount },
+          streak: streakReward ? { ...streakRewardForAnimation, amount: streakReward.amount } : null
+      });
 
       const generatedParticles: Particle[] = Array.from({ length: 20 }).map((_, i) => {
         const randomAnimClass = particleClasses[i % particleClasses.length];
@@ -149,17 +171,13 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
         };
       });
       setParticles(generatedParticles);
-
-      const rewardForAnimation = dailyRewards.find(r => r.day === claimedRewardData.day);
-      
-      setAnimatingReward({ ...rewardForAnimation, amount: claimedRewardData.amount });
       setShowRewardAnimation(true);
 
       setTimeout(() => {
         setShowRewardAnimation(false);
         setIsClaiming(false);
         setParticles([]);
-      }, 2000);
+      }, 3000); // Tăng thời gian hiển thị animation một chút
     } catch (error: any) {
         alert(error.message || "Có lỗi xảy ra, vui lòng thử lại.");
         setIsClaiming(false);
@@ -167,9 +185,15 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     }
   }, [canClaimToday, claimableDay, isClaiming, isSyncingData, setIsSyncingData]);
 
+  // --- THÊM MỚI: useMemo để tính mốc streak tiếp theo ---
+  const nextStreakGoal = useMemo(() => {
+    // Tìm mốc streak đầu tiên lớn hơn streak hiện tại
+    return streakMilestoneRewards.find(milestone => milestone.streakGoal > loginStreak) || null;
+  }, [loginStreak]);
+
+  // --- TỐI ƯU HÓA: SỬ DỤNG useMemo ĐỂ TRÁNH TẠO LẠI OBJECT 'value' KHÔNG CẦN THIẾT ---
   const value = useMemo(() => ({
     loginStreak, 
-    totalLoginStreak, // --- THÊM MỚI: Cung cấp totalLoginStreak cho UI ---
     isSyncingData, 
     canClaimToday, 
     claimableDay, 
@@ -178,11 +202,11 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     animatingReward, 
     particles,
     countdown,
+    nextStreakGoal, // Thêm vào context value
     claimReward, 
     handleClose: onClose,
   }), [
     loginStreak, 
-    totalLoginStreak, // --- THÊM MỚI: Thêm vào dependencies của useMemo ---
     isSyncingData, 
     canClaimToday, 
     claimableDay, 
@@ -191,6 +215,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     animatingReward, 
     particles,
     countdown,
+    nextStreakGoal, // Thêm vào dependencies
     claimReward, 
     onClose
   ]);
