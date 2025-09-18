@@ -3,7 +3,6 @@ import {
   doc, runTransaction, serverTimestamp, increment
 } from 'firebase/firestore';
 
-// Phần thưởng hàng ngày không đổi
 export const CHECK_IN_REWARDS = [
     { day: 1, type: 'coins', amount: 1000, name: "Vàng" },
     { day: 2, type: 'ancientBooks', amount: 10, name: "Sách Cổ" },
@@ -32,7 +31,7 @@ export const processDailyCheckIn = async (userId: string) => {
         const lastCheckIn = data.lastCheckIn?.toDate();
         const loginStreak = data.loginStreak || 0; // Chuỗi trong chu kỳ 7 ngày
         const totalLoginStreak = data.totalLoginStreak || 0; // Tổng chuỗi liên tiếp
-        const now = new Date(); 
+        const now = new Date(); // Thời gian client, chỉ dùng để so sánh. serverTimestamp() sẽ được dùng để ghi.
 
         // Kiểm tra xem đã điểm danh trong cùng ngày UTC chưa
         if (lastCheckIn && 
@@ -68,7 +67,8 @@ export const processDailyCheckIn = async (userId: string) => {
             lastCheckIn: serverTimestamp(),
         };
 
-        // Hàm trợ giúp để thêm phần thưởng vào object updates
+        // Hàm trợ giúp để thêm phần thưởng vào object updates một cách an toàn
+        // Sử dụng increment() của Firestore để tránh race condition
         const addReward = (reward: { type: string; amount: number }) => {
             if (reward.type === 'coins') {
                 updates.coins = increment(reward.amount);
