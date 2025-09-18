@@ -39,7 +39,8 @@ const DailyCheckInView = () => {
               </div>
             </div>
             <div className="flex-1 min-w-0">
-                <div className="flex flex-col items-start gap-1"> {/* Bỏ mb-2 ở đây để khoảng cách đều hơn */}
+                {/* --- SỬA ĐỔI Ở ĐÂY: Tăng gap-1 thành gap-1.5 --- */}
+                <div className="flex flex-col items-start gap-1.5">
                     <span className="inline-flex items-center bg-slate-700 text-slate-300 px-3 py-1 rounded-full text-sm font-medium border border-slate-600">
                         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/streak-icon.webp" alt="Streak Icon" className="w-5 h-5 mr-2" />
                         {loginStreak} Day Streak
@@ -48,7 +49,6 @@ const DailyCheckInView = () => {
                         {countdown}
                     </span>
                 </div>
-                {/* --- ĐÃ XÓA THANH PROGRESS BAR Ở ĐÂY --- */}
             </div>
             <div className="absolute top-3 right-3">
                 <HomeButton onClick={handleClose} /> {/* SỬ DỤNG handleClose TỪ CONTEXT */}
