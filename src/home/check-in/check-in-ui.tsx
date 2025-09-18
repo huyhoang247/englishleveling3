@@ -1,4 +1,3 @@
---- START OF FILE check-in-ui.tsx (7).txt ---
 
 import React from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx';
