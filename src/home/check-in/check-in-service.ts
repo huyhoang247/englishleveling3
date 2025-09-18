@@ -1,8 +1,11 @@
+--- START OF FILE check-in-service.tgfds.txt ---
+
 import { db } from '../../firebase';
 import { 
-  doc, runTransaction, serverTimestamp, increment
+  doc, runTransaction, serverTimestamp
 } from 'firebase/firestore';
 
+// PHẦN THƯỞNG CHU KỲ 7 NGÀY
 export const CHECK_IN_REWARDS = [
     { day: 1, type: 'coins', amount: 1000, name: "Vàng" },
     { day: 2, type: 'ancientBooks', amount: 10, name: "Sách Cổ" },
@@ -13,12 +16,13 @@ export const CHECK_IN_REWARDS = [
     { day: 7, type: 'pickaxes', amount: 10, name: "Cúp" },
 ];
 
-// --- THÊM MỚI: Định nghĩa phần thưởng theo mốc chuỗi ---
+// --- THÊM MỚI: ĐỊNH NGHĨA PHẦN THƯỞNG MỐC STREAK ---
 export const STREAK_MILESTONE_REWARDS = [
-    { day: 7, type: 'coins', amount: 5000, name: "Thưởng 7 Ngày" },
-    { day: 14, type: 'coins', amount: 10000, name: "Thưởng 14 Ngày" },
-    // Có thể thêm các mốc khác ở đây
+    { streakGoal: 7, type: 'coins', amount: 5000, name: "Thưởng 7 Ngày" },
+    { streakGoal: 14, type: 'coins', amount: 10000, name: "Thưởng 14 Ngày" },
+    // Thêm các mốc khác ở đây nếu muốn, ví dụ: { streakGoal: 21, ... }
 ];
+
 
 export const processDailyCheckIn = async (userId: string) => {
     const userDocRef = doc(db, 'users', userId);
@@ -29,8 +33,7 @@ export const processDailyCheckIn = async (userId: string) => {
         
         const data = userDoc.data();
         const lastCheckIn = data.lastCheckIn?.toDate();
-        const loginStreak = data.loginStreak || 0; // Chuỗi trong chu kỳ 7 ngày
-        const totalLoginStreak = data.totalLoginStreak || 0; // Tổng chuỗi liên tiếp
+        const loginStreak = data.loginStreak || 0;
         const now = new Date(); // Thời gian client, chỉ dùng để so sánh. serverTimestamp() sẽ được dùng để ghi.
 
         // Kiểm tra xem đã điểm danh trong cùng ngày UTC chưa
@@ -41,68 +44,63 @@ export const processDailyCheckIn = async (userId: string) => {
             throw new Error("Bạn đã điểm danh hôm nay rồi.");
         }
         
-        let newCycleStreak = 1; // Chuỗi trong chu kỳ 7 ngày, mặc định reset
-        let newTotalStreak = 1; // Tổng chuỗi, mặc định reset
-
+        // --- SỬA ĐỔI: LOGIC TÍNH STREAK MỚI ---
+        let newStreak = 1; // Mặc định reset streak
         if (lastCheckIn) {
             const yesterday = new Date(now);
             yesterday.setUTCDate(now.getUTCDate() - 1);
-            
-            // Nếu lần cuối là ngày hôm qua -> chuỗi tiếp tục
+            // Kiểm tra xem lần cuối là ngày hôm qua (theo UTC) để tính chuỗi liên tiếp
             if (lastCheckIn.getUTCFullYear() === yesterday.getUTCFullYear() &&
                 lastCheckIn.getUTCMonth() === yesterday.getUTCMonth() &&
                 lastCheckIn.getUTCDate() === yesterday.getUTCDate()) {
-                newCycleStreak = (loginStreak % 7) + 1; // Quay vòng 1-7
-                newTotalStreak = totalLoginStreak + 1; // Tăng tổng chuỗi
+                // Streak tiếp tục tăng, không reset sau 7 ngày
+                newStreak = loginStreak + 1;
             }
         }
 
-        // Lấy phần thưởng hàng ngày
-        const dailyReward = CHECK_IN_REWARDS.find(r => r.day === newCycleStreak);
+        // Xác định ngày nhận thưởng trong chu kỳ 7 ngày
+        const dailyRewardDay = (newStreak - 1) % 7 + 1;
+        const dailyReward = CHECK_IN_REWARDS.find(r => r.day === dailyRewardDay);
         if (!dailyReward) throw new Error("Lỗi cấu hình phần thưởng hàng ngày.");
+
+        // --- THÊM MỚI: KIỂM TRA PHẦN THƯỞNG MỐC STREAK ---
+        const streakReward = STREAK_MILESTONE_REWARDS.find(r => r.streakGoal === newStreak);
         
         const updates: { [key: string]: any } = {
-            loginStreak: newCycleStreak,
-            totalLoginStreak: newTotalStreak,
+            loginStreak: newStreak,
             lastCheckIn: serverTimestamp(),
         };
 
-        // Hàm trợ giúp để thêm phần thưởng vào object updates một cách an toàn
-        // Sử dụng increment() của Firestore để tránh race condition
-        const addReward = (reward: { type: string; amount: number }) => {
+        // Hàm trợ giúp để cộng dồn phần thưởng
+        const addRewardToUpdates = (reward: { type: string, amount: number }) => {
             if (reward.type === 'coins') {
-                updates.coins = increment(reward.amount);
+                updates.coins = (data.coins || 0) + reward.amount;
             } else if (reward.type === 'ancientBooks') {
-                updates.ancientBooks = increment(reward.amount);
+                updates.ancientBooks = (data.ancientBooks || 0) + reward.amount;
             } else if (reward.type === 'equipmentPieces') {
-                updates['equipment.pieces'] = increment(reward.amount);
+                updates['equipment.pieces'] = (data.equipment?.pieces || 0) + reward.amount;
             } else if (reward.type === 'cardCapacity') {
-                updates.cardCapacity = increment(reward.amount);
+                updates.cardCapacity = (data.cardCapacity || 100) + reward.amount;
             } else if (reward.type === 'pickaxes') {
-                updates.pickaxes = increment(reward.amount);
+                updates.pickaxes = (data.pickaxes || 0) + reward.amount;
             }
         };
 
         // Thêm phần thưởng hàng ngày
-        addReward(dailyReward);
-        
-        let milestoneRewardClaimed = null;
+        addRewardToUpdates(dailyReward);
 
-        // --- THÊM MỚI: Kiểm tra và thêm phần thưởng mốc chuỗi ---
-        const milestoneReward = STREAK_MILESTONE_REWARDS.find(r => r.day === newTotalStreak);
-        if (milestoneReward) {
-            addReward(milestoneReward);
-            milestoneRewardClaimed = milestoneReward;
+        // Thêm phần thưởng mốc streak nếu có
+        if (streakReward) {
+            addRewardToUpdates(streakReward);
         }
 
         t.update(userDocRef, updates);
         
-        // Trả về thông tin để client cập nhật UI
+        // --- SỬA ĐỔI: Trả về cả hai loại phần thưởng ---
         return { 
-            claimedReward: dailyReward, 
-            newStreak: newCycleStreak,
-            newTotalStreak: newTotalStreak,
-            milestoneRewardClaimed 
+            dailyReward: { ...dailyReward, day: dailyRewardDay }, // Đảm bảo trả về đúng day trong chu kỳ
+            streakReward: streakReward || null, // Trả về null nếu không có
+            newStreak 
         };
     });
 };
