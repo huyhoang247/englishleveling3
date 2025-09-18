@@ -1,5 +1,6 @@
 import React from 'react';
-import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx';
+// --- SỬA ĐỔI: Import thêm streakMilestoneRewards ---
+import { CheckInProvider, useCheckIn, dailyRewards, streakMilestoneRewards } from './check-in-context.tsx';
 import HomeButton from '../../ui/home-button.tsx';
 
 // --- PROPS CHO COMPONENT CHÍNH ---
@@ -8,10 +9,10 @@ interface DailyCheckInProps {
 }
 
 // --- COMPONENT GIAO DIỆN (VIEW) ---
-// Component này không có logic, chỉ nhận dữ liệu từ context và hiển thị.
 const DailyCheckInView = () => {
   const {
-    loginStreak, isSyncingData, canClaimToday, claimableDay,
+    // --- SỬA ĐỔI: Lấy thêm totalLoginStreak ---
+    loginStreak, totalLoginStreak, isSyncingData, canClaimToday, claimableDay,
     isClaiming, showRewardAnimation, animatingReward, particles, countdown,
     claimReward, handleClose,
   } = useCheckIn();
@@ -27,12 +28,14 @@ const DailyCheckInView = () => {
                 <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 opacity-20 blur-md"></div>
                 <div className="w-16 h-16 relative overflow-hidden rounded-full border-2 border-slate-700">
                   <div className="absolute inset-0 bg-slate-900"></div>
+                  {/* Sửa đổi: Tiến trình nước thể hiện chu kỳ 7 ngày */}
                   <div className="water-fill absolute w-full bg-gradient-to-b from-cyan-400 to-blue-600 opacity-80" style={{ bottom: 0, height: `${(loginStreak / 7) * 100}%`, transition: 'height 1s ease-out' }}>
                     <div className="water-wave1"></div>
                     <div className="water-wave2"></div>
                   </div>
                   <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <span className="text-2xl font-bold text-white drop-shadow-lg">{loginStreak}</span>
+                    {/* Sửa đổi: Hiển thị TỔNG chuỗi */}
+                    <span className="text-2xl font-bold text-white drop-shadow-lg">{totalLoginStreak}</span>
                   </div>
                 </div>
               </div>
@@ -41,19 +44,20 @@ const DailyCheckInView = () => {
                 <div className="flex flex-col items-start gap-1 mb-2">
                     <span className="inline-flex items-center bg-slate-700 text-slate-300 px-3 py-1 rounded-full text-sm font-medium border border-slate-600">
                         <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/streak-icon.webp" alt="Streak Icon" className="w-5 h-5 mr-2" />
-                        {loginStreak} Day Streak
+                        {/* Sửa đổi: Hiển thị TỔNG chuỗi */}
+                        {totalLoginStreak} Day Streak
                     </span>
-                    {/* --- SỬA ĐỔI: Luôn hiển thị countdown để tránh vỡ layout. Khi có thể claim, nó sẽ là "00:00:00" --- */}
                     <span className="text-[11px] font-mono font-semibold text-slate-400">
                         {countdown}
                     </span>
                 </div>
                 <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
+                    {/* Sửa đổi: Thanh tiến trình thể hiện chu kỳ 7 ngày */}
                     <div className="h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" style={{ width: `${(loginStreak / 7) * 100}%` }}></div>
                 </div>
             </div>
             <div className="absolute top-3 right-3">
-                <HomeButton onClick={handleClose} /> {/* SỬ DỤNG handleClose TỪ CONTEXT */}
+                <HomeButton onClick={handleClose} />
             </div>
           </div>
         </div>
@@ -94,7 +98,50 @@ const DailyCheckInView = () => {
       </div>
       
       <div className="flex-1 overflow-y-auto pb-4 hide-scrollbar">
+        {/* --- THÊM MỚI: KHU VỰC PHẦN THƯỞNG MỐC CHUỖI --- */}
+        <div className="mb-6">
+            <h3 className="text-lg font-bold text-slate-300 mb-3 px-1">Thưởng Mốc Chuỗi</h3>
+            <div className="grid grid-cols-1 gap-4">
+                {streakMilestoneRewards.map(milestone => {
+                    const isClaimed = totalLoginStreak >= milestone.day;
+                    const progress = Math.min((totalLoginStreak / milestone.day) * 100, 100);
+
+                    return (
+                        <div key={milestone.day} className={`relative rounded-xl overflow-hidden transition-all duration-300 ${isClaimed ? 'opacity-70' : ''}`}>
+                            <div className="relative flex items-center gap-4 p-4 rounded-xl bg-slate-800">
+                                <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg font-medium text-slate-300">{milestone.day} Ngày</div>
+                                <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900 shadow-lg p-1">
+                                    <div className="w-full h-full rounded-lg flex items-center justify-center bg-slate-800">
+                                        <div className="w-10 h-10">{milestone.icon}</div>
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="font-bold text-white">{milestone.name}</h3>
+                                    <p className="text-slate-300 text-sm">x{milestone.amount}</p>
+                                    <div className="mt-2 w-full h-2.5 bg-slate-700/50 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-500 ease-out" 
+                                            style={{ width: `${progress}%` }}>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {isClaimed && (
+                                <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
+                                    <div className="bg-green-600 rounded-full p-2 transform rotate-12">
+                                        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+        
+        {/* --- PHẦN THƯỞNG HÀNG NGÀY --- */}
         <div className="pb-6">
+          <h3 className="text-lg font-bold text-slate-300 mb-3 px-1">Thưởng Hàng Ngày</h3>
           <div className="grid grid-cols-1 gap-4">
             {dailyRewards.map(reward => {
               const isClaimed = reward.day <= loginStreak;
@@ -103,7 +150,7 @@ const DailyCheckInView = () => {
               <div key={reward.day} className={`group relative rounded-xl overflow-hidden transition-all duration-300 ${isClaimed ? 'opacity-60' : 'hover:transform hover:scale-[1.02]'}`}>
                 {isClaimable && (<div className="absolute inset-0 rounded-xl animate-pulse-slow" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.6), transparent)`, backgroundSize: '200% 200%'}}></div>)}
                 <div className={`relative flex items-center gap-4 p-4 rounded-xl ${ isClaimable ? 'bg-gradient-to-r from-slate-800 to-slate-800/95 border border-purple-500/50' : 'bg-slate-800'}`}>
-                  <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg font-medium text-slate-300">Day {reward.day}</div>
+                  <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg font-medium text-slate-300">Ngày {reward.day}</div>
                   <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
                     <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80 backdrop-blur-sm' : 'bg-slate-800'}`}>
                       <div className="w-10 h-10">{reward.icon}</div>
@@ -182,7 +229,6 @@ const DailyCheckInView = () => {
 
 
 // --- COMPONENT CHÍNH ĐỂ EXPORT ---
-// Component này bao bọc View bằng Provider, cung cấp context cho nó.
 const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
   return (
     <CheckInProvider onClose={onClose}>
