@@ -1,4 +1,3 @@
---- START OF FILE check-in-service.tgfds.txt ---
 
 import { db } from '../../firebase';
 import { 
