@@ -32,7 +32,6 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: React.SVGProps
 };
 // --- END: HELPERS & ICONS ---
 
-
 const useAnimateValue = (endValue: number, duration: number = 500) => {
     const [currentValue, setCurrentValue] = useState(0);
     const frameRate = 1000 / 60;
@@ -70,7 +69,7 @@ const useCountdown = (endTime: Timestamp | undefined) => {
     return timeLeft;
 };
 
-// --- START: NEW AUCTION DETAIL MODAL ---
+// --- START: MODAL FOR CREATING AUCTION ---
 const AuctionDetailModal = memo(({ ownedItem, onClose, onList, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onList: (item: OwnedItem, price: number, duration: number) => void, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     const [activeTab, setActiveTab] = useState<'stats' | 'auction'>('stats');
@@ -165,10 +164,67 @@ const AuctionDetailModal = memo(({ ownedItem, onClose, onList, isProcessing }: {
         </div>
     );
 });
-// --- END: NEW AUCTION DETAIL MODAL ---
+// --- END: MODAL FOR CREATING AUCTION ---
+
+// --- START: NEW VIEW-ONLY DETAIL MODAL ---
+const ViewAuctionDetailModal = memo(({ auction, onClose }: { auction: AuctionItem, onClose: () => void }) => {
+    const ownedItem = auction.item;
+    const itemDef = getItemDefinition(ownedItem.itemId);
+
+    if (!itemDef) {
+        console.error(`Cannot open view detail modal for non-existent item ID: ${ownedItem.itemId}`);
+        onClose();
+        return null;
+    }
+
+    const sortedStats = useMemo(() => {
+        const order = ['hp', 'atk', 'def']; const stats = ownedItem.stats || {};
+        const orderedEntries: [string, any][] = []; const remainingEntries = { ...stats };
+        for (const key of order) {
+            if (stats.hasOwnProperty(key)) { orderedEntries.push([key, stats[key]]); delete remainingEntries[key]; }
+        }
+        orderedEntries.push(...Object.entries(remainingEntries));
+        return orderedEntries;
+    }, [ownedItem.stats]);
+    const hasStats = sortedStats.length > 0;
+
+    return (
+        <div className="fixed inset-0 flex items-center justify-center z-[60] p-4">
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+            <div className={`relative bg-gradient-to-br ${getRarityGradient(itemDef.rarity)} p-5 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
+                <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
+                    <div className="flex justify-between items-start mb-2">
+                        <h3 className={`text-2xl font-bold ${getRarityTextColor(itemDef.rarity)}`}>{itemDef.name}</h3>
+                        <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(itemDef.rarity)} bg-gray-800/70 border ${getRarityColor(itemDef.rarity)}`}>{`${itemDef.rarity} Rank`}</span>
+                        <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Level {ownedItem.level}</span>
+                    </div>
+                </div>
+
+                <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+                    <div className="flex flex-col items-center text-center gap-4">
+                        <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
+                             <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
+                        </div>
+                        <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50 text-left">
+                            <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
+                        </div>
+                        <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50">
+                            <h4 className="text-sm font-bold text-cyan-300 mb-2 text-left">CHỈ SỐ</h4>
+                            <div className="space-y-1">{hasStats ? sortedStats.map(([key, value]) => { const config = STAT_CONFIG[key.toLowerCase()]; return (<div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">{config?.Icon && (<div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-4 h-4" /></div>)}<div className="flex flex-1 items-center justify-between"><span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span><span className="font-bold text-sm text-white">{typeof value === 'number' ? value.toLocaleString() : value}</span></div></div>); }) : (<p className="text-sm text-slate-500 text-center py-4">Vật phẩm này không có chỉ số.</p>)}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+});
+// --- END: NEW VIEW-ONLY DETAIL MODAL ---
 
 
-const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: AuctionItem) => void; onClaim: (a: AuctionItem) => void; onReclaim: (a: AuctionItem) => void; }> = ({ auction, userId, onBid, onClaim, onReclaim }) => {
+const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: AuctionItem) => void; onClaim: (a: AuctionItem) => void; onReclaim: (a: AuctionItem) => void; onViewDetails: (a: AuctionItem) => void; }> = ({ auction, userId, onBid, onClaim, onReclaim, onViewDetails }) => {
     const itemDef = getItemDefinition(auction.item.itemId);
     const timeLeft = useCountdown(auction.endTime);
     const isEnded = timeLeft === 'Đã kết thúc';
@@ -192,7 +248,7 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
 
     return (
         <div className={`bg-slate-800/60 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} p-3 flex flex-col gap-2 transition-shadow hover:shadow-lg hover:shadow-cyan-500/10`}>
-            <div className="flex items-center gap-3">
+            <div onClick={() => onViewDetails(auction)} className="flex items-center gap-3 cursor-pointer">
                 <div className={`relative w-16 h-16 flex-shrink-0 bg-black/30 rounded-md border ${getRarityColor(itemDef.rarity)} flex items-center justify-center p-1`}>
                     <img src={itemDef.icon} alt={itemDef.name} className="w-full h-full object-contain" />
                     <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">Lv.{auction.item.level}</span>
@@ -358,6 +414,7 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
     const [message, setMessage] = useState<{type: 'error' | 'success', text: string} | null>(null);
     const [coins, setCoins] = useState(0);
     const [gems, setGems] = useState(0);
+    const [selectedAuction, setSelectedAuction] = useState<AuctionItem | null>(null);
     
     const refreshUserData = async () => {
         try {
@@ -402,6 +459,8 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
             <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); }`}</style>
             {isLoading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-[101]"><div className="text-white text-xl animate-pulse">Đang xử lý...</div></div>}
             
+            {selectedAuction && <ViewAuctionDetailModal auction={selectedAuction} onClose={() => setSelectedAuction(null)} />}
+
             <div className="w-full h-full bg-gradient-to-br from-slate-900 to-[#110f21] flex flex-col">
                 <AuctionHeader onClose={onClose} userCoins={coins} userGems={gems} />
                 
@@ -420,7 +479,8 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
                                 <AuctionCard key={auction.id} auction={auction} userId={userId} 
                                     onBid={handleBid}
                                     onClaim={a => handleAction(() => claimAuctionWin(userId, a.id), "Nhận vật phẩm thành công!")}
-                                    onReclaim={a => handleAction(() => reclaimExpiredAuction(userId, a.id), "Nhận lại vật phẩm thành công!")} />
+                                    onReclaim={a => handleAction(() => reclaimExpiredAuction(userId, a.id), "Nhận lại vật phẩm thành công!")}
+                                    onViewDetails={setSelectedAuction} />
                             )) : <p className="text-slate-500 col-span-full text-center mt-10">Sàn đấu giá hiện đang trống.</p>}
                         </div>
                     )}
@@ -430,7 +490,8 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
                                 <AuctionCard key={auction.id} auction={auction} userId={userId} 
                                     onBid={handleBid}
                                     onClaim={a => handleAction(() => claimAuctionWin(userId, a.id), "Nhận vật phẩm thành công!")}
-                                    onReclaim={a => handleAction(() => reclaimExpiredAuction(userId, a.id), "Nhận lại vật phẩm thành công!")} />
+                                    onReclaim={a => handleAction(() => reclaimExpiredAuction(userId, a.id), "Nhận lại vật phẩm thành công!")}
+                                    onViewDetails={setSelectedAuction} />
                             )) : <p className="text-slate-500 col-span-full text-center mt-10">Bạn chưa có hoạt động đấu giá nào.</p>}
                         </div>
                     )}
