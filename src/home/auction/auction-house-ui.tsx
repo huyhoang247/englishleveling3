@@ -520,7 +520,7 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
                            isProcessing={isLoading}
                         />
                     )}
-                main>
+                </main>
             </div>
         </div>
     );
