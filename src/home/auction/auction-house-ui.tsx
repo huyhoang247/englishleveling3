@@ -227,6 +227,7 @@ const ViewAuctionDetailModal = memo(({ auction, onClose, userId }: { auction: Au
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Người đấu giá:</span><span className="font-bold text-slate-200">{auction.sellerId === userId ? "Bạn" : auction.sellerName}</span></div>
                                         <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Người ra giá cao nhất:</span><span className="font-bold text-cyan-300">{auction.highestBidderId === userId ? "Bạn" : (auction.highestBidderName || 'Chưa có')}</span></div>
+                                        <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Giá khởi điểm:</span><span className="font-semibold text-gray-300 flex items-center gap-1"><CoinIcon className="w-4 h-4" />{auction.startingBid.toLocaleString()}</span></div>
                                         <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Giá hiện tại:</span><span className="font-bold text-yellow-400 flex items-center gap-1"><CoinIcon className="w-4 h-4" />{auction.currentBid.toLocaleString()}</span></div>
                                         <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Thời gian:</span><span className={`font-bold ${isEnded ? 'text-red-500' : 'text-green-400'}`}>{timeLeft}</span></div>
                                     </div>
@@ -265,21 +266,19 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
     if (!itemDef) return <div className="text-red-500 bg-slate-800/60 rounded-lg p-3">Lỗi vật phẩm không xác định</div>;
 
     return (
-        <div className={`bg-slate-800/60 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} p-3 flex flex-col gap-2 transition-shadow hover:shadow-lg hover:shadow-cyan-500/10`}>
-            <div onClick={() => onViewDetails(auction)} className="flex items-center gap-3 cursor-pointer">
+        <div className={`bg-slate-800/60 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} p-3 flex flex-col gap-3 transition-shadow hover:shadow-lg hover:shadow-cyan-500/10`}>
+            <div onClick={() => onViewDetails(auction)} className="flex items-center gap-3 cursor-pointer group">
                 <div className={`relative w-16 h-16 flex-shrink-0 bg-black/30 rounded-md border ${getRarityColor(itemDef.rarity)} flex items-center justify-center p-1`}>
                     <img src={itemDef.icon} alt={itemDef.name} className="w-full h-full object-contain" />
                     <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">Lv.{auction.item.level}</span>
                 </div>
-                <div className="flex-grow h-16 flex items-center justify-center">
-                    <p className="text-sm font-semibold text-slate-300 group-hover:text-cyan-300 transition-colors">Xem chi tiết</p>
+                <div className="flex-grow text-xs space-y-1">
+                    <div className="flex justify-between items-center"><span className="text-slate-400">Giá khởi điểm:</span><span className="font-semibold text-gray-300 flex items-center gap-1"><CoinIcon className="w-4 h-4" />{auction.startingBid.toLocaleString()}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-slate-300">Giá hiện tại:</span><span className="font-bold text-yellow-400 flex items-center gap-1"><CoinIcon className="w-4 h-4" />{auction.currentBid.toLocaleString()}</span></div>
+                    <div className="flex justify-between items-center"><span className="text-slate-300">Thời gian:</span><span className={`font-bold ${isEnded ? 'text-red-500' : 'text-green-400'}`}>{timeLeft}</span></div>
                 </div>
             </div>
-            <div className="text-sm bg-black/20 rounded-md p-2 space-y-1 text-xs">
-                <div className="flex justify-between items-center"><span className="text-slate-300">Giá hiện tại:</span><span className="font-bold text-yellow-400 flex items-center gap-1"><CoinIcon className="w-4 h-4" />{auction.currentBid.toLocaleString()}</span></div>
-                <div className="flex justify-between items-center"><span className="text-slate-300">Thời gian:</span><span className={`font-bold ${isEnded ? 'text-red-500' : 'text-green-400'}`}>{timeLeft}</span></div>
-            </div>
-            <div className="mt-auto pt-2">{renderAction()}</div>
+            <div className="mt-auto">{renderAction()}</div>
         </div>
     );
 };
