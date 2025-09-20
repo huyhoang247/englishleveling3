@@ -308,6 +308,7 @@ function PracticeList() {
         '5': { title: 'Practice 5', desc: ['Gap Fill', 'Hide 4'], color: 'purple' },
         '6': { title: 'Practice 6', desc: ['Gap Fill', 'Hide 5'], color: 'yellow' },
         '7': { title: 'Practice 7', desc: ['Gap Fill', 'Random Hide'], color: 'red' },
+        '8': { title: 'Practice 8', desc: ['Type Word', 'Audio'], color: 'cyan' }, // <<< THÊM PRACTICE 8
     },
   }), []);
   
