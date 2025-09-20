@@ -1,6 +1,6 @@
 // --- START OF FILE auction-house-ui.tsx (MODIFIED) ---
 
-import React, { useState, useEffect, useMemo, FC, memo } from 'react'; // Đã xóa useRef và useLayoutEffect
+import React, { useState, useEffect, useMemo, FC, memo } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { 
     listenToActiveAuctions, listenToUserAuctions, listAuctionItem, placeBidOnAuction, 
@@ -166,10 +166,13 @@ const AuctionDetailModal = memo(({ ownedItem, onClose, onList, isProcessing }: {
 });
 // --- END: MODAL FOR CREATING AUCTION ---
 
-// --- START: NEW VIEW-ONLY DETAIL MODAL ---
-const ViewAuctionDetailModal = memo(({ auction, onClose }: { auction: AuctionItem, onClose: () => void }) => {
+// --- START: VIEW-ONLY DETAIL MODAL (REFACTORED WITH TABS) ---
+const ViewAuctionDetailModal = memo(({ auction, onClose, userId }: { auction: AuctionItem, onClose: () => void, userId: string }) => {
     const ownedItem = auction.item;
     const itemDef = getItemDefinition(ownedItem.itemId);
+    const [activeTab, setActiveTab] = useState<'stats' | 'info'>('stats');
+    const timeLeft = useCountdown(auction.endTime);
+    const isEnded = timeLeft === 'Đã kết thúc';
 
     if (!itemDef) {
         console.error(`Cannot open view detail modal for non-existent item ID: ${ownedItem.itemId}`);
@@ -211,9 +214,24 @@ const ViewAuctionDetailModal = memo(({ auction, onClose }: { auction: AuctionIte
                         <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50 text-left">
                             <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
                         </div>
-                        <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50">
-                            <h4 className="text-sm font-bold text-cyan-300 mb-2 text-left">CHỈ SỐ</h4>
-                            <div className="space-y-1">{hasStats ? sortedStats.map(([key, value]) => { const config = STAT_CONFIG[key.toLowerCase()]; return (<div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">{config?.Icon && (<div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-4 h-4" /></div>)}<div className="flex flex-1 items-center justify-between"><span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span><span className="font-bold text-sm text-white">{typeof value === 'number' ? value.toLocaleString() : value}</span></div></div>); }) : (<p className="text-sm text-slate-500 text-center py-4">Vật phẩm này không có chỉ số.</p>)}</div>
+                        <div className="w-full bg-black/20 rounded-lg">
+                             <div className="flex border-b border-slate-700/50">
+                                <button onClick={() => setActiveTab('stats')} className={`relative px-4 py-2 text-sm font-bold transition-colors ${activeTab === 'stats' ? 'text-cyan-300' : 'text-slate-500 hover:text-slate-300'}`}>Chỉ Số{activeTab === 'stats' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-cyan-400"></div>}</button>
+                                <button onClick={() => setActiveTab('info')} className={`relative px-4 py-2 text-sm font-bold transition-colors ${activeTab === 'info' ? 'text-yellow-300' : 'text-slate-500 hover:text-slate-300'}`}>Thông Tin{activeTab === 'info' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-yellow-400"></div>}</button>
+                            </div>
+                            <div className="p-4">
+                                {activeTab === 'stats' && (
+                                     <div className="space-y-1">{hasStats ? sortedStats.map(([key, value]) => { const config = STAT_CONFIG[key.toLowerCase()]; return (<div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">{config?.Icon && (<div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-4 h-4" /></div>)}<div className="flex flex-1 items-center justify-between"><span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span><span className="font-bold text-sm text-white">{typeof value === 'number' ? value.toLocaleString() : value}</span></div></div>); }) : (<p className="text-sm text-slate-500 text-center py-4">Vật phẩm này không có chỉ số.</p>)}</div>
+                                )}
+                                {activeTab === 'info' && (
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Người đấu giá:</span><span className="font-bold text-slate-200">{auction.sellerId === userId ? "Bạn" : auction.sellerName}</span></div>
+                                        <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Người ra giá cao nhất:</span><span className="font-bold text-cyan-300">{auction.highestBidderId === userId ? "Bạn" : (auction.highestBidderName || 'Chưa có')}</span></div>
+                                        <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Giá hiện tại:</span><span className="font-bold text-yellow-400 flex items-center gap-1"><CoinIcon className="w-4 h-4" />{auction.currentBid.toLocaleString()}</span></div>
+                                        <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Thời gian:</span><span className={`font-bold ${isEnded ? 'text-red-500' : 'text-green-400'}`}>{timeLeft}</span></div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -221,7 +239,7 @@ const ViewAuctionDetailModal = memo(({ auction, onClose }: { auction: AuctionIte
         </div>
     );
 });
-// --- END: NEW VIEW-ONLY DETAIL MODAL ---
+// --- END: VIEW-ONLY DETAIL MODAL ---
 
 
 const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: AuctionItem) => void; onClaim: (a: AuctionItem) => void; onReclaim: (a: AuctionItem) => void; onViewDetails: (a: AuctionItem) => void; }> = ({ auction, userId, onBid, onClaim, onReclaim, onViewDetails }) => {
@@ -253,9 +271,8 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
                     <img src={itemDef.icon} alt={itemDef.name} className="w-full h-full object-contain" />
                     <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">Lv.{auction.item.level}</span>
                 </div>
-                <div className="text-xs space-y-0.5">
-                    <p className="text-slate-400">Người đấu giá: <span className="font-semibold text-slate-200">{auction.sellerId === userId ? "Bạn" : auction.sellerName}</span></p>
-                    <p className="text-slate-400">Người ra giá cao nhất: <span className="font-semibold text-cyan-300">{auction.highestBidderId === userId ? "Bạn" : (auction.highestBidderName || 'Chưa có')}</span></p>
+                <div className="flex-grow h-16 flex items-center justify-center">
+                    <p className="text-sm font-semibold text-slate-300 group-hover:text-cyan-300 transition-colors">Xem chi tiết</p>
                 </div>
             </div>
             <div className="text-sm bg-black/20 rounded-md p-2 space-y-1 text-xs">
@@ -459,7 +476,7 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
             <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); }`}</style>
             {isLoading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-[101]"><div className="text-white text-xl animate-pulse">Đang xử lý...</div></div>}
             
-            {selectedAuction && <ViewAuctionDetailModal auction={selectedAuction} onClose={() => setSelectedAuction(null)} />}
+            {selectedAuction && <ViewAuctionDetailModal auction={selectedAuction} onClose={() => setSelectedAuction(null)} userId={userId} />}
 
             <div className="w-full h-full bg-gradient-to-br from-slate-900 to-[#110f21] flex flex-col">
                 <AuctionHeader onClose={onClose} userCoins={coins} userGems={gems} />
@@ -503,7 +520,7 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
                            isProcessing={isLoading}
                         />
                     )}
-                </main>
+                main>
             </div>
         </div>
     );
