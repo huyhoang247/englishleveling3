@@ -106,7 +106,7 @@ export const getCompletedWordsForGameMode = async (userId: string, gameModeId: s
     return completedSet;
 };
 
-// --- CÁC HÀM MỚI ĐƯỢC THÊM VÀO ---
+// --- CÁC HÀM MỚI ĐƯỢỢC THÊM VÀO ---
 
 /**
  * Interface cho dữ liệu khởi tạo game.
@@ -555,8 +555,12 @@ export const fetchPracticeListProgress = async (
               });
           });
 
-          const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1,2,3,4,5,6,7] : [1,2,3,4,5,6,7].map(n => i*100+n)).flat();
+          // <<< START: THAY ĐỔI Ở ĐÂY
+          const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1,2,3,4,5,6,7,8] : [1,2,3,4,5,6,7,8].map(n => i*100+n)).flat();
           const totals = { p1: userVocabSet.size, p2: wordToRelevantExampleSentences.size, p3: 0, p4: 0, p5: 0, p6: 0, p7: sentenceToUserVocab.size };
+          // totals.p8 sẽ giống totals.p1 nên không cần định nghĩa riêng
+          // <<< END: THAY ĐỔI Ở ĐÂY
+
           sentenceToUserVocab.forEach(words => {
               if (words.length >= 2) totals.p3++;
               if (words.length >= 3) totals.p4++;
@@ -567,9 +571,12 @@ export const fetchPracticeListProgress = async (
           allModes.forEach(num => {
               const modeId = `fill-word-${num}`;
               const baseNum = num % 100;
-              if (baseNum === 1) {
+              // <<< START: THAY ĐỔI Ở ĐÂY
+              if (baseNum === 1 || baseNum === 8) { // Gộp logic cho practice 1 và 8
                   newProgressData[num] = { completed: (completedWordsByGameMode[modeId] || new Set()).size, total: totals.p1 };
-              } else if (baseNum === 2) {
+              } 
+              // <<< END: THAY ĐỔI Ở ĐÂY
+              else if (baseNum === 2) {
                   let completedCount = 0;
                   const completedSet = completedWordsByGameMode[modeId] || new Set();
                   for (const word of wordToRelevantExampleSentences.keys()) { if (completedSet.has(word)) completedCount++; }
