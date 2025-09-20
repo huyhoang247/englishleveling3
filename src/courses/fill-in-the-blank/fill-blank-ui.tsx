@@ -1,12 +1,12 @@
 // --- START OF FILE: fill-word-home.tsx ---
 
-import React, { useState, useEffect, memo, useMemo, useCallback, useRef } from 'react'; // <<< THÊM useRef
+import React, { useState, useEffect, memo, useMemo, useCallback, useRef } from 'react';
 import { auth } from '../../firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
 // --- NEW: Import Context Provider and Hook ---
 import { FillWordProvider, useFillWord } from './fill-blank-context.tsx';
-import FillWordLoadingSkeleton from './fill-blank-loading.tsx'; // <<<--- DÒNG IMPORT MỚI
+import FillWordLoadingSkeleton from './fill-blank-loading.tsx';
 import BackButton from '../../ui/back-button.tsx';
 
 import { defaultImageUrls } from '../../voca-data/image-url.ts';
@@ -31,12 +31,10 @@ const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo((
 const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path><path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path></svg>);
 const PhraseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"> <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /> </svg> );
 const ExamIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"> <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /> </svg> );
-// <<< START: THÊM CÁC ICON CHO AUDIO PLAYER
 const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
 const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg> );
 const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}> <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /> </svg> );
 const ChevronRightIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}> <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /> </svg> );
-// <<< END: THÊM CÁC ICON CHO AUDIO PLAYER
 const generateImageUrl = (imageIndex?: number) => { if (imageIndex !== undefined && typeof imageIndex === 'number') { const adjustedIndex = imageIndex - 1; if (adjustedIndex >= 0 && adjustedIndex < defaultImageUrls.length) { return defaultImageUrls[adjustedIndex]; } } return `https://placehold.co/400x320/E0E7FF/4338CA?text=No+Image`; };
 const capitalizeFirstLetter = (str: string) => { if (!str) return ''; return str.charAt(0).toUpperCase() + str.slice(1); };
 const highlightText = (text: string, regex: RegExp) => { if (!text) return <span>{text}</span>; const parts = text.split(regex); return (<span>{parts.map((part, i) => regex.test(part) ? (<strong key={i} className="text-blue-500 font-semibold">{part}</strong>) : (part))}</span>); };
@@ -46,10 +44,10 @@ const allPhraseParts = Array.from( new Map( phraseData.flatMap(sentence => sente
 const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => ( <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} title="Phrases" dataSource={allPhraseParts} noResultsMessage="Không tìm thấy cụm từ" isPhrase={true} /> );
 const ExamPopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => ( <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} title="Exams" dataSource={exampleData} noResultsMessage="Không tìm thấy ví dụ" /> );
 
-// <<< START: CẬP NHẬT AUDIO PLAYER COMPONENT LẦN 2
+// <<< START: CẬP NHẬT AUDIO PLAYER COMPONENT LẦN 3
 const AudioPlayerUI: React.FC<{
   audioUrls: { [voiceName: string]: string };
-}> = ({ audioUrls }) => { // Xóa prop currentWord không cần thiết
+}> = ({ audioUrls }) => {
   const [selectedVoice, setSelectedVoice] = useState('Matilda');
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -102,19 +100,17 @@ const AudioPlayerUI: React.FC<{
   }, [currentAudioUrl]);
 
   return (
-    // Thay đổi chiều cao và padding
-    <div className="w-full bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg flex justify-between items-center p-3 text-white relative overflow-hidden">
+    // Component này giờ chỉ trả về các nút điều khiển
+    <div className="w-full flex justify-between items-center mt-4">
         <audio ref={audioRef} src={currentAudioUrl} key={currentAudioUrl} preload="auto" className="hidden"/>
         
-        {/* Nút Play/Pause (bên trái) */}
         <button 
           onClick={togglePlay} 
-          className={`flex items-center justify-center w-10 h-10 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} 
+          className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} 
           aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
-          {isPlaying ? <PauseIcon className="w-5 h-5 text-white" /> : <VolumeUpIcon className="w-5 h-5 text-white/80" />}
+          {isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" />}
         </button>
         
-        {/* Bộ chọn giọng đọc (bên phải) */}
         <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
             <button onClick={() => handleNavigateVoice('previous')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors" aria-label="Giọng đọc trước">
                 <ChevronLeftIcon className="w-3 h-3 text-white/80" />
@@ -129,7 +125,7 @@ const AudioPlayerUI: React.FC<{
     </div>
   );
 };
-// <<< END: CẬP NHẬT AUDIO PLAYER COMPONENT LẦN 2
+// <<< END: CẬP NHẬT AUDIO PLAYER COMPONENT LẦN 3
 
 // --- NEW: The UI Component, free of logic ---
 const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number; }> = ({ onGoBack, selectedPractice }) => {
@@ -162,7 +158,7 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
   }, [currentWord, activeBlankIndex, isMultiWordGame]);
 
   // --- Render logic based on context state ---
-  if (loading) return <FillWordLoadingSkeleton />; // <<<--- THAY ĐỔI Ở ĐÂY
+  if (loading) return <FillWordLoadingSkeleton />;
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 text-center p-4">{error}</div>;
   if (vocabularyList.length === 0 && !loading && !error) return (
     <div className="flex flex-col items-center justify-center h-screen text-xl font-semibold text-gray-600 text-center p-4">
@@ -196,6 +192,7 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
             </div>
           ) : (
             <>
+              {/* <<< START: KHỐI HEADER ĐƯỢC THAY ĐỔI */}
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-xl">
                 <div className="flex justify-between items-center mb-4">
                   <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{displayCount}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{totalCount}</span></div></div>
@@ -210,23 +207,28 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
                   </div>
                 </div>
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${progressPercentage}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
-                { (selectedPractice % 100 !== 1 && selectedPractice % 100 !== 8) && currentWord && ( // <<< SỬA ĐỔI: Không hiển thị question cho practice 1 và 8
+                
+                {/* Điều kiện hiển thị Audio Player cho Practice 8 */}
+                {(selectedPractice % 100 === 8) && currentWord?.audioUrls && (
+                  <AudioPlayerUI audioUrls={currentWord.audioUrls} />
+                )}
+
+                {/* Điều kiện hiển thị câu hỏi cho các practice khác */}
+                {(selectedPractice % 100 !== 1 && selectedPractice % 100 !== 8) && currentWord && (
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
                     <p className="text-lg sm:text-xl font-semibold text-white leading-tight">{currentWord.question?.split('___').map((part, i, arr) => ( <React.Fragment key={i}> {part} {i < arr.length - 1 && <span className="font-bold text-indigo-300">___</span>} </React.Fragment> ))}</p>
                     {currentWord.vietnameseHint && (<p className="text-white/80 text-sm mt-2 italic">{currentWord.vietnameseHint}</p>)}
                   </div>
                 )}
               </div>
+              {/* <<< END: KHỐI HEADER ĐƯỢC THAY ĐỔI */}
               
               {currentWord ? (
                 <div className="w-full mt-6 space-y-6">
                   {(selectedPractice % 100 === 1) && <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />}
-                  {/* <<< START: THÊM HIỂN THỊ AUDIO PLAYER CHO PRACTICE 8 */}
-                  {(selectedPractice % 100 === 8) && currentWord.audioUrls && (
-                    <AudioPlayerUI audioUrls={currentWord.audioUrls}/>
-                  )}
-                  {/* <<< END: THÊM HIỂN THỊ AUDIO PLAYER CHO PRACTICE 8 */}
                   
+                  {/* AudioPlayerUI đã được di chuyển lên trên, nên không cần ở đây nữa */}
+
                   {isMultiWordGame ? (
                     <div className="w-full flex flex-col items-center gap-4">
                       <div className={`p-4 bg-white rounded-lg shadow-md w-full transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
@@ -262,7 +264,10 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
                       )}
                     </div>
                   ) : (
-                    <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} isCorrect={isCorrect} disabled={!!isCorrect} />
+                    // Thêm một khoảng trống phía trên cho practice 8 để giao diện cân đối hơn
+                    <div className={`${selectedPractice % 100 === 8 ? 'pt-16' : ''}`}>
+                       <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} isCorrect={isCorrect} disabled={!!isCorrect} />
+                    </div>
                   )}
                 </div>
               ) : <div className='pt-10 font-bold text-gray-500'>Đang tải từ...</div>}
