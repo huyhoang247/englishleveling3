@@ -197,14 +197,13 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
                     <img src={itemDef.icon} alt={itemDef.name} className="w-full h-full object-contain" />
                     <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">Lv.{auction.item.level}</span>
                 </div>
-                <div>
-                    <p className={`font-bold ${getRarityTextColor(itemDef.rarity)}`}>{itemDef.rarity} Rank</p>
-                    <p className="text-xs text-slate-400">Người bán: {auction.sellerId === userId ? "Bạn" : auction.sellerName}</p>
+                <div className="text-xs space-y-0.5">
+                    <p className="text-slate-400">Người đấu giá: <span className="font-semibold text-slate-200">{auction.sellerId === userId ? "Bạn" : auction.sellerName}</span></p>
+                    <p className="text-slate-400">Người ra giá cao nhất: <span className="font-semibold text-cyan-300">{auction.highestBidderId === userId ? "Bạn" : (auction.highestBidderName || 'Chưa có')}</span></p>
                 </div>
             </div>
             <div className="text-sm bg-black/20 rounded-md p-2 space-y-1 text-xs">
                 <div className="flex justify-between items-center"><span className="text-slate-300">Giá hiện tại:</span><span className="font-bold text-yellow-400 flex items-center gap-1"><CoinIcon className="w-4 h-4" />{auction.currentBid.toLocaleString()}</span></div>
-                <div className="flex justify-between items-center"><span className="text-slate-300">Người giữ giá:</span><span className="font-bold text-cyan-300">{auction.highestBidderId === userId ? "Bạn" : (auction.highestBidderName || 'Chưa có')}</span></div>
                 <div className="flex justify-between items-center"><span className="text-slate-300">Thời gian:</span><span className={`font-bold ${isEnded ? 'text-red-500' : 'text-green-400'}`}>{timeLeft}</span></div>
             </div>
             <div className="mt-auto pt-2">{renderAction()}</div>
