@@ -193,11 +193,12 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
     return (
         <div className={`bg-slate-800/60 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} p-3 flex flex-col gap-2 transition-shadow hover:shadow-lg hover:shadow-cyan-500/10`}>
             <div className="flex items-center gap-3">
-                <div className={`w-16 h-16 flex-shrink-0 bg-black/30 rounded-md border ${getRarityColor(itemDef.rarity)} flex items-center justify-center p-1`}>
+                <div className={`relative w-16 h-16 flex-shrink-0 bg-black/30 rounded-md border ${getRarityColor(itemDef.rarity)} flex items-center justify-center p-1`}>
                     <img src={itemDef.icon} alt={itemDef.name} className="w-full h-full object-contain" />
+                    <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">Lv.{auction.item.level}</span>
                 </div>
                 <div>
-                    <p className={`font-bold ${getRarityTextColor(itemDef.rarity)}`}>{itemDef.name} <span className="text-white">Lv.{auction.item.level}</span></p>
+                    <p className={`font-bold ${getRarityTextColor(itemDef.rarity)}`}>{itemDef.rarity} Rank</p>
                     <p className="text-xs text-slate-400">Người bán: {auction.sellerId === userId ? "Bạn" : auction.sellerName}</p>
                 </div>
             </div>
