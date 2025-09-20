@@ -1,4 +1,4 @@
-// --- START OF FILE PvpPortal.tsx (All-In-One with Scrolling - Full Code) ---
+// --- START OF FILE PvpPortal.tsx (All-In-One, No Shortening, Skip Battle Fix) ---
 
 import React, { useState, useEffect, useRef } from 'react';
 
@@ -138,6 +138,59 @@ export const executeTurn = (
     if (newAttackerStats.hp <= 0) { newAttackerStats.hp = 0; winner = 'defender'; log(`<span class="font-bold text-cyan-300">${attacker.data.name}</span> đã gục ngã vì sát thương phản lại!`); }
 
     return { newAttackerStats, newDefenderStats, turnLogs, winner, turnEvents };
+};
+
+// --- NEW FUNCTION: Simulates the entire battle instantly ---
+const simulateFullBattle = (
+    player1Data: PlayerData, 
+    player1InitialStats: CombatStats, 
+    player2Data: OpponentData, 
+    player2InitialStats: CombatStats
+) => {
+    let p1Stats = { ...player1InitialStats };
+    let p2Stats = { ...player2InitialStats };
+    let turnCounter = 0;
+    let currentPlayerTurn: 'player1' | 'player2' = 'player1';
+    let battleWinner: 'player1' | 'player2' | 'draw' | null = null;
+    const fullCombatLog: string[] = [];
+
+    while (!battleWinner && turnCounter < 50) {
+        turnCounter++;
+        
+        const isP1Turn = currentPlayerTurn === 'player1';
+        const attacker = { data: isP1Turn ? player1Data : player2Data, stats: isP1Turn ? p1Stats : p2Stats };
+        const defender = { data: isP1Turn ? player2Data : player1Data, stats: isP1Turn ? p2Stats : p1Stats };
+        const attackerId = isP1Turn ? 'player1' : 'player2';
+        
+        // We only need logs and winner from executeTurn for simulation
+        const { newAttackerStats, newDefenderStats, turnLogs, winner: turnWinner } = executeTurn(attacker, defender, turnCounter);
+
+        if (isP1Turn) {
+            p1Stats = newAttackerStats;
+            p2Stats = newDefenderStats;
+        } else {
+            p2Stats = newAttackerStats;
+            p1Stats = newDefenderStats;
+        }
+
+        fullCombatLog.push(...turnLogs.reverse());
+        currentPlayerTurn = isP1Turn ? 'player2' : 'player1';
+
+        if (turnWinner) {
+            battleWinner = turnWinner === 'attacker' ? attackerId : (attackerId === 'player1' ? 'player2' : 'player1');
+        }
+    }
+
+    if (!battleWinner) {
+        battleWinner = 'draw';
+    }
+
+    return {
+        finalP1Stats: p1Stats,
+        finalP2Stats: p2Stats,
+        combatLog: fullCombatLog,
+        result: battleWinner
+    };
 };
 
 
@@ -378,7 +431,18 @@ function PvpWager({ onClose, player1, onCoinChange }: PvpWagerProps) {
     else if (nextTurn >= 50) { endMatch('draw'); }
   };
   
-  const skipMatch = () => { if (battleIntervalRef.current) clearInterval(battleIntervalRef.current); battleIntervalRef.current = setInterval(runBattleTurn, 100); };
+  const skipMatch = () => {
+    if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+    if (!player2 || !player2Stats) return;
+    
+    const simulation = simulateFullBattle(player1, player1.initialStats, player2, player2.initialStats);
+
+    setPlayer1Stats(simulation.finalP1Stats);
+    setPlayer2Stats(simulation.finalP2Stats);
+    setCombatLog(simulation.combatLog);
+    
+    endMatch(simulation.result);
+  };
 
   const endMatch = (result: 'player1' | 'player2' | 'draw') => {
     if (matchResult) return;
@@ -580,6 +644,19 @@ function PvpRanked({ onClose, player1, onRankChange }: PvpRankedProps) {
         else if (nextTurn >= 50) { endMatch('draw'); }
     };
 
+    const skipMatch = () => {
+        if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+        if (!player2 || !player2Stats) return;
+
+        const simulation = simulateFullBattle(player1, player1.initialStats, player2, player2.initialStats);
+
+        setPlayer1Stats(simulation.finalP1Stats);
+        setPlayer2Stats(simulation.finalP2Stats);
+        setCombatLog(simulation.combatLog);
+        
+        endMatch(simulation.result);
+    };
+
     const handleSearch = () => {
         setBattlePhase('searching');
         addLog("Đang tìm đối thủ xứng tầm...");
@@ -668,6 +745,15 @@ function PvpRanked({ onClose, player1, onRankChange }: PvpRankedProps) {
                         ) : (
                             <>
                                 <div className="w-full max-w-2xl mx-auto mb-4 mt-4"><div className="w-1/2 mx-auto"><HealthBar current={player1Stats.hp} max={player1Stats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" /></div></div>
+                                
+                                <div className="w-full flex justify-center items-center gap-3 mb-4">
+                                    {battlePhase === 'fighting' && !matchResult && (
+                                        <button onClick={skipMatch} className="font-sans px-4 py-1.5 bg-slate-800/70 hover:bg-slate-700/80 rounded-lg font-semibold text-xs border border-slate-600 hover:border-purple-400 text-purple-300">
+                                            Skip Battle
+                                        </button>
+                                    )}
+                                </div>
+
                                 <div className="w-full flex justify-center items-center my-8">
                                     {player2 && player2Stats && (
                                         <div className={`bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 ${currentPlayerTurn === 'player2' && battlePhase === 'fighting' ? 'animate-pulse-turn' : ''}`}>
@@ -912,4 +998,4 @@ export default function PvpPortal() {
     </>
   );
 }
-// --- END OF FILE PvpPortal.tsx (All-In-One with Scrolling - Full Code) ---
+// --- END OF FILE PvpPortal.tsx (All-In-One, No Shortening, Skip Battle Fix) ---
