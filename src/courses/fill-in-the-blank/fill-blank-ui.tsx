@@ -46,7 +46,7 @@ const allPhraseParts = Array.from( new Map( phraseData.flatMap(sentence => sente
 const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => ( <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} title="Phrases" dataSource={allPhraseParts} noResultsMessage="Không tìm thấy cụm từ" isPhrase={true} /> );
 const ExamPopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => ( <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} title="Exams" dataSource={exampleData} noResultsMessage="Không tìm thấy ví dụ" /> );
 
-// <<< START: THÊM AUDIO PLAYER COMPONENT MỚI
+// <<< START: CẬP NHẬT AUDIO PLAYER COMPONENT
 const AudioPlayerUI: React.FC<{
   audioUrls: { [voiceName: string]: string };
   currentWord: string;
@@ -103,26 +103,41 @@ const AudioPlayerUI: React.FC<{
   }, [currentAudioUrl]);
 
   return (
-    <div className="w-full h-[320px] bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg flex flex-col items-center justify-center p-8 text-white relative overflow-hidden">
+    <div className="w-full h-[320px] bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg flex flex-col items-center justify-center p-4 text-white relative overflow-hidden">
         <audio ref={audioRef} src={currentAudioUrl} key={currentAudioUrl} preload="auto" className="hidden"/>
-        <div className="absolute top-4 right-4 flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
-            <button onClick={() => handleNavigateVoice('previous')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors" aria-label="Giọng đọc trước">
-                <ChevronLeftIcon className="w-3 h-3 text-white/80" />
+        
+        {/* --- KHỐI ĐIỀU KHIỂN AUDIO --- */}
+        <div className="absolute top-0 left-0 right-0 w-full p-3 flex justify-between items-center z-10">
+            {/* Nút Play/Pause (bên trái) */}
+            <button 
+              onClick={togglePlay} 
+              className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} 
+              aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
+              {isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" />}
             </button>
-            <div className="text-center w-20 overflow-hidden"><span key={selectedVoice} className="text-xs font-semibold text-white animate-fade-in-short">{selectedVoice}</span></div>
-            <button onClick={() => handleNavigateVoice('next')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors" aria-label="Giọng đọc tiếp theo">
-                <ChevronRightIcon className="w-3 h-3 text-white/80" />
-            </button>
+            
+            {/* Bộ chọn giọng đọc (bên phải) */}
+            <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
+                <button onClick={() => handleNavigateVoice('previous')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors" aria-label="Giọng đọc trước">
+                    <ChevronLeftIcon className="w-3 h-3 text-white/80" />
+                </button>
+                <div className="text-center w-20 overflow-hidden"><span key={selectedVoice} className="text-xs font-semibold text-white animate-fade-in-short">{selectedVoice}</span></div>
+                <button onClick={() => handleNavigateVoice('next')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors" aria-label="Giọng đọc tiếp theo">
+                    <ChevronRightIcon className="w-3 h-3 text-white/80" />
+                </button>
+            </div>
         </div>
-        <button onClick={togglePlay} className={`w-32 h-32 rounded-full flex items-center justify-center bg-white/20 backdrop-blur-md border-2 border-white/30 shadow-2xl transition-transform hover:scale-105 active:scale-95 ${isPlaying ? 'animate-pulse' : ''}`}>
-            {isPlaying ? <PauseIcon className="w-16 h-16" /> : <VolumeUpIcon className="w-16 h-16" />}
-        </button>
-        <p className="mt-6 text-xl font-bold tracking-wider">{currentWord.toUpperCase()}</p>
+        
+        {/* --- TÊN TỪ VỰNG (Ở GIỮA) --- */}
+        <div className="flex-grow flex items-center justify-center">
+            <p className="text-4xl sm:text-5xl font-bold tracking-wider">{currentWord.toUpperCase()}</p>
+        </div>
+
         <style jsx>{` @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; }`}</style>
     </div>
   );
 };
-// <<< END: THÊM AUDIO PLAYER COMPONENT MỚI
+// <<< END: CẬP NHẬT AUDIO PLAYER COMPONENT
 
 // --- NEW: The UI Component, free of logic ---
 const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number; }> = ({ onGoBack, selectedPractice }) => {
