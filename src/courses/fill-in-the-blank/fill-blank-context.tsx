@@ -14,6 +14,8 @@ import { User } from 'firebase/auth';
 import { fetchGameInitialData, recordGameSuccess } from '../course-data-service.ts';
 import { exampleData } from '../../voca-data/example-data.ts';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
+// <<< DÒNG MỚI: Import hàm tạo audio
+import { generateAudioUrlsForWord } from '../../voca-data/audio-quiz-generator.ts';
 
 // --- HELPER FUNCTION (Giả sử bạn đã chuyển nó sang một file utils) ---
 const shuffleArray = <T extends any[]>(array: T): T => { 
@@ -32,6 +34,7 @@ interface VocabularyItem {
   imageIndex?: number;
   question?: string;
   vietnameseHint?: string;
+  audioUrls?: { [voiceName: string]: string }; // <<< DÒNG MỚI: Thêm thuộc tính audio
 }
 
 // --- CONTEXT TYPE DEFINITION ---
@@ -253,14 +256,28 @@ export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, se
             const userVocabularyWords = openedVocabWords.map(v => v.word);
             let gameVocabulary: VocabularyItem[] = [];
 
-            // REFACTORED: Logic to build game vocabulary (same as original, just slightly cleaner)
+            // REFACTORED: Logic to build game vocabulary
             const practiceType = selectedPractice % 100;
             if (practiceType === 1) {
                 openedVocabWords.forEach((vocabItem) => {
                     const imageIndex = Number(vocabItem.id);
                     if (vocabItem.word && !isNaN(imageIndex)) { gameVocabulary.push({ word: vocabItem.word, hint: `Nghĩa của từ "${vocabItem.word}"`, imageIndex: imageIndex }); }
                 });
-            } else if (practiceType >= 2 && practiceType <= 7) {
+            } else if (practiceType === 8) { // <<< START: THÊM LOGIC MỚI CHO PRACTICE 8
+                openedVocabWords.forEach((vocabItem) => {
+                    if (vocabItem.word) {
+                        const audioUrls = generateAudioUrlsForWord(vocabItem.word);
+                        if (audioUrls) {
+                            gameVocabulary.push({
+                                word: vocabItem.word,
+                                hint: `Nghe và điền từ đúng`,
+                                audioUrls: audioUrls
+                            });
+                        }
+                    }
+                });
+            } // <<< END: THÊM LOGIC MỚI CHO PRACTICE 8
+            else if (practiceType >= 2 && practiceType <= 7) {
                 const minWords = (practiceType === 7) ? 1 : practiceType -1; // Type 7 needs at least 1, type 3 needs 2, etc.
                 exampleData.forEach(sentence => {
                     const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
