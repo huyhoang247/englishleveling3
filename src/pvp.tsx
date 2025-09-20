@@ -1,4 +1,4 @@
-// --- START OF FILE PvpPortal.tsx (All-In-One) ---
+// --- START OF FILE PvpPortal.tsx (All-In-One with Scrolling - Full Code) ---
 
 import React, { useState, useEffect, useRef } from 'react';
 
@@ -452,9 +452,9 @@ function PvpWager({ onClose, player1, onCoinChange }: PvpWagerProps) {
       {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} positionClass={d.positionClass} colorClass={d.colorClass} />))}
       {showWagerModal && <WagerModal onClose={() => setShowWagerModal(false)} onConfirm={handleDeposit} playerCoins={player1.coins}/>}
       {battlePhase === 'searching' && <SearchingModal />}
-
-      <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
-        <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
+      
+      <div className="main-bg relative w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
+        <header className="w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14 flex-shrink-0">
             <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
                 <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors">
                   <HomeIcon className="w-5 h-5 text-slate-300" />
@@ -465,55 +465,57 @@ function PvpWager({ onClose, player1, onCoinChange }: PvpWagerProps) {
             </div>
         </header>
 
-        <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
-            {(battlePhase === 'idle' || battlePhase === 'fighting' || battlePhase === 'finished') && (
-                <div className="w-full max-w-2xl mx-auto mb-4 flex flex-col items-center gap-3">
-                    <div className="w-1/2">
-                        <HealthBar current={player1Stats.hp} max={player1Stats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
+        <main className="w-full flex-1 overflow-y-auto p-4 flex flex-col items-center">
+            <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
+                {(battlePhase === 'idle' || battlePhase === 'fighting' || battlePhase === 'finished') && (
+                    <div className="w-full max-w-2xl mx-auto mb-4 flex flex-col items-center gap-3 mt-4">
+                        <div className="w-1/2">
+                            <HealthBar current={player1Stats.hp} max={player1Stats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
+                        </div>
                     </div>
+                )}
+                <div className="w-full flex justify-center items-center gap-3 mb-4">
+                    {battlePhase === 'fighting' && !matchResult && (<button onClick={skipMatch} className="font-sans px-4 py-1.5 bg-slate-800/70 hover:bg-slate-700/80 rounded-lg font-semibold text-xs border border-slate-600 hover:border-orange-400 text-orange-300">Skip Battle</button>)}
                 </div>
-            )}
-            <div className="w-full flex justify-center items-center gap-3 mb-4">
-                {battlePhase === 'fighting' && !matchResult && (<button onClick={skipMatch} className="font-sans px-4 py-1.5 bg-slate-800/70 hover:bg-slate-700/80 rounded-lg font-semibold text-xs border border-slate-600 hover:border-orange-400 text-orange-300">Skip Battle</button>)}
-            </div>
-            <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                {battlePhase === 'idle' && (
-                    <div className="flex flex-col items-center gap-8">
-                      <div className="w-40 h-40 md:w-56 md:h-56 bg-black/20 rounded-full flex items-center justify-center border-4 border-slate-700"><span className="text-8xl font-black text-slate-500 select-none">?</span></div>
-                      <div className="flex flex-col items-center gap-3 w-full max-w-xs">
-                          <div className="flex items-center justify-center gap-4 bg-slate-900/50 border border-slate-700 rounded-lg p-2 w-full">
-                              <span className="font-sans text-slate-300">Bể Cược:</span>
-                              <span className="font-bold text-lg text-yellow-300">{(goldPool || 0).toLocaleString()}</span>
-                              <button onClick={() => setShowWagerModal(true)} className="ml-auto font-sans text-xs bg-sky-600/50 hover:bg-sky-600 border border-sky-500 rounded px-3 py-1">Nạp</button>
+                <div className="w-full flex justify-center items-center my-8">
+                    {battlePhase === 'idle' && (
+                        <div className="flex flex-col items-center gap-8">
+                          <div className="w-40 h-40 md:w-56 md:h-56 bg-black/20 rounded-full flex items-center justify-center border-4 border-slate-700"><span className="text-8xl font-black text-slate-500 select-none">?</span></div>
+                          <div className="flex flex-col items-center gap-3 w-full max-w-xs">
+                              <div className="flex items-center justify-center gap-4 bg-slate-900/50 border border-slate-700 rounded-lg p-2 w-full">
+                                  <span className="font-sans text-slate-300">Bể Cược:</span>
+                                  <span className="font-bold text-lg text-yellow-300">{(goldPool || 0).toLocaleString()}</span>
+                                  <button onClick={() => setShowWagerModal(true)} className="ml-auto font-sans text-xs bg-sky-600/50 hover:bg-sky-600 border border-sky-500 rounded px-3 py-1">Nạp</button>
+                              </div>
+                              {error && <p className="text-red-400 text-sm font-sans mt-1">{error}</p>}
                           </div>
-                          {error && <p className="text-red-400 text-sm font-sans mt-1">{error}</p>}
+                          <button onClick={handleSearch} disabled={goldPool <= 0} className="btn-shine relative overflow-hidden px-10 py-3 bg-red-800/80 rounded-lg text-red-100 border border-red-500/40 transition-all hover:border-red-400 hover:shadow-[0_0_20px_theme(colors.red.500/0.6)] disabled:bg-slate-700/50 disabled:text-slate-400 disabled:cursor-not-allowed">
+                              <span className="font-bold text-xl tracking-widest uppercase">Search</span>
+                          </button>
+                        </div>
+                    )}
+                    {(battlePhase === 'fighting' || battlePhase === 'finished') && player2 && player2Stats && (
+                      <div className={`bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 ${currentPlayerTurn === 'player2' && battlePhase === 'fighting' ? 'animate-pulse-turn' : ''}`}>
+                        <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">{player2.name}</h2>
+                        <div className="w-40 h-40 md:w-56 md:h-56">
+                          <img src={player2.avatarUrl} alt={player2.name} className="w-full h-full object-cover rounded-lg border-2 border-slate-600" />
+                        </div>
+                        <HealthBar current={player2Stats.hp} max={player2Stats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
                       </div>
-                      <button onClick={handleSearch} disabled={goldPool <= 0} className="btn-shine relative overflow-hidden px-10 py-3 bg-red-800/80 rounded-lg text-red-100 border border-red-500/40 transition-all hover:border-red-400 hover:shadow-[0_0_20px_theme(colors.red.500/0.6)] disabled:bg-slate-700/50 disabled:text-slate-400 disabled:cursor-not-allowed">
-                          <span className="font-bold text-xl tracking-widest uppercase">Search</span>
-                      </button>
-                    </div>
-                )}
-                {(battlePhase === 'fighting' || battlePhase === 'finished') && player2 && player2Stats && (
-                  <div className={`bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 ${currentPlayerTurn === 'player2' && battlePhase === 'fighting' ? 'animate-pulse-turn' : ''}`}>
-                    <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">{player2.name}</h2>
-                    <div className="w-40 h-40 md:w-56 md:h-56">
-                      <img src={player2.avatarUrl} alt={player2.name} className="w-full h-full object-cover rounded-lg border-2 border-slate-600" />
-                    </div>
-                    <HealthBar current={player2Stats.hp} max={player2Stats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+                    )}
+                </div>
+                {(battlePhase === 'fighting' || battlePhase === 'finished') && (
+                  <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mb-4">
+                      <div className="h-40 w-full bg-slate-900/50 p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm scrollbar-thin font-sans">
+                          {combatLog.length > 0 && totalPrizePool > 0 && (
+                              <div className="text-center mb-2 font-bold text-yellow-300 border-t border-b border-yellow-600/30 py-1">Bể cược: {totalPrizePool.toLocaleString()} Vàng</div>
+                          )}
+                          {combatLog.map((entry, index) => <p key={index} className={`mb-1 ${index === 0 ? 'opacity-100' : 'opacity-70'}`} dangerouslySetInnerHTML={{__html: entry}}></p>)}
+                      </div>
                   </div>
                 )}
+                {battlePhase === 'finished' && matchResult && player2 && <MatchResultModal result={matchResult} player1Name={player1.name} player2Name={player2.name} onSearchAgain={resetForNewSearch} prizePool={totalPrizePool} />}
             </div>
-            {(battlePhase === 'fighting' || battlePhase === 'finished') && (
-              <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
-                  <div className="mt-2 h-40 w-full bg-slate-900/50 p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm scrollbar-thin font-sans">
-                      {combatLog.length > 0 && totalPrizePool > 0 && (
-                          <div className="text-center mb-2 font-bold text-yellow-300 border-t border-b border-yellow-600/30 py-1">Bể cược: {totalPrizePool.toLocaleString()} Vàng</div>
-                      )}
-                      {combatLog.map((entry, index) => <p key={index} className={`mb-1 ${index === 0 ? 'opacity-100' : 'opacity-70'}`} dangerouslySetInnerHTML={{__html: entry}}></p>)}
-                  </div>
-              </div>
-            )}
-            {battlePhase === 'finished' && matchResult && player2 && <MatchResultModal result={matchResult} player1Name={player1.name} player2Name={player2.name} onSearchAgain={resetForNewSearch} prizePool={totalPrizePool} />}
         </main>
       </div>
     </>
@@ -638,8 +640,8 @@ function PvpRanked({ onClose, player1, onRankChange }: PvpRankedProps) {
             {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} positionClass={d.positionClass} colorClass={d.colorClass} />))}
             {battlePhase === 'searching' && <SearchingModal />}
 
-            <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
-                <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
+            <div className="main-bg relative w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
+                <header className="w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14 flex-shrink-0">
                     <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
                         <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors">
                             <HomeIcon className="w-5 h-5 text-slate-300" />
@@ -650,43 +652,40 @@ function PvpRanked({ onClose, player1, onRankChange }: PvpRankedProps) {
                     </div>
                 </header>
 
-                <main className="w-full h-full flex flex-col justify-center items-center pt-[72px] p-4">
-                    {battlePhase === 'idle' ? (
-                         <div className="flex flex-col items-center gap-8 animate-fade-in">
-                            <h2 className="text-3xl font-bold text-shadow text-yellow-300">Thông Tin Mùa Giải</h2>
-                            <div className="w-full max-w-sm bg-black/30 p-4 rounded-lg border border-slate-700">
-                                <div className='flex justify-between items-baseline mb-1'>
-                                    <span className='font-bold text-xl text-slate-200'>{player1.rankInfo.rankName}</span>
-                                    <span className='font-sans text-sm text-slate-400'>{player1.rankInfo.rankPoints.toLocaleString()} / {player1.rankInfo.rankMaxPoints.toLocaleString()} RP</span>
+                <main className="w-full flex-1 overflow-y-auto p-4 flex flex-col items-center">
+                    <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
+                        {battlePhase === 'idle' ? (
+                            <div className="flex flex-col items-center gap-8 animate-fade-in mt-16">
+                                <h2 className="text-3xl font-bold text-shadow text-yellow-300">Thông Tin Mùa Giải</h2>
+                                <div className="w-full max-w-sm bg-black/30 p-4 rounded-lg border border-slate-700">
+                                    <div className='flex justify-between items-baseline mb-1'><span className='font-bold text-xl text-slate-200'>{player1.rankInfo.rankName}</span><span className='font-sans text-sm text-slate-400'>{player1.rankInfo.rankPoints.toLocaleString()} / {player1.rankInfo.rankMaxPoints.toLocaleString()} RP</span></div>
+                                    <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden"><div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full" style={{ width: `${(player1.rankInfo.rankPoints / player1.rankInfo.rankMaxPoints) * 100}%` }}></div></div>
                                 </div>
-                                <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden">
-                                    <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full" style={{ width: `${(player1.rankInfo.rankPoints / player1.rankInfo.rankMaxPoints) * 100}%` }}></div>
-                                </div>
+                                <button onClick={handleSearch} className="btn-shine relative overflow-hidden px-10 py-3 bg-purple-800/80 rounded-lg text-purple-100 border border-purple-500/40 transition-all hover:border-purple-400 hover:shadow-[0_0_20px_theme(colors.purple.500/0.6)]">
+                                    <span className="font-bold text-xl tracking-widest uppercase">Tìm Trận</span>
+                                </button>
                             </div>
-                            <button onClick={handleSearch} className="btn-shine relative overflow-hidden px-10 py-3 bg-purple-800/80 rounded-lg text-purple-100 border border-purple-500/40 transition-all hover:border-purple-400 hover:shadow-[0_0_20px_theme(colors.purple.500/0.6)]">
-                                <span className="font-bold text-xl tracking-widest uppercase">Tìm Trận</span>
-                            </button>
-                        </div>
-                    ) : (
-                        <>
-                            <div className="w-full max-w-2xl mx-auto mb-4"><div className="w-1/2 mx-auto"><HealthBar current={player1Stats.hp} max={player1Stats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" /></div></div>
-                            <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                                {player2 && player2Stats && (
-                                    <div className={`bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 ${currentPlayerTurn === 'player2' && battlePhase === 'fighting' ? 'animate-pulse-turn' : ''}`}>
-                                        <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">{player2.name}</h2>
-                                        <div className="w-40 h-40 md:w-56 md:h-56"><img src={player2.avatarUrl} alt={player2.name} className="w-full h-full object-cover rounded-lg border-2 border-slate-600" /></div>
-                                        <HealthBar current={player2Stats.hp} max={player2Stats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+                        ) : (
+                            <>
+                                <div className="w-full max-w-2xl mx-auto mb-4 mt-4"><div className="w-1/2 mx-auto"><HealthBar current={player1Stats.hp} max={player1Stats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" /></div></div>
+                                <div className="w-full flex justify-center items-center my-8">
+                                    {player2 && player2Stats && (
+                                        <div className={`bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 ${currentPlayerTurn === 'player2' && battlePhase === 'fighting' ? 'animate-pulse-turn' : ''}`}>
+                                            <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">{player2.name}</h2>
+                                            <div className="w-40 h-40 md:w-56 md:h-56"><img src={player2.avatarUrl} alt={player2.name} className="w-full h-full object-cover rounded-lg border-2 border-slate-600" /></div>
+                                            <HealthBar current={player2Stats.hp} max={player2Stats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mb-4">
+                                    <div className="h-40 w-full bg-slate-900/50 p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm scrollbar-thin font-sans">
+                                        {combatLog.map((entry, index) => <p key={index} className={`mb-1 ${index === 0 ? 'opacity-100' : 'opacity-70'}`} dangerouslySetInnerHTML={{__html: entry}}></p>)}
                                     </div>
-                                )}
-                            </div>
-                             <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
-                                <div className="mt-2 h-40 w-full bg-slate-900/50 p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm scrollbar-thin font-sans">
-                                    {combatLog.map((entry, index) => <p key={index} className={`mb-1 ${index === 0 ? 'opacity-100' : 'opacity-70'}`} dangerouslySetInnerHTML={{__html: entry}}></p>)}
                                 </div>
-                            </div>
-                        </>
-                    )}
-                    {battlePhase === 'finished' && matchResult && <RankedResultModal result={matchResult} onSearchAgain={resetForNewSearch} rpChange={rpChange} />}
+                            </>
+                        )}
+                        {battlePhase === 'finished' && matchResult && <RankedResultModal result={matchResult} onSearchAgain={resetForNewSearch} rpChange={rpChange} />}
+                    </div>
                 </main>
             </div>
         </>
@@ -711,26 +710,24 @@ function PvpInvasion({ onClose, player1, onCoinChange }: PvpInvasionProps) {
 
     const handleScout = () => {
         setView('scouting');
-        // Tạo 3 đối thủ giả lập
         setTimeout(() => {
             setOpponents([getMockOpponent('invasion'), getMockOpponent('invasion'), getMockOpponent('invasion')]);
-        }, 1000); // Giả lập thời gian tìm kiếm
+        }, 1000);
     };
 
     const handleAttack = (target: OpponentData) => {
         setCurrentTarget(target);
         setView('battle');
         
-        // Giả lập trận đấu diễn ra tức thì dựa trên chỉ số
         setTimeout(() => {
             const playerPower = player1.initialStats.atk * 1.5 + player1.initialStats.def;
             const targetPower = target.initialStats.atk * 1.5 + target.initialStats.def;
             
-            if (playerPower > targetPower * (0.8 + Math.random() * 0.4)) { // Thắng
-                const goldStolen = Math.floor(target.coins * (0.1 + Math.random() * 0.05)); // Cướp 10-15%
+            if (playerPower > targetPower * (0.8 + Math.random() * 0.4)) {
+                const goldStolen = Math.floor(target.coins * (0.1 + Math.random() * 0.05));
                 onCoinChange(goldStolen);
                 setBattleResult({ result: 'win', goldStolen });
-            } else { // Thua
+            } else {
                 setBattleResult({ result: 'loss', goldStolen: 0 });
             }
         }, 2000);
@@ -744,9 +741,9 @@ function PvpInvasion({ onClose, player1, onCoinChange }: PvpInvasionProps) {
     };
 
     return (
-        <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
+        <div className="main-bg relative w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
             {showLogModal && <DefenseLogModal log={player1.invasionLog} onClose={() => setShowLogModal(false)} />}
-            <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
+            <header className="w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14 flex-shrink-0">
                 <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
                     <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors">
                         <HomeIcon className="w-5 h-5 text-slate-300" />
@@ -756,7 +753,7 @@ function PvpInvasion({ onClose, player1, onCoinChange }: PvpInvasionProps) {
                     <CoinDisplay displayedCoins={player1.coins} />
                 </div>
             </header>
-            <main className="w-full h-full flex flex-col justify-center items-center pt-[72px] p-4">
+            <main className="w-full flex-1 overflow-y-auto p-4 flex flex-col justify-center items-center">
                 {view === 'main' && (
                     <div className="text-center animate-fade-in-scale-fast">
                         <h2 className="text-4xl">Chuẩn bị Xâm Lược</h2>
@@ -824,15 +821,17 @@ interface PvpSelectionProps {
 
 function PvpSelection({ onClose, playerData, onSelectMode }: PvpSelectionProps) {
   return (
-    <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden p-4">
-        <header className="w-full max-w-7xl mx-auto flex justify-between items-center py-3 px-2">
-            <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors">
-                <HomeIcon className="w-5 h-5 text-slate-300" />
-                <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
-            </button>
-            <CoinDisplay displayedCoins={playerData.coins} />
+    <div className="main-bg relative w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
+        <header className="w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14 flex-shrink-0">
+            <div className="w-full max-w-7xl mx-auto flex justify-between items-center h-full">
+                <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors">
+                    <HomeIcon className="w-5 h-5 text-slate-300" />
+                    <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
+                </button>
+                <CoinDisplay displayedCoins={playerData.coins} />
+            </div>
         </header>
-        <main className="w-full h-full flex flex-col justify-center items-center flex-grow">
+        <main className="w-full flex-1 overflow-y-auto p-4 flex flex-col justify-center items-center">
             <h1 className="text-4xl md:text-5xl font-bold text-shadow tracking-widest mb-4 text-center text-slate-200">ĐẤU TRƯỜNG</h1>
             <p className="font-sans text-slate-400 mb-12 text-center">Chọn một chế độ để bắt đầu cuộc chinh phạt của bạn.</p>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full max-w-6xl">
@@ -890,9 +889,6 @@ export default function PvpPortal() {
   };
 
   const handleReturnToSelection = () => {
-    // Cập nhật lại dữ liệu người chơi khi quay về, ví dụ sau 1 trận đấu
-    const updatedData = { ...playerData }; // Trong game thực, bạn sẽ fetch lại dữ liệu từ server
-    setPlayerData(updatedData);
     setMode('selection');
   };
 
@@ -916,4 +912,4 @@ export default function PvpPortal() {
     </>
   );
 }
-// --- END OF FILE PvpPortal.tsx (All-In-One) ---
+// --- END OF FILE PvpPortal.tsx (All-In-One with Scrolling - Full Code) ---
