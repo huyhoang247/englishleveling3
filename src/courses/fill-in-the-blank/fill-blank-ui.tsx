@@ -39,12 +39,12 @@ const generateImageUrl = (imageIndex?: number) => { if (imageIndex !== undefined
 const capitalizeFirstLetter = (str: string) => { if (!str) return ''; return str.charAt(0).toUpperCase() + str.slice(1); };
 const highlightText = (text: string, regex: RegExp) => { if (!text) return <span>{text}</span>; const parts = text.split(regex); return (<span>{parts.map((part, i) => regex.test(part) ? (<strong key={i} className="text-blue-500 font-semibold">{part}</strong>) : (part))}</span>); };
 const HeaderTag: React.FC<{ word: string }> = ({ word }) => ( <div className="flex items-center gap-2 mb-6"> <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg> <span className="font-sans text-base font-bold uppercase tracking-widest text-blue-600">{word}</span> </div> );
-const BasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; title: string; dataSource: { english: string; vietnamese: string }[]; noResultsMessage: string; isPhrase?: boolean; }> = ({ isOpen, onClose, currentWord, title, dataSource, noResultsMessage, isPhrase = false }) => { const wordsToSearch = useMemo(() => currentWord.split(' '), [currentWord]); const [activeTab, setActiveTab] = useState(0); useEffect(() => { setActiveTab(0); }, [currentWord]); const searchWord = wordsToSearch[activeTab]; const searchRegexForHighlight = useMemo(() => { if (!searchWord || !searchWord.trim()) return null; const escapedWord = searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); return new RegExp(`(\\b${escapedWord}\\b)`, 'ig'); }, [searchWord]); const searchResults = useMemo(() => { if (!searchWord) return []; const searchRegex = new RegExp(`\\b${searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i'); return dataSource.filter(item => searchRegex.test(item.english)); }, [searchWord, dataSource]); if (!isOpen) return null; return ( <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={onClose}> <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}> <div className="p-4 border-b border-gray-200 flex-shrink-0"> <div className="flex items-center justify-between"> <h3 className="text-lg font-bold text-gray-800">{title}</h3> <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors z-10"> <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-5 h-5" /> </button> </div> {wordsToSearch.length > 1 && ( <nav className="mt-3 -mb-4 -mx-4"> <div className="flex space-x-4 px-4"> {wordsToSearch.map((word, index) => (<button key={index} onClick={() => setActiveTab(index)} className={`${activeTab === index ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-all`}>{capitalizeFirstLetter(word)}</button>))} </div> </nav> )} </div> <div className="flex-grow overflow-y-auto bg-white p-6"> <div className="max-w-4xl mx-auto"> <HeaderTag word={searchWord.toUpperCase()} /> {searchResults.length > 0 && searchRegexForHighlight ? ( <div className="space-y-4"> {searchResults.map((result, index) => ( <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-100"> <p className={`text-gray-800 text-base leading-relaxed ${isPhrase ? 'font-semibold' : 'font-medium'}`}> {highlightText(result.english, searchRegexForHighlight)} </p> <p className="mt-2 text-gray-500 text-sm italic">{result.vietnamese}</p> </div> ))} </div> ) : ( <div className="text-center py-12 px-6 bg-gray-50 rounded-xl"> <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg> <h4 className="mt-4 text-lg font-semibold text-gray-700">{noResultsMessage}</h4> <p className="mt-1 text-sm text-gray-500">Chưa có dữ liệu cho từ này.</p> </div> )} </div> </div> </div> </div> ); };
+const BasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; title: string; dataSource: { english: string; vietnamese: string }[]; noResultsMessage: string; isPhrase?: boolean; }> = ({ isOpen, onClose, currentWord, title, dataSource, noResultsMessage, isPhrase = false }) => { const wordsToSearch = useMemo(() => currentWord.split(' '), [currentWord]); const [activeTab, setActiveTab] = useState(0); useEffect(() => { setActiveTab(0); }, [currentWord]); const searchWord = wordsToSearch[activeTab]; const searchRegexForHighlight = useMemo(() => { if (!searchWord || !searchWord.trim()) return null; const escapedWord = searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); return new RegExp(`(\\b${escapedWord}\\b)`, 'ig'); }, [searchWord]); const searchResults = useMemo(() => { if (!searchWord) return []; const searchRegex = new RegExp(`\\b${searchWord.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i'); return dataSource.filter(item => searchRegex.test(item.english)); }, [searchWord, dataSource]); if (!isOpen) return null; return ( <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={onClose}> <div className="relative bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}> <div className="p-4 border-b border-gray-200 flex-shrink-0"> <div className="flex items-center justify-between"> <h3 className="text-lg font-bold text-gray-800">{title}</h3> <button onClick={onClose} className="p-1 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors z-10"> <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/close-icon.webp" alt="Close" className="w-5 h-5" /> </button> </div> {wordsToSearch.length > 1 && ( <nav className="mt-3 -mb-4 -mx-4"> <div className="flex space-x-4 px-4"> {wordsToSearch.map((word, index) => (<button key={index} onClick={() => setActiveTab(index)} className={`${activeTab === index ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-all`}>{capitalizeFirstLetter(word)}</button>))} </div> </nav> )} </div> <div className="flex-grow overflow-y-auto bg-white p-6"> <div className="max-w-4xl mx-auto"> <HeaderTag word={searchWord.toUpperCase()} /> {searchResults.length > 0 && searchRegexForHighlight ? ( <div className="space-y-4"> {searchResults.map((result, index) => ( <div key={index} className="bg-gray-50 p-4 rounded-xl border border-gray-100"> <p className={`text-gray-800 text-base leading-relaxed ${isPhrase ? 'font-semibold' : 'font-medium'}`}> {highlightText(result.english, searchRegexForHighlight)} </p> <p className="mt-2 text-gray-500 text-sm italic">{result.vietnamese}</p> </div> ))} </div> ) : ( <div className="text-center py-12 px-6 bg-gray-50 rounded-xl"> <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.sin(217) 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg> <h4 className="mt-4 text-lg font-semibold text-gray-700">{noResultsMessage}</h4> <p className="mt-1 text-sm text-gray-500">Chưa có dữ liệu cho từ này.</p> </div> )} </div> </div> </div> </div> ); };
 const allPhraseParts = Array.from( new Map( phraseData.flatMap(sentence => sentence.parts).map(p => { const english = capitalizeFirstLetter(p.english); const vietnamese = capitalizeFirstLetter(p.vietnamese); return [english.toLowerCase(), { english, vietnamese }]; }) ).values() );
 const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => ( <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} title="Phrases" dataSource={allPhraseParts} noResultsMessage="Không tìm thấy cụm từ" isPhrase={true} /> );
 const ExamPopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => ( <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} title="Exams" dataSource={exampleData} noResultsMessage="Không tìm thấy ví dụ" /> );
 
-// <<< START: CẬP NHẬT AUDIO PLAYER COMPONENT LẦN 3
+// <<< START: CẬP NHẬT AUDIO PLAYER COMPONENT (KHÔNG CẦN THAY ĐỔI)
 const AudioPlayerUI: React.FC<{
   audioUrls: { [voiceName: string]: string };
 }> = ({ audioUrls }) => {
@@ -80,18 +80,14 @@ const AudioPlayerUI: React.FC<{
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-
     const onPlay = () => setIsPlaying(true);
     const onPauseOrEnd = () => setIsPlaying(false);
-    
     audio.addEventListener('play', onPlay);
     audio.addEventListener('pause', onPauseOrEnd);
     audio.addEventListener('ended', onPauseOrEnd);
-
     if (currentAudioUrl) {
       audio.play().catch(e => console.log("Autoplay prevented by browser"));
     }
-
     return () => {
       audio.removeEventListener('play', onPlay);
       audio.removeEventListener('pause', onPauseOrEnd);
@@ -100,17 +96,14 @@ const AudioPlayerUI: React.FC<{
   }, [currentAudioUrl]);
 
   return (
-    // Component này giờ chỉ trả về các nút điều khiển
-    <div className="w-full flex justify-between items-center mt-4">
+    <div className="w-full flex justify-between items-center">
         <audio ref={audioRef} src={currentAudioUrl} key={currentAudioUrl} preload="auto" className="hidden"/>
-        
         <button 
           onClick={togglePlay} 
           className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} 
           aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
           {isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" />}
         </button>
-        
         <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
             <button onClick={() => handleNavigateVoice('previous')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors" aria-label="Giọng đọc trước">
                 <ChevronLeftIcon className="w-3 h-3 text-white/80" />
@@ -120,16 +113,14 @@ const AudioPlayerUI: React.FC<{
                 <ChevronRightIcon className="w-3 h-3 text-white/80" />
             </button>
         </div>
-
         <style jsx>{` @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; }`}</style>
     </div>
   );
 };
-// <<< END: CẬP NHẬT AUDIO PLAYER COMPONENT LẦN 3
+// <<< END: AUDIO PLAYER COMPONENT
 
-// --- NEW: The UI Component, free of logic ---
+// --- UI Component ---
 const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number; }> = ({ onGoBack, selectedPractice }) => {
-  // --- Get everything from context ---
   const {
     loading, error, gameOver, currentWord, vocabularyList, isMultiWordGame,
     displayedCoins, streak, masteryCount, timeLeft, TOTAL_TIME,
@@ -157,7 +148,6 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
     return correctWords[activeBlankIndex]?.length ?? Infinity;
   }, [currentWord, activeBlankIndex, isMultiWordGame]);
 
-  // --- Render logic based on context state ---
   if (loading) return <FillWordLoadingSkeleton />;
   if (error) return <div className="flex items-center justify-center h-screen text-xl font-semibold text-red-600 text-center p-4">{error}</div>;
   if (vocabularyList.length === 0 && !loading && !error) return (
@@ -170,7 +160,6 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
   
   const displayCount = gameOver || !currentWord ? completedCount : Math.min(completedCount + 1, totalCount);
 
-  // --- JSX is identical, but now uses values from context ---
   return (
     <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
       <style jsx global>{` @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } } .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; } `}</style>
@@ -208,10 +197,13 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
                 </div>
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${progressPercentage}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                 
-                {/* Điều kiện hiển thị Audio Player cho Practice 8 */}
+                {/* <<< START: THÊM CONTAINER CHO AUDIO PLAYER */}
                 {(selectedPractice % 100 === 8) && currentWord?.audioUrls && (
-                  <AudioPlayerUI audioUrls={currentWord.audioUrls} />
+                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-white/25 mt-4 min-h-[60px] flex items-center">
+                     <AudioPlayerUI audioUrls={currentWord.audioUrls} />
+                  </div>
                 )}
+                {/* <<< END: THÊM CONTAINER CHO AUDIO PLAYER */}
 
                 {/* Điều kiện hiển thị câu hỏi cho các practice khác */}
                 {(selectedPractice % 100 !== 1 && selectedPractice % 100 !== 8) && currentWord && (
@@ -227,8 +219,6 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
                 <div className="w-full mt-6 space-y-6">
                   {(selectedPractice % 100 === 1) && <ImageCarousel3D imageUrls={carouselImageUrls} onImageClick={handleImageClick} word={currentWord.word} />}
                   
-                  {/* AudioPlayerUI đã được di chuyển lên trên, nên không cần ở đây nữa */}
-
                   {isMultiWordGame ? (
                     <div className="w-full flex flex-col items-center gap-4">
                       <div className={`p-4 bg-white rounded-lg shadow-md w-full transition-all duration-300 ${shake ? 'animate-shake' : ''}`}>
@@ -264,10 +254,7 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
                       )}
                     </div>
                   ) : (
-                    // Thêm một khoảng trống phía trên cho practice 8 để giao diện cân đối hơn
-                    <div className={`${selectedPractice % 100 === 8 ? 'pt-16' : ''}`}>
                        <WordSquaresInput word={currentWord.word} userInput={userInput} setUserInput={setUserInput} checkAnswer={checkAnswer} isCorrect={isCorrect} disabled={!!isCorrect} />
-                    </div>
                   )}
                 </div>
               ) : <div className='pt-10 font-bold text-gray-500'>Đang tải từ...</div>}
