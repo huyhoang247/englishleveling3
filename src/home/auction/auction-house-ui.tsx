@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo, FC, memo } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { 
@@ -69,9 +70,6 @@ const useCountdown = (endTime: Timestamp | undefined) => {
     }, [endTime]);
     return timeLeft;
 };
-
-// ... (Các components AuctionDetailModal, ViewAuctionDetailModal, AuctionCard, CreateAuctionView, AuctionTabs, AuctionHeader không thay đổi) ...
-// Để ngắn gọn, các component này sẽ được ẩn đi. Chúng không cần thay đổi.
 
 // --- START: MODAL FOR CREATING AUCTION ---
 const AuctionDetailModal = memo(({ ownedItem, onClose, onList, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onList: (item: OwnedItem, price: number, duration: number) => void, isProcessing: boolean }) => {
@@ -170,7 +168,7 @@ const AuctionDetailModal = memo(({ ownedItem, onClose, onList, isProcessing }: {
 });
 // --- END: MODAL FOR CREATING AUCTION ---
 
-// --- START: VIEW-ONLY DETAIL MODAL (REFACTORED WITH TABS) ---
+// --- START: VIEW-ONLY DETAIL MODAL ---
 const ViewAuctionDetailModal = memo(({ auction, onClose, userId }: { auction: AuctionItem, onClose: () => void, userId: string }) => {
     const ownedItem = auction.item;
     const itemDef = getItemDefinition(ownedItem.itemId);
@@ -246,41 +244,82 @@ const ViewAuctionDetailModal = memo(({ auction, onClose, userId }: { auction: Au
 });
 // --- END: VIEW-ONLY DETAIL MODAL ---
 
+// --- MODIFIED AuctionCard Component ---
 const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: AuctionItem) => void; onClaim: (a: AuctionItem) => void; onReclaim: (a: AuctionItem) => void; onViewDetails: (a: AuctionItem) => void; }> = ({ auction, userId, onBid, onClaim, onReclaim, onViewDetails }) => {
     const itemDef = getItemDefinition(auction.item.itemId);
     const timeLeft = useCountdown(auction.endTime);
     const isEnded = timeLeft === 'Ended';
 
+    // Renders the main action button at the bottom of the card
     const renderAction = () => {
-        if (auction.status === 'claimed') return <span className="text-center block text-green-400 font-bold">Đã nhận</span>;
+        // If already claimed by winner
+        if (auction.status === 'claimed') {
+            return <span className="text-center block text-green-400 font-bold">Đã nhận</span>;
+        }
+
+        // If sold, but waiting for winner to claim the item
         if (auction.status === 'sold') {
-            if (auction.highestBidderId === userId) return <button onClick={() => onClaim(auction)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Nhận Vật Phẩm</button>;
-            if (auction.sellerId === userId) return <span className="text-center block text-yellow-400 font-bold">Chờ người mua nhận</span>;
+            // Only the winner sees the button to claim the item
+            if (auction.highestBidderId === userId) {
+                return <button onClick={() => onClaim(auction)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Nhận Vật Phẩm</button>;
+            }
+            // Seller sees nothing, as requested
+            return null;
         }
         
+        // If auction has ended and is still 'active' (waiting for action)
         if (isEnded && auction.status === 'active') {
+            // Show the "Nhận" button only for the winner
             if (auction.highestBidderId === userId) {
                 return <button onClick={() => onClaim(auction)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Nhận</button>;
             }
         }
 
+        // If the auction is ongoing and active
         if (!isEnded && auction.status === 'active') {
+            // Not the seller, so can bid
             if (auction.sellerId !== userId) {
                 return <button onClick={() => onBid(auction)} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Đấu Giá</button>;
             }
         }
+        
+        // Default to nothing
         return null;
     };
     
+    // Renders the content for the third column (Time/Status/Action)
     const renderTimeColumn = () => {
-        if (!isEnded && auction.status === 'active') return <div className={`font-bold text-xs mt-0.5 text-green-400`}>{timeLeft}</div>;
-        if (isEnded && auction.sellerId === userId && !auction.highestBidderId && auction.status === 'active') {
+        // Handle clear, terminal statuses first
+        if (auction.status === 'sold') {
+            return <div className="font-bold text-xs mt-0.5 text-yellow-400">Pending</div>;
+        }
+        if (auction.status === 'claimed') {
+            return <div className="font-bold text-xs mt-0.5 text-green-400">Sold</div>;
+        }
+        if (auction.status === 'expired') {
+             return <div className="font-bold text-xs mt-0.5 text-gray-400">Expired</div>;
+        }
+
+        // If it reaches here, the status must be 'active'
+        if (!isEnded) {
+            return <div className={`font-bold text-xs mt-0.5 text-green-400`}>{timeLeft}</div>;
+        }
+
+        // If it reaches here, status is 'active' AND it has ended
+        // Case 1: Unsold, belongs to current user -> show Reclaim button
+        if (auction.sellerId === userId && !auction.highestBidderId) {
             return <button onClick={(e) => { e.stopPropagation(); onReclaim(auction); }} className="bg-teal-800 hover:bg-teal-700 text-white font-bold text-xs py-0.5 px-2 rounded-md transition-colors">Lấy Lại</button>;
         }
-        if (isEnded && !auction.highestBidderId) return <div className="font-bold text-xs mt-0.5 text-gray-400">Hết Hạn</div>;
-        if (auction.status === 'sold' || auction.status === 'claimed') return <div className="font-bold text-xs mt-0.5 text-yellow-400">Đã Bán</div>;
-        return <div className="font-bold text-xs mt-0.5 text-red-500">Kết Thúc</div>;
+
+        // Case 2: Unsold, for other users to see
+        if (!auction.highestBidderId) {
+            return <div className="font-bold text-xs mt-0.5 text-gray-400">Expired</div>;
+        }
+        
+        // Case 3: Ended and has a winner, waiting for winner to press 'Nhận'
+        return <div className="font-bold text-xs mt-0.5 text-red-500">Ended</div>;
     };
+
 
     if (!itemDef) return <div className="text-red-500 bg-slate-800/60 rounded-lg p-3">Lỗi vật phẩm không xác định</div>;
 
@@ -314,7 +353,9 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
         </div>
     );
 };
+// --- END of MODIFIED AuctionCard Component ---
 
+// --- START: CreateAuctionView ---
 const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedItems; onList: (item: OwnedItem, price: number, duration: number) => void; isProcessing: boolean }> = ({ ownedItems, equippedItems, onList, isProcessing }) => {
     const [itemForAuction, setItemForAuction] = useState<OwnedItem | null>(null);
 
@@ -381,22 +422,29 @@ const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedIt
         </div>
     );
 };
+// --- END: CreateAuctionView ---
 
+// --- NEW ICONS FOR TABS ---
 const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children: React.ReactNode }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg> );
 const Gavel = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="m14 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 9"/><path d="M15 13 9 7l4-4 6 6h3l-4 4z"/></Icon> );
 const ClipboardList = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></Icon> );
 const ArrowUpCircle = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></Icon> );
+// --- END NEW ICONS ---
 
+// --- NEW TABS COMPONENT ---
 const AuctionTabs = ({ activeTab, setActiveTab }: { activeTab: 'browse' | 'my_auctions' | 'create'; setActiveTab: (tab: 'browse' | 'my_auctions' | 'create') => void; }) => {
     const tabs = [ { id: 'browse', name: 'Sàn Đấu Giá', icon: Gavel }, { id: 'my_auctions', name: 'Đấu Giá Của Tôi', icon: ClipboardList }, { id: 'create', name: 'Đăng Bán', icon: ArrowUpCircle }, ];
     return ( <> <nav className="relative flex items-center gap-2 overflow-x-auto horizontal-scrollbar-hidden px-4 sm:px-6 lg:px-8"> {tabs.map(({ id, name, icon: IconComponent }) => ( <button key={id} onClick={() => setActiveTab(id as any)} className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-t-lg font-medium text-sm transition-colors duration-200 border-b-2 ${ activeTab === id ? 'border-cyan-400 text-white' : 'border-transparent text-slate-400 hover:bg-slate-800/50 hover:text-slate-200' }`} > <IconComponent className="w-5 h-5" /> <span>{name}</span> </button> ))} </nav> <style jsx>{` .horizontal-scrollbar-hidden::-webkit-scrollbar { display: none; } .horizontal-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; } `}</style> </> );
 };
+// --- END NEW TABS COMPONENT ---
 
+// --- AuctionHeader Component ---
 const AuctionHeader: FC<any> = ({ onClose, userCoins, userGems }) => {
     const animatedCoins = useAnimateValue(userCoins);
     const animatedGems = useAnimateValue(userGems);
     return ( <header className="flex-shrink-0 bg-slate-900 border-b border-white/10 shadow-lg z-10"> <div className="max-w-[1700px] mx-auto flex items-center justify-between h-[52px] px-4"> <div className="flex items-center gap-4"> <HomeButton onClick={onClose} label="" title="Về trang chính" /> <h1 className="text-lg font-bold text-white hidden sm:block">Nhà Đấu Giá</h1> </div> <div className="flex items-center gap-3"> <GemDisplay displayedGems={animatedGems} /> <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} /> </div> </div> </header> );
 };
+// --- END AuctionHeader Component ---
 
 export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
     const { coins, gems, ownedItems, equippedItems, refreshUserData } = useGame();
@@ -417,17 +465,16 @@ export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
         const unsubActive = listenToActiveAuctions(setActiveAuctions);
         const unsubUser = listenToUserAuctions(userId, setUserAuctions);
         
-        // Lắng nghe các khoản thanh toán đang chờ để tự động nhận tiền
         const unsubPayments = listenAndProcessPendingPayments(userId, (amount) => {
             console.log(`Successfully received ${amount} coins!`);
             setMessage({ type: 'success', text: `Bạn đã nhận được ${amount.toLocaleString()} vàng.` });
-            refreshUserData(); // Cập nhật lại dữ liệu để hiển thị số tiền mới
+            refreshUserData();
         });
 
         return () => { 
             unsubActive(); 
             unsubUser();
-            unsubPayments(); // Dọn dẹp listener khi component unmount
+            unsubPayments();
         };
     }, [userId, refreshUserData]);
     
