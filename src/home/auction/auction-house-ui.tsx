@@ -250,22 +250,29 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
 
     // Renders the main action button at the bottom of the card
     const renderAction = () => {
+        // Handle non-active statuses first
         if (auction.status !== 'active') {
             if(auction.status === 'claimed') return <span className="text-center block text-green-400 font-bold">Đã nhận</span>;
             if(auction.status === 'sold') return <span className="text-center block text-yellow-400 font-bold">Đã bán</span>;
-            return <span className="text-center block text-gray-400 font-bold">Đã hết hạn</span>;
+            // Return null for expired items as the status is shown above
+            return null;
         }
+
+        // Handle active auctions
         if (isEnded) {
-            // The seller's "Reclaim" action is now in the time column.
-            // This button is only for the winner to claim their item.
+            // Only show the "Nhận" button for the winner
             if (auction.highestBidderId === userId) {
                 return <button onClick={() => onClaim(auction)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Nhận</button>;
             }
-            return <span className="text-center block text-gray-400">Đã kết thúc</span>;
+            // Return null for other ended auctions, hiding the bottom text
+            return null;
         }
+
+        // If the auction is ongoing
         if (auction.sellerId !== userId) {
             return <button onClick={() => onBid(auction)} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Đấu Giá</button>;
         }
+
         return <span className="text-center block text-gray-400 italic">Vật phẩm của bạn</span>;
     };
     
@@ -280,10 +287,10 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
             return (
                 <button
                     onClick={(e) => {
-                        e.stopPropagation(); // Important: prevent the card's onClick from firing
+                        e.stopPropagation(); // Prevent card's onClick from firing
                         onReclaim(auction);
                     }}
-                    className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-0.5 px-2 rounded-md transition-colors"
+                    className="bg-teal-800 hover:bg-teal-700 text-white font-bold text-xs py-0.5 px-2 rounded-md transition-colors"
                 >
                     Lấy Lại
                 </button>
