@@ -4,8 +4,9 @@ import React, { useState, useEffect, useMemo, FC, memo } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { 
     listenToActiveAuctions, listenToUserAuctions, listAuctionItem, placeBidOnAuction, 
-    claimAuctionWin, reclaimExpiredAuction, AuctionItem, fetchOrCreateUserGameData,
-} from '../../gameDataService.ts';
+    claimAuctionWin, reclaimExpiredAuction, AuctionItem 
+} from '../../auction-service.ts'; // <-- UPDATED IMPORT PATH
+import { fetchOrCreateUserGameData } from '../../gameDataService.ts'; // <-- IMPORT FOR USER DATA
 import type { OwnedItem, EquippedItems } from '../equipment/equipment-ui.tsx';
 import { getItemDefinition, ItemRank, RARITY_ORDER } from '../equipment/item-database.ts';
 import { uiAssets } from '../../game-assets.ts';
