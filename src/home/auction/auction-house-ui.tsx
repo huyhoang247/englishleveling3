@@ -5,7 +5,7 @@ import { Timestamp } from 'firebase/firestore';
 import { 
     listenToActiveAuctions, listenToUserAuctions, listAuctionItem, placeBidOnAuction, 
     claimAuctionWin, reclaimExpiredAuction, AuctionItem 
-} from '../../auction-service.ts'; // <-- UPDATED IMPORT PATH
+} from './auction-service.ts'; // <-- UPDATED IMPORT PATH
 import { fetchOrCreateUserGameData } from '../../gameDataService.ts'; // <-- IMPORT FOR USER DATA
 import type { OwnedItem, EquippedItems } from '../equipment/equipment-ui.tsx';
 import { getItemDefinition, ItemRank, RARITY_ORDER } from '../equipment/item-database.ts';
