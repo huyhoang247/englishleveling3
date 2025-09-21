@@ -125,22 +125,46 @@ const App: React.FC = () => {
     }
   }, [loadingStep]);
 
-  const handleAuthChange = async (user: User | null) => {
+  // --- THAY ĐỔI 1: Hàm handleAuthChange được đơn giản hóa, chỉ cập nhật state ---
+  // Logic kiểm tra DB đã được chuyển vào useEffect bên dưới để chạy song song.
+  const handleAuthChange = (user: User | null) => {
     setCurrentUser(user);
-    if (user) {
-      await ensureUserDocumentExists(user);
-      setLoadingStep('downloading');
-    } else {
-      setLoadingStep('ready');
-    }
+    setLoadingStep(user ? 'downloading' : 'ready');
   };
 
+  // --- THAY ĐỔI 2: Cập nhật useEffect để chạy xác thực nền song song với timer ---
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      // Chỉ áp dụng logic chờ cho lần kiểm tra đầu tiên khi mở app
       if (isInitialAuthCheck.current) {
         isInitialAuthCheck.current = false;
-        setTimeout(() => handleAuthChange(user), 1500);
+
+        const processInitialAuth = async () => {
+          const startTime = Date.now();
+
+          // 1. Bắt đầu xử lý nghiệp vụ (kiểm tra DB) ngay lập tức.
+          if (user) {
+            await ensureUserDocumentExists(user);
+          }
+
+          // 2. Tính toán thời gian đã trôi qua.
+          const elapsedTime = Date.now() - startTime;
+          
+          // 3. Đảm bảo màn hình loading hiển thị ít nhất 1.5 giây.
+          // Nếu nghiệp vụ chạy nhanh hơn 1.5s, chờ thêm cho đủ.
+          const remainingDelay = 1500 - elapsedTime;
+          if (remainingDelay > 0) {
+            await new Promise(resolve => setTimeout(resolve, remainingDelay));
+          }
+
+          // 4. Chuyển sang bước tiếp theo
+          handleAuthChange(user);
+        };
+
+        processInitialAuth();
+
       } else {
+        // Với các lần thay đổi auth sau (đăng xuất, v.v.), cập nhật ngay lập tức.
         handleAuthChange(user);
       }
     });
@@ -225,7 +249,7 @@ const App: React.FC = () => {
     );
   }
 
-  if (!currentUser) { return <AuthComponent appVersion={appVersion} logoFloating={logoFloating} />; }
+  if (!currentUser) { return <AuthComponent appVersion={appVersion} />; } // prop logoFloating không còn cần thiết
 
   if (loadingStep === 'selecting_mode' || (loadingStep === 'launching' && isAnimatingStart)) {
     const ModeSelectionModal: React.FC<{ onSelect: (mode: DisplayMode) => void, onClose: () => void, currentMode: DisplayMode }> = ({ onSelect, onClose, currentMode }) => {
@@ -292,18 +316,8 @@ const App: React.FC = () => {
     );
   }
 
-  // --- THAY ĐỔI 1: Xóa bỏ block `if (loadingStep === 'launching')` ---
-  // Đoạn code này đã được xóa:
-  // if (loadingStep === 'launching') {
-  //   return <GameSkeletonLoader show={true} />;
-  // }
-
-  // --- THAY ĐỔI 2: Cập nhật block return cuối cùng để render Game và Skeleton Loader đồng thời ---
-  // Cấu trúc này cho phép `background-game` (thông qua component Home) được render
-  // ngay khi `loadingStep` chuyển thành 'launching', với SkeletonLoader nằm ở trên.
   return (
     <div className="relative w-screen h-screen">
-      {/* Lớp 1: Main App - Sẽ được render ngay khi 'launching', nhưng bị che bởi Skeleton */}
       <div className="app-container" style={{ height: 'var(--app-height, 100vh)' }}>
         {activeTab === 'home' && (
           <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
@@ -317,7 +331,6 @@ const App: React.FC = () => {
         {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
       </div>
       
-      {/* Lớp 2: Skeleton Loader Overlay - Chỉ hiển thị trong giai đoạn 'launching' */}
       <GameSkeletonLoader show={loadingStep === 'launching'} />
     </div>
   );
