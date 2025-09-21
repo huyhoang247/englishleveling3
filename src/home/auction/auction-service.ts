@@ -207,49 +207,66 @@ export const placeBidOnAuction = async (
 
 /**
  * Người thắng nhận vật phẩm sau khi đấu giá kết thúc.
- * @param userId - ID người nhận.
+ * @param userId - ID người nhận (phải là người thắng).
  * @param auctionId - ID phiên đấu giá.
  * @returns Promise<OwnedItem> Vật phẩm đã nhận.
  */
 export const claimAuctionWin = async (userId: string, auctionId: string): Promise<OwnedItem> => {
-  const userDocRef = doc(db, 'users', userId);
   const auctionDocRef = doc(db, 'auctions', auctionId);
   let claimedItem: OwnedItem;
 
   await runTransaction(db, async (t) => {
-    const [userDoc, auctionDoc] = await Promise.all([t.get(userDocRef), t.get(auctionDocRef)]);
-
-    if (!userDoc.exists()) throw new Error("User not found.");
+    // --- PHASE 1: READ ALL NECESSARY DOCUMENTS FIRST ---
+    const auctionDoc = await t.get(auctionDocRef);
     if (!auctionDoc.exists()) throw new Error("Phiên đấu giá không tồn tại.");
 
-    const userData = userDoc.data();
     const auctionData = auctionDoc.data() as Omit<AuctionItem, 'id'>;
+
+    // We need both the seller and the winner (who is the current user)
+    if (!auctionData.highestBidderId) throw new Error("Phiên đấu giá này không có người thắng.");
+    
+    const winnerDocRef = doc(db, 'users', auctionData.highestBidderId);
+    const sellerDocRef = doc(db, 'users', auctionData.sellerId);
+
+    const [winnerDoc, sellerDoc] = await Promise.all([
+      t.get(winnerDocRef),
+      t.get(sellerDocRef)
+    ]);
+
+    // --- PHASE 2: VALIDATE ALL DATA ---
+    if (!winnerDoc.exists()) throw new Error("Winner user not found.");
+    // sellerDoc existence is not critical to fail the transaction, but we should check it before updating.
 
     if (auctionData.highestBidderId !== userId) throw new Error("Bạn không phải người thắng phiên đấu giá này.");
     if (auctionData.status !== 'active') throw new Error("Vật phẩm đã được nhận hoặc đã hết hạn.");
     if (Timestamp.now().toMillis() < auctionData.endTime.toMillis()) throw new Error("Phiên đấu giá chưa kết thúc.");
 
-    // Thêm vật phẩm vào túi người thắng
-    const currentEquipment = userData.equipment || { owned: [] };
-    const newOwnedItems = [...currentEquipment.owned, auctionData.item];
     claimedItem = auctionData.item;
+    const winnerData = winnerDoc.data();
+    
+    // --- PHASE 3: PERFORM ALL WRITES ---
 
-    t.update(userDocRef, { 'equipment.owned': newOwnedItems });
+    // 1. Add item to the winner's inventory
+    const currentEquipment = winnerData.equipment || { owned: [] };
+    const newOwnedItems = [...currentEquipment.owned, auctionData.item];
+    t.update(winnerDocRef, { 'equipment.owned': newOwnedItems });
 
-    // Gửi tiền cho người bán
-    const sellerDocRef = doc(db, 'users', auctionData.sellerId);
-    const sellerDoc = await t.get(sellerDocRef);
-    if(sellerDoc.exists()){
+    // 2. Send coins to the seller (if the seller exists)
+    if (sellerDoc.exists()) {
         const sellerData = sellerDoc.data();
         t.update(sellerDocRef, { coins: (sellerData.coins || 0) + auctionData.currentBid });
     }
 
-    // Cập nhật trạng thái phiên đấu giá
+    // 3. Update the auction's status
     t.update(auctionDocRef, { status: 'claimed' });
   });
 
-  return claimedItem!;
+  if (!claimedItem) {
+    throw new Error("Failed to claim item inside transaction.");
+  }
+  return claimedItem;
 };
+
 
 /**
  * Người bán nhận lại vật phẩm nếu không có ai đấu giá.
@@ -287,6 +304,9 @@ export const reclaimExpiredAuction = async (userId: string, auctionId: string): 
         t.update(auctionDocRef, { status: 'expired' });
     });
 
-    return reclaimedItem!;
+    if (!reclaimedItem) {
+      throw new Error("Failed to reclaim item inside transaction.");
+    }
+    return reclaimedItem;
 };
 // --- END OF FILE auction-service.ts ---
