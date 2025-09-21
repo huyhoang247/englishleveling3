@@ -248,6 +248,7 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
     const timeLeft = useCountdown(auction.endTime);
     const isEnded = timeLeft === 'Đã kết thúc';
 
+    // Renders the main action button at the bottom of the card
     const renderAction = () => {
         if (auction.status !== 'active') {
             if(auction.status === 'claimed') return <span className="text-center block text-green-400 font-bold">Đã nhận</span>;
@@ -255,13 +256,49 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
             return <span className="text-center block text-gray-400 font-bold">Đã hết hạn</span>;
         }
         if (isEnded) {
-            if (auction.highestBidderId === userId) return <button onClick={() => onClaim(auction)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Nhận</button>;
-            if (auction.sellerId === userId && !auction.highestBidderId) return <button onClick={() => onReclaim(auction)} className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Lấy Lại</button>;
+            // The seller's "Reclaim" action is now in the time column.
+            // This button is only for the winner to claim their item.
+            if (auction.highestBidderId === userId) {
+                return <button onClick={() => onClaim(auction)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Nhận</button>;
+            }
             return <span className="text-center block text-gray-400">Đã kết thúc</span>;
         }
-        if (auction.sellerId !== userId) return <button onClick={() => onBid(auction)} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Đấu Giá</button>;
+        if (auction.sellerId !== userId) {
+            return <button onClick={() => onBid(auction)} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Đấu Giá</button>;
+        }
         return <span className="text-center block text-gray-400 italic">Vật phẩm của bạn</span>;
     };
+    
+    // Renders the content for the third column (Time/Status/Action)
+    const renderTimeColumn = () => {
+        if (!isEnded) {
+            return <div className={`font-bold text-xs mt-0.5 text-green-400`}>{timeLeft}</div>;
+        }
+
+        // Ended, unsold, and belongs to the current user -> show Reclaim button
+        if (auction.sellerId === userId && !auction.highestBidderId && auction.status === 'active') {
+            return (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation(); // Important: prevent the card's onClick from firing
+                        onReclaim(auction);
+                    }}
+                    className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-0.5 px-2 rounded-md transition-colors"
+                >
+                    Lấy Lại
+                </button>
+            );
+        }
+
+        // Ended and unsold (for other users to see)
+        if (!auction.highestBidderId) {
+            return <div className="font-bold text-xs mt-0.5 text-gray-400">Đã hết hạn</div>;
+        }
+        
+        // Ended and sold
+        return <div className="font-bold text-xs mt-0.5 text-red-500">Đã kết thúc</div>;
+    };
+
 
     if (!itemDef) return <div className="text-red-500 bg-slate-800/60 rounded-lg p-3">Lỗi vật phẩm không xác định</div>;
 
@@ -293,11 +330,9 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
                                 <span>{auction.currentBid.toLocaleString()}</span>
                             </div>
                         </div>
-                        <div>
+                        <div className="flex flex-col items-center">
                             <div className="text-[11px] text-slate-400">Thời Gian</div>
-                            <div className={`font-bold text-xs mt-0.5 ${isEnded ? 'text-red-500' : 'text-green-400'}`}>
-                                {timeLeft}
-                            </div>
+                            {renderTimeColumn()}
                         </div>
                     </div>
                 </div>
