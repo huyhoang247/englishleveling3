@@ -1,4 +1,3 @@
---- START OF FILE auction-service.ts ---
 
 import { db } from '../../firebase';
 import {
@@ -303,4 +302,3 @@ export const listenAndProcessPendingPayments = (
   });
 };
 
---- END OF FILE auction-service.ts ---
