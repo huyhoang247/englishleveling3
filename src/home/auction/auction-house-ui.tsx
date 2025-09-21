@@ -1,4 +1,3 @@
-
 // --- START OF FILE auction-house-ui.tsx (MODIFIED) ---
 
 import React, { useState, useEffect, useMemo, FC, memo } from 'react';
