@@ -1,12 +1,12 @@
 // --- START OF FILE auction-service.ts ---
 
-import { db } from './firebase';
+import { db } from '../../firebase';
 import {
     doc, getDoc, setDoc, runTransaction,
     collection, query, where, orderBy, onSnapshot,
     Timestamp, serverTimestamp
 } from 'firebase/firestore';
-import type { OwnedItem } from './gameDataService'; // Import types from the main service
+import type { OwnedItem } from '../../gameDataService.ts'; // Import types from the main service
 
 // --- AUCTION HOUSE SERVICE FUNCTIONS ---
 
