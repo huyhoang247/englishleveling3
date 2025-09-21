@@ -311,10 +311,10 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
     if (!itemDef) return <div className="text-red-500 bg-slate-800/60 rounded-lg p-3">Lỗi vật phẩm không xác định</div>;
 
     return (
-        <div className={`relative bg-slate-800/60 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} p-3 flex flex-col gap-3 transition-shadow hover:shadow-lg hover:shadow-cyan-500/10`}>
+        <div className={`relative bg-slate-800/60 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} p-3 flex flex-col justify-center transition-shadow hover:shadow-lg hover:shadow-cyan-500/10 min-h-[100px]`}>
             {renderStatusTag()}
             
-            <div onClick={() => onViewDetails(auction)} className="flex items-center gap-3 cursor-pointer group pt-4">
+            <div onClick={() => onViewDetails(auction)} className="flex items-center gap-3 cursor-pointer group">
                 <div className={`relative w-16 h-16 flex-shrink-0 bg-black/30 rounded-md border ${getRarityColor(itemDef.rarity)} flex items-center justify-center p-1`}>
                     <img src={itemDef.icon} alt={itemDef.name} className="w-full h-full object-contain" />
                     <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">Lv.{auction.item.level}</span>
@@ -340,6 +340,7 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
     );
 };
 // --- END: REFACTORED AuctionCard Component ---
+
 
 // --- START: CreateAuctionView ---
 const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedItems; onList: (item: OwnedItem, price: number, duration: number) => void; isProcessing: boolean }> = ({ ownedItems, equippedItems, onList, isProcessing }) => {
