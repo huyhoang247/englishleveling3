@@ -69,12 +69,14 @@ const useCountdown = (endTime: Timestamp | undefined) => {
     return timeLeft;
 };
 
-// --- START: MODAL FOR CREATING AUCTION ---
+// --- START: MODAL FOR CREATING AUCTION (UPDATED) ---
 const AuctionDetailModal = memo(({ ownedItem, onClose, onList, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onList: (item: OwnedItem, price: number, duration: number) => void, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     const [activeTab, setActiveTab] = useState<'stats' | 'auction'>('stats');
-    const [price, setPrice] = useState('');
-    const [duration, setDuration] = useState(12);
+    const [price, setPrice] = useState(1000);
+    
+    const DURATION_OPTIONS = [6, 12, 24];
+    const [durationIndex, setDurationIndex] = useState(1); // Default to 12h (index 1)
 
     if (!itemDef) {
         console.error(`Cannot open auction detail modal for non-existent item ID: ${ownedItem.itemId}`);
@@ -83,10 +85,23 @@ const AuctionDetailModal = memo(({ ownedItem, onClose, onList, isProcessing }: {
     }
 
     const handleListClick = () => {
-        if (price && Number(price) > 0) {
-            onList(ownedItem, Number(price), duration);
+        if (price > 0) {
+            onList(ownedItem, price, DURATION_OPTIONS[durationIndex]);
         }
     };
+
+    const handlePriceChange = (amount: number) => {
+        setPrice(prev => Math.max(1, prev + amount));
+    };
+
+    const handleDurationChange = (direction: -1 | 1) => {
+        setDurationIndex(prev => {
+            const newIndex = prev + direction;
+            return Math.max(0, Math.min(DURATION_OPTIONS.length - 1, newIndex));
+        });
+    };
+
+    const quickPriceValues = [100, 1000, 10000, 100000];
 
     const sortedStats = useMemo(() => {
         const order = ['hp', 'atk', 'def']; const stats = ownedItem.stats || {};
@@ -135,22 +150,38 @@ const AuctionDetailModal = memo(({ ownedItem, onClose, onList, isProcessing }: {
                                 )}
 
                                 {activeTab === 'auction' && (
-                                    <div className="w-full flex flex-col items-center justify-center py-2 space-y-4">
-                                        <div className="w-full max-w-xs space-y-4">
+                                    <div className="space-y-4">
+                                        <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700 space-y-3">
                                             <div>
-                                                <label className="block text-sm font-medium text-slate-300 mb-1 text-left">Giá khởi điểm (Vàng)</label>
-                                                <input type="number" value={price} onChange={e => setPrice(e.target.value)} className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white placeholder-slate-400" placeholder="e.g., 1000" />
+                                                <label className="block text-sm font-medium text-slate-300 mb-2 text-center">Giá khởi điểm (Vàng)</label>
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button onClick={() => handlePriceChange(-quickPriceValues[0])} className="w-10 h-10 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded-md text-white font-bold text-xl transition-colors">-</button>
+                                                    <div className="flex-grow text-center text-xl font-bold py-2 rounded-md bg-black/40 border border-slate-600 text-white">
+                                                        {price.toLocaleString()}
+                                                    </div>
+                                                    <button onClick={() => handlePriceChange(quickPriceValues[0])} className="w-10 h-10 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded-md text-white font-bold text-xl transition-colors">+</button>
+                                                </div>
+                                                <div className="grid grid-cols-4 gap-2 mt-3">
+                                                    {quickPriceValues.map(val => (
+                                                        <button key={val} onClick={() => handlePriceChange(val)} className="py-1.5 bg-slate-700/70 hover:bg-slate-600 text-white text-xs font-semibold rounded-md transition-colors">+{val.toLocaleString()}</button>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-300 mb-1 text-left">Thời gian (Giờ)</label>
-                                                <select value={duration} onChange={e => setDuration(Number(e.target.value))} className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white">
-                                                    <option value={6}>6 Giờ</option><option value={12}>12 Giờ</option><option value={24}>24 Giờ</option>
-                                                </select>
+                                             <div>
+                                                <label className="block text-sm font-medium text-slate-300 mb-2 text-center">Thời gian</label>
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button onClick={() => handleDurationChange(-1)} disabled={durationIndex === 0} className="w-10 h-10 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded-md text-white font-bold text-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">-</button>
+                                                    <div className="flex-grow text-center text-xl font-bold py-2 rounded-md bg-black/40 border border-slate-600 text-white">
+                                                        {DURATION_OPTIONS[durationIndex]} Giờ
+                                                    </div>
+                                                    <button onClick={() => handleDurationChange(1)} disabled={durationIndex === DURATION_OPTIONS.length - 1} className="w-10 h-10 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded-md text-white font-bold text-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">+</button>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="text-center mt-4">
-                                            <button onClick={handleListClick} disabled={!price || Number(price) <= 0 || isProcessing} className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
-                                                Đăng Bán
+                                        
+                                        <div className="text-center pt-2">
+                                            <button onClick={handleListClick} disabled={price <= 0 || isProcessing} className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
+                                                {isProcessing ? 'Đang xử lý...' : 'Đăng Bán'}
                                             </button>
                                             <p className="text-xs text-slate-400 mt-2 flex items-center justify-center gap-1">Phí đăng: 1 <GemIcon className="w-3 h-3" /></p>
                                         </div>
@@ -242,7 +273,7 @@ const ViewAuctionDetailModal = memo(({ auction, onClose, userId }: { auction: Au
 });
 // --- END: VIEW-ONLY DETAIL MODAL ---
 
-// --- START: BIDDING MODAL (NEW) ---
+// --- START: BIDDING MODAL ---
 const BidModal = memo(({ auction, onClose, onPlaceBid, userCoins, isProcessing }: { auction: AuctionItem, onClose: () => void, onPlaceBid: (amount: number) => void, userCoins: number, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(auction.item.itemId);
     
