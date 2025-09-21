@@ -54,7 +54,7 @@ const useCountdown = (endTime: Timestamp | undefined) => {
         if (!endTime) return;
         const interval = setInterval(() => {
             const diff = endTime.toMillis() - Date.now();
-            if (diff <= 0) { setTimeLeft('Đã kết thúc'); clearInterval(interval); return; }
+            if (diff <= 0) { setTimeLeft('Ended'); clearInterval(interval); return; }
             const d = Math.floor(diff / (1000 * 60 * 60 * 24));
             const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -172,7 +172,7 @@ const ViewAuctionDetailModal = memo(({ auction, onClose, userId }: { auction: Au
     const itemDef = getItemDefinition(ownedItem.itemId);
     const [activeTab, setActiveTab] = useState<'stats' | 'info'>('stats');
     const timeLeft = useCountdown(auction.endTime);
-    const isEnded = timeLeft === 'Đã kết thúc';
+    const isEnded = timeLeft === 'Ended';
 
     if (!itemDef) {
         console.error(`Cannot open view detail modal for non-existent item ID: ${ownedItem.itemId}`);
@@ -246,7 +246,7 @@ const ViewAuctionDetailModal = memo(({ auction, onClose, userId }: { auction: Au
 const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: AuctionItem) => void; onClaim: (a: AuctionItem) => void; onReclaim: (a: AuctionItem) => void; onViewDetails: (a: AuctionItem) => void; }> = ({ auction, userId, onBid, onClaim, onReclaim, onViewDetails }) => {
     const itemDef = getItemDefinition(auction.item.itemId);
     const timeLeft = useCountdown(auction.endTime);
-    const isEnded = timeLeft === 'Đã kết thúc';
+    const isEnded = timeLeft === 'Ended';
 
     // Renders the main action button at the bottom of the card
     const renderAction = () => {
@@ -291,18 +291,18 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
                     }}
                     className="bg-teal-800 hover:bg-teal-700 text-white font-bold text-xs py-0.5 px-2 rounded-md transition-colors"
                 >
-                    Lấy Lại
+                    Claim
                 </button>
             );
         }
 
         // Ended and unsold (for other users to see)
         if (!auction.highestBidderId) {
-            return <div className="font-bold text-xs mt-0.5 text-gray-400">Đã hết hạn</div>;
+            return <div className="font-bold text-xs mt-0.5 text-gray-400">Expired</div>;
         }
         
         // Ended and sold
-        return <div className="font-bold text-xs mt-0.5 text-red-500">Đã kết thúc</div>;
+        return <div className="font-bold text-xs mt-0.5 text-red-500">Ended</div>;
     };
 
 
