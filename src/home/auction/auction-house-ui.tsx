@@ -268,7 +268,7 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
     return (
         <div className={`bg-slate-800/60 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} p-3 flex flex-col gap-3 transition-shadow hover:shadow-lg hover:shadow-cyan-500/10`}>
             {/* Clickable Area */}
-            <div onClick={() => onViewDetails(auction)} className="flex items-start gap-3 cursor-pointer group">
+            <div onClick={() => onViewDetails(auction)} className="flex items-center gap-3 cursor-pointer group">
                 {/* Left: Icon */}
                 <div className={`relative w-16 h-16 flex-shrink-0 bg-black/30 rounded-md border ${getRarityColor(itemDef.rarity)} flex items-center justify-center p-1`}>
                     <img src={itemDef.icon} alt={itemDef.name} className="w-full h-full object-contain" />
@@ -276,10 +276,7 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
                 </div>
                 
                 {/* Right: Info block */}
-                <div className="flex-grow space-y-2">
-                    {/* Item Name */}
-                    <h4 className={`font-bold text-sm ${getRarityTextColor(itemDef.rarity)} group-hover:underline transition-all leading-tight`}>{itemDef.name}</h4>
-                    
+                <div className="flex-grow">
                     {/* 3 columns of data */}
                     <div className="grid grid-cols-3 gap-1 text-center">
                         <div>
