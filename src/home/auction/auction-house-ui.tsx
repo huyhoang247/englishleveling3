@@ -244,88 +244,77 @@ const ViewAuctionDetailModal = memo(({ auction, onClose, userId }: { auction: Au
 });
 // --- END: VIEW-ONLY DETAIL MODAL ---
 
-// --- MODIFIED AuctionCard Component ---
+// --- START: REFACTORED AuctionCard Component ---
 const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: AuctionItem) => void; onClaim: (a: AuctionItem) => void; onReclaim: (a: AuctionItem) => void; onViewDetails: (a: AuctionItem) => void; }> = ({ auction, userId, onBid, onClaim, onReclaim, onViewDetails }) => {
     const itemDef = getItemDefinition(auction.item.itemId);
     const timeLeft = useCountdown(auction.endTime);
     const isEnded = timeLeft === 'Ended';
 
-    // Renders the main action button at the bottom of the card
-    const renderAction = () => {
-        // If already claimed by winner
+    // Renders the status tag in the top-right corner
+    const renderStatusTag = () => {
+        let text = '';
+        let colorClasses = '';
+
         if (auction.status === 'claimed') {
-            return <span className="text-center block text-green-400 font-bold">Đã nhận</span>;
+            text = 'Đã bán';
+            colorClasses = 'bg-green-500/20 text-green-300 border-green-500/50';
+        } else if (auction.status === 'sold') {
+            text = 'Chờ nhận';
+            colorClasses = 'bg-yellow-500/20 text-yellow-300 border-yellow-500/50';
+        } else if (auction.status === 'expired' || (isEnded && !auction.highestBidderId)) {
+            text = 'Hết hạn';
+            colorClasses = 'bg-gray-500/20 text-gray-300 border-gray-500/50';
+        } else if (isEnded) {
+            text = 'Kết thúc';
+            colorClasses = 'bg-red-500/20 text-red-300 border-red-500/50';
+        } else {
+            text = timeLeft;
+            colorClasses = 'bg-green-500/20 text-green-300 border-green-500/50';
         }
 
-        // If sold, but waiting for winner to claim the item
-        if (auction.status === 'sold') {
-            // Only the winner sees the button to claim the item
-            if (auction.highestBidderId === userId) {
-                return <button onClick={() => onClaim(auction)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Nhận Vật Phẩm</button>;
-            }
-            // Seller sees nothing, as requested
-            return null;
-        }
-        
-        // If auction has ended and is still 'active' (waiting for action)
-        if (isEnded && auction.status === 'active') {
-            // Show the "Nhận" button only for the winner
-            if (auction.highestBidderId === userId) {
-                return <button onClick={() => onClaim(auction)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Nhận</button>;
-            }
-        }
-
-        // If the auction is ongoing and active
-        if (!isEnded && auction.status === 'active') {
-            // Not the seller, so can bid
-            if (auction.sellerId !== userId) {
-                return <button onClick={() => onBid(auction)} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Đấu Giá</button>;
-            }
-        }
-        
-        // Default to nothing
-        return null;
+        return (
+            <div className={`absolute top-2 right-2 px-2 py-0.5 text-[10px] font-bold rounded-md border ${colorClasses}`}>
+                {text}
+            </div>
+        );
     };
-    
-    // Renders the content for the third column (Time/Status/Action)
-    const renderTimeColumn = () => {
-        // Handle clear, terminal statuses first
-        if (auction.status === 'sold') {
-            return <div className="font-bold text-xs mt-0.5 text-yellow-400">Pending</div>;
-        }
-        if (auction.status === 'claimed') {
-            return <div className="font-bold text-xs mt-0.5 text-green-400">Sold</div>;
-        }
-        if (auction.status === 'expired') {
-             return <div className="font-bold text-xs mt-0.5 text-gray-400">Expired</div>;
-        }
 
-        // If it reaches here, the status must be 'active'
-        if (!isEnded) {
-            return <div className={`font-bold text-xs mt-0.5 text-green-400`}>{timeLeft}</div>;
-        }
-
-        // If it reaches here, status is 'active' AND it has ended
-        // Case 1: Unsold, belongs to current user -> show Reclaim button
-        if (auction.sellerId === userId && !auction.highestBidderId) {
-            return <button onClick={(e) => { e.stopPropagation(); onReclaim(auction); }} className="bg-teal-800 hover:bg-teal-700 text-white font-bold text-xs py-0.5 px-2 rounded-md transition-colors">Lấy Lại</button>;
-        }
-
-        // Case 2: Unsold, for other users to see
-        if (!auction.highestBidderId) {
-            return <div className="font-bold text-xs mt-0.5 text-gray-400">Expired</div>;
+    // Renders the action button inside the grid
+    const renderActionInGrid = () => {
+        const buttonClasses = "w-full text-white font-bold py-1 px-2 rounded-md text-xs transition-colors";
+        
+        // Status 'sold' (waiting for winner to claim)
+        if (auction.status === 'sold' && auction.highestBidderId === userId) {
+            return <button onClick={(e) => { e.stopPropagation(); onClaim(auction); }} className={`${buttonClasses} bg-green-600 hover:bg-green-700`}>Nhận</button>;
         }
         
-        // Case 3: Ended and has a winner, waiting for winner to press 'Nhận'
-        return <div className="font-bold text-xs mt-0.5 text-red-500">Ended</div>;
+        // Ended and active (winner can claim)
+        if (isEnded && auction.status === 'active' && auction.highestBidderId === userId) {
+             return <button onClick={(e) => { e.stopPropagation(); onClaim(auction); }} className={`${buttonClasses} bg-green-600 hover:bg-green-700`}>Nhận</button>;
+        }
+        
+        // Ended and unsold (seller can reclaim)
+        if (isEnded && auction.status === 'active' && auction.sellerId === userId && !auction.highestBidderId) {
+            return <button onClick={(e) => { e.stopPropagation(); onReclaim(auction); }} className={`${buttonClasses} bg-teal-800 hover:bg-teal-700`}>Lấy Lại</button>;
+        }
+        
+        // Ongoing (non-seller can bid)
+        if (!isEnded && auction.status === 'active' && auction.sellerId !== userId) {
+            return <button onClick={(e) => { e.stopPropagation(); onBid(auction); }} className={`${buttonClasses} bg-cyan-600 hover:bg-cyan-700`}>Đấu Giá</button>;
+        }
+
+        // If no action is available, return null to show nothing.
+        return null;
     };
 
 
     if (!itemDef) return <div className="text-red-500 bg-slate-800/60 rounded-lg p-3">Lỗi vật phẩm không xác định</div>;
 
     return (
-        <div className={`bg-slate-800/60 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} p-3 flex flex-col gap-3 transition-shadow hover:shadow-lg hover:shadow-cyan-500/10`}>
-            <div onClick={() => onViewDetails(auction)} className="flex items-center gap-3 cursor-pointer group">
+        <div className={`relative bg-slate-800/60 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} p-3 flex flex-col gap-3 transition-shadow hover:shadow-lg hover:shadow-cyan-500/10`}>
+            {renderStatusTag()}
+            
+            <div onClick={() => onViewDetails(auction)} className="flex items-center gap-3 cursor-pointer group pt-4">
                 <div className={`relative w-16 h-16 flex-shrink-0 bg-black/30 rounded-md border ${getRarityColor(itemDef.rarity)} flex items-center justify-center p-1`}>
                     <img src={itemDef.icon} alt={itemDef.name} className="w-full h-full object-contain" />
                     <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">Lv.{auction.item.level}</span>
@@ -341,19 +330,16 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
                             <div className="text-[11px] text-slate-400">Hiện Tại</div>
                             <div className="font-bold text-xs text-yellow-400 flex items-center justify-center gap-1 mt-0.5"><CoinIcon className="w-3.5 h-3.5" /><span>{auction.currentBid.toLocaleString()}</span></div>
                         </div>
-                        <div className="flex flex-col items-center">
-                            <div className="text-[11px] text-slate-400">Thời Gian</div>
-                            {renderTimeColumn()}
+                        <div className="flex items-center justify-center">
+                           {renderActionInGrid()}
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <div className="mt-auto">{renderAction()}</div>
         </div>
     );
 };
-// --- END of MODIFIED AuctionCard Component ---
+// --- END: REFACTORED AuctionCard Component ---
 
 // --- START: CreateAuctionView ---
 const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedItems; onList: (item: OwnedItem, price: number, duration: number) => void; isProcessing: boolean }> = ({ ownedItems, equippedItems, onList, isProcessing }) => {
@@ -562,4 +548,3 @@ export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
         </div>
     );
 }
-
