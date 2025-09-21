@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useMemo, FC, memo } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { 
@@ -411,17 +409,14 @@ const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedIt
 };
 // --- END: CreateAuctionView ---
 
-// --- NEW ICONS FOR TABS ---
-const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children: React.ReactNode }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg> );
-const Gavel = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="m14 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 9"/><path d="M15 13 9 7l4-4 6 6h3l-4 4z"/></Icon> );
-const ClipboardList = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></Icon> );
-const ArrowUpCircle = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></Icon> );
-// --- END NEW ICONS ---
-
 // --- NEW TABS COMPONENT ---
 const AuctionTabs = ({ activeTab, setActiveTab }: { activeTab: 'browse' | 'my_auctions' | 'create'; setActiveTab: (tab: 'browse' | 'my_auctions' | 'create') => void; }) => {
-    const tabs = [ { id: 'browse', name: 'Sàn Đấu Giá', icon: Gavel }, { id: 'my_auctions', name: 'Đấu Giá Của Tôi', icon: ClipboardList }, { id: 'create', name: 'Đăng Bán', icon: ArrowUpCircle }, ];
-    return ( <> <nav className="relative flex items-center gap-2 overflow-x-auto horizontal-scrollbar-hidden px-4 sm:px-6 lg:px-8"> {tabs.map(({ id, name, icon: IconComponent }) => ( <button key={id} onClick={() => setActiveTab(id as any)} className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-t-lg font-medium text-sm transition-colors duration-200 border-b-2 ${ activeTab === id ? 'border-cyan-400 text-white' : 'border-transparent text-slate-400 hover:bg-slate-800/50 hover:text-slate-200' }`} > <IconComponent className="w-5 h-5" /> <span>{name}</span> </button> ))} </nav> <style jsx>{` .horizontal-scrollbar-hidden::-webkit-scrollbar { display: none; } .horizontal-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; } `}</style> </> );
+    const tabs = [
+        { id: 'browse', name: 'Sàn Đấu Giá', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/market-auction.webp' },
+        { id: 'my_auctions', name: 'Lịch sử đấu giá', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/history-auction.webp' },
+        { id: 'create', name: 'Đăng Bán', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/sell-icon.webp' },
+    ];
+    return ( <> <nav className="relative flex items-center gap-2 overflow-x-auto horizontal-scrollbar-hidden px-4 sm:px-6 lg:px-8"> {tabs.map(({ id, name, icon: iconSrc }) => ( <button key={id} onClick={() => setActiveTab(id as any)} className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-t-lg font-medium text-sm transition-colors duration-200 border-b-2 ${ activeTab === id ? 'border-cyan-400 text-white' : 'border-transparent text-slate-400 hover:bg-slate-800/50 hover:text-slate-200' }`} > <img src={iconSrc} alt={name} className="w-5 h-5" /> <span>{name}</span> </button> ))} </nav> <style jsx>{` .horizontal-scrollbar-hidden::-webkit-scrollbar { display: none; } .horizontal-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; } `}</style> </> );
 };
 // --- END NEW TABS COMPONENT ---
 
