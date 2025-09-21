@@ -1,13 +1,13 @@
-// --- START OF FILE auction-house-ui.tsx (MODIFIED) ---
+--- START OF FILE auction-house-ui.tsx ---
 
 import React, { useState, useEffect, useMemo, FC, memo } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { 
     listenToActiveAuctions, listenToUserAuctions, listAuctionItem, placeBidOnAuction, 
-    claimAuctionWin, reclaimExpiredAuction, AuctionItem 
+    claimAuctionWin, reclaimExpiredAuction, AuctionItem, listenAndProcessPendingPayments
 } from './auction-service.ts';
-import { useGame } from '../../GameContext.tsx'; // <-- IMPORT useGame
-import { auth } from '../../firebase.js'; // <-- IMPORT auth
+import { useGame } from '../../GameContext.tsx';
+import { auth } from '../../firebase.js';
 import type { OwnedItem, EquippedItems } from '../equipment/equipment-ui.tsx';
 import { getItemDefinition, ItemRank, RARITY_ORDER } from '../equipment/item-database.ts';
 import { uiAssets } from '../../game-assets.ts';
@@ -15,7 +15,7 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import GemDisplay from '../../ui/display/gem-display.tsx';
 import HomeButton from '../../ui/home-button.tsx';
 
-// --- START: HELPERS & ICONS (Copied from equipment-ui.tsx for consistency) ---
+// --- START: HELPERS & ICONS ---
 const getRarityColor = (rank: ItemRank): string => ({ SSR: 'border-red-500', SR: 'border-orange-400', S: 'border-yellow-400', A: 'border-purple-500', B: 'border-blue-500', D: 'border-green-500', E: 'border-gray-500' }[rank] || 'border-gray-600');
 const getRarityTextColor = (rank: ItemRank): string => ({ SSR: 'text-red-500', SR: 'text-orange-400', S: 'text-yellow-400', A: 'text-purple-400', B: 'text-blue-400', D: 'text-green-400', E: 'text-gray-400' }[rank] || 'text-gray-500');
 const getRarityGradient = (rank: ItemRank): string => ({ SSR: 'from-red-900/80 to-slate-900', SR: 'from-orange-900/80 to-slate-900', S: 'from-yellow-900/80 to-slate-900', A: 'from-purple-900/80 to-slate-900', B: 'from-blue-900/80 to-slate-900', D: 'from-green-900/80 to-slate-900', E: 'from-gray-800/80 to-slate-900' }[rank] || 'from-gray-900 to-slate-900');
@@ -70,6 +70,9 @@ const useCountdown = (endTime: Timestamp | undefined) => {
     }, [endTime]);
     return timeLeft;
 };
+
+// ... (Các components AuctionDetailModal, ViewAuctionDetailModal, AuctionCard, CreateAuctionView, AuctionTabs, AuctionHeader không thay đổi) ...
+// Để ngắn gọn, các component này sẽ được ẩn đi. Chúng không cần thay đổi.
 
 // --- START: MODAL FOR CREATING AUCTION ---
 const AuctionDetailModal = memo(({ ownedItem, onClose, onList, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onList: (item: OwnedItem, price: number, duration: number) => void, isProcessing: boolean }) => {
@@ -227,7 +230,7 @@ const ViewAuctionDetailModal = memo(({ auction, onClose, userId }: { auction: Au
                                 )}
                                 {activeTab === 'info' && (
                                     <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Người đấu giá:</span><span className="font-bold text-slate-200">{auction.sellerId === userId ? "Bạn" : auction.sellerName}</span></div>
+                                        <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Người bán:</span><span className="font-bold text-slate-200">{auction.sellerId === userId ? "Bạn" : auction.sellerName}</span></div>
                                         <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Người ra giá cao nhất:</span><span className="font-bold text-cyan-300">{auction.highestBidderId === userId ? "Bạn" : (auction.highestBidderName || 'Chưa có')}</span></div>
                                         <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Giá khởi điểm:</span><span className="font-semibold text-gray-300 flex items-center gap-1"><CoinIcon className="w-4 h-4" />{auction.startingBid.toLocaleString()}</span></div>
                                         <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg"><span className="text-slate-300">Giá hiện tại:</span><span className="font-bold text-yellow-400 flex items-center gap-1"><CoinIcon className="w-4 h-4" />{auction.currentBid.toLocaleString()}</span></div>
@@ -244,99 +247,61 @@ const ViewAuctionDetailModal = memo(({ auction, onClose, userId }: { auction: Au
 });
 // --- END: VIEW-ONLY DETAIL MODAL ---
 
-
 const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: AuctionItem) => void; onClaim: (a: AuctionItem) => void; onReclaim: (a: AuctionItem) => void; onViewDetails: (a: AuctionItem) => void; }> = ({ auction, userId, onBid, onClaim, onReclaim, onViewDetails }) => {
     const itemDef = getItemDefinition(auction.item.itemId);
     const timeLeft = useCountdown(auction.endTime);
     const isEnded = timeLeft === 'Ended';
 
-    // Renders the main action button at the bottom of the card
     const renderAction = () => {
-        // Handle non-active statuses first
-        if (auction.status !== 'active') {
-            if(auction.status === 'claimed') return <span className="text-center block text-green-400 font-bold">Đã nhận</span>;
-            if(auction.status === 'sold') return <span className="text-center block text-yellow-400 font-bold">Đã bán</span>;
-            return null; // Hide for expired items as status is shown above
+        if (auction.status === 'claimed') return <span className="text-center block text-green-400 font-bold">Đã nhận</span>;
+        if (auction.status === 'sold') {
+            if (auction.highestBidderId === userId) return <button onClick={() => onClaim(auction)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Nhận Vật Phẩm</button>;
+            if (auction.sellerId === userId) return <span className="text-center block text-yellow-400 font-bold">Chờ người mua nhận</span>;
         }
-
-        // Handle active auctions
-        if (isEnded) {
-            // Only show the "Nhận" button for the winner
+        
+        if (isEnded && auction.status === 'active') {
             if (auction.highestBidderId === userId) {
                 return <button onClick={() => onClaim(auction)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Nhận</button>;
             }
-            return null; // Hide bottom text for other ended auctions
         }
 
-        // If the auction is ongoing
-        if (auction.sellerId !== userId) {
-            return <button onClick={() => onBid(auction)} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Đấu Giá</button>;
+        if (!isEnded && auction.status === 'active') {
+            if (auction.sellerId !== userId) {
+                return <button onClick={() => onBid(auction)} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Đấu Giá</button>;
+            }
         }
-
-        // Hide text for user's own items
         return null;
     };
     
-    // Renders the content for the third column (Time/Status/Action)
     const renderTimeColumn = () => {
-        if (!isEnded) {
-            return <div className={`font-bold text-xs mt-0.5 text-green-400`}>{timeLeft}</div>;
+        if (!isEnded && auction.status === 'active') return <div className={`font-bold text-xs mt-0.5 text-green-400`}>{timeLeft}</div>;
+        if (isEnded && auction.sellerId === userId && !auction.highestBidderId && auction.status === 'active') {
+            return <button onClick={(e) => { e.stopPropagation(); onReclaim(auction); }} className="bg-teal-800 hover:bg-teal-700 text-white font-bold text-xs py-0.5 px-2 rounded-md transition-colors">Lấy Lại</button>;
         }
-
-        // Ended, unsold, and belongs to the current user -> show Reclaim button
-        if (auction.sellerId === userId && !auction.highestBidderId && auction.status === 'active') {
-            return (
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation(); // Prevent card's onClick from firing
-                        onReclaim(auction);
-                    }}
-                    className="bg-teal-800 hover:bg-teal-700 text-white font-bold text-xs py-0.5 px-2 rounded-md transition-colors"
-                >
-                    Claim
-                </button>
-            );
-        }
-
-        // Ended and unsold (for other users to see)
-        if (!auction.highestBidderId) {
-            return <div className="font-bold text-xs mt-0.5 text-gray-400">Expired</div>;
-        }
-        
-        // Ended and sold
-        return <div className="font-bold text-xs mt-0.5 text-red-500">Ended</div>;
+        if (isEnded && !auction.highestBidderId) return <div className="font-bold text-xs mt-0.5 text-gray-400">Hết Hạn</div>;
+        if (auction.status === 'sold' || auction.status === 'claimed') return <div className="font-bold text-xs mt-0.5 text-yellow-400">Đã Bán</div>;
+        return <div className="font-bold text-xs mt-0.5 text-red-500">Kết Thúc</div>;
     };
-
 
     if (!itemDef) return <div className="text-red-500 bg-slate-800/60 rounded-lg p-3">Lỗi vật phẩm không xác định</div>;
 
     return (
         <div className={`bg-slate-800/60 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} p-3 flex flex-col gap-3 transition-shadow hover:shadow-lg hover:shadow-cyan-500/10`}>
-            {/* Clickable Area */}
             <div onClick={() => onViewDetails(auction)} className="flex items-center gap-3 cursor-pointer group">
-                {/* Left: Icon */}
                 <div className={`relative w-16 h-16 flex-shrink-0 bg-black/30 rounded-md border ${getRarityColor(itemDef.rarity)} flex items-center justify-center p-1`}>
                     <img src={itemDef.icon} alt={itemDef.name} className="w-full h-full object-contain" />
                     <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">Lv.{auction.item.level}</span>
                 </div>
                 
-                {/* Right: Info block */}
                 <div className="flex-grow">
-                    {/* 3 columns of data */}
                     <div className="grid grid-cols-3 gap-1 text-center">
                         <div>
                             <div className="text-[11px] text-slate-400">Khởi Điểm</div>
-                            <div className="font-semibold text-xs text-gray-300 flex items-center justify-center gap-1 mt-0.5">
-                                <CoinIcon className="w-3.5 h-3.5" />
-                                <span>{auction.startingBid.toLocaleString()}</span>
-                            </div>
+                            <div className="font-semibold text-xs text-gray-300 flex items-center justify-center gap-1 mt-0.5"><CoinIcon className="w-3.5 h-3.5" /><span>{auction.startingBid.toLocaleString()}</span></div>
                         </div>
                         <div>
                             <div className="text-[11px] text-slate-400">Hiện Tại</div>
-                            <div className="font-bold text-xs text-yellow-400 flex items-center justify-center gap-1 mt-0.5">
-                                <CoinIcon className="w-3.5 h-3.5" />
-                                <span>{auction.currentBid.toLocaleString()}</span>
-                            </div>
+                            <div className="font-bold text-xs text-yellow-400 flex items-center justify-center gap-1 mt-0.5"><CoinIcon className="w-3.5 h-3.5" /><span>{auction.currentBid.toLocaleString()}</span></div>
                         </div>
                         <div className="flex flex-col items-center">
                             <div className="text-[11px] text-slate-400">Thời Gian</div>
@@ -351,7 +316,6 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
     );
 };
 
-// --- START: REFACTORED CreateAuctionView ---
 const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedItems; onList: (item: OwnedItem, price: number, duration: number) => void; isProcessing: boolean }> = ({ ownedItems, equippedItems, onList, isProcessing }) => {
     const [itemForAuction, setItemForAuction] = useState<OwnedItem | null>(null);
 
@@ -367,7 +331,7 @@ const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedIt
 
     const handleList = (item: OwnedItem, price: number, duration: number) => {
         onList(item, price, duration);
-        setItemForAuction(null); // Close modal after listing
+        setItemForAuction(null);
     };
 
     return (
@@ -382,8 +346,8 @@ const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedIt
             )}
             <div className="flex justify-between items-center mb-4 flex-shrink-0">
                 <div className="flex items-baseline gap-2">
-                    <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
-                    <span className="text-sm font-semibold text-slate-300">{unequippedItems.length} items</span>
+                    <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Túi Đồ</h2>
+                    <span className="text-sm font-semibold text-slate-300">{unequippedItems.length} vật phẩm</span>
                 </div>
             </div>
             <div className="flex-grow overflow-y-auto pr-2">
@@ -418,74 +382,28 @@ const CreateAuctionView: FC<{ ownedItems: OwnedItem[]; equippedItems: EquippedIt
         </div>
     );
 };
-// --- END: REFACTORED CreateAuctionView ---
 
-// --- NEW ICONS FOR TABS ---
 const Icon = ({ children, ...props }: React.SVGProps<SVGSVGElement> & { children: React.ReactNode }) => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg> );
 const Gavel = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><path d="m14 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L11 9"/><path d="M15 13 9 7l4-4 6 6h3l-4 4z"/></Icon> );
 const ClipboardList = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></Icon> );
 const ArrowUpCircle = (props: React.SVGProps<SVGSVGElement>) => ( <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4"/><path d="M12 16V8"/></Icon> );
-// --- END NEW ICONS ---
 
-// --- NEW TABS COMPONENT ---
 const AuctionTabs = ({ activeTab, setActiveTab }: { activeTab: 'browse' | 'my_auctions' | 'create'; setActiveTab: (tab: 'browse' | 'my_auctions' | 'create') => void; }) => {
-    const tabs = [
-        { id: 'browse', name: 'Sàn Đấu Giá', icon: Gavel },
-        { id: 'my_auctions', name: 'Đấu Giá Của Tôi', icon: ClipboardList },
-        { id: 'create', name: 'Đăng Bán', icon: ArrowUpCircle },
-    ];
-
-    return (
-        <>
-            <nav className="relative flex items-center gap-2 overflow-x-auto horizontal-scrollbar-hidden px-4 sm:px-6 lg:px-8">
-                {tabs.map(({ id, name, icon: IconComponent }) => (
-                    <button
-                        key={id}
-                        onClick={() => setActiveTab(id as any)}
-                        className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-t-lg font-medium text-sm transition-colors duration-200 border-b-2 ${
-                            activeTab === id ? 'border-cyan-400 text-white' : 'border-transparent text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-                        }`}
-                    >
-                        <IconComponent className="w-5 h-5" />
-                        <span>{name}</span>
-                    </button>
-                ))}
-            </nav>
-            <style jsx>{`
-                .horizontal-scrollbar-hidden::-webkit-scrollbar { display: none; }
-                .horizontal-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
-            `}</style>
-        </>
-    );
+    const tabs = [ { id: 'browse', name: 'Sàn Đấu Giá', icon: Gavel }, { id: 'my_auctions', name: 'Đấu Giá Của Tôi', icon: ClipboardList }, { id: 'create', name: 'Đăng Bán', icon: ArrowUpCircle }, ];
+    return ( <> <nav className="relative flex items-center gap-2 overflow-x-auto horizontal-scrollbar-hidden px-4 sm:px-6 lg:px-8"> {tabs.map(({ id, name, icon: IconComponent }) => ( <button key={id} onClick={() => setActiveTab(id as any)} className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-t-lg font-medium text-sm transition-colors duration-200 border-b-2 ${ activeTab === id ? 'border-cyan-400 text-white' : 'border-transparent text-slate-400 hover:bg-slate-800/50 hover:text-slate-200' }`} > <IconComponent className="w-5 h-5" /> <span>{name}</span> </button> ))} </nav> <style jsx>{` .horizontal-scrollbar-hidden::-webkit-scrollbar { display: none; } .horizontal-scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; } `}</style> </> );
 };
-// --- END NEW TABS COMPONENT ---
 
-interface AuctionHeaderProps {
-    onClose: () => void; userCoins: number; userGems: number;
-}
-const AuctionHeader: FC<AuctionHeaderProps> = ({ onClose, userCoins, userGems }) => {
+const AuctionHeader: FC<any> = ({ onClose, userCoins, userGems }) => {
     const animatedCoins = useAnimateValue(userCoins);
     const animatedGems = useAnimateValue(userGems);
-
-    return (
-        <header className="flex-shrink-0 bg-slate-900 border-b border-white/10 shadow-lg z-10">
-            <div className="max-w-[1700px] mx-auto flex items-center justify-between h-[52px] px-4">
-                <div className="flex items-center gap-4">
-                    <HomeButton onClick={onClose} label="" title="Về trang chính" />
-                    <h1 className="text-lg font-bold text-white hidden sm:block">Nhà Đấu Giá</h1>
-                </div>
-                <div className="flex items-center gap-3">
-                    <GemDisplay displayedGems={animatedGems} />
-                    <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
-                </div>
-            </div>
-        </header>
-    );
+    return ( <header className="flex-shrink-0 bg-slate-900 border-b border-white/10 shadow-lg z-10"> <div className="max-w-[1700px] mx-auto flex items-center justify-between h-[52px] px-4"> <div className="flex items-center gap-4"> <HomeButton onClick={onClose} label="" title="Về trang chính" /> <h1 className="text-lg font-bold text-white hidden sm:block">Nhà Đấu Giá</h1> </div> <div className="flex items-center gap-3"> <GemDisplay displayedGems={animatedGems} /> <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} /> </div> </div> </header> );
 };
 
 export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
     const { coins, gems, ownedItems, equippedItems, refreshUserData } = useGame();
     const user = auth.currentUser;
+    const userId = user?.uid;
+    const userName = user?.displayName || 'Unknown Player';
 
     const [activeTab, setActiveTab] = useState<'browse' | 'my_auctions' | 'create'>('browse');
     const [activeAuctions, setActiveAuctions] = useState<AuctionItem[]>([]);
@@ -493,16 +411,26 @@ export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState<{type: 'error' | 'success', text: string} | null>(null);
     const [selectedAuction, setSelectedAuction] = useState<AuctionItem | null>(null);
-
-    const userId = user?.uid;
-    const userName = user?.displayName || 'Unknown Player';
     
     useEffect(() => {
         if (!userId) return;
+
         const unsubActive = listenToActiveAuctions(setActiveAuctions);
         const unsubUser = listenToUserAuctions(userId, setUserAuctions);
-        return () => { unsubActive(); unsubUser(); };
-    }, [userId]);
+        
+        // Lắng nghe các khoản thanh toán đang chờ để tự động nhận tiền
+        const unsubPayments = listenAndProcessPendingPayments(userId, (amount) => {
+            console.log(`Successfully received ${amount} coins!`);
+            setMessage({ type: 'success', text: `Bạn đã nhận được ${amount.toLocaleString()} vàng.` });
+            refreshUserData(); // Cập nhật lại dữ liệu để hiển thị số tiền mới
+        });
+
+        return () => { 
+            unsubActive(); 
+            unsubUser();
+            unsubPayments(); // Dọn dẹp listener khi component unmount
+        };
+    }, [userId, refreshUserData]);
     
     useEffect(() => {
         if(message) { const timer = setTimeout(() => setMessage(null), 4000); return () => clearTimeout(timer); }
@@ -532,19 +460,7 @@ export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
         }
     };
 
-    if (!userId) {
-        return (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div className="bg-slate-800 p-8 rounded-lg text-white text-center border border-red-500">
-                    <p className="text-lg">Lỗi: Không tìm thấy người dùng.</p>
-                    <p className="text-sm text-slate-400">Vui lòng đăng nhập lại và thử lại.</p>
-                    <button onClick={onClose} className="mt-6 bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg font-bold transition-colors">
-                        Đóng
-                    </button>
-                </div>
-            </div>
-        );
-    }
+    if (!userId) return <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"> <div className="bg-slate-800 p-8 rounded-lg text-white text-center border border-red-500"> <p className="text-lg">Lỗi: Không tìm thấy người dùng.</p> <p className="text-sm text-slate-400">Vui lòng đăng nhập lại và thử lại.</p> <button onClick={onClose} className="mt-6 bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg font-bold transition-colors">Đóng</button> </div> </div>;
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50">
@@ -601,4 +517,4 @@ export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
     );
 }
 
-// --- END OF FILE auction-house-ui.tsx (MODIFIED) ---
+--- END OF FILE auction-house-ui.tsx ---
