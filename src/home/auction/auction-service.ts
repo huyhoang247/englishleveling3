@@ -1,4 +1,4 @@
-// --- START OF FILE auction-service.ts ---
+
 
 import { db } from '../../firebase';
 import {
@@ -207,64 +207,57 @@ export const placeBidOnAuction = async (
 
 /**
  * Người thắng nhận vật phẩm sau khi đấu giá kết thúc.
- * @param userId - ID người nhận (phải là người thắng).
+ * @param userId - ID người nhận.
  * @param auctionId - ID phiên đấu giá.
  * @returns Promise<OwnedItem> Vật phẩm đã nhận.
  */
 export const claimAuctionWin = async (userId: string, auctionId: string): Promise<OwnedItem> => {
+  const userDocRef = doc(db, 'users', userId);
   const auctionDocRef = doc(db, 'auctions', auctionId);
   let claimedItem: OwnedItem;
 
   await runTransaction(db, async (t) => {
-    // --- PHASE 1: READ ALL NECESSARY DOCUMENTS FIRST ---
-    const auctionDoc = await t.get(auctionDocRef);
-    if (!auctionDoc.exists()) throw new Error("Phiên đấu giá không tồn tại.");
+    // --- GIAI ĐOẠN 1: ĐỌC TẤT CẢ DỮ LIỆU CẦN THIẾT TRƯỚC TIÊN ---
+    const [userDoc, auctionDoc] = await Promise.all([t.get(userDocRef), t.get(auctionDocRef)]);
 
+    if (!auctionDoc.exists()) throw new Error("Phiên đấu giá không tồn tại.");
     const auctionData = auctionDoc.data() as Omit<AuctionItem, 'id'>;
 
-    // We need both the seller and the winner (who is the current user)
-    if (!auctionData.highestBidderId) throw new Error("Phiên đấu giá này không có người thắng.");
-    
-    const winnerDocRef = doc(db, 'users', auctionData.highestBidderId);
+    // Sau khi có auctionData, chúng ta lấy sellerId để đọc thông tin người bán
     const sellerDocRef = doc(db, 'users', auctionData.sellerId);
+    const sellerDoc = await t.get(sellerDocRef);
 
-    const [winnerDoc, sellerDoc] = await Promise.all([
-      t.get(winnerDocRef),
-      t.get(sellerDocRef)
-    ]);
 
-    // --- PHASE 2: VALIDATE ALL DATA ---
-    if (!winnerDoc.exists()) throw new Error("Winner user not found.");
-    // sellerDoc existence is not critical to fail the transaction, but we should check it before updating.
+    // --- GIAI ĐOẠN 2: KIỂM TRA TOÀN BỘ DỮ LIỆU ĐÃ ĐỌC ---
+    if (!userDoc.exists()) throw new Error("User not found.");
+    
+    const userData = userDoc.data();
 
     if (auctionData.highestBidderId !== userId) throw new Error("Bạn không phải người thắng phiên đấu giá này.");
     if (auctionData.status !== 'active') throw new Error("Vật phẩm đã được nhận hoặc đã hết hạn.");
     if (Timestamp.now().toMillis() < auctionData.endTime.toMillis()) throw new Error("Phiên đấu giá chưa kết thúc.");
 
-    claimedItem = auctionData.item;
-    const winnerData = winnerDoc.data();
+    claimedItem = auctionData.item; // Gán vật phẩm để trả về sau khi transaction thành công
+
     
-    // --- PHASE 3: PERFORM ALL WRITES ---
+    // --- GIAI ĐOẠN 3: THỰC HIỆN TẤT CẢ CÁC THAO TÁC GHI ---
 
-    // 1. Add item to the winner's inventory
-    const currentEquipment = winnerData.equipment || { owned: [] };
+    // 1. Thêm vật phẩm vào túi người thắng
+    const currentEquipment = userData.equipment || { owned: [] };
     const newOwnedItems = [...currentEquipment.owned, auctionData.item];
-    t.update(winnerDocRef, { 'equipment.owned': newOwnedItems });
+    t.update(userDocRef, { 'equipment.owned': newOwnedItems });
 
-    // 2. Send coins to the seller (if the seller exists)
+    // 2. Gửi tiền cho người bán (nếu người bán còn tồn tại)
     if (sellerDoc.exists()) {
         const sellerData = sellerDoc.data();
         t.update(sellerDocRef, { coins: (sellerData.coins || 0) + auctionData.currentBid });
     }
 
-    // 3. Update the auction's status
+    // 3. Cập nhật trạng thái phiên đấu giá
     t.update(auctionDocRef, { status: 'claimed' });
   });
 
-  if (!claimedItem) {
-    throw new Error("Failed to claim item inside transaction.");
-  }
-  return claimedItem;
+  return claimedItem!;
 };
 
 
@@ -304,9 +297,5 @@ export const reclaimExpiredAuction = async (userId: string, auctionId: string): 
         t.update(auctionDocRef, { status: 'expired' });
     });
 
-    if (!reclaimedItem) {
-      throw new Error("Failed to reclaim item inside transaction.");
-    }
-    return reclaimedItem;
+    return reclaimedItem!;
 };
-// --- END OF FILE auction-service.ts ---
