@@ -5,8 +5,9 @@ import { Timestamp } from 'firebase/firestore';
 import { 
     listenToActiveAuctions, listenToUserAuctions, listAuctionItem, placeBidOnAuction, 
     claimAuctionWin, reclaimExpiredAuction, AuctionItem 
-} from './auction-service.ts'; // <-- UPDATED IMPORT PATH
-import { fetchOrCreateUserGameData } from '../../gameDataService.ts'; // <-- IMPORT FOR USER DATA
+} from './auction-service.ts';
+import { useGame } from '../../GameContext.tsx'; // <-- IMPORT useGame
+import { auth } from '../../firebase.js'; // <-- IMPORT auth
 import type { OwnedItem, EquippedItems } from '../equipment/equipment-ui.tsx';
 import { getItemDefinition, ItemRank, RARITY_ORDER } from '../equipment/item-database.ts';
 import { uiAssets } from '../../game-assets.ts';
@@ -482,32 +483,22 @@ const AuctionHeader: FC<AuctionHeaderProps> = ({ onClose, userCoins, userGems })
     );
 };
 
+export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
+    const { coins, gems, ownedItems, equippedItems, refreshUserData } = useGame();
+    const user = auth.currentUser;
 
-interface AuctionHouseProps {
-    userId: string; userName: string;
-    ownedItems: OwnedItem[]; equippedItems: EquippedItems;
-    onClose: () => void; onAuctionAction: () => void;
-}
-
-export default function AuctionHouse({ userId, userName, ownedItems, equippedItems, onClose, onAuctionAction }: AuctionHouseProps) {
     const [activeTab, setActiveTab] = useState<'browse' | 'my_auctions' | 'create'>('browse');
     const [activeAuctions, setActiveAuctions] = useState<AuctionItem[]>([]);
     const [userAuctions, setUserAuctions] = useState<AuctionItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState<{type: 'error' | 'success', text: string} | null>(null);
-    const [coins, setCoins] = useState(0);
-    const [gems, setGems] = useState(0);
     const [selectedAuction, setSelectedAuction] = useState<AuctionItem | null>(null);
-    
-    const refreshUserData = async () => {
-        try {
-            const data = await fetchOrCreateUserGameData(userId);
-            setCoins(data.coins); setGems(data.gems);
-        } catch (error) { console.error("Failed to refresh user data:", error); setMessage({ type: 'error', text: 'Lỗi cập nhật dữ liệu người dùng.' }); }
-    };
+
+    const userId = user?.uid;
+    const userName = user?.displayName || 'Unknown Player';
     
     useEffect(() => {
-        refreshUserData();
+        if (!userId) return;
         const unsubActive = listenToActiveAuctions(setActiveAuctions);
         const unsubUser = listenToUserAuctions(userId, setUserAuctions);
         return () => { unsubActive(); unsubUser(); };
@@ -522,12 +513,16 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
         try {
             await action();
             setMessage({type: 'success', text: successMsg});
-            onAuctionAction(); await refreshUserData();
+            await refreshUserData();
         } catch (e: any) { setMessage({type: 'error', text: e.message || 'Có lỗi xảy ra.'});
         } finally { setIsLoading(false); }
     };
     
     const handleBid = (auction: AuctionItem) => {
+        if (!userId) {
+            setMessage({ type: 'error', text: 'Bạn phải đăng nhập để đấu giá.' });
+            return;
+        }
         const bidAmountStr = prompt(`Giá hiện tại: ${auction.currentBid.toLocaleString()}. Nhập giá của bạn:`);
         if (bidAmountStr) {
             const bidAmount = parseInt(bidAmountStr, 10);
@@ -536,6 +531,20 @@ export default function AuctionHouse({ userId, userName, ownedItems, equippedIte
             } else { setMessage({ type: 'error', text: 'Giá đặt không hợp lệ.' }); }
         }
     };
+
+    if (!userId) {
+        return (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-slate-800 p-8 rounded-lg text-white text-center border border-red-500">
+                    <p className="text-lg">Lỗi: Không tìm thấy người dùng.</p>
+                    <p className="text-sm text-slate-400">Vui lòng đăng nhập lại và thử lại.</p>
+                    <button onClick={onClose} className="mt-6 bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg font-bold transition-colors">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50">
