@@ -254,8 +254,7 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
         if (auction.status !== 'active') {
             if(auction.status === 'claimed') return <span className="text-center block text-green-400 font-bold">Đã nhận</span>;
             if(auction.status === 'sold') return <span className="text-center block text-yellow-400 font-bold">Đã bán</span>;
-            // Return null for expired items as the status is shown above
-            return null;
+            return null; // Hide for expired items as status is shown above
         }
 
         // Handle active auctions
@@ -264,8 +263,7 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
             if (auction.highestBidderId === userId) {
                 return <button onClick={() => onClaim(auction)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Nhận</button>;
             }
-            // Return null for other ended auctions, hiding the bottom text
-            return null;
+            return null; // Hide bottom text for other ended auctions
         }
 
         // If the auction is ongoing
@@ -273,7 +271,8 @@ const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: Auction
             return <button onClick={() => onBid(auction)} className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-1.5 px-2 rounded-md text-sm transition-colors">Đấu Giá</button>;
         }
 
-        return <span className="text-center block text-gray-400 italic">Vật phẩm của bạn</span>;
+        // Hide text for user's own items
+        return null;
     };
     
     // Renders the content for the third column (Time/Status/Action)
