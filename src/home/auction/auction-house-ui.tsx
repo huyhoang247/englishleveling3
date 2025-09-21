@@ -1,4 +1,3 @@
---- START OF FILE auction-house-ui.tsx ---
 
 import React, { useState, useEffect, useMemo, FC, memo } from 'react';
 import { Timestamp } from 'firebase/firestore';
@@ -517,4 +516,3 @@ export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
     );
 }
 
---- END OF FILE auction-house-ui.tsx ---
