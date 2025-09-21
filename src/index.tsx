@@ -65,6 +65,57 @@ const enterFullScreen = async () => {
 
 const appVersion = "1.0.1";
 
+// ==================================================================
+// THÊM MỚI: CÁC HÀM HELPER ĐỂ QUẢN LÝ CACHE
+// ==================================================================
+const ASSET_CACHE_PREFIX = 'english-leveling-assets';
+const ASSET_CACHE_NAME = `${ASSET_CACHE_PREFIX}-v${appVersion}`;
+
+// Hàm kiểm tra xem tất cả assets cần thiết đã có trong cache chưa
+async function checkAreAllAssetsCached(urls: string[]): Promise<boolean> {
+  if (!('caches' in window)) return false; // Trình duyệt không hỗ trợ Cache API
+  try {
+    const cache = await caches.open(ASSET_CACHE_NAME);
+    const cachedRequests = await cache.keys();
+    const cachedUrls = new Set(cachedRequests.map(req => req.url));
+    return urls.every(url => cachedUrls.has(new URL(url, window.location.origin).href));
+  } catch (error) {
+    console.error("Error checking asset cache:", error);
+    return false;
+  }
+}
+
+// Hàm lưu một asset vào cache
+async function cacheAsset(url: string): Promise<void> {
+    if (!('caches' in window)) return;
+    try {
+        const cache = await caches.open(ASSET_CACHE_NAME);
+        const response = await fetch(url, { mode: 'cors' });
+        if (response.ok) {
+            await cache.put(url, response);
+        } else {
+            console.warn(`Failed to fetch and cache asset: ${url}, status: ${response.status}`);
+        }
+    } catch (error) {
+        // Bỏ qua lỗi CORS nếu có, vì một số ảnh có thể không cache được nhưng game vẫn chạy
+        console.warn(`Could not cache asset ${url}:`, error);
+    }
+}
+
+// Hàm dọn dẹp các cache cũ không còn dùng đến
+async function cleanupOldCaches() {
+    if (!('caches' in window)) return;
+    try {
+        const cacheKeys = await caches.keys();
+        const cachesToDelete = cacheKeys.filter(key => key.startsWith(ASSET_CACHE_PREFIX) && key !== ASSET_CACHE_NAME);
+        await Promise.all(cachesToDelete.map(key => caches.delete(key)));
+        console.log("Old caches cleaned up.");
+    } catch (error) {
+        console.error("Error cleaning up old caches:", error);
+    }
+}
+
+
 const ModeIcon: React.FC<{ mode: DisplayMode; className?: string }> = ({ mode, className }) => {
   if (mode === 'fullscreen') { return (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" /></svg>); }
   return (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>);
@@ -104,6 +155,8 @@ const App: React.FC = () => {
   const [rememberChoice, setRememberChoice] = useState(true);
   const [isModeModalOpen, setIsModeModalOpen] = useState(false);
   const [isAnimatingStart, setIsAnimatingStart] = useState(false);
+  // THÊM MỚI: State để hiển thị thông báo cache
+  const [loadingText, setLoadingText] = useState('Authenticating');
 
   const isInitialAuthCheck = useRef(true);
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
@@ -125,46 +178,36 @@ const App: React.FC = () => {
     }
   }, [loadingStep]);
 
-  // --- THAY ĐỔI 1: Hàm handleAuthChange được đơn giản hóa, chỉ cập nhật state ---
-  // Logic kiểm tra DB đã được chuyển vào useEffect bên dưới để chạy song song.
+  // --- THAY ĐỔI: Hàm handleAuthChange chỉ cập nhật state ---
   const handleAuthChange = (user: User | null) => {
     setCurrentUser(user);
-    setLoadingStep(user ? 'downloading' : 'ready');
+    if (user) {
+        setLoadingText('Verifying assets'); // Cập nhật text
+        setLoadingStep('downloading');
+    } else {
+        setLoadingStep('ready');
+    }
   };
 
-  // --- THAY ĐỔI 2: Cập nhật useEffect để chạy xác thực nền song song với timer ---
+  // --- THAY ĐỔI: Cập nhật useEffect để chạy xác thực nền song song với timer ---
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      // Chỉ áp dụng logic chờ cho lần kiểm tra đầu tiên khi mở app
       if (isInitialAuthCheck.current) {
         isInitialAuthCheck.current = false;
-
         const processInitialAuth = async () => {
           const startTime = Date.now();
-
-          // 1. Bắt đầu xử lý nghiệp vụ (kiểm tra DB) ngay lập tức.
           if (user) {
             await ensureUserDocumentExists(user);
           }
-
-          // 2. Tính toán thời gian đã trôi qua.
           const elapsedTime = Date.now() - startTime;
-          
-          // 3. Đảm bảo màn hình loading hiển thị ít nhất 1.5 giây.
-          // Nếu nghiệp vụ chạy nhanh hơn 1.5s, chờ thêm cho đủ.
           const remainingDelay = 1500 - elapsedTime;
           if (remainingDelay > 0) {
             await new Promise(resolve => setTimeout(resolve, remainingDelay));
           }
-
-          // 4. Chuyển sang bước tiếp theo
           handleAuthChange(user);
         };
-
         processInitialAuth();
-
       } else {
-        // Với các lần thay đổi auth sau (đăng xuất, v.v.), cập nhật ngay lập tức.
         handleAuthChange(user);
       }
     });
@@ -178,16 +221,36 @@ const App: React.FC = () => {
     if (mode === 'fullscreen') await enterFullScreen();
   };
 
+  // --- THAY ĐỔI LỚN: Logic tải và cache tài nguyên ---
   useEffect(() => {
     if (loadingStep !== 'downloading' || !currentUser) return;
     let isCancelled = false;
-    async function preloadAssets() {
-      const totalAssets = allImageUrls.length;
-      for (let i = 0; i < totalAssets; i++) {
-        if (isCancelled) return;
-        await preloadImage(allImageUrls[i]);
-        setLoadingProgress(Math.round(((i + 1) / totalAssets) * 100));
+
+    async function preloadAndCacheAssets() {
+      // 1. Kiểm tra xem cache đã hợp lệ chưa
+      const isCacheValid = await checkAreAllAssetsCached(allImageUrls);
+      
+      if (isCacheValid) {
+        console.log("All assets are already cached. Skipping download.");
+        setLoadingText("Assets loaded from cache");
+        setLoadingProgress(100);
+        // Chờ một chút để người dùng thấy thông báo rồi chuyển bước
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } else {
+        console.log("Cache is outdated or incomplete. Starting download...");
+        setLoadingText("Downloading assets");
+        await cleanupOldCaches(); // Dọn dẹp cache cũ trước khi tải mới
+
+        // 2. Nếu cache không hợp lệ, tiến hành download và cache
+        const totalAssets = allImageUrls.length;
+        for (let i = 0; i < totalAssets; i++) {
+          if (isCancelled) return;
+          await cacheAsset(allImageUrls[i]); // Thay preloadImage bằng cacheAsset
+          setLoadingProgress(Math.round(((i + 1) / totalAssets) * 100));
+        }
       }
+
+      // 3. Sau khi hoàn tất, chuyển sang bước tiếp theo
       if (!isCancelled) {
         const savedMode = localStorage.getItem('displayMode') as DisplayMode | null;
          if (savedMode) {
@@ -197,7 +260,8 @@ const App: React.FC = () => {
          }
       }
     }
-    preloadAssets();
+
+    preloadAndCacheAssets();
     return () => { isCancelled = true; };
   }, [loadingStep, currentUser]);
   
@@ -229,7 +293,7 @@ const App: React.FC = () => {
   if (loadingStep === 'authenticating' || loadingStep === 'downloading') {
     const isAuthenticating = loadingStep === 'authenticating';
     const progress = isAuthenticating ? authLoadProgress : loadingProgress;
-    const text = isAuthenticating ? 'Authenticating' : 'Downloading assets';
+    const text = isAuthenticating ? 'Authenticating' : loadingText; // Sử dụng state loadingText
     return (
       <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
         <div className="w-full flex flex-col items-center px-4">
@@ -249,7 +313,7 @@ const App: React.FC = () => {
     );
   }
 
-  if (!currentUser) { return <AuthComponent appVersion={appVersion} />; } // prop logoFloating không còn cần thiết
+  if (!currentUser) { return <AuthComponent appVersion={appVersion} />; }
 
   if (loadingStep === 'selecting_mode' || (loadingStep === 'launching' && isAnimatingStart)) {
     const ModeSelectionModal: React.FC<{ onSelect: (mode: DisplayMode) => void, onClose: () => void, currentMode: DisplayMode }> = ({ onSelect, onClose, currentMode }) => {
