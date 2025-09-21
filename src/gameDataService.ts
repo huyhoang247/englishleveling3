@@ -1,4 +1,4 @@
-// --- START OF FILE gameDataService.ts (MODIFIED) ---
+// --- START OF FILE gameDataService.ts ---
 
 import { db } from './firebase';
 import { 
@@ -40,8 +40,6 @@ export interface UserGameData {
   lastCheckIn?: Timestamp;
   loginStreak?: number;
 }
-
-// <<<--- VocabularyItem interface ĐÃ ĐƯỢỢC XÓA KHỎI ĐÂY
 
 
 /**
@@ -110,7 +108,6 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
   }
 };
 
-// <<<--- HÀM fetchEquipmentScreenData ĐÃ ĐƯỢC CHUYỂN SANG equipment-service.ts --->
 
 /**
  * Lấy dữ liệu cần thiết cho màn hình Kỹ năng.
@@ -127,7 +124,6 @@ export const fetchSkillScreenData = async (userId: string) => {
   };
 };
 
-// <<<--- HÀM fetchBossBattlePrerequisites ĐÃ ĐƯỢC DI CHUYỂN SANG boss-battle-service.ts --->
 
 export const updateUserCoins = async (userId: string, amount: number): Promise<number> => {
   if (!userId) throw new Error("User ID is required.");
@@ -191,7 +187,6 @@ export const updateUserPickaxes = async (userId: string, newTotal: number): Prom
     return finalAmount;
 };
 
-// <<<--- HÀM upgradeUserStats ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
 
 export const updateUserSkills = async (userId: string, updates: { newOwned: OwnedSkill[]; newEquippedIds: (string | null)[]; goldChange: number; booksChange: number; }) => {
     const userDocRef = doc(db, 'users', userId);
@@ -211,22 +206,6 @@ export const updateUserSkills = async (userId: string, updates: { newOwned: Owne
         return { newCoins, newBooks };
     });
 };
-
-// <<<--- HÀM updateUserInventory ĐÃ ĐƯỢC CHUYỂN SANG equipment-service.ts --->
-
-// --- HÀM processGemToCoinExchange ĐÃ ĐƯỢC XÓA KHỎI ĐÂY ---
-
-// --- HÀM processShopPurchase ĐÃ ĐƯỢC CHUYỂN SANG shop-service.ts ---
-
-// --- HÀM CHO ĐIỂM DANH HÀNG NGÀY ĐÃ ĐƯỢC CHUYỂN SANG checkInService.ts ---
-
-// <<<--- CÁC HÀM VỀ VOCABULARY ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
-
-// <<<--- HÀM fetchAndSyncVocabularyData ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
-
-// <<<--- HÀM updateAchievementData ĐÃ ĐƯỢC XÓA KHỎI ĐÂY --->
-
-// <<<--- AUCTION HOUSE SERVICE FUNCTIONS REMOVED FROM HERE --->
 
 
 // --- START: ADMIN PANEL SERVICE FUNCTIONS ---
@@ -317,4 +296,5 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
   });
 };
 // --- END: ADMIN PANEL SERVICE FUNCTIONS ---
-// --- END OF FILE gameDataService.ts (MODIFIED) ---
+
+// --- END OF FILE gameDataService.ts ---
