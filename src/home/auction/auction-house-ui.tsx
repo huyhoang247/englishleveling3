@@ -242,6 +242,86 @@ const ViewAuctionDetailModal = memo(({ auction, onClose, userId }: { auction: Au
 });
 // --- END: VIEW-ONLY DETAIL MODAL ---
 
+// --- START: BIDDING MODAL (NEW) ---
+const BidModal = memo(({ auction, onClose, onPlaceBid, userCoins, isProcessing }: { auction: AuctionItem, onClose: () => void, onPlaceBid: (amount: number) => void, userCoins: number, isProcessing: boolean }) => {
+    const itemDef = getItemDefinition(auction.item.itemId);
+    
+    // Calculate the minimum next bid. A common rule is current bid + 5%, but at least 1.
+    const minNextBid = auction.currentBid + Math.max(1, Math.round(auction.currentBid * 0.05));
+    const [bidAmount, setBidAmount] = useState(minNextBid);
+
+    if (!itemDef) { onClose(); return null; }
+
+    const handleIncrement = (value: number) => {
+        setBidAmount(prev => Math.min(prev + value, userCoins));
+    };
+    
+    const handleDecrement = (value: number) => {
+        setBidAmount(prev => Math.max(minNextBid, prev - value));
+    };
+
+    const hasEnoughCoins = userCoins >= bidAmount;
+    const isBidTooLow = bidAmount <= auction.currentBid;
+    const canBid = hasEnoughCoins && !isBidTooLow && !isProcessing;
+
+    const quickAddValues = [100, 1000, 10000, 100000];
+
+    return (
+        <div className="fixed inset-0 flex items-center justify-center z-[70] p-4">
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+            <div className={`relative bg-gradient-to-br ${getRarityGradient(itemDef.rarity)} p-5 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-2xl w-full max-w-md z-50`}>
+                <div className="flex justify-between items-start mb-4">
+                    <h3 className={`text-xl font-bold ${getRarityTextColor(itemDef.rarity)}`}>Đặt giá cho: {itemDef.name}</h3>
+                    <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
+                </div>
+                
+                <div className="space-y-4">
+                     <div className="flex items-center gap-4 p-3 bg-black/20 rounded-lg border border-slate-700/50">
+                        <div className={`relative w-16 h-16 flex-shrink-0 bg-black/30 rounded-md border ${getRarityColor(itemDef.rarity)} flex items-center justify-center p-1`}>
+                            <img src={itemDef.icon} alt={itemDef.name} className="w-full h-full object-contain" />
+                            <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">Lv.{auction.item.level}</span>
+                        </div>
+                        <div className="flex-grow text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Giá hiện tại:</span>
+                                <span className="font-bold text-yellow-400 flex items-center gap-1"><CoinIcon className="w-4 h-4"/>{auction.currentBid.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between mt-1">
+                                <span className="text-slate-400">Vàng của bạn:</span>
+                                <span className="font-bold text-slate-200 flex items-center gap-1"><CoinIcon className="w-4 h-4"/>{userCoins.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                        <label className="block text-sm font-medium text-slate-300 mb-2 text-center">Giá bạn đặt</label>
+                        <div className="flex items-center justify-center gap-2">
+                             <button onClick={() => handleDecrement(quickAddValues[0])} className="w-10 h-10 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded-md text-white font-bold text-xl transition-colors">-</button>
+                             <div className={`flex-grow text-center text-2xl font-bold py-2 rounded-md bg-black/40 border ${isBidTooLow || !hasEnoughCoins ? 'border-red-500 text-red-400' : 'border-cyan-500 text-white'}`}>
+                                 {bidAmount.toLocaleString()}
+                             </div>
+                             <button onClick={() => handleIncrement(quickAddValues[0])} className="w-10 h-10 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded-md text-white font-bold text-xl transition-colors">+</button>
+                        </div>
+                         <div className="grid grid-cols-4 gap-2 mt-3">
+                             {quickAddValues.map(val => (
+                                 <button key={val} onClick={() => handleIncrement(val)} className="py-1.5 bg-slate-700/70 hover:bg-slate-600 text-white text-xs font-semibold rounded-md transition-colors">+{val.toLocaleString()}</button>
+                             ))}
+                        </div>
+                    </div>
+                     <div className="text-center h-5">
+                        {!hasEnoughCoins && <p className="text-xs text-red-400">Bạn không đủ vàng.</p>}
+                        {hasEnoughCoins && isBidTooLow && <p className="text-xs text-red-400">Giá đặt phải cao hơn {auction.currentBid.toLocaleString()}.</p>}
+                    </div>
+                    <button onClick={() => onPlaceBid(bidAmount)} disabled={!canBid} className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3 rounded-lg shadow-lg hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100">
+                        {isProcessing ? 'Đang xử lý...' : 'Xác nhận Đặt Giá'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+});
+// --- END: BIDDING MODAL ---
+
 // --- START: REFACTORED AuctionCard Component ---
 const AuctionCard: FC<{ auction: AuctionItem; userId: string; onBid: (a: AuctionItem) => void; onClaim: (a: AuctionItem) => void; onReclaim: (a: AuctionItem) => void; onViewDetails: (a: AuctionItem) => void; }> = ({ auction, userId, onBid, onClaim, onReclaim, onViewDetails }) => {
     const itemDef = getItemDefinition(auction.item.itemId);
@@ -440,6 +520,7 @@ export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState<{type: 'error' | 'success', text: string} | null>(null);
     const [selectedAuction, setSelectedAuction] = useState<AuctionItem | null>(null);
+    const [biddingOnAuction, setBiddingOnAuction] = useState<AuctionItem | null>(null); // State for new bid modal
     
     useEffect(() => {
         if (!userId) return;
@@ -474,19 +555,25 @@ export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
         } finally { setIsLoading(false); }
     };
     
+    // Opens the bid modal
     const handleBid = (auction: AuctionItem) => {
         if (!userId) {
             setMessage({ type: 'error', text: 'Bạn phải đăng nhập để đấu giá.' });
             return;
         }
-        const bidAmountStr = prompt(`Giá hiện tại: ${auction.currentBid.toLocaleString()}. Nhập giá của bạn:`);
-        if (bidAmountStr) {
-            const bidAmount = parseInt(bidAmountStr, 10);
-            if (!isNaN(bidAmount) && bidAmount > 0) {
-                handleAction(() => placeBidOnAuction(userId, userName, auction.id, bidAmount), "Đặt giá thành công!");
-            } else { setMessage({ type: 'error', text: 'Giá đặt không hợp lệ.' }); }
-        }
+        setBiddingOnAuction(auction);
     };
+
+    // Called from the bid modal to execute the bid
+    const handleConfirmBid = (auctionId: string, bidAmount: number) => {
+        if (!userId) return;
+        handleAction(
+            () => placeBidOnAuction(userId, userName, auctionId, bidAmount), 
+            "Đặt giá thành công!"
+        );
+        setBiddingOnAuction(null); // Close modal after action
+    };
+
 
     if (!userId) return <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"> <div className="bg-slate-800 p-8 rounded-lg text-white text-center border border-red-500"> <p className="text-lg">Lỗi: Không tìm thấy người dùng.</p> <p className="text-sm text-slate-400">Vui lòng đăng nhập lại và thử lại.</p> <button onClick={onClose} className="mt-6 bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg font-bold transition-colors">Đóng</button> </div> </div>;
 
@@ -496,6 +583,15 @@ export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
             {isLoading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-[101]"><div className="text-white text-xl animate-pulse">Đang xử lý...</div></div>}
             
             {selectedAuction && <ViewAuctionDetailModal auction={selectedAuction} onClose={() => setSelectedAuction(null)} userId={userId} />}
+            {biddingOnAuction && (
+                <BidModal 
+                    auction={biddingOnAuction}
+                    onClose={() => setBiddingOnAuction(null)}
+                    onPlaceBid={(amount) => handleConfirmBid(biddingOnAuction.id, amount)}
+                    userCoins={coins}
+                    isProcessing={isLoading}
+                />
+            )}
 
             <div className="w-full h-full bg-gradient-to-br from-slate-900 to-[#110f21] flex flex-col">
                 <AuctionHeader onClose={onClose} userCoins={coins} userGems={gems} />
