@@ -101,19 +101,26 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose }: { balance: number; onEnt
                     {rooms.map(room => {
                         const isAffordable = balance >= room.minBalance;
                         return (
-                            <div key={room.id} className={`rounded-xl border-2 transition-all duration-300 ${isAffordable ? 'border-slate-600 hover:border-cyan-400 hover:scale-[1.03]' : 'border-slate-700'}`}>
+                            <div 
+                                key={room.id} 
+                                className={`rounded-xl border-2 transition-all duration-300 ${isAffordable ? 'border-slate-600 hover:border-cyan-400 hover:scale-[1.03] cursor-pointer' : 'border-slate-700 cursor-not-allowed'}`}
+                                onClick={() => isAffordable && onEnterRoom(room.id)}
+                            >
                                <div className={`relative p-6 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
                                     <div className="flex items-center justify-between">
                                         <span className={`inline-block bg-slate-800 ${room.color} text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
                                             {room.name}
                                         </span>
-                                        <button
-                                            onClick={() => onEnterRoom(room.id)}
-                                            disabled={!isAffordable}
-                                            className="bg-cyan-600 text-white font-bold px-5 py-2 rounded-lg text-sm uppercase tracking-wider transition-all duration-200 hover:enabled:bg-cyan-500 hover:enabled:shadow-lg hover:enabled:shadow-cyan-500/20 focus:outline-none focus:ring-4 focus:ring-cyan-500/50 disabled:bg-slate-700 disabled:cursor-not-allowed disabled:text-slate-400"
-                                        >
-                                            {isAffordable ? 'Chơi' : 'Khóa'}
-                                        </button>
+                                        {/* --- NEW STATUS TAGS --- */}
+                                        {isAffordable ? (
+                                            <span className="px-2.5 py-1 text-xs font-bold bg-green-500/20 text-green-300 rounded-full border border-green-500/40">
+                                                Sẵn sàng
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold bg-slate-800 text-slate-400 rounded-full border border-slate-700">
+                                                🔒 Khóa
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="mt-auto pt-4 flex items-center gap-6">
                                         <div>
