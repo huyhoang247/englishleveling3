@@ -96,7 +96,7 @@ const DailyCheckInView = () => {
       <div className="flex-1 overflow-y-auto pb-4 hide-scrollbar">
         <div className="pb-6">
           <div className="grid grid-cols-1 gap-4">
-            {/* --- SỬA ĐỔI TOÀN BỘ Ô PHẦN THƯỞNG MỐC STREAK --- */}
+            {/* --- Ô PHẦN THƯỞNG MỐC STREAK --- */}
             {nextStreakGoal && (
                 <div className="group relative rounded-xl overflow-hidden bg-slate-800 border border-slate-700 shadow-lg p-4">
                     <div className="flex items-center gap-4">
@@ -107,8 +107,14 @@ const DailyCheckInView = () => {
                         </div>
                         <div className="flex-1">
                             <div className="mb-2 flex items-center gap-3">
-                                <div className="w-full h-2.5 bg-slate-700/50 rounded-full overflow-hidden">
-                                    <div className="h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" style={{ width: `${(loginStreak / nextStreakGoal.streakGoal) * 100}%` }}></div>
+                                {/* --- SỬA ĐỔI THANH PROGRESS BAR TẠI ĐÂY --- */}
+                                <div className="w-full h-2.5 bg-slate-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
+                                    <div 
+                                        className="relative h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" 
+                                        style={{ width: `${(loginStreak / nextStreakGoal.streakGoal) * 100}%` }}
+                                    >
+                                        <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-full"></div>
+                                    </div>
                                 </div>
                                 <div className="bg-slate-900/50 border border-slate-700 rounded-md px-2 py-0.5 flex items-baseline">
                                     <span className="text-base font-bold text-white">{loginStreak}</span>
