@@ -83,56 +83,64 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
 // --- COMPONENT: LobbyScreen ---
 const LobbyScreen = ({ balance, onEnterRoom }: { balance: number; onEnterRoom: (roomId: number) => void; }) => {
     return (
-        <div className="flex flex-col items-center justify-start h-full w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans p-4 pt-16 md:pt-12 overflow-y-auto">
-            <div className="text-center mb-8">
+        // The main container is now a flex column that takes full height and prevents its own overflow.
+        <div className="flex flex-col h-full w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans overflow-hidden">
+            {/* --- Static Header Part --- */}
+            {/* This part is not scrollable. It takes its natural height. */}
+            <div className="text-center pt-16 md:pt-12 px-4 shrink-0">
                 <h1 className="text-4xl md:text-6xl font-bold font-lilita uppercase tracking-wider text-cyan-300 drop-shadow-[0_0_10px_rgba(100,220,255,0.6)]">
                     Casino Royale
                 </h1>
                 <p className="text-slate-400 mt-2">Hãy chọn phòng để thử vận may của bạn!</p>
-                 <div className="mt-6 bg-slate-800/50 p-3 rounded-lg inline-flex items-center gap-2">
+                 <div className="mt-6 mb-8 bg-slate-800/50 p-3 rounded-lg inline-flex items-center gap-2">
                     <p className="text-sm text-slate-400">SỐ DƯ CỦA BẠN:</p>
                     <p className="text-xl font-bold text-green-400">{balance.toLocaleString()}</p>
                     <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-5 h-5" />
                 </div>
             </div>
 
-            <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {rooms.map(room => {
-                    const isAffordable = balance >= room.minBalance;
-                    return (
-                        <div key={room.id} className={`rounded-xl border-2 transition-all duration-300 ${isAffordable ? 'border-slate-600 hover:border-cyan-400 hover:scale-[1.03]' : 'border-slate-700'}`}>
-                           <div className={`relative p-6 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
-                                <div className="flex items-center justify-between">
-                                    <span className={`inline-block bg-slate-800 ${room.color} text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
-                                        {room.name}
-                                    </span>
-                                    <button
-                                        onClick={() => onEnterRoom(room.id)}
-                                        disabled={!isAffordable}
-                                        className="bg-cyan-600 text-white font-bold px-5 py-2 rounded-lg text-sm uppercase tracking-wider transition-all duration-200 hover:enabled:bg-cyan-500 hover:enabled:shadow-lg hover:enabled:shadow-cyan-500/20 focus:outline-none focus:ring-4 focus:ring-cyan-500/50 disabled:bg-slate-700 disabled:cursor-not-allowed disabled:text-slate-400"
-                                    >
-                                        {isAffordable ? 'Chơi' : 'Khóa'}
-                                    </button>
-                                </div>
-                                <div className="mt-auto pt-4 flex items-center gap-6">
-                                    <div>
-                                        <div className="text-xs text-slate-400 uppercase font-semibold">Cược</div>
-                                        <div className="font-bold text-white text-lg">{room.baseBet.toLocaleString()}+</div>
+            {/* --- Scrollable Content Part --- */}
+            {/* `flex-1` makes this div take all remaining vertical space. */}
+            {/* `overflow-y-auto` adds a scrollbar ONLY to this div if its content overflows. */}
+            <div className="flex-1 overflow-y-auto px-4 pb-4">
+                <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {rooms.map(room => {
+                        const isAffordable = balance >= room.minBalance;
+                        return (
+                            <div key={room.id} className={`rounded-xl border-2 transition-all duration-300 ${isAffordable ? 'border-slate-600 hover:border-cyan-400 hover:scale-[1.03]' : 'border-slate-700'}`}>
+                               <div className={`relative p-6 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
+                                    <div className="flex items-center justify-between">
+                                        <span className={`inline-block bg-slate-800 ${room.color} text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
+                                            {room.name}
+                                        </span>
+                                        <button
+                                            onClick={() => onEnterRoom(room.id)}
+                                            disabled={!isAffordable}
+                                            className="bg-cyan-600 text-white font-bold px-5 py-2 rounded-lg text-sm uppercase tracking-wider transition-all duration-200 hover:enabled:bg-cyan-500 hover:enabled:shadow-lg hover:enabled:shadow-cyan-500/20 focus:outline-none focus:ring-4 focus:ring-cyan-500/50 disabled:bg-slate-700 disabled:cursor-not-allowed disabled:text-slate-400"
+                                        >
+                                            {isAffordable ? 'Chơi' : 'Khóa'}
+                                        </button>
                                     </div>
-                                    <div>
-                                        <div className="text-xs text-slate-400 uppercase font-semibold">Cần</div>
-                                        <div className="font-bold text-white text-lg flex items-center gap-1.5">
-                                            {room.minBalance.toLocaleString()}
-                                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4" />
+                                    <div className="mt-auto pt-4 flex items-center gap-6">
+                                        <div>
+                                            <div className="text-xs text-slate-400 uppercase font-semibold">Cược</div>
+                                            <div className="font-bold text-white text-lg">{room.baseBet.toLocaleString()}+</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-slate-400 uppercase font-semibold">Cần</div>
+                                            <div className="font-bold text-white text-lg flex items-center gap-1.5">
+                                                {room.minBalance.toLocaleString()}
+                                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4" />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                           </div>
-                        </div>
-                    );
-                })}
+                               </div>
+                            </div>
+                        );
+                    })}
+                </div>
+                <footer className="text-center text-slate-500 mt-12 text-sm">Tạo bởi Gemini. Chỉ mang tính chất giải trí.</footer>
             </div>
-             <footer className="text-center text-slate-500 mt-12 text-sm">Tạo bởi Gemini. Chỉ mang tính chất giải trí.</footer>
         </div>
     );
 };
