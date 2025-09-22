@@ -27,16 +27,32 @@ const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => 
     );
 };
 
+// --- ICON MỚI ---
+const MasteryIcon = ({ className }: { className?: string }) => (
+    <img 
+        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets/images/mastery-icon.webp" 
+        alt="Mastery Icon" 
+        className={className} 
+        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+    />
+);
+
+
 const symbols = ['🍒', '🍋', '🍊', '🍉', '🔔', '⭐', '💎', '7️⃣'];
 const REEL_ITEM_COUNT = 30;
 const basePayouts = { '💎💎💎': 80, '⭐⭐⭐': 60, '🔔🔔🔔': 40, '🍉🍉🍉': 20, '🍊🍊🍊': 15, '🍋🍋🍋': 10, '🍒🍒🍒': 5 };
 
+// --- CẤU HÌNH PHÒNG CHƠI MỚI ---
 const rooms = [
-    { id: 1, name: 'Floor 1', minBalance: 0, baseBet: 10, betStep: 10, initialJackpot: 10000, payoutMultiplier: 1, bgGradient: 'from-orange-900/50 to-slate-900' },
-    { id: 2, name: 'Floor 2', minBalance: 5000, baseBet: 100, betStep: 50, initialJackpot: 100000, payoutMultiplier: 10, bgGradient: 'from-slate-800/50 to-slate-900' },
-    { id: 3, name: 'Floor 3', minBalance: 50000, baseBet: 1000, betStep: 500, initialJackpot: 1000000, payoutMultiplier: 100, bgGradient: 'from-yellow-900/50 to-slate-900' },
-    { id: 4, name: 'Floor 4', minBalance: 500000, baseBet: 10000, betStep: 1000, initialJackpot: 10000000, payoutMultiplier: 1000, bgGradient: 'from-cyan-800/50 to-slate-900' }
+    { id: 1, name: 'Floor 1', minMastery: 10, baseBet: 10, maxBet: 100, betStep: 10, initialJackpot: 10000, payoutMultiplier: 1, bgGradient: 'from-orange-900/50 to-slate-900' },
+    { id: 2, name: 'Floor 2', minMastery: 50, baseBet: 50, maxBet: 500, betStep: 50, initialJackpot: 50000, payoutMultiplier: 5, bgGradient: 'from-slate-800/50 to-slate-900' },
+    { id: 3, name: 'Floor 3', minMastery: 100, baseBet: 100, maxBet: 1000, betStep: 100, initialJackpot: 100000, payoutMultiplier: 10, bgGradient: 'from-yellow-900/50 to-slate-900' },
+    { id: 4, name: 'Floor 4', minMastery: 500, baseBet: 500, maxBet: 5000, betStep: 500, initialJackpot: 500000, payoutMultiplier: 50, bgGradient: 'from-cyan-800/50 to-slate-900' },
+    { id: 5, name: 'Floor 5', minMastery: 1000, baseBet: 1000, maxBet: 10000, betStep: 1000, initialJackpot: 1000000, payoutMultiplier: 100, bgGradient: 'from-purple-800/50 to-slate-900' },
+    { id: 6, name: 'Floor 6', minMastery: 5000, baseBet: 5000, maxBet: 50000, betStep: 5000, initialJackpot: 5000000, payoutMultiplier: 500, bgGradient: 'from-red-800/50 to-slate-900' },
+    { id: 7, name: 'Floor 7', minMastery: 10000, baseBet: 10000, maxBet: 100000, betStep: 10000, initialJackpot: 10000000, payoutMultiplier: 1000, bgGradient: 'from-green-800/50 to-slate-900' }
 ];
+
 const generatePayouts = (multiplier: number) => { const newPayouts: { [key: string]: number } = {}; for (const key in basePayouts) { newPayouts[key] = basePayouts[key as keyof typeof basePayouts] * multiplier; } return newPayouts; };
 rooms.forEach(room => { (room as any).payouts = generatePayouts(room.payoutMultiplier); });
 // @ts-ignore
@@ -121,7 +137,7 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount
             <div className="flex-1 overflow-y-auto px-4 py-8">
                 <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {rooms.map(room => {
-                        const isAffordable = balance >= room.minBalance;
+                        const isAffordable = masteryCount >= room.minMastery; // <-- THAY ĐỔI: Check mastery thay vì balance
                         return (
                             <div
                                 key={room.id}
@@ -153,9 +169,10 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount
                                         </div>
                                         <div>
                                             <div className="text-xs text-slate-400 uppercase font-semibold">Cần</div>
+                                            {/* --- THAY ĐỔI: Hiển thị yêu cầu Mastery --- */}
                                             <div className="font-bold text-white text-lg flex items-center gap-1.5">
-                                                {room.minBalance.toLocaleString()}
-                                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4" />
+                                                {room.minMastery.toLocaleString()}
+                                                <MasteryIcon className="w-4 h-4" />
                                             </div>
                                         </div>
                                     </div>
@@ -191,29 +208,16 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate
     
     const animatedBalance = useAnimateValue(balance, 500);
 
-    // Loại bỏ localBalance và dùng trực tiếp 'balance' từ prop để đảm bảo đồng bộ
-    // const [localBalance, setLocalBalance] = useState(balance);
-    // useEffect(() => { setLocalBalance(balance); }, [balance]);
-
     const handleSpin = () => {
         if (spinning || balance < bet) return;
-
-        // --- THAY ĐỔI QUAN TRỌNG 1 ---
-        // Cập nhật giao diện (trừ tiền) ngay lập tức
         setCoins(prev => prev - bet);
-        
         const contribution = Math.ceil(bet * 0.1);
         onJackpotUpdate(room.id, jackpot + contribution);
-        
-        // Không cần setLocalBalance nữa
-        // setLocalBalance(prev => prev - bet);
-
         setSpinning(true);
         setMessage('Vòng quay đang diễn ra...');
         setWinnings(0);
         setWinningLine([false, false, false]);
         finishedReelsCount.current = 0;
-
         setReelsResult(Math.random() < 0.01 ? ['7️⃣', '7️⃣', '7️⃣'] : Array.from({ length: 3 }, () => symbols[Math.floor(Math.random() * symbols.length)]));
     };
 
@@ -251,30 +255,33 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate
 
             if (isWin) {
                 setWinnings(winAmount);
-                // --- THAY ĐỔI QUAN TRỌNG 2 ---
-                // Cập nhật giao diện (cộng tiền thắng) ngay lập tức
                 setCoins(prev => prev + winAmount);
             }
             setMessage(winMessage);
-            // Gửi net delta lên server để đồng bộ hóa trong nền
             const netDelta = winAmount - bet;
             onGameEnd(netDelta);
         }
     }, [reelsResult, bet, jackpot, room, onGameEnd, onJackpotUpdate, setCoins]);
 
     const handleBetChange = (amount: number) => {
-        setBet(prev => {
-            const newBet = prev + amount;
-            if (newBet >= room.baseBet && newBet <= balance) return newBet;
-            if (newBet > balance) return balance;
-            return prev;
-        });
+        // Nút bấm đã có logic disabled nên hàm này chỉ cần cộng trừ
+        setBet(prev => prev + amount);
     };
+
+    // --- THAY ĐỔI: Logic useEffect để điều chỉnh mức cược ---
     useEffect(() => {
-        // Luôn đảm bảo bet không vượt quá số dư
-        if (bet > balance) setBet(balance > room.baseBet ? balance : room.baseBet);
-        if (balance < room.baseBet && balance > 0) setBet(balance);
-    }, [balance, bet, room.baseBet]);
+        // Điều chỉnh cược nếu nó không hợp lệ do số dư thay đổi hoặc khi vào phòng
+        setBet(currentBet => {
+            const maxAllowed = Math.min(balance, room.maxBet);
+            // Nếu không đủ tiền cược mức tối thiểu, đặt cược bằng toàn bộ số dư
+            if (balance < room.baseBet) {
+                return balance;
+            }
+            // Ngược lại, kẹp giá trị cược trong khoảng hợp lệ [min, max]
+            return Math.max(room.baseBet, Math.min(currentBet, maxAllowed));
+        });
+    }, [balance, room.baseBet, room.maxBet]);
+
 
     return (
         <div className="flex flex-col h-full w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans transition-all duration-500">
@@ -312,12 +319,18 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate
 
                     <div className="flex justify-center text-center items-center mb-6">
                         <div className="bg-slate-900/50 p-3 rounded-lg">
-                            <p className="text-sm text-slate-400">MỨC CƯỢC</p><div className="flex items-center justify-center gap-4"><button onClick={() => handleBetChange(-room.betStep)} disabled={spinning || bet <= room.baseBet} className="px-2 py-0.5 bg-red-600 rounded-md disabled:opacity-50">-</button><p className="text-xl md:text-2xl font-bold text-yellow-400">{bet.toLocaleString()}</p><button onClick={() => handleBetChange(room.betStep)} disabled={spinning || balance < bet + room.betStep} className="px-2 py-0.5 bg-green-600 rounded-md disabled:opacity-50">+</button></div>
+                            <p className="text-sm text-slate-400">MỨC CƯỢC</p>
+                            <div className="flex items-center justify-center gap-4">
+                                {/* --- THAY ĐỔI: Logic disabled cho nút cược --- */}
+                                <button onClick={() => handleBetChange(-room.betStep)} disabled={spinning || bet <= room.baseBet} className="px-2 py-0.5 bg-red-600 rounded-md disabled:opacity-50">-</button>
+                                <p className="text-xl md:text-2xl font-bold text-yellow-400">{bet.toLocaleString()}</p>
+                                <button onClick={() => handleBetChange(room.betStep)} disabled={spinning || bet + room.betStep > room.maxBet || balance < bet + room.betStep} className="px-2 py-0.5 bg-green-600 rounded-md disabled:opacity-50">+</button>
+                            </div>
                         </div>
                     </div>
 
                     <div className="flex flex-col items-center justify-center mt-2">
-                        <button onClick={handleSpin} disabled={spinning || balance < bet} className="group w-36 h-20 rounded-xl bg-slate-900/60 border-2 border-cyan-500/60 backdrop-blur-sm flex flex-col items-center justify-center p-1 transition-all duration-200 hover:enabled:border-cyan-400 hover:enabled:bg-slate-900/80 hover:enabled:scale-105 active:enabled:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-cyan-500/50 disabled:cursor-not-allowed">
+                        <button onClick={handleSpin} disabled={spinning || balance < bet || bet < room.baseBet} className="group w-36 h-20 rounded-xl bg-slate-900/60 border-2 border-cyan-500/60 backdrop-blur-sm flex flex-col items-center justify-center p-1 transition-all duration-200 hover:enabled:border-cyan-400 hover:enabled:bg-slate-900/80 hover:enabled:scale-105 active:enabled:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-cyan-500/50 disabled:cursor-not-allowed">
                             {spinning ? (
                                 <div className="flex flex-col items-center font-lilita text-slate-400">
                                     <svg className="animate-spin h-6 w-6 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
