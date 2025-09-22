@@ -41,21 +41,22 @@ rooms.forEach(room => { (room as any).payouts = generatePayouts(room.payoutMulti
 // @ts-ignore
 type Room = typeof rooms[0] & { payouts: typeof basePayouts };
 
-// --- COMPONENT MỚI: JackpotTag ---
+// --- ICON MỚI: CrownIcon ---
+const CrownIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M12,16L19.36,10.27L21,12L12,21L3,12L4.64,10.27L12,16M12,4A3,3 0 0,1 15,7A3,3 0 0,1 12,10A3,3 0 0,1 9,7A3,3 0 0,1 12,4M12,2L9,5L12,8L15,5L12,2Z" />
+    </svg>
+);
+
+// --- COMPONENT ĐƯỢC THIẾT KẾ LẠI: JackpotTag ---
 const JackpotTag = ({ jackpot }: { jackpot: number; }) => {
     return (
-        <div 
-            className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/2 rotate-12 origin-bottom-left"
-            style={{ textShadow: '0px 1px 3px rgba(0,0,0,0.5)' }}
-        >
-            <div className="relative bg-gradient-to-br from-yellow-400 to-orange-500 text-slate-900 font-bold px-4 py-1.5 rounded-md shadow-lg shadow-yellow-500/20">
-                <div className="flex items-center gap-1.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 fill-current text-yellow-900/80" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-3a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" />
-                    </svg>
-                    <span className="text-lg tracking-wide">{jackpot.toLocaleString()}</span>
-                </div>
-                <div className="absolute -left-1 -bottom-1 w-3 h-3 bg-orange-600 transform rotate-45" style={{ zIndex: -1 }}></div>
+        <div className="absolute bottom-3 right-3">
+            <div className="flex items-center gap-1.5 bg-slate-900/70 backdrop-blur-sm border border-yellow-600/50 rounded-full px-3 py-1 text-yellow-300 shadow-lg shadow-black/30">
+                <CrownIcon className="w-4 h-4" />
+                <span className="text-sm font-bold tracking-wider">
+                    {jackpot.toLocaleString()}
+                </span>
             </div>
         </div>
     );
