@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for portals
 
+// --- NEW IMPORTS ---
+// !!! Chú ý: Vui lòng cập nhật đường dẫn đến file component của bạn !!!
+import HomeButton from './ui/home-button.tsx'; 
+import CoinDisplay from './ui/display/coin-display.tsx';
+
 // --- PROPS INTERFACE ---
 interface SlotMachineGameProps {
   currentCoins: number;
@@ -86,12 +91,8 @@ const LobbyScreen = ({ balance, onEnterRoom }: { balance: number; onEnterRoom: (
         // The main container is now a flex column that takes full height and prevents its own overflow.
         <div className="flex flex-col h-full w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans overflow-hidden">
             {/* --- Updated Header --- */}
-            <div className="flex items-center justify-end p-3 border-b border-slate-800 shrink-0 bg-slate-950/70 backdrop-blur-sm z-10 shadow-lg">
-                <div className="bg-slate-800/70 py-1.5 px-4 rounded-full flex items-center gap-3 border border-slate-700 shadow-md">
-                    <p className="text-sm font-bold text-slate-300 hidden sm:block">SỐ DƯ:</p>
-                    <p className="text-base md:text-lg font-bold text-green-400">{balance.toLocaleString()}</p>
-                    <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-5 h-5" />
-                </div>
+            <div className="flex items-center justify-end p-2 border-b border-slate-800 shrink-0 bg-slate-950/70 backdrop-blur-sm z-10 shadow-lg">
+                <CoinDisplay displayedCoins={balance} isStatsFullscreen={false} />
             </div>
 
             {/* --- Scrollable Content Part --- */}
@@ -321,9 +322,9 @@ export default function SlotMachineGame({ currentCoins, onGameEnd, onClose }: Sl
         <div className="fixed inset-0 bg-slate-900 z-[60]">
             <GlobalStyles />
             <div className="relative w-full h-full">
-                 <button onClick={onClose} className="absolute top-3 right-4 text-slate-400 hover:text-white transition-colors z-50 p-2 rounded-full bg-slate-800/50 hover:bg-slate-700/80" aria-label="Close">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
+                 <div className="absolute top-3 right-4 z-50">
+                    <HomeButton onClick={onClose} label="Thoát" title="Thoát trò chơi" />
+                 </div>
 
                 {currentView === 'lobby' && (
                     <LobbyScreen balance={currentCoins} onEnterRoom={handleEnterRoom} />
