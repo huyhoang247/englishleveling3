@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
 // --- THÊM MỚI: Import tài nguyên từ game-assets (thêm minerAssets) ---
@@ -26,8 +25,8 @@ export const dailyRewards = [
 
 // --- THÊM MỚI: ĐỊNH NGHĨA PHẦN THƯỞNG MỐC STREAK CHO UI ---
 export const streakMilestoneRewards = [
-    { streakGoal: 7, name: "5,000 Gold", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
-    { streakGoal: 14, name: "10,000 Gold", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
+    { streakGoal: 7, name: "Thưởng 7 Ngày", amount: 5000, icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
+    { streakGoal: 14, name: "Thưởng 14 Ngày", amount: 10000, icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
 ];
 
 // --- ĐỊNH NGHĨA TYPES ---
@@ -41,6 +40,7 @@ interface Particle {
 interface StreakMilestone {
     streakGoal: number;
     name: string;
+    amount: number;
     icon: React.ReactNode;
 }
 
