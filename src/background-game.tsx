@@ -34,7 +34,7 @@ import { useGame } from './GameContext.tsx';
 import { updateUserCoins } from './gameDataService.ts';
 
 const SystemCheckScreen = lazy(() => import('./SystemCheckScreen.tsx'));
-const SlotMachineGame = lazy(() => import('./777.tsx')); // ADDED
+const SlotMachineGame = lazy(() => import('./777.tsx'));
 
 interface GemIconProps { size?: number; color?: string; className?: string; [key: string]: any; }
 const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -76,7 +76,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     isAuctionHouseOpen,
     isCheckInOpen,
     isMailboxOpen,
-    is777GameOpen, // ADDED
+    is777GameOpen,
     ownedItems, equippedItems, refreshUserData,
     handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
     handleUpdateJackpotPool, handleStatsUpdate, getPlayerBattleStats,
@@ -91,7 +91,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     toggleCheckIn,
     toggleMailbox, 
     toggleBaseBuilding,
-    toggle777Game, // ADDED
+    toggle777Game,
   } = useGame();
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
@@ -279,15 +279,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         {is777GameOpen && (
             <ErrorBoundary fallback={<div className="fixed inset-0 bg-black/70 flex items-center justify-center text-red-400">Lỗi khi tải Slot Game.</div>}>
                 <Suspense fallback={<SuspenseLoader />}>
-                    {currentUser && <SlotMachineGame
-                        onClose={toggle777Game}
-                        currentCoins={coins}
-                        onGameEnd={async (delta) => {
-                           if (currentUser && delta !== 0) {
-                             setCoins(await updateUserCoins(currentUser.uid, delta));
-                           }
-                        }}
-                    />}
+                    {currentUser && <SlotMachineGame />}
                 </Suspense>
             </ErrorBoundary>
         )}
