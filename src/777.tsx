@@ -82,7 +82,7 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
 // --- COMPONENT: LobbyScreen ---
 const LobbyScreen = ({ balance, onEnterRoom }: { balance: number; onEnterRoom: (roomId: number) => void; }) => {
     return (
-        <div className="flex flex-col items-center justify-start h-full w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans p-4 pt-12 overflow-y-auto">
+        <div className="flex flex-col items-center justify-start h-full w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans p-4 pt-16 md:pt-12 overflow-y-auto">
             <div className="text-center mb-8">
                 <h1 className="text-4xl md:text-6xl font-bold font-lilita uppercase tracking-wider text-cyan-300 drop-shadow-[0_0_10px_rgba(100,220,255,0.6)]">
                     Casino Royale
@@ -229,7 +229,7 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate
     }, [localBalance, bet, room.baseBet]);
 
     return (
-        <div className={`flex flex-col items-center justify-start min-h-screen w-full bg-slate-900 bg-gradient-to-br ${room.bgGradient} text-white font-sans transition-all duration-500 pt-8 overflow-y-auto`}>
+        <div className={`flex flex-col items-center justify-start h-full w-full bg-slate-900 bg-gradient-to-br ${room.bgGradient} text-white font-sans transition-all duration-500 pt-16 md:pt-8 overflow-y-auto`}>
             <div className="w-full max-w-2xl flex flex-col p-6 md:p-8 relative">
                  <button onClick={onExit} className="absolute top-4 left-4 text-slate-400 hover:text-white transition-colors flex items-center gap-2 z-20">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
@@ -306,9 +306,9 @@ export default function SlotMachineGame({ currentCoins, onGameEnd, onClose }: Sl
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-2">
+        <div className="fixed inset-0 bg-slate-900 z-[60]">
             <GlobalStyles />
-            <div className="relative w-full h-full max-w-5xl bg-slate-900 rounded-xl shadow-2xl overflow-hidden border-2 border-slate-700/50">
+            <div className="relative w-full h-full">
                  <button onClick={onClose} className="absolute top-3 right-4 text-slate-400 hover:text-white transition-colors z-50 p-2 rounded-full bg-slate-800/50 hover:bg-slate-700/80" aria-label="Close">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
