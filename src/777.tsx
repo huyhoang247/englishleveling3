@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for portals
+import { useGame } from './GameContext.tsx';
+import { auth } from './firebase.js';
+import { updateUserCoins } from './gameDataService.ts';
 
 // --- NEW IMPORTS ---
 // !!! Chú ý: Vui lòng cập nhật đường dẫn đến file component của bạn !!!
@@ -7,11 +10,7 @@ import HomeButton from './ui/home-button.tsx';
 import CoinDisplay from './ui/display/coin-display.tsx';
 
 // --- PROPS INTERFACE ---
-interface SlotMachineGameProps {
-  currentCoins: number;
-  onGameEnd: (coinDelta: number) => void;
-  onClose: () => void;
-}
+// Component này không còn sử dụng props, nó lấy dữ liệu trực tiếp từ GameContext.
 
 // --- ICONS, CONFIGS & SHARED COMPONENTS ---
 
@@ -296,7 +295,10 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate
 }
 
 // --- COMPONENT CHÍNH: SlotMachineGame ---
-export default function SlotMachineGame({ currentCoins, onGameEnd, onClose }: SlotMachineGameProps) {
+export default function SlotMachineGame() {
+    const { coins, setCoins, toggle777Game } = useGame();
+    const currentUser = auth.currentUser;
+
     const [jackpotPools, setJackpotPools] = useState(() => {
         const pools: { [key: number]: number } = {};
         rooms.forEach(room => { pools[room.id] = room.initialJackpot; });
@@ -306,13 +308,14 @@ export default function SlotMachineGame({ currentCoins, onGameEnd, onClose }: Sl
     const [currentView, setCurrentView] = useState('lobby');
     const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
     
-    // State to ensure portal is only created on the client-side
     const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => { setIsMounted(true); }, []);
 
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
+    const handleGameEnd = async (delta: number) => {
+        if (currentUser && delta !== 0) {
+            setCoins(await updateUserCoins(currentUser.uid, delta));
+        }
+    };
 
     const handleEnterRoom = (roomId: number) => {
         setSelectedRoomId(roomId);
@@ -334,19 +337,19 @@ export default function SlotMachineGame({ currentCoins, onGameEnd, onClose }: Sl
             <div className="relative w-full h-full">
                 {currentView === 'lobby' && (
                     <LobbyScreen 
-                        balance={currentCoins} 
+                        balance={coins} 
                         onEnterRoom={handleEnterRoom}
-                        onClose={onClose} 
+                        onClose={toggle777Game} 
                     />
                 )}
 
                 {currentView === 'game' && selectedRoomId && (
                     <GameScreen
                         room={rooms.find(r => r.id === selectedRoomId) as Room}
-                        balance={currentCoins}
+                        balance={coins}
                         jackpot={jackpotPools[selectedRoomId]}
                         onExit={handleExitRoom}
-                        onGameEnd={onGameEnd}
+                        onGameEnd={handleGameEnd}
                         onJackpotUpdate={handleJackpotUpdate}
                     />
                 )}
