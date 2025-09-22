@@ -96,28 +96,26 @@ const DailyCheckInView = () => {
       <div className="flex-1 overflow-y-auto pb-4 hide-scrollbar">
         <div className="pb-6">
           <div className="grid grid-cols-1 gap-4">
-            {/* --- Ô PHẦN THƯỞNG MỐC STREAK (ĐÃ SỬA ĐỔI) --- */}
+            {/* --- SỬA ĐỔI TOÀN BỘ Ô PHẦN THƯỞNG MỐC STREAK --- */}
             {nextStreakGoal && (
                 <div className="group relative rounded-xl overflow-hidden bg-slate-800 border border-slate-700 shadow-lg p-4">
                     <div className="flex items-center gap-4">
-                        {/* Icon phần thưởng */}
                         <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900 shadow-lg p-1">
                             <div className="w-full h-full rounded-lg flex items-center justify-center bg-slate-800/80 backdrop-blur-sm">
                                 <div className="w-10 h-10">{nextStreakGoal.icon}</div>
                             </div>
                         </div>
-                        {/* Tên, thanh tiến trình và số lượng */}
                         <div className="flex-1">
-                            <h3 className="font-bold text-white">{nextStreakGoal.name}</h3>
-                            <div className="mt-2 w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" style={{ width: `${(loginStreak / nextStreakGoal.streakGoal) * 100}%` }}></div>
+                            <div className="mb-2 flex items-center gap-3">
+                                <div className="w-full h-2.5 bg-slate-700/50 rounded-full overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" style={{ width: `${(loginStreak / nextStreakGoal.streakGoal) * 100}%` }}></div>
+                                </div>
+                                <div className="bg-slate-900/50 border border-slate-700 rounded-md px-2 py-0.5 flex items-baseline">
+                                    <span className="text-base font-bold text-white">{loginStreak}</span>
+                                    <span className="text-xs text-slate-400 font-mono">/{nextStreakGoal.streakGoal}</span>
+                                </div>
                             </div>
-                            <p className="text-indigo-300 text-lg font-semibold mt-1.5">x{nextStreakGoal.amount.toLocaleString('en-US')}</p>
-                        </div>
-                        {/* Ô hiển thị tiến trình ngày (ví dụ: 3/7) */}
-                        <div className="ml-2 flex items-baseline justify-center bg-slate-900/50 border border-slate-700 rounded-lg w-20 h-14 p-1 shadow-inner">
-                            <span className="text-3xl font-bold text-white tracking-tighter">{loginStreak}</span>
-                            <span className="text-lg font-semibold text-slate-500 ml-0.5">/{nextStreakGoal.streakGoal}</span>
+                            <p className="text-indigo-300 text-lg font-bold">x{nextStreakGoal.amount}</p>
                         </div>
                     </div>
                 </div>
