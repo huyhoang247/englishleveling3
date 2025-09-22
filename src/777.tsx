@@ -150,7 +150,7 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 py-8">
+            <div className="flex-1 overflow-y-auto px-4 py-8 hide-scrollbar">
                 <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {rooms.map(room => {
                         const isAffordable = masteryCount >= room.minMastery;
@@ -168,13 +168,6 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount
                                         </span>
                                         <JackpotTag jackpot={jackpotPools[room.id]} />
                                     </div>
-
-                                    {/* Thẻ trạng thái khóa vẫn hiển thị ở góc */}
-                                    {!isAffordable && (
-                                        <span className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold bg-slate-800 text-slate-400 rounded-full border border-slate-700">
-                                            🔒
-                                        </span>
-                                    )}
                                     
                                     <RoomInfoPanel room={room as Room} />
                                 </div>
@@ -288,7 +281,7 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate
                     <CoinDisplay displayedCoins={animatedBalance} isStatsFullscreen={false} />
                 </div>
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto hide-scrollbar">
                 <div className="w-full max-w-2xl mx-auto flex flex-col p-6 md:p-8">
                     <div className={`text-center mb-6 p-3 rounded-xl border-4 transition-all duration-500 relative ${jackpotAnimation ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl' : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg'}`}>
                         <div className="text-yellow-200 text-base font-bold mb-1 tracking-wider">JACKPOT {room.name.toUpperCase()}</div>
@@ -419,5 +412,12 @@ const GlobalStyles = () => (
       .font-lilita { font-family: 'Lilita One', cursive; }
       @keyframes win-pulse { 0%, 100% { transform: scale(1); filter: brightness(1.5); } 50% { transform: scale(1.1); filter: brightness(1.75); } }
       .animate-win-pulse { animation: win-pulse 0.8s ease-in-out infinite; }
+      .hide-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none; /* Chrome, Safari and Opera */
+      }
     `}</style>
 );
