@@ -90,8 +90,8 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose }: { balance: number; onEnt
     return (
         <div className="flex flex-col h-full w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans overflow-hidden">
             {/* --- Updated Header with HomeButton --- */}
-            <div className="flex items-center justify-between p-2 border-b border-slate-800 shrink-0 bg-slate-950/70 backdrop-blur-sm z-10 shadow-lg">
-                <HomeButton onClick={onClose} label="Thoát" title="Thoát trò chơi"/>
+            <div className="flex items-center justify-between h-[53px] px-4 border-b border-slate-800 shrink-0 bg-slate-900 z-10">
+                <HomeButton onClick={onClose} label="" title="Thoát trò chơi"/>
                 <CoinDisplay displayedCoins={balance} isStatsFullscreen={false} />
             </div>
 
