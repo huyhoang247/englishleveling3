@@ -138,7 +138,6 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose }: { balance: number; onEnt
                         );
                     })}
                 </div>
-                <footer className="text-center text-slate-500 mt-12 text-sm">Tạo bởi Gemini. Chỉ mang tính chất giải trí.</footer>
             </div>
         </div>
     );
