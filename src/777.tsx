@@ -8,6 +8,7 @@ import { updateUserCoins } from './gameDataService.ts';
 // !!! Chú ý: Vui lòng cập nhật đường dẫn đến file component của bạn !!!
 import HomeButton from './ui/home-button.tsx';
 import CoinDisplay from './ui/display/coin-display.tsx';
+import MasteryDisplay from './ui/display/mastery-display.tsx'; // <-- IMPORT THÊM
 import { useAnimateValue } from './ui/useAnimateValue.ts';
 
 // --- PROPS INTERFACE ---
@@ -105,13 +106,16 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
 };
 
 // --- COMPONENT: LobbyScreen ---
-const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools }: { balance: number; onEnterRoom: (roomId: number) => void; onClose: () => void; jackpotPools: { [key: number]: number; }; }) => {
+const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount }: { balance: number; onEnterRoom: (roomId: number) => void; onClose: () => void; jackpotPools: { [key: number]: number; }; masteryCount: number; }) => {
     const animatedBalance = useAnimateValue(balance, 500);
     return (
         <div className="flex flex-col h-full w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans overflow-hidden">
             <div className="flex items-center justify-between h-[53px] px-4 border-b border-slate-700/50 shrink-0 bg-slate-950 z-10">
                 <HomeButton onClick={onClose} label="" title="Thoát trò chơi" />
-                <CoinDisplay displayedCoins={animatedBalance} isStatsFullscreen={false} />
+                <div className="flex items-center gap-2">
+                    <MasteryDisplay masteryCount={masteryCount} />
+                    <CoinDisplay displayedCoins={animatedBalance} isStatsFullscreen={false} />
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-8">
@@ -166,15 +170,15 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools }: { balance:
 };
 
 // --- COMPONENT: GameScreen ---
-const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate, setCoins }: {
+const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate, setCoins, masteryCount }: {
     room: Room;
     balance: number;
     jackpot: number;
     onExit: () => void;
     onGameEnd: (delta: number) => void;
     onJackpotUpdate: (roomId: number, newJackpot: number) => void;
-    // --- PROP MỚI ---
     setCoins: React.Dispatch<React.SetStateAction<number>>;
+    masteryCount: number; // <-- PROP MỚI
 }) => {
     const [reelsResult, setReelsResult] = useState(['7️⃣', '7️⃣', '7️⃣']);
     const [spinning, setSpinning] = useState(false);
@@ -279,7 +283,10 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                     Rời phòng
                 </button>
-                <CoinDisplay displayedCoins={animatedBalance} isStatsFullscreen={false} />
+                <div className="flex items-center gap-2">
+                    <MasteryDisplay masteryCount={masteryCount} />
+                    <CoinDisplay displayedCoins={animatedBalance} isStatsFullscreen={false} />
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -333,7 +340,7 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate
 
 // --- COMPONENT CHÍNH: SlotMachineGame ---
 export default function SlotMachineGame() {
-    const { coins, setCoins, toggle777Game } = useGame();
+    const { coins, setCoins, toggle777Game, masteryCards } = useGame(); // <-- LẤY THÊM masteryCards
     const currentUser = auth.currentUser;
 
     const [jackpotPools, setJackpotPools] = useState(() => {
@@ -381,6 +388,7 @@ export default function SlotMachineGame() {
                         onEnterRoom={handleEnterRoom}
                         onClose={toggle777Game}
                         jackpotPools={jackpotPools}
+                        masteryCount={masteryCards} // <-- TRUYỀN PROP
                     />
                 )}
 
@@ -392,8 +400,8 @@ export default function SlotMachineGame() {
                         onExit={handleExitRoom}
                         onGameEnd={handleGameEnd}
                         onJackpotUpdate={handleJackpotUpdate}
-                        // --- TRUYỀN PROP MỚI XUỐNG ---
                         setCoins={setCoins}
+                        masteryCount={masteryCards} // <-- TRUYỀN PROP
                     />
                 )}
             </div>
