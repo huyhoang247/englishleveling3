@@ -108,13 +108,13 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose }: { balance: number; onEnt
                             >
                                <div className={`relative p-6 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
                                     <div className="flex items-center justify-between">
-                                        <span className={`inline-block bg-slate-800 ${room.color} text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
+                                        <span className={`inline-block bg-slate-800 text-slate-300 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
                                             {room.name}
                                         </span>
                                         {/* --- NEW STATUS TAGS --- */}
                                         {isAffordable ? (
                                             <span className="px-2.5 py-1 text-xs font-bold bg-green-500/20 text-green-300 rounded-full border border-green-500/40">
-                                                Sẵn sàng
+                                                Active
                                             </span>
                                         ) : (
                                             <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold bg-slate-800 text-slate-400 rounded-full border border-slate-700">
