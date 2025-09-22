@@ -107,8 +107,8 @@ const DailyCheckInView = () => {
                         </div>
                         <div className="flex-1">
                             <div className="mb-2 flex items-center gap-3">
-                                {/* --- SỬA ĐỔI THANH PROGRESS BAR TẠI ĐÂY --- */}
-                                <div className="w-full h-2.5 bg-slate-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
+                                {/* --- SỬA ĐỔI KÍCH THƯỚC PROGRESS BAR TẠI ĐÂY --- */}
+                                <div className="w-full h-3.5 bg-slate-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
                                     <div 
                                         className="relative h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" 
                                         style={{ width: `${(loginStreak / nextStreakGoal.streakGoal) * 100}%` }}
