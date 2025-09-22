@@ -41,6 +41,26 @@ rooms.forEach(room => { (room as any).payouts = generatePayouts(room.payoutMulti
 // @ts-ignore
 type Room = typeof rooms[0] & { payouts: typeof basePayouts };
 
+// --- COMPONENT MỚI: JackpotTag ---
+const JackpotTag = ({ jackpot }: { jackpot: number; }) => {
+    return (
+        <div 
+            className="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/2 rotate-12 origin-bottom-left"
+            style={{ textShadow: '0px 1px 3px rgba(0,0,0,0.5)' }}
+        >
+            <div className="relative bg-gradient-to-br from-yellow-400 to-orange-500 text-slate-900 font-bold px-4 py-1.5 rounded-md shadow-lg shadow-yellow-500/20">
+                <div className="flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 fill-current text-yellow-900/80" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11a1 1 0 11-2 0 1 1 0 012 0zm-1-3a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" />
+                    </svg>
+                    <span className="text-lg tracking-wide">{jackpot.toLocaleString()}</span>
+                </div>
+                <div className="absolute -left-1 -bottom-1 w-3 h-3 bg-orange-600 transform rotate-45" style={{ zIndex: -1 }}></div>
+            </div>
+        </div>
+    );
+};
+
 // --- COMPONENT: Reel ---
 const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymbol: string; spinning: boolean; onSpinEnd: () => void; index: number; isWinner: boolean; }) => {
     const reelRef = useRef<HTMLDivElement>(null);
@@ -86,7 +106,7 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
 };
 
 // --- COMPONENT: LobbyScreen ---
-const LobbyScreen = ({ balance, onEnterRoom, onClose }: { balance: number; onEnterRoom: (roomId: number) => void; onClose: () => void; }) => {
+const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools }: { balance: number; onEnterRoom: (roomId: number) => void; onClose: () => void; jackpotPools: { [key: number]: number; }; }) => {
     const animatedBalance = useAnimateValue(balance, 500);
     return (
         <div className="flex flex-col h-full w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans overflow-hidden">
@@ -106,6 +126,10 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose }: { balance: number; onEnt
                                 onClick={() => isAffordable && onEnterRoom(room.id)}
                             >
                                 <div className={`relative p-6 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
+                                    
+                                    {/* THÊM JACKPOT TAG TẠI ĐÂY */}
+                                    <JackpotTag jackpot={jackpotPools[room.id]} />
+
                                     <div className="flex items-center justify-between">
                                         <span className={`inline-block bg-slate-800 text-slate-300 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
                                             {room.name}
@@ -358,6 +382,7 @@ export default function SlotMachineGame() {
                         balance={coins}
                         onEnterRoom={handleEnterRoom}
                         onClose={toggle777Game}
+                        jackpotPools={jackpotPools}
                     />
                 )}
 
