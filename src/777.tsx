@@ -267,10 +267,12 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate
                         <p className={`text-lg md:text-xl font-semibold transition-all duration-300 ${winnings > 0 ? 'text-yellow-300 animate-pulse' : 'text-slate-200'}`}>{message}</p>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4 text-center items-center mb-6">
-                        <div className="bg-slate-900/50 p-3 rounded-lg"><p className="text-sm text-slate-400">SỐ DƯ</p><p className="text-xl md:text-2xl font-bold text-green-400">{localBalance.toLocaleString()}</p></div>
-                        <div className="bg-slate-900/50 p-3 rounded-lg"><p className="text-sm text-slate-400">MỨC CƯỢC</p><div className="flex items-center justify-center gap-4"><button onClick={() => handleBetChange(-room.betStep)} disabled={spinning || bet <= room.baseBet} className="px-2 py-0.5 bg-red-600 rounded-md disabled:opacity-50">-</button><p className="text-xl md:text-2xl font-bold text-yellow-400">{bet.toLocaleString()}</p><button onClick={() => handleBetChange(room.betStep)} disabled={spinning || localBalance < bet + room.betStep} className="px-2 py-0.5 bg-green-600 rounded-md disabled:opacity-50">+</button></div></div>
-                    </div>
+                    <div className="flex justify-center text-center items-center mb-6">
+                        {/* SỐ DƯ đã bị loại bỏ vì đã có ở header */}
+                        <div className="bg-slate-900/50 p-3 rounded-lg">
+                            <p className="text-sm text-slate-400">MỨC CƯỢC</p><div className="flex items-center justify-center gap-4"><button onClick={() => handleBetChange(-room.betStep)} disabled={spinning || bet <= room.baseBet} className="px-2 py-0.5 bg-red-600 rounded-md disabled:opacity-50">-</button><p className="text-xl md:text-2xl font-bold text-yellow-400">{bet.toLocaleString()}</p><button onClick={() => handleBetChange(room.betStep)} disabled={spinning || localBalance < bet + room.betStep} className="px-2 py-0.5 bg-green-600 rounded-md disabled:opacity-50">+</button></div>
+                        </div>
+                    </div> 
 
                     <div className="flex flex-col items-center justify-center mt-2">
                         <button onClick={handleSpin} disabled={spinning || localBalance < bet} className="group w-36 h-20 rounded-xl bg-slate-900/60 border-2 border-cyan-500/60 backdrop-blur-sm flex flex-col items-center justify-center p-1 transition-all duration-200 hover:enabled:border-cyan-400 hover:enabled:bg-slate-900/80 hover:enabled:scale-105 active:enabled:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-cyan-500/50 disabled:cursor-not-allowed">
