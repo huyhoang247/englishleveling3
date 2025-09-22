@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for portals
 import { useGame } from './GameContext.tsx';
 import { auth } from './firebase.js';
-// --- THAY ĐỔI: Import các hàm mới từ service ---
 import { updateUserCoins, listenToJackpotPools, contributeToJackpot, resetJackpot } from './gameDataService.ts';
 
 // --- NEW IMPORTS ---
@@ -11,9 +10,6 @@ import HomeButton from './ui/home-button.tsx';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import MasteryDisplay from './ui/display/mastery-display.tsx';
 import { useAnimateValue } from './ui/useAnimateValue.ts';
-
-// --- PROPS INTERFACE ---
-// Component này không còn sử dụng props, nó lấy dữ liệu trực tiếp từ GameContext.
 
 // --- ICONS, CONFIGS & SHARED COMPONENTS ---
 
@@ -69,31 +65,29 @@ const JackpotTag = ({ jackpot }: { jackpot: number; }) => (
     </div>
 );
 
-const RoomInfoPanel = ({ room }: { room: Room }) => {
-    return (
-        <div className="mt-auto pt-4">
-            <div className="bg-black/20 backdrop-blur-sm rounded-lg p-3 border border-slate-700/50">
-                <div className="flex items-center justify-around">
-                    <div className="flex flex-col items-center text-center">
-                        <span className="text-xs text-slate-400 uppercase font-semibold tracking-wider">Cược</span>
-                        <div className="font-bold text-white text-lg flex items-center gap-1.5 mt-1">
-                            {room.baseBet.toLocaleString()} - {room.maxBet.toLocaleString()}
-                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4" />
-                        </div>
+const RoomInfoPanel = ({ room }: { room: Room }) => (
+    <div className="mt-auto pt-4">
+        <div className="bg-black/20 backdrop-blur-sm rounded-lg p-3 border border-slate-700/50">
+            <div className="flex items-center justify-around">
+                <div className="flex flex-col items-center text-center">
+                    <span className="text-xs text-slate-400 uppercase font-semibold tracking-wider">Cược</span>
+                    <div className="font-bold text-white text-lg flex items-center gap-1.5 mt-1">
+                        {room.baseBet.toLocaleString()} - {room.maxBet.toLocaleString()}
+                        <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4" />
                     </div>
-                    <div className="w-px h-10 bg-slate-700/80"></div>
-                    <div className="flex flex-col items-center text-center">
-                        <span className="text-xs text-slate-400 uppercase font-semibold tracking-wider">Yêu Cầu</span>
-                        <div className="font-bold text-white text-lg flex items-center gap-1.5 mt-1">
-                            {room.minMastery.toLocaleString()}
-                            <MasteryIcon className="w-5 h-5" />
-                        </div>
+                </div>
+                <div className="w-px h-10 bg-slate-700/80"></div>
+                <div className="flex flex-col items-center text-center">
+                    <span className="text-xs text-slate-400 uppercase font-semibold tracking-wider">Yêu Cầu</span>
+                    <div className="font-bold text-white text-lg flex items-center gap-1.5 mt-1">
+                        {room.minMastery.toLocaleString()}
+                        <MasteryIcon className="w-5 h-5" />
                     </div>
                 </div>
             </div>
         </div>
-    );
-};
+    </div>
+);
 
 const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymbol: string; spinning: boolean; onSpinEnd: () => void; index: number; isWinner: boolean; }) => {
     const reelRef = useRef<HTMLDivElement>(null);
@@ -138,6 +132,48 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
     );
 };
 
+// --- COMPONENT SKELETON MỚI CHO MÀN HÌNH LOADING ---
+const SlotLobbySkeleton = () => {
+    return (
+        <div className="flex flex-col h-full w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans overflow-hidden">
+            <div className="flex items-center justify-between h-[53px] px-4 border-b border-slate-700/50 shrink-0 bg-slate-950 z-10">
+                <div className="h-8 w-8 bg-slate-800/70 rounded-lg animate-pulse"></div>
+                <div className="flex items-center gap-2">
+                    <div className="h-8 w-24 bg-slate-800/70 rounded-lg animate-pulse"></div>
+                    <div className="h-8 w-24 bg-slate-800/70 rounded-lg animate-pulse"></div>
+                </div>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-8 hide-scrollbar">
+                <div className="w-full max-w-4xl mx-auto">
+                    <div className="flex flex-col items-center justify-center text-center mb-8">
+                        <svg className="animate-spin h-8 w-8 text-cyan-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <h2 className="text-xl font-bold text-slate-200">Đang kết nối đến sảnh chơi...</h2>
+                        <p className="text-slate-400 mt-1">Vui lòng chờ trong giây lát.</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="rounded-xl border-2 border-slate-700 p-4 h-48 flex flex-col bg-slate-900/70">
+                                <div className="flex items-center justify-between">
+                                    <div className="h-6 w-20 bg-slate-800/80 rounded-full"></div>
+                                    <div className="h-6 w-24 bg-slate-800/80 rounded-full"></div>
+                                </div>
+                                <div className="flex-grow"></div>
+                                <div className="mt-auto h-20 w-full bg-black/20 rounded-lg border border-slate-700/50 p-3">
+                                    <div className="flex items-center justify-around h-full">
+                                        <div className="flex flex-col items-center gap-2"><div className="h-3 w-10 bg-slate-700 rounded"></div><div className="h-5 w-16 bg-slate-700 rounded"></div></div>
+                                        <div className="w-px h-10 bg-slate-700/80"></div>
+                                        <div className="flex flex-col items-center gap-2"><div className="h-3 w-12 bg-slate-700 rounded"></div><div className="h-5 w-14 bg-slate-700 rounded"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount }: { balance: number; onEnterRoom: (roomId: number) => void; onClose: () => void; jackpotPools: { [key: number]: number; }; masteryCount: number; }) => {
     const animatedBalance = useAnimateValue(balance, 500);
     return (
@@ -149,7 +185,6 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount
                     <CoinDisplay displayedCoins={animatedBalance} isStatsFullscreen={false} />
                 </div>
             </div>
-
             <div className="flex-1 overflow-y-auto px-4 py-8 hide-scrollbar">
                 <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {rooms.map(room => {
@@ -162,9 +197,7 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount
                             >
                                 <div className={`relative p-4 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
                                     <div className="flex items-center justify-between">
-                                        <span className="bg-slate-800 text-slate-300 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                                            {room.name}
-                                        </span>
+                                        <span className="bg-slate-800 text-slate-300 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">{room.name}</span>
                                         <JackpotTag jackpot={jackpotPools[room.id]} />
                                     </div>
                                     <RoomInfoPanel room={room as Room} />
@@ -183,7 +216,6 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, setCoins, maste
     balance: number;
     jackpot: number;
     onExit: () => void;
-    // --- THAY ĐỔI: Chữ ký của onGameEnd để xử lý DB hiệu quả hơn ---
     onGameEnd: (netDelta: number, bet: number, isJackpotWin?: boolean) => void;
     setCoins: React.Dispatch<React.SetStateAction<number>>;
     masteryCount: number;
@@ -200,16 +232,12 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, setCoins, maste
 
     const handleSpin = () => {
         if (spinning || balance < bet) return;
-        
-        // --- THAY ĐỔI: Chỉ cập nhật state ở client, việc cập nhật DB sẽ diễn ra sau khi có kết quả ---
         setCoins(prev => prev - bet);
-        
         setSpinning(true);
         setMessage('Vòng quay đang diễn ra...');
         setWinnings(0);
         setWinningLine([false, false, false]);
         finishedReelsCount.current = 0;
-        // Tăng tỉ lệ trúng Jackpot để test (ví dụ: 0.1 ~ 10%)
         setReelsResult(Math.random() < 0.01 ? ['7️⃣', '7️⃣', '7️⃣'] : Array.from({ length: 3 }, () => symbols[Math.floor(Math.random() * symbols.length)]));
     };
 
@@ -248,19 +276,16 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, setCoins, maste
 
             if (isWin) {
                 setWinnings(winAmount);
-                // Cập nhật state ở client ngay lập tức
                 setCoins(prev => prev + winAmount);
             }
             setMessage(winMessage);
-            
-            // --- THAY ĐỔI: Gửi kết quả cuối cùng về component cha để xử lý DB ---
-            const netDelta = winAmount - bet; // Tính toán số tiền thay đổi cuối cùng
+            const netDelta = winAmount - bet;
             onGameEnd(netDelta, bet, isJackpotWin);
         }
     }, [reelsResult, bet, jackpot, room, onGameEnd, setCoins]);
 
     const handleBetChange = (amount: number) => {
-        setBet(prev => prev + amount);
+        setBet(prev => Math.max(room.baseBet, Math.min(room.maxBet, prev + amount)));
     };
 
     useEffect(() => {
@@ -333,49 +358,46 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, setCoins, maste
             </div>
         </div>
     );
-}
+};
+
 
 export default function SlotMachineGame() {
     const { coins, setCoins, toggle777Game, masteryCards } = useGame();
     const currentUser = auth.currentUser;
 
-    // --- THAY ĐỔI: Khởi tạo jackpotPools là null để làm cờ loading ---
     const [jackpotPools, setJackpotPools] = useState<{ [key: number]: number } | null>(null);
-
     const [currentView, setCurrentView] = useState('lobby');
     const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
     const [isMounted, setIsMounted] = useState(false);
+    const [isMinTimePassed, setIsMinTimePassed] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
-        
-        // --- THAY ĐỔI: Lắng nghe jackpot từ Firestore khi component được mount ---
+
         const initialPools: { [key: number]: number } = {};
         rooms.forEach(room => { initialPools[room.id] = room.initialJackpot; });
-
-        // Bắt đầu lắng nghe, hàm callback sẽ cập nhật state của chúng ta
         const unsubscribe = listenToJackpotPools(setJackpotPools, initialPools);
 
-        // Hủy lắng nghe khi component unmount để tránh rò rỉ bộ nhớ
-        return () => unsubscribe();
+        const timer = setTimeout(() => {
+            setIsMinTimePassed(true);
+        }, 800);
+
+        return () => {
+            unsubscribe();
+            clearTimeout(timer);
+        };
     }, []);
 
-    // --- THAY ĐỔI: Hàm xử lý game tập trung, tương tác với DB ---
     const handleGameEnd = async (netDelta: number, bet: number, isJackpotWin: boolean = false) => {
-        // 1. Cập nhật tiền của người dùng với kết quả cuối cùng
         if (currentUser && netDelta !== 0) {
             await updateUserCoins(currentUser.uid, netDelta);
         }
-
-        // 2. Đóng góp 10% tiền cược vào jackpot
         if (selectedRoomId) {
             const contribution = Math.ceil(bet * 0.1);
             if (contribution > 0) {
                 await contributeToJackpot(selectedRoomId, contribution);
             }
         }
-
-        // 3. Nếu thắng jackpot, reset jackpot của phòng đó về giá trị ban đầu
         if (isJackpotWin && selectedRoomId) {
             const room = rooms.find(r => r.id === selectedRoomId);
             if (room) {
@@ -394,17 +416,17 @@ export default function SlotMachineGame() {
         setSelectedRoomId(null);
     };
 
-    // --- THAY ĐỔI: Hiển thị màn hình loading trong khi chờ lấy dữ liệu jackpot từ Firestore ---
-    if (!isMounted || !jackpotPools) {
+    const isLoading = !isMounted || !jackpotPools || !isMinTimePassed;
+
+    if (isLoading) {
         const loadingScreen = (
-            <div className="fixed inset-0 bg-slate-900 z-[60] flex flex-col items-center justify-center text-white font-sans">
-                 <svg className="animate-spin h-8 w-8 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                <p className="text-lg">Đang kết nối đến sảnh chơi...</p>
+            <div className="fixed inset-0 bg-slate-900 z-[60]">
+                <GlobalStyles />
+                <SlotLobbySkeleton />
             </div>
         );
         return isMounted ? ReactDOM.createPortal(loadingScreen, document.body) : null;
     }
-
 
     const gameContent = (
         <div className="fixed inset-0 bg-slate-900 z-[60]">
