@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom'; // Import ReactDOM for portals
 import { useGame } from './GameContext.tsx';
 import { auth } from './firebase.js';
-import { updateUserCoins } from './gameDataService.ts';
+// --- THAY ĐỔI: Import các hàm mới từ service ---
+import { updateUserCoins, listenToJackpotPools, contributeToJackpot, resetJackpot } from './gameDataService.ts';
 
 // --- NEW IMPORTS ---
 // !!! Chú ý: Vui lòng cập nhật đường dẫn đến file component của bạn !!!
@@ -41,13 +42,13 @@ const REEL_ITEM_COUNT = 30;
 const basePayouts = { '💎💎💎': 80, '⭐⭐⭐': 60, '🔔🔔🔔': 40, '🍉🍉🍉': 20, '🍊🍊🍊': 15, '🍋🍋🍋': 10, '🍒🍒🍒': 5 };
 
 const rooms = [
-    { id: 1, name: 'Floor 1', minMastery: 10, baseBet: 10, maxBet: 100, betStep: 10, initialJackpot: 10000, payoutMultiplier: 1, bgGradient: 'from-orange-900/50 to-slate-900' },
-    { id: 2, name: 'Floor 2', minMastery: 50, baseBet: 50, maxBet: 500, betStep: 50, initialJackpot: 50000, payoutMultiplier: 5, bgGradient: 'from-slate-800/50 to-slate-900' },
-    { id: 3, name: 'Floor 3', minMastery: 100, baseBet: 100, maxBet: 1000, betStep: 100, initialJackpot: 100000, payoutMultiplier: 10, bgGradient: 'from-yellow-900/50 to-slate-900' },
-    { id: 4, name: 'Floor 4', minMastery: 500, baseBet: 500, maxBet: 5000, betStep: 500, initialJackpot: 500000, payoutMultiplier: 50, bgGradient: 'from-cyan-800/50 to-slate-900' },
-    { id: 5, name: 'Floor 5', minMastery: 1000, baseBet: 1000, maxBet: 10000, betStep: 1000, initialJackpot: 1000000, payoutMultiplier: 100, bgGradient: 'from-purple-800/50 to-slate-900' },
-    { id: 6, name: 'Floor 6', minMastery: 5000, baseBet: 5000, maxBet: 50000, betStep: 5000, initialJackpot: 5000000, payoutMultiplier: 500, bgGradient: 'from-red-800/50 to-slate-900' },
-    { id: 7, name: 'Floor 7', minMastery: 10000, baseBet: 10000, maxBet: 100000, betStep: 10000, initialJackpot: 10000000, payoutMultiplier: 1000, bgGradient: 'from-green-800/50 to-slate-900' }
+    { id: 1, name: 'Floor 1', minMastery: 10, baseBet: 10, maxBet: 100, betStep: 10, initialJackpot: 10000, payoutMultiplier: 1 },
+    { id: 2, name: 'Floor 2', minMastery: 50, baseBet: 50, maxBet: 500, betStep: 50, initialJackpot: 50000, payoutMultiplier: 5 },
+    { id: 3, name: 'Floor 3', minMastery: 100, baseBet: 100, maxBet: 1000, betStep: 100, initialJackpot: 100000, payoutMultiplier: 10 },
+    { id: 4, name: 'Floor 4', minMastery: 500, baseBet: 500, maxBet: 5000, betStep: 500, initialJackpot: 500000, payoutMultiplier: 50 },
+    { id: 5, name: 'Floor 5', minMastery: 1000, baseBet: 1000, maxBet: 10000, betStep: 1000, initialJackpot: 1000000, payoutMultiplier: 100 },
+    { id: 6, name: 'Floor 6', minMastery: 5000, baseBet: 5000, maxBet: 50000, betStep: 5000, initialJackpot: 5000000, payoutMultiplier: 500 },
+    { id: 7, name: 'Floor 7', minMastery: 10000, baseBet: 10000, maxBet: 100000, betStep: 10000, initialJackpot: 10000000, payoutMultiplier: 1000 }
 ];
 
 const generatePayouts = (multiplier: number) => { const newPayouts: { [key: string]: number } = {}; for (const key in basePayouts) { newPayouts[key] = basePayouts[key as keyof typeof basePayouts] * multiplier; } return newPayouts; };
@@ -55,7 +56,6 @@ rooms.forEach(room => { (room as any).payouts = generatePayouts(room.payoutMulti
 // @ts-ignore
 type Room = typeof rooms[0] & { payouts: typeof basePayouts };
 
-// --- THAY ĐỔI: JackpotTag không còn định vị absolute ---
 const JackpotTag = ({ jackpot }: { jackpot: number; }) => (
     <div className="flex items-center gap-1.5 bg-slate-900/70 backdrop-blur-sm border border-yellow-600/50 rounded-full pl-2 pr-3 py-1 text-yellow-300 shadow-lg shadow-black/30">
         <img 
@@ -71,7 +71,7 @@ const JackpotTag = ({ jackpot }: { jackpot: number; }) => (
 
 const RoomInfoPanel = ({ room }: { room: Room }) => {
     return (
-        <div className="mt-auto pt-4"> {/* Giảm pt để panel gần header hơn */}
+        <div className="mt-auto pt-4">
             <div className="bg-black/20 backdrop-blur-sm rounded-lg p-3 border border-slate-700/50">
                 <div className="flex items-center justify-around">
                     <div className="flex flex-col items-center text-center">
@@ -161,14 +161,12 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount
                                 onClick={() => isAffordable && onEnterRoom(room.id)}
                             >
                                 <div className={`relative p-4 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
-                                    {/* --- THAY ĐỔI: Header mới cho thẻ phòng --- */}
                                     <div className="flex items-center justify-between">
                                         <span className="bg-slate-800 text-slate-300 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                             {room.name}
                                         </span>
                                         <JackpotTag jackpot={jackpotPools[room.id]} />
                                     </div>
-                                    
                                     <RoomInfoPanel room={room as Room} />
                                 </div>
                             </div>
@@ -180,13 +178,13 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount
     );
 };
 
-const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate, setCoins, masteryCount }: {
+const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, setCoins, masteryCount }: {
     room: Room;
     balance: number;
     jackpot: number;
     onExit: () => void;
-    onGameEnd: (delta: number) => void;
-    onJackpotUpdate: (roomId: number, newJackpot: number) => void;
+    // --- THAY ĐỔI: Chữ ký của onGameEnd để xử lý DB hiệu quả hơn ---
+    onGameEnd: (netDelta: number, bet: number, isJackpotWin?: boolean) => void;
     setCoins: React.Dispatch<React.SetStateAction<number>>;
     masteryCount: number;
 }) => {
@@ -202,14 +200,16 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate
 
     const handleSpin = () => {
         if (spinning || balance < bet) return;
+        
+        // --- THAY ĐỔI: Chỉ cập nhật state ở client, việc cập nhật DB sẽ diễn ra sau khi có kết quả ---
         setCoins(prev => prev - bet);
-        const contribution = Math.ceil(bet * 0.1);
-        onJackpotUpdate(room.id, jackpot + contribution);
+        
         setSpinning(true);
         setMessage('Vòng quay đang diễn ra...');
         setWinnings(0);
         setWinningLine([false, false, false]);
         finishedReelsCount.current = 0;
+        // Tăng tỉ lệ trúng Jackpot để test (ví dụ: 0.1 ~ 10%)
         setReelsResult(Math.random() < 0.01 ? ['7️⃣', '7️⃣', '7️⃣'] : Array.from({ length: 3 }, () => symbols[Math.floor(Math.random() * symbols.length)]));
     };
 
@@ -221,15 +221,16 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate
             let winAmount = 0;
             let winMessage = 'Chúc bạn may mắn lần sau!';
             let isWin = false;
+            let isJackpotWin = false;
 
             if (r1 === '7️⃣' && r2 === '7️⃣' && r3 === '7️⃣') {
                 winAmount = jackpot;
                 winMessage = `🎉 JACKPOT! BẠN THẮNG ${winAmount.toLocaleString()} XU! 🎉`;
                 setWinningLine([true, true, true]);
                 isWin = true;
+                isJackpotWin = true;
                 setJackpotAnimation(true);
                 setTimeout(() => setJackpotAnimation(false), 3000);
-                onJackpotUpdate(room.id, room.initialJackpot);
             } else if (r1 === r2 && r2 === r3) {
                 const key = `${r1}${r2}${r3}` as keyof typeof room.payouts;
                 winAmount = (room.payouts[key] || 0) * (bet / room.baseBet);
@@ -247,13 +248,16 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, onJackpotUpdate
 
             if (isWin) {
                 setWinnings(winAmount);
+                // Cập nhật state ở client ngay lập tức
                 setCoins(prev => prev + winAmount);
             }
             setMessage(winMessage);
-            const netDelta = winAmount - bet;
-            onGameEnd(netDelta);
+            
+            // --- THAY ĐỔI: Gửi kết quả cuối cùng về component cha để xử lý DB ---
+            const netDelta = winAmount - bet; // Tính toán số tiền thay đổi cuối cùng
+            onGameEnd(netDelta, bet, isJackpotWin);
         }
-    }, [reelsResult, bet, jackpot, room, onGameEnd, onJackpotUpdate, setCoins]);
+    }, [reelsResult, bet, jackpot, room, onGameEnd, setCoins]);
 
     const handleBetChange = (amount: number) => {
         setBet(prev => prev + amount);
@@ -335,21 +339,48 @@ export default function SlotMachineGame() {
     const { coins, setCoins, toggle777Game, masteryCards } = useGame();
     const currentUser = auth.currentUser;
 
-    const [jackpotPools, setJackpotPools] = useState(() => {
-        const pools: { [key: number]: number } = {};
-        rooms.forEach(room => { pools[room.id] = room.initialJackpot; });
-        return pools;
-    });
+    // --- THAY ĐỔI: Khởi tạo jackpotPools là null để làm cờ loading ---
+    const [jackpotPools, setJackpotPools] = useState<{ [key: number]: number } | null>(null);
 
     const [currentView, setCurrentView] = useState('lobby');
     const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
-
     const [isMounted, setIsMounted] = useState(false);
-    useEffect(() => { setIsMounted(true); }, []);
 
-    const handleGameEnd = async (delta: number) => {
-        if (currentUser && delta !== 0) {
-            await updateUserCoins(currentUser.uid, delta);
+    useEffect(() => {
+        setIsMounted(true);
+        
+        // --- THAY ĐỔI: Lắng nghe jackpot từ Firestore khi component được mount ---
+        const initialPools: { [key: number]: number } = {};
+        rooms.forEach(room => { initialPools[room.id] = room.initialJackpot; });
+
+        // Bắt đầu lắng nghe, hàm callback sẽ cập nhật state của chúng ta
+        const unsubscribe = listenToJackpotPools(setJackpotPools, initialPools);
+
+        // Hủy lắng nghe khi component unmount để tránh rò rỉ bộ nhớ
+        return () => unsubscribe();
+    }, []);
+
+    // --- THAY ĐỔI: Hàm xử lý game tập trung, tương tác với DB ---
+    const handleGameEnd = async (netDelta: number, bet: number, isJackpotWin: boolean = false) => {
+        // 1. Cập nhật tiền của người dùng với kết quả cuối cùng
+        if (currentUser && netDelta !== 0) {
+            await updateUserCoins(currentUser.uid, netDelta);
+        }
+
+        // 2. Đóng góp 10% tiền cược vào jackpot
+        if (selectedRoomId) {
+            const contribution = Math.ceil(bet * 0.1);
+            if (contribution > 0) {
+                await contributeToJackpot(selectedRoomId, contribution);
+            }
+        }
+
+        // 3. Nếu thắng jackpot, reset jackpot của phòng đó về giá trị ban đầu
+        if (isJackpotWin && selectedRoomId) {
+            const room = rooms.find(r => r.id === selectedRoomId);
+            if (room) {
+                await resetJackpot(selectedRoomId, room.initialJackpot);
+            }
         }
     };
 
@@ -363,9 +394,17 @@ export default function SlotMachineGame() {
         setSelectedRoomId(null);
     };
 
-    const handleJackpotUpdate = (roomId: number, newJackpot: number) => {
-        setJackpotPools(prev => ({ ...prev, [roomId]: newJackpot }));
-    };
+    // --- THAY ĐỔI: Hiển thị màn hình loading trong khi chờ lấy dữ liệu jackpot từ Firestore ---
+    if (!isMounted || !jackpotPools) {
+        const loadingScreen = (
+            <div className="fixed inset-0 bg-slate-900 z-[60] flex flex-col items-center justify-center text-white font-sans">
+                 <svg className="animate-spin h-8 w-8 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <p className="text-lg">Đang kết nối đến sảnh chơi...</p>
+            </div>
+        );
+        return isMounted ? ReactDOM.createPortal(loadingScreen, document.body) : null;
+    }
+
 
     const gameContent = (
         <div className="fixed inset-0 bg-slate-900 z-[60]">
@@ -387,7 +426,6 @@ export default function SlotMachineGame() {
                         jackpot={jackpotPools[selectedRoomId]}
                         onExit={handleExitRoom}
                         onGameEnd={handleGameEnd}
-                        onJackpotUpdate={handleJackpotUpdate}
                         setCoins={setCoins}
                         masteryCount={masteryCards}
                     />
@@ -395,10 +433,6 @@ export default function SlotMachineGame() {
             </div>
         </div>
     );
-
-    if (!isMounted) {
-        return null;
-    }
 
     return ReactDOM.createPortal(gameContent, document.body);
 }
