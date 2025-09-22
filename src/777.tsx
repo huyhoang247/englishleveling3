@@ -85,15 +85,12 @@ const LobbyScreen = ({ balance, onEnterRoom }: { balance: number; onEnterRoom: (
     return (
         // The main container is now a flex column that takes full height and prevents its own overflow.
         <div className="flex flex-col h-full w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans overflow-hidden">
-            {/* --- Redesigned Header --- */}
-            <div className="flex items-center justify-between p-4 md:p-5 border-b border-slate-700/50 shrink-0 bg-slate-900/60 backdrop-blur-sm z-10 shadow-lg">
-                <h1 className="text-2xl md:text-3xl font-bold font-lilita uppercase tracking-wider text-cyan-300 drop-shadow-[0_0_8px_rgba(100,220,255,0.5)]">
-                    Chọn Phòng
-                </h1>
-                <div className="bg-slate-800/70 p-2 px-4 rounded-full flex items-center gap-3 border border-slate-600 shadow-md">
+            {/* --- Updated Header --- */}
+            <div className="flex items-center justify-end p-3 border-b border-slate-800 shrink-0 bg-slate-950/70 backdrop-blur-sm z-10 shadow-lg">
+                <div className="bg-slate-800/70 py-1.5 px-4 rounded-full flex items-center gap-3 border border-slate-700 shadow-md">
                     <p className="text-sm font-bold text-slate-300 hidden sm:block">SỐ DƯ:</p>
-                    <p className="text-lg font-bold text-green-400">{balance.toLocaleString()}</p>
-                    <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-6 h-6" />
+                    <p className="text-base md:text-lg font-bold text-green-400">{balance.toLocaleString()}</p>
+                    <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-5 h-5" />
                 </div>
             </div>
 
