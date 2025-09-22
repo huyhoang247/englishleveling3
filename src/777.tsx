@@ -41,19 +41,16 @@ rooms.forEach(room => { (room as any).payouts = generatePayouts(room.payoutMulti
 // @ts-ignore
 type Room = typeof rooms[0] & { payouts: typeof basePayouts };
 
-// --- ICON MỚI: CrownIcon ---
-const CrownIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
-        <path d="M12,16L19.36,10.27L21,12L12,21L3,12L4.64,10.27L12,16M12,4A3,3 0 0,1 15,7A3,3 0 0,1 12,10A3,3 0 0,1 9,7A3,3 0 0,1 12,4M12,2L9,5L12,8L15,5L12,2Z" />
-    </svg>
-);
-
 // --- COMPONENT ĐƯỢC THIẾT KẾ LẠI: JackpotTag ---
 const JackpotTag = ({ jackpot }: { jackpot: number; }) => {
     return (
         <div className="absolute bottom-3 right-3">
-            <div className="flex items-center gap-1.5 bg-slate-900/70 backdrop-blur-sm border border-yellow-600/50 rounded-full px-3 py-1 text-yellow-300 shadow-lg shadow-black/30">
-                <CrownIcon className="w-4 h-4" />
+            <div className="flex items-center gap-1.5 bg-slate-900/70 backdrop-blur-sm border border-yellow-600/50 rounded-full pl-2 pr-3 py-1 text-yellow-300 shadow-lg shadow-black/30">
+                <img 
+                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/jackpot-icon.webp" 
+                    alt="Jackpot" 
+                    className="w-5 h-5" 
+                />
                 <span className="text-sm font-bold tracking-wider">
                     {jackpot.toLocaleString()}
                 </span>
@@ -61,6 +58,7 @@ const JackpotTag = ({ jackpot }: { jackpot: number; }) => {
         </div>
     );
 };
+
 
 // --- COMPONENT: Reel ---
 const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymbol: string; spinning: boolean; onSpinEnd: () => void; index: number; isWinner: boolean; }) => {
