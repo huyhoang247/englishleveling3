@@ -11,7 +11,8 @@ import CoinDisplay from './ui/display/coin-display.tsx';
 import MasteryDisplay from './ui/display/mastery-display.tsx';
 import { useAnimateValue } from './ui/useAnimateValue.ts';
 // --- THAY ĐỔI: Import component skeleton từ file riêng ---
-import SlotLobbySkeleton from './777-loading.tsx'; // <-- SỬA ĐƯỜNG DẪN NẾU CẦN
+// Sửa lại đường dẫn này nếu bạn đặt file SlotLobbySkeleton.tsx ở một nơi khác
+import SlotLobbySkeleton from './777-loading.tsx'; 
 
 // --- ICONS, CONFIGS & SHARED COMPONENTS ---
 
@@ -133,8 +134,6 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
         </div>
     );
 };
-
-// --- THAY ĐỔI: Component SlotLobbySkeleton đã được xóa khỏi đây và chuyển sang file riêng ---
 
 const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount }: { balance: number; onEnterRoom: (roomId: number) => void; onClose: () => void; jackpotPools: { [key: number]: number; }; masteryCount: number; }) => {
     const animatedBalance = useAnimateValue(balance, 500);
@@ -330,12 +329,9 @@ export default function SlotMachineGame() {
     const [jackpotPools, setJackpotPools] = useState<{ [key: number]: number } | null>(null);
     const [currentView, setCurrentView] = useState('lobby');
     const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
-    const [isMounted, setIsMounted] = useState(false);
     const [isMinTimePassed, setIsMinTimePassed] = useState(false);
 
     useEffect(() => {
-        setIsMounted(true);
-
         const initialPools: { [key: number]: number } = {};
         rooms.forEach(room => { initialPools[room.id] = room.initialJackpot; });
         const unsubscribe = listenToJackpotPools(setJackpotPools, initialPools);
@@ -378,23 +374,23 @@ export default function SlotMachineGame() {
         setSelectedRoomId(null);
     };
 
-    const isLoading = !isMounted || !jackpotPools || !isMinTimePassed;
+    const isLoading = !jackpotPools || !isMinTimePassed;
 
     if (isLoading) {
-        const loadingScreen = (
+        return ReactDOM.createPortal(
             <div className="fixed inset-0 bg-slate-900 z-[60]">
                 <GlobalStyles />
                 <SlotLobbySkeleton />
-            </div>
+            </div>,
+            document.body
         );
-        return isMounted ? ReactDOM.createPortal(loadingScreen, document.body) : null;
     }
 
-    const gameContent = (
+    return ReactDOM.createPortal(
         <div className="fixed inset-0 bg-slate-900 z-[60]">
             <GlobalStyles />
             <div className="relative w-full h-full">
-                {currentView === 'lobby' && (
+                {currentView === 'lobby' && jackpotPools && (
                     <LobbyScreen
                         balance={coins}
                         onEnterRoom={handleEnterRoom}
@@ -403,7 +399,7 @@ export default function SlotMachineGame() {
                         masteryCount={masteryCards}
                     />
                 )}
-                {currentView === 'game' && selectedRoomId && (
+                {currentView === 'game' && selectedRoomId && jackpotPools && (
                     <GameScreen
                         room={rooms.find(r => r.id === selectedRoomId) as Room}
                         balance={coins}
@@ -415,10 +411,9 @@ export default function SlotMachineGame() {
                     />
                 )}
             </div>
-        </div>
+        </div>,
+        document.body
     );
-
-    return ReactDOM.createPortal(gameContent, document.body);
 }
 
 const GlobalStyles = () => (
