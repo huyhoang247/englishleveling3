@@ -4,7 +4,8 @@ import { db } from './firebase';
 import { 
   doc, getDoc, setDoc, runTransaction, 
   collection, getDocs, writeBatch,
-  query, where, orderBy, onSnapshot, Timestamp, serverTimestamp, addDoc
+  query, where, orderBy, onSnapshot, Timestamp, serverTimestamp, addDoc,
+  updateDoc, increment, Unsubscribe // --- THÊM CÁC IMPORT CẦN THIẾT ---
 } from 'firebase/firestore';
 
 // Các interface này nên được định nghĩa ở một nơi tập trung (ví dụ: types.ts) và import vào
@@ -61,16 +62,8 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       skillsData.equipped = [null, null, null];
     }
 
-    // --- SỬA ĐỔI BẮT ĐẦU ---
-    // 1. Định nghĩa một cấu trúc mặc định đầy đủ.
     const defaultEquipment = { pieces: 100, owned: [], equipped: { weapon: null, armor: null, Helmet: null } };
-
-    // 2. Hợp nhất object mặc định với dữ liệu thực tế.
-    //    - Đặt object mặc định làm nền.
-    //    - Dữ liệu từ `data.equipment` (nếu có) sẽ ghi đè lên các giá trị mặc định.
-    //    - Nếu `data.equipment` thiếu thuộc tính `pieces`, giá trị `pieces: 100` từ `defaultEquipment` sẽ được giữ lại.
     const equipmentData = { ...defaultEquipment, ...(data.equipment || {}) };
-    // --- SỬA ĐỔI KẾT THÚC ---
 
     return {
       coins: data.coins || 0,
@@ -207,6 +200,80 @@ export const updateUserSkills = async (userId: string, updates: { newOwned: Owne
     });
 };
 
+// --- ADDITIONS START: SLOT MACHINE (777) GAME SERVICES ---
+
+// Tham chiếu đến document lưu trữ tất cả jackpot pools của game 777
+const slotJackpotDocRef = doc(db, 'miniGames', 'slotMachineJackpots');
+
+// Hàm để khởi tạo jackpot nếu document chưa tồn tại
+const initializeSlotJackpots = async (initialPools: { [key: number]: number }) => {
+    try {
+        await setDoc(slotJackpotDocRef, initialPools);
+        console.log("Slot machine jackpot pools initialized successfully.");
+    } catch (error) {
+        console.error("Error initializing slot machine jackpot pools: ", error);
+    }
+};
+
+/**
+ * Lắng nghe sự thay đổi của jackpot pools trong real-time.
+ * @param callback Hàm sẽ được gọi mỗi khi dữ liệu jackpot thay đổi.
+ * @param initialPools Dữ liệu jackpot ban đầu để khởi tạo nếu chưa có trên DB.
+ * @returns Một hàm để hủy lắng nghe (unsubscribe).
+ */
+export const listenToJackpotPools = (
+    callback: (pools: { [key: number]: number }) => void,
+    initialPools: { [key: number]: number }
+): Unsubscribe => {
+    const unsubscribe = onSnapshot(slotJackpotDocRef, async (docSnap) => {
+        if (docSnap.exists()) {
+            callback(docSnap.data() as { [key: number]: number });
+        } else {
+            console.log("Slot machine jackpot document not found, initializing...");
+            await initializeSlotJackpots(initialPools);
+            callback(initialPools);
+        }
+    }, (error) => {
+        console.error("Error listening to slot machine jackpot pools: ", error);
+    });
+
+    return unsubscribe;
+};
+
+/**
+ * Đóng góp vào jackpot pool của một phòng cụ thể trong game Slot Machine.
+ * Sử dụng `increment` của Firestore để đảm bảo an toàn khi nhiều người chơi cùng lúc.
+ * @param roomId ID của phòng.
+ * @param contribution Số tiền đóng góp.
+ */
+export const contributeToJackpot = async (roomId: number, contribution: number) => {
+    if (contribution <= 0) return;
+    try {
+        await updateDoc(slotJackpotDocRef, {
+            [`${roomId}`]: increment(contribution)
+        });
+    } catch (error) {
+        console.error(`Error contributing to slot machine jackpot for room ${roomId}: `, error);
+    }
+};
+
+/**
+ * Reset jackpot của một phòng về giá trị ban đầu sau khi có người thắng.
+ * @param roomId ID của phòng.
+ * @param initialValue Giá trị jackpot ban đầu.
+ */
+export const resetJackpot = async (roomId: number, initialValue: number) => {
+     try {
+        await updateDoc(slotJackpotDocRef, {
+            [`${roomId}`]: initialValue
+        });
+    } catch (error)
+ {
+        console.error(`Error resetting slot machine jackpot for room ${roomId}: `, error);
+    }
+};
+// --- ADDITIONS END ---
+
 
 // --- START: ADMIN PANEL SERVICE FUNCTIONS ---
 export interface SimpleUser {
@@ -225,8 +292,6 @@ export const fetchAllUsers = async (): Promise<SimpleUser[]> => {
   const users: SimpleUser[] = [];
   querySnapshot.forEach((doc) => {
     const data = doc.data();
-    // Giả sử user document có chứa trường 'email' và 'username'.
-    // Nếu không có, chúng sẽ là undefined, điều này được xử lý bởi interface.
     users.push({ 
         uid: doc.id,
         email: data.email,
@@ -258,7 +323,6 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
 
     for (const key in updates) {
       const valueToAdd = updates[key];
-      // Xử lý các trường lồng nhau như 'stats.hp' hoặc 'equipment.pieces'
       if (key.includes('.')) {
         const keys = key.split('.');
         let currentLevel = data as any;
@@ -267,10 +331,8 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
         }
         const finalKey = keys[keys.length - 1];
         const currentValue = currentLevel[finalKey] || 0;
-        // Sử dụng dot notation trong payload để Firestore hiểu
         updatePayload[key] = Math.max(0, currentValue + valueToAdd);
       } else {
-        // Xử lý các trường ở cấp cao nhất
         const currentValue = (data as any)[key] || 0;
         updatePayload[key] = Math.max(0, currentValue + valueToAdd);
       }
@@ -278,8 +340,7 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
     
     t.update(userDocRef, updatePayload);
     
-    // Trả về dữ liệu đã được hợp nhất để cập nhật UI ngay lập tức
-    const updatedData = JSON.parse(JSON.stringify(data)); // Deep copy to avoid mutation issues
+    const updatedData = JSON.parse(JSON.stringify(data));
     for(const key in updatePayload){
         if (key.includes('.')) {
             const keys = key.split('.');
