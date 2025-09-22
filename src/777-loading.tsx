@@ -17,9 +17,6 @@ const SlotLobbySkeleton = () => {
             {/* --- Skeleton Main Content --- */}
             <div className="flex-1 overflow-y-auto px-4 py-8 hide-scrollbar">
                 <div className="w-full max-w-4xl mx-auto">
-                    <div className="flex flex-col items-center justify-center text-center mb-8">
-                        
-                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
                         {Array.from({ length: 4 }).map((_, i) => (
                             <div key={i} className="rounded-xl border-2 border-slate-700 p-4 h-48 flex flex-col bg-slate-900/70">
