@@ -34,6 +34,7 @@ import { useGame } from './GameContext.tsx';
 import { updateUserCoins } from './gameDataService.ts';
 
 const SystemCheckScreen = lazy(() => import('./SystemCheckScreen.tsx'));
+const SlotMachineGame = lazy(() => import('./777.tsx')); // ADDED
 
 interface GemIconProps { size?: number; color?: string; className?: string; [key: string]: any; }
 const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
@@ -74,7 +75,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
     isAuctionHouseOpen,
     isCheckInOpen,
-    isMailboxOpen, 
+    isMailboxOpen,
+    is777GameOpen, // ADDED
     ownedItems, equippedItems, refreshUserData,
     handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
     handleUpdateJackpotPool, handleStatsUpdate, getPlayerBattleStats,
@@ -89,6 +91,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     toggleCheckIn,
     toggleMailbox, 
     toggleBaseBuilding,
+    toggle777Game, // ADDED
   } = useGame();
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
@@ -148,7 +151,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             </div>
             <RateLimitToast show={showRateLimitToast} />
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena }, { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/mail-icon.webp" alt="Mailbox Icon" className="w-full h-full object-contain p-1" />, onClick: toggleMailbox } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
+              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena }, { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/mail-icon.webp" alt="Mailbox Icon" className="w-full h-full object-contain p-1" />, onClick: toggleMailbox }, { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/777-icon.webp" alt="777 Slot Game Icon" className="w-full h-full object-contain" />, onClick: toggle777Game } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
               {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, { icon: <img src={uiAssets.gavelIcon} alt="Auction House Icon" className="w-full h-full object-contain p-1" />, onClick: toggleAuctionHouse }, { icon: <img src={uiAssets.checkInIcon} alt="Check In Icon" className="w-full h-full object-contain" />, onClick: toggleCheckIn } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
@@ -269,6 +272,22 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             <ErrorBoundary fallback={<div className="fixed inset-0 bg-black/70 flex items-center justify-center text-red-400">Lỗi khi tải công cụ System Check.</div>}>
                 <Suspense fallback={<SuspenseLoader />}>
                     <SystemCheckScreen onClose={toggleSystemCheck} />
+                </Suspense>
+            </ErrorBoundary>
+        )}
+        
+        {is777GameOpen && (
+            <ErrorBoundary fallback={<div className="fixed inset-0 bg-black/70 flex items-center justify-center text-red-400">Lỗi khi tải Slot Game.</div>}>
+                <Suspense fallback={<SuspenseLoader />}>
+                    {currentUser && <SlotMachineGame
+                        onClose={toggle777Game}
+                        currentCoins={coins}
+                        onGameEnd={async (delta) => {
+                           if (currentUser && delta !== 0) {
+                             setCoins(await updateUserCoins(currentUser.uid, delta));
+                           }
+                        }}
+                    />}
                 </Suspense>
             </ErrorBoundary>
         )}
