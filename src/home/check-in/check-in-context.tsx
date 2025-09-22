@@ -24,9 +24,10 @@ export const dailyRewards = [
 ];
 
 // --- THÊM MỚI: ĐỊNH NGHĨA PHẦN THƯỞNG MỐC STREAK CHO UI ---
+// SỬA ĐỔI: Thêm trường 'amount' để nhất quán và thay đổi 'name'
 export const streakMilestoneRewards = [
-    { streakGoal: 7, name: "Thưởng 7 Ngày", amount: 5000, icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
-    { streakGoal: 14, name: "Thưởng 14 Ngày", amount: 10000, icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
+    { streakGoal: 7, name: "Gold", amount: "5,000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
+    { streakGoal: 14, name: "Gold", amount: "10,000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
 ];
 
 // --- ĐỊNH NGHĨA TYPES ---
@@ -37,10 +38,11 @@ interface Particle {
 }
 
 // --- THÊM MỚI: Type cho mốc streak ---
+// SỬA ĐỔI: Thêm trường 'amount'
 interface StreakMilestone {
     streakGoal: number;
     name: string;
-    amount: number;
+    amount: string;
     icon: React.ReactNode;
 }
 
