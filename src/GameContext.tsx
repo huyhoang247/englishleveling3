@@ -60,6 +60,7 @@ interface IGameContext {
     isAuctionHouseOpen: boolean;
     isCheckInOpen: boolean;
     isMailboxOpen: boolean;
+    is777GameOpen: boolean; // ADDED
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
@@ -94,6 +95,7 @@ interface IGameContext {
     toggleCheckIn: () => void;
     toggleMailbox: () => void;
     toggleBaseBuilding: () => void;
+    toggle777Game: () => void; // ADDED
     setCoins: React.Dispatch<React.SetStateAction<number>>;
     setIsSyncingData: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -152,6 +154,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isMailboxOpen, setIsMailboxOpen] = useState(false);
+  const [is777GameOpen, setIs777GameOpen] = useState(false); // ADDED
   
   // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
@@ -337,7 +340,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
           const newState = !prev;
           if (newState) {
               hideNavBar();
-              [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen, setIsAuctionHouseOpen, setIsCheckInOpen, setIsMailboxOpen ].forEach(s => { if (s !== setter) s(false); });
+              [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen, setIsAuctionHouseOpen, setIsCheckInOpen, setIsMailboxOpen, setIs777GameOpen ].forEach(s => { if (s !== setter) s(false); });
           } else { showNavBar(); }
           return newState;
       });
@@ -380,6 +383,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const toggleCheckIn = createToggleFunction(setIsCheckInOpen);
   const toggleMailbox = createToggleFunction(setIsMailboxOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
+  const toggle777Game = createToggleFunction(setIs777GameOpen); // ADDED
   
   const handleSkillScreenClose = (dataUpdated: boolean) => {
     toggleSkillScreen();
@@ -412,7 +416,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     }
   };
 
-  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen;
+  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen || is777GameOpen; // MODIFIED
   const isLoading = isLoadingUserData || !assetsLoaded;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
@@ -429,6 +433,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isAuctionHouseOpen,
     isCheckInOpen,
     isMailboxOpen,
+    is777GameOpen, // ADDED
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
     getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
@@ -438,7 +443,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     toggleAuctionHouse,
     toggleCheckIn,
     toggleMailbox,
-    toggleBaseBuilding, setCoins,
+    toggleBaseBuilding, 
+    toggle777Game, // ADDED
+    setCoins,
     setIsSyncingData
   };
 
