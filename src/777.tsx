@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import ReactDOM from 'react-dom'; // Import ReactDOM for portals
 
 // --- PROPS INTERFACE ---
 interface SlotMachineGameProps {
@@ -290,6 +291,14 @@ export default function SlotMachineGame({ currentCoins, onGameEnd, onClose }: Sl
 
     const [currentView, setCurrentView] = useState('lobby');
     const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
+    
+    // State to ensure portal is only created on the client-side
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
 
     const handleEnterRoom = (roomId: number) => {
         setSelectedRoomId(roomId);
@@ -305,7 +314,7 @@ export default function SlotMachineGame({ currentCoins, onGameEnd, onClose }: Sl
         setJackpotPools(prev => ({...prev, [roomId]: newJackpot }));
     };
 
-    return (
+    const gameContent = (
         <div className="fixed inset-0 bg-slate-900 z-[60]">
             <GlobalStyles />
             <div className="relative w-full h-full">
@@ -330,6 +339,13 @@ export default function SlotMachineGame({ currentCoins, onGameEnd, onClose }: Sl
             </div>
         </div>
     );
+
+    // Only render the portal on the client side
+    if (!isMounted) {
+        return null;
+    }
+
+    return ReactDOM.createPortal(gameContent, document.body);
 }
 
 // Component chứa các style global
