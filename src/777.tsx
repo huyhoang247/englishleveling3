@@ -128,24 +128,23 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools }: { balance:
                             >
                                 <div className={`relative p-6 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
                                     
-                                    {/* THÊM JACKPOT TAG TẠI ĐÂY */}
+                                    <span className="absolute top-3 left-3 bg-slate-800 text-slate-300 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                                        {room.name}
+                                    </span>
+
+                                    {isAffordable ? (
+                                        <span className="absolute top-3 right-3 px-2.5 py-1 text-xs font-bold bg-green-500/20 text-green-300 rounded-full border border-green-500/40">
+                                            Active
+                                        </span>
+                                    ) : (
+                                        <span className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold bg-slate-800 text-slate-400 rounded-full border border-slate-700">
+                                            🔒 Khóa
+                                        </span>
+                                    )}
+                                    
                                     <JackpotTag jackpot={jackpotPools[room.id]} />
 
-                                    <div className="flex items-center justify-between">
-                                        <span className={`inline-block bg-slate-800 text-slate-300 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
-                                            {room.name}
-                                        </span>
-                                        {isAffordable ? (
-                                            <span className="px-2.5 py-1 text-xs font-bold bg-green-500/20 text-green-300 rounded-full border border-green-500/40">
-                                                Active
-                                            </span>
-                                        ) : (
-                                            <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold bg-slate-800 text-slate-400 rounded-full border border-slate-700">
-                                                🔒 Khóa
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="mt-auto pt-4 flex items-center gap-6">
+                                    <div className="mt-auto pt-10 flex items-center gap-6">
                                         <div>
                                             <div className="text-xs text-slate-400 uppercase font-semibold">Cược</div>
                                             <div className="font-bold text-white text-lg">{room.baseBet.toLocaleString()}+</div>
