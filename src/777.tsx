@@ -86,18 +86,16 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
 };
 
 // --- COMPONENT: LobbyScreen ---
-const LobbyScreen = ({ balance, onEnterRoom }: { balance: number; onEnterRoom: (roomId: number) => void; }) => {
+const LobbyScreen = ({ balance, onEnterRoom, onClose }: { balance: number; onEnterRoom: (roomId: number) => void; onClose: () => void; }) => {
     return (
-        // The main container is now a flex column that takes full height and prevents its own overflow.
         <div className="flex flex-col h-full w-full bg-slate-900 bg-gradient-to-br from-indigo-900/50 to-slate-900 text-white font-sans overflow-hidden">
-            {/* --- Updated Header --- */}
-            <div className="flex items-center justify-end p-2 border-b border-slate-800 shrink-0 bg-slate-950/70 backdrop-blur-sm z-10 shadow-lg">
+            {/* --- Updated Header with HomeButton --- */}
+            <div className="flex items-center justify-between p-2 border-b border-slate-800 shrink-0 bg-slate-950/70 backdrop-blur-sm z-10 shadow-lg">
+                <HomeButton onClick={onClose} label="Thoát" title="Thoát trò chơi"/>
                 <CoinDisplay displayedCoins={balance} isStatsFullscreen={false} />
             </div>
 
             {/* --- Scrollable Content Part --- */}
-            {/* `flex-1` makes this div take all remaining vertical space. */}
-            {/* `overflow-y-auto` adds a scrollbar ONLY to this div if its content overflows. */}
             <div className="flex-1 overflow-y-auto px-4 py-8">
                 <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {rooms.map(room => {
@@ -322,12 +320,19 @@ export default function SlotMachineGame({ currentCoins, onGameEnd, onClose }: Sl
         <div className="fixed inset-0 bg-slate-900 z-[60]">
             <GlobalStyles />
             <div className="relative w-full h-full">
-                 <div className="absolute top-3 right-4 z-50">
-                    <HomeButton onClick={onClose} label="Thoát" title="Thoát trò chơi" />
-                 </div>
+                 {/* Close button is now inside LobbyScreen. We keep one for GameScreen for consistency. */}
+                 {currentView === 'game' && (
+                    <div className="absolute top-3 right-4 z-50">
+                        <HomeButton onClick={onClose} label="Thoát" title="Thoát trò chơi" />
+                    </div>
+                 )}
 
                 {currentView === 'lobby' && (
-                    <LobbyScreen balance={currentCoins} onEnterRoom={handleEnterRoom} />
+                    <LobbyScreen 
+                        balance={currentCoins} 
+                        onEnterRoom={handleEnterRoom}
+                        onClose={onClose} 
+                    />
                 )}
 
                 {currentView === 'game' && selectedRoomId && (
