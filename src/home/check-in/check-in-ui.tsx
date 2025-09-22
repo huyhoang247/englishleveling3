@@ -119,7 +119,7 @@ const DailyCheckInView = () => {
                 </div>
             )}
 
-            {/* --- DANH SÁCH PHẦN THƯỞNG HÀNG NGÀY (Không đổi) --- */}
+            {/* --- DANH SÁCH PHẦN THƯỞNG HÀNG NGÀY --- */}
             {dailyRewards.map(reward => {
               const lastCompletedDayInCycle = canClaimToday ? claimableDay - 1 : claimableDay;
               const isClaimed = reward.day <= lastCompletedDayInCycle && loginStreak > 0;
@@ -139,8 +139,24 @@ const DailyCheckInView = () => {
                     <h3 className="font-bold text-white">{reward.name}</h3>
                     <p className="text-slate-300 text-sm">x{reward.amount}</p>
                   </div>
-                  <button onClick={() => claimReward(reward.day)} disabled={!isClaimable || isClaiming || isSyncingData} className={`min-w-[90px] py-2 px-3 rounded-lg font-semibold text-sm transition-all ${ isClaimed ? 'bg-green-600 text-white' : isClaimable ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white hover:shadow-indigo-400/20 hover:shadow-lg' : 'bg-slate-700 text-slate-400'}`}>
-                    { isClaimed ? 'Đã Nhận' : isClaiming && isClaimable ? '...' : 'Claim' }
+                  {/* --- SỬA ĐỔI NÚT CLAIM --- */}
+                  <button 
+                    onClick={() => claimReward(reward.day)} 
+                    disabled={!isClaimable || isClaiming || isSyncingData} 
+                    className={`min-w-[90px] h-10 flex items-center justify-center py-2 px-3 rounded-lg font-semibold text-sm transition-all ${ 
+                      isClaimed ? 'bg-green-600 text-white' : 
+                      isClaimable ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white hover:shadow-indigo-400/20 hover:shadow-lg' : 
+                      'bg-slate-700 text-slate-400'
+                    }`}
+                  >
+                    { isClaimed ? 'Đã Nhận' : 
+                      isClaiming && isClaimable ? (
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : 'Claim' 
+                    }
                   </button>
                   {isClaimed && (
                     <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
@@ -189,10 +205,11 @@ const DailyCheckInView = () => {
         </div>
       )}
 
-      {/* --- CSS (Không đổi) --- */}
+      {/* --- CSS --- */}
       <style jsx>{`
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         @keyframes float-particle-1 { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(-100px, -100px) scale(0); opacity: 0; } }
         @keyframes float-particle-2 { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(100px, -100px) scale(0); opacity: 0; } }
@@ -203,6 +220,7 @@ const DailyCheckInView = () => {
         @keyframes wave { 0% { transform: translateX(-100%) translateY(5px); } 100% { transform: translateX(100%) translateY(-5px); } }
         .water-wave1, .water-wave2 { position: absolute; top: -15px; left: 0; width: 200%; height: 20px; background: rgba(255, 255, 255, 0.3); border-radius: 50%; animation: wave 3s infinite linear; }
         .water-wave2 { top: -5px; animation-delay: 1s; opacity: 0.6; }
+        .animate-spin { animation: spin 1s linear infinite; }
         .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-float-particle-1 { animation: float-particle-1 2s ease-out forwards; }
