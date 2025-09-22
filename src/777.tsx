@@ -55,25 +55,23 @@ rooms.forEach(room => { (room as any).payouts = generatePayouts(room.payoutMulti
 // @ts-ignore
 type Room = typeof rooms[0] & { payouts: typeof basePayouts };
 
+// --- THAY ĐỔI: JackpotTag không còn định vị absolute ---
 const JackpotTag = ({ jackpot }: { jackpot: number; }) => (
-    <div className="absolute bottom-3 right-3">
-        <div className="flex items-center gap-1.5 bg-slate-900/70 backdrop-blur-sm border border-yellow-600/50 rounded-full pl-2 pr-3 py-1 text-yellow-300 shadow-lg shadow-black/30">
-            <img 
-                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/jackpot-icon.webp" 
-                alt="Jackpot" 
-                className="w-5 h-5" 
-            />
-            <span className="text-sm font-bold tracking-wider">
-                {jackpot.toLocaleString()}
-            </span>
-        </div>
+    <div className="flex items-center gap-1.5 bg-slate-900/70 backdrop-blur-sm border border-yellow-600/50 rounded-full pl-2 pr-3 py-1 text-yellow-300 shadow-lg shadow-black/30">
+        <img 
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/jackpot-icon.webp" 
+            alt="Jackpot" 
+            className="w-5 h-5" 
+        />
+        <span className="text-sm font-bold tracking-wider">
+            {jackpot.toLocaleString()}
+        </span>
     </div>
 );
 
-// --- COMPONENT MỚI: RoomInfoPanel (thay thế cho phần hiển thị Cược/Cần cũ) ---
 const RoomInfoPanel = ({ room }: { room: Room }) => {
     return (
-        <div className="mt-auto pt-10">
+        <div className="mt-auto pt-4"> {/* Giảm pt để panel gần header hơn */}
             <div className="bg-black/20 backdrop-blur-sm rounded-lg p-3 border border-slate-700/50">
                 <div className="flex items-center justify-around">
                     <div className="flex flex-col items-center text-center">
@@ -163,21 +161,21 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount
                                 onClick={() => isAffordable && onEnterRoom(room.id)}
                             >
                                 <div className={`relative p-4 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
-                                    <span className="absolute top-3 left-3 bg-slate-800 text-slate-300 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                                        {room.name}
-                                    </span>
-                                    {isAffordable ? (
-                                        <span className="absolute top-3 right-3 px-2.5 py-1 text-xs font-bold bg-green-500/20 text-green-300 rounded-full border border-green-500/40">
-                                            Active
+                                    {/* --- THAY ĐỔI: Header mới cho thẻ phòng --- */}
+                                    <div className="flex items-center justify-between">
+                                        <span className="bg-slate-800 text-slate-300 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                                            {room.name}
                                         </span>
-                                    ) : (
+                                        <JackpotTag jackpot={jackpotPools[room.id]} />
+                                    </div>
+
+                                    {/* Thẻ trạng thái khóa vẫn hiển thị ở góc */}
+                                    {!isAffordable && (
                                         <span className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold bg-slate-800 text-slate-400 rounded-full border border-slate-700">
-                                            🔒 Khóa
+                                            🔒
                                         </span>
                                     )}
-                                    <JackpotTag jackpot={jackpotPools[room.id]} />
                                     
-                                    {/* --- GIAO DIỆN MỚI CHO THÔNG TIN PHÒNG --- */}
                                     <RoomInfoPanel room={room as Room} />
                                 </div>
                             </div>
