@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import {
     PlayerData, OpponentData, getMockOpponent,
     DefenseLogModal, SearchingModal, HomeIcon, CoinDisplay
-} from './pvp/shared';
+} from './share.tsx';
 
 interface PvpInvasionProps {
   onClose: () => void;
