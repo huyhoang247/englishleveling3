@@ -6,7 +6,7 @@ import { PvpStyles, PlayerData, getMockPlayerData } from './share.tsx';
 import PvpSelection from './pvp-selection.tsx';
 import PvpWager from './dau-cuoc.tsx';
 import PvpRanked from './dau-xep-hang.tsx';
-import PvpInvasion from './PvpInvasion';
+import PvpInvasion from './dau-xam-luoc.tsx';
 
 export default function PvpPortal() {
   const [playerData, setPlayerData] = useState<PlayerData>(getMockPlayerData());
