@@ -5,7 +5,7 @@ import { PvpStyles, PlayerData, getMockPlayerData } from './share.tsx';
 
 import PvpSelection from './pvp-selection.tsx';
 import PvpWager from './dau-cuoc.tsx';
-import PvpRanked from './PvpRanked';
+import PvpRanked from './dau-xep-hang.tsx';
 import PvpInvasion from './PvpInvasion';
 
 export default function PvpPortal() {
