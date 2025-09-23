@@ -5,7 +5,7 @@ import {
     PlayerData, OpponentData, CombatStats,
     executeTurn, simulateFullBattle, getMockOpponent,
     FloatingText, SearchingModal, HomeIcon, CoinDisplay, HealthBar, RankedResultModal
-} from './pvp/shared';
+} from './share.tsx';
 
 interface PvpRankedProps {
   onClose: () => void;
