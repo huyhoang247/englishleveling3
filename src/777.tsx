@@ -54,7 +54,7 @@ rooms.forEach(room => { (room as any).payouts = generatePayouts(room.payoutMulti
 type Room = typeof rooms[0] & { payouts: typeof basePayouts };
 
 const JackpotTag = ({ jackpot }: { jackpot: number; }) => (
-    <div className="flex items-center gap-1.5 bg-slate-900/70 backdrop-blur-sm border border-yellow-600/50 rounded-full pl-2 pr-3 py-1 text-yellow-300 shadow-lg shadow-black/30">
+    <div className="flex items-center gap-1.5 bg-slate-900/90 border border-yellow-600/50 rounded-full pl-2 pr-3 py-1 text-yellow-300 shadow-lg shadow-black/30">
         <img 
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/jackpot-icon.webp" 
             alt="Jackpot" 
@@ -68,7 +68,7 @@ const JackpotTag = ({ jackpot }: { jackpot: number; }) => (
 
 const RoomInfoPanel = ({ room }: { room: Room }) => (
     <div className="mt-auto pt-4">
-        <div className="bg-black/20 backdrop-blur-sm rounded-lg p-3 border border-slate-700/50">
+        <div className="bg-black/30 rounded-lg p-3 border border-slate-700/50">
             <div className="flex items-center justify-around">
                 <div className="flex flex-col items-center text-center">
                     <span className="text-xs text-slate-400 uppercase font-semibold tracking-wider">Cược</span>
@@ -143,11 +143,11 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
     }, [onSpinEnd, spinning]);
 
     return (
-        <div className="h-28 w-24 md:h-40 md:w-32 bg-slate-800/50 backdrop-blur-sm border-2 border-slate-600 rounded-xl shadow-lg overflow-hidden">
-            <div ref={reelRef} className={isWinner ? 'filter brightness-150' : ''}>
+        <div className="h-28 w-24 md:h-40 md:w-32 bg-slate-800/80 border-2 border-slate-600 rounded-xl shadow-lg overflow-hidden">
+            <div ref={reelRef} className={`will-change-transform ${isWinner ? 'filter brightness-150' : ''}`}>
                 {reelSymbols.map((s, i) => (
                     <div key={i} className={`flex items-center justify-center h-28 w-full md:h-40 ${isWinner && i === reelSymbols.length - 1 ? 'animate-win-pulse' : ''}`}>
-                        <span className={`text-5xl md:text-7xl drop-shadow-lg ${isWinner && i === reelSymbols.length - 1 ? 'scale-110' : ''} transition-transform duration-300`}>{s}</span>
+                        <span className={`text-5xl md:text-7xl drop-shadow-lg will-change-transform ${isWinner && i === reelSymbols.length - 1 ? 'scale-110' : ''} transition-transform duration-300`}>{s}</span>
                     </div>
                 ))}
             </div>
@@ -163,10 +163,10 @@ const RoomCard = memo(({ room, jackpot, isAffordable, onEnterRoom }: {
 }) => {
     return (
         <div
-            className={`rounded-xl border-2 transition-all duration-300 ${isAffordable ? 'border-slate-600 hover:border-cyan-400 hover:scale-[1.03] cursor-pointer' : 'border-slate-700 cursor-not-allowed'}`}
+            className={`rounded-xl border-2 transition-all duration-300 will-change-transform ${isAffordable ? 'border-slate-600 hover:border-cyan-400 hover:scale-[1.03] cursor-pointer' : 'border-slate-700 cursor-not-allowed'}`}
             onClick={() => isAffordable && onEnterRoom(room.id)}
         >
-            <div className={`relative p-4 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
+            <div className={`relative p-4 flex flex-col h-full rounded-xl bg-slate-900/80 ${!isAffordable ? 'opacity-50' : ''}`}>
                 <div className="flex items-center justify-between">
                     <span className="bg-slate-800 text-slate-300 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">{room.name}</span>
                     <JackpotTag jackpot={jackpot} />
@@ -307,7 +307,7 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, setCoins, maste
             </div>
             <div className="flex-1 overflow-y-auto hide-scrollbar">
                 <div className="w-full max-w-2xl mx-auto flex flex-col p-6 md:p-8">
-                    <div className={`text-center mb-6 p-3 rounded-xl border-4 transition-all duration-500 relative ${jackpotAnimation ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl' : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg'}`}>
+                    <div className={`text-center mb-6 p-3 rounded-xl border-4 transition-all duration-500 relative will-change-transform ${jackpotAnimation ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 border-yellow-300 animate-pulse scale-110 shadow-2xl' : 'bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 border-purple-400 shadow-lg'}`}>
                         <div className="text-yellow-200 text-base font-bold mb-1 tracking-wider">JACKPOT {room.name.toUpperCase()}</div>
                         <div className={`text-4xl font-black text-white drop-shadow-lg flex items-center justify-center gap-1 ${jackpotAnimation ? 'animate-bounce' : ''}`}>
                             {jackpot.toLocaleString()}
@@ -334,7 +334,7 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, setCoins, maste
                         </div>
                     </div>
                     <div className="flex flex-col items-center justify-center mt-2">
-                        <button onClick={handleSpin} disabled={spinning || balance < bet || bet === 0} className="group w-36 h-20 rounded-xl bg-slate-900/60 border-2 border-cyan-500/60 backdrop-blur-sm flex flex-col items-center justify-center p-1 transition-all duration-200 hover:enabled:border-cyan-400 hover:enabled:bg-slate-900/80 hover:enabled:scale-105 active:enabled:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-cyan-500/50 disabled:cursor-not-allowed">
+                        <button onClick={handleSpin} disabled={spinning || balance < bet || bet === 0} className="group w-36 h-20 rounded-xl bg-slate-900/80 border-2 border-cyan-500/60 flex flex-col items-center justify-center p-1 transition-all duration-200 hover:enabled:border-cyan-400 hover:enabled:bg-slate-900/90 hover:enabled:scale-105 active:enabled:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-cyan-500/50 disabled:cursor-not-allowed will-change-transform">
                             {spinning ? (
                                 <div className="flex flex-col items-center font-lilita text-slate-400">
                                     <svg className="animate-spin h-6 w-6 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -465,6 +465,9 @@ const GlobalStyles = () => (
       }
       .hide-scrollbar::-webkit-scrollbar {
         display: none; /* Chrome, Safari and Opera */
+      }
+      .will-change-transform {
+        will-change: transform;
       }
     `}</style>
 );
