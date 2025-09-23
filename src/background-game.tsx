@@ -10,7 +10,7 @@ import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
-import PvpArena from './PvP/pvp-home.tsx';
+import PvpArena from './home/pvp/pvp-home.tsx';
 import DungeonCanvasBackground from './background-canvas.tsx';
 import LuckyChestGame from './lucky-game.tsx';
 import { uiAssets, lottieAssets } from './game-assets.ts';
