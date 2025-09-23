@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { PvpStyles, PlayerData, getMockPlayerData } from './share.tsx';
 
-import PvpSelection from './PvpSelection';
+import PvpSelection from './pvp-selection.tsx';
 import PvpWager from './PvpWager';
 import PvpRanked from './PvpRanked';
 import PvpInvasion from './PvpInvasion';
