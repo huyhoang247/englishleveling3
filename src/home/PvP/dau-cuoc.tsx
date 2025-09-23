@@ -5,7 +5,7 @@ import {
     PlayerData, OpponentData, CombatStats,
     executeTurn, simulateFullBattle, getMockOpponent,
     FloatingText, WagerModal, SearchingModal, HomeIcon, CoinDisplay, HealthBar, MatchResultModal
-} from './pvp/shared';
+} from './share.tsx';
 
 interface PvpWagerProps {
   onClose: () => void;
