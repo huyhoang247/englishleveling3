@@ -1,12 +1,11 @@
 // --- START OF FILE 777.tsx (16).txt ---
 
-import React, { useState, useEffect, useCallback, useRef, memo } from 'react'; // --- TỐI ƯU: Thêm 'memo'
+import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import ReactDOM from 'react-dom'; 
 import { useGame } from './GameContext.tsx';
 import { auth } from './firebase.js';
 import { updateUserCoins, listenToJackpotPools, contributeToJackpot, resetJackpot } from './gameDataService.ts';
 
-// --- NEW IMPORTS ---
 import HomeButton from './ui/home-button.tsx';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import MasteryDisplay from './ui/display/mastery-display.tsx';
@@ -36,7 +35,7 @@ const MasteryIcon = ({ className }: { className?: string }) => (
 );
 
 const symbols = ['🍒', '🍋', '🍊', '🍉', '🔔', '⭐', '💎', '7️⃣'];
-const REEL_ITEM_COUNT = 30; // Số lượng biểu tượng cho hiệu ứng quay
+const REEL_ITEM_COUNT = 30;
 const basePayouts = { '💎💎💎': 80, '⭐⭐⭐': 60, '🔔🔔🔔': 40, '🍉🍉🍉': 20, '🍊🍊🍊': 15, '🍋🍋🍋': 10, '🍒🍒🍒': 5 };
 
 const rooms = [
@@ -55,8 +54,7 @@ rooms.forEach(room => { (room as any).payouts = generatePayouts(room.payoutMulti
 type Room = typeof rooms[0] & { payouts: typeof basePayouts };
 
 const JackpotTag = ({ jackpot }: { jackpot: number; }) => (
-    <div className="flex items-center gap-1.5 bg-slate-900/70 border border-yellow-600/50 rounded-full pl-2 pr-3 py-1 text-yellow-300 shadow-lg shadow-black/30">
-        {/* --- TỐI ƯU 3: Cân nhắc bỏ backdrop-blur-sm ở dòng trên nếu cần hiệu năng cao hơn */}
+    <div className="flex items-center gap-1.5 bg-slate-900/70 backdrop-blur-sm border border-yellow-600/50 rounded-full pl-2 pr-3 py-1 text-yellow-300 shadow-lg shadow-black/30">
         <img 
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/jackpot-icon.webp" 
             alt="Jackpot" 
@@ -71,7 +69,6 @@ const JackpotTag = ({ jackpot }: { jackpot: number; }) => (
 const RoomInfoPanel = ({ room }: { room: Room }) => (
     <div className="mt-auto pt-4">
         <div className="bg-black/20 backdrop-blur-sm rounded-lg p-3 border border-slate-700/50">
-            {/* --- TỐI ƯU 3: Cân nhắc bỏ backdrop-blur-sm ở dòng trên nếu cần hiệu năng cao hơn */}
             <div className="flex items-center justify-around">
                 <div className="flex flex-col items-center text-center">
                     <span className="text-xs text-slate-400 uppercase font-semibold tracking-wider">Cược</span>
@@ -93,60 +90,52 @@ const RoomInfoPanel = ({ room }: { room: Room }) => (
     </div>
 );
 
-// --- TỐI ƯU 1: TÁI CẤU TRÚC COMPONENT `Reel` CHO HIỆU NĂNG CAO HƠN ---
+// --- COMPONENT `Reel` PHIÊN BẢN ĐÃ SỬA LỖI ANIMATION ---
 const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymbol: string; spinning: boolean; onSpinEnd: () => void; index: number; isWinner: boolean; }) => {
     const reelRef = useRef<HTMLDivElement>(null);
-    const [reelSymbols, setReelSymbols] = useState<string[]>([]);
-    
-    // Chỉ chạy một lần để khởi tạo các biểu tượng ban đầu
-    useEffect(() => {
-        setReelSymbols(Array.from({ length: REEL_ITEM_COUNT }, () => symbols[Math.floor(Math.random() * symbols.length)]));
-    }, []);
+    const [reelSymbols, setReelSymbols] = useState<string[]>(() => 
+        Array.from({ length: REEL_ITEM_COUNT }, () => symbols[Math.floor(Math.random() * symbols.length)])
+    );
 
     useEffect(() => {
         if (!spinning) return;
-        
+
         const el = reelRef.current;
         if (!el || !el.firstChild) return;
-
-        const symbolHeight = (el.firstChild as HTMLElement).clientHeight;
-
-        // Tạo danh sách biểu tượng mới cho vòng quay này, kết thúc bằng finalSymbol
-        const newSpinSymbols = [
-            ...Array.from({ length: REEL_ITEM_COUNT - 1 }, () => symbols[Math.floor(Math.random() * symbols.length)]),
+        
+        const spinList = [
+            ...Array.from({ length: REEL_ITEM_COUNT * 2 - 1 }, () => symbols[Math.floor(Math.random() * symbols.length)]),
             finalSymbol
         ];
-        
-        // Kết hợp các biểu tượng cũ và mới để tạo hiệu ứng cuộn vô tận
-        const fullReelList = [...reelSymbols, ...newSpinSymbols];
-        setReelSymbols(fullReelList);
 
-        // Reset về vị trí bắt đầu của phần mới thêm vào MÀ KHÔNG CÓ transition
-        const startPosition = (fullReelList.length - (REEL_ITEM_COUNT * 2)) * symbolHeight;
-        el.style.transition = 'none';
-        el.style.transform = `translateY(-${startPosition}px)`;
+        setReelSymbols(prev => [...prev.slice(-REEL_ITEM_COUNT), ...spinList]);
 
-        // Dùng requestAnimationFrame để đảm bảo trình duyệt đã áp dụng thay đổi trên trước khi bắt đầu animation
         requestAnimationFrame(() => {
-            const spinDuration = 2500 + index * 600;
-            // Vị trí cuối cùng là biểu tượng cuối cùng trong danh sách
-            const finalPosition = (fullReelList.length - 1) * symbolHeight;
+            const el = reelRef.current;
+            if (!el || !el.firstChild) return;
 
-            el.style.transition = `transform ${spinDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
-            el.style.transform = `translateY(-${finalPosition}px)`;
+            const symbolHeight = (el.firstChild as HTMLElement).clientHeight;
+
+            el.style.transition = 'none';
+            el.style.transform = 'translateY(0)';
+            
+            requestAnimationFrame(() => {
+                const spinDuration = 2500 + index * 600;
+                const finalPosition = (REEL_ITEM_COUNT * 3 - 1) * symbolHeight;
+                
+                el.style.transition = `transform ${spinDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
+                el.style.transform = `translateY(-${finalPosition}px)`;
+            });
         });
-        
-    }, [spinning, finalSymbol, index]); // Bỏ reelSymbols để tránh re-trigger không cần thiết
 
-    // Lắng nghe sự kiện transition kết thúc
+    }, [spinning, finalSymbol, index]);
+
     useEffect(() => {
         const el = reelRef.current;
         if (!el) return;
-        const handleEnd = () => { 
+        const handleEnd = () => {
             if (spinning) {
-                onSpinEnd(); 
-                // Tối ưu: Cắt bớt mảng symbol để không bị lớn vô hạn
-                setReelSymbols(prev => prev.slice(-REEL_ITEM_COUNT));
+                onSpinEnd();
             }
         };
         el.addEventListener('transitionend', handleEnd);
@@ -155,7 +144,6 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
 
     return (
         <div className="h-28 w-24 md:h-40 md:w-32 bg-slate-800/50 backdrop-blur-sm border-2 border-slate-600 rounded-xl shadow-lg overflow-hidden">
-            {/* --- TỐI ƯU 3: Cân nhắc bỏ backdrop-blur-sm ở dòng trên nếu cần hiệu năng cao hơn */}
             <div ref={reelRef} className={isWinner ? 'filter brightness-150' : ''}>
                 {reelSymbols.map((s, i) => (
                     <div key={i} className={`flex items-center justify-center h-28 w-full md:h-40 ${isWinner && i === reelSymbols.length - 1 ? 'animate-win-pulse' : ''}`}>
@@ -167,7 +155,6 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
     );
 };
 
-// --- TỐI ƯU 2: TÁCH `RoomCard` VÀ SỬ DỤNG `React.memo` ---
 const RoomCard = memo(({ room, jackpot, isAffordable, onEnterRoom }: {
     room: Room;
     jackpot: number;
@@ -180,7 +167,6 @@ const RoomCard = memo(({ room, jackpot, isAffordable, onEnterRoom }: {
             onClick={() => isAffordable && onEnterRoom(room.id)}
         >
             <div className={`relative p-4 flex flex-col h-full rounded-xl bg-slate-900/70 backdrop-blur-sm ${!isAffordable ? 'opacity-50' : ''}`}>
-                {/* --- TỐI ƯU 3: Cân nhắc bỏ backdrop-blur-sm ở dòng trên nếu cần hiệu năng cao hơn */}
                 <div className="flex items-center justify-between">
                     <span className="bg-slate-800 text-slate-300 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider">{room.name}</span>
                     <JackpotTag jackpot={jackpot} />
@@ -205,7 +191,6 @@ const LobbyScreen = ({ balance, onEnterRoom, onClose, jackpotPools, masteryCount
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-8 hide-scrollbar">
                 <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* --- THAY ĐỔI: Sử dụng component RoomCard đã được memo-hóa --- */}
                     {rooms.map(room => (
                         <RoomCard
                             key={room.id}
@@ -350,7 +335,6 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, setCoins, maste
                     </div>
                     <div className="flex flex-col items-center justify-center mt-2">
                         <button onClick={handleSpin} disabled={spinning || balance < bet || bet === 0} className="group w-36 h-20 rounded-xl bg-slate-900/60 border-2 border-cyan-500/60 backdrop-blur-sm flex flex-col items-center justify-center p-1 transition-all duration-200 hover:enabled:border-cyan-400 hover:enabled:bg-slate-900/80 hover:enabled:scale-105 active:enabled:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-cyan-500/50 disabled:cursor-not-allowed">
-                             {/* --- TỐI ƯU 3: Cân nhắc bỏ backdrop-blur-sm ở dòng trên nếu cần hiệu năng cao hơn */}
                             {spinning ? (
                                 <div className="flex flex-col items-center font-lilita text-slate-400">
                                     <svg className="animate-spin h-6 w-6 mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -414,11 +398,10 @@ export default function SlotMachineGame() {
         }
     };
 
-    // --- TỐI ƯU 2: Sử dụng `useCallback` để props không thay đổi giữa các lần render ---
     const handleEnterRoom = useCallback((roomId: number) => {
         setSelectedRoomId(roomId);
         setCurrentView('game');
-    }, []); // Dependency rỗng vì các hàm setState là ổn định
+    }, []);
 
     const handleExitRoom = () => {
         setCurrentView('lobby');
