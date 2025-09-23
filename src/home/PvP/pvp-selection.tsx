@@ -1,7 +1,7 @@
 // --- START OF FILE PvpSelection.tsx ---
 
 import React from 'react';
-import { PlayerData, CoinDisplay, HomeIcon, RankedIcon, WagerIcon, InvasionIcon } from './pvp/share.tsx';
+import { PlayerData, CoinDisplay, HomeIcon, RankedIcon, WagerIcon, InvasionIcon } from './share.tsx';
 
 interface PvpSelectionProps {
   onClose: () => void;
