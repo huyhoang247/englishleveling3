@@ -84,26 +84,58 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
 
   const particleClasses = ["animate-float-particle-1", "animate-float-particle-2", "animate-float-particle-3", "animate-float-particle-4", "animate-float-particle-5"];
 
+  // =========================================================================
+  // --- BẮT ĐẦU PHẦN SỬA LỖI ---
+  // =========================================================================
   useEffect(() => {
     const now = new Date();
     const last = lastCheckIn;
 
-    if (!last) {
+    // --- XỬ LÝ LẦN ĐẦU TIÊN ---
+    if (!last) { 
         setCanClaimToday(true);
-        // --- SỬA ĐỔI: Tính claimableDay dựa trên loginStreak ---
-        setClaimableDay((loginStreak % 7) + 1);
+        // loginStreak lúc này là 0, ngày cần nhận là ngày 1
+        setClaimableDay(1); 
         return;
     }
 
-    const isSameDay = last.getUTCFullYear() === now.getUTCFullYear() && last.getUTCMonth() === now.getUTCMonth() && last.getUTCDate() === now.getUTCDate();
+    // --- KIỂM TRA ĐÃ ĐIỂM DANH HÔM NAY CHƯA ---
+    const isSameDay = last.getUTCFullYear() === now.getUTCFullYear() &&
+                      last.getUTCMonth() === now.getUTCMonth() &&
+                      last.getUTCDate() === now.getUTCDate();
+
     setCanClaimToday(!isSameDay);
 
-    const yesterday = new Date(now);
-    yesterday.setUTCDate(now.getUTCDate() - 1);
-    const isConsecutive = last.getUTCFullYear() === yesterday.getUTCFullYear() && last.getUTCMonth() === yesterday.getUTCMonth() && last.getUTCDate() === yesterday.getUTCDate();
-    // --- SỬA ĐỔI: Tính claimableDay dựa trên loginStreak, reset về 1 nếu gián đoạn ---
-    setClaimableDay(isConsecutive ? (loginStreak % 7) + 1 : 1);
+    if (isSameDay) {
+        // TRƯỜNG HỢP 1: Đã điểm danh hôm nay.
+        // Hiển thị ngày *tiếp theo* trong chu kỳ.
+        // loginStreak đã được cập nhật. Ngày tiếp theo sẽ là (streak hiện tại % 7) + 1.
+        const nextDayInCycle = (loginStreak % 7) + 1;
+        setClaimableDay(nextDayInCycle);
+    } else {
+        // TRƯỜNG HỢP 2: Chưa điểm danh hôm nay.
+        // Kiểm tra xem chuỗi có bị ngắt không.
+        const yesterday = new Date(now);
+        yesterday.setUTCDate(now.getUTCDate() - 1);
+        const isConsecutive = last.getUTCFullYear() === yesterday.getUTCFullYear() &&
+                              last.getUTCMonth() === yesterday.getUTCMonth() &&
+                              last.getUTCDate() === yesterday.getUTCDate();
+        
+        if (isConsecutive) {
+            // Chuỗi liên tục. Ngày cần nhận là ngày tiếp theo của chuỗi.
+            // (loginStreak hiện tại % 7) + 1
+            const dayToClaim = (loginStreak % 7) + 1;
+            setClaimableDay(dayToClaim);
+        } else {
+            // Chuỗi đã bị ngắt. Reset về ngày 1.
+            setClaimableDay(1);
+        }
+    }
   }, [lastCheckIn, loginStreak]);
+  // =======================================================================
+  // --- KẾT THÚC PHẦN SỬA LỖI ---
+  // =======================================================================
+
 
   // --- useEffect để xử lý countdown (Không đổi) ---
   useEffect(() => {
@@ -231,4 +263,4 @@ export const useCheckIn = (): CheckInContextType => {
     throw new Error('useCheckIn phải được sử dụng trong CheckInProvider');
   }
   return context;
-};
+}; 
