@@ -15,7 +15,7 @@ interface SidebarLayoutProps {
   // Props to handle toggling specific screens in the parent
   onShowRank?: () => void;   // Handler for showing Rank
   onShowMinerChallenge?: () => void; // NEW: Handler for Miner Challenge
-  onShowLuckyGame?: () => void; // NEW: Handler for showing Lucky Game
+  onShowLuckyGame?: () => void; // NEW: Handler for showing Lucky Treasure
   onShowAchievements?: () => void; // NEW: Handler for showing Achievements
   onShowUpgrade?: () => void; // NEW: Handler for showing Upgrade screen
   onShowBaseBuilding?: () => void; // NEW: Handler for Base Building
@@ -220,7 +220,7 @@ const FrameIcon = ({ size = 24, className = '', ...props }) => (
 const LuckyGameIcon = ({ size = 24, className = '', ...props }) => (
   <img
     src={uiAssets.luckyGameIcon}
-    alt="Lucky Game Icon"
+    alt="Lucky Treasure Icon"
     width={size}
     height={size}
     className={className}
@@ -245,7 +245,7 @@ function SidebarLayout({ children, setToggleSidebar, onShowRank, onShowLuckyGame
 
   const menuItems = [
     { id: 'rank', label: 'Rank', icon: FrameIcon, onClick: onShowRank },
-    { id: 'luckyGame', label: 'Lucky Game', icon: LuckyGameIcon, onClick: onShowLuckyGame },
+    { id: 'luckyGame', label: 'Lucky Treasure', icon: LuckyGameIcon, onClick: onShowLuckyGame },
     { id: 'minerChallenge', label: 'Miner Challenge', icon: BombIcon, onClick: onShowMinerChallenge },
     { id: 'achievements', label: 'Achievements', icon: TrophyIcon, onClick: onShowAchievements },
     { id: 'upgrade', label: 'Upgrade', icon: UpgradeIcon, onClick: onShowUpgrade }, // THAY ĐỔI: Sử dụng UpgradeIcon mới
