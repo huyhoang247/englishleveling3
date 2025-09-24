@@ -620,10 +620,11 @@ export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
                 </div>
 
                 <main className="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 relative">
+                    {/* <<< THAY ĐỔI Ở ĐÂY: Chuyển vị trí thông báo sang góc trên phải >>> */}
                     <RateLimitToast
                         show={!!message}
                         message={message?.text}
-                        className="absolute top-4 left-1/2 -translate-x-1/2 z-[101]"
+                        className="absolute top-4 right-4 z-[101]"
                         showIcon={message?.type === 'error'}
                     />
                     
