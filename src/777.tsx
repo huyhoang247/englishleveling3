@@ -34,24 +34,31 @@ const MasteryIcon = ({ className }: { className?: string }) => (
     />
 );
 
-const symbols = ['🍒', '🍋', '🍊', '🍉', '🔔', '⭐', '💎', '7️⃣'];
+// --- NEW SYMBOL CONFIGURATION ---
+const SYMBOLS = {
+  SEVEN: { id: 'seven', src: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/777-slot/seven.webp', type: 'jackpot' },
+  APPLE: { id: 'apple', src: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/777-slot/apple.webp', type: 'basic' },
+  CHERRY: { id: 'cherry', src: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/777-slot/cherry.webp', type: 'basic' },
+  ORANGE: { id: 'orange', src: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/777-slot/orange.webp', type: 'basic' },
+  CROWN: { id: 'crown', src: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/777-slot/crown.webp', type: 'medium' },
+  BELL: { id: 'bell', src: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/777-slot/bell.webp', type: 'medium' },
+};
+
+const ALL_SYMBOLS = Object.values(SYMBOLS);
 const REEL_ITEM_COUNT = 30;
-const basePayouts = { '💎💎💎': 80, '⭐⭐⭐': 60, '🔔🔔🔔': 40, '🍉🍉🍉': 20, '🍊🍊🍊': 15, '🍋🍋🍋': 10, '🍒🍒🍒': 5 };
 
 const rooms = [
-    { id: 1, name: 'Floor 1', minMastery: 10, baseBet: 10, maxBet: 100, betStep: 10, initialJackpot: 10000, payoutMultiplier: 1 },
-    { id: 2, name: 'Floor 2', minMastery: 50, baseBet: 50, maxBet: 500, betStep: 50, initialJackpot: 50000, payoutMultiplier: 5 },
-    { id: 3, name: 'Floor 3', minMastery: 100, baseBet: 100, maxBet: 1000, betStep: 100, initialJackpot: 100000, payoutMultiplier: 10 },
-    { id: 4, name: 'Floor 4', minMastery: 500, baseBet: 500, maxBet: 5000, betStep: 500, initialJackpot: 500000, payoutMultiplier: 50 },
-    { id: 5, name: 'Floor 5', minMastery: 1000, baseBet: 1000, maxBet: 10000, betStep: 1000, initialJackpot: 1000000, payoutMultiplier: 100 },
-    { id: 6, name: 'Floor 6', minMastery: 5000, baseBet: 5000, maxBet: 50000, betStep: 5000, initialJackpot: 5000000, payoutMultiplier: 500 },
-    { id: 7, name: 'Floor 7', minMastery: 10000, baseBet: 10000, maxBet: 100000, betStep: 10000, initialJackpot: 10000000, payoutMultiplier: 1000 }
+    { id: 1, name: 'Floor 1', minMastery: 10, baseBet: 10, maxBet: 100, betStep: 10, initialJackpot: 10000 },
+    { id: 2, name: 'Floor 2', minMastery: 50, baseBet: 50, maxBet: 500, betStep: 50, initialJackpot: 50000 },
+    { id: 3, name: 'Floor 3', minMastery: 100, baseBet: 100, maxBet: 1000, betStep: 100, initialJackpot: 100000 },
+    { id: 4, name: 'Floor 4', minMastery: 500, baseBet: 500, maxBet: 5000, betStep: 500, initialJackpot: 500000 },
+    { id: 5, name: 'Floor 5', minMastery: 1000, baseBet: 1000, maxBet: 10000, betStep: 1000, initialJackpot: 1000000 },
+    { id: 6, name: 'Floor 6', minMastery: 5000, baseBet: 5000, maxBet: 50000, betStep: 5000, initialJackpot: 5000000 },
+    { id: 7, name: 'Floor 7', minMastery: 10000, baseBet: 10000, maxBet: 100000, betStep: 10000, initialJackpot: 10000000 }
 ];
 
-const generatePayouts = (multiplier: number) => { const newPayouts: { [key: string]: number } = {}; for (const key in basePayouts) { newPayouts[key] = basePayouts[key as keyof typeof basePayouts] * multiplier; } return newPayouts; };
-rooms.forEach(room => { (room as any).payouts = generatePayouts(room.payoutMultiplier); });
-// @ts-ignore
-type Room = typeof rooms[0] & { payouts: typeof basePayouts };
+// Payouts are now dynamic and not tied to rooms, so we can define the base type here.
+type Room = typeof rooms[0];
 
 const JackpotTag = ({ jackpot }: { jackpot: number; }) => (
     <div className="flex items-center gap-1.5 bg-slate-900/90 border border-yellow-600/50 rounded-full pl-2 pr-3 py-1 text-yellow-300 shadow-lg shadow-black/30">
@@ -90,11 +97,11 @@ const RoomInfoPanel = ({ room }: { room: Room }) => (
     </div>
 );
 
-// --- COMPONENT `Reel` PHIÊN BẢN ĐÃ SỬA LỖI ANIMATION ---
+// --- COMPONENT `Reel` PHIÊN BẢN ĐÃ SỬA LỖI ANIMATION VÀ DÙNG ICON ---
 const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymbol: string; spinning: boolean; onSpinEnd: () => void; index: number; isWinner: boolean; }) => {
     const reelRef = useRef<HTMLDivElement>(null);
     const [reelSymbols, setReelSymbols] = useState<string[]>(() => 
-        Array.from({ length: REEL_ITEM_COUNT }, () => symbols[Math.floor(Math.random() * symbols.length)])
+        Array.from({ length: REEL_ITEM_COUNT }, () => ALL_SYMBOLS[Math.floor(Math.random() * ALL_SYMBOLS.length)].src)
     );
 
     useEffect(() => {
@@ -104,7 +111,7 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
         if (!el || !el.firstChild) return;
         
         const spinList = [
-            ...Array.from({ length: REEL_ITEM_COUNT * 2 - 1 }, () => symbols[Math.floor(Math.random() * symbols.length)]),
+            ...Array.from({ length: REEL_ITEM_COUNT * 2 - 1 }, () => ALL_SYMBOLS[Math.floor(Math.random() * ALL_SYMBOLS.length)].src),
             finalSymbol
         ];
 
@@ -146,8 +153,12 @@ const Reel = ({ finalSymbol, spinning, onSpinEnd, index, isWinner }: { finalSymb
         <div className="h-28 w-24 md:h-40 md:w-32 bg-slate-800/80 border-2 border-slate-600 rounded-xl shadow-lg overflow-hidden">
             <div ref={reelRef} className={`will-change-transform ${isWinner ? 'filter brightness-150' : ''}`}>
                 {reelSymbols.map((s, i) => (
-                    <div key={i} className={`flex items-center justify-center h-28 w-full md:h-40 ${isWinner && i === reelSymbols.length - 1 ? 'animate-win-pulse' : ''}`}>
-                        <span className={`text-5xl md:text-7xl drop-shadow-lg will-change-transform ${isWinner && i === reelSymbols.length - 1 ? 'scale-110' : ''} transition-transform duration-300`}>{s}</span>
+                    <div key={i} className={`flex items-center justify-center h-28 w-full md:h-40 p-2 ${isWinner && i === reelSymbols.length - 1 ? 'animate-win-pulse' : ''}`}>
+                        <img 
+                            src={s} 
+                            alt="slot icon" 
+                            className={`h-20 w-20 md:h-28 md:w-28 object-contain drop-shadow-lg will-change-transform ${isWinner && i === reelSymbols.length - 1 ? 'scale-110' : ''} transition-transform duration-300`}
+                        />
                     </div>
                 ))}
             </div>
@@ -215,7 +226,7 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, setCoins, maste
     setCoins: React.Dispatch<React.SetStateAction<number>>;
     masteryCount: number;
 }) => {
-    const [reelsResult, setReelsResult] = useState(['7️⃣', '7️⃣', '7️⃣']);
+    const [reelsResult, setReelsResult] = useState([SYMBOLS.SEVEN.src, SYMBOLS.SEVEN.src, SYMBOLS.SEVEN.src]);
     const [spinning, setSpinning] = useState(false);
     const [bet, setBet] = useState(room.baseBet);
     const [message, setMessage] = useState(`Chào mừng đến ${room.name}!`);
@@ -225,6 +236,55 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, setCoins, maste
     const finishedReelsCount = useRef(0);
     const animatedBalance = useAnimateValue(balance, 500);
 
+    const generateSpinResult = () => {
+        const roll = Math.random() * 100;
+        const basicSymbols = ALL_SYMBOLS.filter(s => s.type === 'basic');
+        const mediumSymbols = ALL_SYMBOLS.filter(s => s.type === 'medium');
+        const allButSeven = [...basicSymbols, ...mediumSymbols];
+    
+        const shuffle = (array: any[]) => array.sort(() => Math.random() - 0.5);
+    
+        // 0.5% for Jackpot (3 sevens)
+        if (roll < 0.5) return [SYMBOLS.SEVEN, SYMBOLS.SEVEN, SYMBOLS.SEVEN];
+        // 10% for 2 Sevens (Free Spins)
+        if (roll < 10.5) {
+            const nonSeven = allButSeven[Math.floor(Math.random() * allButSeven.length)];
+            return shuffle([SYMBOLS.SEVEN, SYMBOLS.SEVEN, nonSeven]);
+        }
+        // 3% for 3 Medium
+        if (roll < 13.5) {
+            const symbol = mediumSymbols[Math.floor(Math.random() * mediumSymbols.length)];
+            return [symbol, symbol, symbol];
+        }
+        // 6% for 2 Medium
+        if (roll < 19.5) {
+            const symbol = mediumSymbols[Math.floor(Math.random() * mediumSymbols.length)];
+            const otherSymbols = ALL_SYMBOLS.filter(s => s.id !== symbol.id);
+            const nonMatch = otherSymbols[Math.floor(Math.random() * otherSymbols.length)];
+            return shuffle([symbol, symbol, nonMatch]);
+        }
+        // 15% for 3 Basic
+        if (roll < 34.5) {
+            const symbol = basicSymbols[Math.floor(Math.random() * basicSymbols.length)];
+            return [symbol, symbol, symbol];
+        }
+        // 30% for 2 Basic
+        if (roll < 64.5) {
+            const symbol = basicSymbols[Math.floor(Math.random() * basicSymbols.length)];
+            const otherSymbols = ALL_SYMBOLS.filter(s => s.id !== symbol.id && s.type !== 'jackpot');
+            const nonMatch = otherSymbols[Math.floor(Math.random() * otherSymbols.length)];
+            return shuffle([symbol, symbol, nonMatch]);
+        }
+    
+        // 35.5% for Loss: Generate a non-winning combination
+        let s1, s2, s3;
+        const lossPool = allButSeven;
+        s1 = lossPool[Math.floor(Math.random() * lossPool.length)];
+        do { s2 = lossPool[Math.floor(Math.random() * lossPool.length)]; } while (s2.id === s1.id);
+        do { s3 = lossPool[Math.floor(Math.random() * lossPool.length)]; } while (s3.id === s1.id || s3.id === s2.id);
+        return [s1, s2, s3];
+    };
+
     const handleSpin = () => {
         if (spinning || balance < bet) return;
         setCoins(prev => prev - bet);
@@ -233,46 +293,78 @@ const GameScreen = ({ room, balance, jackpot, onExit, onGameEnd, setCoins, maste
         setWinnings(0);
         setWinningLine([false, false, false]);
         finishedReelsCount.current = 0;
-        setReelsResult(Math.random() < 0.01 ? ['7️⃣', '7️⃣', '7️⃣'] : Array.from({ length: 3 }, () => symbols[Math.floor(Math.random() * symbols.length)]));
+        const resultSymbols = generateSpinResult();
+        setReelsResult(resultSymbols.map(s => s.src));
     };
 
     const handleSpinEnd = useCallback(() => {
         finishedReelsCount.current += 1;
         if (finishedReelsCount.current === reelsResult.length) {
             setSpinning(false);
-            const [r1, r2, r3] = reelsResult;
+            
+            const resultSymbols = reelsResult.map(src => ALL_SYMBOLS.find(s => s.src === src));
+            const counts: { [id: string]: number } = {};
+            resultSymbols.forEach(symbol => {
+                if (symbol) { counts[symbol.id] = (counts[symbol.id] || 0) + 1; }
+            });
+
             let winAmount = 0;
             let winMessage = 'Chúc bạn may mắn lần sau!';
             let isWin = false;
             let isJackpotWin = false;
+            let winningSymbolId = '';
 
-            if (r1 === '7️⃣' && r2 === '7️⃣' && r3 === '7️⃣') {
+            if (counts.seven === 3) {
                 winAmount = jackpot;
                 winMessage = `🎉 JACKPOT! BẠN THẮNG ${winAmount.toLocaleString()} XU! 🎉`;
-                setWinningLine([true, true, true]);
                 isWin = true;
                 isJackpotWin = true;
+                winningSymbolId = 'seven';
                 setJackpotAnimation(true);
                 setTimeout(() => setJackpotAnimation(false), 3000);
-            } else if (r1 === r2 && r2 === r3) {
-                const key = `${r1}${r2}${r3}` as keyof typeof room.payouts;
-                winAmount = (room.payouts[key] || 0) * (bet / room.baseBet);
-                if (winAmount > 0) {
-                    winMessage = `🎉 CHÚC MỪNG! BẠN THẮNG ${winAmount.toLocaleString()} XU! 🎉`;
-                    setWinningLine([true, true, true]);
-                    isWin = true;
-                }
+            } else if (counts.seven === 2) {
+                winAmount = bet * 5; // Reward for Free Spins trigger
+                winMessage = `🎉 KÍCH HOẠT FREE SPINS! Thắng ${winAmount.toLocaleString()} xu! 🎉`;
+                isWin = true;
+                winningSymbolId = 'seven';
             } else {
-                const sevens = reelsResult.filter(s => s === '7️⃣').length;
-                const diamonds = reelsResult.filter(s => s === '💎').length;
-                if (sevens === 2) { winAmount = bet * 2; winMessage = `May mắn! Thắng ${winAmount.toLocaleString()} xu!`; setWinningLine(reelsResult.map(s => s === '7️⃣')); isWin = true; }
-                else if (diamonds === 2) { winAmount = bet; winMessage = `Tuyệt! Thắng ${winAmount.toLocaleString()} xu!`; setWinningLine(reelsResult.map(s => s === '💎')); isWin = true; }
+                const winningEntry = Object.entries(counts).find(([, count]) => count >= 2);
+                if (winningEntry) {
+                    const [id, count] = winningEntry;
+                    const symbol = ALL_SYMBOLS.find(s => s.id === id);
+                    if (symbol) {
+                        winningSymbolId = id;
+                        isWin = true;
+                        if (symbol.type === 'medium') {
+                            if (count === 3) {
+                                winAmount = Math.floor(jackpot * 0.20);
+                                winMessage = `SIÊU THẮNG! Bạn nhận 20% Jackpot: ${winAmount.toLocaleString()} xu!`;
+                            } else { // 2 of a kind
+                                winAmount = Math.floor(jackpot * 0.05);
+                                winMessage = `THẮNG LỚN! Bạn nhận 5% Jackpot: ${winAmount.toLocaleString()} xu!`;
+                            }
+                        } else if (symbol.type === 'basic') {
+                            if (count === 3) {
+                                winAmount = bet * 3;
+                                winMessage = `CHIẾN THẮNG! Bạn thắng ${winAmount.toLocaleString()} xu!`;
+                            } else { // 2 of a kind
+                                winAmount = bet * 2;
+                                winMessage = `Tuyệt! Thắng ${winAmount.toLocaleString()} xu!`;
+                            }
+                        }
+                    }
+                }
             }
 
             if (isWin) {
                 setWinnings(winAmount);
                 setCoins(prev => prev + winAmount);
+                const winningSymbolSrc = ALL_SYMBOLS.find(s => s.id === winningSymbolId)?.src;
+                if (winningSymbolSrc) {
+                     setWinningLine(reelsResult.map(src => src === winningSymbolSrc));
+                }
             }
+
             setMessage(winMessage);
             const netDelta = winAmount - bet;
             onGameEnd(netDelta, bet, isJackpotWin);
