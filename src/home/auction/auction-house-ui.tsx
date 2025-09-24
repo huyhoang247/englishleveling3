@@ -613,6 +613,14 @@ export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
             <div className="w-full h-full bg-gradient-to-br from-slate-900 to-[#110f21] flex flex-col">
                 <AuctionHeader onClose={onClose} userCoins={coins} userGems={gems} />
                 
+                {/* <<< THAY ĐỔI VỊ TRÍ VÀ CLASSNAME Ở ĐÂY >>> */}
+                <RateLimitToast
+                    show={!!message}
+                    message={message?.text}
+                    className="absolute top-14 right-4 z-[101]"
+                    showIcon={message?.type === 'error'}
+                />
+
                 <div className="flex-shrink-0 bg-[#0a0a14] border-b border-slate-800/70 shadow-md">
                     <div className="max-w-[1700px] mx-auto pt-2">
                          <AuctionTabs activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -620,14 +628,6 @@ export default function AuctionHouse({ onClose }: { onClose: () => void; }) {
                 </div>
 
                 <main className="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 relative">
-                    {/* <<< THAY ĐỔI Ở ĐÂY: Chuyển vị trí thông báo sang góc trên phải >>> */}
-                    <RateLimitToast
-                        show={!!message}
-                        message={message?.text}
-                        className="absolute top-4 right-4 z-[101]"
-                        showIcon={message?.type === 'error'}
-                    />
-                    
                     {activeTab === 'browse' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                             {activeAuctions.length > 0 ? activeAuctions.map(auction => (
