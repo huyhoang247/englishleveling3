@@ -1,4 +1,4 @@
-// --- START OF FILE: src/word-chain.tsx (Refactored & Fixed Alignment) ---
+// --- START OF FILE: src/word-chain.tsx (Refactored & Fixed Keyboard Alignment) ---
 
 import { useState, useEffect, Fragment } from 'react';
 import { auth } from '../../firebase';
@@ -16,7 +16,7 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import HomeButton from '../../ui/home-button.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 
-// --- Icons (Giữ nguyên) ---
+// --- Icons ---
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
         <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
@@ -28,7 +28,7 @@ const SendIcon = () => (
     </svg>
 );
 
-// --- The new "View" Component ---
+// --- The "View" Component with Keyboard Fix ---
 const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
     // Consume all state and logic from the context
     const {
@@ -49,7 +49,7 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
         handleCloseModal,
     } = useWordChain();
 
-    // Render function for the chain remains here as it's pure UI
+    // Render function for the chain
     const renderChain = () => {
         return wordChain.map((entry, index) => {
             const isPlayer = entry.author === 'player';
@@ -73,8 +73,10 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
 
     return (
         <Fragment>
-            <div className="fixed inset-0 z-[51] bg-gradient-to-br from-gray-100 to-blue-50 flex flex-col">
-                <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
+            {/* Main container is now relative with a fixed height, not resizing with the keyboard. */}
+            <div className="relative w-full h-screen bg-gradient-to-br from-gray-100 to-blue-50">
+                {/* Header is now `fixed` to the viewport, staying on top regardless of scrolling or keyboard. */}
+                <header className="fixed top-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm z-20 shadow-md">
                     <div className="flex h-14 items-center justify-between px-4">
                         <div className="flex justify-start">
                            <HomeButton onClick={onGoBack} label="Home" />
@@ -86,57 +88,61 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
                     </div>
                 </header>
 
-                <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 space-y-4">
-                    {renderChain()}
-                    {gameState === 'aiTurn' && (
-                        <div className="flex items-center gap-2 justify-start animate-pop-in">
-                            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/bot-icon.webp" alt="Bot typing" className="flex-shrink-0 w-8 h-8 rounded-full object-cover" />
-                            <div className="max-w-[70%] rounded-2xl px-4 py-2 text-lg bg-white rounded-bl-lg shadow-md flex items-center gap-1">
-                                <span className="animate-pulse-dot bg-gray-400"></span>
-                                <span className="animate-pulse-dot bg-gray-400 delay-150"></span>
-                                <span className="animate-pulse-dot bg-gray-400 delay-300"></span>
+                {/* New container for scrollable content (chat + input). `pt-14` prevents content from being hidden under the fixed header. */}
+                <div className="h-full flex flex-col pt-14">
+                    <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 space-y-4">
+                        {renderChain()}
+                        {gameState === 'aiTurn' && (
+                            <div className="flex items-center gap-2 justify-start animate-pop-in">
+                                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/bot-icon.webp" alt="Bot typing" className="flex-shrink-0 w-8 h-8 rounded-full object-cover" />
+                                <div className="max-w-[70%] rounded-2xl px-4 py-2 text-lg bg-white rounded-bl-lg shadow-md flex items-center gap-1">
+                                    <span className="animate-pulse-dot bg-gray-400"></span>
+                                    <span className="animate-pulse-dot bg-gray-400 delay-150"></span>
+                                    <span className="animate-pulse-dot bg-gray-400 delay-300"></span>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
 
-                <div className="p-4 bg-white border-t">
-                    {message && !selectedCard && (
-                        <div className={`mb-3 p-3 rounded-lg text-center text-sm font-medium animate-pop-in
-                        ${message.type === 'error' && 'bg-red-100 text-red-700'}
-                        ${message.type === 'success' && 'bg-green-100 text-green-700'}
-                        ${message.type === 'warning' && 'bg-yellow-100 text-yellow-700'}
-                        ${message.type === 'info' && 'bg-blue-100 text-blue-700'}
-                    `}>
-                            {message.text}
-                        </div>
-                    )}
-
-                    {gameState === 'gameOver' ? (
-                        <button onClick={startGame} disabled={!allWordsLoaded} className="w-full py-3 text-lg font-bold text-white bg-gradient-to-r from-green-500 to-teal-500 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed">
-                            Chơi lại
-                        </button>
-                    ) : (
-                        <form onSubmit={handlePlayerSubmit} className="flex items-center gap-3">
-                            <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
-                                <span className="text-2xl font-bold text-indigo-500">{nextChar.toUpperCase()}</span>
+                    <div className="flex-shrink-0 p-4 bg-white border-t">
+                        {message && !selectedCard && (
+                            <div className={`mb-3 p-3 rounded-lg text-center text-sm font-medium animate-pop-in
+                            ${message.type === 'error' && 'bg-red-100 text-red-700'}
+                            ${message.type === 'success' && 'bg-green-100 text-green-700'}
+                            ${message.type === 'warning' && 'bg-yellow-100 text-yellow-700'}
+                            ${message.type === 'info' && 'bg-blue-100 text-blue-700'}
+                        `}>
+                                {message.text}
                             </div>
-                            <input
-                                type="text"
-                                value={playerInput}
-                                onChange={(e) => setPlayerInput(e.target.value)}
-                                placeholder={gameState === 'playerTurn' ? 'Nhập từ của bạn...' : "Đợi máy..."}
-                                disabled={gameState !== 'playerTurn'}
-                                className="w-full text-lg p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition"
-                                autoComplete="off"
-                                autoCapitalize="none"
-                            />
-                            <button type="submit" disabled={gameState !== 'playerTurn' || !playerInput.trim()} className="flex-shrink-0 w-12 h-12 bg-indigo-500 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-indigo-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition">
-                                <SendIcon />
+                        )}
+
+                        {gameState === 'gameOver' ? (
+                            <button onClick={startGame} disabled={!allWordsLoaded} className="w-full py-3 text-lg font-bold text-white bg-gradient-to-r from-green-500 to-teal-500 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed">
+                                Chơi lại
                             </button>
-                        </form>
-                    )}
+                        ) : (
+                            <form onSubmit={handlePlayerSubmit} className="flex items-center gap-3">
+                                <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                                    <span className="text-2xl font-bold text-indigo-500">{nextChar.toUpperCase()}</span>
+                                </div>
+                                <input
+                                    type="text"
+                                    value={playerInput}
+                                    onChange={(e) => setPlayerInput(e.target.value)}
+                                    placeholder={gameState === 'playerTurn' ? 'Nhập từ của bạn...' : "Đợi máy..."}
+                                    disabled={gameState !== 'playerTurn'}
+                                    className="w-full text-lg p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition"
+                                    autoComplete="off"
+                                    autoCapitalize="none"
+                                />
+                                <button type="submit" disabled={gameState !== 'playerTurn' || !playerInput.trim()} className="flex-shrink-0 w-12 h-12 bg-indigo-500 text-white rounded-xl flex items-center justify-center shadow-md hover:bg-indigo-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition">
+                                    <SendIcon />
+                                </button>
+                            </form>
+                        )}
+                    </div>
                 </div>
+
                 <style jsx>{`
                 @keyframes pop-in {
                     from { opacity: 0; transform: scale(0.8); }
