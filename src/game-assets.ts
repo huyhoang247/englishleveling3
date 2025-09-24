@@ -40,7 +40,7 @@ export const uiAssets = {
   // -- Thêm mới từ sidebar.tsx --
   awardIcon: require("./assets/images/coin.webp"),
   rankFrameIcon: require("./assets/images/coin.webp"),
-  luckyGameIcon: require("./assets/images/coin.webp"),
+  luckyGameIcon: require("./assets/images/lucky-treasure.webp"),
   upgradeIcon: require("./assets/images/upgrade-icon.webp"),
   gavelIcon: require("./assets/images/auction-icon.webp"), // THÊM MỚI ICON ĐẤU GIÁ
   checkInIcon: require("./assets/images/check-in-icon.webp"), // THÊM MỚI ICON ĐIỂM DANH
