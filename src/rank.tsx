@@ -25,7 +25,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState<string | null>(null); // Error state
   const [animation, setAnimation] = useState(false);
-  const [timeFilter, setTimeFilter] = useState('all'); // Added timeFilter state
+  // const [timeFilter, setTimeFilter] = useState('all'); // REMOVED: timeFilter state is no longer needed
 
   // State to hold fetched user data
   const [usersData, setUsersData] = useState<UserData[]>([]);
@@ -47,7 +47,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
       }
 
 
-      // TODO: Implement time-based filtering if your data structure supports it
+      // Time-based filtering is removed as per request
       const querySnapshot = await getDocs(q);
       const fetchedUsers: UserData[] = [];
       
@@ -75,17 +75,17 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
     }
   };
 
-  // Fetch data when the component mounts or activeTab/timeFilter changes
+  // Fetch data when the component mounts or activeTab changes
   useEffect(() => {
     fetchUsers();
-  }, [activeTab, timeFilter]); // Re-run fetch when tab or time filter changes
+  }, [activeTab]); // Re-run fetch when tab changes
 
   // Animation effect
   useEffect(() => {
     setAnimation(true);
     const timer = setTimeout(() => setAnimation(false), 700);
     return () => clearTimeout(timer);
-  }, [activeTab, timeFilter]);
+  }, [activeTab]);
 
   // Getting rank icon with animation
   const getRankIcon = (rank: number) => {
@@ -128,7 +128,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
   };
 
 
-  // Filter and sort data based on activeTab and timeFilter
+  // Filter and sort data based on activeTab
   const filteredAndSortedData = usersData
     .sort((a, b) => {
         if (activeTab === 'wealth') {
@@ -170,66 +170,8 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             />
         </div>
         
-        {/* UPDATED: Time Filter Selector with new color scheme */}
-        <div className="mb-4 p-0.5 bg-slate-900/40 backdrop-blur-sm rounded-lg border border-slate-700/60 flex items-center justify-between flex-shrink-0">
-          <button
-            className={`py-1.5 px-3 font-medium flex items-center justify-center rounded-md transition-all duration-300 text-xs flex-1 ${
-              timeFilter === 'day'
-                ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-sm shadow-blue-700/20'
-                : 'bg-transparent text-slate-400 hover:bg-slate-800/50'
-            }`}
-            onClick={() => setTimeFilter('day')}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="mr-1 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-            Ngày
-          </button>
-          <button
-            className={`py-1.5 px-3 font-medium flex items-center justify-center rounded-md transition-all duration-300 text-xs flex-1 ${
-              timeFilter === 'week'
-                ? 'bg-gradient-to-r from-blue-600 to-slate-600 text-white shadow-sm shadow-slate-700/20'
-                : 'bg-transparent text-slate-400 hover:bg-slate-800/50'
-            }`}
-            onClick={() => setTimeFilter('week')}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="mr-1 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-            </svg>
-            Tuần
-          </button>
-          <button
-            className={`py-1.5 px-3 font-medium flex items-center justify-center rounded-md transition-all duration-300 text-xs flex-1 ${
-              timeFilter === 'month'
-                ? 'bg-gradient-to-r from-slate-600 to-gray-700 text-white shadow-sm shadow-gray-700/20'
-                : 'bg-transparent text-slate-400 hover:bg-slate-800/50'
-            }`}
-            onClick={() => setTimeFilter('month')}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="mr-1 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 2v4"/>
-              <path d="M16 2v4"/>
-              <rect x="3" y="4" width="18" height="18" rx="2"/>
-              <path d="M3 10h18"/>
-            </svg>
-            Tháng
-          </button>
-          <button
-            className={`py-1.5 px-3 font-medium flex items-center justify-center rounded-md transition-all duration-300 text-xs flex-1 ${
-              timeFilter === 'all'
-                ? 'bg-gradient-to-r from-gray-700 to-gray-800 text-white shadow-sm shadow-gray-900/20'
-                : 'bg-transparent text-slate-400 hover:bg-slate-800/50'
-            }`}
-            onClick={() => setTimeFilter('all')}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="mr-1 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-            Tổng
-          </button>
-        </div>
-
+        {/* REMOVED: Time Filter Selector is hidden as requested */}
+        
         {/* UPDATED: Tabs with new color scheme */}
         <div className="flex mb-4 p-0.5 bg-slate-900/40 backdrop-blur-sm rounded-lg border border-slate-700/60 flex-shrink-0">
           <button
@@ -433,10 +375,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             </svg>
             <span className="text-slate-300">Cập nhật: </span>
             <span className="text-white font-medium ml-1">
-              {timeFilter === 'day' && '1 giờ trước'}
-              {timeFilter === 'week' && '12:00 hôm nay'}
-              {timeFilter === 'month' && '01/05/2025'}
-              {timeFilter === 'all' && '00:00 hôm nay'}
+              00:00 hôm nay
             </span>
           </div>
         </div>
