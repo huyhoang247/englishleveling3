@@ -160,14 +160,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         </div>
 
         {/* --- Overlays / Modals --- */}
-        <div className="fixed inset-0 z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> 
-            <ErrorBoundary>
-                {/* MODIFIED: Thêm currentUser và truyền currentUserId vào component */}
-                {isRankOpen && currentUser && (
-                    <EnhancedLeaderboard onClose={toggleRank} currentUserId={currentUser.uid} />
-                )}
-            </ErrorBoundary> 
-        </div>
+        <div className="fixed inset-0 z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> <ErrorBoundary>{isRankOpen && currentUser && <EnhancedLeaderboard onClose={toggleRank} currentUserId={currentUser.uid} />}</ErrorBoundary> </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isPvpArenaOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isPvpArenaOpen && currentUser && (<PvpArena onClose={togglePvpArena} userId={currentUser.uid} player1={{ name: currentUser.displayName || "You", avatarUrl: currentUser.photoURL || "", coins: coins, initialStats: getPlayerBattleStats(), equippedSkills: getEquippedSkillsDetails() }} player2={{ name: "Shadow Fiend", avatarUrl: "https://i.imgur.com/kQoG2Yd.png", initialStats: { maxHp: 1500, hp: 1500, atk: 120, def: 55 }, equippedSkills: [] }} onCoinChange={async (amount) => setCoins(await updateUserCoins(currentUser!.uid, amount))} onMatchEnd={(result) => console.log(`Match ended. Winner: ${result.winner}`)} /> )}</ErrorBoundary>
         </div>
