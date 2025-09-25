@@ -1999,6 +1999,1005 @@ Thẻ (Card) là một miếng giấy cứng hoặc nhựa nhỏ, thường có 
 Kế hoạch (Plans) là một tập hợp các ý định hoặc các bước đã được suy nghĩ kỹ lưỡng để đạt được một mục tiêu nào đó trong tương lai.
 Thực hành (Practices) là hành động lặp đi lặp lại một kỹ năng để trở nên giỏi hơn, hoặc là việc áp dụng lý thuyết vào thực tế.
 Tăng lên (Rise) là sự di chuyển lên một vị trí cao hơn hoặc sự gia tăng về số lượng, mức độ. Ví dụ: 'Mặt trời mọc (tăng lên) ở phía đông', 'giá cả tăng lên'.
+Tiếng Pháp (French) là ngôn ngữ chính thức của nước Pháp và được sử dụng ở nhiều quốc gia khác trên thế giới.
+Tiêu chuẩn (Standards) là những quy tắc hoặc yêu cầu được đặt ra để làm thước đo chất lượng cho một sản phẩm, dịch vụ hay công việc.
+Mặc dù (Despite) là một từ dùng để giới thiệu một sự thật trái ngược với điều được nói đến trong mệnh đề chính, thể hiện sự tương phản.
+Khách hàng (Customer) là người mua hoặc sử dụng sản phẩm, dịch vụ của một cửa hàng hoặc công ty.
+Con gái (Daughter) là người con có giới tính nữ của cha mẹ.
+Còn sống (Alive) là trạng thái đang tồn tại sự sống, chưa chết.
+Miệng (Mouth) là một bộ phận trên khuôn mặt dùng để ăn, nói và thở.
+Nữ (Female) là từ chỉ giới tính của người hoặc động vật có khả năng sinh con hoặc đẻ trứng.
+Sẽ (Shall) là một động từ dùng để diễn tả một hành động sẽ xảy ra trong tương lai, thường mang tính trang trọng hoặc đề nghị.
+Người Anh (British) là từ dùng để chỉ những người có quốc tịch hoặc nguồn gốc từ Vương quốc Anh.
+Tiếp tục (Continues/Continuing) là hành động làm một việc gì đó mà không dừng lại, hoặc bắt đầu lại sau khi đã tạm dừng.
+Khẩn cấp (Emergency) là một tình huống nguy hiểm, bất ngờ và nghiêm trọng, đòi hỏi phải hành động ngay lập tức.
+Chicago (Chicago) là một trong những thành phố lớn nhất và nổi tiếng nhất ở Mỹ, nằm ở bang Illinois.
+Người lớn (Adults) là những người đã trưởng thành, không còn là trẻ em hay thanh thiếu niên.
+Cha mẹ (Parent) là người cha hoặc người mẹ của một người con.
+Instagram (Instagram) là một mạng xã hội phổ biến cho phép người dùng chia sẻ hình ảnh và video với bạn bè và người theo dõi.
+Harvard (Harvard) là tên một trường đại học danh tiếng và lâu đời bậc nhất thế giới, nằm ở bang Massachusetts, Mỹ.
+Quan hệ đối tác (Partnership) là sự hợp tác giữa hai hay nhiều người hoặc tổ chức để cùng nhau đạt được một mục tiêu chung.
+Tối cao (Supreme) là cấp độ cao nhất, quan trọng nhất hoặc quyền lực nhất.
+Con trai (Boys) là những người con có giới tính nam của cha mẹ, hoặc dùng để chỉ các bé trai nói chung.
+Phim (Movies) là một tác phẩm nghệ thuật dưới dạng hình ảnh chuyển động, thường kể một câu chuyện và được chiếu ở rạp hoặc trên tivi.
+Người bạn (Fellow) là một người cùng trong một nhóm, một hoàn cảnh hoặc có chung sở thích với bạn.
+Thượng nghị sĩ (Senator) là một chính trị gia được bầu vào Thượng viện, một trong hai viện của cơ quan lập pháp ở nhiều quốc gia.
+Thành phần (Components) là các bộ phận, yếu tố riêng lẻ cấu tạo nên một vật thể hoặc một hệ thống lớn hơn.
+Phần nào đó (Somewhat) là một trạng từ chỉ mức độ, có nghĩa là "một chút", "hơi hơi", không hoàn toàn.
+Nghĩ (Thinks) là hoạt động của trí óc để hình thành ý tưởng, suy luận hoặc đưa ra quyết định.
+Hấp dẫn (Fascinating) là tính từ mô tả một cái gì đó rất thú vị và lôi cuốn, khiến bạn muốn biết thêm về nó.
+Treo (Hang) là hành động giữ một vật ở trên cao sao cho phần dưới của nó không chạm vào đâu.
+Di chuyển (Moves) là hành động thay đổi vị trí từ nơi này sang nơi khác.
+Ngồi (Sat) là hành động đặt cơ thể ở tư thế mông tựa trên một bề mặt như ghế hoặc sàn nhà.
+Khả năng (Possibility) là việc một điều gì đó có thể xảy ra hoặc có thể là sự thật.
+Xem (Watched) là hành động nhìn vào một cái gì đó trong một khoảng thời gian, thường là thứ đang chuyển động hoặc thay đổi.
+Chính thức (Official) có nghĩa là được công nhận bởi một cơ quan có thẩm quyền hoặc được thực hiện một cách công khai, theo quy định.
+Đóng (Shut) là hành động làm cho một cái gì đó như cửa ra vào, cửa sổ không còn ở trạng thái mở.
+Đầu (Heads) là phần trên cùng của cơ thể người, nơi chứa não, mắt, tai, mũi, và miệng.
+Chia (Divided) là hành động phân tách một cái gì đó thành nhiều phần nhỏ hơn.
+Nhận ra (Recognized) là hành động biết hoặc nhớ ai đó, cái gì đó khi bạn nhìn thấy hoặc nghe thấy họ.
+Đèn (Lights) là những vật dụng tạo ra ánh sáng để chúng ta có thể nhìn thấy trong bóng tối.
+Chấm (Dot) là một dấu tròn nhỏ.
+Yêu (Loves) là cảm giác yêu thương, quý mến sâu sắc dành cho một người, một vật hay một hoạt động nào đó.
+Đặt (Lay) là hành động để một vật gì đó xuống một bề mặt một cách cẩn thận.
+Nhìn thấy (Sees) là hành động nhận biết được sự vật, hiện tượng bằng mắt.
+Điều trị (Treated) là quá trình chăm sóc y tế để chữa bệnh hoặc làm giảm các triệu chứng của bệnh tật.
+Thay mặt (Behalf) là làm một việc gì đó với tư cách là đại diện cho một người hoặc một nhóm người khác.
+Thay thế (Alternative) là một lựa chọn khác có sẵn thay cho một lựa chọn ban đầu.
+Nói dối (Lie) là hành động nói điều gì đó không đúng sự thật một cách cố ý.
+Có đủ khả năng chi trả (Afford) là có đủ tiền để mua hoặc làm một việc gì đó mà không gặp khó khăn về tài chính.
+Trước đây (Previously) là khoảng thời gian đã qua, trước thời điểm hiện tại.
+Thực tế (Practical) là tính từ mô tả những thứ liên quan đến kinh nghiệm thực tế hơn là lý thuyết, có tính ứng dụng cao.
+Ủy ban (Commission) là một nhóm người được chính thức giao nhiệm vụ tìm hiểu, báo cáo hoặc kiểm soát một vấn đề cụ thể.
+Tấn (Ton) là một đơn vị đo khối lượng, bằng 1000 kilôgam.
+Bất kể (Regardless) là một từ dùng để chỉ rằng một điều gì đó vẫn đúng hoặc vẫn xảy ra mà không bị ảnh hưởng bởi các yếu tố khác.
+Xuất hiện (Appears) là hành động bắt đầu được nhìn thấy hoặc trở nên rõ ràng.
+Chân (Legs) là bộ phận của cơ thể dùng để đứng và đi lại, kéo dài từ hông đến bàn chân.
+Vắc xin (Vaccines) là một chế phẩm sinh học giúp cơ thể tạo ra sự miễn dịch để chống lại một bệnh truyền nhiễm cụ thể.
+Sữa (Milk) là một chất lỏng dinh dưỡng màu trắng do động vật có vú tiết ra để nuôi con.
+Châu Á (Asian) là tính từ dùng để chỉ những gì thuộc về hoặc có nguồn gốc từ châu Á.
+Của bạn (Yours) là một đại từ sở hữu, dùng để chỉ một cái gì đó thuộc về người mà bạn đang nói chuyện.
+Phần lớn (Largely) là một trạng từ có nghĩa là chủ yếu, hầu hết, hoặc về cơ bản.
+Ôi trời (Gosh) là một thán từ dùng để biểu lộ sự ngạc nhiên, kinh ngạc.
+Giám đốc điều hành (CEO) là chức danh cao nhất trong một công ty, chịu trách nhiệm quản lý và điều hành mọi hoạt động.
+Chiến thắng (Winning) là hành động hoặc kết quả của việc đứng đầu trong một cuộc thi, trận đấu hoặc cuộc chiến.
+Thông qua (Via) là một giới từ có nghĩa là đi qua một nơi nào đó trên đường đến một nơi khác, hoặc bằng một phương tiện nào đó.
+Hình ảnh (Photos) là những bức tranh được tạo ra bằng máy ảnh, ghi lại khoảnh khắc của sự vật, con người.
+Bóng đá (Football) là một môn thể thao đồng đội, trong đó hai đội cố gắng đưa bóng vào khung thành đối phương chủ yếu bằng chân.
+Tách ra (Split) là hành động chia một cái gì đó thành hai hoặc nhiều phần.
+Đạt tới (Reaching) là hành động đến được một nơi, một cấp độ hoặc một mục tiêu nào đó sau một quá trình nỗ lực.
+Xử lý (Processing) là một chuỗi các hành động hoặc các bước được thực hiện để đạt được một kết quả cụ thể.
+Khuôn mặt (Faces) là phần phía trước của đầu, từ trán đến cằm, bao gồm mắt, mũi và miệng.
+Anh chàng (Dude) là một từ lóng thân mật dùng để gọi một người đàn ông, đặc biệt là bạn bè.
+Kéo (Pulling) là hành động dùng lực để di chuyển một vật về phía mình.
+Mặc dù (Although) là một liên từ dùng để nối hai mệnh đề có ý nghĩa tương phản nhau.
+Đã giúp (Helped) là hành động hỗ trợ ai đó làm một việc gì đó trong quá khứ.
+Chết (Dead) là trạng thái không còn sống, khi mọi hoạt động sinh học của một cơ thể đã ngừng lại.
+Có tên là (Named) là được gọi bằng một cái tên cụ thể.
+Bạo lực (Violence) là hành vi sử dụng sức mạnh thể chất để gây tổn thương, lạm dụng, hoặc phá hoại.
+Khái niệm (Concept) là một ý tưởng hoặc một nguyên tắc trừu tượng về một sự vật, hiện tượng nào đó.
+Dẫn đầu (Leading) là ở vị trí đầu tiên hoặc quan trọng nhất trong một cuộc đua, một nhóm hoặc một lĩnh vực.
+Trở lại (Back) là hành động hoặc sự di chuyển quay về nơi xuất phát.
+Nhỏ (Little) là tính từ chỉ kích thước, số lượng hoặc mức độ không lớn.
+Ngày (Day) là một khoảng thời gian 24 giờ, hoặc là khoảng thời gian từ lúc mặt trời mọc đến lúc mặt trời lặn.
+Cho (Give) là hành động đưa một cái gì đó cho ai đó mà không yêu cầu nhận lại.
+Nhìn (Looking) là hành động hướng mắt về một phía để xem một cái gì đó.
+Hỏi (Ask) là hành động nói hoặc viết điều gì đó để mong nhận được câu trả lời hoặc thông tin.
+Khác với (Unlike) là giới từ dùng để chỉ sự khác biệt giữa hai người hoặc hai vật.
+Hoàn thành (Completed) là trạng thái đã làm xong một công việc, một nhiệm vụ một cách trọn vẹn.
+Nước Anh (England) là quốc gia lớn nhất và đông dân nhất trong Vương quốc Liên hiệp Anh và Bắc Ireland.
+Tài năng (Talent) là một khả năng hoặc kỹ năng đặc biệt, bẩm sinh mà một người có.
+Người hâm mộ (Fans) là những người rất yêu thích và ủng hộ một người nổi tiếng, một đội thể thao hoặc một loại hình giải trí nào đó.
+Lạm dụng (Abuse) là hành vi sử dụng một cái gì đó sai mục đích, quá mức, hoặc đối xử với ai đó một cách tàn nhẫn.
+Trong khi (Whereas) là một liên từ được sử dụng để so sánh hoặc đối chiếu hai sự thật, hai ý kiến trái ngược nhau.
+Súng (Gun) là một loại vũ khí bắn ra đạn với tốc độ cao.
+Dẫn (Leads) là hành động đi trước để chỉ đường, hoặc gây ra một kết quả, một hành động nào đó.
+Đã thắng (Won) là hành động đạt được chiến thắng trong một cuộc thi hoặc trận đấu trong quá khứ.
+Có thể (Possibly) là một trạng từ thể hiện rằng một điều gì đó có khả năng xảy ra nhưng không chắc chắn.
+Bị giết (Killed) là trạng thái bị tước đoạt mạng sống bởi một hành động bạo lực.
+Cá nhân (Personally) là trạng từ chỉ một điều gì đó liên quan đến, được thực hiện bởi hoặc là ý kiến của riêng một người.
+Khắp nơi (Everywhere) là ở mọi địa điểm, không có nơi nào là ngoại lệ.
+Thật vậy (Indeed) là một trạng từ được sử dụng để nhấn mạnh một câu khẳng định hoặc để đồng ý với điều gì đó.
+Hội nghị (Conference) là một cuộc họp lớn, trang trọng, thường kéo dài vài ngày, nơi những người có cùng chuyên môn hoặc sở thích tụ tập để thảo luận về một chủ đề cụ thể.
+Tôn giáo (Religious) là tính từ dùng để mô tả những gì liên quan đến niềm tin vào Chúa, các vị thần hoặc các hệ thống tín ngưỡng tâm linh.
+Giết (Kill) là hành động làm cho một người hoặc một sinh vật nào đó chết.
+Gần như (Nearly) có nghĩa là rất gần, hầu như, chỉ còn thiếu một chút nữa là đến một con số, một mức độ hoặc một trạng thái nào đó.
+Thay đổi (Shift) là sự di chuyển hoặc sự thay đổi về vị trí, phương hướng, hoặc quan điểm.
+Hàng trăm (Hundreds) là một con số rất lớn, chỉ số lượng gồm nhiều trăm đơn vị.
+Nếu không thì (Otherwise) là một từ nối dùng để chỉ kết quả sẽ xảy ra nếu điều kiện trước đó không được thực hiện.
+Bằng cách nào đó (Somehow) nghĩa là bằng một cách thức nào đó không rõ ràng hoặc không xác định.
+Bất cứ nơi nào (Anywhere) là một trạng từ chỉ một địa điểm không xác định, ở bất kỳ nơi nào.
+Trách nhiệm (Responsibility) là nghĩa vụ, bổn phận phải thực hiện một công việc và chịu hậu quả về hành động của mình.
+Tổ chức/Cầm (Held) là dạng quá khứ của "hold", có thể mang nghĩa là đã cầm, giữ một vật hoặc đã tổ chức một sự kiện.
+Gọi (Calls) là hành động dùng giọng nói để thu hút sự chú ý hoặc liên lạc qua điện thoại.
+Đối tác (Partner) là người cùng làm việc, kinh doanh hoặc là người bạn đời trong một mối quan hệ.
+Đã chơi (Played) là hành động tham gia vào một trò chơi, một môn thể thao hoặc một hoạt động giải trí trong quá khứ.
+Tham gia (Engage) là hành động tham dự hoặc trở thành một phần của một hoạt động, một cuộc thảo luận nào đó.
+Thật không may (Unfortunately) là một trạng từ dùng để diễn tả sự tiếc nuối về một sự kiện hoặc tình huống không may mắn.
+Chết (Die) là động từ chỉ hành động ngừng sống, kết thúc sự sống.
+Do đó (Therefore) là một liên từ dùng để chỉ kết quả, kết luận được rút ra từ những điều đã nói trước đó; vì vậy.
+Có lẽ (Perhaps) là một trạng từ thể hiện rằng một điều gì đó có thể đúng hoặc có thể xảy ra, nhưng không chắc chắn.
+Cái chết (Death) là danh từ chỉ sự kết thúc vĩnh viễn của sự sống.
+Có khả năng (Likely) là tính từ mô tả một việc gì đó có nhiều cơ hội xảy ra hoặc là sự thật.
+Cho (Gives) là hành động đưa một cái gì đó cho người khác.
+Tuy nhiên (However) là một từ nối dùng để giới thiệu một ý kiến hoặc sự thật đối lập với điều vừa được nêu ra.
+Đã cho (Gave) là dạng quá khứ của động từ "give", chỉ hành động trao một vật gì đó cho người khác đã xảy ra.
+Cảm thấy (Felt) là dạng quá khứ của động từ "feel", chỉ một cảm xúc hoặc cảm giác đã trải qua.
+Chính họ (Themselves) là đại từ phản thân, dùng để nhấn mạnh chính những người hoặc vật vừa được đề cập đã tự làm một việc gì đó.
+Mảnh (Piece) là một phần nhỏ được tách ra từ một vật thể lớn hơn.
+Phải (Must) là một động từ khuyết thiếu dùng để diễn tả một sự bắt buộc hoặc một điều rất cần thiết phải làm.
+Đã biết (Knew) là dạng quá khứ của động từ "know", chỉ việc đã có kiến thức hoặc thông tin về điều gì đó.
+Thay vì (Instead) là một trạng từ được sử dụng để chỉ một sự lựa chọn thay thế cho một lựa chọn khác.
+Làm ơn (Please) là một từ được dùng để thể hiện sự lịch sự khi đưa ra một yêu cầu hoặc lời đề nghị.
+Đã nói (Told) là dạng quá khứ của động từ "tell", có nghĩa là đã kể hoặc thông báo cho ai đó một điều gì.
+Dọc theo (Along) là giới từ chỉ sự chuyển động hoặc vị trí theo chiều dài của một con đường, một con sông.
+Được cho (Given) là dạng phân từ của "give", có nghĩa là được ai đó cung cấp hoặc khi xem xét một sự thật đã biết.
+Vấn đề (Matter) là một chủ đề, một tình huống hoặc một sự việc đang được thảo luận hoặc xem xét.
+Những cái khác/Những người khác (Others) dùng để chỉ những người hoặc những vật còn lại không được đề cập cụ thể.
+Hoặc (Either) là từ dùng để đưa ra sự lựa chọn giữa hai người hoặc hai vật.
+Chính xác (Exactly) là một trạng từ nhấn mạnh rằng điều gì đó hoàn toàn đúng, không có sai lệch.
+Xảy ra (Happens) là hành động một sự kiện, một tình huống nào đó diễn ra.
+Cơ thể (Body) là toàn bộ cấu trúc vật chất của một con người hoặc động vật.
+Đến khi (Until) là một giới từ hoặc liên từ, chỉ một hành động kéo dài cho tới một thời điểm nhất định thì dừng lại.
+Từ (Word) là một đơn vị ngôn ngữ có nghĩa, được dùng để nói hoặc viết.
+Sau đó (Later) là một trạng từ chỉ thời gian, có nghĩa là tại một thời điểm trong tương lai hoặc sau một sự kiện nào đó.
+Những ngày (Days) là dạng số nhiều của "ngày", chỉ một khoảng thời gian dài hơn một ngày.
+Lấy (Taking) là hành động cầm, nắm hoặc di chuyển một thứ gì đó.
+Trở thành (Become) là động từ chỉ sự thay đổi, chuyển đổi từ trạng thái này sang trạng thái khác.
+Dựa trên (Based) có nghĩa là sử dụng một ý tưởng, thông tin hoặc sự thật làm nền tảng để phát triển một cái gì đó.
+Mọi người (Everyone) là đại từ dùng để chỉ tất cả mọi người trong một nhóm, không ngoại trừ ai.
+Bên trong (Within) là giới từ chỉ vị trí hoặc thời gian ở trong một giới hạn nhất định.
+Điều khoản (Terms) là những quy định, điều kiện được đặt ra trong một hợp đồng hay một thỏa thuận.
+Ai đó (Somebody) là đại từ dùng để chỉ một người nào đó không xác định.
+Đúng (True) là tính từ mô tả một điều gì đó phù hợp với sự thật hoặc thực tế.
+Hầu như (Almost) là trạng từ chỉ mức độ gần như hoàn toàn, chỉ thiếu một chút.
+Đã lấy (Took) là dạng quá khứ của động từ "take", chỉ hành động đã cầm hoặc lấy một vật gì đó.
+Bất cứ điều gì (Whatever) là từ dùng để chỉ bất kỳ thứ gì, không quan trọng đó là gì.
+Chính bạn (Yourself) là đại từ phản thân, dùng để nhấn mạnh chính người đang được nói đến.
+Trong khi (During) là giới từ được sử dụng để chỉ một hành động xảy ra xuyên suốt một khoảng thời gian hoặc một sự kiện.
+Thường xuyên (Often) là trạng từ chỉ một hành động xảy ra nhiều lần, lặp đi lặp lại.
+Cùng nhau (Together) là trạng từ mô tả hành động được thực hiện chung với một hoặc nhiều người khác.
+Những năm (Years) là dạng số nhiều của "năm", chỉ một khoảng thời gian dài.
+Nhìn (Look) là hành động hướng mắt về một phía để quan sát một sự vật, hiện tượng.
+Làm việc (Work) là hoạt động sử dụng sức lực hoặc trí óc để hoàn thành một công việc, thường để kiếm tiền.
+Tốt (Good) là tính từ mô tả một điều gì đó có chất lượng cao, tích cực hoặc mang lại sự hài lòng.
+Cái gì đó (Something) là một đại từ dùng để chỉ một vật, một sự việc hoặc một ý tưởng không được xác định cụ thể.
+Đầu tiên (First) là từ chỉ vị trí đứng đầu trong một dãy hoặc thứ tự.
+Loại (Kind) là danh từ chỉ một nhóm các sự vật có cùng đặc điểm; cũng là tính từ có nghĩa là tử tế, tốt bụng.
+Cần (Need) là động từ diễn tả sự cần thiết phải có một thứ gì đó hoặc phải làm một việc gì đó.
+Chỉ (Only) là một trạng từ dùng để giới hạn, có nghĩa là không có gì khác ngoài điều đang được nói đến.
+Nói chuyện (Talk) là hành động giao tiếp, trao đổi thông tin bằng lời nói.
+Đã thấy (Seen) là dạng phân từ của động từ "see", chỉ việc đã nhìn thấy một điều gì đó.
+Sống (Live) là động từ chỉ trạng thái tồn tại sự sống, hoặc cư trú tại một nơi nào đó.
+Tin (Believe) là hành động chấp nhận một điều gì đó là sự thật mà không cần bằng chứng chắc chắn.
+Ai đó (Someone) là đại từ dùng để chỉ một người nào đó không xác định, tương tự như "somebody".
+Suy nghĩ (Thinking) là quá trình hoạt động của trí não để xem xét, hình thành ý tưởng hoặc đưa ra quyết định.
+Trường hợp (Case) là một tình huống, một hoàn cảnh cụ thể.
+Bất cứ điều gì (Anything) là đại từ dùng để chỉ bất kỳ vật gì, việc gì trong câu hỏi hoặc câu phủ định.
+Toàn bộ (Whole) là tính từ có nghĩa là tất cả, trọn vẹn, không thiếu một phần nào.
+Đang nói chuyện (Talking) là hành động đang trong quá trình giao tiếp bằng lời nói.
+Người (Person) là một cá nhân, một con người.
+Xong (Done) là trạng thái đã hoàn thành, đã kết thúc một công việc.
+Bắt đầu (Start) là hành động hoặc thời điểm khởi đầu một việc gì đó.
+Khác (Another) là từ dùng để chỉ thêm một người, một vật khác cùng loại hoặc một cái khác biệt.
+Vẫn (Still) là trạng từ chỉ một hành động hoặc tình huống vẫn tiếp tục diễn ra cho đến hiện tại.
+Hôm nay (Today) là ngày hiện tại, ngày đang diễn ra.
+Mỗi (Every) là từ dùng để chỉ từng cá nhân trong một nhóm mà không có ngoại lệ.
+Sau (After) là giới từ hoặc liên từ chỉ một thời điểm muộn hơn hoặc theo sau một sự kiện.
+Có lẽ (Maybe) là trạng từ dùng để diễn tả một khả năng, một điều có thể xảy ra nhưng không chắc chắn.
+Tìm (Find) là hành động phát hiện hoặc khám phá ra một cái gì đó sau khi tìm kiếm.
+Sở hữu (Own) là động từ có nghĩa là có một cái gì đó thuộc về mình.
+Nhận (Getting) là hành động đang trong quá trình tiếp nhận hoặc có được một cái gì đó.
+Cảm ơn (Thank) là động từ dùng để bày tỏ lòng biết ơn đối với ai đó.
+Tắt (Off) là trạng thái không hoạt động, thường dùng cho các thiết bị điện.
+Có lẽ/Chắc là (Probably) là trạng từ chỉ một điều gì đó rất có khả năng sẽ xảy ra.
+Mọi thứ (Everything) là đại từ dùng để chỉ tất cả mọi vật, mọi sự việc.
+Đã đến (Came) là dạng quá khứ của động từ "come", chỉ hành động đã tới một địa điểm nào đó.
+Đã muốn (Wanted) là dạng quá khứ của động từ "want", chỉ một mong muốn đã có trong quá khứ.
+Nói (Says) là hành động phát ra lời nói hoặc diễn đạt một ý kiến.
+Các chàng trai/Các bạn (Guys) là một từ thân mật dùng để gọi một nhóm người, bất kể giới tính.
+Mọi người (Everybody) là đại từ dùng để chỉ tất cả mọi người trong một nhóm, tương tự "everyone".
+Làm (Makes) là động từ chỉ hành động tạo ra, chế tạo hoặc gây ra một điều gì đó.
+Suy nghĩ (Thought) là một ý tưởng, quan điểm được hình thành trong tâm trí hoặc quá trình tư duy.
+Sử dụng (Using) là hành động dùng một thứ gì đó cho một mục đích cụ thể.
+Một lần (Once) chỉ một sự việc xảy ra tại một thời điểm duy nhất trong quá khứ.
+Đã (Already) là một trạng từ cho biết một hành động đã xảy ra trước thời điểm hiện tại.
+Thỉnh thoảng (Sometimes) có nghĩa là đôi khi, không phải lúc nào cũng vậy.
+Không có (Without) có nghĩa là thiếu vắng hoặc không bao gồm một thứ gì đó.
+Tập đoàn (Corporate) là tính từ liên quan đến một công ty hoặc một tập đoàn kinh doanh lớn.
+Thị trường (Markets) là nơi diễn ra các hoạt động mua bán hàng hóa và dịch vụ.
+Nhập cư (Immigration) là hành động chuyển đến một quốc gia khác để sinh sống lâu dài.
+Nhân viên (Employees) là những người được một tổ chức hoặc cá nhân thuê để làm việc và trả lương.
+Mạng lưới (Networks) là một hệ thống gồm nhiều người hoặc nhiều thứ được kết nối với nhau.
+Hành động (Acts) là những việc làm, hành vi cụ thể; cũng có thể là các đạo luật do chính phủ ban hành.
+Máy chủ (Server) là một máy tính hoặc chương trình quản lý các tài nguyên và dịch vụ trong một mạng lưới.
+Vai trò (Roles) là chức năng hoặc vị trí mà một người hay một vật đảm nhận trong một tình huống cụ thể.
+Tệp tin (Files) là một tập hợp dữ liệu được lưu trữ dưới một cái tên trên máy tính.
+Sự tham gia (Engagement) là hành động tham dự, dấn thân hoặc cam kết vào một hoạt động nào đó.
+Tài liệu (Documents) là các văn bản, giấy tờ hoặc dữ liệu điện tử cung cấp thông tin hoặc bằng chứng.
+Chính sách (Policies) là những quy tắc, kế hoạch được sử dụng làm cơ sở để đưa ra quyết định trong một tổ chức.
+Di chúc (Testament) là một văn bản pháp lý thể hiện ý nguyện của một người về việc phân chia tài sản sau khi qua đời; cũng có nghĩa là một minh chứng cho điều gì đó.
+Liên quan (Associated) có nghĩa là có sự kết nối hoặc mối quan hệ với một điều gì đó khác.
+Chương trình (Programs) là một chuỗi các hoạt động, sự kiện được lên kế hoạch hoặc một bộ lệnh dành cho máy tính.
+Đa dạng (Diverse) là tính từ mô tả sự phong phú, bao gồm nhiều loại hình hoặc yếu tố khác nhau.
+Khách hàng (Customers) là những người mua sản phẩm hoặc sử dụng dịch vụ từ một cửa hàng hoặc doanh nghiệp.
+Cơ sở hạ tầng (Infrastructure) là các công trình và tiện ích cơ bản cho xã hội, như đường sá, cầu cống, điện, nước.
+Đại diện (Represented) có nghĩa là đã hành động hoặc phát ngôn thay mặt cho một người hoặc một tổ chức.
+Năng động (Dynamic) mô tả một cái gì đó luôn thay đổi, phát triển và đầy năng lượng.
+Quản lý (Administration) là công việc điều hành, tổ chức và giám sát hoạt động của một doanh nghiệp hoặc tổ chức.
+Thảo luận (Discussions) là các cuộc trò chuyện, trao đổi ý kiến về một chủ đề nào đó để đưa ra quyết định.
+Tổ chức (Organizations) là những nhóm người được thành lập vì một mục đích chung, chẳng hạn như công ty, hiệp hội.
+Cơ quan (Institutions) là các tổ chức lớn, quan trọng như trường đại học, ngân hàng, hoặc các cơ quan chính phủ.
+Quốc gia (Nations) là các cộng đồng lớn gồm những người có chung lịch sử, văn hóa hoặc ngôn ngữ và sống trong một lãnh thổ nhất định.
+Khía cạnh (Aspects) là những mặt, những phương diện khác nhau của một vấn đề hoặc sự vật.
+Có ý nghĩa (Meaningful) mô tả một điều gì đó quan trọng, hữu ích và mang lại giá trị.
+Thiết bị (Devices) là những máy móc, dụng cụ hoặc công cụ được tạo ra cho một mục đích cụ thể.
+Thực tế ảo (Virtual) mô tả một môi trường được tạo ra bởi máy tính, không tồn tại trong thế giới vật lý nhưng cho cảm giác như thật.
+Kịch bản (Scenario) là một chuỗi các sự kiện có thể xảy ra trong một tình huống giả định.
+Chiến lược (Strategic) là tính từ liên quan đến việc lập kế hoạch dài hạn để đạt được một mục tiêu tổng thể.
+Đường phố (Streets) là các con đường công cộng trong thành phố hoặc thị trấn, thường có nhà cửa và tòa nhà hai bên.
+Kỹ thuật (Techniques) là những phương pháp, cách thức cụ thể để thực hiện một công việc, đặc biệt là những việc đòi hỏi kỹ năng.
+Doanh nghiệp (Businesses) là các tổ chức thương mại như công ty, cửa hàng hoạt động để kiếm lợi nhuận.
+Cá nhân (Individuals) là những con người riêng lẻ, khác biệt với một nhóm hay tập thể.
+Sự đa dạng (Diversity) là trạng thái có nhiều loại hình, nhiều yếu tố khác nhau cùng tồn tại.
+Hậu quả (Consequences) là kết quả hoặc tác động của một hành động, thường mang ý nghĩa tiêu cực.
+Tỷ lệ (Rates) là một phép đo so sánh giữa hai đại lượng khác nhau.
+Công nghệ (Tech) là từ viết tắt của "technology", chỉ việc ứng dụng kiến thức khoa học vào thực tiễn.
+Cho phép (Allowing) là hành động đồng ý để ai đó làm gì hoặc để một việc gì đó xảy ra.
+Phản hồi (Feedback) là những ý kiến, nhận xét về một sản phẩm hoặc hiệu suất công việc nhằm mục đích cải thiện.
+Hành động (Actions) là những việc làm cụ thể được thực hiện để đạt được một mục tiêu.
+Sự tương tác (Interaction) là sự giao tiếp, ảnh hưởng qua lại giữa hai hay nhiều người hoặc sự vật.
+Sự kiện (Events) là những việc diễn ra, đặc biệt là những việc quan trọng hoặc đã được lên kế hoạch.
+Tài trợ (Funding) là việc cung cấp tiền cho một mục đích, một dự án cụ thể.
+Chiến lược (Strategies) là những kế hoạch hành động được thiết kế để đạt được mục tiêu dài hạn.
+Quan chức (Officials) là những người giữ các chức vụ có thẩm quyền trong chính phủ hoặc một tổ chức.
+Chuyên gia (Experts) là những người có kiến thức sâu rộng và kỹ năng cao trong một lĩnh vực cụ thể.
+Kết quả (Outcomes) là những tác động hoặc hậu quả cuối cùng của một quá trình hoặc hành động.
+Nhiều (Multi) là một tiền tố có nghĩa là "đa", "nhiều" hoặc "hơn một".
+Đánh giá (Assessment) là quá trình xem xét, nhận định về chất lượng, giá trị của một cái gì đó.
+Hướng dẫn (Guidance) là sự chỉ dẫn, lời khuyên để giúp ai đó giải quyết một vấn đề.
+Không gian (Spaces) là những khoảng trống, những khu vực có thể sử dụng được.
+Y tế (Healthcare) là lĩnh vực liên quan đến việc chăm sóc và cải thiện sức khỏe con người.
+Vận chuyển (Transportation) là hoạt động di chuyển người, hàng hóa từ nơi này đến nơi khác.
+Yêu cầu (Requirements) là những điều kiện, tiêu chuẩn cần phải có hoặc phải được đáp ứng.
+Cơ quan (Agencies) là các tổ chức hoặc văn phòng cung cấp một dịch vụ cụ thể.
+Thuộc về giáo dục (Educational) là tính từ liên quan đến việc dạy và học.
+Đặc điểm (Features) là những nét nổi bật, đặc trưng của một người hoặc sự vật.
+Thử thách (Challenging) mô tả một việc gì đó khó khăn nhưng thú vị, đòi hỏi sự nỗ lực để vượt qua.
+Lãnh đạo (Leadership) là khả năng hoặc hành động dẫn dắt, chỉ huy một nhóm người hay một tổ chức.
+Bán hàng (Sales) là hoạt động trao đổi hàng hóa hoặc dịch vụ để lấy tiền.
+Cơ sở vật chất (Facilities) là các tòa nhà, trang thiết bị được xây dựng để phục vụ một mục đích cụ thể.
+Kiểm tra (Testing) là quá trình thử nghiệm để đánh giá chất lượng hoặc hiệu suất của một cái gì đó.
+Giới tính (Gender) là đặc điểm xã hội và văn hóa phân biệt nam và nữ.
+Phúc âm (Gospel) là những lời dạy của Chúa Jesus và câu chuyện về cuộc đời của ngài, được ghi lại trong Kinh Thánh.
+Sao Hỏa (Mars) là hành tinh thứ tư tính từ Mặt Trời, còn được gọi là "Hành tinh Đỏ".
+Tập trung (Focusing) là hành động dồn sự chú ý và nỗ lực vào một việc cụ thể.
+Phần trăm (Percentage) là một tỷ lệ được biểu thị dưới dạng một phần của 100.
+Véc-tơ (Vector) là một đại lượng trong toán học và vật lý có cả độ lớn và phương hướng.
+Texas (Bang ở Hoa Kỳ) là một tiểu bang lớn ở miền nam Hoa Kỳ.
+Đang diễn ra (Ongoing) mô tả một quá trình hoặc hoạt động vẫn đang tiếp tục, chưa kết thúc.
+Kinh Thánh (Bible) là cuốn sách thiêng liêng của đạo Thiên Chúa, bao gồm Cựu Ước và Tân Ước.
+Hoạt động (Operations) là các quy trình và công việc cần thiết để vận hành một doanh nghiệp hoặc hệ thống.
+Thực thi (Enforcement) là hành động bắt buộc tuân theo một luật lệ, quy định nào đó.
+Cuộc họp (Meetings) là những buổi gặp gỡ của một nhóm người để thảo luận công việc.
+Khác biệt (Differences) là những điểm không giống nhau giữa hai hay nhiều sự vật, sự việc.
+Công việc (Jobs) là những vị trí làm việc có trả lương.
+Carolina (Tiểu bang ở Mỹ) là tên chung của hai tiểu bang Bắc Carolina và Nam Carolina ở Hoa Kỳ.
+Người Ấn Độ (Indian) là từ dùng để chỉ người hoặc những gì thuộc về đất nước Ấn Độ.
+Tương tác (Interact) là hành động giao tiếp hoặc ảnh hưởng qua lại lẫn nhau.
+Tận tâm (Committed/Dedicated) là hết lòng, cống hiến cho một mục tiêu, một công việc hay một người nào đó.
+Florida (Tiểu bang ở Mỹ) là một tiểu bang nằm ở vùng đông nam của Hoa Kỳ.
+Kết quả (Outcome) là hậu quả, tác động cuối cùng của một hành động hay sự kiện.
+Hồ sơ (Records) là những thông tin, tài liệu được ghi chép và lưu trữ lại.
+Thuộc về chủng tộc (Racial) là tính từ liên quan đến các chủng tộc khác nhau của loài người.
+Phẫu thuật (Surgery) là một phương pháp y học dùng các dụng cụ để mổ, chữa trị hoặc sửa chữa các bộ phận trong cơ thể.
+Được bao gồm (Included) có nghĩa là là một phần của một tổng thể lớn hơn.
+Đã được thảo luận (Discussed) là một vấn đề đã được bàn bạc, trao đổi ý kiến.
+Sự phục hồi (Recovery) là quá trình trở lại trạng thái bình thường sau khi bị ốm, bị thương hoặc gặp khó khăn.
+Muốn (wanna) là cách nói thân mật, không trang trọng của "want to".
+Được phát hành (Released) là được công bố hoặc cho ra mắt công chúng.
+Các công nghệ (Technologies) là các phương pháp, hệ thống và thiết bị là kết quả của kiến thức khoa học.
+Cập nhật (Update) là hành động cung cấp thông tin mới nhất hoặc làm cho một cái gì đó trở nên hiện đại hơn.
+Nộp (Submit) là hành động trình hoặc gửi một tài liệu, đơn từ để được xem xét.
+Có thể (could) là một động từ khuyết thiếu dùng để diễn tả một khả năng hoặc một đề nghị lịch sự.
+Trên/Qua (over) là một giới từ có thể chỉ vị trí ở phía trên, sự bao phủ, hoặc sự kết thúc.
+Hai (two) là số đếm chỉ số lượng là 2.
+Nhiều (much) là từ dùng để chỉ một số lượng lớn, thường đi với danh từ không đếm được.
+Đã nhận (got) là dạng quá khứ của "get", có nghĩa là đã có được hoặc đã nhận được thứ gì đó.
+Thậm chí (even) là một trạng từ dùng để nhấn mạnh một điều gì đó bất ngờ hoặc cực đoan.
+Vật/Thứ (thing) là một danh từ chung dùng để chỉ một đồ vật, một sự việc hoặc một ý tưởng.
+Lấy (take) là hành động cầm, nắm hoặc di chuyển một vật gì đó đi nơi khác.
+Hơn (than) là một liên từ được sử dụng trong cấu trúc so sánh để đối chiếu hai sự vật.
+Đã nói (said) là dạng quá khứ của động từ "say", chỉ hành động đã phát ra lời nói.
+Đã làm (did) là dạng quá khứ của động từ "do", chỉ một hành động đã được thực hiện.
+Qua (through) là giới từ chỉ sự di chuyển từ bên này sang bên kia của một không gian.
+Nhiều (many) là từ dùng để chỉ một số lượng lớn, thường đi với danh từ đếm được.
+Mạo từ xác định (the) là một từ được đặt trước danh từ để chỉ một người hoặc vật cụ thể đã được xác định.
+Và (and) là một liên từ dùng để kết nối hai từ, cụm từ hoặc mệnh đề.
+Đến (to) là một giới từ thường được dùng để chỉ phương hướng, mục đích hoặc một điểm đến.
+Của (of) là một giới từ dùng để chỉ sự sở hữu, mối quan hệ hoặc sự bao gồm.
+Một (a) là mạo từ không xác định, được dùng trước một danh từ đếm được số ít.
+Đó (That) là một đại từ chỉ định, dùng để chỉ một người hoặc vật ở xa người nói.
+Trong (In) là một giới từ chỉ vị trí bên trong một không gian hoặc một khoảng thời gian.
+Bạn (You) là đại từ nhân xưng dùng để chỉ người đang nói chuyện cùng.
+Tôi (I) là đại từ nhân xưng dùng để chỉ chính người đang nói.
+Là (Is) là một dạng của động từ "to be", thường dùng cho ngôi thứ ba số ít ở thì hiện tại.
+Nó (It) là đại từ nhân xưng dùng để chỉ một vật, một con vật hoặc một sự việc.
+Vì vậy (So) là một liên từ dùng để chỉ kết quả hoặc hậu quả của một sự việc.
+Chúng ta/Chúng tôi (We) là đại từ nhân xưng dùng để chỉ một nhóm người bao gồm cả người nói.
+Này (This) là một đại từ chỉ định, dùng để chỉ một người hoặc vật ở gần người nói.
+Cho (For) là một giới từ thường được dùng để chỉ mục đích hoặc người nhận một hành động.
+Có (Have) là một động từ chỉ sự sở hữu.
+Trên (On) là một giới từ chỉ vị trí trên một bề mặt.
+Là (Are) là một dạng của động từ "to be", thường dùng cho ngôi thứ hai và các ngôi số nhiều.
+Với (With) là một giới từ chỉ sự đồng hành, sự cùng nhau hoặc việc sử dụng một công cụ.
+Nhưng (But) là một liên từ dùng để giới thiệu một ý tương phản với ý đã nói trước đó.
+Là (Was) là dạng quá khứ của động từ "to be", dùng cho ngôi thứ nhất và thứ ba số ít.
+Là/Thì/Ở (Be) là dạng nguyên mẫu của động từ "to be".
+Nó là (It's) là dạng viết tắt của "it is".
+Gì (What) là một từ để hỏi, dùng để yêu cầu thông tin về một sự vật, sự việc.
+Họ/Chúng nó (They) là đại từ nhân xưng dùng để chỉ một nhóm người hoặc vật không bao gồm người nói.
+Thích (like) là động từ diễn tả sự yêu thích, hài lòng với một điều gì đó.
+Về (about) là giới từ dùng để chỉ chủ đề, đề tài của một cuộc nói chuyện hay văn bản.
+Như (as) là một từ dùng để so sánh hoặc chỉ vai trò, chức năng của một người hay sự vật.
+Không (not) là một trạng từ dùng để phủ định một hành động hoặc một ý kiến.
+Chỉ (just) là một trạng từ có nhiều nghĩa, thường có nghĩa là "vừa mới", "chỉ" hoặc "đơn thuần".
+Tại (at) là một giới từ chỉ một địa điểm hoặc thời gian cụ thể.
+Có thể (can) là một động từ khuyết thiếu diễn tả khả năng hoặc sự cho phép.
+Làm (do) là một động từ chỉ hành động chung hoặc dùng làm trợ động từ trong câu hỏi và câu phủ định.
+Tất cả (all) là từ dùng để chỉ toàn bộ số lượng của một nhóm.
+Nếu (if) là một liên từ dùng để đưa ra một điều kiện.
+Hoặc (or) là một liên từ dùng để đưa ra sự lựa chọn giữa hai hay nhiều khả năng.
+Vâng (yeah) là cách nói thân mật, không trang trọng của "yes".
+Một (one) là số đếm chỉ số lượng là 1.
+Biết (know) là động từ chỉ việc có kiến thức hoặc thông tin về một điều gì đó.
+Của bạn (your) là một tính từ sở hữu, chỉ một cái gì đó thuộc về người đang nói chuyện cùng.
+Ở đó (there) là một trạng từ chỉ một nơi ở xa người nói.
+Từ (from) là một giới từ chỉ nguồn gốc, điểm xuất phát.
+Của tôi (my) là một tính từ sở hữu, chỉ một cái gì đó thuộc về người nói.
+Nghĩ (think) là động từ chỉ hoạt động của trí não để hình thành ý tưởng, quan điểm.
+Đó là (that's) là dạng viết tắt của "that is".
+Những người (people) là danh từ số nhiều của "person", chỉ một nhóm người.
+Của chúng ta/chúng tôi (our) là một tính từ sở hữu, chỉ một cái gì đó thuộc về một nhóm người có cả người nói.
+Một (an) là mạo từ không xác định, được dùng trước một danh từ bắt đầu bằng nguyên âm.
+Tôi là (I'm) là dạng viết tắt của "I am".
+Bởi vì (because) là một liên từ dùng để chỉ nguyên nhân của một sự việc.
+Khi (when) là một từ để hỏi về thời gian hoặc một liên từ chỉ thời điểm xảy ra một hành động.
+Ra (out) là một giới từ hoặc trạng từ chỉ sự di chuyển từ trong ra ngoài.
+Thực sự (really) là một trạng từ dùng để nhấn mạnh mức độ của một tính từ hoặc trạng từ khác.
+Lên (up) là một giới từ hoặc trạng từ chỉ sự di chuyển theo hướng lên trên.
+Như thế nào (how) là một từ để hỏi về cách thức hoặc tình trạng của một sự việc.
+Nhận (get) là một động từ có nhiều nghĩa, thường có nghĩa là có được, nhận được hoặc trở nên.
+Anh ấy (he) là đại từ nhân xưng dùng để chỉ một người nam đã được nhắc đến.
+Bây giờ (now) là một trạng từ chỉ thời điểm hiện tại.
+Sau đó (then) là một trạng từ chỉ một thời điểm tiếp theo trong một chuỗi sự kiện.
+Phải (have to) là một cụm động từ diễn tả một sự bắt buộc, cần thiết phải làm gì.
+Một vài (some) là từ dùng để chỉ một số lượng không xác định nhưng không phải là tất cả.
+Nhiều hơn (more) là từ dùng trong so sánh để chỉ mức độ lớn hơn.
+Ở đây (here) là một trạng từ chỉ nơi chốn, tại vị trí của người nói.
+Những cái này (these) là đại từ chỉ định số nhiều, dùng để chỉ những vật ở gần người nói.
+Bởi (by) là một giới từ có nhiều nghĩa, thường dùng để chỉ tác nhân gây ra hành động hoặc phương tiện.
+Tôi (me) là đại từ nhân xưng, đóng vai trò là tân ngữ.
+Không (don't) là dạng viết tắt của "do not", dùng để phủ định một hành động.
+Sẽ (would) là một động từ khuyết thiếu, thường dùng trong câu điều kiện hoặc để diễn tả một yêu cầu lịch sự.
+Đúng (right) là tính từ có nghĩa là chính xác, phù hợp; cũng có nghĩa là bên phải.
+Sẽ (will) là một động từ khuyết thiếu dùng để diễn tả một hành động sẽ xảy ra trong tương lai.
+Họ/chúng (them) là đại từ nhân xưng, đóng vai trò là tân ngữ.
+Thời gian (time) là một khái niệm chỉ sự trôi chảy liên tục của các sự kiện.
+Cái nào (which) là một từ để hỏi, dùng để yêu cầu lựa chọn trong một nhóm giới hạn.
+Ai (who) là một từ để hỏi, dùng để hỏi về người.
+Rất (very) là một trạng từ dùng để nhấn mạnh mức độ.
+Có (has) là một dạng của động từ "have", dùng cho ngôi thứ ba số ít.
+Chúng tôi là (we're) là dạng viết tắt của "we are".
+Bạn là (you're) là dạng viết tắt của "you are".
+Của họ (their) là một tính từ sở hữu, chỉ một cái gì đó thuộc về một nhóm người đã được nhắc đến.
+Thấy (see) là động từ chỉ hành động nhận biết bằng mắt.
+Là (were) là dạng quá khứ của động từ "to be", dùng cho ngôi thứ hai và các ngôi số nhiều.
+Đã có (had) là dạng quá khứ của động từ "have", chỉ sự sở hữu trong quá khứ.
+Muốn (want) là động từ diễn tả một mong muốn, một ý định.
+Đi (go) là động từ chỉ sự di chuyển từ nơi này đến nơi khác.
+Tốt (well) là một trạng từ mô tả một hành động được thực hiện một cách tốt đẹp, hiệu quả.
+Sự công nhận (recognition) là việc thừa nhận hoặc đánh giá cao một ai đó hoặc một điều gì đó vì thành tựu hoặc giá trị của họ.
+Hát (sing) là hành động tạo ra giai điệu, âm nhạc bằng giọng nói của mình.
+Được mời (invited) là được ai đó ngỏ lời tham gia một sự kiện hoặc hoạt động nào đó một cách trang trọng.
+Máy móc (machines) là các thiết bị có động cơ được tạo ra để giúp con người làm việc dễ dàng và nhanh hơn.
+Viện Công nghệ Massachusetts (MIT) là tên viết tắt của một trường đại học rất nổi tiếng về khoa học và công nghệ ở Mỹ.
+Tạp chí (journal) là một ấn phẩm được xuất bản định kỳ (hàng tuần, hàng tháng), chứa các bài viết chuyên sâu về một chủ đề cụ thể.
+Yên tĩnh (quiet) là trạng thái không gian không có hoặc có rất ít tiếng ồn, âm thanh.
+Sự phán quyết (judgment) là một quyết định hoặc ý kiến chính thức được đưa ra sau khi đã suy nghĩ cẩn thận, đặc biệt là trong một phiên tòa.
+Quyết tâm (determined) là có ý chí mạnh mẽ để làm điều gì đó và không để khó khăn cản trở.
+Xe buýt (bus) là một loại phương tiện giao thông công cộng lớn, chở được nhiều người và chạy theo các tuyến đường cố định.
+Vận hành (operate) là điều khiển hoặc làm cho một cỗ máy, một hệ thống hoạt động đúng cách.
+Hỗn hợp (mixed) là được tạo thành từ nhiều thứ khác nhau được trộn lẫn lại với nhau.
+Trong nước (domestic) chỉ những gì liên quan đến hoặc xảy ra bên trong một quốc gia, đối lập với "quốc tế".
+Sản xuất (manufacturing) là quá trình tạo ra hàng hóa với số lượng lớn, thường bằng máy móc trong các nhà máy.
+Thứ Hai (Monday) là ngày đầu tiên trong tuần làm việc, theo sau ngày Chủ Nhật.
+Tiếng Tây Ban Nha (spanish) là ngôn ngữ chính thức của nước Tây Banha và nhiều quốc gia ở Châu Mỹ Latinh.
+Giày (shoes) là vật dụng dùng để mang vào chân nhằm bảo vệ và làm đẹp khi đi lại.
+Châu Á (asia) là châu lục lớn nhất và đông dân nhất trên thế giới, nơi có Việt Nam.
+Cạnh tranh (competitive) mô tả một môi trường hoặc tính cách luôn muốn cố gắng để giỏi hơn hoặc thành công hơn người khác.
+Nấu ăn (cooking) là hành động chuẩn bị thức ăn bằng cách sử dụng nhiệt, ví dụ như luộc, rán, nướng.
+Khoa học (sciences) là việc nghiên cứu về thế giới tự nhiên và xã hội một cách có hệ thống thông qua quan sát và thí nghiệm.
+Sự đại diện (representation) là hành động thay mặt cho một người hoặc một nhóm người để nói hoặc hành động theo lợi ích của họ.
+Phương tiện (medium) là công cụ hoặc cách thức để truyền tải thông tin hay thể hiện một ý tưởng, ví dụ như tivi là một phương tiện truyền thông.
+Xa xôi (remote) mô tả một nơi ở rất xa trung tâm, hẻo lánh và khó tiếp cận.
+Quả cam (orange) là một loại trái cây hình tròn, có vỏ màu cam, nhiều nước và có vị chua ngọt.
+Có khả năng (capable) là có đủ kỹ năng, sức mạnh hoặc phẩm chất cần thiết để làm tốt một việc gì đó.
+Kiến thức sâu sắc (insight) là sự hiểu biết sâu và rõ ràng về bản chất của một vấn đề phức tạp.
+Bằng chứng (proof) là thông tin, sự thật hoặc vật chứng minh một điều gì đó là đúng. Ví dụ, dấu vân tay có thể là bằng chứng trong một vụ án.
+Cái chuông (bell) là một vật bằng kim loại, khi rung sẽ phát ra âm thanh "reng reng", thường dùng để báo hiệu.
+Chính cô ấy (herself) là một đại từ dùng để nhấn mạnh người nữ đã tự mình làm một việc gì đó mà không cần ai giúp.
+Công thức (formula) là một bộ quy tắc hoặc phương pháp được thể hiện bằng ký hiệu để giải quyết một vấn đề, đặc biệt trong toán học và hóa học.
+Cuộc bầu cử (elections) là quá trình người dân bỏ phiếu một cách chính thức để chọn ra người đại diện cho mình trong chính quyền.
+Chấn thương (trauma) là một tổn thương nghiêm trọng về thể chất hoặc một cú sốc lớn về tinh thần.
+Kem (cream) là phần béo của sữa, hoặc chỉ một món ăn lạnh, ngọt được làm từ sữa, đường và các loại hương liệu.
+Sóng (waves) là sự chuyển động nhấp nhô của nước trên bề mặt biển, hồ, hoặc sự lan truyền của năng lượng như sóng radio, sóng âm.
+Trứng (eggs) là vật hình bầu dục do các loài gia cầm (gà, vịt) hoặc chim đẻ ra, là một loại thực phẩm phổ biến.
+Bản ghi âm (recording) là âm thanh hoặc hình ảnh đã được lưu lại trên một thiết bị để có thể nghe hoặc xem lại sau này.
+Bản địa (indigenous) chỉ những người hoặc nền văn hóa có nguồn gốc từ một vùng đất cụ thể, đã sinh sống ở đó từ rất lâu đời.
+Rừng (forest) là một khu vực rộng lớn được bao phủ bởi rất nhiều cây cối và các loài thực vật khác.
+Cuộc điều tra (investigation) là quá trình tìm kiếm, thu thập thông tin một cách có hệ thống để khám phá sự thật về một vụ việc.
+Đồng tính (gay) là từ chỉ những người có sức hấp dẫn về tình cảm hoặc tình dục với người cùng giới tính.
+Hỏi (asks) là hành động đưa ra một câu nói hoặc một câu hỏi để tìm kiếm thông tin.
+Bừa bộn (mess) là tình trạng một nơi không gọn gàng, sạch sẽ, với đồ đạc để lộn xộn khắp nơi.
+Đối thoại (dialogue) là cuộc trò chuyện, nói chuyện qua lại giữa hai hay nhiều người.
+Một cách ngắn gọn (briefly) là làm hoặc nói điều gì đó trong một khoảng thời gian ngắn, chỉ tập trung vào những điểm chính.
+Hạnh phúc (happiness) là trạng thái cảm xúc vui vẻ, hài lòng và mãn nguyện trong cuộc sống.
+Một tên riêng (thomas) là một cái tên phổ biến dành cho nam giới ở nhiều nước phương Tây.
+Tâm lý học (psychology) là ngành khoa học nghiên cứu về tâm trí, cảm xúc và hành vi của con người.
+Theo đuổi (pursue) là nỗ lực để đạt được một mục tiêu hoặc ước mơ nào đó trong một thời gian dài.
+Kịch bản (script) là văn bản chứa lời thoại, hành động và chỉ dẫn cho diễn viên trong một bộ phim hoặc vở kịch.
+Diễn giả (speakers) là những người phát biểu, thuyết trình trước đám đông tại một sự kiện. Từ này cũng có nghĩa là "cái loa".
+May mắn (luck) là những điều tốt đẹp xảy ra một cách tình cờ, ngẫu nhiên mà không thể lường trước.
+Việc uống (drinking) là hành động đưa chất lỏng như nước, sữa, bia vào cơ thể qua miệng.
+Cơ chế (mechanism) là cách thức mà một hệ thống hoặc một quá trình hoạt động, bao gồm các bộ phận và cách chúng tương tác với nhau.
+Vượt qua (passing) có nhiều nghĩa, như di chuyển ngang qua một vật gì đó, hoặc thi đỗ một kỳ thi.
+Chết (dying) là quá trình kết thúc sự sống của một sinh vật.
+Lượng tử (quantum) là một khái niệm trong vật lý, chỉ một lượng năng lượng nhỏ nhất và không thể chia nhỏ hơn được nữa.
+Bưu kiện (package) là một gói đồ hoặc một cái hộp được đóng gói cẩn thận để gửi qua đường bưu điện.
+Cài đặt (settings) là các tùy chọn giúp bạn điều chỉnh cách hoạt động của một thiết bị điện tử hoặc một ứng dụng.
+Bền vững (sustainable) là có khả năng duy trì lâu dài mà không làm cạn kiệt tài nguyên hoặc gây hại cho môi trường.
+Bể bơi (pool) là một cái hồ nhân tạo được xây dựng và chứa đầy nước để mọi người bơi lội, vui chơi.
+Được tài trợ (funded) là được người khác hoặc một tổ chức cung cấp tiền để thực hiện một dự án, hoạt động.
+Diễn viên (actors) là những người chuyên đóng vai các nhân vật trong phim, kịch hoặc các chương trình truyền hình.
+Nhạy cảm (sensitive) là dễ bị ảnh hưởng bởi cảm xúc, dễ bị tổn thương, hoặc có khả năng nhận biết những thay đổi tinh tế.
+Hệ điều hành (Android) là một hệ điều hành phổ biến dành cho điện thoại thông minh và máy tính bảng, được phát triển bởi Google.
+Lý tưởng (ideal) là một tiêu chuẩn hoàn hảo, tốt đẹp nhất mà người ta hình dung và mong muốn đạt tới.
+Thuộc về Hy Lạp (greek) là tính từ chỉ những gì có liên quan đến đất nước, con người, hoặc văn hóa của Hy Lạp.
+Nghiêm trọng (severe) mô tả một vấn đề, một cơn đau, hoặc một tình huống rất tồi tệ, xấu hoặc khắc nghiệt.
+Nhà (houses) là những công trình kiến trúc được xây dựng để con người sinh sống và trú ngụ.
+Đã đồng ý (agreed) là hình thức quá khứ của "đồng ý", nghĩa là đã chấp nhận một ý kiến hoặc đề nghị.
+Bữa ăn (meal) là một lần ăn chính trong ngày, chẳng hạn như bữa sáng, bữa trưa, hoặc bữa tối.
+Đã đứng (stood) là hình thức quá khứ của "đứng", chỉ hành động ở tư thế thẳng trên đôi chân của mình.
+Liên quan (relate) là có một mối liên kết hoặc sự kết nối với một người hoặc một sự việc nào đó.
+Hồ sơ (profile) là một bản mô tả ngắn gọn về thông tin cá nhân, kỹ năng, và kinh nghiệm của một người.
+Phổ quát (universal) là đúng, có thật, hoặc có thể áp dụng cho tất cả mọi người, ở khắp mọi nơi.
+Hóa học (chemistry) là ngành khoa học nghiên cứu về các chất, cấu tạo, tính chất và sự biến đổi của chúng.
+Chất lỏng (liquid) là một trong ba trạng thái cơ bản của vật chất (cùng với rắn và khí), có thể chảy và có hình dạng của vật chứa nó, ví dụ như nước.
+Người tham gia (participants) là những người cùng tham dự, góp mặt vào một sự kiện hoặc một hoạt động nào đó.
+Được chọn (chosen) là được lựa ra từ một nhóm vì được coi là tốt nhất hoặc phù hợp nhất.
+Mối quan hệ (relations) là cách mà hai hay nhiều người, nhóm hoặc quốc gia kết nối và đối xử với nhau.
+Đẩy (Pushed) là dùng lực tác động lên một vật để di chuyển nó ra xa khỏi mình, ngược lại với "kéo".
+Trí thức (Intellectual) là những người có trình độ học vấn cao, thường làm các công việc liên quan đến suy nghĩ, phân tích và nghiên cứu.
+Ma thuật (Magic) là những sức mạnh siêu nhiên, bí ẩn được cho là có thể tạo ra những điều kỳ diệu, không thể giải thích bằng khoa học thông thường.
+Sự tôn trọng (Regard) là cảm giác coi trọng, kính mến dành cho một ai đó vì phẩm chất hoặc thành tựu của họ.
+Ứng viên (Candidate) là người nộp đơn ứng tuyển vào một vị trí công việc, hoặc người tham gia tranh cử trong một cuộc bầu cử.
+Quầy (Counter) là một cái bàn dài trong cửa hàng, ngân hàng, hoặc quán bar, nơi nhân viên đứng để phục vụ khách hàng.
+Nhiễm trùng (Infection) là tình trạng cơ thể bị vi khuẩn hoặc vi-rút có hại xâm nhập, sinh sôi và gây bệnh.
+Mưa (Rain) là hiện tượng tự nhiên khi nước từ các đám mây rơi xuống mặt đất dưới dạng những giọt nhỏ.
+Chim (Bird) là loài động vật có xương sống, có lông vũ, có mỏ và hai cánh, đa số các loài có thể bay được.
+Chủ nhật (Sunday) là ngày cuối cùng trong tuần, thường được coi là ngày nghỉ ngơi.
+Sự tồn tại (Existence) là trạng thái có thật, đang hiện hữu trong thực tế.
+Việc làm (Employment) là tình trạng một người có một công việc và được trả lương để làm công việc đó.
+Chiến tranh (Wars) là các cuộc xung đột vũ trang quy mô lớn và kéo dài giữa các quốc gia hoặc các nhóm người.
+Trọng lực (Gravity) là lực hút của Trái Đất kéo mọi vật thể về phía tâm của nó, khiến mọi thứ rơi xuống đất.
+Lập trình viên (Developers) là những người chuyên viết mã lệnh để tạo ra các phần mềm máy tính, trang web hoặc ứng dụng điện thoại.
+Tạp chí (Magazine) là một loại sách mỏng có nhiều hình ảnh đẹp, được xuất bản định kỳ (hàng tuần, hàng tháng) với các bài viết về nhiều chủ đề giải trí, thời sự.
+Tên riêng (Francisco) là một cái tên phổ biến dành cho nam giới. San Francisco cũng là tên một thành phố nổi tiếng ở Mỹ.
+To (Loud) mô tả âm thanh có cường độ lớn, mạnh, dễ dàng nghe thấy, trái ngược với "yên tĩnh".
+Cột (Column) là một trụ thẳng đứng, thường có hình tròn, dùng để chống đỡ mái nhà hoặc để trang trí trong kiến trúc.
+Trứng (Egg) là vật hình bầu dục do con mái của các loài như gà, vịt, chim đẻ ra, là một loại thực phẩm giàu dinh dưỡng.
+Giết người (killing) là hành động tước đi mạng sống của một người.
+Thị trưởng (mayor) là người đứng đầu chính quyền của một thành phố.
+Biến đổi (transformation) là sự thay đổi lớn về hình dạng, tính chất hoặc diện mạo.
+Cửa sổ (windows) là một khoảng trống trên tường nhà, có lắp kính, dùng để lấy ánh sáng và không khí.
+Nền tảng (platforms) là một cơ sở vững chắc để phát triển hoặc xây dựng những thứ khác; cũng có thể là một sân ga hoặc bục cao.
+Hữu cơ (organic) chỉ các sản phẩm được trồng trọt, chăn nuôi tự nhiên, không sử dụng hóa chất tổng hợp.
+Đã rơi (dropped) là hình thức quá khứ của "rơi", nghĩa là đã di chuyển từ trên cao xuống thấp do trọng lực.
+Lạm phát (Inflation) là tình trạng mức giá chung của hàng hóa và dịch vụ tăng lên theo thời gian, làm giảm sức mua của đồng tiền.
+Tìm kiếm (seeking) là hành động cố gắng để tìm thấy hoặc có được một cái gì đó.
+Mua (purchase) là hành động dùng tiền để đổi lấy một món hàng hoặc dịch vụ.
+Giấy tờ (papers) là các tài liệu, văn bản quan trọng như chứng minh thư, hợp đồng, hoặc bài báo.
+Xuất sắc (brilliant) là rất thông minh, tài giỏi hoặc cực kỳ tốt đẹp, ấn tượng.
+Cảnh (scenes) là một phần của một vở kịch, bộ phim hoặc một khung cảnh trong thực tế.
+Công nghiệp (industrial) là những gì liên quan đến các nhà máy, máy móc và việc sản xuất hàng hóa quy mô lớn.
+Ý thức (consciousness) là trạng thái nhận biết và hiểu biết về bản thân và môi trường xung quanh.
+Trái tim (hearts) là cơ quan bơm máu đi khắp cơ thể; cũng là biểu tượng của tình yêu và cảm xúc.
+Tấn (tons) là một đơn vị đo khối lượng, bằng 1000 kilôgam; cũng có nghĩa là "rất nhiều".
+Mặc định (default) là một thiết lập hoặc tùy chọn được chọn sẵn tự động nếu bạn không chọn cái khác.
+Theo lịch sử (historically) là dựa trên các sự kiện, thông tin đã xảy ra trong quá khứ.
+Có đầu nhọn (pointed) là có một đầu sắc, nhọn, không tù.
+Biến đổi (transform) là làm thay đổi hoàn toàn hình dạng hoặc bản chất của một cái gì đó.
+Thái Bình Dương (Pacific) là tên của đại dương lớn nhất trên thế giới.
+Tiến sĩ (phd) là học vị cao nhất trong hệ thống giáo dục, được trao cho người đã hoàn thành một công trình nghiên cứu độc lập.
+Boston là tên một thành phố lớn và quan trọng về lịch sử ở phía đông bắc Hoa Kỳ.
+Mệt mỏi (tired) là cảm giác cạn kiệt năng lượng, cần được nghỉ ngơi sau khi làm việc hoặc hoạt động nhiều.
+Lịch sử (historic) là quan trọng hoặc nổi tiếng trong quá khứ.
+Nông nghiệp (agriculture) là ngành kinh tế liên quan đến việc trồng trọt và chăn nuôi để tạo ra lương thực, thực phẩm.
+Lĩnh vực (domain) là một phạm vi kiến thức, hoạt động hoặc sở hữu cụ thể. Trong internet, nó là tên của một trang web.
+Tính cách (personality) là tổ hợp các đặc điểm về suy nghĩ, cảm xúc và hành vi tạo nên một cá nhân riêng biệt.
+Quyền lực (powers) là khả năng hoặc quyền hạn để điều khiển, ra lệnh hoặc gây ảnh hưởng đến người khác.
+Khu vực (regions) là những vùng đất rộng lớn có các đặc điểm riêng về địa lý, khí hậu hoặc văn hóa.
+Nhà khoa học (scientist) là người nghiên cứu khoa học để tìm hiểu về thế giới tự nhiên.
+Chiều cao (height) là khoảng cách đo từ chân đến đỉnh của một người hoặc một vật.
+Bản đồ (maps) là hình vẽ thu nhỏ của một khu vực (như Trái Đất, một quốc gia, một thành phố) để chỉ ra vị trí và đường đi.
+Tài sản (assets) là những thứ có giá trị mà một cá nhân hoặc công ty sở hữu, ví dụ như tiền bạc, nhà cửa.
+Hiđrô (hydrogen) là một nguyên tố hóa học, là loại khí nhẹ nhất và phổ biến nhất trong vũ trụ.
+Đã xảy ra (occurred) là hình thức quá khứ của "xảy ra", nghĩa là một sự việc đã diễn ra.
+Thành công (succeed) là đạt được mục tiêu hoặc kết quả mong muốn.
+Danh mục (categories) là các nhóm hoặc loại mà người hoặc vật được phân chia vào dựa trên những đặc điểm chung.
+Cho phép (lets) là để cho ai đó làm một việc gì.
+Hỗ trợ (supports) là giúp đỡ, ủng hộ ai đó về vật chất hoặc tinh thần; hoặc chống đỡ, làm điểm tựa cho một vật.
+Tài khoản (accounts) là một bản ghi chép các giao dịch tài chính tại ngân hàng; hoặc một hồ sơ người dùng trên một trang web, ứng dụng.
+Thuật toán (algorithm) là một tập hợp các quy tắc hoặc các bước phải tuân theo để giải quyết một vấn đề, thường dùng trong máy tính.
+Mùi (smell) là cảm giác mà mũi nhận biết được từ các chất trong không khí, có thể là mùi thơm hoặc mùi hôi.
+Khớp xương (joint) là nơi hai hoặc nhiều xương trong cơ thể nối lại với nhau, giúp cơ thể cử động được.
+Phương tiện (vehicles) là những thứ dùng để chuyên chở người hoặc hàng hóa, như ô tô, xe máy, máy bay.
+Suốt đời (lifetime) là toàn bộ khoảng thời gian một người sống.
+Nhận (receiving) là hành động có được hoặc được đưa cho một thứ gì đó.
+Hồi phục (healing) là quá trình một vết thương hoặc một căn bệnh trở nên khỏe mạnh trở lại.
+Trang phục (dress) là quần áo nói chung, hoặc chỉ một chiếc váy liền của phụ nữ.
+Đế chế (empire) là một tập hợp rộng lớn gồm nhiều quốc gia hoặc vùng lãnh thổ nằm dưới sự cai trị của một vị vua hoặc một chính quyền duy nhất.
+Đề nghị (proposed) là đưa ra một ý kiến, kế hoạch hoặc lời đề xuất để người khác xem xét.
+Cư dân (residents) là những người sinh sống hợp pháp tại một nơi cụ thể, như một ngôi nhà, một khu phố, hoặc một quốc gia.
+Rượu (alcohol) là một loại đồ uống có cồn, được tạo ra từ quá trình lên men của trái cây hoặc ngũ cốc.
+Giả mạo (fake) là không phải là thật, được làm ra để trông giống như đồ thật nhằm mục đích lừa đảo.
+Bên ngoài (external) là thuộc về hoặc xảy ra ở phía bên ngoài của một cái gì đó, đối lập với "bên trong".
+Cảm hứng (inspiration) là một ý tưởng hay cảm xúc bất chợt và sáng tạo, thôi thúc bạn làm một điều gì đó.
+Lặn (dive) là hành động nhảy xuống nước với đầu lao xuống trước, hoặc bơi sâu dưới mặt nước.
+Kỹ sư (engineer) là người được đào tạo để thiết kế, xây dựng và bảo trì các loại máy móc, công trình, hệ thống.
+Khách (guest) là người được mời đến nhà ai đó hoặc tham dự một sự kiện.
+Loại bỏ (removed) là lấy một thứ gì đó ra khỏi vị trí của nó hoặc làm cho nó biến mất.
+Afghanistan là tên một quốc gia nằm ở khu vực Trung Á.
+Bức xạ (radiation) là năng lượng được phát ra dưới dạng sóng hoặc hạt, ví dụ như bức xạ mặt trời, bức xạ hạt nhân.
+Thứ năm (fifth) là chỉ vị trí đứng ở số 5 trong một dãy thứ tự.
+Đã đến (arrived) là hình thức quá khứ của "đến", nghĩa là đã tới một nơi nào đó sau một chuyến đi.
+Đã ở lại (stayed) là hình thức quá khứ của "ở lại", nghĩa là đã tiếp tục ở một nơi nào đó mà không rời đi.
+Chương trình giảng dạy (curriculum) là toàn bộ các môn học và nội dung được dạy tại một trường học hoặc trong một khóa học.
+Quần áo (clothes) là các vật dụng dùng để mặc trên người như áo, quần, váy.
+Gây hại (harm) là làm tổn thương hoặc gây ra thiệt hại cho ai đó hoặc cái gì đó.
+Ngày càng (increasingly) là chỉ một sự việc diễn ra với mức độ nhiều hơn, thường xuyên hơn theo thời gian.
+Thí nghiệm (trials) là các cuộc thử nghiệm để kiểm tra chất lượng, sự an toàn hoặc hiệu quả của một sản phẩm, phương pháp mới.
+Liên quan tới (regarding) là nói về hoặc có kết nối với một chủ đề cụ thể.
+Quyền riêng tư (privacy) là quyền được giữ kín thông tin cá nhân và không bị người khác làm phiền.
+Tải xuống (download) là sao chép dữ liệu (như tệp tin, phần mềm, phim) từ internet về máy tính hoặc điện thoại của bạn.
+Trò đùa (joke) là một câu chuyện hoặc hành động hài hước được nói hoặc làm để khiến người khác cười.
+Khu vực (regional) là liên quan đến một vùng hoặc một khu vực địa lý cụ thể, chứ không phải toàn bộ quốc gia.
+Tập thể (collective) là được thực hiện bởi một nhóm người cùng nhau, vì lợi ích chung của cả nhóm.
+Triển khai (implementation) là quá trình đưa một kế hoạch, quyết định hoặc hệ thống vào thực tế để nó bắt đầu hoạt động.
+Ốm đau (illness) là tình trạng bị bệnh, không khỏe trong người.
+Đặt cược (bet) là hành động dùng tiền để đoán kết quả của một sự kiện không chắc chắn (như một trận đấu thể thao) với hy vọng sẽ thắng được nhiều tiền hơn.
+Vết cắt (Cuts) là một vết thương trên da do vật sắc nhọn gây ra.
+Kết thúc (Ending) là phần cuối cùng của một câu chuyện, bộ phim, hoặc một sự kiện.
+Áo sơ mi (Shirt) là một loại áo có cổ, có tay áo và hàng cúc ở phía trước.
+Sự thoải mái (Comfort) là trạng thái dễ chịu về thể chất, không bị đau đớn và thư giãn về tinh thần.
+Nhớ lại (Recall) là hành động gợi lại một thông tin hoặc một ký ức đã có trong quá khứ.
+Nói (Speaks) là hành động phát ra lời nói, giao tiếp bằng ngôn ngữ.
+Được chấp nhận (Accepted) là được đồng ý hoặc được công nhận là đúng, phù hợp.
+Thân thiện (Friendly) là có thái độ tốt bụng, cởi mở và dễ gần với người khác.
+Gây ra (Causing) là nguyên nhân làm cho một điều gì đó xảy ra.
+Kinh khủng (Horrible) là rất tồi tệ, khó chịu hoặc gây ra sự sợ hãi.
+Một dãy (Array) là một tập hợp lớn và ấn tượng gồm nhiều người hoặc vật được sắp xếp theo một trật tự.
+Mũ (Hat) là vật dụng đội trên đầu để che nắng, che mưa hoặc để làm đẹp.
+Hợp lý (Reasonable) là có lý lẽ, công bằng và chính đáng; hoặc có giá cả phải chăng.
+Bệnh AIDS (AIDS) là tên của một căn bệnh suy giảm miễn dịch nghiêm trọng do vi-rút HIV gây ra.
+Đồng minh (Allies) là các quốc gia hoặc những người hợp tác, ủng hộ lẫn nhau, đặc biệt là trong chiến tranh.
+Được ghi lại (Recorded) là được lưu lại dưới dạng âm thanh, hình ảnh hoặc văn bản.
+Trốn thoát (Escape) là hành động thoát ra khỏi một nơi nguy hiểm hoặc một tình huống không mong muốn.
+Phòng ngừa (Prevention) là hành động ngăn chặn một điều gì đó xấu xảy ra.
+Thống kê (Statistics) là ngành khoa học thu thập, phân tích và trình bày dữ liệu dưới dạng các con số.
+Chật (Tight) là quá nhỏ, ôm sát vào cơ thể và gây khó chịu; hoặc được buộc, giữ rất chắc chắn.
+Thường xuyên (frequently) là lặp đi lặp lại nhiều lần trong một khoảng thời gian ngắn.
+Một cách mạnh mẽ (strongly) là làm điều gì đó với nhiều sức lực, sự quyết tâm hoặc sự tin tưởng.
+Hàng hóa (goods) là những sản phẩm được sản xuất để bán hoặc sử dụng.
+Vị trí (locations) là nơi một người hoặc một vật đang ở hoặc tồn tại.
+Microsoft là tên một công ty công nghệ máy tính đa quốc gia lớn của Mỹ.
+Quân đội (troops) là một nhóm lớn những người lính.
+Khách sạn (hotel) là nơi cung cấp chỗ ở và các dịch vụ khác cho khách du lịch, khách công tác.
+Nhân viên (employee) là người được thuê để làm việc cho một người khác hoặc một công ty.
+Gương (mirror) là một bề mặt phản chiếu hình ảnh của người hoặc vật đứng trước nó.
+Mánh khoé (trick) là một hành động khôn léo hoặc lừa dối để đạt được điều gì đó.
+Dựa vào (rely) là tin tưởng hoặc phụ thuộc vào ai đó hoặc điều gì đó.
+Đam mê (passionate) là có hoặc thể hiện cảm xúc rất mãnh liệt, nồng cháy.
+Vượt qua (overcome) là thành công trong việc đối phó với một khó khăn hoặc một vấn đề.
+Thành kiến (bias) là định kiến, sự thiên vị không công bằng đối với một người hoặc một nhóm người.
+Thợ rèn (smith) là người làm việc với kim loại, đặc biệt là sắt, để tạo ra các đồ vật.
+Nói (spoken) là dạng quá khứ phân từ của "speak", có nghĩa là được nói ra bằng lời.
+Nên (ought) là một từ dùng để đưa ra lời khuyên hoặc chỉ ra điều đúng đắn cần làm.
+Khôn ngoan (wise) là có khả năng đưa ra những quyết định và phán đoán đúng đắn dựa trên kinh nghiệm và kiến thức.
+Đám đông (crowd) là một nhóm rất đông người tụ tập lại ở một nơi.
+Yêu thương (loving) là thể hiện tình yêu hoặc sự quan tâm sâu sắc.
+Lòng tự hào (pride) là cảm giác hài lòng và hãnh diện về bản thân hoặc về những người thân thiết với mình.
+Răng (teeth) là những cấu trúc cứng, màu trắng trong miệng dùng để cắn và nhai thức ăn.
+Pounds là một đơn vị đo khối lượng (bằng khoảng 0,45 kg) hoặc là đơn vị tiền tệ chính thức của Vương quốc Anh.
+Lớp (layers) là một lớp vật chất bao phủ một bề mặt hoặc nằm giữa hai lớp khác.
+Đĩa (plate) là một dụng cụ ăn uống phẳng, thường có hình tròn, dùng để đựng thức ăn.
+Cuối cùng (ultimate) là điều quan trọng nhất, tốt nhất hoặc cơ bản nhất trong một chuỗi sự việc.
+Ẩn (hidden) là bị che giấu, không thể nhìn thấy hoặc tìm thấy một cách dễ dàng.
+Liên kết (linked) là có một mối quan hệ hoặc sự kết nối với nhau.
+Biến số (variables) là những yếu tố có thể thay đổi hoặc khác nhau trong một tình huống.
+Chuyên gia (professionals) là những người có kỹ năng và trình độ cao trong một lĩnh vực công việc cụ thể.
+Khoản đầu tư (investments) là việc bỏ tiền, công sức vào một thứ gì đó với hy vọng sẽ thu được lợi nhuận trong tương lai.
+Ngay lập tức (immediate) là xảy ra hoặc được thực hiện ngay mà không có sự chậm trễ.
+Đá (kick) là hành động dùng chân để đánh hoặc di chuyển một vật gì đó.
+Cơ bắp (muscle) là mô trong cơ thể có khả năng co lại để tạo ra chuyển động.
+Khối (blocks) là những mẩu vật chất cứng, thường có hình chữ nhật hoặc hình vuông.
+Cựu sinh viên (alumni) là những người đã từng tốt nghiệp từ một trường học, cao đẳng hoặc đại học cụ thể.
+Nắm giữ (holds) là giữ một vật gì đó trong tay hoặc trong một vị trí nhất định.
+Cốt truyện (plot) là chuỗi các sự kiện chính tạo nên một câu chuyện trong sách hoặc phim.
+Dự định (intended) là được lên kế hoạch hoặc có mục đích từ trước.
+Cổ (neck) là bộ phận cơ thể nối đầu với phần còn lại của cơ thể.
+Thứ mười chín (19th) là chỉ vị trí đứng ở số 19 trong một dãy thứ tự.
+Được vinh danh (honored) là được tôn trọng và ngưỡng mộ một cách công khai.
+Đại diện (representative) là một người được chọn để thay mặt cho một nhóm người khác để phát biểu hoặc hành động.
+Được vẽ (drawn) là dạng quá khứ phân từ của "draw", nghĩa là đã được tạo ra bằng bút chì, bút mực.
+Sếp (boss) là người quản lý, người có quyền ra lệnh cho bạn tại nơi làm việc.
+Trục (axis) là một đường thẳng tưởng tượng mà một vật thể quay quanh nó.
+Ảnh hưởng (affects) là có tác động làm thay đổi một người hoặc một vật gì đó.
+Khái niệm (concepts) là những ý tưởng hoặc nguyên tắc trừu tượng.
+Bị kiểm soát (controlled) là bị điều khiển hoặc bị giới hạn bởi một ai đó hoặc một cái gì đó.
+Hạt (particles) là những mảnh vật chất cực kỳ nhỏ.
+Thờ phụng (worship) là hành động thể hiện lòng tôn kính sâu sắc đối với một vị thần.
+Thuộc về tổng thống (presidential) là những gì có liên quan đến chức vụ tổng thống của một quốc gia.
+Hài lòng (pleased) là cảm thấy vui vẻ và thỏa mãn.
+Fuck là một từ chửi thề rất thô tục trong tiếng Anh, được dùng để thể hiện sự tức giận hoặc nhấn mạnh điều gì đó.
+Tuyết (snow) là hiện tượng những tinh thể băng nhỏ, màu trắng rơi từ trên trời xuống khi thời tiết rất lạnh.
+UK là tên viết tắt của Vương quốc Anh (United Kingdom).
+Làng (village) là một khu dân cư nhỏ ở vùng nông thôn, nhỏ hơn thị trấn.
+Được thông báo (informed) là có kiến thức hoặc thông tin về một vấn đề gì đó.
+Phản hồi (responses) là câu trả lời hoặc phản ứng đối với một câu hỏi, một sự việc.
+Dự đoán (predict) là nói rằng một sự việc nào đó sẽ xảy ra trong tương lai.
+Đã cho ăn (fed) là dạng quá khứ của "feed", nghĩa là đã đưa thức ăn cho người hoặc động vật.
+Mặt nạ (mask) là vật dùng để che mặt, hoặc một phần của khuôn mặt.
+Ít hơn (fewer) được dùng với danh từ đếm được, có nghĩa là một số lượng nhỏ hơn.
+Việc chọn lựa (picking) là hành động lấy hoặc chọn một thứ gì đó từ một nhóm.
+Bất động sản (estate) là một khu đất rộng lớn có nhà ở, hoặc toàn bộ tài sản và tiền bạc của một người.
+Bão (storm) là một hiện tượng thời tiết khắc nghiệt với gió mạnh, mưa to, sấm và chớp.
+Mãnh liệt (intense) là rất mạnh mẽ, cực độ hoặc ở mức độ cao.
+Sự sáng tạo (creativity) là khả năng sử dụng trí tưởng tượng để tạo ra những ý tưởng hoặc những thứ mới mẻ, độc đáo.
+Inch là một đơn vị đo chiều dài trong hệ thống đo lường của Anh và Mỹ, bằng 2.54 centimet.
+Những lỗ (holes) là những khoảng trống, chỗ thủng trên hoặc trong một vật thể.
+Scott là một tên riêng phổ biến dành cho nam giới.
+Trang trọng (formal) là tuân theo các quy tắc, nghi thức và thường được dùng trong các tình huống quan trọng, chính thức.
+Tấm (sheet) là một mảnh vật liệu mỏng, phẳng, chẳng hạn như một tấm giấy, tấm kim loại hoặc tấm ga trải giường.
+Mục lục (index) là một danh sách các từ hoặc chủ đề theo thứ tự bảng chữ cái ở cuối sách, chỉ ra số trang mà chúng xuất hiện.
+Giao hàng (delivery) là hành động mang hàng hóa, thư từ đến cho một người hoặc một nơi nào đó.
+Tháng Hai (February) là tháng thứ hai trong năm.
+Sinh nhật (birthday) là ngày kỷ niệm ngày một người được sinh ra.
+Bộ phim (films) là những câu chuyện được ghi lại bằng hình ảnh chuyển động và âm thanh, được chiếu ở rạp hoặc trên TV.
+Xương (bone) là bộ phận cứng, màu trắng tạo thành bộ xương của người và động vật.
+Adam là một tên riêng phổ biến dành cho nam giới.
+Biểu diễn (Performing) là hành động hát, nhảy, diễn kịch hoặc chơi nhạc trước khán giả.
+Nhiệm vụ (Tasks) là những công việc cụ thể mà bạn phải làm.
+Điện (Electricity) là một dạng năng lượng dùng để thắp sáng, sưởi ấm và cung cấp năng lượng cho máy móc hoạt động.
+Có kế hoạch (Planned) là được sắp xếp hoặc suy nghĩ cẩn thận từ trước.
+Tăng lên (Rising) là đang di chuyển lên một vị trí cao hơn hoặc đang trở nên lớn hơn về số lượng, giá trị.
+Công nhân (Worker) là người làm một công việc cụ thể, đặc biệt là công việc chân tay.
+Cao (Tall) mô tả một người hoặc một vật có chiều cao lớn hơn mức trung bình.
+Tin (Believes) là chấp nhận một điều gì đó là sự thật.
+Bao gồm (Involves) là có một cái gì đó như một phần cần thiết hoặc kết quả.
+Richard là một tên riêng phổ biến dành cho nam giới.
+Martin là một tên riêng phổ biến dành cho nam giới.
+Mũi (Nose) là bộ phận trên khuôn mặt dùng để thở và ngửi.
+Đánh (Hits) là hành động dùng tay hoặc một vật gì đó để tác động mạnh vào người khác hoặc vật khác.
+Quy định (Regulations) là những quy tắc hoặc chỉ thị chính thức do một cơ quan có thẩm quyền ban hành.
+Mù (Blind) là không có khả năng nhìn thấy.
+Quảng cáo (Ads) là các thông báo, hình ảnh hoặc video ngắn được tạo ra để thuyết phục mọi người mua một sản phẩm hoặc dịch vụ.
+Sự tập trung (Concentration) là khả năng dồn toàn bộ sự chú ý của bạn vào một việc gì đó.
+Paris là thủ đô và là thành phố lớn nhất của nước Pháp.
+Hoa hồng (Rose) là một loại hoa có mùi thơm, thường có màu đỏ, hồng, trắng hoặc vàng, là biểu tượng của tình yêu.
+Tương phản (Contrast) là sự khác biệt rõ rệt giữa hai hay nhiều thứ khi được so sánh với nhau.
+Đính kèm (attached) là được gắn hoặc nối vào một cái gì đó.
+Giám sát (monitoring) là theo dõi một tình huống hoặc quá trình một cách cẩn thận trong một khoảng thời gian.
+Hoàn thành (accomplish) là thành công trong việc làm hoặc kết thúc một việc gì đó.
+Đề xuất (proposal) là một kế hoạch hoặc gợi ý chính thức được đưa ra để người khác xem xét.
+Hạt giống (seed) là phần nhỏ của cây mà từ đó một cây mới có thể mọc lên.
+Cửa hàng (stores) là nơi bán hàng hóa cho công chúng.
+Tai (ear) là bộ phận trên cơ thể người và động vật dùng để nghe.
+Định dạng (format) là cách mà một cái gì đó được sắp xếp hoặc trình bày.
+Năng suất (productive) là tạo ra hoặc làm được nhiều việc, có kết quả tốt.
+Yếu (weak) là thiếu sức mạnh về thể chất hoặc tinh thần.
+Không cái nào (neither) được dùng để phủ định cả hai lựa chọn.
+Kiểm tra (checking) là xem xét một cái gì đó để chắc chắn rằng nó đúng, an toàn hoặc phù hợp.
+Phích cắm (plug) là một thiết bị có chân kim loại ở đầu, dùng để nối thiết bị điện vào ổ cắm.
+Pin (battery) là một thiết bị lưu trữ năng lượng và cung cấp điện.
+Bạo lực (violent) là sử dụng vũ lực để làm tổn thương hoặc tấn công ai đó.
+Khả năng (capabilities) là sức mạnh hoặc năng lực để làm một việc gì đó.
+Kết hợp (combined) là được tạo thành từ việc gộp chung nhiều thứ lại với nhau.
+Sắt (iron) là một kim loại cứng, màu xám bạc, được sử dụng rộng rãi; cũng có nghĩa là bàn là/bàn ủi.
+Thanh toán (payment) là hành động trả tiền cho một món hàng hoặc dịch vụ.
+Thành lập (establish) là bắt đầu hoặc tạo ra một tổ chức, hệ thống.
+Vịnh (bay) là một phần của biển hoặc hồ lớn ăn sâu vào đất liền.
+Mật độ (density) là số lượng người hoặc vật trong một đơn vị diện tích hoặc thể tích.
+Đã trả lời (answered) là dạng quá khứ của "trả lời", đã đưa ra câu trả lời cho một câu hỏi.
+Giảm (reduced) là làm cho nhỏ hơn về kích thước, số lượng hoặc mức độ.
+Sự cải thiện (improvement) là hành động làm cho một cái gì đó tốt hơn.
+Bảo thủ (conservative) là có xu hướng giữ gìn các giá trị truyền thống và không thích sự thay đổi lớn.
+Được tích hợp (integrated) là được kết hợp lại với nhau để hoạt động như một thể thống nhất.
+Giải quyết (solving) là tìm ra câu trả lời hoặc cách xử lý một vấn đề.
+Giới hạn (limits) là điểm hoặc mức độ mà vượt qua đó thì không thể tiếp tục được nữa.
+Không bình thường (unusual) là khác biệt so với những gì thường thấy, lạ.
+Cháy (burn) là bị lửa thiêu đốt hoặc phát ra nhiệt và ánh sáng.
+Đối mặt (faced) là đứng trước và xử lý một tình huống khó khăn.
+Sự sống sót (survival) là tình trạng tiếp tục sống, đặc biệt là sau một tai nạn hoặc hoàn cảnh nguy hiểm.
+Tự do (liberal) là ủng hộ sự thay đổi và tiến bộ xã hội, tôn trọng quyền cá nhân.
+Ngu (stupid) là thiếu thông minh hoặc khả năng phán đoán.
+Phiên (sessions) là một khoảng thời gian dành cho một hoạt động cụ thể, như một phiên họp, phiên học.
+Lộ trình (route) là con đường hoặc tuyến đường đi từ nơi này đến nơi khác.
+Các electron (electrons) là những hạt rất nhỏ mang điện tích âm, quay quanh hạt nhân của một nguyên tử.
+Sự giảm (reduction) là hành động làm cho một cái gì đó trở nên nhỏ hơn hoặc ít hơn.
+Can đảm (courage) là sức mạnh tinh thần để đối mặt với nguy hiểm, sợ hãi hoặc khó khăn.
+Đòn bẩy (leverage) là sử dụng một thứ gì đó để đạt được lợi thế tối đa.
+Georgia là tên một tiểu bang ở đông nam Hoa Kỳ.
+Văn hóa (cultures) là những phong tục, tín ngưỡng, nghệ thuật và lối sống của một xã hội hoặc một nhóm người cụ thể.
+Lăn (rolling) là di chuyển bằng cách xoay tròn.
+Lối vào (entry) là nơi để đi vào một tòa nhà hoặc một khu vực; cũng có nghĩa là một mục trong danh sách.
+Quý cô (ladies) là một cách nói lịch sự và trang trọng để chỉ phụ nữ.
+Sô cô la (chocolate) là một loại thực phẩm ngọt, màu nâu, được làm từ hạt ca cao.
+Chủ sở hữu (owner) là người sở hữu hợp pháp một thứ gì đó.
+Được bảo vệ (protected) là được giữ an toàn khỏi bị tổn hại hoặc nguy hiểm.
+Chế độ (regime) là một hệ thống chính quyền, đặc biệt là một hệ thống độc đoán.
+Hành vi (behaviors) là cách mà một người hoặc động vật hành động.
+Biểu đồ (chart) là một bản vẽ thể hiện thông tin dưới dạng sơ đồ, đồ thị.
+Bộ (ministry) là một cơ quan của chính phủ, đứng đầu là một bộ trưởng (ví dụ: Bộ Giáo dục).
+Màu vàng (golden) có màu sắc óng ánh như vàng.
+Bị buộc (tied) là được gắn hoặc cột lại với nhau bằng dây.
+Máy ảnh (cameras) là thiết bị dùng để chụp ảnh hoặc quay phim.
+Đã thu thập (collected) là dạng quá khứ của "thu thập", đã gom nhiều thứ lại với nhau.
+Niềm tin (beliefs) là những điều mà một người tin là đúng.
+Giải thưởng (prize) là một vật có giá trị được trao cho người chiến thắng trong một cuộc thi.
+Mảnh nhỏ (bits) là những phần rất nhỏ của một cái gì đó.
+Tên thành phố (Angeles) thường là một phần của tên "Los Angeles", một thành phố lớn ở Mỹ. "Angeles" có nghĩa là "thiên thần" trong tiếng Tây Ban Nha.
+Phá vỡ (breaks) là làm cho một vật bị tách ra thành nhiều mảnh; cũng có nghĩa là giờ giải lao.
+Rễ (roots) là bộ phận của cây mọc dưới lòng đất để hút nước và chất dinh dưỡng; cũng có nghĩa là nguồn gốc.
+Quản lý (managing) là điều hành, kiểm soát hoặc tổ chức một cái gì đó.
+Kênh (channels) là một đài truyền hình (kênh TV); hoặc một con đường cho nước chảy.
+Bệnh viện (hospitals) là nơi chăm sóc và chữa trị cho người bệnh hoặc người bị thương.
+Thảm họa (disaster) là một sự kiện tồi tệ đột ngột gây ra nhiều thiệt hại và đau khổ.
+Đang cháy (burning) là đang bị lửa thiêu đốt.
+Hư cấu (fiction) là những câu chuyện được sáng tác từ trí tưởng tượng, không có thật.
+Mở rộng (extend) là làm cho một cái gì đó dài hơn, lớn hơn hoặc kéo dài hơn.
+Nhật ký trực tuyến (blog) là một trang web nơi một người thường xuyên viết về suy nghĩ, kinh nghiệm hoặc sở thích của mình.
+Nhãn (label) là một mảnh giấy hoặc vật liệu nhỏ gắn vào một vật để cung cấp thông tin về nó.
+Phi công (pilot) là người lái máy bay.
+Số lượng (amounts) là một lượng của một thứ gì đó.
+Nước sốt (sauce) là một loại chất lỏng đặc được dùng để ăn kèm với thức ăn để tăng thêm hương vị.
+Một cách đáng kể (significantly) là ở một mức độ quan trọng hoặc đủ lớn để được chú ý.
+Mỏng (thin) có khoảng cách giữa hai mặt đối diện rất nhỏ, trái ngược với "dày".
+Thuộc về âm nhạc (musical) là liên quan đến âm nhạc hoặc có tài năng về âm nhạc.
+Kết nối (connecting) là nối hai hoặc nhiều thứ lại với nhau.
+Bị ràng buộc (bound) là bị giới hạn hoặc bị buộc phải làm điều gì đó; cũng có nghĩa là đi đến một nơi nào đó.
+Kết luận (conclusion) là phần cuối cùng của một bài viết hoặc một cuộc thảo luận, tóm tắt lại các ý chính.
+Cải thiện (improving) là đang làm cho một cái gì đó trở nên tốt hơn.
+Tốt nghiệp (graduated) là đã hoàn thành thành công một khóa học ở trường học, cao đẳng hoặc đại học.
+Giải quyết (addressing) là xử lý hoặc bắt đầu giải quyết một vấn đề.
+Hiệu quả (efficiency) là khả năng làm việc tốt mà không lãng phí thời gian hoặc năng lượng.
+Giấu (hide) là đặt một cái gì đó ở nơi mà người khác không thể nhìn thấy hoặc tìm thấy.
+Được đề cập tới (referred) là được nói đến hoặc nhắc đến.
+Học bổng (scholarship) là một khoản tiền được trao cho học sinh, sinh viên để giúp họ trang trải chi phí học tập.
+Tư duy (mindset) là cách suy nghĩ và quan điểm của một người.
+Biện hộ (advocate) là công khai ủng hộ hoặc bênh vực cho một ý kiến, một chính sách hoặc một người nào đó.
+Đại lý (agent) là người hoặc công ty hành động thay mặt cho người khác (ví dụ: đại lý du lịch).
+Đó sẽ (that'll) là dạng viết tắt của "that will".
+Nhà văn (writers) là những người viết sách, truyện hoặc bài báo.
+Tiến hành (conduct) là tổ chức và thực hiện một hoạt động hoặc một cuộc thí nghiệm.
+Xu hướng (trend) là một khuynh hướng chung hoặc một sự thay đổi đang diễn ra trong một lĩnh vực nào đó.
+Hàng xóm (neighbors) là những người sống ở gần nhà bạn.
+Lập luận (arguments) là những lý lẽ được đưa ra để thuyết phục người khác; cũng có nghĩa là các cuộc tranh cãi.
+Gõ nhẹ (tap) là dùng tay hoặc ngón tay vỗ nhẹ vào một bề mặt; cũng có nghĩa là vòi nước.
+Vật chất (substance) là một loại vật liệu có các đặc tính vật lý cụ thể.
+Chiến đấu (combat) là đánh nhau, đặc biệt là trong chiến tranh.
+Mục tiêu (objective) là điều bạn cố gắng đạt được.
+Đồng nghiệp (colleague) là người cùng làm việc với bạn trong một công ty hoặc tổ chức.
+Có thể nhìn thấy (visible) là có thể được nhìn thấy bằng mắt thường.
+Bị phá hủy (destroyed) là bị hư hại hoàn toàn đến mức không thể sửa chữa được nữa.
+Các chất đạm (proteins) là những chất dinh dưỡng cần thiết cho cơ thể để xây dựng và sửa chữa các mô.
+Bài báo (articles) là một bài viết về một chủ đề cụ thể trong một tờ báo hoặc tạp chí.
+Những ưu tiên (priorities) là những việc được coi là quan trọng hơn những việc khác và cần được giải quyết trước.
+Súng (guns) là một loại vũ khí bắn ra đạn.
+Alpha là chữ cái đầu tiên trong bảng chữ cái Hy Lạp (α), thường dùng để chỉ sự khởi đầu hoặc thứ quan trọng nhất.
+Truyền tin (communications) là quá trình trao đổi thông tin, ý tưởng giữa mọi người.
+Kịch tính (dramatic) là gây xúc động mạnh, bất ngờ và đầy sự kiện.
+Quá trình ra quyết định (decision-making) là quá trình suy nghĩ và lựa chọn một hành động từ nhiều khả năng khác nhau.
+Gạo (rice) là một loại ngũ cốc là lương thực chính ở nhiều nước châu Á.
+Người sáng lập (founder) là người đã bắt đầu hoặc tạo ra một công ty, tổ chức.
+Tỉnh táo (conscious) là nhận thức được những gì đang xảy ra xung quanh bạn.
+Thuộc về nhận thức (cognitive) là liên quan đến các quá trình suy nghĩ, hiểu biết và học hỏi của não bộ.
+Đã tiến hóa (evolved) là đã phát triển và thay đổi dần dần qua một thời gian dài.
+Những lời nói dối (lies) là những điều không đúng sự thật được nói ra một cách cố ý.
+Bê tông (concrete) là một vật liệu xây dựng cứng, được làm từ xi măng, cát, đá và nước.
+Rào cản (barriers) là những vật cản hoặc khó khăn ngăn chặn sự di chuyển hoặc tiến bộ.
+Đào (Dig) là hành động dùng tay hoặc công cụ để tạo một cái hố trên mặt đất.
+Ôm (Embrace) là hành động vòng tay qua người khác để thể hiện tình cảm; cũng có nghĩa là chấp nhận một ý tưởng.
+Bánh Pizza (Pizza) là một món ăn của Ý gồm một lớp đế bánh mì tròn, phẳng được phủ cà chua, phô mai và các loại nhân khác.
+Đề Xuất (Suggested) là đưa ra một ý tưởng hoặc kế hoạch để người khác xem xét.
+Tương Đương (Equivalent) là có cùng giá trị, số lượng, ý nghĩa hoặc tầm quan trọng.
+Sáng Tạo (Innovative) là có những ý tưởng mới mẻ, độc đáo và tiên tiến.
+Ưu Tiên (Prefer) là thích một cái gì đó hơn những cái khác.
+Sự Lựa Chọn (Selection) là hành động chọn lựa một người hoặc một vật từ một nhóm.
+Đã Giao (Delivered) là đã mang một thứ gì đó đến một nơi hoặc một người được chỉ định.
+Tia (Ray) là một đường ánh sáng hẹp.
+Hy Sinh (Sacrifice) là từ bỏ một thứ gì đó quý giá vì một mục đích hoặc một người quan trọng hơn.
+Chuyển Động (Movements) là hành động thay đổi vị trí hoặc tư thế.
+Charles là một tên riêng phổ biến dành cho nam giới.
+Mang (Carrying) là hành động giữ và di chuyển một vật gì đó từ nơi này đến nơi khác.
+Tạm Dừng (Pause) là một sự ngừng lại ngắn trong một hành động hoặc lời nói.
+Liên Xô (Soviet) là từ dùng để chỉ Liên bang Cộng hòa Xã hội chủ nghĩa Xô viết, một quốc gia cũ.
+Được Liệt Kê (Listed) là được ghi tên trong một danh sách.
+Giải Thích (Explained) là làm cho một điều gì đó trở nên rõ ràng và dễ hiểu.
+Đã Thuê (Hired) là đã trả tiền để sử dụng một người làm việc cho mình trong một thời gian.
+Nhà Đầu Tư (Investors) là những người bỏ tiền vào một doanh nghiệp với hy vọng thu được lợi nhuận.
+Thuộc về sinh học (biological) là liên quan đến các sinh vật sống và quá trình sống của chúng.
+Sự căng thẳng (tension) là trạng thái lo lắng, hồi hộp về tinh thần hoặc sự căng cứng về thể chất.
+Vấn đề (affairs) là những sự kiện, công việc hoặc tình huống, đặc biệt là những vấn đề quan trọng.
+Bảo vệ (guard) là canh gác hoặc giữ cho ai đó/cái gì đó được an toàn khỏi nguy hiểm.
+Không thoải mái (uncomfortable) là gây ra cảm giác khó chịu về thể chất hoặc ngượng ngùng về tinh thần.
+Nguy hiểm (danger) là khả năng bị tổn thương, bị hại hoặc gặp điều không may.
+Rẻ (cheap) có giá thấp, không tốn nhiều tiền.
+Mẫu (samples) là một phần nhỏ hoặc một số lượng nhỏ của một thứ gì đó, được lấy ra để kiểm tra hoặc thử.
+Theo dõi (monitor) là quan sát và kiểm tra một tình huống một cách cẩn thận trong một khoảng thời gian.
+Đánh giá (evaluation) là quá trình xem xét và đưa ra nhận định về giá trị hoặc chất lượng của một cái gì đó.
+Được mang (carried) là dạng quá khứ của "carry", đã giữ và di chuyển một vật gì đó.
+Đóng (closing) là hành động làm cho một cái gì đó không còn mở.
+Đáng ngạc nhiên (surprising) là gây ra sự ngạc nhiên vì không lường trước được.
+Bộ lọc (filter) là một thiết bị hoặc công cụ dùng để loại bỏ những thứ không mong muốn ra khỏi chất lỏng hoặc khí.
+Đoạn văn (passage) là một phần của một bài viết hoặc một cuốn sách.
+Jeff là một tên riêng phổ biến dành cho nam giới.
+Ký ức (memories) là những điều mà bạn nhớ lại từ quá khứ.
+Phòng (rooms) là các không gian riêng biệt bên trong một tòa nhà, được ngăn cách bởi các bức tường.
+Nhận thức (insights) là sự hiểu biết sâu sắc và rõ ràng về một vấn đề phức tạp.
+Ranh giới (boundaries) là những đường giới hạn phân chia các khu vực hoặc các giới hạn về mặt xã hội.
+Hát (singing) là hành động tạo ra âm nhạc bằng giọng nói.
+Hóa đơn (bills) là một tờ giấy ghi số tiền bạn phải trả cho hàng hóa hoặc dịch vụ đã sử dụng.
+Sự cứu trợ (relief) là sự giảm bớt hoặc loại bỏ nỗi đau, lo lắng; hoặc là sự giúp đỡ cho những người gặp khó khăn.
+Điện thoại (phones) là thiết bị dùng để liên lạc bằng giọng nói với người khác ở xa.
+Chi nhánh (branch) là một bộ phận của một tổ chức lớn hơn, hoạt động ở một địa điểm khác; cũng có nghĩa là cành cây.
+Luật sư (lawyer) là người được đào tạo về pháp luật và có nhiệm vụ tư vấn hoặc đại diện cho người khác trước tòa.
+William là một tên riêng phổ biến dành cho nam giới.
+Thường xuyên (oftentimes) là xảy ra nhiều lần, thường xuyên.
+HIV là tên viết tắt của virus gây suy giảm miễn dịch ở người, là nguyên nhân gây ra bệnh AIDS.
+Môi trường (environments) là toàn bộ điều kiện tự nhiên và xã hội xung quanh một người hoặc sinh vật.
+Vừa vặn (fits) là có kích thước và hình dạng phù hợp với một người hoặc một vật.
+Sự tham gia (participation) là hành động tham gia vào một hoạt động hoặc sự kiện.
+Kỷ luật (discipline) là khả năng tự kiểm soát bản thân để tuân theo các quy tắc hoặc làm những việc cần làm.
+Trái phiếu (bonds) là một loại giấy tờ chứng nhận nợ, trong đó người phát hành vay tiền và hứa sẽ trả lại cùng với lãi suất; cũng có nghĩa là mối liên kết.
+Núi (mountains) là những vùng đất rất cao, nhô lên trên mặt đất xung quanh.
+Bia (beer) là một loại đồ uống có cồn, được làm từ ngũ cốc lên men.
+Xứng đáng (deserve) là có quyền được nhận một cái gì đó (thường là phần thưởng hoặc sự trừng phạt) vì những gì bạn đã làm.
+Của một người (person's) là hình thức sở hữu, chỉ ra một cái gì đó thuộc về một người.
+Động vật hoang dã (Wildlife) là các loài động vật sống trong môi trường tự nhiên, không được con người thuần hóa.
+Được chọn (selected) là được lựa ra từ một nhóm sau khi đã cân nhắc.
+Ngón tay (Fingers) là một trong năm bộ phận dài, mảnh ở cuối bàn tay.
+Doanh nhân (Entrepreneurs) là những người bắt đầu kinh doanh riêng, chấp nhận rủi ro tài chính với hy vọng thu được lợi nhuận.
+Có hình dạng (Shaped) là có một hình dạng hoặc hình thức cụ thể.
+Biên tập viên (Editor) là người chịu trách nhiệm chuẩn bị và sửa đổi nội dung cho một cuốn sách, tờ báo, hoặc tạp chí trước khi xuất bản.
+Trẻ sơ sinh (Babies) là những đứa trẻ rất nhỏ, mới được sinh ra.
+Ngực (Chest) là phần trên của cơ thể, nằm giữa cổ và bụng.
+Bảo vệ (Protecting) là hành động giữ cho ai đó hoặc cái gì đó an toàn khỏi bị tổn hại.
+Tối đa (Maximum) là mức độ, số lượng hoặc giá trị lớn nhất có thể đạt được.
+Chiếc bàn làm việc (Desk) là một món đồ nội thất có mặt phẳng, thường dùng để viết, đọc hoặc làm việc với máy tính.
+Phụ thuộc (Dependent) là cần sự giúp đỡ hoặc hỗ trợ từ người khác để tồn tại hoặc thành công.
+Các ngành công nghiệp (Industries) là tập hợp các công ty, doanh nghiệp hoạt động trong cùng một lĩnh vực sản xuất hoặc kinh doanh.
+Được cấp (Granted) là được cho phép hoặc được trao cho một cách chính thức.
+Lãnh thổ (Territory) là một khu vực đất đai thuộc quyền kiểm soát của một quốc gia, người cai trị hoặc một nhóm người.
+Cái bát (Bowl) là một dụng cụ hình tròn, sâu, dùng để đựng thức ăn, đặc biệt là súp hoặc ngũ cốc.
+Tài sản (Asset) là một món đồ có giá trị thuộc sở hữu của một người hoặc công ty.
+Thiểu số (Minority) là một nhóm người nhỏ hơn trong một nhóm lớn hơn, thường khác biệt về chủng tộc, tôn giáo hoặc chính trị.
+Chứng minh (Demonstrate) là cho thấy một cách rõ ràng bằng ví dụ hoặc bằng chứng.
+Không quan trọng (Minor) là nhỏ, ít quan trọng hơn so với những thứ khác.
+Nhanh chóng (Rapidly) là xảy ra rất nhanh, với tốc độ cao.
+Cà vạt (Tie) là một dải vải hẹp được thắt nút ở cổ, thường được nam giới mặc cùng với áo sơ mi.
+Tuyển dụng (Hiring) là quá trình tìm kiếm và thuê người làm việc.
+Bức tranh (Paintings) là những tác phẩm nghệ thuật được tạo ra bằng cách vẽ màu lên một bề mặt như giấy hoặc vải.
+Các bạn (Y'all) là cách nói thân mật, không trang trọng của "you all", thường được dùng ở miền Nam Hoa Kỳ để chỉ một nhóm người.
+Ooh là một thán từ được dùng để biểu lộ sự ngạc nhiên, thích thú hoặc đau đớn.
+Mở rộng (Extended) là được làm cho dài hơn, lớn hơn hoặc kéo dài hơn.
+Sự mở rộng (Expansion) là hành động làm cho một cái gì đó trở nên lớn hơn về kích thước, số lượng hoặc phạm vi.
+Giận dữ (Anger) là một cảm xúc mạnh mẽ thể hiện sự không hài lòng hoặc bực tức.
+Đã đăng (Posted) là đã đưa thông tin, hình ảnh lên mạng xã hội hoặc gửi một lá thư qua bưu điện.
+Nhà tù (Jail) là nơi giam giữ những người bị kết tội hoặc đang chờ xét xử.
+Sự bất bình đẳng (Inequality) là tình trạng không công bằng, khi một nhóm người có nhiều quyền lợi hoặc cơ hội hơn những người khác.
+Tập hợp (Gather) là tụ tập lại thành một nhóm hoặc thu thập nhiều thứ lại với nhau.
+Đã đầu tư (Invested) là đã bỏ tiền bạc, thời gian hoặc công sức vào một dự án với hy vọng thu được lợi ích.
+Chủ sở hữu (Owners) là những người có quyền sở hữu hợp pháp đối với một tài sản.
+Vai (Shoulder) là bộ phận của cơ thể nơi cánh tay nối với thân mình.
+Xảy ra (Occurs) là diễn ra hoặc tồn tại.
+Giả sử (Assuming) là chấp nhận một điều gì đó là đúng mà không cần có bằng chứng.
+Electron là một hạt hạ nguyên tử mang điện tích âm, quay quanh hạt nhân của nguyên tử.
+Thổi (Blow) là tạo ra một luồng không khí từ miệng.
+Tiền tiết kiệm (Savings) là số tiền bạn giữ lại, không chi tiêu, thường để dành cho tương lai.
+Logic là cách suy luận hợp lý, dựa trên các nguyên tắc và bằng chứng rõ ràng.
+Điều khiển (Controls) là quyền lực hoặc khả năng ra lệnh, quản lý hoặc ảnh hưởng đến người hoặc vật.
+Phá Hủy (Destroy) là làm hư hại một thứ gì đó nghiêm trọng đến mức nó không còn tồn tại hoặc không thể sử dụng được nữa.
+Đà (Momentum) là sức mạnh hoặc lực mà một vật thể đang chuyển động có được.
+Thành Phố Giê-Ru-Sa-Lem (Jerusalem) là một thành phố cổ ở Trung Đông, có ý nghĩa quan trọng đối với Do Thái giáo, Cơ đốc giáo và Hồi giáo.
+Xe Tải (Truck) là một loại phương tiện lớn dùng để vận chuyển hàng hóa nặng.
+Tòa Án (Courts) là nơi diễn ra các phiên xét xử để giải quyết các tranh chấp pháp lý và quyết định tội phạm.
+Trà (Tea) là một loại đồ uống nóng hoặc lạnh, được làm bằng cách ngâm lá trà đã được sấy khô trong nước nóng.
+Giáo Sư (Professors) là những giảng viên có chức danh cao nhất tại một trường đại học hoặc cao đẳng.
+Nhiếp Ảnh (Photography) là nghệ thuật và quá trình tạo ra hình ảnh bằng cách ghi lại ánh sáng trên một phương tiện nhạy sáng, chẳng hạn như phim hoặc cảm biến kỹ thuật số.
+Tương Tác (Interactions) là hành động giao tiếp hoặc có ảnh hưởng lẫn nhau giữa hai hay nhiều người hoặc vật.
+Doanh Nghiệp (Enterprise) là một công ty hoặc một tổ chức kinh doanh.
+Áp Dụng (Applying) là sử dụng một cái gì đó, chẳng hạn như một phương pháp hoặc một quy tắc, vào một tình huống cụ thể.
+Tìm Ra (Figuring) là quá trình suy nghĩ để hiểu hoặc giải quyết một vấn đề.
+Hít Thở (Breathing) là hành động hít không khí vào và thở ra khỏi phổi.
+Thở (Breathe) là động từ chỉ hành động hít vào và thở ra.
+Nước Úc (Australia) là một quốc gia bao gồm lục địa Úc, đảo Tasmania và nhiều hòn đảo nhỏ hơn.
+Được Tạo Ra (Generated) là được sản xuất hoặc làm cho tồn tại.
+Bụi (Dust) là những hạt vật chất khô, rất nhỏ, bay trong không khí và đọng lại trên các bề mặt.
+Khoản Vay (Loan) là một số tiền được cho vay và phải trả lại, thường kèm theo lãi suất.
+Đánh Giá (Evaluate) là xem xét hoặc phán đoán về giá trị, chất lượng của một cái gì đó.
+Ba chiều (3d) là có chiều dài, chiều rộng và chiều sâu.
+Viết (writes) là hành động tạo ra các chữ cái hoặc từ trên một bề mặt.
+Quảng cáo (advertising) là hoạt động thu hút sự chú ý của công chúng đến sản phẩm hoặc dịch vụ để khuyến khích họ mua hàng.
+Việt Nam (Vietnam) là tên một quốc gia ở Đông Nam Á.
+Phần cứng (hardware) là các bộ phận vật lý của một hệ thống máy tính.
+Quy định (regulation) là một quy tắc hoặc chỉ thị chính thức do một cơ quan có thẩm quyền ban hành.
+Thân mến (dear) là một từ được dùng để thể hiện tình cảm yêu mến; cũng có nghĩa là đắt tiền.
+Đúng cách (correctly) là theo một cách đúng đắn, chính xác.
+Song song (parallel) là chỉ các đường thẳng hoặc mặt phẳng luôn cách đều nhau và không bao giờ cắt nhau.
+Mệnh lệnh (orders) là những chỉ thị, yêu cầu phải được tuân theo; cũng có nghĩa là các đơn đặt hàng.
+Nhận thức (perception) là cách bạn suy nghĩ về một điều gì đó và ấn tượng của bạn về nó.
+Nhà cung cấp (provider) là một công ty hoặc người cung cấp một sản phẩm hoặc dịch vụ.
+Huyện (districts) là một khu vực của một quốc gia hoặc thành phố, được xác định cho một mục đích hành chính cụ thể.
+Sarah là một tên riêng phổ biến dành cho nữ giới.
+Khoan đã (whoa) là một thán từ được dùng để thể hiện sự ngạc nhiên hoặc để yêu cầu ai đó dừng lại.
+Trở về (returned) là quay trở lại một nơi nào đó.
+Băng dính (tape) là một dải vật liệu mỏng có chất dính ở một mặt, dùng để dán các vật lại với nhau.
+Daniel là một tên riêng phổ biến dành cho nam giới.
+Hệ sinh thái (ecosystem) là một cộng đồng các sinh vật sống tương tác với nhau và với môi trường không sống của chúng.
+Thị giác (sight) là khả năng nhìn thấy; cũng có nghĩa là cảnh vật.
+Các cuộc phỏng vấn (interviews) là các buổi gặp gỡ chính thức trong đó một người đặt câu hỏi cho người khác để thu thập thông tin.
+Chăm sóc (nursing) là công việc chăm sóc người bệnh hoặc người bị thương, thường là nghề của y tá.
+Hướng dẫn (guidelines) là những quy tắc hoặc lời khuyên chỉ ra cách thực hiện một việc gì đó.
+Mối đe dọa (threats) là những lời nói hoặc dấu hiệu cho thấy ai đó sẽ gây hại hoặc gây ra rắc rối.
+Ngón tay (finger) là một trong năm bộ phận dài, mảnh ở cuối bàn tay.
+Nhân (multiply) là một phép toán cộng một số với chính nó một số lần nhất định.
+Đảo ngược (reverse) là thay đổi theo chiều ngược lại.
+Thu thập (collecting) là hành động gom nhiều thứ lại với nhau từ nhiều nơi.
+Diễn viên (actor) là người chuyên đóng vai các nhân vật trong phim, kịch.
+Trình duyệt (browser) là một chương trình máy tính cho phép bạn truy cập và xem thông tin trên Internet.
+Bộ đồ (suit) là một bộ quần áo gồm áo khoác và quần hoặc váy được may từ cùng một loại vải.
+Mở rộng (expanding) là trở nên lớn hơn về kích thước, số lượng hoặc phạm vi.
+Cờ (flag) là một mảnh vải có màu sắc và hoa văn đặc trưng, là biểu tượng của một quốc gia hoặc một tổ chức.
+Mở rộng (extension) là một phần được thêm vào để làm cho một cái gì đó lớn hơn hoặc dài hơn.
+Tập phim (episodes) là các phần riêng lẻ của một câu chuyện được phát sóng trên truyền hình hoặc đài phát thanh.
+Bảo tồn (conservation) là việc bảo vệ động vật, thực vật và các nguồn tài nguyên thiên nhiên.
+Bơ (butter) là một loại thực phẩm dạng rắn, màu vàng nhạt được làm từ sữa, thường dùng để phết lên bánh mì.
+Chứa (contains) là có một cái gì đó bên trong hoặc là một phần của nó.
+Người nhập cư (immigrants) là những người đến một quốc gia khác để sinh sống lâu dài.
+Bất cứ ai (whoever) là bất kỳ người nào.
+Bộ gen (genome) là toàn bộ vật chất di truyền của một sinh vật.
+Bị đánh (struck) là dạng quá khứ của "strike", đã bị va chạm mạnh.
+Thực đơn (menu) là một danh sách các món ăn và đồ uống có sẵn tại một nhà hàng.
+Tức giận (mad) là rất tức giận hoặc bị điên.
+Bóng (shadow) là vùng tối được tạo ra khi một vật thể cản ánh sáng.
+Tham dự (attend) là có mặt tại một sự kiện hoặc một nơi nào đó.
+Thô (raw) là ở trạng thái tự nhiên, chưa qua chế biến hoặc nấu chín.
+Bị buộc tội (charged) là bị buộc tội chính thức về một tội ác.
+Đóng gói (pack) là đặt đồ đạc vào vali, hộp hoặc túi để vận chuyển hoặc cất giữ.
+Ben là một tên riêng phổ biến dành cho nam giới.
+Sang trọng (fancy) là đắt tiền, cầu kỳ và thời trang.
+Tuyên bố (statements) là những điều được nói hoặc viết ra một cách chính thức.
+Bụi cây (bush) là một loại cây thấp, có nhiều cành mọc gần mặt đất.
+Thái độ (attitude) là cách bạn suy nghĩ và cảm nhận về một người hoặc một vấn đề, thể hiện qua hành vi của bạn.
+Tuổi (ages) là khoảng thời gian rất dài; cũng có nghĩa là số tuổi của một người.
+Tỉ lệ (ratio) là mối quan hệ giữa hai nhóm người hoặc vật, thể hiện số lần nhóm thứ nhất chứa nhóm thứ hai.
+Đang chuẩn bị (preparing) là đang làm cho một cái gì đó sẵn sàng để sử dụng.
+Dày (thick) có khoảng cách lớn giữa hai mặt đối diện, trái ngược với "mỏng".
+Bằng nhau (equally) theo một cách công bằng và giống nhau cho tất cả mọi người.
+Được thành lập (founded) là đã được bắt đầu hoặc tạo ra.
+
 
 `;
 
