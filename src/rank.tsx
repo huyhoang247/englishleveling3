@@ -182,9 +182,9 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
 
       <div className="relative flex flex-col h-full">
         
-        {/* ===== HEADER ALIGNMENT FIX APPLIED HERE ===== */}
-        {/* Changed 'pt-4 pb-2' to 'py-3' for balanced vertical padding */}
-        <div className="flex justify-end items-center mb-3 flex-shrink-0 bg-black/40 rounded-t-lg -mt-4 -mx-4 px-4 py-3">
+        {/* ===== HEADER SHORTENED & BUTTON MOVED TO LEFT ===== */}
+        {/* Changed 'justify-end' to 'justify-start' and 'py-3' to 'py-2' */}
+        <div className="flex justify-start items-center mb-3 flex-shrink-0 bg-black/40 rounded-t-lg -mt-4 -mx-4 px-4 py-2">
             <HomeButton
               onClick={onClose}
               label="" // Use an empty label to only show the icon
