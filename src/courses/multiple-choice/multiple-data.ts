@@ -1,6 +1,6 @@
 // quizData.ts
 
-import QuizDataPart1 from './multiple-data-p1.ts';
+import QuizDataPart1 from './multiple-data/multiple-data-p1.ts';
 
 const QuizDataOriginal = [
   
