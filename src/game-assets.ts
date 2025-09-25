@@ -39,7 +39,7 @@ export const uiAssets = {
   goldIcon: require("./assets/images/coin.webp"),
   // -- Thêm mới từ sidebar.tsx --
   awardIcon: require("./assets/images/coin.webp"),
-  rankFrameIcon: require("./assets/images/coin.webp"),
+  rankFrameIcon: require("./assets/images/rank-icon.webp"),
   luckyGameIcon: require("./assets/images/lucky-treasure.webp"),
   upgradeIcon: require("./assets/images/upgrade-icon.webp"),
   gavelIcon: require("./assets/images/auction-icon.webp"), // THÊM MỚI ICON ĐẤU GIÁ
