@@ -178,33 +178,15 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
       <div className="absolute -top-10 -left-10 w-20 h-20 bg-indigo-500 rounded-full filter blur-3xl opacity-10 pointer-events-none"></div>
       <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-purple-500 rounded-full filter blur-3xl opacity-10 pointer-events-none"></div>
 
-      <div className="relative flex flex-col h-full"> {/* Added flex-col and h-full to enable flex layout */}
+      <div className="relative flex flex-col h-full">
         
         {/* ===== HEADER DESIGN UPDATED START ===== */}
-        <div className="flex justify-between items-center p-3 border-b border-indigo-700/40 flex-shrink-0 mb-4">
-          {/* Left placeholder for layout balance */}
-          <div className="w-7 h-7"></div>
-
-          {/* Centered Title with Icon */}
-          <div className="flex-grow text-center">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 text-transparent bg-clip-text flex items-center justify-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-purple-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                <path d="M4 22h16" />
-                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-              </svg>
-              Bảng Xếp Hạng
-            </h1>
-          </div>
-
-          {/* Right Close Button */}
-          <div className="w-7 h-7 flex items-center justify-center">
+        {/* Header is now a simple bar with a close button on the right */}
+        {/* It has a subtle dark background to distinguish it from the content */}
+        <div className="flex justify-end items-center py-1 mb-3 flex-shrink-0 bg-black/20 rounded-t-lg -mt-4 -mx-4 px-4 pt-4">
             <button
               onClick={onClose}
-              className="p-1 rounded-full hover:bg-indigo-700/50 transition-colors"
+              className="p-1.5 rounded-full hover:bg-indigo-700/50 transition-colors"
               aria-label="Đóng bảng xếp hạng"
               title="Đóng"
             >
@@ -215,7 +197,6 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                 onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
               />
             </button>
-          </div>
         </div>
         {/* ===== HEADER DESIGN UPDATED END ===== */}
 
