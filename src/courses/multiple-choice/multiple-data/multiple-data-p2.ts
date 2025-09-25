@@ -2002,7 +2002,6 @@ const QuizDataPart2 = [
     "options": ["Nhanh", "Đen", "Tốt", "Lạnh"],
     "correctAnswer": "Tốt"
   },  
-  [
   {
     "question": "Từ \"recognition\" trong tiếng Anh có nghĩa là gì?",
     "options": ["Con mèo", "Sự công nhận", "Cây cối", "Đồ chơi"],
@@ -5002,7 +5001,7 @@ const QuizDataPart2 = [
     "question": "Từ \"founded\" trong tiếng Anh có nghĩa là gì?",
     "options": ["Được thành lập", "Bị phá hủy", "Đã di chuyển", "Được sơn"],
     "correctAnswer": "Được thành lập"
-  },
+  }
 
 
   
