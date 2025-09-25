@@ -181,9 +181,8 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
       <div className="relative flex flex-col h-full">
         
         {/* ===== HEADER DESIGN UPDATED START ===== */}
-        {/* Header is now a simple bar with a close button on the right */}
-        {/* It has a subtle dark background to distinguish it from the content */}
-        <div className="flex justify-end items-center py-1 mb-3 flex-shrink-0 bg-black/20 rounded-t-lg -mt-4 -mx-4 px-4 pt-4">
+        {/* Changed bg-black/20 to bg-black/40 for a darker, more prominent header */}
+        <div className="flex justify-end items-center py-1 mb-3 flex-shrink-0 bg-black/40 rounded-t-lg -mt-4 -mx-4 px-4 pt-4">
             <button
               onClick={onClose}
               className="p-1.5 rounded-full hover:bg-indigo-700/50 transition-colors"
