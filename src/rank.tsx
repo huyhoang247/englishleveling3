@@ -371,10 +371,9 @@ export default function EnhancedLeaderboard({ onClose, currentUserId }: Enhanced
           {currentPlayerData && (
             <div className="mt-auto pt-2 flex-shrink-0">
               <div 
-                className="relative grid gap-2 py-2.5 px-3 rounded-lg items-center transition-all duration-200 bg-gradient-to-r from-slate-700/60 via-slate-800/80 to-slate-700/60 shadow-lg border-t-2 border-cyan-500/80"
+                className="relative grid gap-2 py-2.5 px-3 rounded-lg items-center transition-all duration-200 bg-gradient-to-r from-slate-700/60 via-slate-800/80 to-slate-700/60 shadow-lg border-t border-slate-600"
                 style={{ gridTemplateColumns: activeTab === 'wealth' ? 'repeat(11, minmax(0, 1fr))' : 'repeat(9, minmax(0, 1fr))' }}
               >
-                 <div className="absolute top-1 right-2 bg-cyan-500 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">YOU</div>
                  {/* Column for Rank */}
                  <div className="col-span-1 flex justify-center">
                     {getRankIcon(currentPlayerData.rank)}
