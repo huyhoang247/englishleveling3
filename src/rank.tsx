@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'; // Import Firestore functions
 import { db } from './firebase.js'; // Import the db instance from your firebase config file
-import HomeButton from './ui/home-button.tsx'; // ===== IMPORT THE NEW BUTTON HERE =====
+import HomeButton from './ui/home-button.tsx'; // Import the HomeButton component
 
 // Define prop types for EnhancedLeaderboard
 interface EnhancedLeaderboardProps {
@@ -66,7 +66,9 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
 
       const querySnapshot = await getDocs(q);
       const fetchedUsers: UserData[] = [];
-      querySnapshot.forEach((doc).
+      
+      // ===== SYNTAX FIX APPLIED HERE =====
+      querySnapshot.forEach((doc) => {
         // Assuming each user document has 'username', 'coins', and 'listVocabulary' fields
         const data = doc.data();
         const listVocabulary = data.listVocabulary || []; // Get the listVocabulary array, default to empty array if not exists
@@ -181,18 +183,15 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
 
       <div className="relative flex flex-col h-full">
         
-        {/* ===== HEADER DESIGN UPDATED START ===== */}
+        {/* ===== HEADER DESIGN UPDATED ===== */}
         <div className="flex justify-end items-center py-1 mb-3 flex-shrink-0 bg-black/40 rounded-t-lg -mt-4 -mx-4 px-4 pt-4">
-            {/* The old button is replaced with the imported HomeButton component */}
-            {/* The onClose function is passed to the onClick prop to maintain functionality */}
             <HomeButton
               onClick={onClose}
               label="" // Use an empty label to only show the icon
               title="Về trang chính" // Tooltip for the button
             />
         </div>
-        {/* ===== HEADER DESIGN UPDATED END ===== */}
-
+        
         {/* Time Filter Selector */}
         <div className="mb-4 p-0.5 bg-indigo-900/30 backdrop-blur-sm rounded-lg border border-indigo-700/40 flex items-center justify-between flex-shrink-0">
           <button
