@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'; // Import Firestore functions
 import { db } from './firebase.js'; // Import the db instance from your firebase config file
 import HomeButton from './ui/home-button.tsx'; // Import the HomeButton component
+import { auth } from './firebase.js'; // Import auth to get current user info
 
 // Define prop types for EnhancedLeaderboard
 interface EnhancedLeaderboardProps {
   onClose: () => void; // Add a prop for the close function
+  currentUserId: string;
 }
 
 // Define interface for user data fetched from Firestore
@@ -14,21 +16,20 @@ interface UserData {
   username: string;
   coins: number;
   avatar?: string; // Optional avatar field
-  // Add other fields if necessary (e.g., floor)
   vocabularyCount: number; // Add field for vocabulary count
 }
 
 // Accept the onClose prop
-export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProps) {
+export default function EnhancedLeaderboard({ onClose, currentUserId }: EnhancedLeaderboardProps) {
   const [activeTab, setActiveTab] = useState('wealth');
   const [isHovering, setIsHovering] = useState<number | null>(null); // Use number or null for index
   const [loading, setLoading] = useState(true); // Loading state
   const [error, setError] = useState<string | null>(null); // Error state
   const [animation, setAnimation] = useState(false);
-  // const [timeFilter, setTimeFilter] = useState('all'); // REMOVED: timeFilter state is no longer needed
 
   // State to hold fetched user data
   const [usersData, setUsersData] = useState<UserData[]>([]);
+  const [currentPlayerData, setCurrentPlayerData] = useState<(UserData & { rank: number }) | null>(null);
 
   // Function to fetch data from Firestore
   const fetchUsers = async () => {
@@ -128,20 +129,28 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
   };
 
 
-  // Filter and sort data based on activeTab
-  const filteredAndSortedData = usersData
-    .sort((a, b) => {
-        if (activeTab === 'wealth') {
-            return b.coins - a.coins; // Sort by coins descending
-        } else if (activeTab === 'collection') {
-            return b.vocabularyCount - a.vocabularyCount;
-        }
-        return 0; // Default no sort
-    })
-    .map((user, index) => ({
-        ...user,
-        rank: index + 1, // Assign rank based on sorted order
-    }));
+  // Memoize sorted data to prevent re-computation on every render
+  const filteredAndSortedData = useMemo(() => {
+    return [...usersData] // Create a shallow copy before sorting
+      .sort((a, b) => {
+          if (activeTab === 'wealth') {
+              return b.coins - a.coins;
+          } else if (activeTab === 'collection') {
+              return b.vocabularyCount - a.vocabularyCount;
+          }
+          return 0;
+      })
+      .map((user, index) => ({
+          ...user,
+          rank: index + 1,
+      }));
+  }, [usersData, activeTab]);
+
+  // Find current player's rank data
+  useEffect(() => {
+    const currentUser = filteredAndSortedData.find(user => user.id === currentUserId);
+    setCurrentPlayerData(currentUser || null);
+  }, [filteredAndSortedData, currentUserId]);
 
 
   return (
@@ -355,6 +364,63 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
               </div>
             </>
           )}
+
+          {/* ========================================= */}
+          {/* ============= CURRENT PLAYER RANK DISPLAY ============= */}
+          {/* ========================================= */}
+          {currentPlayerData && (
+            <div className="mt-auto pt-2 flex-shrink-0">
+              <div 
+                className="relative grid gap-2 py-2.5 px-3 rounded-lg items-center transition-all duration-200 bg-gradient-to-r from-slate-700/60 via-slate-800/80 to-slate-700/60 shadow-lg border-t-2 border-cyan-500/80"
+                style={{ gridTemplateColumns: activeTab === 'wealth' ? 'repeat(11, minmax(0, 1fr))' : 'repeat(9, minmax(0, 1fr))' }}
+              >
+                 <div className="absolute top-1 right-2 bg-cyan-500 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">YOU</div>
+                 {/* Column for Rank */}
+                 <div className="col-span-1 flex justify-center">
+                    {getRankIcon(currentPlayerData.rank)}
+                 </div>
+
+                 {/* Column for Player Info */}
+                 <div className={activeTab === 'wealth' ? 'col-span-7' : 'col-span-5'}>
+                     <div className="flex items-center overflow-hidden">
+                       <div className={`w-7 h-7 rounded-full flex items-center justify-center mr-2 text-sm flex-shrink-0 ${
+                         currentPlayerData.rank === 1 ? 'bg-gradient-to-br from-yellow-500 to-amber-700 shadow-sm shadow-yellow-500/20' :
+                         currentPlayerData.rank === 2 ? 'bg-gradient-to-br from-gray-300 to-gray-500 shadow-sm' :
+                         currentPlayerData.rank === 3 ? 'bg-gradient-to-br from-amber-700 to-amber-900 shadow-sm' :
+                         'bg-gradient-to-br from-slate-600 to-slate-800'
+                       }`}>
+                         {currentPlayerData.avatar}
+                       </div>
+                       <div className="truncate">
+                         <span className="font-medium text-sm text-slate-100">{currentPlayerData.username}</span>
+                       </div>
+                     </div>
+                 </div>
+
+                 {/* Column for Stats */}
+                 <div className="col-span-3">
+                    {activeTab === 'wealth' ? (
+                       <div className="text-right font-mono font-bold text-xs flex items-center justify-end">
+                         <div className="bg-gradient-to-r from-yellow-200 to-yellow-500 bg-clip-text text-transparent">
+                           {formatNumber(currentPlayerData.coins)}
+                         </div>
+                       </div>
+                    ) : (
+                       <div className="text-center">
+                         <span className="text-cyan-300 bg-cyan-900/40 px-1.5 py-0.5 rounded text-xs border border-cyan-800/50 mr-1">
+                           N/A
+                         </span>
+                         <span className="opacity-30">|</span>
+                         <span className="text-blue-300 bg-blue-900/40 px-1.5 py-0.5 rounded text-xs border border-blue-800/50 ml-1">
+                            {formatNumber(currentPlayerData.vocabularyCount)}
+                         </span>
+                       </div>
+                    )}
+                 </div>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* UPDATED: Footer with new color scheme */}
