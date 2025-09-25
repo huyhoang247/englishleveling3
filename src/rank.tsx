@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'; // Import Firestore functions
 import { db } from './firebase.js'; // Import the db instance from your firebase config file
+import HomeButton from './ui/home-button.tsx'; // ===== IMPORT THE NEW BUTTON HERE =====
 
 // Define prop types for EnhancedLeaderboard
 interface EnhancedLeaderboardProps {
@@ -65,7 +66,7 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
 
       const querySnapshot = await getDocs(q);
       const fetchedUsers: UserData[] = [];
-      querySnapshot.forEach((doc) => {
+      querySnapshot.forEach((doc).
         // Assuming each user document has 'username', 'coins', and 'listVocabulary' fields
         const data = doc.data();
         const listVocabulary = data.listVocabulary || []; // Get the listVocabulary array, default to empty array if not exists
@@ -181,21 +182,14 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
       <div className="relative flex flex-col h-full">
         
         {/* ===== HEADER DESIGN UPDATED START ===== */}
-        {/* Changed bg-black/20 to bg-black/40 for a darker, more prominent header */}
         <div className="flex justify-end items-center py-1 mb-3 flex-shrink-0 bg-black/40 rounded-t-lg -mt-4 -mx-4 px-4 pt-4">
-            <button
+            {/* The old button is replaced with the imported HomeButton component */}
+            {/* The onClose function is passed to the onClick prop to maintain functionality */}
+            <HomeButton
               onClick={onClose}
-              className="p-1.5 rounded-full hover:bg-indigo-700/50 transition-colors"
-              aria-label="Đóng bảng xếp hạng"
-              title="Đóng"
-            >
-              <img
-                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
-                alt="Close icon"
-                className="w-5 h-5"
-                onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
-              />
-            </button>
+              label="" // Use an empty label to only show the icon
+              title="Về trang chính" // Tooltip for the button
+            />
         </div>
         {/* ===== HEADER DESIGN UPDATED END ===== */}
 
@@ -354,17 +348,12 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                         </div>
                         <div className="truncate">
                           <span className="font-medium text-sm">{player.username}</span>
-                          {/* You might want to add user-specific details on hover if available in Firestore */}
-                          {/* {isHovering === index && (
-                            <div className="text-xs text-indigo-300 mt-0.5">Thành viên từ: ...</div>
-                          )} */}
                         </div>
                       </div>
                       <div className="col-span-3 text-right font-mono font-bold text-xs flex items-center justify-end">
                         <div className="bg-gradient-to-r from-yellow-200 to-yellow-500 bg-clip-text text-transparent">
                           {formatNumber(player.coins)}
                         </div>
-                        {/* Add logic for daily/weekly/monthly change if you have the data */}
                       </div>
                     </div>
                   ))
@@ -421,16 +410,11 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
                         </div>
                         <div className="truncate">
                           <span className="font-medium text-sm">{player.username}</span>
-                           {/* Add collection-specific details on hover if available */}
-                           {/* {isHovering === index + 100 && (
-                            <div className="text-xs text-indigo-300 mt-0.5">Trưng bày: ...</div>
-                          )} */}
                         </div>
                       </div>
                       <div className="col-span-3 text-center">
-                        {/* Display Floor and Vocabulary Count */}
-                         <span className="text-blue-300 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs border border-blue-800/40 mr-1">
-                          {/* {player.floor || 'N/A'} */} N/A {/* Placeholder for Floor */}
+                        <span className="text-blue-300 bg-blue-900/30 px-1.5 py-0.5 rounded text-xs border border-blue-800/40 mr-1">
+                          N/A {/* Placeholder for Floor */}
                         </span>
                         <span className="opacity-30">|</span>
                         <span className="text-purple-300 bg-purple-900/30 px-1.5 py-0.5 rounded text-xs border border-purple-800/40 ml-1">
@@ -472,7 +456,6 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
             </svg>
             <span className="text-indigo-300">Cập nhật: </span>
             <span className="text-white font-medium ml-1">
-              {/* You might want to display the actual last updated time from Firestore */}
               {timeFilter === 'day' && '1 giờ trước'}
               {timeFilter === 'week' && '12:00 hôm nay'}
               {timeFilter === 'month' && '01/05/2025'}
