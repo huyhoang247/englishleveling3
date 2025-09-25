@@ -1,7 +1,7 @@
 // --- START OF FILE: multiple-data-elementary.ts ---
 
 // Dữ liệu quiz cho cấp độ cơ bản (elementary)
-const elementaryQuizData = [
+const QuizDataPart2 = [
   {
     "question": "Từ \"Apple\" trong tiếng Anh có nghĩa là gì?",
     "options": ["Quả chuối", "Quả cam", "Quả táo", "Quả nho"],
@@ -24,6 +24,6 @@ const elementaryQuizData = [
   }
 ];
 
-export default elementaryQuizData;
+export default QuizDataPart2;
 
 // --- END OF FILE: multiple-data-elementary.ts ---
