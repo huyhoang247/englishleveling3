@@ -179,28 +179,45 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
       <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-purple-500 rounded-full filter blur-3xl opacity-10 pointer-events-none"></div>
 
       <div className="relative flex flex-col h-full"> {/* Added flex-col and h-full to enable flex layout */}
-        {/* Header */}
-        <div className="flex justify-between items-center mb-4 flex-shrink-0">
+        
+        {/* ===== HEADER DESIGN UPDATED START ===== */}
+        <div className="flex justify-between items-center p-3 border-b border-indigo-700/40 flex-shrink-0 mb-4">
+          {/* Left placeholder for layout balance */}
+          <div className="w-7 h-7"></div>
+
+          {/* Centered Title with Icon */}
           <div className="flex-grow text-center">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 text-transparent bg-clip-text">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 text-transparent bg-clip-text flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-purple-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                <path d="M4 22h16" />
+                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+              </svg>
               Bảng Xếp Hạng
             </h1>
           </div>
-          {/* Close Button */}
-          <button
-            onClick={onClose} // Call the onClose prop when clicked
-            className="p-1 rounded-full hover:bg-indigo-700/50 transition-colors flex-shrink-0"
-            aria-label="Đóng bảng xếp hạng"
-            title="Đóng"
-          >
-            <img
-              src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
-              alt="Close icon"
-              className="w-5 h-5 text-indigo-300"
-              onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
-            />
-          </button>
+
+          {/* Right Close Button */}
+          <div className="w-7 h-7 flex items-center justify-center">
+            <button
+              onClick={onClose}
+              className="p-1 rounded-full hover:bg-indigo-700/50 transition-colors"
+              aria-label="Đóng bảng xếp hạng"
+              title="Đóng"
+            >
+              <img
+                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png"
+                alt="Close icon"
+                className="w-5 h-5"
+                onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+              />
+            </button>
+          </div>
         </div>
+        {/* ===== HEADER DESIGN UPDATED END ===== */}
 
         {/* Time Filter Selector */}
         <div className="mb-4 p-0.5 bg-indigo-900/30 backdrop-blur-sm rounded-lg border border-indigo-700/40 flex items-center justify-between flex-shrink-0">
@@ -330,7 +347,6 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
               </div>
 
               {/* Wealth List - Scrollable */}
-              {/* ===== FIX APPLIED HERE: Added flex-1 ===== */}
               <div className="overflow-y-auto custom-scrollbar-hidden flex-1">
                 {filteredAndSortedData.length > 0 ? (
                   filteredAndSortedData.map((player, index) => (
@@ -398,7 +414,6 @@ export default function EnhancedLeaderboard({ onClose }: EnhancedLeaderboardProp
               </div>
 
               {/* Collection List - Scrollable */}
-              {/* ===== FIX APPLIED HERE: Added flex-1 ===== */}
               <div className="overflow-y-auto custom-scrollbar-hidden flex-1">
                 {filteredAndSortedData.length > 0 ? (
                   filteredAndSortedData.map((player, index) => (
