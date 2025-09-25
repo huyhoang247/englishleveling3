@@ -1,5 +1,8 @@
 // quizData.ts
 
+
+import quizDataPart1 from './multiple-data-p1.ts';
+
 const quizData = [
   
   {
