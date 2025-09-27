@@ -223,16 +223,15 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
                 > 
                     <h2 className="text-lg font-semibold tracking-wider uppercase text-white title-glow">Chế Tạo Thành Công</h2> 
                     
-                    <div className={`relative w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}>
+                    <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}>
                         <IconComponent className={`w-20 h-20 ${rarityTextColor}`} />
-                        <span className={`absolute bottom-1.5 right-1.5 px-2 py-0.5 text-xs font-bold ${getRarityTextColor(ownedSkill.rarity)} bg-black/70 rounded-md border ${getRarityColor(ownedSkill.rarity)} capitalize`}>
-                            {getRarityDisplayName(ownedSkill.rarity)}
-                        </span>
                     </div>
 
-                    <div> 
-                        <span className={`text-2xl font-bold ${rarityTextColor}`}>{skill.name}</span> 
-                    </div> 
+                    <div className="flex flex-col items-center">
+                        <span className={`text-2xl font-bold ${rarityTextColor}`}>{skill.name}</span>
+                        <span className="font-semibold text-slate-300 mt-1 capitalize">{getRarityDisplayName(ownedSkill.rarity)}</span>
+                    </div>
+
                     <p className="text-sm text-slate-400 mt-1">{skill.description(1, ownedSkill.rarity)}</p>
                 </div> 
             </div> 
