@@ -425,10 +425,39 @@ const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedIte
     if (!itemDef) return null;
     
     const rarityTextColor = getRarityTextColor(itemDef.rarity);
-    const rarityColorVal = getRarityColor(itemDef.rarity).replace('border-', ''); 
-    const shadowStyle = { boxShadow: `0 0 25px -5px ${rarityColorVal}, 0 0 15px -10px ${rarityColorVal}` };
+    const rarityColor = getRarityColor(itemDef.rarity).replace('border-', ''); 
+    const shadowStyle = { boxShadow: `0 0 25px -5px var(--tw-color-${rarityColor}), 0 0 15px -10px var(--tw-color-${rarityColor})` };
 
-    return ( <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div> <div className="relative w-full max-w-sm"> <div className="absolute inset-0.5 animate-spin-slow-360"> <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(itemDef.rarity)} opacity-50 rounded-full blur-2xl`}></div> </div> <div className={`relative bg-gradient-to-b ${getRarityGradient(itemDef.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(itemDef.rarity)} text-center flex flex-col items-center gap-4`} style={shadowStyle}> <h2 className="text-2xl font-black tracking-widest uppercase text-white title-glow">Chế Tạo Thành Công</h2> <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}> <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" /> </div> <div className="flex flex-col"> <span className={`text-2xl font-bold ${rarityTextColor}`}>{itemDef.name}</span> <span className="font-semibold text-slate-300">{itemDef.rarity}</span> </div> <p className="text-sm text-slate-400">{itemDef.description}</p> <button onClick={onClose} className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"> Tuyệt vời! </button> </div> </div> </div> );
+    return ( 
+        <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> 
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div> 
+            <div className="relative w-full max-w-sm"> 
+                <div className="absolute inset-0.5 animate-spin-slow-360"> 
+                    <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(itemDef.rarity)} opacity-50 rounded-full blur-2xl`}></div> 
+                </div> 
+                <div 
+                    className={`relative bg-gradient-to-b ${getRarityGradient(itemDef.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(itemDef.rarity)} text-center flex flex-col items-center gap-4`} 
+                    style={shadowStyle}
+                > 
+                    <h2 className="text-lg font-semibold tracking-wider uppercase text-white title-glow">Chế Tạo Thành Công</h2> 
+                    
+                    <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
+                        <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
+                    </div>
+                    
+                    <div className="w-full p-4 bg-black/25 rounded-lg border border-slate-700/50 text-center flex flex-col gap-2">
+                        <div>
+                            <h3 className={`text-xl font-bold ${rarityTextColor}`}>{itemDef.name}</h3>
+                            <p className={`font-semibold ${rarityTextColor} opacity-80 capitalize text-sm`}>{itemDef.rarity} Rank</p>
+                        </div>
+                        <hr className="border-slate-700/50 my-1" />
+                        <p className="text-sm text-slate-300 leading-relaxed">{itemDef.description}</p>
+                    </div>
+
+                </div> 
+            </div> 
+        </div> 
+    );
 });
 
 interface ForgeResult { level: number; refundGold: number; }
