@@ -67,8 +67,12 @@ const DailyCheckInView = () => {
         <div className="mb-6">
           <div className="flex justify-between">
             {dailyRewards.map(reward => {
-              const lastCompletedDayInCycle = canClaimToday ? claimableDay - 1 : claimableDay;
-              const isClaimed = reward.day <= lastCompletedDayInCycle && loginStreak > 0;
+              // ======================= SỬA LỖI TẠI ĐÂY (LẦN 1) =======================
+              // Logic mới: Tính toán ngày đã hoàn thành trực tiếp từ loginStreak.
+              // Nếu streak=1, ngày 1 hoàn thành. Nếu streak=7, ngày 7 hoàn thành. Nếu streak=8, ngày 1 (của chu kỳ mới) hoàn thành.
+              const completedDaysInCycle = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0;
+              const isClaimed = reward.day <= completedDaysInCycle;
+              // =======================================================================
               
               const isClaimable = canClaimToday && reward.day === claimableDay;
               let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 relative";
@@ -135,8 +139,11 @@ const DailyCheckInView = () => {
             )}
 
             {dailyRewards.map(reward => {
-              const lastCompletedDayInCycle = canClaimToday ? claimableDay - 1 : claimableDay;
-              const isClaimed = reward.day <= lastCompletedDayInCycle && loginStreak > 0;
+              // ======================= SỬA LỖI TẠI ĐÂY (LẦN 2) =======================
+              const completedDaysInCycle = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0;
+              const isClaimed = reward.day <= completedDaysInCycle;
+              // =======================================================================
+
               const isClaimable = canClaimToday && reward.day === claimableDay;
               
               return (
