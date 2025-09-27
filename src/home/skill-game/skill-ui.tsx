@@ -210,7 +210,34 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
     const rarityTextColor = getRarityTextColor(ownedSkill.rarity);
     const rarityColor = getRarityColor(ownedSkill.rarity).replace('border-', ''); 
     const shadowStyle = { boxShadow: `0 0 25px -5px ${rarityColor}, 0 0 15px -10px ${rarityColor}` };
-    return ( <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={handleCloseCraftSuccessModal}></div> <div className="relative w-full max-w-sm"> <div className="absolute inset-0.5 animate-spin-slow-360"> <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(ownedSkill.rarity)} opacity-50 rounded-full blur-2xl`}></div> </div> <div className={`relative bg-gradient-to-b ${getRarityGradient(ownedSkill.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(ownedSkill.rarity)} text-center flex flex-col items-center gap-3`} style={shadowStyle}> <h2 className="text-lg font-semibold tracking-wider uppercase text-white title-glow">Chế Tạo Thành Công</h2> <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}> <IconComponent className={`w-20 h-20 ${rarityTextColor}`} /> </div> <div className="flex flex-col"> <span className={`text-2xl font-bold ${rarityTextColor}`}>{skill.name}</span> <span className="font-semibold text-slate-300">{getRarityDisplayName(ownedSkill.rarity)}</span> </div> <p className="text-sm text-slate-400">{skill.description(1, ownedSkill.rarity)}</p> </div> </div> </div> );
+    return ( 
+        <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> 
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={handleCloseCraftSuccessModal}></div> 
+            <div className="relative w-full max-w-sm"> 
+                <div className="absolute inset-0.5 animate-spin-slow-360"> 
+                    <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(ownedSkill.rarity)} opacity-50 rounded-full blur-2xl`}></div> 
+                </div> 
+                <div 
+                    className={`relative bg-gradient-to-b ${getRarityGradient(ownedSkill.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(ownedSkill.rarity)} text-center flex flex-col items-center gap-3`} 
+                    style={shadowStyle}
+                > 
+                    <h2 className="text-lg font-semibold tracking-wider uppercase text-white title-glow">Chế Tạo Thành Công</h2> 
+                    
+                    <div className={`relative w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}>
+                        <IconComponent className={`w-20 h-20 ${rarityTextColor}`} />
+                        <span className={`absolute bottom-1.5 right-1.5 px-2 py-0.5 text-xs font-bold ${getRarityTextColor(ownedSkill.rarity)} bg-black/70 rounded-md border ${getRarityColor(ownedSkill.rarity)} capitalize`}>
+                            {getRarityDisplayName(ownedSkill.rarity)}
+                        </span>
+                    </div>
+
+                    <div> 
+                        <span className={`text-2xl font-bold ${rarityTextColor}`}>{skill.name}</span> 
+                    </div> 
+                    <p className="text-sm text-slate-400 mt-1">{skill.description(1, ownedSkill.rarity)}</p>
+                </div> 
+            </div> 
+        </div> 
+    );
 });
 
 const MergeModal = memo(() => {
