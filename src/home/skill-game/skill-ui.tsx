@@ -218,7 +218,7 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
                     <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(ownedSkill.rarity)} opacity-50 rounded-full blur-2xl`}></div> 
                 </div> 
                 <div 
-                    className={`relative bg-gradient-to-b ${getRarityGradient(ownedSkill.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(ownedSkill.rarity)} text-center flex flex-col items-center gap-3`} 
+                    className={`relative bg-gradient-to-b ${getRarityGradient(ownedSkill.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(ownedSkill.rarity)} text-center flex flex-col items-center gap-4`} 
                     style={shadowStyle}
                 > 
                     <h2 className="text-lg font-semibold tracking-wider uppercase text-white title-glow">Chế Tạo Thành Công</h2> 
@@ -226,13 +226,16 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
                     <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}>
                         <IconComponent className={`w-20 h-20 ${rarityTextColor}`} />
                     </div>
-
-                    <div className="flex flex-col items-center">
-                        <span className={`text-2xl font-bold ${rarityTextColor}`}>{skill.name}</span>
-                        <span className="font-semibold text-slate-300 mt-1 capitalize">{getRarityDisplayName(ownedSkill.rarity)}</span>
+                    
+                    <div className="w-full p-4 bg-black/25 rounded-lg border border-slate-700/50 text-center flex flex-col gap-2">
+                        <div>
+                            <h3 className={`text-xl font-bold ${rarityTextColor}`}>{skill.name}</h3>
+                            <p className={`font-semibold ${getRarityTextColor(ownedSkill.rarity)} opacity-80 capitalize text-sm`}>{getRarityDisplayName(ownedSkill.rarity)}</p>
+                        </div>
+                        <hr className="border-slate-700/50 my-1" />
+                        <p className="text-sm text-slate-300 leading-relaxed">{skill.description(1, ownedSkill.rarity)}</p>
                     </div>
 
-                    <p className="text-sm text-slate-400 mt-1">{skill.description(1, ownedSkill.rarity)}</p>
                 </div> 
             </div> 
         </div> 
