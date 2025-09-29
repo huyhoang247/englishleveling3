@@ -47,7 +47,7 @@ export const generateAudioUrlsForWord = (word: string): { [voiceName: string]: s
     else if (index >= 4000 && index < 4700) { audioDirectory = 'audio5'; }
     else if (index >= 5000 && index < 6000) { audioDirectory = 'audio6'; }
     else if (index >= 6000 && index < 7000) { audioDirectory = 'audio7'; }
-    else if (index >= 7000 && index < 7500) { audioDirectory = 'audio8'; }
+    else if (index >= 7000 && index < 7400) { audioDirectory = 'audio8'; }
     else if (index >= 8000 && index < 9000) { audioDirectory = 'audio9'; }
     else if (index >= 9000 && index < 10000) { audioDirectory = 'audio10'; }
     else if (index >= 10000) { audioDirectory = 'audio11'; }
