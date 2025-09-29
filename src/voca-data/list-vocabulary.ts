@@ -6,7 +6,7 @@
 import AdvancedVocabulary from './list-vocabulary/advanced-vocabulary.ts';
 
 
-const defaultVocabulary = [
+export const defaultVocabulary = [
   ...BasicVocabulary, 
   ...AdvancedVocabulary
 ];
@@ -6516,4 +6516,3 @@ export const BasicVocabulary: string[] = [
   
 ];
 
-export default defaultVocabulary;
