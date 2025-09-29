@@ -6515,3 +6515,5 @@ export const BasicVocabulary: string[] = [
 
   
 ];
+
+export default defaultVocabulary;
