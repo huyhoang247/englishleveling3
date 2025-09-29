@@ -5,7 +5,13 @@
 
 import AdvancedVocabulary from './list-vocabulary/advanced-vocabulary.ts';
 
-export const defaultVocabulary: string[] = [
+
+const defaultVocabulary = [
+  ...BasicVocabulary, 
+  ...AdvancedVocabulary
+];
+
+export const BasicVocabulary: string[] = [
   "Source",
   "Insurance",
   "Argument",
