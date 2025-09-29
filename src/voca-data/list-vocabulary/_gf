@@ -1,0 +1,7 @@
+export const AdvancedVocabulary: string[] = [
+  "Source",
+  "Insurance",
+  "forge"
+  
+  
+];
