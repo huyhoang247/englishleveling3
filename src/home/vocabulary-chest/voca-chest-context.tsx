@@ -1,4 +1,4 @@
-// --- START OF FILE voca-chest-context.tsx (ĐÃ SỬA LỖI NÚT "MỞ LẠI") ---
+// --- START OF FILE voca-chest-context.tsx (1).txt ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { auth, db } from '../../firebase.js'; // THAY ĐỔI: Import auth để lấy userId
@@ -156,30 +156,13 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
             alert(`Đã xảy ra lỗi. Giao dịch đã bị hủy.\n${error instanceof Error ? error.message : String(error)}`);
             setProcessingChestId(null);
         }
-    }, [processingChestId, currentUserId, playerStats, availableIndices]); 
+    }, [processingChestId, currentUserId, playerStats, availableIndices]); // onStateUpdate đã bị xóa khỏi dependencies
 
-    // --- OVERLAY HANDLERS (SỬA LỖI) ---
-    const closeOverlay = useCallback(() => { 
-        setCardsForPopup([]); 
-        setProcessingChestId(null); 
-    }, []);
+    // --- OVERLAY HANDLERS (Không đổi) ---
+    const closeOverlay = useCallback(() => { setCardsForPopup([]); setProcessingChestId(null); }, []);
+    const openAgain = useCallback(() => { if (lastOpenedChest) { openChest(lastOpenedChest.count, lastOpenedChest.type); } }, [lastOpenedChest, openChest]);
 
-    const openAgain = useCallback(() => {
-        if (lastOpenedChest) {
-            // 1. Đóng overlay hiện tại. Hàm này sẽ xóa thẻ cũ và quan trọng nhất là
-            //    reset `processingChestId` về `null`.
-            closeOverlay();
-
-            // 2. Dùng setTimeout để đảm bảo state đã được cập nhật xong và UI đã "dọn dẹp"
-            //    trước khi bắt đầu một tiến trình `openChest` mới.
-            //    Điều này ngăn chặn việc gọi `openChest` khi `processingChestId` chưa kịp reset.
-            setTimeout(() => {
-                openChest(lastOpenedChest.count, lastOpenedChest.type);
-            }, 100); // Một khoảng trễ nhỏ là đủ
-        }
-    }, [lastOpenedChest, openChest, closeOverlay]); // Thêm `closeOverlay` vào dependency array
-
-    // --- CONTEXT VALUE ---
+    // --- CONTEXT VALUE (Không đổi) ---
     const value: VocabularyChestContextType = {
         isLoading, playerStats, availableIndices, urlsToPreload,
         isOverlayVisible: cardsForPopup.length > 0,
