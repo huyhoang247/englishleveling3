@@ -1,4 +1,4 @@
-export const IntermediateVocabulary: string[] = [
+export const ElementaryVocabulary: string[] = [
 
 "transformed",
 "appealing",
