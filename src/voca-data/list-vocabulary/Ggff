@@ -1,3 +1,8 @@
 export const AdvancedVocabulary: string[] = [
 
 "aisle",
+"notch",
+"forge"
+  
+  
+];
