@@ -3,7 +3,10 @@
 
 // Nếu cần mở rộng, bạn có thể chuyển mỗi phần tử thành object với thêm ví dụ, dịch, v.v.
 
+import { IntermediateVocabulary } from './list-vocabulary/intermediate-vocabulary.ts';
 import { AdvancedVocabulary } from './list-vocabulary/advanced-vocabulary.ts';
+
+
 
 
 export const BasicVocabulary: string[] = [
@@ -6513,6 +6516,7 @@ export const BasicVocabulary: string[] = [
 
 export const defaultVocabulary = [
   ...BasicVocabulary, 
+  ...IntermediateVocabulary,
   ...AdvancedVocabulary
 ];
 
