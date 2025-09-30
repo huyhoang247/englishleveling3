@@ -1,0 +1,8 @@
+export const IntermediateVocabulary: string[] = [
+
+"transformed",
+"appealing",
+"tense"
+  
+  
+];
