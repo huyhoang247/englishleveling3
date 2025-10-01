@@ -1,8 +1,6 @@
-// Các import và component con (Tile, Player, Enemy, Bullet, Joystick) giữ nguyên như phiên bản trước
-// (Player và Bullet vẫn cần `React.forwardRef`)
-import React, { useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 
-// --- Cấu hình Game --- (Giữ nguyên)
+// --- Cấu hình Game ---
 const TILE_SIZE = 40;
 const WORLD_WIDTH = 40;
 const WORLD_HEIGHT = 30;
@@ -13,13 +11,13 @@ const PLAYER_INVINCIBILITY_DURATION = 1500;
 const MAX_ENEMIES = 7;
 const PLAYER_HITBOX_SIZE = TILE_SIZE * 0.7;
 
-// --- Các loại khối --- (Giữ nguyên)
+// --- Các loại khối ---
 const TILE_TYPES = {
   GRASS: 'GRASS', DIRT: 'DIRT', STONE: 'STONE',
   WATER: 'WATER', LAVA: 'LAVA',
 };
 
-// --- Components (Giữ nguyên như phiên bản refactor trước) ---
+// --- Components (Không thay đổi) ---
 const Tile = React.memo(({ type }) => {
   const getTileStyle = () => {
     switch (type) {
@@ -34,8 +32,9 @@ const Tile = React.memo(({ type }) => {
   return <div className={`w-full h-full border-b-4 border-r-2 ${getTileStyle()}`} style={{ width: TILE_SIZE, height: TILE_SIZE }}><div className="w-full h-full opacity-10 noise-pattern"></div></div>;
 });
 
+// THAY ĐỔI: Chuyển Player sang dùng forwardRef để có thể nhận ref từ component cha
 const Player = React.forwardRef(({ isInvincible }, ref) => (
-  <div ref={ref} className="absolute" style={{ width: PLAYER_HITBOX_SIZE, height: PLAYER_HITBOX_SIZE, top: 0, left: 0, zIndex: 10, willChange: 'transform' }}>
+  <div ref={ref} className="absolute" style={{ width: PLAYER_HITBOX_SIZE, height: PLAYER_HITBOX_SIZE, zIndex: 10, willChange: 'transform' }}>
     <div className={`w-full h-full bg-red-500 rounded-md shadow-lg border-2 border-red-700 flex items-center justify-center transition-opacity ${isInvincible ? 'opacity-50 animate-pulse' : 'opacity-100'}`}><div className="w-4 h-4 bg-white rounded-sm"></div></div>
   </div>
 ));
@@ -46,9 +45,11 @@ const Enemy = ({ position }) => (
     </div>
 );
 
+// THAY ĐỔI: Chuyển Bullet sang dùng forwardRef
 const Bullet = React.forwardRef((props, ref) => (
-    <div ref={ref} className="absolute rounded-full bg-yellow-400 shadow-md" style={{ width: 10, height: 10, top: 0, left: 0, zIndex: 15, willChange: 'transform' }} />
+    <div ref={ref} className="absolute rounded-full bg-yellow-400 shadow-md" style={{ width: 10, height: 10, zIndex: 15, willChange: 'transform' }} />
 ));
+
 
 const Joystick = ({ onMove, onStop }) => {
     const baseRef = useRef(null);
@@ -119,30 +120,29 @@ const Joystick = ({ onMove, onStop }) => {
     );
 };
 
-
 // --- Component chính của Game ---
 export default function App() {
   const [world, setWorld] = useState([]);
-  const [enemies, setEnemies] = useState([]); // THAY ĐỔI: Chuyển enemy sang state để render
+  // THAY ĐỔI: renderBullets vẫn giữ để React biết KHI NÀO cần thêm/xóa DOM, nhưng không dùng để cập nhật vị trí
   const [renderBullets, setRenderBullets] = useState([]); 
   const [isInvincible, setIsInvincible] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   
-  // Các ref cho logic game
+  // Các ref cho logic game (không đổi)
   const playerPositionRef = useRef({ x: TILE_SIZE * 2, y: TILE_SIZE * 2 });
   const playerMovementRef = useRef({ dx: 0, dy: 0 });
   const enemiesRef = useRef([]);
   const bulletsRef = useRef([]);
   const playerInvincibleEndRef = useRef(0);
   
-  // Các ref để tham chiếu trực tiếp tới các phần tử DOM
+  // THAY ĐỔI: Thêm các ref để tham chiếu trực tiếp tới các phần tử DOM
   const playerElementRef = useRef(null);
   const gameWorldRef = useRef(null);
-  const bulletElementsRef = useRef(new Map()); 
+  const bulletElementsRef = useRef(new Map()); // Dùng Map để lưu ref của từng viên đạn
 
   const solidTiles = useMemo(() => new Set([TILE_TYPES.STONE, TILE_TYPES.WATER, TILE_TYPES.LAVA]), []);
 
-  // Khởi tạo thế giới
+  // Khởi tạo thế giới (không đổi)
   useEffect(() => {
     const newWorld = Array.from({ length: WORLD_HEIGHT }, (_, y) =>
       Array.from({ length: WORLD_WIDTH }, (_, x) => {
@@ -168,119 +168,167 @@ export default function App() {
         });
     }
     enemiesRef.current = newEnemies;
-    setEnemies(newEnemies); // Cập nhật state để render
     setIsLoaded(true);
   }, [solidTiles]);
   
-  // --- VÒNG LẶP LOGIC GAME ---
+  // --- VÒNG LẶP GAME CHÍNH ---
   useEffect(() => {
     if (!isLoaded) return;
     let animationFrameId;
 
     const checkCollision = (x, y) => {
-        const corners = [ {cx: x, cy: y}, {cx: x + PLAYER_HITBOX_SIZE, cy: y}, {cx: x, cy: y + PLAYER_HITBOX_SIZE}, {cx: x + PLAYER_HITBOX_SIZE, cy: y + PLAYER_HITBOX_SIZE}, ];
-        for (const corner of corners) { const tileX = Math.floor(corner.cx / TILE_SIZE); const tileY = Math.floor(corner.cy / TILE_SIZE); if(world[tileY] && solidTiles.has(world[tileY][tileX])) return true; }
+        const corners = [
+            {cx: x, cy: y},
+            {cx: x + PLAYER_HITBOX_SIZE, cy: y},
+            {cx: x, cy: y + PLAYER_HITBOX_SIZE},
+            {cx: x + PLAYER_HITBOX_SIZE, cy: y + PLAYER_HITBOX_SIZE},
+        ];
+        for (const corner of corners) {
+            const tileX = Math.floor(corner.cx / TILE_SIZE);
+            const tileY = Math.floor(corner.cy / TILE_SIZE);
+            if(world[tileY] && solidTiles.has(world[tileY][tileX])) {
+                return true;
+            }
+        }
         return false;
     }
 
     const gameLoop = () => {
       const now = Date.now();
       
-      // 1. Cập nhật vị trí người chơi (logic)
+      // 1. Cập nhật vị trí người chơi (logic không đổi)
       const { dx, dy } = playerMovementRef.current;
       if (dx !== 0 || dy !== 0) {
         const currentPos = playerPositionRef.current;
-        let nextX = currentPos.x + dx; let nextY = currentPos.y + dy;
+        let nextX = currentPos.x + dx;
+        let nextY = currentPos.y + dy;
+        
         if (!checkCollision(nextX, currentPos.y)) currentPos.x = nextX;
         if (!checkCollision(currentPos.x, nextY)) currentPos.y = nextY;
+
         currentPos.x = Math.max(0, Math.min(currentPos.x, WORLD_WIDTH * TILE_SIZE - PLAYER_HITBOX_SIZE));
         currentPos.y = Math.max(0, Math.min(currentPos.y, WORLD_HEIGHT * TILE_SIZE - PLAYER_HITBOX_SIZE));
       }
 
-      // 2. Kẻ thù bắn đạn (logic)
+      // 2. Kẻ thù bắn đạn
       let hasNewBullets = false;
       enemiesRef.current.forEach(enemy => {
           if (now - enemy.lastShotTime > ENEMY_SHOOT_INTERVAL) {
               enemy.lastShotTime = now;
               const angle = Math.atan2(playerPositionRef.current.y - enemy.position.y, playerPositionRef.current.x - enemy.position.x);
-              bulletsRef.current.push({ id: `bullet-${now}-${Math.random()}`, position: { ...enemy.position }, velocity: { dx: Math.cos(angle) * BULLET_SPEED, dy: Math.sin(angle) * BULLET_SPEED } });
+              bulletsRef.current.push({
+                  id: `bullet-${now}-${Math.random()}`,
+                  position: { ...enemy.position },
+                  velocity: { dx: Math.cos(angle) * BULLET_SPEED, dy: Math.sin(angle) * BULLET_SPEED }
+              });
               hasNewBullets = true;
           }
       });
       
-      // 3. Cập nhật đạn và va chạm (logic)
+      // 3. Cập nhật đạn và va chạm
       const currentIsInvincible = now < playerInvincibleEndRef.current;
       let bulletsChanged = false;
       const nextBullets = [];
       const bulletSize = 10;
       
       for (const bullet of bulletsRef.current) {
-          bullet.position.x += bullet.velocity.dx; bullet.position.y += bullet.velocity.dy;
-          const tileX = Math.floor(bullet.position.x / TILE_SIZE); const tileY = Math.floor(bullet.position.y / TILE_SIZE);
+          bullet.position.x += bullet.velocity.dx;
+          bullet.position.y += bullet.velocity.dy;
+
+          const tileX = Math.floor(bullet.position.x / TILE_SIZE);
+          const tileY = Math.floor(bullet.position.y / TILE_SIZE);
+
           let hitSomething = false;
-          if (world[tileY] && solidTiles.has(world[tileY][tileX])) { hitSomething = true; } 
-          else if (!currentIsInvincible && bullet.position.x < playerPositionRef.current.x + PLAYER_HITBOX_SIZE && bullet.position.x + bulletSize > playerPositionRef.current.x && bullet.position.y < playerPositionRef.current.y + PLAYER_HITBOX_SIZE && bullet.position.y + bulletSize > playerPositionRef.current.y) {
-              playerInvincibleEndRef.current = now + PLAYER_INVINCIBILITY_DURATION; hitSomething = true;
+          if (world[tileY] && solidTiles.has(world[tileY][tileX])) {
+              hitSomething = true;
+          } else if (!currentIsInvincible &&
+              bullet.position.x < playerPositionRef.current.x + PLAYER_HITBOX_SIZE &&
+              bullet.position.x + bulletSize > playerPositionRef.current.x &&
+              bullet.position.y < playerPositionRef.current.y + PLAYER_HITBOX_SIZE &&
+              bullet.position.y + bulletSize > playerPositionRef.current.y) 
+          {
+              playerInvincibleEndRef.current = now + PLAYER_INVINCIBILITY_DURATION;
+              hitSomething = true;
           }
-          if (hitSomething) { bulletsChanged = true; } else { nextBullets.push(bullet); }
+
+          if (hitSomething) {
+              bulletsChanged = true;
+          } else {
+              nextBullets.push(bullet);
+          }
       }
+
       if (bulletsChanged) bulletsRef.current = nextBullets;
       
-      // 4. CẬP NHẬT STATE ĐỂ KÍCH HOẠT RE-RENDER KHI CẦN
-      if (hasNewBullets || bulletsChanged) { setRenderBullets([...bulletsRef.current]); }
-      if (isInvincible !== currentIsInvincible) { setIsInvincible(currentIsInvincible); }
+      // 4. CẬP NHẬT GIAO DIỆN TRỰC TIẾP (KHÔNG DÙNG setState)
+      // Cập nhật vị trí Player DOM
+      if (playerElementRef.current) {
+          playerElementRef.current.style.transform = `translate(${playerPositionRef.current.x}px, ${playerPositionRef.current.y}px)`;
+      }
 
-      // 5. Lặp lại
+      // Cập nhật vị trí Camera DOM
+      if (gameWorldRef.current) {
+          const cameraX = playerPositionRef.current.x - window.innerWidth / 2 + PLAYER_HITBOX_SIZE / 2;
+          const cameraY = playerPositionRef.current.y - window.innerHeight / 2 + PLAYER_HITBOX_SIZE / 2;
+          gameWorldRef.current.style.transform = `translate(-${cameraX}px, -${cameraY}px)`;
+      }
+      
+      // Cập nhật vị trí các Bullet DOM
+      bulletsRef.current.forEach(bullet => {
+        const el = bulletElementsRef.current.get(bullet.id);
+        if (el) {
+            el.style.transform = `translate(${bullet.position.x}px, ${bullet.position.y}px)`;
+        }
+      });
+
+      // 5. CẬP NHẬT STATE KHI CÓ THAY ĐỔI VỀ CẤU TRÚC (thêm/xóa đạn)
+      if (hasNewBullets || bulletsChanged) {
+        setRenderBullets([...bulletsRef.current]);
+      }
+      
+      // Cập nhật trạng thái bất tử (đây là state đơn giản, ít thay đổi, có thể giữ)
+      setIsInvincible(currentIsInvincible);
+
       animationFrameId = requestAnimationFrame(gameLoop);
     };
 
     animationFrameId = requestAnimationFrame(gameLoop);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isLoaded, world, solidTiles, isInvincible]); // Thêm isInvincible để cập nhật state đúng
-
-  // THAY ĐỔI LỚN: Dùng useLayoutEffect để đồng bộ DOM với state từ ref
-  useLayoutEffect(() => {
-    // Hàm này chạy sau mỗi lần render, đảm bảo vị trí luôn đúng
-    // trước khi trình duyệt vẽ ra màn hình.
-    
-    // Cập nhật vị trí Player DOM
-    if (playerElementRef.current) {
-        playerElementRef.current.style.transform = `translate(${playerPositionRef.current.x}px, ${playerPositionRef.current.y}px)`;
-    }
-
-    // Cập nhật vị trí Camera DOM
-    if (gameWorldRef.current) {
-        const cameraX = playerPositionRef.current.x - window.innerWidth / 2 + PLAYER_HITBOX_SIZE / 2;
-        const cameraY = playerPositionRef.current.y - window.innerHeight / 2 + PLAYER_HITBOX_SIZE / 2;
-        gameWorldRef.current.style.transform = `translate(-${cameraX}px, -${cameraY}px)`;
-    }
-    
-    // Cập nhật vị trí các Bullet DOM
-    bulletsRef.current.forEach(bullet => {
-      const el = bulletElementsRef.current.get(bullet.id);
-      if (el) {
-          el.style.transform = `translate(${bullet.position.x}px, ${bullet.position.y}px)`;
-      }
-    });
-  }); // Không có dependency array, chạy sau mỗi lần render
+  }, [isLoaded, world, solidTiles]);
 
   // Xử lý input (không đổi)
-  const handleJoystickMove = useCallback((angle) => { playerMovementRef.current = { dx: Math.cos(angle) * PLAYER_SPEED, dy: Math.sin(angle) * PLAYER_SPEED }; }, []);
-  const handleJoystickStop = useCallback(() => { playerMovementRef.current = { dx: 0, dy: 0 }; }, []);
+  const handleJoystickMove = useCallback((angle) => {
+    playerMovementRef.current = { dx: Math.cos(angle) * PLAYER_SPEED, dy: Math.sin(angle) * PLAYER_SPEED };
+  }, []);
+  const handleJoystickStop = useCallback(() => {
+    playerMovementRef.current = { dx: 0, dy: 0 };
+  }, []);
+
   useEffect(() => {
     const keyState = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
     const updateMovement = () => {
         let dx = 0; let dy = 0;
-        if (keyState.ArrowUp) dy -= 1; if (keyState.ArrowDown) dy += 1; if (keyState.ArrowLeft) dx -= 1; if (keyState.ArrowRight) dx += 1;
+        if (keyState.ArrowUp) dy -= 1;
+        if (keyState.ArrowDown) dy += 1;
+        if (keyState.ArrowLeft) dx -= 1;
+        if (keyState.ArrowRight) dx += 1;
+        
         const length = Math.hypot(dx, dy);
-        if (length > 0) { playerMovementRef.current = { dx: (dx / length) * PLAYER_SPEED, dy: (dy / length) * PLAYER_SPEED }; } else { playerMovementRef.current = { dx: 0, dy: 0 }; }
+        if (length > 0) {
+            playerMovementRef.current = { dx: (dx / length) * PLAYER_SPEED, dy: (dy / length) * PLAYER_SPEED };
+        } else {
+            playerMovementRef.current = { dx: 0, dy: 0 };
+        }
     }
     const handleKey = (e) => { if (e.key in keyState) { keyState[e.key] = e.type === 'keydown'; updateMovement(); }};
-    window.addEventListener('keydown', handleKey); window.addEventListener('keyup', handleKey);
+    window.addEventListener('keydown', handleKey);
+    window.addEventListener('keyup', handleKey);
     return () => { window.removeEventListener('keydown', handleKey); window.removeEventListener('keyup', handleKey); };
   }, []);
   
-  if (!isLoaded) { return <div className="w-screen h-screen flex items-center justify-center bg-gray-800 text-white text-2xl">Đang kiến tạo thế giới...</div>; }
+  if (!isLoaded) {
+    return <div className="w-screen h-screen flex items-center justify-center bg-gray-800 text-white text-2xl">Đang kiến tạo thế giới...</div>;
+  }
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-blue-300 font-sans relative touch-none select-none">
@@ -289,21 +337,28 @@ export default function App() {
             <p className="text-sm">Di chuyển tự do, né tránh kẻ thù!</p>
             {isInvincible && <p className="text-xs text-cyan-300 animate-pulse">BẤT TỬ</p>}
         </div>
-      <div ref={gameWorldRef} style={{ willChange: 'transform', position: 'absolute', top: 0, left: 0 }}>
+      {/* THAY ĐỔI: Gắn ref vào div của thế giới game */}
+      <div ref={gameWorldRef} style={{ willChange: 'transform' }}>
         <div className="relative" style={{ width: WORLD_WIDTH * TILE_SIZE, height: WORLD_HEIGHT * TILE_SIZE }}>
             <div className="absolute top-0 left-0 flex flex-wrap">
               {world.map((row, y) => row.map((tile, x) => <Tile key={`${x}-${y}`} type={tile} />))}
             </div>
-            {enemies.map(enemy => <Enemy key={enemy.id} position={enemy.position} />)}
+            {/* THAY ĐỔI: Render Enemy và Bullet */}
+            {enemiesRef.current.map(enemy => <Enemy key={enemy.id} position={enemy.position} />)}
             {renderBullets.map(bullet => (
                 <Bullet 
                     key={bullet.id} 
+                    // THAY ĐỔI: Dùng callback ref để thêm/xóa ref khỏi Map khi đạn được tạo/hủy
                     ref={el => {
-                        if (el) { bulletElementsRef.current.set(bullet.id, el); } 
-                        else { bulletElementsRef.current.delete(bullet.id); }
+                        if (el) {
+                            bulletElementsRef.current.set(bullet.id, el);
+                        } else {
+                            bulletElementsRef.current.delete(bullet.id);
+                        }
                     }} 
                 />
             ))}
+            {/* THAY ĐỔI: Gắn ref vào Player và bỏ prop position */}
             <Player ref={playerElementRef} isInvincible={isInvincible} />
         </div>
       </div>
