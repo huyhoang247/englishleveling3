@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
-// --- Thành phần biểu tượng (Icon) ---
-// Sử dụng SVG nội tuyến để không cần thư viện ngoài
+// --- Icon Component ---
+// Using inline SVG to avoid external libraries
 const Icon = ({ path, className = "w-6 h-6" }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/24/24" fill="currentColor" className={className}>
     <path d={path} />
   </svg>
 );
 
-// --- Các biểu tượng cụ thể ---
+// --- Specific Icons ---
 const ICONS = {
   sword: "M12.984 2.016l4.5 4.5c0.188 0.188 0.352 0.516 0.352 0.844v3.422l-9.047 9.047c-0.234 0.234-0.516 0.352-0.844 0.352h-2.25c-0.328 0-0.609-0.117-0.844-0.352l-2.016-2.016c-0.234-0.234-0.352-0.516-0.352-0.844v-2.25c0-0.328 0.117-0.609 0.352-0.844l9.047-9.047h3.422c0.328 0 0.656 0.164 0.844 0.352zM14.25 4.688l-9.141 9.141v1.594h1.594l9.141-9.141v-1.594h-1.594zM16.5 3l3.75 3.75-6.188 6.188-3.75-3.75z",
   shield: "M12 1.09375l-9 4.5v6.09375c0 4.57812 3.82812 8.42188 9 9.28125c5.17188-0.85937 9-4.70313 9-9.28125v-6.09375l-9-4.5zM12 3.92188l6.75 3.375v4.40624c0 3.23438-2.67187 5.90625-6.75 6.64063c-4.07812-0.73438-6.75-3.40625-6.75-6.64063v-4.40624z",
@@ -21,10 +21,11 @@ const ICONS = {
   pencil: "M18.6875 2.3125l-2.09375 2.09375 3.59375 3.59375 2.09375-2.09375c0.5-0.5 0.5-1.3125 0-1.8125l-1.78125-1.78125c-0.5-0.5-1.3125-0.5-1.8125 0zM15.5 5.5l-12.5 12.5v3.59375h3.59375l12.5-12.5z",
   gem: "M12 0.75l-4.5 4.5h9zM12 23.25l4.5-4.5h-9zM6 6l-5.25 5.25v1.5l5.25 5.25h12l5.25-5.25v-1.5l-5.25-5.25z",
   star: "M12 17.25l-6.1875 3.25 1.1875-6.875-5-4.875h6.1875l2.8125-6.25 2.8125 6.25h6.1875l-5 4.875 1.1875 6.875z",
-  trendingUp: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"
+  trendingUp: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z",
+  users: "M9 8.25c-2.07 0-3.75-1.68-3.75-3.75S6.93.75 9 .75s3.75 1.68 3.75 3.75S11.07 8.25 9 8.25zm5.18 2.53c-1.28-1-2.9-1.53-4.68-1.53H9c-1.78 0-3.4.53-4.68 1.53C2.43 12.06 1.5 14.16 1.5 16.5v1.5c0 .83.67 1.5 1.5 1.5h12c.83 0 1.5-.67 1.5-1.5v-1.5c0-2.34-.93-4.44-2.82-5.72zM22.5 16.5c0-1.23-.42-2.34-1.13-3.25.34-.11.68-.24 1.02-.38 1.13-.48 1.86-1.63 1.86-2.99 0-1.77-1.43-3.2-3.2-3.2-1.3 0-2.4.77-2.92 1.84-.6-.2-1.26-.34-1.97-.34-1.2 0-2.31.33-3.28.89.29.3.56.63.79 1 .53-.25 1.12-.4 1.74-.4.18 0 .36 0 .53.02 1.77.18 3.16 1.63 3.16 3.48z"
 };
 
-// --- Các thành phần con ---
+// --- Child Components ---
 
 const StatBar = ({ label, value, maxValue, icon }) => {
     const percentage = (value / maxValue) * 100;
@@ -49,13 +50,13 @@ const StatBar = ({ label, value, maxValue, icon }) => {
                 </div>
             </div>
             
-            {/* Thanh tiến trình */}
+            {/* Progress Bar */}
             <div className="h-4 bg-gray-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
                 <div
                     className="h-full bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-500 rounded-full transition-all duration-500 ease-out relative"
                     style={{ width: `${percentage}%` }}
                 >
-                    {/* Hiệu ứng bóng */}
+                    {/* Glossy Effect */}
                     <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-full"></div>
                 </div>
             </div>
@@ -84,7 +85,7 @@ const MenuItem = ({ icon, label, hasToggle }) => {
   );
 };
 
-// --- Các cửa sổ (Modal) ---
+// --- Modal Components ---
 
 const AvatarModal = ({ isOpen, onClose, onSelectAvatar, avatars, currentAvatar }) => {
   if (!isOpen) return null;
@@ -198,14 +199,14 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
     );
 };
 
-// --- Thành phần Chính (App) ---
+// --- Main App Component ---
 export default function GameProfile() {
   const [modals, setModals] = useState({ avatar: false, edit: false, upgrade: false });
   const [currentAvatar, setCurrentAvatar] = useState('https://robohash.org/Player.png?set=set4&bgset=bg1');
   const [playerInfo, setPlayerInfo] = useState({
       name: 'CyberWarrior',
       title: 'Lv. 42 - Elite Vanguard',
-      accountType: 'Normal', // 'Normal' hoặc 'Premium'
+      accountType: 'Normal', // 'Normal' or 'Premium'
       gems: 250,
       exp: 420,
       maxExp: 1500
@@ -235,12 +236,23 @@ export default function GameProfile() {
   };
 
   return (
-    <div className="bg-slate-900 min-h-screen font-sans text-white p-4 flex justify-center items-start">
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;500;700&display=swap'); .font-orbitron { font-family: 'Orbitron', sans-serif; } .font-roboto { font-family: 'Roboto', sans-serif; }`}</style>
+    <div className="bg-slate-900 min-h-screen font-sans text-white p-4 flex justify-center items-center">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;500;700&display=swap'); 
+        .font-orbitron { font-family: 'Orbitron', sans-serif; } 
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+      `}</style>
       
-      <main className="w-full max-w-md bg-slate-800/30 rounded-2xl shadow-2xl shadow-purple-900/20 overflow-hidden">
-        {/* --- Header Hồ sơ --- */}
-        <div className="p-6 bg-gradient-to-br from-gray-900 to-slate-900 relative">
+      <main className="w-full max-w-md bg-slate-800/30 rounded-2xl shadow-2xl shadow-purple-900/20 flex flex-col" style={{height: 'calc(100vh - 2rem)', maxHeight: '700px'}}>
+        {/* --- Profile Header (Non-scrollable) --- */}
+        <div className="p-6 bg-gradient-to-br from-gray-900 to-slate-900 relative flex-shrink-0">
            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
            <div className="relative">
               <div className="flex items-center space-x-4">
@@ -277,16 +289,23 @@ export default function GameProfile() {
            </div>
         </div>
 
-        {/* --- Nội dung --- */}
-        <div className="p-4 space-y-3">
+        {/* --- Content (Scrollable) --- */}
+        <div className="p-4 pb-6 space-y-3 overflow-y-auto flex-grow no-scrollbar">
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2">Hành trang</h2>
             <MenuItem icon={ICONS.sword} label="Trang bị & Vật phẩm" />
             <MenuItem icon={ICONS.shield} label="Thành tựu" />
             <MenuItem icon={ICONS.potion} label="Cửa hàng" />
+            
+            <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Bang hội & Bạn bè</h2>
+            <MenuItem icon={ICONS.users} label="Danh sách bạn bè" />
+            <MenuItem icon={ICONS.shield} label="Bang hội của tôi" />
+            
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Hệ thống</h2>
             <MenuItem icon={ICONS.cog} label="Cài đặt Giao diện" hasToggle={true} />
             <MenuItem icon={ICONS.map} label="Lịch sử Phiêu lưu" />
             <MenuItem icon={ICONS.chest} label="Kho báu" />
+            <MenuItem icon={ICONS.cog} label="Âm thanh" hasToggle={true} />
+            <MenuItem icon={ICONS.map} label="Đăng xuất" />
         </div>
       </main>
 
