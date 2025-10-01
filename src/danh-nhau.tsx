@@ -1,368 +1,468 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // --- Cấu hình Game ---
-const TILE_SIZE = 40;
-const WORLD_WIDTH = 40;
-const WORLD_HEIGHT = 30;
-const PLAYER_SPEED = 3;
-const BULLET_SPEED = 5;
-const ENEMY_SHOOT_INTERVAL = 1800;
-const PLAYER_INVINCIBILITY_DURATION = 1500;
-const MAX_ENEMIES = 7;
-const PLAYER_HITBOX_SIZE = TILE_SIZE * 0.7;
+const GRID_SIZE = 15;
+const GAME_SPEED = 100; // ms per tick
 
-// --- Các loại khối ---
-const TILE_TYPES = {
-  GRASS: 'GRASS', DIRT: 'DIRT', STONE: 'STONE',
-  WATER: 'WATER', LAVA: 'LAVA',
+const PATH = [
+  { x: 0, y: 7 }, { x: 1, y: 7 }, { x: 2, y: 7 }, { x: 2, y: 6 }, { x: 2, y: 5 },
+  { x: 2, y: 4 }, { x: 3, y: 4 }, { x: 4, y: 4 }, { x: 5, y: 4 }, { x: 5, y: 5 },
+  { x: 5, y: 6 }, { x: 5, y: 7 }, { x: 5, y: 8 }, { x: 5, y: 9 }, { x: 5, y: 10 },
+  { x: 6, y: 10 }, { x: 7, y: 10 }, { x: 8, y: 10 }, { x: 9, y: 10 }, { x: 9, y: 9 },
+  { x: 9, y: 8 }, { x: 9, y: 7 }, { x: 9, y: 6 }, { x: 9, y: 5 }, { x: 9, y: 4 },
+  { x: 9, y: 3 }, { x: 9, y: 2 }, { x: 10, y: 2 }, { x: 11, y: 2 }, { x: 12, y: 2 },
+  { x: 12, y: 3 }, { x: 12, y: 4 }, { x: 12, y: 5 }, { x: 12, y: 6 }, { x: 12, y: 7 },
+  { x: 12, y: 8 }, { x: 13, y: 8 }, { x: 14, y: 8 }
+];
+
+const TOWER_TYPES = {
+  gun: {
+    name: 'Tháp Súng',
+    cost: 100,
+    damage: 10,
+    range: 3,
+    fireRate: 5, // Ticks per shot
+    color: 'bg-cyan-500',
+    projectileColor: 'bg-cyan-300',
+    projectileSpeed: 0.5,
+  },
+  laser: {
+    name: 'Tháp Laser',
+    cost: 250,
+    damage: 25,
+    range: 4,
+    fireRate: 8,
+    color: 'bg-red-500',
+    projectileColor: 'bg-red-300',
+    projectileSpeed: 0.7,
+  },
+  sniper: {
+    name: 'Tháp Bắn Tỉa',
+    cost: 400,
+    damage: 100,
+    range: 6,
+    fireRate: 20,
+    color: 'bg-purple-500',
+    projectileColor: 'bg-purple-300',
+    projectileSpeed: 1,
+  }
 };
 
-// --- Components (Không thay đổi) ---
-const Tile = React.memo(({ type }) => {
-  const getTileStyle = () => {
-    switch (type) {
-      case TILE_TYPES.GRASS: return 'bg-green-500 border-green-700';
-      case TILE_TYPES.DIRT: return 'bg-yellow-800 border-yellow-900';
-      case TILE_TYPES.STONE: return 'bg-gray-500 border-gray-700';
-      case TILE_TYPES.WATER: return 'bg-blue-500 border-blue-700 animate-pulse';
-      case TILE_TYPES.LAVA: return 'bg-orange-500 border-red-700 animate-pulse';
-      default: return 'bg-gray-200';
-    }
-  };
-  return <div className={`w-full h-full border-b-4 border-r-2 ${getTileStyle()}`} style={{ width: TILE_SIZE, height: TILE_SIZE }}><div className="w-full h-full opacity-10 noise-pattern"></div></div>;
-});
+const WAVES = [
+  { count: 10, health: 100, speed: 0.1, reward: 10 },
+  { count: 15, health: 150, speed: 0.1, reward: 12 },
+  { count: 20, health: 180, speed: 0.12, reward: 15 },
+  { count: 10, health: 500, speed: 0.08, reward: 50 },
+  { count: 25, health: 250, speed: 0.15, reward: 20 },
+  { count: 30, health: 300, speed: 0.18, reward: 25 },
+  { count: 1,  health: 10000, speed: 0.05, reward: 1000, isBoss: true},
+];
 
-// THAY ĐỔI: Chuyển Player sang dùng forwardRef để có thể nhận ref từ component cha
-const Player = React.forwardRef(({ isInvincible }, ref) => (
-  <div ref={ref} className="absolute" style={{ width: PLAYER_HITBOX_SIZE, height: PLAYER_HITBOX_SIZE, zIndex: 10, willChange: 'transform' }}>
-    <div className={`w-full h-full bg-red-500 rounded-md shadow-lg border-2 border-red-700 flex items-center justify-center transition-opacity ${isInvincible ? 'opacity-50 animate-pulse' : 'opacity-100'}`}><div className="w-4 h-4 bg-white rounded-sm"></div></div>
-  </div>
-));
-
-const Enemy = ({ position }) => (
-    <div className="absolute" style={{ width: TILE_SIZE * 0.9, height: TILE_SIZE * 0.9, transform: `translate(${position.x}px, ${position.y}px)`, zIndex: 9 }}>
-        <div className="w-full h-full bg-purple-600 rounded-lg shadow-lg border-2 border-purple-800 flex items-center justify-center"><div className="w-3 h-3 bg-yellow-300 rounded-full"></div></div>
-    </div>
+// --- Biểu tượng SVG ---
+const EnemyIcon = ({ isBoss }) => (
+  <svg viewBox="0 0 100 100" className={`absolute w-full h-full ${isBoss ? 'text-red-700' : 'text-zinc-400'}`} fill="currentColor">
+    <path d="M50,10 C27.9,10 10,27.9 10,50 C10,72.1 27.9,90 50,90 C72.1,90 90,72.1 90,50 C90,27.9 72.1,10 50,10 Z M50,20 C66.6,20 80,33.4 80,50 C80,57.1 77.5,63.6 73.2,68.7 L31.3,26.8 C36.4,22.5 42.9,20 50,20 Z M26.8,31.3 L68.7,73.2 C63.6,77.5 57.1,80 50,80 C33.4,80 20,66.6 20,50 C20,42.9 22.5,36.4 26.8,31.3 Z" />
+  </svg>
 );
 
-// THAY ĐỔI: Chuyển Bullet sang dùng forwardRef
-const Bullet = React.forwardRef((props, ref) => (
-    <div ref={ref} className="absolute rounded-full bg-yellow-400 shadow-md" style={{ width: 10, height: 10, zIndex: 15, willChange: 'transform' }} />
-));
-
-
-const Joystick = ({ onMove, onStop }) => {
-    const baseRef = useRef(null);
-    const handleRef = useRef(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const animationFrameRef = useRef(null);
-    const movementRef = useRef({ angle: 0, active: false });
-
-    const handleInteraction = (clientX, clientY, isStarting) => {
-        if (!baseRef.current) return;
-        if(isStarting) setIsDragging(true);
-
-        const rect = baseRef.current.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const dx = clientX - centerX;
-        const dy = clientY - centerY;
-        const distance = Math.min(50, Math.hypot(dx, dy));
-        const angle = Math.atan2(dy, dx);
-
-        if(handleRef.current) {
-            handleRef.current.style.transform = `translate(${distance * Math.cos(angle)}px, ${distance * Math.sin(angle)}px)`;
-        }
-        movementRef.current = { angle, active: true };
-    };
-
-    const handleInteractionEnd = useCallback(() => {
-        if (!isDragging) return;
-        setIsDragging(false);
-        if(handleRef.current) handleRef.current.style.transform = `translate(0px, 0px)`;
-        movementRef.current = { angle: 0, active: false };
-        onStop();
-    }, [isDragging, onStop]);
-
-    useEffect(() => {
-        const loop = () => {
-            if (movementRef.current.active) onMove(movementRef.current.angle);
-            animationFrameRef.current = requestAnimationFrame(loop);
-        };
-        if(isDragging) animationFrameRef.current = requestAnimationFrame(loop);
-        return () => { if(animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
-    }, [isDragging, onMove]);
-
-    const onMouseMove = (e) => isDragging && handleInteraction(e.clientX, e.clientY, false);
-    const onTouchMove = (e) => isDragging && handleInteraction(e.touches[0].clientX, e.touches[0].clientY, false);
-    
-    useEffect(() => {
-        window.addEventListener('mousemove', onMouseMove);
-        window.addEventListener('mouseup', handleInteractionEnd);
-        window.addEventListener('touchmove', onTouchMove, { passive: false });
-        window.addEventListener('touchend', handleInteractionEnd);
-
-        return () => {
-            window.removeEventListener('mousemove', onMouseMove);
-            window.removeEventListener('mouseup', handleInteractionEnd);
-            window.removeEventListener('touchmove', onTouchMove);
-            window.removeEventListener('touchend', handleInteractionEnd);
-        };
-    }, [isDragging, handleInteractionEnd]);
-
-    const onMouseDown = (e) => handleInteraction(e.clientX, e.clientY, true);
-    const onTouchStart = (e) => { e.preventDefault(); handleInteraction(e.touches[0].clientX, e.touches[0].clientY, true); };
-    
+const TowerIcon = ({ type }) => {
+  if (type === 'laser') {
     return (
-        <div ref={baseRef} onMouseDown={onMouseDown} onTouchStart={onTouchStart} className="fixed bottom-10 left-10 w-32 h-32 bg-gray-500 bg-opacity-30 rounded-full flex items-center justify-center select-none touch-none" style={{ zIndex: 20 }}>
-            <div ref={handleRef} className="w-16 h-16 bg-gray-200 bg-opacity-60 rounded-full shadow-lg transition-transform"></div>
-        </div>
-    );
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-white p-1">
+        <path d="M12 1L9 9h6l-3-8zM4.22 4.22l4.24 4.24L4.22 12l4.24-3.54-4.24-4.24zM19.78 4.22l-4.24 4.24L19.78 12l-4.24-3.54 4.24-4.24zM12 23l3-8H9l3 8zM4.22 19.78l4.24-4.24L4.22 12l4.24 3.54-4.24 4.24zM19.78 19.78l-4.24-4.24L19.78 12l-4.24 3.54 4.24 4.24z"/>
+      </svg>
+    )
+  }
+  if (type === 'sniper') {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-white p-1">
+        <path d="M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 2c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.14-7-7 3.14-7 7-7zm0 3c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm-7 2h2v2H5zm14 0h-2v2h2zM10 5v2h4V5zM10 17v2h4v-2z"/>
+      </svg>
+    )
+  }
+  // Default: gun tower
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-white p-1">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+      <path d="M11 7h2v6h-2z"/>
+      <circle cx="12" cy="16" r="1"/>
+    </svg>
+  );
 };
 
-// --- Component chính của Game ---
+// --- Component Chính ---
 export default function App() {
-  const [world, setWorld] = useState([]);
-  // THAY ĐỔI: renderBullets vẫn giữ để React biết KHI NÀO cần thêm/xóa DOM, nhưng không dùng để cập nhật vị trí
-  const [renderBullets, setRenderBullets] = useState([]); 
-  const [isInvincible, setIsInvincible] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  
-  // Các ref cho logic game (không đổi)
-  const playerPositionRef = useRef({ x: TILE_SIZE * 2, y: TILE_SIZE * 2 });
-  const playerMovementRef = useRef({ dx: 0, dy: 0 });
-  const enemiesRef = useRef([]);
-  const bulletsRef = useRef([]);
-  const playerInvincibleEndRef = useRef(0);
-  
-  // THAY ĐỔI: Thêm các ref để tham chiếu trực tiếp tới các phần tử DOM
-  const playerElementRef = useRef(null);
-  const gameWorldRef = useRef(null);
-  const bulletElementsRef = useRef(new Map()); // Dùng Map để lưu ref của từng viên đạn
+  const [gameState, setGameState] = useState({
+    gold: 300,
+    lives: 20,
+    wave: 0,
+    gameStatus: 'idle', // idle, playing, wave-cleared, game-over, victory
+  });
+  const [towers, setTowers] = useState([]);
+  const [enemies, setEnemies] = useState([]);
+  const [projectiles, setProjectiles] = useState([]);
+  const [selectedTower, setSelectedTower] = useState(null);
+  const [tileSize, setTileSize] = useState(40);
 
-  const solidTiles = useMemo(() => new Set([TILE_TYPES.STONE, TILE_TYPES.WATER, TILE_TYPES.LAVA]), []);
+  const gameTickRef = useRef(0);
+  const gameLoopStateRef = useRef({ gameState, enemies, towers, projectiles, tileSize });
 
-  // Khởi tạo thế giới (không đổi)
   useEffect(() => {
-    const newWorld = Array.from({ length: WORLD_HEIGHT }, (_, y) =>
-      Array.from({ length: WORLD_WIDTH }, (_, x) => {
-        if (x < 1 || x > WORLD_WIDTH - 2 || y < 1 || y > WORLD_HEIGHT - 2) return TILE_TYPES.STONE;
-        if (Math.random() < 0.07) return TILE_TYPES.STONE;
-        if (x > 20 && x < 25 && y > 18 && y < 22) return TILE_TYPES.LAVA;
-        return TILE_TYPES.GRASS;
-      })
-    );
-    setWorld(newWorld);
+    gameLoopStateRef.current = { gameState, enemies, towers, projectiles, tileSize };
+  }, [gameState, enemies, towers, projectiles, tileSize]);
+
+  // Effect to calculate responsive tile size
+  useEffect(() => {
+      const calculateSize = () => {
+        const screenWidth = window.innerWidth;
+        const boardContainerWidth = Math.min(screenWidth * 0.95, 600);
+        const newTileSize = Math.floor(boardContainerWidth / GRID_SIZE);
+        setTileSize(newTileSize);
+      };
+
+      calculateSize();
+      window.addEventListener('resize', calculateSize);
+      return () => window.removeEventListener('resize', calculateSize);
+  }, []);
+  
+  const isPath = (x, y) => PATH.some(p => p.x === x && p.y === y);
+  const isOccupied = (x, y) => towers.some(t => t.x === x && t.y === y);
+
+  const handleTileClick = (x, y) => {
+    if (!selectedTower || isPath(x, y) || isOccupied(x, y)) return;
+
+    const towerInfo = TOWER_TYPES[selectedTower];
+    if (gameState.gold >= towerInfo.cost) {
+      setGameState(prev => ({ ...prev, gold: prev.gold - towerInfo.cost }));
+      setTowers(prev => [...prev, {
+        id: Date.now(),
+        type: selectedTower,
+        x, y,
+        ...towerInfo,
+        fireCooldown: 0,
+        target: null,
+      }]);
+      setSelectedTower(null);
+    }
+  };
+
+  const startNextWave = useCallback(() => {
+    const { gameState } = gameLoopStateRef.current;
+    const nextWaveIndex = gameState.wave;
+    if (nextWaveIndex >= WAVES.length) {
+      setGameState(prev => ({ ...prev, gameStatus: 'victory' }));
+      return;
+    }
+    const waveData = WAVES[nextWaveIndex];
+    const newEnemies = Array.from({ length: waveData.count }, (_, i) => ({
+      id: `${nextWaveIndex}-${i}`,
+      ...waveData,
+      maxHealth: waveData.health,
+      pathIndex: 0,
+      x: PATH[0].x * tileSize + tileSize / 2,
+      y: PATH[0].y * tileSize + tileSize / 2,
+      spawnDelay: i * (waveData.isBoss ? 0 : 20), // Ticks
+    }));
     
+    setEnemies(newEnemies);
+    setGameState(prev => ({ ...prev, gameStatus: 'playing', wave: prev.wave + 1 }));
+  }, [tileSize]);
+
+  const gameLoop = useCallback(() => {
+    const { gameState, enemies, towers, projectiles, tileSize } = gameLoopStateRef.current;
+    if (gameState.gameStatus !== 'playing') return;
+
+    gameTickRef.current++;
+
+    // --- Cập nhật Kẻ địch ---
     const newEnemies = [];
-    for (let i = 0; i < MAX_ENEMIES; i++) {
-        let ex, ey;
-        do {
-            ex = Math.floor(Math.random() * (WORLD_WIDTH - 2)) + 1;
-            ey = Math.floor(Math.random() * (WORLD_HEIGHT - 2)) + 1;
-        } while (solidTiles.has(newWorld[ey][ex]) || (Math.hypot(ex - 2, ey - 2) < 6));
-        newEnemies.push({
-            id: `enemy-${i}`,
-            position: { x: ex * TILE_SIZE, y: ey * TILE_SIZE },
-            lastShotTime: Date.now() + Math.random() * ENEMY_SHOOT_INTERVAL
+    let livesLost = 0;
+    let goldEarned = 0;
+    
+    enemies.forEach(enemy => {
+      if (enemy.spawnDelay > 0) {
+        newEnemies.push({ ...enemy, spawnDelay: enemy.spawnDelay - 1 });
+        return;
+      }
+      
+      if (enemy.health <= 0) {
+        goldEarned += enemy.reward;
+        return;
+      }
+
+      let currentPathIndex = enemy.pathIndex;
+      if (currentPathIndex >= PATH.length - 1) {
+        livesLost++;
+        return;
+      }
+      
+      const targetPos = PATH[currentPathIndex + 1];
+      const targetX = targetPos.x * tileSize + tileSize / 2;
+      const targetY = targetPos.y * tileSize + tileSize / 2;
+
+      const dx = targetX - enemy.x;
+      const dy = targetY - enemy.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      let newX = enemy.x;
+      let newY = enemy.y;
+
+      if (distance < enemy.speed * tileSize) {
+        newX = targetX;
+        newY = targetY;
+        currentPathIndex++;
+      } else {
+        newX += (dx / distance) * enemy.speed * tileSize * (GAME_SPEED / 100);
+        newY += (dy / distance) * enemy.speed * tileSize * (GAME_SPEED / 100);
+      }
+      
+      newEnemies.push({ ...enemy, x: newX, y: newY, pathIndex: currentPathIndex });
+    });
+
+    // --- Cập nhật Tháp và Bắn đạn ---
+    const newProjectiles = [...projectiles];
+    const updatedTowers = towers.map(tower => {
+      let newCooldown = Math.max(0, tower.fireCooldown - 1);
+      
+      if (newCooldown === 0) {
+        const enemiesInRange = newEnemies.filter(e => {
+            const dx = e.x - (tower.x * tileSize + tileSize / 2);
+            const dy = e.y - (tower.y * tileSize + tileSize / 2);
+            return Math.sqrt(dx * dx + dy * dy) <= tower.range * tileSize;
         });
-    }
-    enemiesRef.current = newEnemies;
-    setIsLoaded(true);
-  }, [solidTiles]);
-  
-  // --- VÒNG LẶP GAME CHÍNH ---
-  useEffect(() => {
-    if (!isLoaded) return;
-    let animationFrameId;
 
-    const checkCollision = (x, y) => {
-        const corners = [
-            {cx: x, cy: y},
-            {cx: x + PLAYER_HITBOX_SIZE, cy: y},
-            {cx: x, cy: y + PLAYER_HITBOX_SIZE},
-            {cx: x + PLAYER_HITBOX_SIZE, cy: y + PLAYER_HITBOX_SIZE},
-        ];
-        for (const corner of corners) {
-            const tileX = Math.floor(corner.cx / TILE_SIZE);
-            const tileY = Math.floor(corner.cy / TILE_SIZE);
-            if(world[tileY] && solidTiles.has(world[tileY][tileX])) {
-                return true;
+        if (enemiesInRange.length > 0) {
+            const target = enemiesInRange[0];
+            newProjectiles.push({
+                id: Math.random(),
+                startX: tower.x * tileSize + tileSize / 2,
+                startY: tower.y * tileSize + tileSize / 2,
+                targetId: target.id,
+                damage: tower.damage,
+                speed: tower.projectileSpeed,
+                color: tower.projectileColor,
+                x: tower.x * tileSize + tileSize / 2,
+                y: tower.y * tileSize + tileSize / 2,
+            });
+            return { ...tower, fireCooldown: tower.fireRate };
+        }
+      }
+      return { ...tower, fireCooldown: newCooldown };
+    });
+
+    // --- Cập nhật Đạn ---
+    const finalProjectiles = [];
+    newProjectiles.forEach(p => {
+        const target = newEnemies.find(e => e.id === p.targetId);
+        if (!target) return;
+
+        const dx = target.x - p.x;
+        const dy = target.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < p.speed * tileSize * 0.5) {
+            const enemyIndex = newEnemies.findIndex(e => e.id === p.targetId);
+            if (enemyIndex !== -1) {
+              newEnemies[enemyIndex].health -= p.damage;
             }
+        } else {
+            p.x += (dx / dist) * p.speed * tileSize * (GAME_SPEED / 100);
+            p.y += (dy / dist) * p.speed * tileSize * (GAME_SPEED / 100);
+            finalProjectiles.push(p);
         }
-        return false;
+    });
+
+    setEnemies(newEnemies.filter(e => e.health > 0));
+    setTowers(updatedTowers);
+    setProjectiles(finalProjectiles);
+
+    if (livesLost > 0 || goldEarned > 0) {
+      setGameState(prev => {
+        const newLives = prev.lives - livesLost;
+        if (newLives <= 0) {
+          return { ...prev, lives: 0, gameStatus: 'game-over' };
+        }
+        return {
+          ...prev,
+          lives: newLives,
+          gold: prev.gold + goldEarned
+        };
+      });
     }
 
-    const gameLoop = () => {
-      const now = Date.now();
-      
-      // 1. Cập nhật vị trí người chơi (logic không đổi)
-      const { dx, dy } = playerMovementRef.current;
-      if (dx !== 0 || dy !== 0) {
-        const currentPos = playerPositionRef.current;
-        let nextX = currentPos.x + dx;
-        let nextY = currentPos.y + dy;
-        
-        if (!checkCollision(nextX, currentPos.y)) currentPos.x = nextX;
-        if (!checkCollision(currentPos.x, nextY)) currentPos.y = nextY;
+    if (newEnemies.length === 0 && enemies.length > 0) {
+        setGameState(prev => ({...prev, gameStatus: 'wave-cleared'}));
+    }
 
-        currentPos.x = Math.max(0, Math.min(currentPos.x, WORLD_WIDTH * TILE_SIZE - PLAYER_HITBOX_SIZE));
-        currentPos.y = Math.max(0, Math.min(currentPos.y, WORLD_HEIGHT * TILE_SIZE - PLAYER_HITBOX_SIZE));
-      }
-
-      // 2. Kẻ thù bắn đạn
-      let hasNewBullets = false;
-      enemiesRef.current.forEach(enemy => {
-          if (now - enemy.lastShotTime > ENEMY_SHOOT_INTERVAL) {
-              enemy.lastShotTime = now;
-              const angle = Math.atan2(playerPositionRef.current.y - enemy.position.y, playerPositionRef.current.x - enemy.position.x);
-              bulletsRef.current.push({
-                  id: `bullet-${now}-${Math.random()}`,
-                  position: { ...enemy.position },
-                  velocity: { dx: Math.cos(angle) * BULLET_SPEED, dy: Math.sin(angle) * BULLET_SPEED }
-              });
-              hasNewBullets = true;
-          }
-      });
-      
-      // 3. Cập nhật đạn và va chạm
-      const currentIsInvincible = now < playerInvincibleEndRef.current;
-      let bulletsChanged = false;
-      const nextBullets = [];
-      const bulletSize = 10;
-      
-      for (const bullet of bulletsRef.current) {
-          bullet.position.x += bullet.velocity.dx;
-          bullet.position.y += bullet.velocity.dy;
-
-          const tileX = Math.floor(bullet.position.x / TILE_SIZE);
-          const tileY = Math.floor(bullet.position.y / TILE_SIZE);
-
-          let hitSomething = false;
-          if (world[tileY] && solidTiles.has(world[tileY][tileX])) {
-              hitSomething = true;
-          } else if (!currentIsInvincible &&
-              bullet.position.x < playerPositionRef.current.x + PLAYER_HITBOX_SIZE &&
-              bullet.position.x + bulletSize > playerPositionRef.current.x &&
-              bullet.position.y < playerPositionRef.current.y + PLAYER_HITBOX_SIZE &&
-              bullet.position.y + bulletSize > playerPositionRef.current.y) 
-          {
-              playerInvincibleEndRef.current = now + PLAYER_INVINCIBILITY_DURATION;
-              hitSomething = true;
-          }
-
-          if (hitSomething) {
-              bulletsChanged = true;
-          } else {
-              nextBullets.push(bullet);
-          }
-      }
-
-      if (bulletsChanged) bulletsRef.current = nextBullets;
-      
-      // 4. CẬP NHẬT GIAO DIỆN TRỰC TIẾP (KHÔNG DÙNG setState)
-      // Cập nhật vị trí Player DOM
-      if (playerElementRef.current) {
-          playerElementRef.current.style.transform = `translate(${playerPositionRef.current.x}px, ${playerPositionRef.current.y}px)`;
-      }
-
-      // Cập nhật vị trí Camera DOM
-      if (gameWorldRef.current) {
-          const cameraX = playerPositionRef.current.x - window.innerWidth / 2 + PLAYER_HITBOX_SIZE / 2;
-          const cameraY = playerPositionRef.current.y - window.innerHeight / 2 + PLAYER_HITBOX_SIZE / 2;
-          gameWorldRef.current.style.transform = `translate(-${cameraX}px, -${cameraY}px)`;
-      }
-      
-      // Cập nhật vị trí các Bullet DOM
-      bulletsRef.current.forEach(bullet => {
-        const el = bulletElementsRef.current.get(bullet.id);
-        if (el) {
-            el.style.transform = `translate(${bullet.position.x}px, ${bullet.position.y}px)`;
-        }
-      });
-
-      // 5. CẬP NHẬT STATE KHI CÓ THAY ĐỔI VỀ CẤU TRÚC (thêm/xóa đạn)
-      if (hasNewBullets || bulletsChanged) {
-        setRenderBullets([...bulletsRef.current]);
-      }
-      
-      // Cập nhật trạng thái bất tử (đây là state đơn giản, ít thay đổi, có thể giữ)
-      setIsInvincible(currentIsInvincible);
-
-      animationFrameId = requestAnimationFrame(gameLoop);
-    };
-
-    animationFrameId = requestAnimationFrame(gameLoop);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [isLoaded, world, solidTiles]);
-
-  // Xử lý input (không đổi)
-  const handleJoystickMove = useCallback((angle) => {
-    playerMovementRef.current = { dx: Math.cos(angle) * PLAYER_SPEED, dy: Math.sin(angle) * PLAYER_SPEED };
-  }, []);
-  const handleJoystickStop = useCallback(() => {
-    playerMovementRef.current = { dx: 0, dy: 0 };
   }, []);
 
   useEffect(() => {
-    const keyState = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
-    const updateMovement = () => {
-        let dx = 0; let dy = 0;
-        if (keyState.ArrowUp) dy -= 1;
-        if (keyState.ArrowDown) dy += 1;
-        if (keyState.ArrowLeft) dx -= 1;
-        if (keyState.ArrowRight) dx += 1;
-        
-        const length = Math.hypot(dx, dy);
-        if (length > 0) {
-            playerMovementRef.current = { dx: (dx / length) * PLAYER_SPEED, dy: (dy / length) * PLAYER_SPEED };
-        } else {
-            playerMovementRef.current = { dx: 0, dy: 0 };
-        }
-    }
-    const handleKey = (e) => { if (e.key in keyState) { keyState[e.key] = e.type === 'keydown'; updateMovement(); }};
-    window.addEventListener('keydown', handleKey);
-    window.addEventListener('keyup', handleKey);
-    return () => { window.removeEventListener('keydown', handleKey); window.removeEventListener('keyup', handleKey); };
-  }, []);
+    const handle = setInterval(gameLoop, GAME_SPEED);
+    return () => clearInterval(handle);
+  }, [gameLoop]);
   
-  if (!isLoaded) {
-    return <div className="w-screen h-screen flex items-center justify-center bg-gray-800 text-white text-2xl">Đang kiến tạo thế giới...</div>;
+  const resetGame = () => {
+     setGameState({
+        gold: 300,
+        lives: 20,
+        wave: 0,
+        gameStatus: 'idle',
+     });
+     setTowers([]);
+     setEnemies([]);
+     setProjectiles([]);
+     setSelectedTower(null);
+     gameTickRef.current = 0;
   }
 
   return (
-    <div className="w-screen h-screen overflow-hidden bg-blue-300 font-sans relative touch-none select-none">
-       <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg z-20 text-center pointer-events-none">
-            <h1 className="text-xl font-bold">Block World Survivor</h1>
-            <p className="text-sm">Di chuyển tự do, né tránh kẻ thù!</p>
-            {isInvincible && <p className="text-xs text-cyan-300 animate-pulse">BẤT TỬ</p>}
-        </div>
-      {/* THAY ĐỔI: Gắn ref vào div của thế giới game */}
-      <div ref={gameWorldRef} style={{ willChange: 'transform' }}>
-        <div className="relative" style={{ width: WORLD_WIDTH * TILE_SIZE, height: WORLD_HEIGHT * TILE_SIZE }}>
-            <div className="absolute top-0 left-0 flex flex-wrap">
-              {world.map((row, y) => row.map((tile, x) => <Tile key={`${x}-${y}`} type={tile} />))}
+    <div className="bg-zinc-800 text-white min-h-screen w-full flex flex-col items-center justify-center font-sans p-2">
+      <h1 className="text-3xl md:text-4xl font-bold mb-2 md:mb-4 tracking-wider">React Tower Defense</h1>
+      
+      <div className="flex flex-col lg:flex-row gap-4 w-full max-w-5xl items-center lg:items-start">
+        {/* Game Board */}
+        <div 
+          className="relative bg-zinc-700 grid border-2 border-zinc-600 shadow-lg"
+          style={{
+            gridTemplateColumns: `repeat(${GRID_SIZE}, ${tileSize}px)`,
+            width: GRID_SIZE * tileSize,
+            height: GRID_SIZE * tileSize,
+          }}
+        >
+          {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, i) => {
+            const x = i % GRID_SIZE;
+            const y = Math.floor(i / GRID_SIZE);
+            const isPathTile = isPath(x, y);
+            const isOccuPiedTile = isOccupied(x,y);
+            return (
+              <div
+                key={i}
+                onClick={() => handleTileClick(x, y)}
+                className={`
+                  w-full h-full border-zinc-900/20 border-t border-l
+                  ${isPathTile ? 'bg-zinc-600' : 'bg-green-800/50'}
+                  ${!isPathTile && !isOccuPiedTile && selectedTower ? 'hover:bg-green-500/50 cursor-pointer' : ''}
+                  ${selectedTower && isOccuPiedTile ? 'cursor-not-allowed' : ''}
+                `}
+              />
+            );
+          })}
+          {towers.map(tower => (
+            <div
+              key={tower.id}
+              className={`absolute flex items-center justify-center rounded-full ${tower.color} shadow-lg`}
+              style={{
+                left: tower.x * tileSize,
+                top: tower.y * tileSize,
+                width: tileSize,
+                height: tileSize,
+              }}
+            >
+              <TowerIcon type={tower.type} />
+              <div className="absolute rounded-full border border-dashed border-white/30 pointer-events-none"
+                style={{
+                  width: tower.range * 2 * tileSize,
+                  height: tower.range * 2 * tileSize,
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                }}
+              />
             </div>
-            {/* THAY ĐỔI: Render Enemy và Bullet */}
-            {enemiesRef.current.map(enemy => <Enemy key={enemy.id} position={enemy.position} />)}
-            {renderBullets.map(bullet => (
-                <Bullet 
-                    key={bullet.id} 
-                    // THAY ĐỔI: Dùng callback ref để thêm/xóa ref khỏi Map khi đạn được tạo/hủy
-                    ref={el => {
-                        if (el) {
-                            bulletElementsRef.current.set(bullet.id, el);
-                        } else {
-                            bulletElementsRef.current.delete(bullet.id);
-                        }
-                    }} 
-                />
-            ))}
-            {/* THAY ĐỔI: Gắn ref vào Player và bỏ prop position */}
-            <Player ref={playerElementRef} isInvincible={isInvincible} />
+          ))}
+          {enemies.map(enemy => (
+            enemy.spawnDelay <= 0 && <div
+              key={enemy.id}
+              className="absolute transition-all duration-100 ease-linear"
+              style={{
+                left: enemy.x - tileSize / 2,
+                top: enemy.y - tileSize / 2,
+                width: tileSize * (enemy.isBoss ? 1.5 : 1),
+                height: tileSize * (enemy.isBoss ? 1.5 : 1),
+                transform: `translate(-${(tileSize * (enemy.isBoss ? 1.5 : 1) - tileSize)/2}px, -${(tileSize * (enemy.isBoss ? 1.5 : 1) - tileSize)/2}px)`
+              }}
+            >
+              <EnemyIcon isBoss={enemy.isBoss} />
+              <div className="absolute -top-1.5 left-0 w-full h-1 bg-red-500 rounded-full">
+                <div className="bg-green-500 h-full rounded-full" style={{width: `${(enemy.health/enemy.maxHealth) * 100}%`}}></div>
+              </div>
+            </div>
+          ))}
+           {projectiles.map(p => (
+              <div
+                key={p.id}
+                className={`absolute rounded-full ${p.color}`}
+                style={{
+                    left: p.x - (tileSize * 0.075),
+                    top: p.y - (tileSize * 0.075),
+                    width: tileSize * 0.15,
+                    height: tileSize * 0.15,
+                }}
+              />
+           ))}
+
+          {(gameState.gameStatus === 'game-over' || gameState.gameStatus === 'victory' || gameState.gameStatus === 'idle' || gameState.gameStatus === 'wave-cleared') && (
+            <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-center p-4">
+              {gameState.gameStatus === 'game-over' && <h2 className="text-3xl md:text-5xl font-bold text-red-500 mb-4">THUA CUỘC</h2>}
+              {gameState.gameStatus === 'victory' && <h2 className="text-3xl md:text-5xl font-bold text-yellow-400 mb-4">CHIẾN THẮNG!</h2>}
+              {gameState.gameStatus === 'idle' && <h2 className="text-xl md:text-3xl font-bold mb-4">Sẵn sàng để phòng thủ?</h2>}
+              {gameState.gameStatus === 'wave-cleared' && <h2 className="text-xl md:text-3xl font-bold mb-4">ĐÃ SẠCH WAVE!</h2>}
+              
+              {(gameState.gameStatus === 'idle' || gameState.gameStatus === 'wave-cleared') && (
+                <button
+                  onClick={startNextWave}
+                  className="bg-yellow-500 hover:bg-yellow-400 text-zinc-900 font-bold py-2 px-5 md:py-3 md:px-6 rounded-lg text-lg md:text-xl shadow-lg transition-transform transform hover:scale-105"
+                >
+                  Bắt đầu Wave {gameState.wave + 1}
+                </button>
+              )}
+               {(gameState.gameStatus === 'game-over' || gameState.gameStatus === 'victory') && (
+                <button
+                  onClick={resetGame}
+                  className="bg-gray-200 hover:bg-white text-zinc-900 font-bold py-2 px-5 md:py-3 md:px-6 rounded-lg text-lg md:text-xl shadow-lg transition-transform transform hover:scale-105 mt-4"
+                >
+                  Chơi lại
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Control Panel */}
+        <div className="flex flex-col gap-4 w-full lg:w-64">
+          <div className="bg-zinc-700/50 p-3 md:p-4 rounded-lg shadow-lg border border-zinc-600">
+            <h3 className="text-lg md:text-xl font-bold mb-2 text-yellow-400">Trạng thái</h3>
+            <div className="flex justify-between"><span>Vàng:</span> <span>{gameState.gold} G</span></div>
+            <div className="flex justify-between"><span>Mạng:</span> <span>{gameState.lives} ❤️</span></div>
+            <div className="flex justify-between"><span>Wave:</span> <span>{gameState.wave} / {WAVES.length}</span></div>
+          </div>
+          <div className="bg-zinc-700/50 p-3 md:p-4 rounded-lg shadow-lg border border-zinc-600">
+            <h3 className="text-lg md:text-xl font-bold mb-3 text-cyan-400">Mua Tháp</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(TOWER_TYPES).map(([type, info]) => (
+                <button
+                  key={type}
+                  onClick={() => setSelectedTower(type)}
+                  disabled={gameState.gold < info.cost}
+                  className={`
+                    p-2 rounded-lg text-left border-2 transition-all text-sm
+                    ${selectedTower === type ? 'border-yellow-400 bg-zinc-600' : 'border-zinc-500 bg-zinc-700'}
+                    ${gameState.gold < info.cost ? 'opacity-50 cursor-not-allowed' : 'hover:border-cyan-400 hover:bg-zinc-600'}
+                  `}
+                >
+                  <div className="font-bold">{info.name}</div>
+                  <div>Giá: <span className="text-yellow-400">{info.cost}G</span></div>
+                  <div className='text-xs'>DMG: <span className="text-red-400">{info.damage}</span></div>
+                </button>
+              ))}
+            </div>
+            {selectedTower && (
+                <button onClick={() => setSelectedTower(null)} className="w-full mt-3 p-2 bg-red-600 hover:bg-red-500 rounded-lg">Hủy chọn</button>
+            )}
+          </div>
         </div>
       </div>
-      <Joystick onMove={handleJoystickMove} onStop={handleJoystickStop} />
     </div>
   );
 }
+
