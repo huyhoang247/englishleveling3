@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // --- Cấu hình Game ---
-const GRID_SIZE = 15;
+const GRID_SIZE = 10; // Giữ nguyên 10x10
 const GAME_SPEED = 100; // ms per tick
 
+// Thiết kế lại đường đi cho bàn 10x10
 const PATH = [
-  { x: 0, y: 7 }, { x: 1, y: 7 }, { x: 2, y: 7 }, { x: 2, y: 6 }, { x: 2, y: 5 },
-  { x: 2, y: 4 }, { x: 3, y: 4 }, { x: 4, y: 4 }, { x: 5, y: 4 }, { x: 5, y: 5 },
-  { x: 5, y: 6 }, { x: 5, y: 7 }, { x: 5, y: 8 }, { x: 5, y: 9 }, { x: 5, y: 10 },
-  { x: 6, y: 10 }, { x: 7, y: 10 }, { x: 8, y: 10 }, { x: 9, y: 10 }, { x: 9, y: 9 },
-  { x: 9, y: 8 }, { x: 9, y: 7 }, { x: 9, y: 6 }, { x: 9, y: 5 }, { x: 9, y: 4 },
-  { x: 9, y: 3 }, { x: 9, y: 2 }, { x: 10, y: 2 }, { x: 11, y: 2 }, { x: 12, y: 2 },
-  { x: 12, y: 3 }, { x: 12, y: 4 }, { x: 12, y: 5 }, { x: 12, y: 6 }, { x: 12, y: 7 },
-  { x: 12, y: 8 }, { x: 13, y: 8 }, { x: 14, y: 8 }
+  { x: 0, y: 4 }, { x: 1, y: 4 }, { x: 2, y: 4 },
+  { x: 2, y: 5 }, { x: 2, y: 6 }, { x: 2, y: 7 },
+  { x: 3, y: 7 }, { x: 4, y: 7 }, { x: 5, y: 7 },
+  { x: 5, y: 6 }, { x: 5, y: 5 }, { x: 5, y: 4 }, { x: 5, y: 3 }, { x: 5, y: 2 },
+  { x: 6, y: 2 }, { x: 7, y: 2 },
+  { x: 7, y: 3 }, { x: 7, y: 4 }, { x: 7, y: 5 }, { x: 7, y: 6 }, { x: 7, y: 7 }, { x: 7, y: 8 },
+  { x: 8, y: 8 }, { x: 9, y: 8 }
 ];
+
 
 const TOWER_TYPES = {
   gun: {
@@ -40,7 +41,7 @@ const TOWER_TYPES = {
     name: 'Tháp Bắn Tỉa',
     cost: 400,
     damage: 100,
-    range: 6,
+    range: 5,
     fireRate: 20,
     color: 'bg-purple-500',
     projectileColor: 'bg-purple-300',
@@ -111,12 +112,13 @@ export default function App() {
     gameLoopStateRef.current = { gameState, enemies, towers, projectiles, tileSize };
   }, [gameState, enemies, towers, projectiles, tileSize]);
 
-  // Effect to calculate responsive tile size
+  // Effect để tính toán kích thước ô linh hoạt, lớn hơn cho điện thoại
   useEffect(() => {
       const calculateSize = () => {
         const screenWidth = window.innerWidth;
-        const boardContainerWidth = Math.min(screenWidth * 0.95, 600);
-        const newTileSize = Math.floor(boardContainerWidth / GRID_SIZE);
+        // Cho phép bàn chơi chiếm 95% chiều rộng màn hình, giới hạn tối đa 500px trên màn hình lớn
+        const boardSize = Math.min(screenWidth * 0.95, 500);
+        const newTileSize = Math.floor(boardSize / GRID_SIZE);
         setTileSize(newTileSize);
       };
 
@@ -147,7 +149,7 @@ export default function App() {
   };
 
   const startNextWave = useCallback(() => {
-    const { gameState } = gameLoopStateRef.current;
+    const { gameState, tileSize } = gameLoopStateRef.current;
     const nextWaveIndex = gameState.wave;
     if (nextWaveIndex >= WAVES.length) {
       setGameState(prev => ({ ...prev, gameStatus: 'victory' }));
@@ -166,7 +168,7 @@ export default function App() {
     
     setEnemies(newEnemies);
     setGameState(prev => ({ ...prev, gameStatus: 'playing', wave: prev.wave + 1 }));
-  }, [tileSize]);
+  }, []);
 
   const gameLoop = useCallback(() => {
     const { gameState, enemies, towers, projectiles, tileSize } = gameLoopStateRef.current;
@@ -174,97 +176,58 @@ export default function App() {
 
     gameTickRef.current++;
 
-    // --- Cập nhật Kẻ địch ---
+    // --- Logic Kẻ địch ---
     const newEnemies = [];
     let livesLost = 0;
     let goldEarned = 0;
     
     enemies.forEach(enemy => {
-      if (enemy.spawnDelay > 0) {
-        newEnemies.push({ ...enemy, spawnDelay: enemy.spawnDelay - 1 });
-        return;
-      }
+      if (enemy.spawnDelay > 0) { newEnemies.push({ ...enemy, spawnDelay: enemy.spawnDelay - 1 }); return; }
+      if (enemy.health <= 0) { goldEarned += enemy.reward; return; }
+      if (enemy.pathIndex >= PATH.length - 1) { livesLost++; return; }
       
-      if (enemy.health <= 0) {
-        goldEarned += enemy.reward;
-        return;
-      }
-
       let currentPathIndex = enemy.pathIndex;
-      if (currentPathIndex >= PATH.length - 1) {
-        livesLost++;
-        return;
-      }
-      
       const targetPos = PATH[currentPathIndex + 1];
       const targetX = targetPos.x * tileSize + tileSize / 2;
       const targetY = targetPos.y * tileSize + tileSize / 2;
-
       const dx = targetX - enemy.x;
       const dy = targetY - enemy.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       
-      let newX = enemy.x;
-      let newY = enemy.y;
-
+      let newX = enemy.x, newY = enemy.y;
       if (distance < enemy.speed * tileSize) {
-        newX = targetX;
-        newY = targetY;
-        currentPathIndex++;
+        newX = targetX; newY = targetY; currentPathIndex++;
       } else {
         newX += (dx / distance) * enemy.speed * tileSize * (GAME_SPEED / 100);
         newY += (dy / distance) * enemy.speed * tileSize * (GAME_SPEED / 100);
       }
-      
       newEnemies.push({ ...enemy, x: newX, y: newY, pathIndex: currentPathIndex });
     });
 
-    // --- Cập nhật Tháp và Bắn đạn ---
+    // --- Logic Tháp & Đạn ---
     const newProjectiles = [...projectiles];
     const updatedTowers = towers.map(tower => {
       let newCooldown = Math.max(0, tower.fireCooldown - 1);
-      
       if (newCooldown === 0) {
-        const enemiesInRange = newEnemies.filter(e => {
-            const dx = e.x - (tower.x * tileSize + tileSize / 2);
-            const dy = e.y - (tower.y * tileSize + tileSize / 2);
-            return Math.sqrt(dx * dx + dy * dy) <= tower.range * tileSize;
-        });
-
+        const enemiesInRange = newEnemies.filter(e => Math.sqrt(Math.pow(e.x - (tower.x * tileSize + tileSize / 2), 2) + Math.pow(e.y - (tower.y * tileSize + tileSize / 2), 2)) <= tower.range * tileSize);
         if (enemiesInRange.length > 0) {
-            const target = enemiesInRange[0];
-            newProjectiles.push({
-                id: Math.random(),
-                startX: tower.x * tileSize + tileSize / 2,
-                startY: tower.y * tileSize + tileSize / 2,
-                targetId: target.id,
-                damage: tower.damage,
-                speed: tower.projectileSpeed,
-                color: tower.projectileColor,
-                x: tower.x * tileSize + tileSize / 2,
-                y: tower.y * tileSize + tileSize / 2,
-            });
-            return { ...tower, fireCooldown: tower.fireRate };
+          const target = enemiesInRange[0];
+          newProjectiles.push({ id: Math.random(), targetId: target.id, damage: tower.damage, speed: tower.projectileSpeed, color: tower.projectileColor, x: tower.x * tileSize + tileSize / 2, y: tower.y * tileSize + tileSize / 2 });
+          return { ...tower, fireCooldown: tower.fireRate };
         }
       }
       return { ...tower, fireCooldown: newCooldown };
     });
 
-    // --- Cập nhật Đạn ---
     const finalProjectiles = [];
     newProjectiles.forEach(p => {
         const target = newEnemies.find(e => e.id === p.targetId);
         if (!target) return;
-
-        const dx = target.x - p.x;
-        const dy = target.y - p.y;
+        const dx = target.x - p.x; const dy = target.y - p.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-
         if (dist < p.speed * tileSize * 0.5) {
             const enemyIndex = newEnemies.findIndex(e => e.id === p.targetId);
-            if (enemyIndex !== -1) {
-              newEnemies[enemyIndex].health -= p.damage;
-            }
+            if (enemyIndex !== -1) newEnemies[enemyIndex].health -= p.damage;
         } else {
             p.x += (dx / dist) * p.speed * tileSize * (GAME_SPEED / 100);
             p.y += (dy / dist) * p.speed * tileSize * (GAME_SPEED / 100);
@@ -272,6 +235,7 @@ export default function App() {
         }
     });
 
+    // --- Cập nhật State ---
     setEnemies(newEnemies.filter(e => e.health > 0));
     setTowers(updatedTowers);
     setProjectiles(finalProjectiles);
@@ -279,21 +243,14 @@ export default function App() {
     if (livesLost > 0 || goldEarned > 0) {
       setGameState(prev => {
         const newLives = prev.lives - livesLost;
-        if (newLives <= 0) {
-          return { ...prev, lives: 0, gameStatus: 'game-over' };
-        }
-        return {
-          ...prev,
-          lives: newLives,
-          gold: prev.gold + goldEarned
-        };
+        if (newLives <= 0) return { ...prev, lives: 0, gameStatus: 'game-over' };
+        return { ...prev, lives: newLives, gold: prev.gold + goldEarned };
       });
     }
 
     if (newEnemies.length === 0 && enemies.length > 0) {
         setGameState(prev => ({...prev, gameStatus: 'wave-cleared'}));
     }
-
   }, []);
 
   useEffect(() => {
@@ -302,27 +259,19 @@ export default function App() {
   }, [gameLoop]);
   
   const resetGame = () => {
-     setGameState({
-        gold: 300,
-        lives: 20,
-        wave: 0,
-        gameStatus: 'idle',
-     });
-     setTowers([]);
-     setEnemies([]);
-     setProjectiles([]);
-     setSelectedTower(null);
+     setGameState({ gold: 300, lives: 20, wave: 0, gameStatus: 'idle' });
+     setTowers([]); setEnemies([]); setProjectiles([]); setSelectedTower(null);
      gameTickRef.current = 0;
   }
 
   return (
-    <div className="bg-zinc-800 text-white min-h-screen w-full flex flex-col items-center justify-center font-sans p-2">
+    <div className="bg-zinc-800 text-white min-h-screen w-full flex flex-col items-center justify-center font-sans p-2 select-none">
       <h1 className="text-3xl md:text-4xl font-bold mb-2 md:mb-4 tracking-wider">React Tower Defense</h1>
       
-      <div className="flex flex-col lg:flex-row gap-4 w-full max-w-5xl items-center lg:items-start">
-        {/* Game Board */}
+      <div className="flex flex-col lg:flex-row gap-4 w-full max-w-5xl items-center lg:items-start justify-center">
+        {/* Bàn chơi */}
         <div 
-          className="relative bg-zinc-700 grid border-2 border-zinc-600 shadow-lg"
+          className="relative bg-zinc-700 grid border-2 border-zinc-600 shadow-lg shrink-0"
           style={{
             gridTemplateColumns: `repeat(${GRID_SIZE}, ${tileSize}px)`,
             width: GRID_SIZE * tileSize,
@@ -330,135 +279,26 @@ export default function App() {
           }}
         >
           {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, i) => {
-            const x = i % GRID_SIZE;
-            const y = Math.floor(i / GRID_SIZE);
-            const isPathTile = isPath(x, y);
-            const isOccuPiedTile = isOccupied(x,y);
-            return (
-              <div
-                key={i}
-                onClick={() => handleTileClick(x, y)}
-                className={`
-                  w-full h-full border-zinc-900/20 border-t border-l
-                  ${isPathTile ? 'bg-zinc-600' : 'bg-green-800/50'}
-                  ${!isPathTile && !isOccuPiedTile && selectedTower ? 'hover:bg-green-500/50 cursor-pointer' : ''}
-                  ${selectedTower && isOccuPiedTile ? 'cursor-not-allowed' : ''}
-                `}
-              />
-            );
+            const x = i % GRID_SIZE; const y = Math.floor(i / GRID_SIZE);
+            return (<div key={i} onClick={() => handleTileClick(x, y)} className={`w-full h-full border-zinc-900/20 border-t border-l ${isPath(x, y) ? 'bg-zinc-600' : 'bg-green-800/50'} ${!isPath(x, y) && !isOccupied(x,y) && selectedTower ? 'hover:bg-green-500/50 cursor-pointer' : ''} ${selectedTower && isOccupied(x,y) ? 'cursor-not-allowed' : ''}`}/>);
           })}
-          {towers.map(tower => (
-            <div
-              key={tower.id}
-              className={`absolute flex items-center justify-center rounded-full ${tower.color} shadow-lg`}
-              style={{
-                left: tower.x * tileSize,
-                top: tower.y * tileSize,
-                width: tileSize,
-                height: tileSize,
-              }}
-            >
-              <TowerIcon type={tower.type} />
-              <div className="absolute rounded-full border border-dashed border-white/30 pointer-events-none"
-                style={{
-                  width: tower.range * 2 * tileSize,
-                  height: tower.range * 2 * tileSize,
-                  left: '50%',
-                  top: '50%',
-                  transform: 'translate(-50%, -50%)',
-                }}
-              />
-            </div>
-          ))}
-          {enemies.map(enemy => (
-            enemy.spawnDelay <= 0 && <div
-              key={enemy.id}
-              className="absolute transition-all duration-100 ease-linear"
-              style={{
-                left: enemy.x - tileSize / 2,
-                top: enemy.y - tileSize / 2,
-                width: tileSize * (enemy.isBoss ? 1.5 : 1),
-                height: tileSize * (enemy.isBoss ? 1.5 : 1),
-                transform: `translate(-${(tileSize * (enemy.isBoss ? 1.5 : 1) - tileSize)/2}px, -${(tileSize * (enemy.isBoss ? 1.5 : 1) - tileSize)/2}px)`
-              }}
-            >
-              <EnemyIcon isBoss={enemy.isBoss} />
-              <div className="absolute -top-1.5 left-0 w-full h-1 bg-red-500 rounded-full">
-                <div className="bg-green-500 h-full rounded-full" style={{width: `${(enemy.health/enemy.maxHealth) * 100}%`}}></div>
-              </div>
-            </div>
-          ))}
-           {projectiles.map(p => (
-              <div
-                key={p.id}
-                className={`absolute rounded-full ${p.color}`}
-                style={{
-                    left: p.x - (tileSize * 0.075),
-                    top: p.y - (tileSize * 0.075),
-                    width: tileSize * 0.15,
-                    height: tileSize * 0.15,
-                }}
-              />
-           ))}
-
-          {(gameState.gameStatus === 'game-over' || gameState.gameStatus === 'victory' || gameState.gameStatus === 'idle' || gameState.gameStatus === 'wave-cleared') && (
-            <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-center p-4">
-              {gameState.gameStatus === 'game-over' && <h2 className="text-3xl md:text-5xl font-bold text-red-500 mb-4">THUA CUỘC</h2>}
-              {gameState.gameStatus === 'victory' && <h2 className="text-3xl md:text-5xl font-bold text-yellow-400 mb-4">CHIẾN THẮNG!</h2>}
-              {gameState.gameStatus === 'idle' && <h2 className="text-xl md:text-3xl font-bold mb-4">Sẵn sàng để phòng thủ?</h2>}
-              {gameState.gameStatus === 'wave-cleared' && <h2 className="text-xl md:text-3xl font-bold mb-4">ĐÃ SẠCH WAVE!</h2>}
-              
-              {(gameState.gameStatus === 'idle' || gameState.gameStatus === 'wave-cleared') && (
-                <button
-                  onClick={startNextWave}
-                  className="bg-yellow-500 hover:bg-yellow-400 text-zinc-900 font-bold py-2 px-5 md:py-3 md:px-6 rounded-lg text-lg md:text-xl shadow-lg transition-transform transform hover:scale-105"
-                >
-                  Bắt đầu Wave {gameState.wave + 1}
-                </button>
-              )}
-               {(gameState.gameStatus === 'game-over' || gameState.gameStatus === 'victory') && (
-                <button
-                  onClick={resetGame}
-                  className="bg-gray-200 hover:bg-white text-zinc-900 font-bold py-2 px-5 md:py-3 md:px-6 rounded-lg text-lg md:text-xl shadow-lg transition-transform transform hover:scale-105 mt-4"
-                >
-                  Chơi lại
-                </button>
-              )}
-            </div>
-          )}
+          {towers.map(tower => (<div key={tower.id} className={`absolute flex items-center justify-center rounded-full ${tower.color} shadow-lg`} style={{ left: tower.x * tileSize, top: tower.y * tileSize, width: tileSize, height: tileSize, }}><TowerIcon type={tower.type} /><div className="absolute rounded-full border border-dashed border-white/30 pointer-events-none" style={{ width: tower.range * 2 * tileSize, height: tower.range * 2 * tileSize, left: '50%', top: '50%', transform: 'translate(-50%, -50%)', }}/></div>))}
+          {enemies.map(enemy => (enemy.spawnDelay <= 0 && <div key={enemy.id} className="absolute" style={{ left: enemy.x - tileSize / 2, top: enemy.y - tileSize / 2, width: tileSize * (enemy.isBoss ? 1.5 : 1), height: tileSize * (enemy.isBoss ? 1.5 : 1), transform: `translate(-${(tileSize * (enemy.isBoss ? 1.5 : 1) - tileSize)/2}px, -${(tileSize * (enemy.isBoss ? 1.5 : 1) - tileSize)/2}px)`}}><EnemyIcon isBoss={enemy.isBoss} /><div className="absolute -top-1.5 left-0 w-full h-1 bg-red-500 rounded-full"><div className="bg-green-500 h-full rounded-full" style={{width: `${(enemy.health/enemy.maxHealth) * 100}%`}}></div></div></div>))}
+          {projectiles.map(p => (<div key={p.id} className={`absolute rounded-full ${p.color}`} style={{ left: p.x - (tileSize * 0.075), top: p.y - (tileSize * 0.075), width: tileSize * 0.15, height: tileSize * 0.15, }}/>))}
+          {(gameState.gameStatus !== 'playing') && (<div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-center p-4"><h2 className={`text-3xl md:text-5xl font-bold mb-4 ${gameState.gameStatus === 'game-over' ? 'text-red-500' : 'text-yellow-400'}`}>{gameState.gameStatus === 'game-over' ? 'THUA CUỘC' : gameState.gameStatus === 'victory' ? 'CHIẾN THẮNG!' : gameState.gameStatus === 'idle' ? 'Sẵn sàng?' : 'ĐÃ SẠCH WAVE!'}</h2> {(gameState.gameStatus === 'idle' || gameState.gameStatus === 'wave-cleared') && (<button onClick={startNextWave} className="bg-yellow-500 hover:bg-yellow-400 text-zinc-900 font-bold py-2 px-5 md:py-3 md:px-6 rounded-lg text-lg md:text-xl shadow-lg transition-transform transform hover:scale-105">Bắt đầu Wave {gameState.wave + 1}</button>)} {(gameState.gameStatus === 'game-over' || gameState.gameStatus === 'victory') && (<button onClick={resetGame} className="bg-gray-200 hover:bg-white text-zinc-900 font-bold py-2 px-5 md:py-3 md:px-6 rounded-lg text-lg md:text-xl shadow-lg transition-transform transform hover:scale-105 mt-4">Chơi lại</button>)}</div>)}
         </div>
-
-        {/* Control Panel */}
-        <div className="flex flex-col gap-4 w-full lg:w-64">
+        {/* Bảng điều khiển */}
+        <div className="flex flex-col gap-4 w-full max-w-sm lg:w-64">
           <div className="bg-zinc-700/50 p-3 md:p-4 rounded-lg shadow-lg border border-zinc-600">
             <h3 className="text-lg md:text-xl font-bold mb-2 text-yellow-400">Trạng thái</h3>
-            <div className="flex justify-between"><span>Vàng:</span> <span>{gameState.gold} G</span></div>
-            <div className="flex justify-between"><span>Mạng:</span> <span>{gameState.lives} ❤️</span></div>
-            <div className="flex justify-between"><span>Wave:</span> <span>{gameState.wave} / {WAVES.length}</span></div>
+            <div className="grid grid-cols-3 gap-2 text-center"><div>Vàng<br/><span className="font-bold">{gameState.gold} G</span></div><div>Mạng<br/><span className="font-bold">{gameState.lives} ❤️</span></div><div>Wave<br/><span className="font-bold">{gameState.wave}/{WAVES.length}</span></div></div>
           </div>
           <div className="bg-zinc-700/50 p-3 md:p-4 rounded-lg shadow-lg border border-zinc-600">
             <h3 className="text-lg md:text-xl font-bold mb-3 text-cyan-400">Mua Tháp</h3>
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(TOWER_TYPES).map(([type, info]) => (
-                <button
-                  key={type}
-                  onClick={() => setSelectedTower(type)}
-                  disabled={gameState.gold < info.cost}
-                  className={`
-                    p-2 rounded-lg text-left border-2 transition-all text-sm
-                    ${selectedTower === type ? 'border-yellow-400 bg-zinc-600' : 'border-zinc-500 bg-zinc-700'}
-                    ${gameState.gold < info.cost ? 'opacity-50 cursor-not-allowed' : 'hover:border-cyan-400 hover:bg-zinc-600'}
-                  `}
-                >
-                  <div className="font-bold">{info.name}</div>
-                  <div>Giá: <span className="text-yellow-400">{info.cost}G</span></div>
-                  <div className='text-xs'>DMG: <span className="text-red-400">{info.damage}</span></div>
-                </button>
-              ))}
+              {Object.entries(TOWER_TYPES).map(([type, info]) => (<button key={type} onClick={() => setSelectedTower(type)} disabled={gameState.gold < info.cost} className={`p-2 rounded-lg text-left border-2 transition-all text-sm ${selectedTower === type ? 'border-yellow-400 bg-zinc-600' : 'border-zinc-500 bg-zinc-700'} ${gameState.gold < info.cost ? 'opacity-50 cursor-not-allowed' : 'hover:border-cyan-400 hover:bg-zinc-600'}`}><div className="font-bold">{info.name}</div><div>Giá: <span className="text-yellow-400">{info.cost}G</span></div><div className='text-xs'>DMG: <span className="text-red-400">{info.damage}</span></div></button>))}
             </div>
-            {selectedTower && (
-                <button onClick={() => setSelectedTower(null)} className="w-full mt-3 p-2 bg-red-600 hover:bg-red-500 rounded-lg">Hủy chọn</button>
-            )}
+            {selectedTower && (<button onClick={() => setSelectedTower(null)} className="w-full mt-3 p-2 bg-red-600 hover:bg-red-500 rounded-lg">Hủy chọn</button>)}
           </div>
         </div>
       </div>
