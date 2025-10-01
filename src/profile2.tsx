@@ -18,7 +18,6 @@ const ICONS = {
   map: "M12 0c-4.148 0-7.5 3.352-7.5 7.5c0 4.148 7.5 16.5 7.5 16.5s7.5-12.352 7.5-16.5c0-4.148-3.352-7.5-7.5-7.5zM12 11.25c-2.078 0-3.75-1.672-3.75-3.75s1.672-3.75 3.75-3.75 3.75 1.672 3.75 3.75-1.672 3.75-3.75 3.75z",
   camera: "M6 6c-1.657 0-3 1.343-3 3v9c0 1.657 1.343 3 3 3h12c1.657 0 3-1.343 3-3v-9c0-1.657-1.343-3-3-3h-2.25l-1.5-1.5h-4.5l-1.5 1.5h-2.25zm6 12c-2.485 0-4.5-2.015-4.5-4.5s2.015-4.5 4.5-4.5 4.5 2.015 4.5 4.5-2.015 4.5-4.5 4.5z",
   close: "M6.46875 4.96875l-1.5 1.5 5.53125 5.53125-5.53125 5.53125 1.5 1.5 5.53125-5.53125 5.53125 5.53125 1.5-1.5-5.53125-5.53125 5.53125-5.53125-1.5-1.5-5.53125 5.53125z",
-  pencil: "M18.6875 2.3125l-2.09375 2.09375 3.59375 3.59375 2.09375-2.09375c0.5-0.5 0.5-1.3125 0-1.8125l-1.78125-1.78125c-0.5-0.5-1.3125-0.5-1.8125 0zM15.5 5.5l-12.5 12.5v3.59375h3.59375l12.5-12.5z",
   gem: "M12 0.75l-4.5 4.5h9zM12 23.25l4.5-4.5h-9zM6 6l-5.25 5.25v1.5l5.25 5.25h12l5.25-5.25v-1.5l-5.25-5.25z",
   star: "M12 17.25l-6.1875 3.25 1.1875-6.875-5-4.875h6.1875l2.8125-6.25 2.8125 6.25h6.1875l-5 4.875 1.1875 6.875z",
   trendingUp: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z",
@@ -32,7 +31,6 @@ const StatBar = ({ label, value, maxValue, icon }) => {
     
     return (
         <div className="space-y-2">
-            {/* Header */}
             <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                     <div className="p-1.5 rounded-lg bg-blue-500/20">
@@ -50,13 +48,11 @@ const StatBar = ({ label, value, maxValue, icon }) => {
                 </div>
             </div>
             
-            {/* Progress Bar */}
             <div className="h-4 bg-gray-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
                 <div
                     className="h-full bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-500 rounded-full transition-all duration-500 ease-out relative"
                     style={{ width: `${percentage}%` }}
                 >
-                    {/* Glossy Effect */}
                     <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-full"></div>
                 </div>
             </div>
@@ -120,7 +116,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
       <div className="bg-slate-900 border-2 border-purple-500 rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-orbitron font-bold text-slate-100">Chỉnh Sửa Hồ Sơ</h2>
+          <h2 className="text-xl font-roboto font-bold text-slate-100">Chỉnh Sửa Hồ Sơ</h2>
           <button onClick={onClose} className="text-slate-500 hover:text-white"><Icon path={ICONS.close} /></button>
         </div>
         <form onSubmit={handleSave} className="space-y-4">
@@ -264,8 +260,10 @@ export default function GameProfile() {
                 </div>
                 <div className="flex-grow">
                   <div className="flex items-center space-x-2 mb-1">
-                      <h1 className="text-xl font-bold font-orbitron text-slate-100 tracking-wider">{playerInfo.name}</h1>
-                      <button onClick={() => handleModal('edit', true)} className="text-slate-400 hover:text-purple-400"><Icon path={ICONS.pencil} className="w-4 h-4" /></button>
+                      <h1 className="text-xl font-bold font-roboto text-slate-100 tracking-wider">{playerInfo.name}</h1>
+                      <button onClick={() => handleModal('edit', true)} className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full hover:bg-purple-600 hover:text-white transition-colors">
+                        Edit
+                      </button>
                   </div>
                   <p className="text-purple-400 font-semibold text-sm">{playerInfo.title}</p>
                    <div className="flex items-center space-x-2 mt-2">
