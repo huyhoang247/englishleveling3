@@ -232,7 +232,9 @@ export default function GameProfile() {
   };
 
   return (
-    <div className="bg-slate-900 min-h-screen font-sans text-white p-4 flex justify-center items-center">
+    // FIX 1: Removed `min-h-screen`, `flex`, `justify-center`, `items-center`. 
+    // Added `w-full h-full` to make it fill the container from `index.tsx`.
+    <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;500;700&display=swap'); 
         .font-orbitron { font-family: 'Orbitron', sans-serif; } 
@@ -246,7 +248,8 @@ export default function GameProfile() {
         }
       `}</style>
       
-      <main className="w-full max-w-md bg-slate-800/30 rounded-2xl shadow-2xl shadow-purple-900/20 flex flex-col" style={{height: 'calc(100vh - 2rem)', maxHeight: '700px'}}>
+      {/* FIX 1 (cont.): Removed inline style with fixed height and added `mx-auto` and `h-full` to make it flexible. */}
+      <main className="w-full max-w-md mx-auto h-full bg-slate-800/30 rounded-2xl shadow-2xl shadow-purple-900/20 flex flex-col">
         {/* --- Profile Header (Non-scrollable) --- */}
         <div className="p-6 bg-gradient-to-br from-gray-900 to-slate-900 relative flex-shrink-0">
            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
@@ -288,7 +291,8 @@ export default function GameProfile() {
         </div>
 
         {/* --- Content (Scrollable) --- */}
-        <div className="p-4 pb-6 space-y-3 overflow-y-auto flex-grow no-scrollbar">
+        {/* FIX 2: Changed `pb-6` to `pb-24` to add space for the bottom navigation bar */}
+        <div className="p-4 pb-24 space-y-3 overflow-y-auto flex-grow no-scrollbar">
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2">Hành trang</h2>
             <MenuItem icon={ICONS.sword} label="Trang bị & Vật phẩm" />
             <MenuItem icon={ICONS.shield} label="Thành tựu" />
@@ -314,4 +318,3 @@ export default function GameProfile() {
     </div>
   );
 }
-
