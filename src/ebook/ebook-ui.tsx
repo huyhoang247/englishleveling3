@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { EbookProvider, useEbook, Book, Vocabulary, PhraseSentence, HiddenWordState } from './ebook-context.tsx';
-import VirtualKeyboard from './ui/keyboard.tsx'; // Đảm bảo đường dẫn này đúng với cấu trúc dự án của bạn
+import VirtualKeyboard from '../ui/keyboard.tsx'; // Đảm bảo đường dẫn này đúng với cấu trúc dự án của bạn
 
 // --- COMPONENT & MODAL IMPORTS ---
 import FlashcardDetailModal from '../story/flashcard.tsx';
