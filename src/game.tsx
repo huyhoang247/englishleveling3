@@ -12,7 +12,7 @@ import AddToPlaylistModal from './AddToPlaylistModal.tsx';
 import { phraseData } from './phrase-data-2.ts';
 import PhraseDetailModal from './PhraseDetailModal.tsx';
 // START: IMPORT KEYBOARD
-import VirtualKeyboard from './keyboard.tsx'; // <-- IMPORT BÀN PHÍM ẢO
+import VirtualKeyboard from './ui/keyboard.tsx'; // <-- IMPORT BÀN PHÍM ẢO
 // END: IMPORT KEYBOARD
 
 // --- Icons ---
