@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx'; // Assuming this path is correct
 import { defaultVocabulary } from './voca-data/list-vocabulary.ts'; // Assuming this path is correct
@@ -10,6 +9,11 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
 import { phraseData } from './phrase-data-2.ts'; // <-- IMPORT PHRASE DATA
 import PhraseDetailModal from './PhraseDetailModal.tsx'; // <-- IMPORT PHRASE MODAL MỚI
+
+// --- START: GUESS THE WORD FEATURE ---
+import VirtualKeyboard from './ui/keyboard.tsx'; // IMPORT BÀN PHÍM ẢO
+// --- END: GUESS THE WORD FEATURE ---
+
 
 // --- Icons ---
 const PlayIcon = () => (
@@ -453,6 +457,25 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
   // --- STATE MỚI CHO CHỌN GIỌNG ĐỌC ---
   const [selectedVoiceKey, setSelectedVoiceKey] = useState<string | null>(null);
 
+  // --- START: GUESS THE WORD FEATURE ---
+  interface HiddenWord {
+    id: string; // Unique ID, e.g., "line-word-index"
+    word: string;
+    revealed: boolean;
+  }
+  interface ActiveGuessingWord {
+    id: string;
+    answer: string;
+  }
+  const [isGuessModeActive, setIsGuessModeActive] = useState(false);
+  const [hiddenWordsCount, setHiddenWordsCount] = useState<number>(10);
+  const [hiddenWordsMap, setHiddenWordsMap] = useState<Map<string, HiddenWord>>(new Map());
+  const [activeGuessingWord, setActiveGuessingWord] = useState<ActiveGuessingWord | null>(null);
+  const [currentGuessInput, setCurrentGuessInput] = useState('');
+  const [guessStatus, setGuessStatus] = useState<'idle' | 'incorrect'>('idle');
+  // --- END: GUESS THE WORD FEATURE ---
+
+
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(user => {
       setCurrentUser(user);
@@ -496,7 +519,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
     setIsLoadingVocab(false);
   }, []);
 
-  // --- DỮ LIỆU CỤM TỪ ĐƯỢC CHUẨN BỊ ---
+  // --- DỮ LIỆU CỤM TỪ ĐƯỢỢC CHUẨN BỊ ---
   const { phraseMap, phraseRegex } = useMemo(() => {
     if (phraseData.length === 0) {
       return { phraseMap: new Map(), phraseRegex: null };
@@ -531,6 +554,86 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
       setSelectedVoiceKey(null);
     }
   }, [availableVoices]);
+
+  // --- START: GUESS THE WORD FEATURE ---
+  // Logic khởi tạo và cập nhật danh sách từ bị ẩn
+  useEffect(() => {
+    if (!isGuessModeActive || !currentBook || vocabMap.size === 0) {
+      setHiddenWordsMap(new Map()); // Dọn dẹp khi tắt chế độ
+      return;
+    }
+
+    const allVocabInBook: { id: string; word: string }[] = [];
+    const contentLines = currentBook.content.trim().split(/\n+/);
+    
+    contentLines.forEach((line, lineIndex) => {
+        const parts = line.split(/(\b\w+\b)/g);
+        parts.forEach((part, partIndex) => {
+            const normalizedWord = part.toLowerCase();
+            if (vocabMap.has(normalizedWord)) {
+                allVocabInBook.push({ id: `${lineIndex}-${partIndex}`, word: part });
+            }
+        });
+    });
+
+    // Xáo trộn mảng (Fisher-Yates shuffle)
+    for (let i = allVocabInBook.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allVocabInBook[i], allVocabInBook[j]] = [allVocabInBook[j], allVocabInBook[i]];
+    }
+
+    const wordsToHide = allVocabInBook.slice(0, hiddenWordsCount);
+    
+    const newMap = new Map<string, HiddenWord>();
+    wordsToHide.forEach(item => {
+        newMap.set(item.id, { ...item, revealed: false });
+    });
+
+    setHiddenWordsMap(newMap);
+    setActiveGuessingWord(null); // Đóng cửa sổ đoán khi danh sách thay đổi
+
+  }, [isGuessModeActive, hiddenWordsCount, currentBook, vocabMap]);
+
+  // Logic kiểm tra câu trả lời
+  useEffect(() => {
+    if (!activeGuessingWord || currentGuessInput.length !== activeGuessingWord.answer.length) {
+      return;
+    }
+
+    if (currentGuessInput.toLowerCase() === activeGuessingWord.answer.toLowerCase()) {
+      // TRẢ LỜI ĐÚNG
+      setHiddenWordsMap(prevMap => {
+        const newMap = new Map(prevMap);
+        const wordData = newMap.get(activeGuessingWord.id);
+        if (wordData) {
+          newMap.set(activeGuessingWord.id, { ...wordData, revealed: true });
+        }
+        return newMap;
+      });
+      setActiveGuessingWord(null);
+      setCurrentGuessInput('');
+    } else {
+      // TRẢ LỜI SAI
+      setGuessStatus('incorrect');
+      setTimeout(() => {
+        setGuessStatus('idle');
+        setCurrentGuessInput('');
+      }, 500); // Thời gian hiệu ứng rung và reset
+    }
+  }, [currentGuessInput, activeGuessingWord]);
+
+  const handleHiddenWordClick = (id: string, answer: string) => {
+    setCurrentGuessInput('');
+    setGuessStatus('idle');
+    setActiveGuessingWord({ id, answer });
+  };
+  
+  const closeGuessingModal = () => {
+    setActiveGuessingWord(null);
+    setCurrentGuessInput('');
+  }
+  // --- END: GUESS THE WORD FEATURE ---
+
 
   const handleVoiceChange = (direction: 'next' | 'previous') => {
       if (availableVoices.length <= 1 || !selectedVoiceKey) return;
@@ -715,8 +818,54 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 
     return (
       <div className="font-['Inter',_sans-serif] text-gray-800 dark:text-gray-200 px-2 sm:px-4 pb-24">
-        {contentLines.map((line, index) => {
-          if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
+        {contentLines.map((line, lineIndex) => {
+          if (line.trim() === '') return <div key={`blank-${lineIndex}`} className="h-3 sm:h-4"></div>;
+
+          // --- START: GUESS THE WORD FEATURE - LOGIC RENDER ---
+          if (isGuessModeActive) {
+            const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
+            const renderableParts = parts.map((part, partIndex) => {
+              if (!part) return null;
+              const wordId = `${lineIndex}-${partIndex}`;
+              const hiddenWordData = hiddenWordsMap.get(wordId);
+
+              if (hiddenWordData) {
+                if (hiddenWordData.revealed) {
+                  // Từ đã được đoán đúng
+                  return (
+                    <span
+                      key={wordId}
+                      className="font-semibold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-800/50 px-1 rounded-md"
+                    >
+                      {part}
+                    </span>
+                  );
+                } else {
+                  // Từ đang bị ẩn
+                  return (
+                    <button
+                      key={wordId}
+                      onClick={() => handleHiddenWordClick(wordId, hiddenWordData.word)}
+                      className="inline-flex items-center align-bottom bg-gray-200 dark:bg-gray-700 rounded-md px-2 py-0.5 mx-0.5 font-mono tracking-widest text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {'_'.repeat(part.length)}
+                    </button>
+                  );
+                }
+              }
+              // Render các từ/ký tự khác bình thường
+              return <span key={`${lineIndex}-${partIndex}`}>{part}</span>;
+            }).filter(Boolean);
+            
+             // Giữ lại logic render tiêu đề
+            const isLikelyChapterTitle = lineIndex === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
+            const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && lineIndex < 5 && lineIndex > 0) || ((line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70);
+
+            if (isLikelyChapterTitle) return <h2 key={`line-${lineIndex}`} className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-6 text-center">{renderableParts}</h2>;
+            if (isLikelySectionTitle) return <h3 key={`line-${lineIndex}`} className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">{renderableParts}</h3>;
+            return <p key={`line-${lineIndex}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
+          }
+          // --- END: GUESS THE WORD FEATURE ---
 
           let renderableParts: (JSX.Element | string)[] = [];
 
@@ -729,7 +878,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                   if (foundPhrase) {
                       return (
                           <span
-                              key={`${index}-${partIndex}`}
+                              key={`${lineIndex}-${partIndex}`}
                               className="font-semibold text-green-600 dark:text-green-400 hover:underline underline-offset-2 decoration-1 decoration-green-500/70 dark:decoration-green-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-green-700 dark:hover:text-green-300 bg-green-50 dark:bg-green-500/10 rounded px-1"
                               onClick={() => handlePhraseClick(foundPhrase)}
                               role="button" tabIndex={0}
@@ -752,7 +901,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                 if (isVocabWord) {
                   return (
                     <span
-                      key={`${index}-${partIndex}`}
+                      key={`${lineIndex}-${partIndex}`}
                       className="font-semibold text-blue-600 dark:text-blue-400 hover:underline underline-offset-2 decoration-1 decoration-blue-500/70 dark:decoration-blue-400/70 cursor-pointer transition-all duration-150 ease-in-out hover:text-blue-700 dark:hover:text-blue-300"
                       onClick={() => handleWordClick(part)}
                       role="button" tabIndex={0}
@@ -762,16 +911,16 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                     </span>
                   );
                 }
-                return <span key={`${index}-${partIndex}`}>{part}</span>;
+                return <span key={`${lineIndex}-${partIndex}`}>{part}</span>;
               }).filter(Boolean) as JSX.Element[];
           }
 
-          const isLikelyChapterTitle = index === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
-          const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && index < 5 && index > 0) || ((line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70);
+          const isLikelyChapterTitle = lineIndex === 0 && line.length < 60 && !line.includes('.') && !line.includes('Chapter') && !line.includes('Prologue');
+          const isLikelySectionTitle = (line.length < 70 && (line.endsWith(':') || line.split(' ').length < 7) && !line.includes('.') && lineIndex < 5 && lineIndex > 0) || ((line.toLowerCase().startsWith('chapter') || line.toLowerCase().startsWith('prologue')) && line.length < 70);
 
-          if (isLikelyChapterTitle) return <h2 key={`line-${index}`} className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-6 text-center">{renderableParts}</h2>;
-          if (isLikelySectionTitle) return <h3 key={`line-${index}`} className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">{renderableParts}</h3>;
-          return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
+          if (isLikelyChapterTitle) return <h2 key={`line-${lineIndex}`} className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-6 text-center">{renderableParts}</h2>;
+          if (isLikelySectionTitle) return <h3 key={`line-${lineIndex}`} className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100 mt-8 mb-4">{renderableParts}</h3>;
+          return <p key={`line-${lineIndex}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
         })}
       </div>
     );
@@ -941,7 +1090,58 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                     Thống kê Sách
                   </button>
                 </div>
+                
+                {/* --- START: GUESS THE WORD FEATURE - UI CONTROLS --- */}
+                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="guess-mode-toggle" className="font-semibold text-gray-700 dark:text-gray-200">
+                      Chế độ Đoán từ
+                    </label>
+                    <button
+                      id="guess-mode-toggle"
+                      onClick={() => setIsGuessModeActive(!isGuessModeActive)}
+                      className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-blue-500 ${
+                        isGuessModeActive ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                      }`}
+                      role="switch"
+                      aria-checked={isGuessModeActive}
+                    >
+                      <span
+                        className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-200 ease-in-out ${
+                          isGuessModeActive ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  
+                  {isGuessModeActive && (
+                    <div className="flex items-center justify-between animate-fade-in-short">
+                       <span className="text-sm text-gray-600 dark:text-gray-300">Số từ ẩn:</span>
+                       <div className="flex items-center gap-3 bg-white dark:bg-gray-800 p-1 rounded-full shadow-inner">
+                         <button 
+                           onClick={() => setHiddenWordsCount(c => Math.max(5, c - 5))}
+                           disabled={hiddenWordsCount <= 5}
+                           className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600 text-lg font-bold disabled:opacity-50 flex items-center justify-center"
+                         >
+                           -
+                         </button>
+                         <span className="font-bold text-center w-8 text-blue-600 dark:text-blue-400">{hiddenWordsCount}</span>
+                         <button 
+                           onClick={() => setHiddenWordsCount(c => Math.min(100, c + 5))}
+                           disabled={hiddenWordsCount >= 100}
+                           className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600 text-lg font-bold disabled:opacity-50 flex items-center justify-center"
+                         >
+                           +
+                         </button>
+                       </div>
+                    </div>
+                  )}
+                </div>
+                {/* --- END: GUESS THE WORD FEATURE --- */}
+                
                 {/* === NÚT CHUYỂN ĐỔI CHẾ ĐỘ HIGHLIGHT === */}
+                {/* Ẩn khi Guess Mode bật để giao diện gọn gàng hơn */}
+                {!isGuessModeActive && (
                  <div className="mt-6 flex justify-center">
                     <div className="inline-flex rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 p-1">
                         <button
@@ -966,6 +1166,7 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
                         </button>
                     </div>
                 </div>
+                )}
               </div>
             )}
             {renderBookContent()}
@@ -1069,9 +1270,67 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
         bookTitle={currentBook?.title || ''}
         vocabMap={vocabMap}
       />
+
+      {/* --- START: GUESS THE WORD FEATURE - GUESSING MODAL --- */}
+      {activeGuessingWord && (
+        <div 
+          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+          onClick={closeGuessingModal}
+        >
+          <div 
+            className="w-full max-w-md bg-gray-100 dark:bg-gray-800 rounded-2xl shadow-2xl p-4 flex flex-col gap-4"
+            onClick={e => e.stopPropagation()} // Ngăn việc nhấn vào modal bị đóng
+          >
+            {/* Input Display */}
+            <div className={`flex justify-center gap-1.5 ${guessStatus === 'incorrect' ? 'animate-shake' : ''}`}>
+              {activeGuessingWord.answer.split('').map((char, index) => (
+                <div 
+                  key={index}
+                  className={`w-10 h-12 sm:w-12 sm:h-14 rounded-lg flex items-center justify-center text-2xl sm:text-3xl font-bold uppercase transition-colors duration-200
+                    ${guessStatus === 'incorrect' 
+                      ? 'bg-red-200 dark:bg-red-800 text-red-700 dark:text-red-200 border-2 border-red-500' 
+                      : currentGuessInput[index] 
+                        ? 'bg-white dark:bg-gray-700 border-2 border-blue-400 dark:border-blue-500 text-gray-800 dark:text-white'
+                        : 'bg-gray-200 dark:bg-gray-600 border-2 border-gray-300 dark:border-gray-500'
+                    }`}
+                >
+                  {currentGuessInput[index] || ''}
+                </div>
+              ))}
+            </div>
+
+            {/* Virtual Keyboard */}
+            <VirtualKeyboard 
+              userInput={currentGuessInput}
+              setUserInput={setCurrentGuessInput}
+              wordLength={activeGuessingWord.answer.length}
+              disabled={guessStatus === 'incorrect'}
+            />
+          </div>
+          {/* Thêm CSS cho hiệu ứng rung */}
+          <style jsx global>{`
+            @keyframes shake {
+              10%, 90% { transform: translate3d(-1px, 0, 0); }
+              20%, 80% { transform: translate3d(2px, 0, 0); }
+              30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+              40%, 60% { transform: translate3d(4px, 0, 0); }
+            }
+            .animate-shake {
+              animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            }
+            @keyframes fade-in-short {
+              from { opacity: 0; transform: translateY(10px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-fade-in-short {
+              animation: fade-in-short 0.3s ease-out forwards;
+            }
+          `}</style>
+        </div>
+      )}
+      {/* --- END: GUESS THE WORD FEATURE --- */}
     </div>
   );
 };
 
 export default EbookReader;
-// --- END OF FILE game.tsx ---
