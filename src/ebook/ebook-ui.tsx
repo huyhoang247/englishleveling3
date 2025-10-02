@@ -164,7 +164,7 @@ const EbookReaderContent: React.FC = () => {
     return renderableParts;
   }
 
-  // --- NEW & IMPROVED COMPONENT: HiddenWordInput (V2) ---
+  // --- NEW & IMPROVED COMPONENT: HiddenWordInput (V3 - Compact & Seamless) ---
   const HiddenWordInput: React.FC<{
     wordState: HiddenWordState;
     index: number;
@@ -173,7 +173,7 @@ const EbookReaderContent: React.FC = () => {
   }> = ({ wordState, index, onClick, isActive }) => {
       const { originalWord, userInput, status } = wordState;
 
-      // 1. Khi đã đoán đúng: Hiển thị từ gốc với nền xanh, không còn là ô input nữa.
+      // Khi đã đoán đúng: Hiển thị từ gốc, liền mạch với văn bản.
       if (status === 'correct') {
           return (
               <span 
@@ -184,38 +184,43 @@ const EbookReaderContent: React.FC = () => {
           );
       }
 
-      // 2. Xây dựng các lớp CSS cho ô input liền mạch, kích thước cố định
-      // Class cho container chính của ô input
+      // Xây dựng các lớp CSS cho ô input nhỏ gọn
       let containerClasses = `
-          inline-block align-bottom 
-          w-28 h-9 
-          mx-1 px-2 py-1 
-          cursor-pointer rounded-md 
-          bg-gray-100 dark:bg-gray-700/60 
-          border-b-2 border-dotted border-gray-400 dark:border-gray-500 
-          hover:border-solid hover:border-blue-500 
-          transition-all duration-200 
-          font-mono tracking-wider text-center text-lg
+          inline-block align-bottom          // Căn chỉnh với dòng văn bản
+          min-w-16                           // Chiều rộng tối thiểu 4rem (64px) để dễ click
+          mx-1 px-2                          // Thêm khoảng cách ngang
+          cursor-pointer rounded-md          // Style cơ bản
+          bg-gray-100 dark:bg-gray-700/60    // Màu nền
+          border-b-2 border-dotted border-gray-400 dark:border-gray-500 // Gạch chân
+          hover:border-solid hover:border-blue-500 // Hiệu ứng khi di chuột
+          transition-all duration-200
+          text-left                          // Căn chữ sang trái
       `;
-      // Class cho phần text bên trong ô
+      // Không set font-size, height, width ở đây để nó kế thừa từ thẻ <p> cha
+
       let textClasses = "text-gray-800 dark:text-gray-200";
 
-      // 3. Thay đổi style dựa trên trạng thái (active, incorrect)
-      // Khi ô được click vào (active)
+      // Style khi ô được chọn
       if (isActive) {
-          containerClasses += " border-solid border-blue-500 ring-2 ring-blue-300 dark:ring-blue-500/50";
+          containerClasses += " border-solid border-blue-500 ring-1 ring-blue-300 dark:ring-blue-500/50";
       }
 
-      // Khi trả lời sai
+      // Style khi trả lời sai
       if (status === 'incorrect') {
           containerClasses += " animate-shake border-red-500 dark:border-red-500";
-          textClasses = "text-red-500"; // Chữ nhập vào sẽ có màu đỏ
+          textClasses = "text-red-500"; // Chữ màu đỏ
       }
 
-      // 4. Render ra ô input liền mạch
+      // Render ô input
       return (
           <span className={containerClasses} onClick={onClick}>
-            <span className={textClasses}>{userInput}</span>
+              {/* 
+                Sử dụng non-breaking space (&nbsp;) khi input rỗng 
+                để ô không bị co lại hoàn toàn và giữ được chiều cao dòng 
+              */}
+              <span className={textClasses}>
+                  {userInput || <>&nbsp;</>}
+              </span>
           </span>
       );
   };
