@@ -129,7 +129,7 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
                                     readOnly
                                     placeholder={gameState === 'playerTurn' ? 'Nhập từ vựng...' : "Đợi máy..."}
                                     disabled={gameState !== 'playerTurn'}
-                                    className="w-full h-12 text-lg px-4 bg-white rounded-xl shadow-md focus:ring-2 focus:ring-indigo-400 transition cursor-default placeholder:text-gray-500 text-gray-800"
+                                    className="w-full h-12 text-lg px-4 bg-white rounded-xl shadow-md focus:outline-none transition cursor-default placeholder:text-gray-500 text-gray-800"
                                     autoComplete="off"
                                     autoCapitalize="none"
                                 />
