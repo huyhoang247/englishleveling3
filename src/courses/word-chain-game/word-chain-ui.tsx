@@ -1,4 +1,4 @@
-// --- START OF FILE: src/word-chain.tsx (Refactored & Fixed Alignment) ---
+// --- START OF FILE: src/word-chain.tsx (Updated for UI blending, keyboard.tsx unchanged) ---
 
 import { useState, useEffect, Fragment } from 'react';
 import { auth } from '../../firebase';
@@ -33,21 +33,9 @@ const SendIcon = () => (
 const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
     // Consume all state and logic from the context
     const {
-        gameState,
-        wordChain,
-        playerInput,
-        message,
-        selectedCard,
-        masteryCount,
-        displayedCoins,
-        chatContainerRef,
-        nextChar,
-        allWordsLoaded,
-        setPlayerInput,
-        handlePlayerSubmit,
-        startGame,
-        handleWordClick,
-        handleCloseModal,
+        gameState, wordChain, playerInput, message, selectedCard, masteryCount,
+        displayedCoins, chatContainerRef, nextChar, allWordsLoaded, setPlayerInput,
+        handlePlayerSubmit, startGame, handleWordClick, handleCloseModal,
     } = useWordChain();
 
     // Render function for the chain remains here as it's pure UI
@@ -101,13 +89,14 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
                     )}
                 </div>
 
-                <div className="p-4 bg-white border-t">
+                {/* UPDATED: Input area container is now transparent */}
+                <div className="p-4 border-t border-gray-200/60">
                     {message && !selectedCard && (
                         <div className={`mb-3 p-3 rounded-lg text-center text-sm font-medium animate-pop-in
-                        ${message.type === 'error' && 'bg-red-100 text-red-700'}
-                        ${message.type === 'success' && 'bg-green-100 text-green-700'}
-                        ${message.type === 'warning' && 'bg-yellow-100 text-yellow-700'}
-                        ${message.type === 'info' && 'bg-blue-100 text-blue-700'}
+                        ${message.type === 'error' && 'bg-red-100/80 text-red-800'}
+                        ${message.type === 'success' && 'bg-green-100/80 text-green-800'}
+                        ${message.type === 'warning' && 'bg-yellow-100/80 text-yellow-800'}
+                        ${message.type === 'info' && 'bg-blue-100/80 text-blue-800'}
                     `}>
                             {message.text}
                         </div>
@@ -120,16 +109,17 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
                     ) : (
                         <Fragment>
                             <form onSubmit={handlePlayerSubmit} className="flex items-center gap-3">
-                                <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                                <div className="flex-shrink-0 w-12 h-12 bg-gray-200/80 rounded-xl flex items-center justify-center">
                                     <span className="text-2xl font-bold text-indigo-500">{nextChar.toUpperCase()}</span>
                                 </div>
+                                {/* UPDATED: Input field is now transparent */}
                                 <input
                                     type="text"
                                     value={playerInput}
-                                    readOnly // Ngăn bàn phím mặc định của thiết bị hiện lên
+                                    readOnly
                                     placeholder={gameState === 'playerTurn' ? 'Sử dụng bàn phím bên dưới...' : "Đợi máy..."}
                                     disabled={gameState !== 'playerTurn'}
-                                    className="w-full text-lg p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition cursor-default"
+                                    className="w-full text-lg p-3 bg-transparent border border-gray-400/50 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition cursor-default placeholder:text-gray-500 text-gray-800"
                                     autoComplete="off"
                                     autoCapitalize="none"
                                 />
@@ -141,7 +131,7 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
                                 <VirtualKeyboard
                                     userInput={playerInput}
                                     setUserInput={setPlayerInput}
-                                    wordLength={99} // Đặt giới hạn độ dài từ rất cao
+                                    wordLength={99}
                                     disabled={gameState !== 'playerTurn'}
                                 />
                             </div>
