@@ -544,7 +544,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     dismissKeyboard,
   };
 
-  return <EbookContext.Provider value={value}>{children}</E-bookContext.Provider>;
+  return <EbookContext.Provider value={value}>{children}</EbookContext.Provider>;
 };
 
 // --- CUSTOM HOOK ---
