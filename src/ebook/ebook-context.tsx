@@ -9,7 +9,8 @@ import React, {
   useContext,
   ReactNode,
   Dispatch,
-  SetStateAction
+  SetStateAction,
+  useCallback
 } from 'react';
 import { auth, db } from '../firebase.js'; 
 import { User } from 'firebase/auth';
@@ -64,6 +65,14 @@ export interface BookStats {
   wordFrequencies: Map<string, number>;
 }
 
+// --- NEW TYPES FOR CLOZE TEST ---
+export interface HiddenWordState {
+  originalWord: string;
+  userInput: string;
+  status: 'hidden' | 'correct' | 'incorrect';
+}
+
+
 // --- TYPE FOR THE CONTEXT VALUE ---
 interface EbookContextType {
   // State
@@ -86,7 +95,14 @@ interface EbookContextType {
   highlightMode: 'word' | 'phrase';
   selectedPhrase: PhraseSentence | null;
   selectedVoiceKey: string | null;
-  subtitleLanguage: 'en' | 'vi' | 'bilingual'; // <-- UPDATED: Added 'bilingual' state
+  subtitleLanguage: 'en' | 'vi' | 'bilingual';
+
+  // --- NEW STATES FOR CLOZE TEST ---
+  isClozeTestActive: boolean;
+  hiddenWordCount: number;
+  hiddenWords: Map<number, HiddenWordState>;
+  activeHiddenWordIndex: number | null;
+  correctlyGuessedCount: number;
 
   // Refs
   audioPlayerRef: React.RefObject<HTMLAudioElement>;
@@ -119,6 +135,14 @@ interface EbookContextType {
   setHighlightMode: Dispatch<SetStateAction<'word' | 'phrase'>>;
   handleVoiceChange: (direction: 'next' | 'previous') => void;
   toggleSubtitleLanguage: () => void;
+
+  // --- NEW FUNCTIONS FOR CLOZE TEST ---
+  setHiddenWordCount: (count: number) => void;
+  startClozeTest: () => void;
+  stopClozeTest: () => void;
+  handleHiddenWordClick: (wordIndex: number) => void;
+  handleClozeTestInput: (value: string) => void;
+  dismissKeyboard: () => void;
 }
 
 // --- CREATE CONTEXT ---
@@ -152,7 +176,13 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const [highlightMode, setHighlightMode] = useState<'word' | 'phrase'>('word');
   const [selectedPhrase, setSelectedPhrase] = useState<PhraseSentence | null>(null);
   const [selectedVoiceKey, setSelectedVoiceKey] = useState<string | null>(null);
-  const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'vi' | 'bilingual'>('en'); // <-- UPDATED: Set initial state
+  const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'vi' | 'bilingual'>('en');
+
+  // --- NEW STATES FOR CLOZE TEST ---
+  const [isClozeTestActive, setIsClozeTestActive] = useState(false);
+  const [hiddenWordCount, _setHiddenWordCount] = useState(10);
+  const [hiddenWords, setHiddenWords] = useState<Map<number, HiddenWordState>>(new Map());
+  const [activeHiddenWordIndex, setActiveHiddenWordIndex] = useState<number | null>(null);
 
   // --- HOOKS & LOGIC ---
   useEffect(() => {
@@ -208,7 +238,6 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const isViSubAvailable = useMemo(() => !!currentBook?.contentVi, [currentBook]);
   
   const displayedContent = useMemo(() => {
-    // This is now only used for 'en' and 'vi' modes. 'bilingual' is handled in the UI component.
     if (subtitleLanguage === 'vi' && currentBook?.contentVi) {
       return currentBook.contentVi;
     }
@@ -216,7 +245,6 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   }, [currentBook, subtitleLanguage]);
   
   useEffect(() => {
-    // Reset về ngôn ngữ gốc khi chọn sách mới
     setSubtitleLanguage('en');
   }, [selectedBookId]);
 
@@ -322,6 +350,108 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     };
   }, []);
 
+  // --- NEW CLOZE TEST LOGIC ---
+
+  const correctlyGuessedCount = useMemo(() => {
+    let count = 0;
+    hiddenWords.forEach(word => {
+        if (word.status === 'correct') {
+            count++;
+        }
+    });
+    return count;
+  }, [hiddenWords]);
+
+
+  const setHiddenWordCount = (count: number) => {
+    _setHiddenWordCount(Math.max(5, Math.min(100, count)));
+  };
+
+  const startClozeTest = useCallback(() => {
+    if (!currentBook?.content) return;
+    
+    const allWords = currentBook.content.match(/\b[a-zA-Z']+\b/g) || [];
+    const validWordIndices = allWords
+      .map((word, index) => ({ word, index }))
+      .filter(item => item.word.length >= 3)
+      .map(item => item.index);
+
+    const shuffledIndices = validWordIndices.sort(() => 0.5 - Math.random());
+    const indicesToHide = shuffledIndices.slice(0, hiddenWordCount);
+
+    const newHiddenWords = new Map<number, HiddenWordState>();
+    indicesToHide.forEach(index => {
+      newHiddenWords.set(index, {
+        originalWord: allWords[index],
+        userInput: '',
+        status: 'hidden',
+      });
+    });
+
+    setHiddenWords(newHiddenWords);
+    setIsClozeTestActive(true);
+    setActiveHiddenWordIndex(null);
+  }, [currentBook, hiddenWordCount]);
+
+  const stopClozeTest = () => {
+    setIsClozeTestActive(false);
+    setHiddenWords(new Map());
+    setActiveHiddenWordIndex(null);
+  };
+  
+  useEffect(() => {
+    stopClozeTest();
+  }, [selectedBookId]);
+
+  const handleHiddenWordClick = (wordIndex: number) => {
+    if (hiddenWords.get(wordIndex)?.status !== 'correct') {
+      setActiveHiddenWordIndex(wordIndex);
+    }
+  };
+
+  const dismissKeyboard = () => {
+    setActiveHiddenWordIndex(null);
+  };
+  
+  const checkAnswer = (wordIndex: number, finalInput: string) => {
+    const wordState = hiddenWords.get(wordIndex);
+    if (!wordState) return;
+
+    const isCorrect = finalInput.toLowerCase() === wordState.originalWord.toLowerCase();
+    const newStatus = isCorrect ? 'correct' : 'incorrect';
+    
+    const newHiddenWords = new Map(hiddenWords);
+    newHiddenWords.set(wordIndex, { ...wordState, status: newStatus });
+    setHiddenWords(newHiddenWords);
+
+    if (isCorrect) {
+        setTimeout(() => setActiveHiddenWordIndex(null), 300);
+    } else {
+        setTimeout(() => {
+            const currentWord = newHiddenWords.get(wordIndex);
+            if(currentWord && currentWord.status === 'incorrect') {
+                 newHiddenWords.set(wordIndex, { ...currentWord, userInput: '', status: 'hidden' });
+                 setHiddenWords(new Map(newHiddenWords));
+            }
+        }, 800);
+    }
+  };
+
+  const handleClozeTestInput = (value: string) => {
+    if (activeHiddenWordIndex === null) return;
+
+    const currentWordState = hiddenWords.get(activeHiddenWordIndex);
+    if (!currentWordState) return;
+    
+    const newHiddenWords = new Map(hiddenWords);
+    newHiddenWords.set(activeHiddenWordIndex, { ...currentWordState, userInput: value });
+    setHiddenWords(newHiddenWords);
+    
+    if (value.length === currentWordState.originalWord.length) {
+        checkAnswer(activeHiddenWordIndex, value);
+    }
+  };
+
 
   // --- HANDLERS ---
   const handleSelectBook = (bookId: string) => setSelectedBookId(bookId);
@@ -382,11 +512,10 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   
   const toggleSubtitleLanguage = () => {
     if (isViSubAvailable) {
-      // --- UPDATED: Cycle through en -> vi -> bilingual -> en ---
       setSubtitleLanguage(prev => {
         if (prev === 'en') return 'vi';
         if (prev === 'vi') return 'bilingual';
-        return 'en'; // From 'bilingual', loop back to 'en'
+        return 'en';
       });
     }
   };
@@ -400,10 +529,22 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     handleWordClick, closeVocabDetail, handlePhraseClick, closePhraseDetail, togglePlayPause, handleSeek,
     togglePlaybackSpeed, setIsDarkMode, toggleSidebar, setIsBatchPlaylistModalOpen,
     setIsStatsModalOpen, setHighlightMode, handleVoiceChange,
-    subtitleLanguage, isViSubAvailable, displayedContent, toggleSubtitleLanguage
+    subtitleLanguage, isViSubAvailable, displayedContent, toggleSubtitleLanguage,
+    // --- NEW VALUES FOR CLOZE TEST ---
+    isClozeTestActive,
+    hiddenWordCount,
+    hiddenWords,
+    activeHiddenWordIndex,
+    correctlyGuessedCount,
+    setHiddenWordCount,
+    startClozeTest,
+    stopClozeTest,
+    handleHiddenWordClick,
+    handleClozeTestInput,
+    dismissKeyboard,
   };
 
-  return <EbookContext.Provider value={value}>{children}</EbookContext.Provider>;
+  return <EbookContext.Provider value={value}>{children}</E-bookContext.Provider>;
 };
 
 // --- CUSTOM HOOK ---
