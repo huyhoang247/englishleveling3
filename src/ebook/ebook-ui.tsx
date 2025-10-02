@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { EbookProvider, useEbook, Book, Vocabulary, PhraseSentence, HiddenWordState } from './ebook-context.tsx';
-import VirtualKeyboard from '../ui/keyboard.tsx'; // Đảm bảo đường dẫn này đúng với cấu trúc dự án của bạn
+import VirtualKeyboard from './ui/keyboard.tsx'; // Đảm bảo đường dẫn này đúng với cấu trúc dự án của bạn
 
 // --- COMPONENT & MODAL IMPORTS ---
 import FlashcardDetailModal from '../story/flashcard.tsx';
@@ -164,7 +164,7 @@ const EbookReaderContent: React.FC = () => {
     return renderableParts;
   }
 
-  // --- NEW & IMPROVED COMPONENT: HiddenWordInput ---
+  // --- NEW & IMPROVED COMPONENT: HiddenWordInput (V2) ---
   const HiddenWordInput: React.FC<{
     wordState: HiddenWordState;
     index: number;
@@ -173,7 +173,7 @@ const EbookReaderContent: React.FC = () => {
   }> = ({ wordState, index, onClick, isActive }) => {
       const { originalWord, userInput, status } = wordState;
 
-      // Khi đã đoán đúng, hiển thị từ với nền xanh lá cây
+      // 1. Khi đã đoán đúng: Hiển thị từ gốc với nền xanh, không còn là ô input nữa.
       if (status === 'correct') {
           return (
               <span 
@@ -184,34 +184,38 @@ const EbookReaderContent: React.FC = () => {
           );
       }
 
-      // Các lớp CSS cơ sở cho ô trống
-      let containerClasses = "inline-flex items-center align-bottom mx-1 cursor-pointer gap-[2px] p-0.5 rounded-md transition-all duration-200";
-      let charBoxClasses = "flex items-center justify-center w-5 h-7 sm:w-6 sm:h-8 text-center font-semibold text-base sm:text-lg rounded-sm bg-gray-200/70 dark:bg-gray-700/80 transition-all duration-200";
+      // 2. Xây dựng các lớp CSS cho ô input liền mạch, kích thước cố định
+      // Class cho container chính của ô input
+      let containerClasses = `
+          inline-block align-bottom 
+          w-28 h-9 
+          mx-1 px-2 py-1 
+          cursor-pointer rounded-md 
+          bg-gray-100 dark:bg-gray-700/60 
+          border-b-2 border-dotted border-gray-400 dark:border-gray-500 
+          hover:border-solid hover:border-blue-500 
+          transition-all duration-200 
+          font-mono tracking-wider text-center text-lg
+      `;
+      // Class cho phần text bên trong ô
+      let textClasses = "text-gray-800 dark:text-gray-200";
 
-      // Style khi ô được chọn (active)
+      // 3. Thay đổi style dựa trên trạng thái (active, incorrect)
+      // Khi ô được click vào (active)
       if (isActive) {
-          containerClasses += " bg-blue-100 dark:bg-blue-500/20 ring-2 ring-blue-400";
-      } else {
-          containerClasses += " bg-gray-100 dark:bg-gray-900/50 hover:bg-gray-200 dark:hover:bg-gray-700";
+          containerClasses += " border-solid border-blue-500 ring-2 ring-blue-300 dark:ring-blue-500/50";
       }
 
-      // Style khi trả lời sai (rung và chuyển sang màu đỏ)
+      // Khi trả lời sai
       if (status === 'incorrect') {
-          containerClasses += " animate-shake";
-          charBoxClasses = charBoxClasses.replace('bg-gray-200/70 dark:bg-gray-700/80', 'bg-red-100 dark:bg-red-500/20');
+          containerClasses += " animate-shake border-red-500 dark:border-red-500";
+          textClasses = "text-red-500"; // Chữ nhập vào sẽ có màu đỏ
       }
 
-      const chars = Array.from({ length: originalWord.length });
-
+      // 4. Render ra ô input liền mạch
       return (
           <span className={containerClasses} onClick={onClick}>
-              {chars.map((_, i) => (
-                  <span key={i} className={charBoxClasses}>
-                      <span className={`${status === 'incorrect' ? 'text-red-500' : 'text-gray-800 dark:text-gray-200'}`}>
-                          {userInput[i] || ''}
-                      </span>
-                  </span>
-              ))}
+            <span className={textClasses}>{userInput}</span>
           </span>
       );
   };
@@ -259,7 +263,7 @@ const EbookReaderContent: React.FC = () => {
         let globalWordCounter = -1;
 
         return (
-            <div className="font-['Inter',_sans-serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
+            <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
                 {paragraphs.map((paragraph, pIndex) => {
                     if (paragraph.trim() === '') return <div key={`blank-${pIndex}`} className="h-3 sm:h-4"></div>;
 
