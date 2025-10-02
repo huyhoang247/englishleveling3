@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { EbookProvider, useEbook, Book, Vocabulary, PhraseSentence, HiddenWordState } from './ebook-context.tsx';
-import VirtualKeyboard from '../ui/keyboard.tsx'; // Đảm bảo đường dẫn này đúng với cấu trúc dự án của bạn
+import VirtualKeyboard from './ui/keyboard.tsx'; // Đảm bảo đường dẫn này đúng với cấu trúc dự án của bạn
 
 // --- COMPONENT & MODAL IMPORTS ---
 import FlashcardDetailModal from '../story/flashcard.tsx';
@@ -164,7 +164,7 @@ const EbookReaderContent: React.FC = () => {
     return renderableParts;
   }
 
-  // --- NEW & IMPROVED COMPONENT: HiddenWordInput (V3 - Compact & Seamless) ---
+  // --- NEW & IMPROVED COMPONENT: HiddenWordInput (V4 - Compact, Bold) ---
   const HiddenWordInput: React.FC<{
     wordState: HiddenWordState;
     index: number;
@@ -173,7 +173,7 @@ const EbookReaderContent: React.FC = () => {
   }> = ({ wordState, index, onClick, isActive }) => {
       const { originalWord, userInput, status } = wordState;
 
-      // Khi đã đoán đúng: Hiển thị từ gốc, liền mạch với văn bản.
+      // Khi đã đoán đúng
       if (status === 'correct') {
           return (
               <span 
@@ -184,21 +184,21 @@ const EbookReaderContent: React.FC = () => {
           );
       }
 
-      // Xây dựng các lớp CSS cho ô input nhỏ gọn
+      // Các lớp CSS cho ô input
       let containerClasses = `
-          inline-block align-bottom          // Căn chỉnh với dòng văn bản
-          min-w-16                           // Chiều rộng tối thiểu 4rem (64px) để dễ click
-          mx-1 px-2                          // Thêm khoảng cách ngang
-          cursor-pointer rounded-md          // Style cơ bản
-          bg-gray-100 dark:bg-gray-700/60    // Màu nền
-          border-b-2 border-dotted border-gray-400 dark:border-gray-500 // Gạch chân
-          hover:border-solid hover:border-blue-500 // Hiệu ứng khi di chuột
+          inline-block align-bottom
+          min-w-16
+          mx-1 px-2 py-0.5                   // <-- THAY ĐỔI: Giảm chiều cao với padding dọc nhỏ
+          cursor-pointer rounded-md
+          bg-gray-100 dark:bg-gray-700/60
+          border-b-2 border-dotted border-gray-400 dark:border-gray-500
+          hover:border-solid hover:border-blue-500
           transition-all duration-200
-          text-left                          // Căn chữ sang trái
+          text-left
       `;
-      // Không set font-size, height, width ở đây để nó kế thừa từ thẻ <p> cha
 
-      let textClasses = "text-gray-800 dark:text-gray-200";
+      // Các lớp CSS cho chữ bên trong ô
+      let textClasses = "font-bold text-gray-800 dark:text-gray-200"; // <-- THAY ĐỔI: Thêm font-bold
 
       // Style khi ô được chọn
       if (isActive) {
@@ -208,16 +208,12 @@ const EbookReaderContent: React.FC = () => {
       // Style khi trả lời sai
       if (status === 'incorrect') {
           containerClasses += " animate-shake border-red-500 dark:border-red-500";
-          textClasses = "text-red-500"; // Chữ màu đỏ
+          textClasses = "font-bold text-red-500"; // <-- THAY ĐỔI: Giữ font-bold khi sai
       }
 
       // Render ô input
       return (
           <span className={containerClasses} onClick={onClick}>
-              {/* 
-                Sử dụng non-breaking space (&nbsp;) khi input rỗng 
-                để ô không bị co lại hoàn toàn và giữ được chiều cao dòng 
-              */}
               <span className={textClasses}>
                   {userInput || <>&nbsp;</>}
               </span>
