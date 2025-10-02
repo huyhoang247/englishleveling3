@@ -15,6 +15,8 @@ import FlashcardDetailModal from '../../story/flashcard.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import HomeButton from '../../ui/home-button.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
+// Giả sử đường dẫn này đúng. Sửa lại nếu cần.
+import VirtualKeyboard from '../../ui/keyboard.tsx'; // <-- IMPORT BÀN PHÍM ẢO
 
 // --- Icons (Giữ nguyên) ---
 const UserIcon = () => (
@@ -49,8 +51,28 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
         handleCloseModal,
     } = useWordChain();
 
+    // State để quản lý hiển thị bàn phím ảo
+    const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+    // Xử lý submit, ẩn bàn phím sau khi gửi
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (gameState !== 'playerTurn' || !playerInput.trim()) return;
+        handlePlayerSubmit(e);
+    };
+    
+    // Tự động mở bàn phím khi đến lượt người chơi
+    useEffect(() => {
+        if (gameState === 'playerTurn') {
+            setKeyboardVisible(true);
+        } else {
+            setKeyboardVisible(false);
+        }
+    }, [gameState]);
+
     // Render function for the chain remains here as it's pure UI
     const renderChain = () => {
+        // ... (Nội dung hàm renderChain giữ nguyên, không cần thay đổi)
         return wordChain.map((entry, index) => {
             const isPlayer = entry.author === 'player';
             return (
@@ -85,10 +107,12 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
                         </div>
                     </div>
                 </header>
-
-                <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 space-y-4">
+                
+                {/* Thêm padding-bottom khi bàn phím hiện để không che mất tin nhắn cuối */}
+                <div ref={chatContainerRef} className={`flex-grow overflow-y-auto p-4 space-y-4 transition-all duration-300 ${isKeyboardVisible ? 'pb-52' : 'pb-4'}`}>
                     {renderChain()}
                     {gameState === 'aiTurn' && (
+                        // ... (Phần typing indicator của bot giữ nguyên)
                         <div className="flex items-center gap-2 justify-start animate-pop-in">
                             <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/bot-icon.webp" alt="Bot typing" className="flex-shrink-0 w-8 h-8 rounded-full object-cover" />
                             <div className="max-w-[70%] rounded-2xl px-4 py-2 text-lg bg-white rounded-bl-lg shadow-md flex items-center gap-1">
@@ -102,7 +126,8 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
 
                 <div className="p-4 bg-white border-t">
                     {message && !selectedCard && (
-                        <div className={`mb-3 p-3 rounded-lg text-center text-sm font-medium animate-pop-in
+                        // ... (Phần hiển thị message giữ nguyên)
+                         <div className={`mb-3 p-3 rounded-lg text-center text-sm font-medium animate-pop-in
                         ${message.type === 'error' && 'bg-red-100 text-red-700'}
                         ${message.type === 'success' && 'bg-green-100 text-green-700'}
                         ${message.type === 'warning' && 'bg-yellow-100 text-yellow-700'}
@@ -117,17 +142,18 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
                             Chơi lại
                         </button>
                     ) : (
-                        <form onSubmit={handlePlayerSubmit} className="flex items-center gap-3">
+                        <form onSubmit={handleSubmit} className="flex items-center gap-3">
                             <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
                                 <span className="text-2xl font-bold text-indigo-500">{nextChar.toUpperCase()}</span>
                             </div>
                             <input
                                 type="text"
                                 value={playerInput}
-                                onChange={(e) => setPlayerInput(e.target.value)}
+                                readOnly // <-- Ngăn bàn phím hệ thống
+                                onFocus={() => setKeyboardVisible(true)} // <-- Mở bàn phím ảo khi focus
                                 placeholder={gameState === 'playerTurn' ? 'Nhập từ của bạn...' : "Đợi máy..."}
                                 disabled={gameState !== 'playerTurn'}
-                                className="w-full text-lg p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition"
+                                className="w-full text-lg p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition cursor-pointer"
                                 autoComplete="off"
                                 autoCapitalize="none"
                             />
@@ -137,7 +163,29 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
                         </form>
                     )}
                 </div>
+
+                {/* --- KHU VỰC BÀN PHÍM ẢO --- */}
+                {isKeyboardVisible && (
+                     <div className="fixed bottom-0 left-0 right-0 z-50 bg-gray-200/95 backdrop-blur-sm shadow-lg animate-slide-up">
+                         <div className="flex justify-end p-1">
+                             <button 
+                                 onClick={() => setKeyboardVisible(false)}
+                                 className="px-3 py-1 text-sm text-gray-600 bg-white rounded-md shadow hover:bg-gray-100"
+                             >
+                                 Ẩn
+                             </button>
+                         </div>
+                         <VirtualKeyboard
+                             userInput={playerInput}
+                             setUserInput={setPlayerInput}
+                             wordLength={99} // <-- TRICK: Đặt một giá trị lớn để không giới hạn độ dài
+                             disabled={gameState !== 'playerTurn'}
+                         />
+                     </div>
+                )}
+
                 <style jsx>{`
+                /* ... (Nội dung style giữ nguyên, thêm animation slide-up) ... */
                 @keyframes pop-in {
                     from { opacity: 0; transform: scale(0.8); }
                     to { opacity: 1; transform: scale(1); }
@@ -157,10 +205,17 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
                 }
                 .delay-150 { animation-delay: 0.15s; }
                 .delay-300 { animation-delay: 0.3s; }
+
+                @keyframes slide-up {
+                    from { transform: translateY(100%); }
+                    to { transform: translateY(0); }
+                }
+                .animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
             `}</style>
             </div>
 
             <FlashcardDetailModal
+                // ... (props của Modal giữ nguyên)
                 selectedCard={selectedCard}
                 showVocabDetail={!!selectedCard}
                 onClose={handleCloseModal}
@@ -174,9 +229,9 @@ const WordChainGameView = ({ onGoBack }: { onGoBack: () => void }) => {
 
 // --- The main export now wraps the View with the Provider ---
 export default function WordChainGame({ onGoBack }: { onGoBack: () => void }) {
+    // ... (Phần logic của component chính giữ nguyên)
     const [user, setUser] = useState(auth.currentUser);
 
-    // Handles authentication state
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, currentUser => {
             setUser(currentUser);
@@ -184,7 +239,6 @@ export default function WordChainGame({ onGoBack }: { onGoBack: () => void }) {
         return () => unsubscribe();
     }, []);
 
-    // Provide the user object to the game's logic context
     return (
         <WordChainProvider user={user}>
             <WordChainGameView onGoBack={onGoBack} />
