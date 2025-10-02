@@ -164,7 +164,7 @@ const EbookReaderContent: React.FC = () => {
     return renderableParts;
   }
 
-  // --- NEW & IMPROVED COMPONENT: HiddenWordInput (V4 - Compact, Bold) ---
+  // --- FINAL VERSION: HiddenWordInput (V5 - Ultra Compact & Seamless) ---
   const HiddenWordInput: React.FC<{
     wordState: HiddenWordState;
     index: number;
@@ -184,31 +184,31 @@ const EbookReaderContent: React.FC = () => {
           );
       }
 
-      // Các lớp CSS cho ô input
+      // Các lớp CSS cho ô input được tối ưu
       let containerClasses = `
-          inline-block align-bottom
-          min-w-16
-          mx-1 px-2 py-0.5                   // <-- THAY ĐỔI: Giảm chiều cao với padding dọc nhỏ
-          cursor-pointer rounded-md
-          bg-gray-100 dark:bg-gray-700/60
-          border-b-2 border-dotted border-gray-400 dark:border-gray-500
-          hover:border-solid hover:border-blue-500
+          inline-block align-baseline              // <-- THAY ĐỔI: Dùng align-baseline cho căn chỉnh tự nhiên nhất
+          min-w-14                                 // Giảm chiều rộng tối thiểu một chút
+          mx-1 px-1.5 pb-px                        // <-- THAY ĐỔI: Bỏ padding dọc, chỉ thêm 1px đệm dưới
+          cursor-pointer rounded-t-sm              // Bo góc nhẹ phía trên
+          bg-gray-100/50 dark:bg-gray-700/40       // Làm nền mờ hơn
+          border-b-2 border-gray-300 dark:border-gray-600 // <-- THAY ĐỔI: Viền dưới mờ hơn khi không active
+          hover:border-blue-500
           transition-all duration-200
           text-left
       `;
 
-      // Các lớp CSS cho chữ bên trong ô
-      let textClasses = "font-bold text-gray-800 dark:text-gray-200"; // <-- THAY ĐỔI: Thêm font-bold
+      // Lớp cho chữ
+      let textClasses = "font-bold text-gray-800 dark:text-gray-200";
 
       // Style khi ô được chọn
       if (isActive) {
-          containerClasses += " border-solid border-blue-500 ring-1 ring-blue-300 dark:ring-blue-500/50";
+          containerClasses += " border-blue-500 ring-1 ring-blue-300/70";
       }
 
       // Style khi trả lời sai
       if (status === 'incorrect') {
-          containerClasses += " animate-shake border-red-500 dark:border-red-500";
-          textClasses = "font-bold text-red-500"; // <-- THAY ĐỔI: Giữ font-bold khi sai
+          containerClasses += " animate-shake border-red-500";
+          textClasses = "font-bold text-red-500";
       }
 
       // Render ô input
