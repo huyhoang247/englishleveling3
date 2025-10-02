@@ -1,3 +1,5 @@
+// Filename: check-in-ui.tsx
+
 import React from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx';
 import HomeButton from '../../ui/home-button.tsx';
@@ -68,10 +70,17 @@ const DailyCheckInView = () => {
           <div className="flex justify-between">
             {dailyRewards.map(reward => {
               // ======================= SỬA LỖI TẠI ĐÂY (LẦN 1) =======================
-              // Logic mới: Tính toán ngày đã hoàn thành trực tiếp từ loginStreak.
-              // Nếu streak=1, ngày 1 hoàn thành. Nếu streak=7, ngày 7 hoàn thành. Nếu streak=8, ngày 1 (của chu kỳ mới) hoàn thành.
-              const completedDaysInCycle = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0;
-              const isClaimed = reward.day <= completedDaysInCycle;
+              let isClaimed;
+              if (canClaimToday) {
+                  // Nếu HÔM NAY CÓ THỂ điểm danh, thì một ngày được coi là "đã nhận"
+                  // chỉ khi nó nằm TRƯỚC ngày có thể nhận của hôm nay.
+                  isClaimed = reward.day < claimableDay;
+              } else {
+                  // Nếu HÔM NAY KHÔNG THỂ điểm danh (vì đã làm rồi), thì dùng logic cũ dựa trên streak.
+                  // Vì lúc này loginStreak đã được cập nhật chính xác cho ngày hôm nay.
+                  const completedDaysInCycle = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0;
+                  isClaimed = reward.day <= completedDaysInCycle;
+              }
               // =======================================================================
               
               const isClaimable = canClaimToday && reward.day === claimableDay;
@@ -140,8 +149,17 @@ const DailyCheckInView = () => {
 
             {dailyRewards.map(reward => {
               // ======================= SỬA LỖI TẠI ĐÂY (LẦN 2) =======================
-              const completedDaysInCycle = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0;
-              const isClaimed = reward.day <= completedDaysInCycle;
+              let isClaimed;
+              if (canClaimToday) {
+                  // Nếu HÔM NAY CÓ THỂ điểm danh, thì một ngày được coi là "đã nhận"
+                  // chỉ khi nó nằm TRƯỚC ngày có thể nhận của hôm nay.
+                  isClaimed = reward.day < claimableDay;
+              } else {
+                  // Nếu HÔM NAY KHÔNG THỂ điểm danh (vì đã làm rồi), thì dùng logic cũ dựa trên streak.
+                  // Vì lúc này loginStreak đã được cập nhật chính xác cho ngày hôm nay.
+                  const completedDaysInCycle = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0;
+                  isClaimed = reward.day <= completedDaysInCycle;
+              }
               // =======================================================================
 
               const isClaimable = canClaimToday && reward.day === claimableDay;
