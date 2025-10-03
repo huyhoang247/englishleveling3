@@ -328,8 +328,11 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, on
         setDefender(prev => prev ? { ...prev, stats: tempDefender } : null);
         endGame(finalWinner);
     }, [attacker, defender, turnCounter, executeFullTurn, endGame, gameOver]);
-
-    const startGame = useCallback(() => {
+    
+    // ==========================================================
+    // --- START OF FIX ---
+    // Removed useCallback with empty dependency array which caused the bug.
+    const startGame = () => {
         setBattleState(prev => {
             if (prev === 'idle') {
                 isEndingGame.current = false;
@@ -337,19 +340,20 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, on
             }
             return prev;
         });
-    }, []);
+    };
+    // --- END OF FIX ---
+    // ==========================================================
 
     useEffect(() => {
         const fetchDefender = async () => {
             try {
                 const opponentData = await getOpponentForBattle(defenderId);
                 setDefender({ name: opponentData.name, avatarUrl: opponentData.avatarUrl, stats: opponentData.stats, initialCoins: opponentData.coins, });
-                setAttacker({ name: attackerData.name, avatarUrl: attackerData.avatarUrl, stats: attackerData.initialStats }); 
                 setCombatLog([`[Lượt 0] Trận đấu với ${opponentData.name} bắt đầu!`]);
             } catch (e) { setError("Không thể tải dữ liệu đối thủ."); console.error(e); } finally { setIsLoading(false); }
         };
         fetchDefender();
-    }, [defenderId, attackerData]);
+    }, [defenderId]);
     
     // --- MODIFICATION: TỰ ĐỘNG BẮT ĐẦU TRẬN ĐẤU ---
     useEffect(() => {
