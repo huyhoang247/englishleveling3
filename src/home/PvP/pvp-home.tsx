@@ -1,4 +1,7 @@
-// --- START OF FULL FILE: src/home/PvP/pvp-home.tsx ---
+// --- START OF FILE src/home/PvP/pvp-home.tsx ---
+
+// *** TÓM TẮT THAY ĐỔI (Cải thiện nhỏ) ***
+// - Thay đổi giá trị vàng tìm kiếm mặc định trong modal từ 10000 xuống 1000 để hợp lý hơn.
 
 import React, { useState, Fragment } from 'react';
 import { useGame } from '../../GameContext.tsx'; // Điều chỉnh đường dẫn nếu cần
@@ -282,7 +285,7 @@ function PvpInvasion({ onClose, player1 }: {
                 isOpen={isScoutModalOpen}
                 onClose={() => setIsScoutModalOpen(false)}
                 onSearch={executeSearch}
-                initialCoins={10000}
+                initialCoins={1000} // <--- THAY ĐỔI NHỎ ĐỂ CẢI THIỆN TRẢI NGHIỆM
             />
             {showLogModal && <DefenseLogModal log={player1.invasionLog} onClose={() => setShowLogModal(false)} />}
             
@@ -416,5 +419,4 @@ export default function PvpArena({ onClose }: { onClose: () => void }) {
     </Fragment>
   );
 }
-
-// --- END OF FULL FILE: src/home/PvP/pvp-home.tsx ---
+// --- END OF FILE src/home/PvP/pvp-home.tsx ---
