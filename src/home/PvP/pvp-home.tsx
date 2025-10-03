@@ -614,7 +614,7 @@ export default function PvpArena({ onClose }: { onClose: () => void }) {
       name: currentUser.displayName || "Adventurer",
       avatarUrl: currentUser.photoURL || `https://api.dicebear.com/8.x/adventurer/svg?seed=${currentUser.uid}`,
       coins: coins,
-      initialStats: { ...battleStats, critRate: 0.1, critDmg: 1.5, healPower: 50, reflectDmg: 10, }
+      initialStats: { ...battleStats, maxHp: battleStats.hp, critRate: 0.1, critDmg: 1.5, healPower: 50, reflectDmg: 10, }
   };
   
   const [mode, setMode] = useState<'selection' | 'invasion'>('selection');
