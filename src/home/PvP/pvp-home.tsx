@@ -1,4 +1,4 @@
-// --- START OF FILE pvp-home.tsx (FINAL DEBUG VERSION) ---
+// --- START OF FILE pvp-home.tsx (FINAL FIX FOR INFINITE LOOP) ---
 
 import React, { useState, Fragment, useEffect, useCallback, useRef, createContext, useContext, ReactNode, memo, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
@@ -26,7 +26,6 @@ export interface PlayerData {
 // ===================================================================================
 // --- SHARED UI COMPONENTS (No changes) ---
 // ===================================================================================
-
 const PvpStyles = () => ( <style>{`.main-bg { background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets/images/pvp-bg.webp'); background-size: cover; background-position: center; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; } .animate-fade-in-scale-fast { animation: fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .scrollbar-thin::-webkit-scrollbar { width: 4px; } .scrollbar-thin::-webkit-scrollbar-track { background: transparent; } .scrollbar-thin::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 20px; } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; }`}</style> );
 const HomeIcon = ({ className }: { className: string }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>);
 const InvasionIcon = ({ className }: { className: string }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>);
@@ -76,7 +75,6 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
     const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const isEndingGame = useRef(false);
 
-    // This function is pure (no side effects, doesn't rely on external state) so it's fine.
     const executeFullTurn = useCallback((currentAttacker: CombatStats, currentDefender: CombatStats, turn: number) => {
         const turnLogs: string[] = [];
         const log = (msg: string) => turnLogs.push(`[Lượt ${turn}] ${msg}`);
@@ -85,28 +83,23 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
         let defenderStats = { ...currentDefender };
         let winner: 'win' | 'loss' | null = null;
         let turnEvents: Omit<TurnEvents, 'timestamp'> = { attackerDmg: 0, defenderDmg: 0 };
-        
         const attackerDmg = calculateDamage(attackerStats.atk, defenderStats.def);
         turnEvents.defenderDmg = attackerDmg;
         log(`Bạn tấn công, gây <b class="text-red-400">${attackerDmg}</b> sát thương.`);
         defenderStats.hp -= attackerDmg;
-        
         if (defenderStats.hp <= 0) {
             defenderStats.hp = 0; winner = 'win';
             log(`Đối thủ đã bị đánh bại!`);
             return { attacker: attackerStats, defender: defenderStats, turnLogs, winner, turnEvents };
         }
-        
         const defenderDmg = calculateDamage(defenderStats.atk, attackerStats.def);
         turnEvents.attackerDmg = defenderDmg;
         log(`Đối thủ phản công, gây <b class="text-red-400">${defenderDmg}</b> sát thương.`);
         attackerStats.hp -= defenderDmg;
-        
         if (attackerStats.hp <= 0) {
             attackerStats.hp = 0; winner = 'loss';
             log("Bạn đã gục ngã... THẤT BẠI!");
         }
-        
         return { attacker: attackerStats, defender: defenderStats, turnLogs, winner, turnEvents };
     }, []);
 
@@ -114,7 +107,6 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
         if (isEndingGame.current) return;
         isEndingGame.current = true;
         if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-        
         const finalGoldStolen = result === 'win' ? Math.min(defender?.initialCoins ?? 0, goldToSteal) : 0;
         try {
             await recordInvasionResult(auth.currentUser!.uid, defenderId, result, finalGoldStolen);
@@ -128,53 +120,49 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
         }
     }, [defenderId, goldToSteal, defender, game]);
 
-    // [THE FIX IS HERE] This is the new, safe version of runBattleTurn.
-    // It uses functional updates for every state setter to avoid stale closures.
+    // [THE FIX] This function is now stable and will not cause re-renders.
     const runBattleTurn = useCallback(() => {
         setTurnCounter(prevTurn => {
             const nextTurn = prevTurn + 1;
             console.log(`%c[runBattleTurn] Executing Turn: ${nextTurn}`, 'color: cyan');
 
-            let attackerUpdate: AttackerInfo | null = null;
+            setAttacker(prevAttacker => {
+                if (!prevAttacker) return prevAttacker;
 
-            setDefender(prevDefender => {
-                // If defender or attacker doesn't exist yet, do nothing.
-                if (!prevDefender || !attacker) return prevDefender;
+                let updatedAttacker = prevAttacker;
 
-                const { attacker: newAttackerStats, defender: newDefenderStats, turnLogs, winner, turnEvents } = 
-                    executeFullTurn(attacker.stats, prevDefender.stats, nextTurn);
-                
-                // Prepare the attacker update
-                attackerUpdate = { ...attacker, stats: newAttackerStats };
+                setDefender(prevDefender => {
+                    if (!prevDefender) return prevDefender;
 
-                setCombatLog(prevLog => [...turnLogs.reverse(), ...prevLog].slice(0, 50));
-                setLastTurnEvents({ ...turnEvents, timestamp: Date.now() });
-                
-                if (winner) {
-                    setTimeout(() => endGame(winner), 100);
-                }
+                    const { attacker: newAttackerStats, defender: newDefenderStats, turnLogs, winner, turnEvents } = 
+                        executeFullTurn(prevAttacker.stats, prevDefender.stats, nextTurn);
+                    
+                    updatedAttacker = { ...prevAttacker, stats: newAttackerStats };
+                    
+                    setCombatLog(prevLog => [...turnLogs.reverse(), ...prevLog].slice(0, 50));
+                    setLastTurnEvents({ ...turnEvents, timestamp: Date.now() });
+                    
+                    if (winner) {
+                        setTimeout(() => endGame(winner), 100);
+                    }
+                    
+                    return { ...prevDefender, stats: newDefenderStats };
+                });
 
-                // Return new defender state
-                return { ...prevDefender, stats: newDefenderStats };
+                return updatedAttacker;
             });
-
-            // Apply the attacker update
-            setAttacker(prevAttacker => attackerUpdate || prevAttacker);
-
             return nextTurn;
         });
-    }, [attacker, executeFullTurn, endGame]); // `attacker` is needed to get the latest stats for calculation.
+    }, [executeFullTurn, endGame]); // <-- Dependencies are now stable functions.
 
     const skipBattle = useCallback(() => {
         if (gameOver || !attacker || !defender) return;
         if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
         setBattleState('finished');
-        
         let tempAttacker = attacker.stats;
         let tempDefender = defender.stats;
         let tempTurn = turnCounter;
         let finalWinner: 'win' | 'loss' | null = null;
-        
         while (finalWinner === null && tempTurn < 500) {
             tempTurn++;
             const { attacker: newAttacker, defender: def, winner } = executeFullTurn(tempAttacker, tempDefender, tempTurn);
@@ -183,7 +171,6 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
             finalWinner = winner;
         }
         if (!finalWinner) finalWinner = 'loss';
-
         setAttacker(prev => prev ? { ...prev, stats: tempAttacker } : null);
         setDefender(prev => prev ? { ...prev, stats: tempDefender } : null);
         endGame(finalWinner);
@@ -191,27 +178,23 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
     
     useEffect(() => {
         const fetchDefender = async () => {
-            console.log("[BATTLE] Fetching defender data...");
             try {
                 const opponentData = await getOpponentForBattle(defenderId);
                 setDefender({ name: opponentData.name, avatarUrl: opponentData.avatarUrl, stats: opponentData.stats, initialCoins: opponentData.coins });
                 setCombatLog([`[Lượt 0] Trận đấu với ${opponentData.name} bắt đầu!`]);
             } catch (e) { setError("Không thể tải dữ liệu đối thủ."); console.error(e); } 
-            finally { setIsLoading(false); console.log("[BATTLE] Finished fetching defender data.");}
+            finally { setIsLoading(false); }
         };
         fetchDefender();
     }, [defenderId]);
     
     useEffect(() => {
         if (!isLoading && battleState === 'idle' && attacker && defender) {
-            console.log("[BATTLE] Conditions met. Starting battle in 800ms.");
             const startTimeout = setTimeout(() => setBattleState('fighting'), 800);
             return () => clearTimeout(startTimeout);
         }
     }, [isLoading, battleState, attacker, defender]);
 
-    // This useEffect now has a stable `runBattleTurn` dependency, but we need to ensure it re-runs if `attacker` changes
-    // to avoid stale closures inside the interval itself.
     useEffect(() => {
         console.log(`[BATTLE INTERVAL CHECK] State: ${battleState}, GameOver: ${gameOver}`);
         if (battleState === 'fighting' && !gameOver) {
