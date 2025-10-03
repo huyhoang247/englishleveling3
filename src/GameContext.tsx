@@ -77,6 +77,7 @@ interface IGameContext {
     handleSkillScreenClose: (dataUpdated: boolean) => void;
     updateSkillsState: (data: SkillScreenExitData) => void;
     updateUserCurrency: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
+    updateCoins: (amount: number) => Promise<void>; // --- MODIFIED: ADDED THIS ---
 
     // Toggles
     toggleRank: () => void;
@@ -297,6 +298,25 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       def: (userStatsValue.def || 0) + (totalEquipmentStats.def || 0),
     };
   }, [userStatsValue, totalEquipmentStats]);
+    
+  // --- MODIFIED: ADDED THIS FUNCTION ---
+  const updateCoins = async (amount: number) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId || amount === 0) return;
+    setIsSyncingData(true);
+    try {
+      // The service function now returns the new coin total after the transaction
+      const newTotalCoins = await updateUserCoins(userId, amount);
+      // We set the state here for immediate UI feedback. 
+      // The realtime listener will also receive this update, but this prevents UI lag.
+      setCoins(newTotalCoins);
+    } catch (error) {
+      console.error("Failed to update coins via context:", error);
+      // Optional: show an error toast to the user
+    } finally {
+      setIsSyncingData(false);
+    }
+  };
 
   const handleBossFloorUpdate = async (newFloor: number) => {
     const userId = auth.currentUser?.uid;
@@ -438,6 +458,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
     getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
     updateUserCurrency,
+    updateCoins, // --- MODIFIED: ADDED THIS ---
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
     toggleAuctionHouse,
