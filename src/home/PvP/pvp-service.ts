@@ -1,4 +1,8 @@
-// --- START OF FULL FILE: src/pvp-service.ts ---
+// --- START OF FILE src/pvp-service.ts ---
+
+// *** TÓM TẮT THAY ĐỔI ***
+// - Sửa collection từ 'pvp_profiles' thành 'users' trong hàm findInvasionOpponents để tìm đúng dữ liệu người chơi.
+// - Thêm trường 'displayName' vào query để lấy tên người chơi chính xác từ collection 'users'.
 
 import { db } from '../../firebase'; // Đảm bảo đường dẫn chính xác
 import { 
@@ -51,9 +55,9 @@ export interface BattleResult {
 export const findInvasionOpponents = async (currentUserId: string, minCoins: number): Promise<PvpOpponent[]> => {
   if (!currentUserId) return [];
 
-  const profilesRef = collection(db, 'pvp_profiles');
+  const profilesRef = collection(db, 'users'); // <--- THAY ĐỔI CHÍNH Ở ĐÂY
 
-  console.log(`Searching for opponents with at least ${minCoins} coins.`);
+  console.log(`Searching for opponents with at least ${minCoins} coins in 'users' collection.`);
 
   // Thay đổi query: Bỏ `powerLevel`, thay bằng `coins`
   const q = query(
@@ -70,7 +74,7 @@ export const findInvasionOpponents = async (currentUserId: string, minCoins: num
         const data = doc.data();
         potentialOpponents.push({
             userId: doc.id,
-            name: data.displayName || 'Unnamed Player',
+            name: data.displayName || data.username || 'Unnamed Player', // Ưu tiên displayName
             avatarUrl: data.avatarUrl || `https://api.dicebear.com/8.x/adventurer/svg?seed=${doc.id}`,
             coins: data.coins || 0,
             powerLevel: data.powerLevel || 0,
@@ -117,7 +121,8 @@ export const resolveInvasionBattleClientSide = async (
       const attackerData = attackerDoc.data();
       const defenderData = defenderDoc.data();
 
-      const defenderStats = defenderData.stats_value || { atk: 0, def: 0 };
+      // Giả định defender cũng có stats_value, nếu không thì dùng giá trị mặc định
+      const defenderStats = defenderData.stats_value || { atk: 10, def: 10 };
 
       const attackerPower = attackerStats.atk * 1.5 + attackerStats.def;
       const defenderPower = defenderStats.atk * 1.5 + defenderStats.def;
@@ -130,7 +135,8 @@ export const resolveInvasionBattleClientSide = async (
 
       if (playerWins) {
         const potentialGold = (defenderData.coins || 0);
-        const goldToSteal = Math.min(potentialGold, Math.floor(potentialGold * (0.1 + Math.random() * 0.05)));
+        // Cướp từ 10% đến 15% số vàng của đối thủ
+        const goldToSteal = Math.floor(potentialGold * (0.1 + Math.random() * 0.05));
         
         if (goldToSteal > 0) {
           transaction.update(attackerRef, { coins: increment(goldToSteal) });
@@ -141,14 +147,16 @@ export const resolveInvasionBattleClientSide = async (
         }
       }
 
+      // Ghi nhật ký cho người phòng thủ
       const defenseLogEntry = {
-        opponent: attackerData.username || "Một người chơi",
+        opponent: attackerData.displayName || attackerData.username || "Một người chơi",
         result: battleResult.result === 'win' ? 'loss' : 'win',
         resources: -battleResult.goldStolen,
         timestamp: serverTimestamp(),
       };
+      
       const existingLog = defenderData.invasionLog || [];
-      const updatedLog = [defenseLogEntry, ...existingLog].slice(0, 20);
+      const updatedLog = [defenseLogEntry, ...existingLog].slice(0, 20); // Giữ 20 log gần nhất
       transaction.update(defenderRef, { invasionLog: updatedLog });
 
       return battleResult;
@@ -162,4 +170,4 @@ export const resolveInvasionBattleClientSide = async (
   }
 };
 
-// --- END OF FULL FILE: src/pvp-service.ts ---
+// --- END OF FILE src/pvp-service.ts ---
