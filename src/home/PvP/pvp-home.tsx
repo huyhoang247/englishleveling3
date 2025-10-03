@@ -1,4 +1,4 @@
-// --- START OF FILE pvp-home.tsx (FINALIZED VERSION) ---
+// --- START OF FILE pvp-home.tsx (FINAL DEBUG VERSION) ---
 
 import React, { useState, Fragment, useEffect, useCallback, useRef, createContext, useContext, ReactNode, memo, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
@@ -24,14 +24,10 @@ export interface PlayerData {
 }
 
 // ===================================================================================
-// --- SHARED UI COMPONENTS ---
+// --- SHARED UI COMPONENTS (No changes) ---
 // ===================================================================================
 
-const PvpStyles = () => (
-    <style>{`
-        .main-bg { background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets/images/pvp-bg.webp'); background-size: cover; background-position: center; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .btn-shine::after { content: ''; position: absolute; top: -50%; left: -50%; width: 20%; height: 200%; background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 100%); transform: rotate(25deg); animation: shine 5s infinite; } @keyframes shine { 0% { left: -50%; } 20% { left: 120%; } 100% { left: 120%; } } .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; } .animate-fade-in-scale-fast { animation: fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .scrollbar-thin::-webkit-scrollbar { width: 4px; } .scrollbar-thin::-webkit-scrollbar-track { background: transparent; } .scrollbar-thin::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 20px; } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; }
-    `}</style>
-);
+const PvpStyles = () => ( <style>{`.main-bg { background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets/images/pvp-bg.webp'); background-size: cover; background-position: center; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; } .animate-fade-in-scale-fast { animation: fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .scrollbar-thin::-webkit-scrollbar { width: 4px; } .scrollbar-thin::-webkit-scrollbar-track { background: transparent; } .scrollbar-thin::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 20px; } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; }`}</style> );
 const HomeIcon = ({ className }: { className: string }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>);
 const InvasionIcon = ({ className }: { className: string }) => (<svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>);
 const CoinDisplay = ({ displayedCoins }: { displayedCoins: number }) => (<div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-900/50 border border-yellow-700"><svg className="w-5 h-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.415L11 9.586V6z" clipRule="evenodd" /></svg><span className="font-bold text-yellow-300 font-sans tracking-wider">{Math.floor(displayedCoins).toLocaleString()}</span></div>);
@@ -80,6 +76,7 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
     const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const isEndingGame = useRef(false);
 
+    // This function is pure (no side effects, doesn't rely on external state) so it's fine.
     const executeFullTurn = useCallback((currentAttacker: CombatStats, currentDefender: CombatStats, turn: number) => {
         const turnLogs: string[] = [];
         const log = (msg: string) => turnLogs.push(`[Lượt ${turn}] ${msg}`);
@@ -88,23 +85,28 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
         let defenderStats = { ...currentDefender };
         let winner: 'win' | 'loss' | null = null;
         let turnEvents: Omit<TurnEvents, 'timestamp'> = { attackerDmg: 0, defenderDmg: 0 };
+        
         const attackerDmg = calculateDamage(attackerStats.atk, defenderStats.def);
         turnEvents.defenderDmg = attackerDmg;
         log(`Bạn tấn công, gây <b class="text-red-400">${attackerDmg}</b> sát thương.`);
         defenderStats.hp -= attackerDmg;
+        
         if (defenderStats.hp <= 0) {
             defenderStats.hp = 0; winner = 'win';
             log(`Đối thủ đã bị đánh bại!`);
             return { attacker: attackerStats, defender: defenderStats, turnLogs, winner, turnEvents };
         }
+        
         const defenderDmg = calculateDamage(defenderStats.atk, attackerStats.def);
         turnEvents.attackerDmg = defenderDmg;
         log(`Đối thủ phản công, gây <b class="text-red-400">${defenderDmg}</b> sát thương.`);
         attackerStats.hp -= defenderDmg;
+        
         if (attackerStats.hp <= 0) {
             attackerStats.hp = 0; winner = 'loss';
             log("Bạn đã gục ngã... THẤT BẠI!");
         }
+        
         return { attacker: attackerStats, defender: defenderStats, turnLogs, winner, turnEvents };
     }, []);
 
@@ -112,12 +114,11 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
         if (isEndingGame.current) return;
         isEndingGame.current = true;
         if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+        
         const finalGoldStolen = result === 'win' ? Math.min(defender?.initialCoins ?? 0, goldToSteal) : 0;
         try {
             await recordInvasionResult(auth.currentUser!.uid, defenderId, result, finalGoldStolen);
-            if (finalGoldStolen > 0) {
-                game.updateUserCurrency({ coins: game.coins + finalGoldStolen });
-            }
+            if (finalGoldStolen > 0) game.updateUserCurrency({ coins: game.coins + finalGoldStolen });
         } catch(e) {
             console.error("Failed to record battle result:", e);
             setError("Lỗi khi ghi nhận kết quả trận đấu.");
@@ -127,49 +128,53 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
         }
     }, [defenderId, goldToSteal, defender, game]);
 
+    // [THE FIX IS HERE] This is the new, safe version of runBattleTurn.
+    // It uses functional updates for every state setter to avoid stale closures.
     const runBattleTurn = useCallback(() => {
         setTurnCounter(prevTurn => {
             const nextTurn = prevTurn + 1;
-            let finalWinner: 'win'|'loss'|null = null;
+            console.log(`%c[runBattleTurn] Executing Turn: ${nextTurn}`, 'color: cyan');
 
-            setAttacker(prevAttacker => {
-                if (!prevAttacker) return null;
-                let newAttackerData = prevAttacker;
+            let attackerUpdate: AttackerInfo | null = null;
 
-                setDefender(prevDefender => {
-                    if (!prevDefender) return null;
+            setDefender(prevDefender => {
+                // If defender or attacker doesn't exist yet, do nothing.
+                if (!prevDefender || !attacker) return prevDefender;
 
-                    const { attacker: newAttackerStats, defender: newDefenderStats, turnLogs, winner, turnEvents } = 
-                        executeFullTurn(prevAttacker.stats, prevDefender.stats, nextTurn);
-                    
-                    finalWinner = winner;
-                    newAttackerData = { ...prevAttacker, stats: newAttackerStats };
+                const { attacker: newAttackerStats, defender: newDefenderStats, turnLogs, winner, turnEvents } = 
+                    executeFullTurn(attacker.stats, prevDefender.stats, nextTurn);
+                
+                // Prepare the attacker update
+                attackerUpdate = { ...attacker, stats: newAttackerStats };
 
-                    setCombatLog(prevLog => [...turnLogs.reverse(), ...prevLog].slice(0, 50));
-                    setLastTurnEvents({ ...turnEvents, timestamp: Date.now() });
-                    
-                    if (winner) {
-                        setTimeout(() => endGame(winner), 100);
-                    }
+                setCombatLog(prevLog => [...turnLogs.reverse(), ...prevLog].slice(0, 50));
+                setLastTurnEvents({ ...turnEvents, timestamp: Date.now() });
+                
+                if (winner) {
+                    setTimeout(() => endGame(winner), 100);
+                }
 
-                    return { ...prevDefender, stats: newDefenderStats };
-                });
-
-                return newAttackerData;
+                // Return new defender state
+                return { ...prevDefender, stats: newDefenderStats };
             });
+
+            // Apply the attacker update
+            setAttacker(prevAttacker => attackerUpdate || prevAttacker);
 
             return nextTurn;
         });
-    }, [executeFullTurn, endGame]);
+    }, [attacker, executeFullTurn, endGame]); // `attacker` is needed to get the latest stats for calculation.
 
     const skipBattle = useCallback(() => {
         if (gameOver || !attacker || !defender) return;
         if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
         setBattleState('finished');
+        
         let tempAttacker = attacker.stats;
         let tempDefender = defender.stats;
         let tempTurn = turnCounter;
         let finalWinner: 'win' | 'loss' | null = null;
+        
         while (finalWinner === null && tempTurn < 500) {
             tempTurn++;
             const { attacker: newAttacker, defender: def, winner } = executeFullTurn(tempAttacker, tempDefender, tempTurn);
@@ -178,6 +183,7 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
             finalWinner = winner;
         }
         if (!finalWinner) finalWinner = 'loss';
+
         setAttacker(prev => prev ? { ...prev, stats: tempAttacker } : null);
         setDefender(prev => prev ? { ...prev, stats: tempDefender } : null);
         endGame(finalWinner);
@@ -185,31 +191,38 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
     
     useEffect(() => {
         const fetchDefender = async () => {
+            console.log("[BATTLE] Fetching defender data...");
             try {
                 const opponentData = await getOpponentForBattle(defenderId);
-                setDefender({ name: opponentData.name, avatarUrl: opponentData.avatarUrl, stats: opponentData.stats, initialCoins: opponentData.coins, });
+                setDefender({ name: opponentData.name, avatarUrl: opponentData.avatarUrl, stats: opponentData.stats, initialCoins: opponentData.coins });
                 setCombatLog([`[Lượt 0] Trận đấu với ${opponentData.name} bắt đầu!`]);
             } catch (e) { setError("Không thể tải dữ liệu đối thủ."); console.error(e); } 
-            finally { setIsLoading(false); }
+            finally { setIsLoading(false); console.log("[BATTLE] Finished fetching defender data.");}
         };
         fetchDefender();
     }, [defenderId]);
     
     useEffect(() => {
         if (!isLoading && battleState === 'idle' && attacker && defender) {
-            const startTimeout = setTimeout(() => {
-                setBattleState('fighting');
-            }, 800);
+            console.log("[BATTLE] Conditions met. Starting battle in 800ms.");
+            const startTimeout = setTimeout(() => setBattleState('fighting'), 800);
             return () => clearTimeout(startTimeout);
         }
     }, [isLoading, battleState, attacker, defender]);
 
+    // This useEffect now has a stable `runBattleTurn` dependency, but we need to ensure it re-runs if `attacker` changes
+    // to avoid stale closures inside the interval itself.
     useEffect(() => {
+        console.log(`[BATTLE INTERVAL CHECK] State: ${battleState}, GameOver: ${gameOver}`);
         if (battleState === 'fighting' && !gameOver) {
+          console.log('%c[BATTLE INTERVAL] Setting up interval.', 'color: lightgreen');
           battleIntervalRef.current = setInterval(runBattleTurn, 1200);
         }
         return () => { 
-            if (battleIntervalRef.current) clearInterval(battleIntervalRef.current) 
+            if (battleIntervalRef.current) {
+                console.log('%c[BATTLE INTERVAL] Cleaning up interval.', 'color: orange;');
+                clearInterval(battleIntervalRef.current);
+            }
         };
     }, [battleState, gameOver, runBattleTurn]);
 
@@ -225,14 +238,9 @@ function PvpSelection({ onClose, playerData, onSelectMode }: { onClose: () => vo
 
 function PvpInvasion({ onClose, player1, battleHistory }: { onClose: () => void; player1: PlayerData; battleHistory: BattleHistoryEntry[]; }) { const [view, setView] = useState<'main' | 'scouting' | 'battleUI'>('main'); const [opponents, setOpponents] = useState<PvpOpponent[]>([]); const [currentTarget, setCurrentTarget] = useState<PvpOpponent | null>(null); const [showHistoryModal, setShowHistoryModal] = useState(false); const [isActionInProgress, setIsActionInProgress] = useState(false); const [isScoutModalOpen, setIsScoutModalOpen] = useState(false); const [searchAmount, setSearchAmount] = useState(0); const animatedCoins = useAnimateValue(player1.coins); const executeSearch = async (goldAmount: number) => { setIsScoutModalOpen(false); if (isActionInProgress) return; setSearchAmount(goldAmount); setIsActionInProgress(true); setView('scouting'); try { const foundOpponents = await findInvasionOpponents(auth.currentUser!.uid, goldAmount); setOpponents(foundOpponents); } catch (error) { console.error("Failed to scout opponents by gold:", error); alert("Không thể tìm thấy đối thủ. Vui lòng thử lại."); setView('main'); } finally { setIsActionInProgress(false); } }; const handleAttack = (target: PvpOpponent) => { if (isActionInProgress) return; setCurrentTarget(target); setView('battleUI'); }; const reset = useCallback(() => { setView('main'); setOpponents([]); setCurrentTarget(null); setSearchAmount(0); setIsActionInProgress(false); }, []); const handleBattleFinish = useCallback((result: 'win' | 'loss', stolen: number) => { reset(); }, [reset]); return (<div className="main-bg relative w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden"><ScoutByGoldModal isOpen={isScoutModalOpen} onClose={() => setIsScoutModalOpen(false)} onSearch={executeSearch} initialCoins={1000} />{showHistoryModal && <BattleHistoryModal history={battleHistory} onClose={() => setShowHistoryModal(false)} />}<header className="w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14 flex-shrink-0"><div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full"><button onClick={view === 'battleUI' ? reset : onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"><HomeIcon className="w-5 h-5 text-slate-300" /><span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span></button><h1 className="text-2xl font-bold text-sky-400 text-shadow tracking-widest">XÂM LƯỢC</h1><CoinDisplay displayedCoins={animatedCoins} /></div></header><main className="w-full flex-1 flex flex-col items-center">{view === 'main' && (<div className="flex-grow flex flex-col items-center justify-center text-center animate-fade-in-scale-fast w-full max-w-sm p-4"><h2 className="text-4xl">Chuẩn bị Xâm Lược</h2><p className="font-sans text-slate-400 mt-2 mb-8">Tấn công người chơi khác để cướp vàng hoặc củng cố phòng tuyến.</p><div className="flex flex-col gap-4 max-w-xs mx-auto w-full"><button onClick={() => setIsScoutModalOpen(true)} disabled={isActionInProgress} className="w-full py-3 bg-sky-600/50 hover:bg-sky-600 rounded-lg font-bold tracking-wider uppercase border border-sky-500 disabled:bg-slate-600/50 disabled:cursor-not-allowed">Dò Tìm Mục Tiêu</button><button onClick={() => alert("Tính năng đang phát triển!")} className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold tracking-wider uppercase border border-slate-600">Thiết Lập Phòng Thủ</button><button onClick={() => setShowHistoryModal(true)} className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold tracking-wider uppercase border border-slate-600">Lịch Sử Chiến Đấu</button></div></div>)}{view === 'scouting' && (<div className="w-full max-w-4xl animate-fade-in p-4 pt-20"><h2 className="text-3xl text-center mb-6">Chọn Mục Tiêu Tấn Công</h2>{isActionInProgress && opponents.length === 0 ? <SearchingModal /> : !isActionInProgress && opponents.length === 0 ? (<div className="text-center text-slate-400 font-sans p-8 bg-slate-900/50 rounded-lg"><h3 className="text-xl text-white mb-2">Không tìm thấy đối thủ</h3><p>Không có người chơi nào có đủ {searchAmount.toLocaleString()} vàng để bạn cướp.</p></div>) : (<div className="grid grid-cols-1 md:grid-cols-3 gap-6">{opponents.map((op, index) => (<div key={index} className="bg-slate-900/70 p-4 rounded-lg border border-slate-700 flex flex-col items-center gap-2 text-center"><img src={op.avatarUrl} alt={op.name} className="w-24 h-24 rounded-full border-2 border-slate-600 mb-2" /><h3 className="text-xl font-bold">{op.name}</h3><p className="font-sans text-sm text-slate-400">Tổng Vàng: <span className="text-slate-200 font-semibold">{op.coins.toLocaleString()}</span></p><div className='mt-2'><p className="font-sans text-sm text-slate-400">Vàng có thể cướp:</p><p className="font-bold text-lg text-yellow-300">{searchAmount.toLocaleString()}</p></div><button onClick={() => handleAttack(op)} className="mt-4 w-full py-2 bg-red-600/50 hover:bg-red-600 rounded-lg font-bold border border-red-500">Tấn Công</button></div>))}</div>)}<div className="text-center mt-8"><button onClick={reset} className="font-sans text-slate-400 hover:text-white underline">Hủy và quay lại</button></div></div>)}{view === 'battleUI' && currentTarget && (<PvpBattleProvider attackerData={player1} defenderId={currentTarget.userId} goldToSteal={searchAmount}><PvpBattleView onFinishBattle={handleBattleFinish} goldToSteal={searchAmount} /></PvpBattleProvider>)}</main></div>); }
 
-// ===================================================================================
-// --- MAIN EXPORTED COMPONENT ---
-// ===================================================================================
-
 export default function PvpArena({ onClose }: { onClose: () => void }) {
   const { coins, getPlayerBattleStats } = useGame();
   const currentUser = auth.currentUser;
-  
   const [battleHistory, setBattleHistory] = useState<BattleHistoryEntry[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
@@ -247,23 +255,13 @@ export default function PvpArena({ onClose }: { onClose: () => void }) {
   }, [currentUser]);
 
   const playerData: PlayerData | null = useMemo(() => {
-    if (!currentUser) {
-      return null;
-    }
-    
+    if (!currentUser) return null;
     const battleStats = getPlayerBattleStats();
     return {
         name: currentUser.displayName || "Adventurer",
         avatarUrl: currentUser.photoURL || `https://api.dicebear.com/8.x/adventurer/svg?seed=${currentUser.uid}`,
         coins: coins,
-        initialStats: { 
-            ...battleStats, 
-            maxHp: battleStats.hp, 
-            critRate: 0.1, 
-            critDmg: 1.5, 
-            healPower: 50, 
-            reflectDmg: 10, 
-        }
+        initialStats: { ...battleStats, maxHp: battleStats.hp, critRate: 0.1, critDmg: 1.5, healPower: 50, reflectDmg: 10 }
     };
   }, [currentUser, coins, getPlayerBattleStats]);
 
