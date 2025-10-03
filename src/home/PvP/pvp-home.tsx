@@ -403,35 +403,49 @@ const PvpBattleView = ({ onFinishBattle, goldToSteal }: { onFinishBattle: (resul
     const goldStolen = gameOver === 'win' ? Math.min(defender.initialCoins, goldToSteal) : 0;
 
     return (
-        <div className="w-full flex-1 flex flex-col items-center justify-around font-lilita text-white p-4 pt-12 animate-fade-in">
-             {damages.map(d => (<FloatingText key={d.id} text={String(d.text)} id={d.id} extraClasses={d.extraClasses} />))}
-             {gameOver === 'win' && <PvpVictoryModal onFinish={() => onFinishBattle('win', goldStolen)} goldStolen={goldStolen} opponentName={defender.name} />}
-             {gameOver === 'loss' && <PvpDefeatModal onFinish={() => onFinishBattle('loss', 0)} opponentName={defender.name} />}
+        <div className="w-full flex-1 flex flex-col items-center justify-between font-lilita text-white p-4 pt-12 animate-fade-in relative">
+            {damages.map(d => (<FloatingText key={d.id} text={String(d.text)} id={d.id} extraClasses={d.extraClasses} />))}
+            {gameOver === 'win' && <PvpVictoryModal onFinish={() => onFinishBattle('win', goldStolen)} goldStolen={goldStolen} opponentName={defender.name} />}
+            {gameOver === 'loss' && <PvpDefeatModal onFinish={() => onFinishBattle('loss', 0)} opponentName={defender.name} />}
 
-            <div className="flex flex-col items-center gap-3 w-full max-w-sm">
-                <h2 className="text-2xl text-red-400 text-shadow">{defender.name}</h2>
-                <img src={defender.avatarUrl} alt={defender.name} className="w-32 h-32 rounded-full border-4 border-slate-600" />
-                <HealthBar current={defender.stats.hp} max={defender.stats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+            {/* Top section with player panels */}
+            <div className="w-full flex justify-between items-start">
+                {/* Attacker Panel (Left) */}
+                <div className="flex flex-col items-center gap-2 w-full max-w-[45%] sm:max-w-xs">
+                    <h2 className="text-xl sm:text-2xl text-sky-400 text-shadow truncate w-full text-center">{attacker.name}</h2>
+                    <img src={attacker.avatarUrl} alt={attacker.name} className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-slate-600" />
+                    <HealthBar current={attacker.stats.hp} max={attacker.stats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
+                </div>
+                
+                {/* Defender Panel (Right) */}
+                <div className="flex flex-col items-center gap-2 w-full max-w-[45%] sm:max-w-xs">
+                    <h2 className="text-xl sm:text-2xl text-red-400 text-shadow truncate w-full text-center">{defender.name}</h2>
+                    <img src={defender.avatarUrl} alt={defender.name} className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-slate-600" />
+                    <HealthBar current={defender.stats.hp} max={defender.stats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+                </div>
             </div>
 
+            {/* Bottom section with combat log */}
             <div className="w-full max-w-lg h-48 flex flex-col items-center justify-center my-4">
-                {/* --- MODIFICATION: NÚT TẤN CÔNG ĐÃ BỊ XÓA --- */}
-                {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="absolute bottom-4 right-4 font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Bỏ Qua</button> )}
                 {battleState !== 'idle' && (
                     <div className="h-full w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
                        {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
                     </div>
                 )}
             </div>
-
-            <div className="flex flex-col items-center gap-3 w-full max-w-sm">
-                <HealthBar current={attacker.stats.hp} max={attacker.stats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
-                <img src={attacker.avatarUrl} alt={attacker.name} className="w-32 h-32 rounded-full border-4 border-slate-600" />
-                <h2 className="text-2xl text-sky-400 text-shadow">{attacker.name}</h2>
-            </div>
+            
+            {/* Skip button is now absolutely positioned for better control */}
+            {battleState === 'fighting' && !gameOver && (
+                <button 
+                    onClick={skipBattle} 
+                    className="absolute bottom-4 right-4 font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">
+                        Bỏ Qua
+                </button>
+            )}
         </div>
     );
 };
+
 
 // ===================================================================================
 // --- START OF PVP COMPONENTS (Main Flow Logic) ---
