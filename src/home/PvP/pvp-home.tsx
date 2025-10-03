@@ -1,11 +1,12 @@
-// --- START OF FILE pvp-home.tsx (3).txt ---
-
-// --- START OF COMBINED FILE: pvp-arena.tsx ---
+// --- START OF FILE pvp-home.tsx ---
 
 import React, { useState, useEffect, useRef, Fragment } from 'react';
+import { useGame } from '../GameContext.tsx'; // Adjust path as necessary
+import { auth } from '../firebase'; // Adjust path as necessary
+import { findInvasionOpponents, simulateInvasionBattle, PvpOpponent, BattleResult } from '../pvp-service.ts'; // Adjust path as necessary
 
 // ===================================================================================
-// --- START OF SHARED COMPONENTS / TYPES / UTILS (from share.tsx) ---
+// --- START OF SHARED COMPONENTS / TYPES / UTILS ---
 // ===================================================================================
 
 // --- INTERFACES & TYPES ---
@@ -25,7 +26,7 @@ export interface PlayerData {
   name: string;
   avatarUrl: string;
   coins: number;
-  initialStats: CombatStats; // Use initialStats for resetting
+  initialStats: CombatStats; 
   rankInfo: {
     rankName: string;
     rankPoints: number;
@@ -39,32 +40,7 @@ export interface PlayerData {
   }[];
 }
 
-export interface OpponentData extends Omit<PlayerData, 'rankInfo' | 'invasionLog'> {
-  // Opponents may have simpler data structures
-}
-
-// --- MOCK DATA & UTILITY FUNCTIONS ---
-
-const mockNames = ["Shadow Blade", "Iron Golem", "Mystic Archer", "Sunfire Mage", "Void Walker", "Storm Giant"];
-
-export const getMockOpponent = (mode: 'wager' | 'ranked' | 'invasion'): OpponentData => {
-  const name = mockNames[Math.floor(Math.random() * mockNames.length)];
-  return {
-    name,
-    avatarUrl: `https://api.dicebear.com/8.x/adventurer/svg?seed=${name}`,
-    coins: Math.floor(Math.random() * 50000) + 10000,
-    initialStats: {
-      hp: Math.floor(Math.random() * 2000) + 8000,
-      maxHp: 10000,
-      atk: Math.floor(Math.random() * 300) + 700,
-      def: Math.floor(Math.random() * 200) + 400,
-      critRate: 0.15,
-      critDmg: 1.5,
-      healPower: Math.floor(Math.random() * 50) + 50,
-      reflectDmg: Math.floor(Math.random() * 20),
-    },
-  };
-};
+// NOTE: OpponentData is now replaced by PvpOpponent from pvp-service.ts
 
 // --- SHARED UI COMPONENTS ---
 
@@ -179,8 +155,7 @@ export const DefenseLogModal = ({ log, onClose }: { log: PlayerData['invasionLog
 // --- START OF PVP COMPONENTS ---
 // ===================================================================================
 
-// --- PvpSelection Component (Modified to only show Invasion) ---
-
+// --- PvpSelection Component ---
 interface PvpSelectionProps {
   onClose: () => void;
   playerData: PlayerData;
@@ -199,13 +174,8 @@ function PvpSelection({ onClose, playerData, onSelectMode }: PvpSelectionProps) 
                 <CoinDisplay displayedCoins={playerData.coins} />
             </div>
         </header>
-        {/* 
-          FIX: Removed 'justify-center' and added 'pt-20' to align the content to the top
-          with some padding, instead of vertically centering it.
-        */}
         <main className="w-full flex-1 overflow-y-auto p-4 pt-20 flex flex-col items-center">
             <div className="flex justify-center w-full max-w-md">
-                {/* Invasion Mode Card */}
                 <div className="group relative bg-slate-900/50 border-2 border-slate-700 rounded-2xl p-6 flex flex-col items-center text-center backdrop-blur-sm transition-all duration-300 hover:border-sky-500/80 hover:scale-105 hover:shadow-2xl hover:shadow-sky-500/10 w-full">
                      <div className="absolute -top-8 w-16 h-16 bg-slate-800 border-4 border-slate-600 rounded-full flex items-center justify-center transition-colors duration-300 group-hover:bg-sky-900/50 group-hover:border-sky-500"><InvasionIcon className="w-9 h-9 text-slate-400 transition-colors duration-300 group-hover:text-sky-400" /></div>
                     <h2 className="text-3xl font-bold mt-8 text-shadow text-sky-400">XÂM LƯỢC</h2>
@@ -225,42 +195,35 @@ function PvpSelection({ onClose, playerData, onSelectMode }: PvpSelectionProps) 
 }
 
 // --- PvpInvasion Component ---
-
 interface PvpInvasionProps {
   onClose: () => void;
   player1: PlayerData;
-  onCoinChange: (amount: number) => void;
+  onCoinChange: (amount: number) => Promise<void>;
 }
 
 function PvpInvasion({ onClose, player1, onCoinChange }: PvpInvasionProps) {
     const [view, setView] = useState<'main' | 'scouting' | 'battle'>('main');
-    const [opponents, setOpponents] = useState<OpponentData[]>([]);
-    const [currentTarget, setCurrentTarget] = useState<OpponentData | null>(null);
-    const [battleResult, setBattleResult] = useState<{ result: 'win' | 'loss', goldStolen: number } | null>(null);
+    const [opponents, setOpponents] = useState<PvpOpponent[]>([]);
+    const [currentTarget, setCurrentTarget] = useState<PvpOpponent | null>(null);
+    const [battleResult, setBattleResult] = useState<BattleResult | null>(null);
     const [showLogModal, setShowLogModal] = useState(false);
 
-    const handleScout = () => {
+    const handleScout = async () => {
         setView('scouting');
-        setTimeout(() => {
-            setOpponents([getMockOpponent('invasion'), getMockOpponent('invasion'), getMockOpponent('invasion')]);
-        }, 1000);
+        const foundOpponents = await findInvasionOpponents();
+        setOpponents(foundOpponents);
     };
 
-    const handleAttack = (target: OpponentData) => {
+    const handleAttack = (target: PvpOpponent) => {
         setCurrentTarget(target);
         setView('battle');
         
-        setTimeout(() => {
-            const playerPower = player1.initialStats.atk * 1.5 + player1.initialStats.def;
-            const targetPower = target.initialStats.atk * 1.5 + target.initialStats.def;
-            
-            if (playerPower > targetPower * (0.8 + Math.random() * 0.4)) {
-                const goldStolen = Math.floor(target.coins * (0.1 + Math.random() * 0.05));
-                onCoinChange(goldStolen);
-                setBattleResult({ result: 'win', goldStolen });
-            } else {
-                setBattleResult({ result: 'loss', goldStolen: 0 });
+        setTimeout(async () => {
+            const outcome = simulateInvasionBattle(player1.initialStats, target);
+            if (outcome.result === 'win' && outcome.goldStolen > 0) {
+                await onCoinChange(outcome.goldStolen);
             }
+            setBattleResult(outcome);
         }, 2000);
     };
 
@@ -284,10 +247,6 @@ function PvpInvasion({ onClose, player1, onCoinChange }: PvpInvasionProps) {
                     <CoinDisplay displayedCoins={player1.coins} />
                 </div>
             </header>
-            {/* 
-              FIX: Removed 'justify-center' from this component in the previous step.
-              Now adding 'pt-20' to give consistent top spacing.
-            */}
             <main className="w-full flex-1 overflow-y-auto p-4 pt-20 flex flex-col items-center">
                 {view === 'main' && (
                     <div className="text-center animate-fade-in-scale-fast">
@@ -351,39 +310,39 @@ function PvpInvasion({ onClose, player1, onCoinChange }: PvpInvasionProps) {
 
 interface PvpArenaProps {
   onClose: () => void;
-  player1: {
-    name: string;
-    avatarUrl: string;
-    coins: number;
-    initialStats: CombatStats;
-    equippedSkills: any[];
-  };
-  onCoinChange: (amount: number) => Promise<void>;
 }
 
-export default function PvpArena({ onClose, player1, onCoinChange }: PvpArenaProps) {
-  const [playerData, setPlayerData] = useState<PlayerData>({
-      name: player1.name,
-      avatarUrl: player1.avatarUrl,
-      coins: player1.coins,
-      initialStats: player1.initialStats,
-      rankInfo: {
+export default function PvpArena({ onClose }: PvpArenaProps) {
+  // --- MODIFIED: Get all data from GameContext ---
+  const { coins, getPlayerBattleStats, updateCoins } = useGame();
+  const currentUser = auth.currentUser;
+
+  // --- MODIFIED: Construct player data from context and mock data ---
+  // The player's core data is now always in sync with the context.
+  const battleStats = getPlayerBattleStats();
+  const playerData: PlayerData = {
+      name: currentUser?.displayName || "Adventurer",
+      avatarUrl: currentUser?.photoURL || `https://api.dicebear.com/8.x/adventurer/svg?seed=${currentUser?.uid}`,
+      coins: coins,
+      initialStats: { // Combine stats from context with default values
+        ...battleStats,
+        critRate: 0.1, // Add default or future context value
+        critDmg: 1.5,   // Add default or future context value
+        healPower: 50,  // Add default or future context value
+        reflectDmg: 10, // Add default or future context value
+      },
+      rankInfo: { // Mock data, can be moved to context later
         rankName: "Đồng IV",
         rankPoints: 120,
         rankMaxPoints: 200,
       },
-      invasionLog: [
+      invasionLog: [ // Mock data, can be moved to context later
           { opponent: 'Shadow Hunter', result: 'win', resources: 1500, timestamp: new Date() },
           { opponent: 'Iron Golem', result: 'loss', resources: -800, timestamp: new Date() },
       ]
-  });
+  };
   
   const [mode, setMode] = useState<'selection' | 'invasion'>('selection');
-
-  const handleCoinChange = async (amount: number) => {
-    await onCoinChange(amount);
-    setPlayerData(prev => ({ ...prev, coins: Math.max(0, prev.coins + amount) }));
-  };
 
   const handleReturnToSelection = () => {
     setMode('selection');
@@ -395,7 +354,8 @@ export default function PvpArena({ onClose, player1, onCoinChange }: PvpArenaPro
 
   const renderContent = () => {
     if (mode === 'invasion') {
-        return <PvpInvasion player1={playerData} onClose={handleReturnToSelection} onCoinChange={handleCoinChange} />;
+        // --- MODIFIED: Pass updateCoins from context as onCoinChange ---
+        return <PvpInvasion player1={playerData} onClose={handleReturnToSelection} onCoinChange={updateCoins} />;
     }
     return <PvpSelection playerData={playerData} onSelectMode={setMode} onClose={handleClosePortal} />;
   }
