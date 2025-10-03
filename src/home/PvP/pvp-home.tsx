@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { useGame } from '../../GameContext.tsx'; // Adjust path as necessary
 import { auth } from '../../firebase'; // Adjust path as necessary
-import { findInvasionOpponents, simulateInvasionBattle, PvpOpponent, BattleResult } from '../pvp-service.ts'; // Adjust path as necessary
+import { findInvasionOpponents, simulateInvasionBattle, PvpOpponent, BattleResult } from './pvp-service.ts'; // Adjust path as necessary
 
 // ===================================================================================
 // --- START OF SHARED COMPONENTS / TYPES / UTILS ---
