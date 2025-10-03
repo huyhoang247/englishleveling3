@@ -1,8 +1,9 @@
 // --- START OF FILE src/pvp-service.ts ---
 
 // *** TÓM TẮT THAY ĐỔI ***
-// - Sửa collection từ 'pvp_profiles' thành 'users' trong hàm findInvasionOpponents để tìm đúng dữ liệu người chơi.
-// - Thêm trường 'displayName' vào query để lấy tên người chơi chính xác từ collection 'users'.
+// 1. Cập nhật hàm `resolveInvasionBattleClientSide` để nhận thêm tham số `goldAmountToSteal`.
+// 2. Thay thế logic tính toán vàng cướp được bằng tham số này.
+// 3. Thêm bước kiểm tra để đảm bảo không cướp nhiều hơn số vàng đối thủ có.
 
 import { db } from '../../firebase'; // Đảm bảo đường dẫn chính xác
 import { 
@@ -14,12 +15,9 @@ import {
   runTransaction, 
   doc, 
   serverTimestamp, 
-  arrayUnion, 
   increment 
 } from 'firebase/firestore';
 
-// Lấy interface CombatStats từ component pvp-home
-// Bạn có thể chuyển interface này ra file riêng (vd: types.ts) để dễ quản lý
 export interface CombatStats {
   hp: number;
   maxHp: number;
@@ -31,50 +29,46 @@ export interface CombatStats {
   reflectDmg: number;
 }
 
-// Interface cho đối thủ tìm thấy
 export interface PvpOpponent {
   userId: string;
   name: string;
   avatarUrl: string;
   coins: number;
-  powerLevel: number; // Vẫn giữ lại để có thể hiển thị nếu muốn
+  powerLevel: number;
 }
 
-// Interface cho kết quả trận đấu
 export interface BattleResult {
   result: 'win' | 'loss';
   goldStolen: number;
 }
 
 /**
- * [ĐÃ CẬP NHẬT] Tìm kiếm đối thủ dựa trên số vàng tối thiểu.
+ * Tìm kiếm đối thủ có tổng số vàng lớn hơn hoặc bằng số vàng mục tiêu.
  * @param currentUserId - ID của người chơi hiện tại để loại trừ.
- * @param minCoins - Số vàng tối thiểu mà mục tiêu phải có.
- * @returns {Promise<PvpOpponent[]>} Một danh sách đối thủ thực.
+ * @param minCoins - Số vàng tối thiểu mà mục tiêu phải có (chính là số vàng muốn cướp).
+ * @returns {Promise<PvpOpponent[]>} Một danh sách đối thủ.
  */
 export const findInvasionOpponents = async (currentUserId: string, minCoins: number): Promise<PvpOpponent[]> => {
   if (!currentUserId) return [];
 
-  const profilesRef = collection(db, 'users'); // <--- THAY ĐỔI CHÍNH Ở ĐÂY
+  const profilesRef = collection(db, 'users');
 
   console.log(`Searching for opponents with at least ${minCoins} coins in 'users' collection.`);
 
-  // Thay đổi query: Bỏ `powerLevel`, thay bằng `coins`
   const q = query(
     profilesRef,
-    where('coins', '>=', minCoins), // Tìm người có số vàng LỚN HƠN HOẶC BẰNG mức nhập
-    limit(20) // Vẫn lấy 20 người để chọn ngẫu nhiên
+    where('coins', '>=', minCoins),
+    limit(20)
   );
 
   const querySnapshot = await getDocs(q);
   const potentialOpponents: PvpOpponent[] = [];
   querySnapshot.forEach((doc) => {
-    // Loại trừ chính mình ra khỏi danh sách
     if (doc.id !== currentUserId) {
         const data = doc.data();
         potentialOpponents.push({
             userId: doc.id,
-            name: data.displayName || data.username || 'Unnamed Player', // Ưu tiên displayName
+            name: data.displayName || data.username || 'Unnamed Player',
             avatarUrl: data.avatarUrl || `https://api.dicebear.com/8.x/adventurer/svg?seed=${doc.id}`,
             coins: data.coins || 0,
             powerLevel: data.powerLevel || 0,
@@ -92,17 +86,18 @@ export const findInvasionOpponents = async (currentUserId: string, minCoins: num
 
 
 /**
- * [CLIENT-SIDE - KHÔNG BẢO MẬT] Xử lý kết quả trận đấu.
- * Cập nhật tiền của cả hai người chơi và ghi nhật ký phòng thủ.
+ * Xử lý kết quả trận đấu, cướp một lượng vàng cụ thể.
  * @param attackerId - ID người tấn công.
  * @param defenderId - ID người phòng thủ.
- * @param attackerStats - Chỉ số của người tấn công để mô phỏng lại trận đấu.
+ * @param attackerStats - Chỉ số của người tấn công.
+ * @param goldAmountToSteal - Số vàng mục tiêu mà người tấn công muốn cướp.
  * @returns {Promise<BattleResult>} Kết quả cuối cùng của trận đấu.
  */
 export const resolveInvasionBattleClientSide = async (
   attackerId: string,
   defenderId: string,
-  attackerStats: CombatStats
+  attackerStats: CombatStats,
+  goldAmountToSteal: number 
 ): Promise<BattleResult> => {
   try {
     const result = await runTransaction(db, async (transaction) => {
@@ -121,7 +116,6 @@ export const resolveInvasionBattleClientSide = async (
       const attackerData = attackerDoc.data();
       const defenderData = defenderDoc.data();
 
-      // Giả định defender cũng có stats_value, nếu không thì dùng giá trị mặc định
       const defenderStats = defenderData.stats_value || { atk: 10, def: 10 };
 
       const attackerPower = attackerStats.atk * 1.5 + attackerStats.def;
@@ -134,20 +128,20 @@ export const resolveInvasionBattleClientSide = async (
       };
 
       if (playerWins) {
-        const potentialGold = (defenderData.coins || 0);
-        // Cướp từ 10% đến 15% số vàng của đối thủ
-        const goldToSteal = Math.floor(potentialGold * (0.1 + Math.random() * 0.05));
+        const defenderTotalCoins = defenderData.coins || 0;
         
-        if (goldToSteal > 0) {
-          transaction.update(attackerRef, { coins: increment(goldToSteal) });
-          transaction.update(defenderRef, { coins: increment(-goldToSteal) });
+        // Đảm bảo chỉ cướp số vàng mà đối thủ có, không vượt quá mục tiêu
+        const actualGoldStolen = Math.min(defenderTotalCoins, goldAmountToSteal);
+        
+        if (actualGoldStolen > 0) {
+          transaction.update(attackerRef, { coins: increment(actualGoldStolen) });
+          transaction.update(defenderRef, { coins: increment(-actualGoldStolen) });
           
           battleResult.result = 'win';
-          battleResult.goldStolen = goldToSteal;
+          battleResult.goldStolen = actualGoldStolen;
         }
       }
 
-      // Ghi nhật ký cho người phòng thủ
       const defenseLogEntry = {
         opponent: attackerData.displayName || attackerData.username || "Một người chơi",
         result: battleResult.result === 'win' ? 'loss' : 'win',
@@ -156,7 +150,7 @@ export const resolveInvasionBattleClientSide = async (
       };
       
       const existingLog = defenderData.invasionLog || [];
-      const updatedLog = [defenseLogEntry, ...existingLog].slice(0, 20); // Giữ 20 log gần nhất
+      const updatedLog = [defenseLogEntry, ...existingLog].slice(0, 20);
       transaction.update(defenderRef, { invasionLog: updatedLog });
 
       return battleResult;
