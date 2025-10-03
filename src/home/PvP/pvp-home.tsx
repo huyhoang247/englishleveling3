@@ -1,243 +1,326 @@
 // --- START OF FULL FILE: src/home/PvP/pvp-home.tsx ---
 
-import React, { useState, Fragment, useEffect } from 'react';
-import { useGame } from '../../GameContext.tsx'; // Điều chỉnh đường dẫn nếu cần
-import { auth } from '../../firebase'; // Điều chỉnh đường dẫn nếu cần
+import React, { useState, Fragment, useEffect, useCallback, useRef, createContext, useContext, ReactNode, memo } from 'react';
+import { useGame } from '../../GameContext.tsx'; 
+import { auth } from '../../firebase';
 import { 
     findInvasionOpponents, 
-    resolveInvasionBattleClientSide, 
-    getBattleHistory, // Import hàm mới
+    getBattleHistory,
+    getOpponentForBattle, // MODIFICATION: Import new function
+    recordInvasionResult, // MODIFICATION: Import new function
     PvpOpponent, 
-    BattleResult,
-    CombatStats,
-    BattleHistoryEntry // Import interface mới
-} from './pvp-service.ts'; // Điều chỉnh đường dẫn nếu cần
+    BattleHistoryEntry,
+    CombatStats
+} from './pvp-service.ts';
+import { uiAssets } from '../../game-assets.ts'; // NEW: For stat icons
+import { useAnimateValue } from '../../ui/useAnimateValue.ts'; // NEW: For smooth coin/energy display
 
 // --- INTERFACES ---
-
 export interface PlayerData {
   name: string;
   avatarUrl: string;
   coins: number;
   initialStats: CombatStats; 
-  invasionLog: any[]; // Trường này không còn được dùng nữa, để trống
 }
 
 // ===================================================================================
-// --- START OF SHARED UI COMPONENTS ---
+// --- START OF SHARED UI COMPONENTS (Unchanged) ---
+// ===================================================================================
+const PvpStyles = () => ( <style>{` .main-bg { background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets/images/pvp-bg.webp'); background-size: cover; background-position: center; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .btn-shine::after { content: ''; position: absolute; top: -50%; left: -50%; width: 20%; height: 200%; background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 100%); transform: rotate(25deg); animation: shine 5s infinite; } @keyframes shine { 0% { left: -50%; } 20% { left: 120%; } 100% { left: 120%; } } .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; } .animate-fade-in-scale-fast { animation: fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; } @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } } .scrollbar-thin::-webkit-scrollbar { width: 4px; } .scrollbar-thin::-webkit-scrollbar-track { background: transparent; } .scrollbar-thin::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 20px; } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; }`}</style> );
+const HomeIcon = ({ className }: { className: string }) => ( <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"> <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /> </svg> );
+const InvasionIcon = ({ className }: { className: string }) => ( <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /> </svg> );
+const CoinDisplay = ({ displayedCoins }: { displayedCoins: number }) => ( <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-900/50 border border-yellow-700"> <svg className="w-5 h-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"> <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.415L11 9.586V6z" clipRule="evenodd" /> </svg> <span className="font-bold text-yellow-300 font-sans tracking-wider">{Math.floor(displayedCoins).toLocaleString()}</span> </div> );
+const SearchingModal = () => ( <div className="text-center animate-fade-in"> <h2 className="text-3xl mb-4">Đang tìm kiếm...</h2> <div className="flex justify-center items-center gap-2"> <div className="w-4 h-4 bg-sky-400 rounded-full animate-pulse"></div> <div className="w-4 h-4 bg-sky-400 rounded-full animate-pulse [animation-delay:0.2s]"></div> <div className="w-4 h-4 bg-sky-400 rounded-full animate-pulse [animation-delay:0.4s]"></div> </div> </div> );
+const BattleHistoryModal = ({ history, onClose }: { history: BattleHistoryEntry[], onClose: () => void }) => ( <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-center items-center" onClick={onClose}> <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 w-full max-w-lg animate-fade-in-scale-fast" onClick={e => e.stopPropagation()}> <h2 className="text-2xl font-bold text-center mb-4 text-sky-400">Lịch Sử Chiến Đấu</h2> <div className="max-h-96 overflow-y-auto space-y-3 pr-2 scrollbar-thin"> {history.length > 0 ? history.map((entry) => ( <div key={entry.id} className="bg-slate-900/70 p-3 rounded-lg flex justify-between items-center text-sm font-sans"> <div> <p> <span className={`font-bold ${entry.type === 'attack' ? 'text-red-400' : 'text-cyan-400'}`}> {entry.type === 'attack' ? 'Tấn Công' : 'Phòng Thủ'} </span> <span className='text-slate-400'> vs </span> <span className="font-bold text-slate-200">{entry.opponentName}</span> </p> <p className="text-xs text-slate-400">{entry.timestamp.toLocaleString()}</p> </div> <div className='text-right'> <span className={`font-bold text-lg ${entry.result === 'win' ? 'text-green-400' : 'text-red-400'}`}> {entry.result === 'win' ? 'THẮNG' : 'THUA'} </span> <p className={`font-semibold ${entry.goldChange >= 0 ? 'text-yellow-400' : 'text-slate-400'}`}> {entry.goldChange > 0 ? `+${entry.goldChange.toLocaleString()}` : entry.goldChange.toLocaleString()} </p> </div> </div> )) : <p className="text-center text-slate-400 font-sans">Không có dữ liệu.</p>} </div> <button onClick={onClose} className="mt-6 w-full py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold uppercase transition-colors">Đóng</button> </div> </div> );
+function ScoutByGoldModal({ isOpen, onClose, onSearch, initialCoins }: {isOpen: boolean; onClose: () => void; onSearch: (goldAmount: number) => void; initialCoins: number;}) { const [amount, setAmount] = useState(initialCoins); const step = 1000; const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => { const value = parseInt(e.target.value, 10); setAmount(isNaN(value) ? 0 : value); }; const handleIncrement = () => setAmount(prev => prev + step); const handleDecrement = () => setAmount(prev => Math.max(0, prev - step)); const handleSearchClick = () => { onSearch(amount); }; if (!isOpen) return null; return ( <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-center items-center" onClick={onClose}> <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 w-full max-w-sm animate-fade-in-scale-fast" onClick={e => e.stopPropagation()}> <h2 className="text-2xl font-bold text-center mb-4 text-sky-400">Dò Tìm Theo Vàng</h2> <p className="text-center font-sans text-slate-400 mb-6 text-sm">Nhập số vàng bạn muốn cướp từ mục tiêu.</p> <div className="flex items-center justify-center gap-2 mb-6"> <button onClick={handleDecrement} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold text-2xl">-</button> <input type="number" value={amount} onChange={handleAmountChange} className="w-40 text-center bg-slate-900 border border-slate-600 rounded-lg p-3 text-2xl font-bold text-yellow-300 focus:outline-none focus:ring-2 focus:ring-sky-500" /> <button onClick={handleIncrement} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold text-2xl">+</button> </div> <button onClick={handleSearchClick} className="w-full py-3 bg-sky-600/80 hover:bg-sky-600 rounded-lg font-bold tracking-wider uppercase border border-sky-500 transition-all"> Tìm Kiếm </button> </div> </div> );}
+
+// ===================================================================================
+// --- START OF NEW BATTLE UI & CONTEXT (ADAPTED FROM TOWER) ---
 // ===================================================================================
 
-const PvpStyles = () => (
-    <style>{`
-        .main-bg {
-            background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets/images/pvp-bg.webp');
-            background-size: cover;
-            background-position: center;
-        }
-        .text-shadow {
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-        .btn-shine::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 20%;
-            height: 200%;
-            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 100%);
-            transform: rotate(25deg);
-            animation: shine 5s infinite;
-        }
-        @keyframes shine {
-            0% { left: -50%; }
-            20% { left: 120%; }
-            100% { left: 120%; }
-        }
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-        .animate-fade-in-scale-fast {
-            animation: fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
-        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 20px; }
-    `}</style>
-);
+// --- BATTLE UI HELPER COMPONENTS ---
 
-const HomeIcon = ({ className }: { className: string }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-    </svg>
-);
-
-const InvasionIcon = ({ className }: { className: string }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-);
-
-const CoinDisplay = ({ displayedCoins }: { displayedCoins: number }) => (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-yellow-900/50 border border-yellow-700">
-        <svg className="w-5 h-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.415L11 9.586V6z" clipRule="evenodd" />
-        </svg>
-        <span className="font-bold text-yellow-300 font-sans tracking-wider">{displayedCoins.toLocaleString()}</span>
-    </div>
-);
-
-const SearchingModal = () => (
-    <div className="text-center animate-fade-in">
-        <h2 className="text-3xl mb-4">Đang tìm kiếm...</h2>
-        <div className="flex justify-center items-center gap-2">
-            <div className="w-4 h-4 bg-sky-400 rounded-full animate-pulse"></div>
-            <div className="w-4 h-4 bg-sky-400 rounded-full animate-pulse [animation-delay:0.2s]"></div>
-            <div className="w-4 h-4 bg-sky-400 rounded-full animate-pulse [animation-delay:0.4s]"></div>
-        </div>
-    </div>
-);
-
-const BattleHistoryModal = ({ history, onClose }: { history: BattleHistoryEntry[], onClose: () => void }) => (
-  <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-center items-center" onClick={onClose}>
-    <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 w-full max-w-lg animate-fade-in-scale-fast" onClick={e => e.stopPropagation()}>
-      <h2 className="text-2xl font-bold text-center mb-4 text-sky-400">Lịch Sử Chiến Đấu</h2>
-      <div className="max-h-96 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
-        {history.length > 0 ? history.map((entry) => (
-          <div key={entry.id} className="bg-slate-900/70 p-3 rounded-lg flex justify-between items-center text-sm font-sans">
-            <div>
-              <p>
-                <span className={`font-bold ${entry.type === 'attack' ? 'text-red-400' : 'text-cyan-400'}`}>
-                    {entry.type === 'attack' ? 'Tấn Công' : 'Phòng Thủ'}
-                </span>
-                <span className='text-slate-400'> vs </span> 
-                <span className="font-bold text-slate-200">{entry.opponentName}</span>
-              </p>
-              <p className="text-xs text-slate-400">{entry.timestamp.toLocaleString()}</p>
-            </div>
-            <div className='text-right'>
-              <span className={`font-bold text-lg ${entry.result === 'win' ? 'text-green-400' : 'text-red-400'}`}>
-                {entry.result === 'win' ? 'THẮNG' : 'THUA'}
-              </span>
-              <p className={`font-semibold ${entry.goldChange >= 0 ? 'text-yellow-400' : 'text-slate-400'}`}>
-                {entry.goldChange > 0 ? `+${entry.goldChange.toLocaleString()}` : entry.goldChange.toLocaleString()}
-              </p>
-            </div>
-          </div>
-        )) : <p className="text-center text-slate-400 font-sans">Không có dữ liệu.</p>}
-      </div>
-      <button onClick={onClose} className="mt-6 w-full py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold uppercase transition-colors">Đóng</button>
-    </div>
-  </div>
-);
-
-interface ScoutByGoldModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSearch: (goldAmount: number) => void;
-  initialCoins: number;
-}
-
-function ScoutByGoldModal({ isOpen, onClose, onSearch, initialCoins }: ScoutByGoldModalProps) {
-  const [amount, setAmount] = useState(initialCoins);
-  const step = 1000;
-
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    setAmount(isNaN(value) ? 0 : value);
-  };
-  
-  const handleIncrement = () => setAmount(prev => prev + step);
-  const handleDecrement = () => setAmount(prev => Math.max(0, prev - step));
-  
-  const handleSearchClick = () => {
-    onSearch(amount);
-  };
-
-  if (!isOpen) return null;
-
+const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
+  const scale = Math.max(0, current / max);
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-center items-center" onClick={onClose}>
-      <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 w-full max-w-sm animate-fade-in-scale-fast" onClick={e => e.stopPropagation()}>
-        <h2 className="text-2xl font-bold text-center mb-4 text-sky-400">Dò Tìm Theo Vàng</h2>
-        <p className="text-center font-sans text-slate-400 mb-6 text-sm">Nhập số vàng bạn muốn cướp từ mục tiêu.</p>
-        
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <button onClick={handleDecrement} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold text-2xl">-</button>
-          <input 
-            type="number"
-            value={amount}
-            onChange={handleAmountChange}
-            className="w-40 text-center bg-slate-900 border border-slate-600 rounded-lg p-3 text-2xl font-bold text-yellow-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
-          />
-          <button onClick={handleIncrement} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold text-2xl">+</button>
-        </div>
-        
-        <button onClick={handleSearchClick} className="w-full py-3 bg-sky-600/80 hover:bg-sky-600 rounded-lg font-bold tracking-wider uppercase border border-sky-500 transition-all">
-          Tìm Kiếm
-        </button>
+    <div className="w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
+      <div className={`h-full rounded-full transition-transform duration-500 ease-out origin-left ${colorGradient}`} style={{ transform: `scaleX(${scale})`, boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` }}></div>
+      <div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold">
+        <span>{Math.ceil(current)} / {max}</span>
       </div>
     </div>
   );
+});
+
+const FloatingText = ({ text, id, extraClasses }: { text: string, id: number, extraClasses: string }) => (
+    <div key={id} className={`absolute top-1/3 text-2xl animate-float-up pointer-events-none ${extraClasses}`} style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}>{text}</div>
+);
+
+const PvpVictoryModal = memo(({ onFinish, goldStolen, opponentName }: { onFinish: () => void, goldStolen: number, opponentName: string }) => (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
+      <div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white flex flex-col items-center p-6 text-center">
+          <h2 className="text-4xl font-bold text-yellow-300 tracking-widest uppercase mb-2 text-shadow" style={{ textShadow: `0 0 10px rgba(252, 211, 77, 0.7)` }}>VICTORY</h2>
+          <p className="font-sans text-slate-300 text-sm mb-4">Bạn đã đánh bại {opponentName}!</p>
+          <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-40 py-1.5 rounded-lg border border-slate-700">
+              <span className="text-xl font-bold text-yellow-300 text-shadow-sm">+{goldStolen.toLocaleString()}</span>
+              <img src={uiAssets.coinIcon} alt="Coins" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />
+          </div>
+          <hr className="w-full border-t border-yellow-500/20 my-5" />
+          <button onClick={onFinish} className="w-full px-8 py-3 bg-blue-600/50 hover:bg-blue-600 rounded-lg font-bold text-base text-blue-50 tracking-wider uppercase border border-blue-500 hover:border-blue-400 transition-all duration-200 active:scale-95">Trở Về</button>
+      </div>
+    </div>
+));
+
+const PvpDefeatModal = memo(({ onFinish, opponentName }: { onFinish: () => void, opponentName: string }) => (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
+      <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl shadow-black/30 animate-fade-in-scale-fast text-white flex flex-col items-center p-6 text-center">
+          <h2 className="text-4xl font-bold text-slate-300 tracking-widest uppercase mb-3">DEFEAT</h2>
+          <p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">Bạn đã bị {opponentName} đánh bại. Hãy mạnh mẽ hơn!</p>
+          <hr className="w-full border-t border-slate-700/50 my-5" />
+          <button onClick={onFinish} className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600 hover:border-slate-500 transition-all duration-200 active:scale-95">Trở Về</button>
+      </div>
+    </div>
+));
+
+// --- BATTLE CONTEXT ---
+type TurnEvents = { attackerDmg: number; defenderDmg: number; timestamp: number };
+interface PvpBattleState {
+    isLoading: boolean; error: string | null; attackerStats: CombatStats | null;
+    defender: { name: string; avatarUrl: string; stats: CombatStats; initialCoins: number } | null;
+    combatLog: string[]; gameOver: 'win' | 'loss' | null; battleState: 'idle' | 'fighting' | 'finished';
+    lastTurnEvents: TurnEvents | null;
 }
+interface PvpBattleActions { startGame: () => void; skipBattle: () => void; }
+type PvpBattleContextType = PvpBattleState & PvpBattleActions;
+const PvpBattleContext = createContext<PvpBattleContextType | undefined>(undefined);
 
+const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, onFinish }: { 
+    children: ReactNode; attackerData: PlayerData; defenderId: string; goldToSteal: number; onFinish: (result: 'win' | 'loss', stolen: number) => void 
+}) => {
+    const game = useGame();
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [attackerStats, setAttackerStats] = useState<CombatStats | null>(attackerData.initialStats);
+    const [defender, setDefender] = useState<PvpBattleState['defender']>(null);
+    const [combatLog, setCombatLog] = useState<string[]>([]);
+    const [turnCounter, setTurnCounter] = useState(0);
+    const [gameOver, setGameOver] = useState<null | 'win' | 'loss'>(null);
+    const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
+    const [lastTurnEvents, setLastTurnEvents] = useState<TurnEvents | null>(null);
+    const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const isEndingGame = useRef(false);
 
-// ===================================================================================
-// --- START OF PVP COMPONENTS ---
-// ===================================================================================
+    const executeFullTurn = useCallback((currentAttacker: CombatStats, currentDefender: CombatStats, turn: number) => {
+        const turnLogs: string[] = [];
+        const log = (msg: string) => turnLogs.push(`[Lượt ${turn}] ${msg}`);
+        const calculateDamage = (atk: number, def: number) => Math.max(1, Math.floor(atk * (0.8 + Math.random() * 0.4) * (1 - def / (def + 100))));
+        
+        let attacker = { ...currentAttacker };
+        let defender = { ...currentDefender };
+        let winner: 'win' | 'loss' | null = null;
+        let turnEvents: Omit<TurnEvents, 'timestamp'> = { attackerDmg: 0, defenderDmg: 0 };
 
-function PvpSelection({ onClose, playerData, onSelectMode }: {
-    onClose: () => void;
-    playerData: PlayerData;
-    onSelectMode: (mode: 'invasion') => void;
-}) {
+        const attackerDmg = calculateDamage(attacker.atk, defender.def);
+        turnEvents.defenderDmg = attackerDmg;
+        log(`Bạn tấn công, gây <b class="text-red-400">${attackerDmg}</b> sát thương.`);
+        defender.hp -= attackerDmg;
+        
+        if (defender.hp <= 0) {
+            defender.hp = 0; winner = 'win';
+            log(`Đối thủ đã bị đánh bại!`);
+            return { attacker, defender, turnLogs, winner, turnEvents };
+        }
+
+        const defenderDmg = calculateDamage(defender.atk, attacker.def);
+        turnEvents.attackerDmg = defenderDmg;
+        log(`Đối thủ phản công, gây <b class="text-red-400">${defenderDmg}</b> sát thương.`);
+        attacker.hp -= defenderDmg;
+
+        if (attacker.hp <= 0) {
+            attacker.hp = 0; winner = 'loss';
+            log("Bạn đã gục ngã... THẤT BẠI!");
+        }
+        return { attacker, defender, turnLogs, winner, turnEvents };
+    }, []);
+
+    const endGame = useCallback(async (result: 'win' | 'loss') => {
+        if (isEndingGame.current) return;
+        isEndingGame.current = true;
+        if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+        
+        const finalGoldStolen = result === 'win' ? Math.min(defender?.initialCoins ?? 0, goldToSteal) : 0;
+        
+        try {
+            await recordInvasionResult(auth.currentUser!.uid, defenderId, result, finalGoldStolen);
+            if (finalGoldStolen > 0) {
+                game.updateUserCurrency({ coins: game.coins + finalGoldStolen });
+            }
+        } catch(e) {
+            console.error("Failed to record battle result:", e);
+            setError("Lỗi khi ghi nhận kết quả trận đấu.");
+        } finally {
+            setGameOver(result);
+            setBattleState('finished');
+            onFinish(result, finalGoldStolen);
+        }
+    }, [defenderId, goldToSteal, defender, game, onFinish]);
+
+    const runBattleTurn = useCallback(() => {
+        if (!attackerStats || !defender?.stats || gameOver) return;
+        const nextTurn = turnCounter + 1;
+        const { attacker: newAttacker, defender: newDefender, turnLogs, winner, turnEvents } = executeFullTurn(attackerStats, defender.stats, nextTurn);
+        
+        setAttackerStats(newAttacker);
+        setDefender(prev => prev ? { ...prev, stats: newDefender } : null);
+        setLastTurnEvents({ ...turnEvents, timestamp: Date.now() });
+        setCombatLog(prev => [...turnLogs.reverse(), ...prev].slice(0, 50));
+        setTurnCounter(nextTurn);
+        if (winner) endGame(winner);
+    }, [turnCounter, attackerStats, defender, executeFullTurn, endGame, gameOver]);
+    
+    const skipBattle = useCallback(() => {
+        if (!attackerStats || !defender?.stats || gameOver) return;
+        if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+        setBattleState('finished');
+
+        let tempAttacker = { ...attackerStats };
+        let tempDefender = { ...defender.stats };
+        let tempTurn = turnCounter;
+        let finalWinner: 'win' | 'loss' | null = null;
+        
+        while (finalWinner === null && tempTurn < 500) {
+            tempTurn++;
+            const { attacker, defender: def, winner } = executeFullTurn(tempAttacker, tempDefender, tempTurn);
+            tempAttacker = attacker;
+            tempDefender = def;
+            finalWinner = winner;
+        }
+        if (!finalWinner) finalWinner = 'loss'; // Default to loss if battle is too long
+        
+        setAttackerStats(tempAttacker);
+        setDefender(prev => prev ? { ...prev, stats: tempDefender } : null);
+        endGame(finalWinner);
+    }, [attackerStats, defender, turnCounter, executeFullTurn, endGame, gameOver]);
+
+    const startGame = useCallback(() => {
+        if (battleState !== 'idle') return;
+        isEndingGame.current = false;
+        setBattleState('fighting');
+    }, [battleState]);
+
+    useEffect(() => {
+        const fetchDefender = async () => {
+            try {
+                const opponentData = await getOpponentForBattle(defenderId);
+                setDefender({
+                    name: opponentData.name,
+                    avatarUrl: opponentData.avatarUrl,
+                    stats: opponentData.stats,
+                    initialCoins: opponentData.coins,
+                });
+                setAttackerStats(attackerData.initialStats); // Reset attacker stats on new battle
+                setCombatLog([`[Lượt 0] Trận đấu với ${opponentData.name} bắt đầu!`]);
+            } catch (e) {
+                setError("Không thể tải dữ liệu đối thủ.");
+                console.error(e);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchDefender();
+    }, [defenderId, attackerData.initialStats]);
+
+    useEffect(() => {
+        if (battleState === 'fighting' && !gameOver) {
+          battleIntervalRef.current = setInterval(runBattleTurn, 1200);
+        }
+        return () => { if (battleIntervalRef.current) clearInterval(battleIntervalRef.current) };
+    }, [battleState, gameOver, runBattleTurn]);
+
+    const value: PvpBattleContextType = { isLoading, error, attackerStats, defender, combatLog, gameOver, battleState, lastTurnEvents, startGame, skipBattle };
+    return <PvpBattleContext.Provider value={value}>{children}</PvpBattleContext.Provider>;
+};
+const usePvpBattle = () => { const context = useContext(PvpBattleContext); if (!context) throw new Error('usePvpBattle must be used within a PvpBattleProvider'); return context; };
+
+// --- MAIN BATTLE VIEW ---
+const PvpBattleView = ({ onFinishBattle }: { onFinishBattle: (result: 'win' | 'loss', stolen: number) => void }) => {
+    const { isLoading, error, attackerStats, defender, combatLog, gameOver, battleState, lastTurnEvents, startGame, skipBattle } = usePvpBattle();
+    const [damages, setDamages] = useState<{ id: number, text: string, extraClasses: string }[]>([]);
+
+    const showFloatingText = useCallback((text: string, colorClass: string, isAttackerSide: boolean) => {
+        const id = Date.now() + Math.random();
+        const position = isAttackerSide ? 'left-[25%]' : 'right-[25%]';
+        setDamages(prev => [...prev, { id, text, extraClasses: `${position} ${colorClass}` }]);
+        setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
+    }, []);
+
+    useEffect(() => {
+        if (!lastTurnEvents) return;
+        if (lastTurnEvents.defenderDmg > 0) showFloatingText(`-${lastTurnEvents.defenderDmg}`, 'text-red-500', false);
+        setTimeout(() => {
+          if (lastTurnEvents.attackerDmg > 0) showFloatingText(`-${lastTurnEvents.attackerDmg}`, 'text-red-500', true);
+        }, 500);
+    }, [lastTurnEvents, showFloatingText]);
+
+    if (isLoading) return <div className="flex-grow flex items-center justify-center"><SearchingModal /></div>;
+    if (error || !attackerStats || !defender) return <div className="text-red-400 text-center">{error || "Không có dữ liệu trận đấu."}</div>;
+    
+    const goldStolen = gameOver === 'win' ? Math.min(defender.initialCoins, 1000) : 0; // Replace 1000 with actual goldToSteal from context
+
     return (
-        <div className="main-bg relative w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
-            <header className="w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14 flex-shrink-0">
-                <div className="w-full max-w-7xl mx-auto flex justify-between items-center h-full">
-                    <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors">
-                        <HomeIcon className="w-5 h-5 text-slate-300" />
-                        <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
+        <div className="w-full flex-1 flex flex-col items-center justify-around font-lilita text-white p-4 pt-12 animate-fade-in">
+             {damages.map(d => (<FloatingText key={d.id} text={String(d.text)} id={d.id} extraClasses={d.extraClasses} />))}
+             {gameOver === 'win' && <PvpVictoryModal onFinish={() => onFinishBattle('win', goldStolen)} goldStolen={goldStolen} opponentName={defender.name} />}
+             {gameOver === 'loss' && <PvpDefeatModal onFinish={() => onFinishBattle('loss', 0)} opponentName={defender.name} />}
+
+            {/* --- Top Row: Defender --- */}
+            <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+                <h2 className="text-2xl text-red-400 text-shadow">{defender.name}</h2>
+                <img src={defender.avatarUrl} alt={defender.name} className="w-32 h-32 rounded-full border-4 border-slate-600" />
+                <HealthBar current={defender.stats.hp} max={defender.stats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
+            </div>
+
+            {/* --- Middle Row: Controls / Log --- */}
+            <div className="w-full max-w-lg h-48 flex flex-col items-center justify-center my-4">
+                {battleState === 'idle' && (
+                    <button onClick={startGame} className="btn-shine relative overflow-hidden px-10 py-3 bg-red-800/80 rounded-lg text-red-200 border border-red-500/40 transition-all duration-300 hover:text-white hover:border-red-400 hover:shadow-[0_0_20px_theme(colors.red.500/0.6)] active:scale-95">
+                        <span className="font-bold text-lg tracking-widest uppercase">Tấn Công</span>
                     </button>
-                    <CoinDisplay displayedCoins={playerData.coins} />
-                </div>
-            </header>
-            <main className="w-full flex-1 overflow-y-auto p-4 pt-20 flex flex-col items-center">
-                <div className="flex justify-center w-full max-w-md">
-                    <div className="group relative bg-slate-900/50 border-2 border-slate-700 rounded-2xl p-6 flex flex-col items-center text-center backdrop-blur-sm transition-all duration-300 hover:border-sky-500/80 hover:scale-105 hover:shadow-2xl hover:shadow-sky-500/10 w-full">
-                         <div className="absolute -top-8 w-16 h-16 bg-slate-800 border-4 border-slate-600 rounded-full flex items-center justify-center transition-colors duration-300 group-hover:bg-sky-900/50 group-hover:border-sky-500"><InvasionIcon className="w-9 h-9 text-slate-400 transition-colors duration-300 group-hover:text-sky-400" /></div>
-                        <h2 className="text-3xl font-bold mt-8 text-shadow text-sky-400">XÂM LƯỢC</h2>
-                        <p className="font-sans text-sm text-slate-400 mt-2 mb-6 h-10">Tấn công người chơi khác để cướp tài nguyên và leo lên bảng xếp hạng.</p>
-                        <div className="mt-auto w-full flex gap-3">
-                             <button onClick={() => onSelectMode('invasion')} className="w-full py-3 bg-sky-600/50 hover:bg-sky-600 rounded-lg font-bold tracking-wider uppercase border border-sky-500 hover:border-sky-400 transition-all">Hành Động</button>
-                        </div>
+                )}
+                 {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="absolute bottom-4 right-4 font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Bỏ Qua</button> )}
+                {battleState !== 'idle' && (
+                    <div className="h-full w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
+                       {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
                     </div>
-                </div>
-            </main>
+                )}
+            </div>
+
+            {/* --- Bottom Row: Attacker --- */}
+            <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+                <HealthBar current={attackerStats.hp} max={attackerStats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
+                <img src={attackerData.avatarUrl} alt={attackerData.name} className="w-32 h-32 rounded-full border-4 border-slate-600" />
+                <h2 className="text-2xl text-sky-400 text-shadow">{attackerData.name}</h2>
+            </div>
         </div>
     );
-}
+};
 
-function PvpInvasion({ onClose, player1, battleHistory }: {
-    onClose: () => void;
-    player1: PlayerData;
-    battleHistory: BattleHistoryEntry[];
-}) {
-    const [view, setView] = useState<'main' | 'scouting' | 'battle'>('main');
+// ===================================================================================
+// --- START OF PVP COMPONENTS (Main Flow Logic) ---
+// ===================================================================================
+
+function PvpSelection({ onClose, playerData, onSelectMode }: { onClose: () => void; playerData: PlayerData; onSelectMode: (mode: 'invasion') => void; }) { /* Unchanged */ return ( <div className="main-bg relative w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden"> <header className="w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14 flex-shrink-0"> <div className="w-full max-w-7xl mx-auto flex justify-between items-center h-full"> <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors"> <HomeIcon className="w-5 h-5 text-slate-300" /> <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span> </button> <CoinDisplay displayedCoins={playerData.coins} /> </div> </header> <main className="w-full flex-1 overflow-y-auto p-4 pt-20 flex flex-col items-center"> <div className="flex justify-center w-full max-w-md"> <div className="group relative bg-slate-900/50 border-2 border-slate-700 rounded-2xl p-6 flex flex-col items-center text-center backdrop-blur-sm transition-all duration-300 hover:border-sky-500/80 hover:scale-105 hover:shadow-2xl hover:shadow-sky-500/10 w-full"> <div className="absolute -top-8 w-16 h-16 bg-slate-800 border-4 border-slate-600 rounded-full flex items-center justify-center transition-colors duration-300 group-hover:bg-sky-900/50 group-hover:border-sky-500"><InvasionIcon className="w-9 h-9 text-slate-400 transition-colors duration-300 group-hover:text-sky-400" /></div> <h2 className="text-3xl font-bold mt-8 text-shadow text-sky-400">XÂM LƯỢC</h2> <p className="font-sans text-sm text-slate-400 mt-2 mb-6 h-10">Tấn công người chơi khác để cướp tài nguyên và leo lên bảng xếp hạng.</p> <div className="mt-auto w-full flex gap-3"> <button onClick={() => onSelectMode('invasion')} className="w-full py-3 bg-sky-600/50 hover:bg-sky-600 rounded-lg font-bold tracking-wider uppercase border border-sky-500 hover:border-sky-400 transition-all">Hành Động</button> </div> </div> </div> </main> </div> ); }
+
+function PvpInvasion({ onClose, player1, battleHistory }: { onClose: () => void; player1: PlayerData; battleHistory: BattleHistoryEntry[]; }) {
+    const [view, setView] = useState<'main' | 'scouting' | 'battleUI'>('main'); // MODIFICATION
     const [opponents, setOpponents] = useState<PvpOpponent[]>([]);
     const [currentTarget, setCurrentTarget] = useState<PvpOpponent | null>(null);
-    const [battleResult, setBattleResult] = useState<BattleResult | null>(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [isActionInProgress, setIsActionInProgress] = useState(false);
     const [isScoutModalOpen, setIsScoutModalOpen] = useState(false);
     const [searchAmount, setSearchAmount] = useState(0);
+
+    const animatedCoins = useAnimateValue(player1.coins);
 
     const executeSearch = async (goldAmount: number) => {
         setIsScoutModalOpen(false);
@@ -257,74 +340,58 @@ function PvpInvasion({ onClose, player1, battleHistory }: {
         }
     };
     
-    const handleAttack = async (target: PvpOpponent) => {
+    // MODIFICATION: This now triggers the battle UI instead of instant resolution
+    const handleAttack = (target: PvpOpponent) => {
         if (isActionInProgress) return;
-        setIsActionInProgress(true);
         setCurrentTarget(target);
-        setView('battle');
-        
-        const result = await resolveInvasionBattleClientSide(
-            auth.currentUser!.uid,
-            target.userId,
-            player1.initialStats,
-            searchAmount
-        );
-        
-        setBattleResult(result);
-        setIsActionInProgress(false);
+        setView('battleUI');
     };
 
     const reset = () => {
         setView('main');
         setOpponents([]);
         setCurrentTarget(null);
-        setBattleResult(null);
         setSearchAmount(0);
+        setIsActionInProgress(false);
+    };
+    
+    // New handler for when the battle UI finishes
+    const handleBattleFinish = (result: 'win' | 'loss', stolen: number) => {
+        // The service call is now handled inside the context,
+        // we just need to return to the main menu.
+        reset();
     };
 
     return (
         <div className="main-bg relative w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
-            <ScoutByGoldModal 
-                isOpen={isScoutModalOpen}
-                onClose={() => setIsScoutModalOpen(false)}
-                onSearch={executeSearch}
-                initialCoins={1000}
-            />
+            <ScoutByGoldModal isOpen={isScoutModalOpen} onClose={() => setIsScoutModalOpen(false)} onSearch={executeSearch} initialCoins={1000} />
             {showHistoryModal && <BattleHistoryModal history={battleHistory} onClose={() => setShowHistoryModal(false)} />}
             
             <header className="w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14 flex-shrink-0">
                 <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
-                    <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors">
+                    <button onClick={view === 'battleUI' ? reset : onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors">
                         <HomeIcon className="w-5 h-5 text-slate-300" />
                         <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                     </button>
                     <h1 className="text-2xl font-bold text-sky-400 text-shadow tracking-widest">XÂM LƯỢC</h1>
-                    <CoinDisplay displayedCoins={player1.coins} />
+                    <CoinDisplay displayedCoins={animatedCoins} />
                 </div>
             </header>
             
-            <main className="w-full flex-1 overflow-y-auto p-4 pt-20 flex flex-col items-center">
+            <main className="w-full flex-1 flex flex-col items-center">
                 {view === 'main' && (
-                    <div className="text-center animate-fade-in-scale-fast w-full max-w-sm">
+                    <div className="flex-grow flex flex-col items-center justify-center text-center animate-fade-in-scale-fast w-full max-w-sm p-4">
                         <h2 className="text-4xl">Chuẩn bị Xâm Lược</h2>
                         <p className="font-sans text-slate-400 mt-2 mb-8">Tấn công người chơi khác để cướp vàng hoặc củng cố phòng tuyến.</p>
-                        <div className="flex flex-col gap-4 max-w-xs mx-auto">
-                            <button 
-                                onClick={() => setIsScoutModalOpen(true)}
-                                disabled={isActionInProgress} 
-                                className="w-full py-3 bg-sky-600/50 hover:bg-sky-600 rounded-lg font-bold tracking-wider uppercase border border-sky-500 disabled:bg-slate-600/50 disabled:cursor-not-allowed"
-                            >
-                                Dò Tìm Mục Tiêu
-                            </button>
+                        <div className="flex flex-col gap-4 max-w-xs mx-auto w-full">
+                            <button onClick={() => setIsScoutModalOpen(true)} disabled={isActionInProgress} className="w-full py-3 bg-sky-600/50 hover:bg-sky-600 rounded-lg font-bold tracking-wider uppercase border border-sky-500 disabled:bg-slate-600/50 disabled:cursor-not-allowed">Dò Tìm Mục Tiêu</button>
                             <button onClick={() => alert("Tính năng đang phát triển!")} className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold tracking-wider uppercase border border-slate-600">Thiết Lập Phòng Thủ</button>
-                            <button onClick={() => setShowHistoryModal(true)} className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold tracking-wider uppercase border border-slate-600">
-                                Lịch Sử Chiến Đấu
-                            </button>
+                            <button onClick={() => setShowHistoryModal(true)} className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold tracking-wider uppercase border border-slate-600">Lịch Sử Chiến Đấu</button>
                         </div>
                     </div>
                 )}
                 {view === 'scouting' && (
-                    <div className="w-full max-w-4xl animate-fade-in">
+                    <div className="w-full max-w-4xl animate-fade-in p-4 pt-20">
                         <h2 className="text-3xl text-center mb-6">Chọn Mục Tiêu Tấn Công</h2>
                         {isActionInProgress && opponents.length === 0 ? <SearchingModal /> : 
                          !isActionInProgress && opponents.length === 0 ? (
@@ -339,40 +406,26 @@ function PvpInvasion({ onClose, player1, battleHistory }: {
                                         <img src={op.avatarUrl} alt={op.name} className="w-24 h-24 rounded-full border-2 border-slate-600 mb-2" />
                                         <h3 className="text-xl font-bold">{op.name}</h3>
                                         <p className="font-sans text-sm text-slate-400">Tổng Vàng: <span className="text-slate-200 font-semibold">{op.coins.toLocaleString()}</span></p> 
-                                        <div className='mt-2'>
-                                            <p className="font-sans text-sm text-slate-400">Vàng có thể cướp:</p>
-                                            <p className="font-bold text-lg text-yellow-300">{searchAmount.toLocaleString()}</p>
-                                        </div>
-                                        <button onClick={() => handleAttack(op)} disabled={isActionInProgress} className="mt-4 w-full py-2 bg-red-600/50 hover:bg-red-600 rounded-lg font-bold border border-red-500 disabled:bg-slate-600/50 disabled:cursor-not-allowed">
-                                            {isActionInProgress ? '...' : 'Tấn Công'}
-                                        </button>
+                                        <div className='mt-2'><p className="font-sans text-sm text-slate-400">Vàng có thể cướp:</p><p className="font-bold text-lg text-yellow-300">{searchAmount.toLocaleString()}</p></div>
+                                        <button onClick={() => handleAttack(op)} className="mt-4 w-full py-2 bg-red-600/50 hover:bg-red-600 rounded-lg font-bold border border-red-500">Tấn Công</button>
                                     </div>
                                 ))}
                             </div>
                         )}
                          <div className="text-center mt-8">
-                             <button onClick={reset} disabled={isActionInProgress} className="font-sans text-slate-400 hover:text-white underline disabled:text-slate-600 disabled:cursor-not-allowed">Hủy và quay lại</button>
+                             <button onClick={reset} className="font-sans text-slate-400 hover:text-white underline">Hủy và quay lại</button>
                          </div>
                     </div>
                 )}
-                {view === 'battle' && (
-                    <div className="text-center animate-fade-in-scale-fast">
-                        {!battleResult ? <SearchingModal /> :
-                         battleResult.result === 'win' ? (
-                            <div>
-                                <h2 className="text-5xl text-green-400">THẮNG LỢI!</h2>
-                                <p className="font-sans mt-4 text-lg">Bạn đã cướp được <span className="font-bold text-yellow-300">{battleResult.goldStolen.toLocaleString()}</span> vàng từ {currentTarget?.name}.</p>
-                                <button onClick={reset} className="mt-8 px-8 py-3 bg-blue-600/50 hover:bg-blue-600 rounded-lg font-bold">OK</button>
-                            </div>
-                         ) : (
-                            <div>
-                                <h2 className="text-5xl text-red-400">THẤT BẠI!</h2>
-                                <p className="font-sans mt-4 text-lg">Bạn đã bị phòng tuyến của {currentTarget?.name} đánh bại.</p>
-                                <button onClick={reset} className="mt-8 px-8 py-3 bg-blue-600/50 hover:bg-blue-600 rounded-lg font-bold">OK</button>
-                            </div>
-                         )
-                        }
-                    </div>
+                {view === 'battleUI' && currentTarget && (
+                    <PvpBattleProvider 
+                        attackerData={player1} 
+                        defenderId={currentTarget.userId} 
+                        goldToSteal={searchAmount}
+                        onFinish={handleBattleFinish}
+                    >
+                        <PvpBattleView onFinishBattle={handleBattleFinish} />
+                    </PvpBattleProvider>
                 )}
             </main>
         </div>
@@ -380,7 +433,7 @@ function PvpInvasion({ onClose, player1, battleHistory }: {
 }
 
 // ===================================================================================
-// --- START OF MAIN EXPORTED COMPONENT ---
+// --- START OF MAIN EXPORTED COMPONENT (Unchanged logic) ---
 // ===================================================================================
 
 export default function PvpArena({ onClose }: { onClose: () => void }) {
@@ -394,40 +447,20 @@ export default function PvpArena({ onClose }: { onClose: () => void }) {
     if (currentUser) {
       setIsLoadingHistory(true);
       getBattleHistory(currentUser.uid)
-        .then(history => {
-          setBattleHistory(history);
-        })
-        .catch(err => {
-          console.error("Failed to fetch battle history:", err);
-          alert("Không thể tải lịch sử chiến đấu.");
-        })
-        .finally(() => {
-          setIsLoadingHistory(false);
-        });
+        .then(history => setBattleHistory(history))
+        .catch(err => { console.error("Failed to fetch battle history:", err); alert("Không thể tải lịch sử chiến đấu."); })
+        .finally(() => setIsLoadingHistory(false));
     }
   }, [currentUser]);
 
-  if (!currentUser) {
-    return (
-        <div className="w-full h-screen bg-black flex items-center justify-center text-white">
-            <p>Vui lòng đăng nhập để truy cập Đấu trường.</p>
-        </div>
-    );
-  }
+  if (!currentUser) { return ( <div className="w-full h-screen bg-black flex items-center justify-center text-white"><p>Vui lòng đăng nhập để truy cập Đấu trường.</p></div> ); }
 
   const battleStats = getPlayerBattleStats();
   const playerData: PlayerData = {
       name: currentUser.displayName || "Adventurer",
       avatarUrl: currentUser.photoURL || `https://api.dicebear.com/8.x/adventurer/svg?seed=${currentUser.uid}`,
       coins: coins,
-      initialStats: {
-        ...battleStats,
-        critRate: 0.1, 
-        critDmg: 1.5,
-        healPower: 50,
-        reflectDmg: 10,
-      },
-      invasionLog: [] // Trường này không còn được dùng, giữ để không lỗi type
+      initialStats: { ...battleStats, critRate: 0.1, critDmg: 1.5, healPower: 50, reflectDmg: 10, }
   };
   
   const [mode, setMode] = useState<'selection' | 'invasion'>('selection');
