@@ -1,7 +1,10 @@
 // --- START OF FILE src/home/PvP/pvp-home.tsx ---
 
-// *** TÓM TẮT THAY ĐỔI (Cải thiện nhỏ) ***
-// - Thay đổi giá trị vàng tìm kiếm mặc định trong modal từ 10000 xuống 1000 để hợp lý hơn.
+// *** TÓM TẮT THAY ĐỔI ***
+// 1. Thêm state `searchAmount` để lưu lại số vàng người chơi đã nhập khi tìm kiếm.
+// 2. Khi tìm kiếm, cập nhật state `searchAmount` này.
+// 3. Khi hiển thị đối thủ, "Vàng có thể cướp" sẽ chính là `searchAmount`.
+// 4. Khi tấn công, truyền `searchAmount` vào hàm `resolveInvasionBattleClientSide`.
 
 import React, { useState, Fragment } from 'react';
 import { useGame } from '../../GameContext.tsx'; // Điều chỉnh đường dẫn nếu cần
@@ -135,7 +138,6 @@ const DefenseLogModal = ({ log, onClose }: { log: PlayerData['invasionLog'], onC
   </div>
 );
 
-// --- COMPONENT MỚI CHO POPUP DÒ TÌM ---
 interface ScoutByGoldModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -145,7 +147,7 @@ interface ScoutByGoldModalProps {
 
 function ScoutByGoldModal({ isOpen, onClose, onSearch, initialCoins }: ScoutByGoldModalProps) {
   const [amount, setAmount] = useState(initialCoins);
-  const step = 1000; // Bước nhảy khi nhấn +/-
+  const step = 1000;
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -165,7 +167,7 @@ function ScoutByGoldModal({ isOpen, onClose, onSearch, initialCoins }: ScoutByGo
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-center items-center" onClick={onClose}>
       <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 w-full max-w-sm animate-fade-in-scale-fast" onClick={e => e.stopPropagation()}>
         <h2 className="text-2xl font-bold text-center mb-4 text-sky-400">Dò Tìm Theo Vàng</h2>
-        <p className="text-center font-sans text-slate-400 mb-6 text-sm">Nhập số vàng tối thiểu của mục tiêu bạn muốn tìm.</p>
+        <p className="text-center font-sans text-slate-400 mb-6 text-sm">Nhập số vàng bạn muốn cướp từ mục tiêu.</p>
         
         <div className="flex items-center justify-center gap-2 mb-6">
           <button onClick={handleDecrement} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold text-2xl">-</button>
@@ -238,10 +240,12 @@ function PvpInvasion({ onClose, player1 }: {
     const [showLogModal, setShowLogModal] = useState(false);
     const [isActionInProgress, setIsActionInProgress] = useState(false);
     const [isScoutModalOpen, setIsScoutModalOpen] = useState(false);
+    const [searchAmount, setSearchAmount] = useState(0);
 
     const executeSearch = async (goldAmount: number) => {
         setIsScoutModalOpen(false);
         if (isActionInProgress) return;
+        setSearchAmount(goldAmount);
         setIsActionInProgress(true);
         setView('scouting');
         try {
@@ -265,7 +269,8 @@ function PvpInvasion({ onClose, player1 }: {
         const result = await resolveInvasionBattleClientSide(
             auth.currentUser!.uid,
             target.userId,
-            player1.initialStats
+            player1.initialStats,
+            searchAmount
         );
         
         setBattleResult(result);
@@ -277,6 +282,7 @@ function PvpInvasion({ onClose, player1 }: {
         setOpponents([]);
         setCurrentTarget(null);
         setBattleResult(null);
+        setSearchAmount(0);
     };
 
     return (
@@ -285,7 +291,7 @@ function PvpInvasion({ onClose, player1 }: {
                 isOpen={isScoutModalOpen}
                 onClose={() => setIsScoutModalOpen(false)}
                 onSearch={executeSearch}
-                initialCoins={1000} // <--- THAY ĐỔI NHỎ ĐỂ CẢI THIỆN TRẢI NGHIỆM
+                initialCoins={1000}
             />
             {showLogModal && <DefenseLogModal log={player1.invasionLog} onClose={() => setShowLogModal(false)} />}
             
@@ -325,18 +331,21 @@ function PvpInvasion({ onClose, player1 }: {
                          !isActionInProgress && opponents.length === 0 ? (
                             <div className="text-center text-slate-400 font-sans p-8 bg-slate-900/50 rounded-lg">
                                 <h3 className="text-xl text-white mb-2">Không tìm thấy đối thủ</h3>
-                                <p>Không có người chơi nào thỏa mãn điều kiện tìm kiếm. Hãy thử với số vàng thấp hơn.</p>
+                                <p>Không có người chơi nào có đủ {searchAmount.toLocaleString()} vàng để bạn cướp.</p>
                             </div>
                          ) : (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {opponents.map((op, index) => (
-                                    <div key={index} className="bg-slate-900/70 p-4 rounded-lg border border-slate-700 flex flex-col items-center gap-3 text-center">
-                                        <img src={op.avatarUrl} alt={op.name} className="w-24 h-24 rounded-full border-2 border-slate-600" />
+                                    <div key={index} className="bg-slate-900/70 p-4 rounded-lg border border-slate-700 flex flex-col items-center gap-2 text-center">
+                                        <img src={op.avatarUrl} alt={op.name} className="w-24 h-24 rounded-full border-2 border-slate-600 mb-2" />
                                         <h3 className="text-xl font-bold">{op.name}</h3>
-                                        <p className="font-sans text-sm text-slate-400">Vàng có thể cướp:</p>
-                                        <p className="font-bold text-lg text-yellow-300">~{Math.floor(op.coins * 0.12).toLocaleString()}</p>
-                                        <p className="font-sans text-xs text-slate-400">Sức mạnh: {op.powerLevel.toLocaleString()}</p>
-                                        <button onClick={() => handleAttack(op)} disabled={isActionInProgress} className="mt-2 w-full py-2 bg-red-600/50 hover:bg-red-600 rounded-lg font-bold border border-red-500 disabled:bg-slate-600/50 disabled:cursor-not-allowed">
+                                        <p className="font-sans text-sm text-slate-400">Tổng Vàng: <span className="text-slate-200 font-semibold">{op.coins.toLocaleString()}</span></p> 
+                                        <div className='mt-2'>
+                                            <p className="font-sans text-sm text-slate-400">Vàng có thể cướp:</p>
+                                            <p className="font-bold text-lg text-yellow-300">{searchAmount.toLocaleString()}</p>
+                                        </div>
+                                        <p className="font-sans text-xs text-slate-500 mt-1">Sức mạnh: {op.powerLevel.toLocaleString()}</p>
+                                        <button onClick={() => handleAttack(op)} disabled={isActionInProgress} className="mt-auto w-full py-2 bg-red-600/50 hover:bg-red-600 rounded-lg font-bold border border-red-500 disabled:bg-slate-600/50 disabled:cursor-not-allowed">
                                             {isActionInProgress ? '...' : 'Tấn Công'}
                                         </button>
                                     </div>
