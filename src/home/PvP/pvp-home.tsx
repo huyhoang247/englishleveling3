@@ -1,3 +1,5 @@
+// --- START OF FILE pvp-home.tsx (3).txt ---
+
 // --- START OF COMBINED FILE: pvp-arena.tsx ---
 
 import React, { useState, useEffect, useRef, Fragment } from 'react';
@@ -198,8 +200,7 @@ function PvpSelection({ onClose, playerData, onSelectMode }: PvpSelectionProps) 
             </div>
         </header>
         <main className="w-full flex-1 overflow-y-auto p-4 flex flex-col justify-center items-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-shadow tracking-widest mb-4 text-center text-slate-200">ĐẤU TRƯỜNG</h1>
-            <p className="font-sans text-slate-400 mb-12 text-center">Chọn một chế độ để bắt đầu cuộc chinh phạt của bạn.</p>
+            {/* Đã xóa h1 và p tại đây */}
             <div className="flex justify-center w-full max-w-md">
                 {/* Invasion Mode Card */}
                 <div className="group relative bg-slate-900/50 border-2 border-slate-700 rounded-2xl p-6 flex flex-col items-center text-center backdrop-blur-sm transition-all duration-300 hover:border-sky-500/80 hover:scale-105 hover:shadow-2xl hover:shadow-sky-500/10 w-full">
