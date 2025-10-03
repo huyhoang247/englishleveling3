@@ -329,7 +329,15 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, on
         endGame(finalWinner);
     }, [attacker, defender, turnCounter, executeFullTurn, endGame, gameOver]);
 
-    const startGame = useCallback(() => { if (battleState !== 'idle') return; isEndingGame.current = false; setBattleState('fighting'); }, [battleState]);
+    const startGame = useCallback(() => {
+        setBattleState(prev => {
+            if (prev === 'idle') {
+                isEndingGame.current = false;
+                return 'fighting';
+            }
+            return prev;
+        });
+    }, []);
 
     useEffect(() => {
         const fetchDefender = async () => {
