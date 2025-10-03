@@ -1,4 +1,4 @@
-// --- START OF FILE pvp-home.tsx (FINAL FIX FOR INFINITE LOOP) ---
+// --- START OF FILE pvp-home.tsx (FINAL FIX WITH useInterval PATTERN) ---
 
 import React, { useState, Fragment, useEffect, useCallback, useRef, createContext, useContext, ReactNode, memo, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
@@ -72,7 +72,6 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
     const [gameOver, setGameOver] = useState<null | 'win' | 'loss'>(null);
     const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
     const [lastTurnEvents, setLastTurnEvents] = useState<TurnEvents | null>(null);
-    const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const isEndingGame = useRef(false);
 
     const executeFullTurn = useCallback((currentAttacker: CombatStats, currentDefender: CombatStats, turn: number) => {
@@ -106,7 +105,6 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
     const endGame = useCallback(async (result: 'win' | 'loss') => {
         if (isEndingGame.current) return;
         isEndingGame.current = true;
-        if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
         const finalGoldStolen = result === 'win' ? Math.min(defender?.initialCoins ?? 0, goldToSteal) : 0;
         try {
             await recordInvasionResult(auth.currentUser!.uid, defenderId, result, finalGoldStolen);
@@ -119,8 +117,8 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
             setBattleState('finished');
         }
     }, [defenderId, goldToSteal, defender, game]);
-
-    // [THE FIX] This function is now stable and will not cause re-renders.
+    
+    // This is the stable callback that will be called by the interval
     const runBattleTurn = useCallback(() => {
         setTurnCounter(prevTurn => {
             const nextTurn = prevTurn + 1;
@@ -128,36 +126,28 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
 
             setAttacker(prevAttacker => {
                 if (!prevAttacker) return prevAttacker;
-
                 let updatedAttacker = prevAttacker;
-
                 setDefender(prevDefender => {
                     if (!prevDefender) return prevDefender;
-
                     const { attacker: newAttackerStats, defender: newDefenderStats, turnLogs, winner, turnEvents } = 
                         executeFullTurn(prevAttacker.stats, prevDefender.stats, nextTurn);
-                    
                     updatedAttacker = { ...prevAttacker, stats: newAttackerStats };
-                    
                     setCombatLog(prevLog => [...turnLogs.reverse(), ...prevLog].slice(0, 50));
                     setLastTurnEvents({ ...turnEvents, timestamp: Date.now() });
-                    
                     if (winner) {
                         setTimeout(() => endGame(winner), 100);
                     }
-                    
                     return { ...prevDefender, stats: newDefenderStats };
                 });
-
                 return updatedAttacker;
             });
             return nextTurn;
         });
-    }, [executeFullTurn, endGame]); // <-- Dependencies are now stable functions.
+    }, [executeFullTurn, endGame]);
 
     const skipBattle = useCallback(() => {
         if (gameOver || !attacker || !defender) return;
-        if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+        isEndingGame.current = true; // Mark that we are ending the game
         setBattleState('finished');
         let tempAttacker = attacker.stats;
         let tempDefender = defender.stats;
@@ -195,19 +185,24 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: 
         }
     }, [isLoading, battleState, attacker, defender]);
 
+    // [THE FIX] The useInterval pattern
+    const savedCallback = useRef(runBattleTurn);
+    useEffect(() => {
+        savedCallback.current = runBattleTurn;
+    }, [runBattleTurn]);
+
     useEffect(() => {
         console.log(`[BATTLE INTERVAL CHECK] State: ${battleState}, GameOver: ${gameOver}`);
         if (battleState === 'fighting' && !gameOver) {
-          console.log('%c[BATTLE INTERVAL] Setting up interval.', 'color: lightgreen');
-          battleIntervalRef.current = setInterval(runBattleTurn, 1200);
+            const tick = () => savedCallback.current();
+            console.log('%c[BATTLE INTERVAL] Setting up stable interval.', 'color: lightgreen; font-weight: bold;');
+            const intervalId = setInterval(tick, 1200);
+            return () => {
+                console.log('%c[BATTLE INTERVAL] Cleaning up stable interval.', 'color: orange; font-weight: bold;');
+                clearInterval(intervalId);
+            };
         }
-        return () => { 
-            if (battleIntervalRef.current) {
-                console.log('%c[BATTLE INTERVAL] Cleaning up interval.', 'color: orange;');
-                clearInterval(battleIntervalRef.current);
-            }
-        };
-    }, [battleState, gameOver, runBattleTurn]);
+    }, [battleState, gameOver]);
 
     const value: PvpBattleContextType = { isLoading, error, attacker, defender, combatLog, gameOver, battleState, lastTurnEvents, skipBattle };
     return <PvpBattleContext.Provider value={value}>{children}</PvpBattleContext.Provider>;
