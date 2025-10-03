@@ -1,4 +1,4 @@
-// --- START OF FILE pvp-service.ts (FIXED DEFENSE WIN REWARD) ---
+// --- START OF FILE pvp-service.ts (FULL CODE WITH CLAIM REWARD LOGIC) ---
 
 import { db } from '../../firebase';
 import { 
@@ -14,10 +14,26 @@ import {
   getDoc
 } from 'firebase/firestore';
 
-// --- INTERFACES (No changes) ---
-export interface CombatStats { hp: number; maxHp: number; atk: number; def: number; critRate: number; critDmg: number; healPower: number; reflectDmg: number; }
-export interface PvpOpponent { userId: string; name: string; avatarUrl: string; coins: number; powerLevel: number; }
-export interface BattleResult { result: 'win' | 'loss'; goldStolen: number; }
+// --- INTERFACES ---
+export interface CombatStats { 
+  hp: number; 
+  maxHp: number; 
+  atk: number; 
+  def: number; 
+  critRate: number; 
+  critDmg: number; 
+  healPower: number; 
+  reflectDmg: number; 
+}
+
+export interface PvpOpponent { 
+  userId: string; 
+  name: string; 
+  avatarUrl: string; 
+  coins: number; 
+  powerLevel: number; 
+}
+
 export interface BattleHistoryEntry {
   id: string;
   type: 'attack' | 'defense';
@@ -26,11 +42,11 @@ export interface BattleHistoryEntry {
   result: 'win' | 'loss';
   goldChange: number;
   timestamp: Date;
+  status?: 'claimed' | 'unclaimed'; // Field to track rewards
 }
 
 // --- SERVICE FUNCTIONS ---
 
-// findInvasionOpponents function remains unchanged
 export const findInvasionOpponents = async (currentUserId: string, minCoins: number): Promise<PvpOpponent[]> => {
   if (!currentUserId) return [];
   const profilesRef = collection(db, 'users');
@@ -54,7 +70,6 @@ export const findInvasionOpponents = async (currentUserId: string, minCoins: num
   return shuffled.slice(0, 3);
 };
 
-// getBattleHistory function remains unchanged
 export const getBattleHistory = async (userId: string): Promise<BattleHistoryEntry[]> => {
     const historyRef = collection(db, 'users', userId, 'battleHistory');
     const q = query(historyRef, orderBy('timestamp', 'desc'), limit(20));
@@ -70,12 +85,12 @@ export const getBattleHistory = async (userId: string): Promise<BattleHistoryEnt
             result: data.result,
             goldChange: data.goldChange,
             timestamp: data.timestamp.toDate(),
+            status: data.status, // Fetch the status field
         });
     });
     return history;
 };
 
-// getOpponentForBattle function remains unchanged
 export const getOpponentForBattle = async (defenderId: string): Promise<{
     name: string;
     avatarUrl: string;
@@ -118,69 +133,83 @@ export const getOpponentForBattle = async (defenderId: string): Promise<{
     };
 };
 
-/**
- * [MODIFIED] Executes a Firestore transaction to record the outcome of a PvP battle.
- * Now handles coin transfers for both wins and losses.
- * @param attackerId The ID of the attacker.
- * @param defenderId The ID of the defender.
- * @param result The outcome of the battle ('win' or 'loss' for the attacker).
- * @param goldTransferAmount The amount of gold to be transferred.
- */
 export const recordInvasionResult = async (
   attackerId: string,
   defenderId: string,
   result: 'win' | 'loss',
   goldTransferAmount: number
 ): Promise<void> => {
-  if (goldTransferAmount <= 0) return; // No need to run a transaction if no gold is at stake
-
   try {
     await runTransaction(db, async (transaction) => {
       const attackerRef = doc(db, 'users', attackerId);
       const defenderRef = doc(db, 'users', defenderId);
-
-      // We only need the display names for history, can get them without a transaction read
-      // if performance becomes an issue, but this is safer.
-      const [attackerDoc, defenderDoc] = await Promise.all([
-        transaction.get(attackerRef),
-        transaction.get(defenderRef)
-      ]);
-
-      if (!attackerDoc.exists() || !defenderDoc.exists()) {
-        throw new Error("Không tìm thấy người chơi.");
-      }
-
-      // [NEW LOGIC] Determine gold change for each player based on the result
-      const attackerGoldChange = result === 'win' ? goldTransferAmount : -goldTransferAmount;
-      const defenderGoldChange = -attackerGoldChange; // Defender's change is always the opposite
-
-      // Update coin balances
-      transaction.update(attackerRef, { coins: increment(attackerGoldChange) });
-      transaction.update(defenderRef, { coins: increment(defenderGoldChange) });
-
-      // --- Write to battle history for both players ---
+      const [attackerDoc, defenderDoc] = await Promise.all([transaction.get(attackerRef), transaction.get(defenderRef)]);
+      if (!attackerDoc.exists() || !defenderDoc.exists()) throw new Error("Không tìm thấy người chơi.");
+      
+      const attackerData = attackerDoc.data();
+      const defenderData = defenderDoc.data();
       const battleTimestamp = new Date();
-      const attackerName = attackerDoc.data().displayName || attackerDoc.data().username || "Anonymous";
-      const defenderName = defenderDoc.data().displayName || defenderDoc.data().username || "Anonymous";
+      const attackerName = attackerData.displayName || "Anonymous";
+      const defenderName = defenderData.displayName || "Anonymous";
 
-      const attackerHistoryRef = doc(collection(db, 'users', attackerId, 'battleHistory'));
-      transaction.set(attackerHistoryRef, {
-        type: 'attack', opponentName: defenderName, opponentId: defenderId,
-        result: result, 
-        goldChange: attackerGoldChange, // [MODIFIED] Use calculated change
-        timestamp: battleTimestamp
-      });
+      if (result === 'win') {
+        // Attacker wins: Transfer gold as usual
+        transaction.update(attackerRef, { coins: increment(goldTransferAmount) });
+        transaction.update(defenderRef, { coins: increment(-goldTransferAmount) });
+        
+        const attackerHistoryRef = doc(collection(db, 'users', attackerId, 'battleHistory'));
+        transaction.set(attackerHistoryRef, { type: 'attack', opponentName: defenderName, opponentId: defenderId, result: 'win', goldChange: goldTransferAmount, timestamp: battleTimestamp });
+        const defenderHistoryRef = doc(collection(db, 'users', defenderId, 'battleHistory'));
+        transaction.set(defenderHistoryRef, { type: 'defense', opponentName: attackerName, opponentId: attackerId, result: 'loss', goldChange: -goldTransferAmount, timestamp: battleTimestamp });
 
-      const defenderHistoryRef = doc(collection(db, 'users', defenderId, 'battleHistory'));
-      transaction.set(defenderHistoryRef, {
-        type: 'defense', opponentName: attackerName, opponentId: attackerId,
-        result: result === 'win' ? 'loss' : 'win', // Result is inverted for the defender
-        goldChange: defenderGoldChange, // [MODIFIED] Use calculated change
-        timestamp: battleTimestamp
-      });
+      } else { 
+        // Attacker loses: Attacker loses gold, but defender must claim it.
+        transaction.update(attackerRef, { coins: increment(-goldTransferAmount) });
+        // NOTE: DEFENDER'S COINS ARE NOT CHANGED HERE
+
+        const attackerHistoryRef = doc(collection(db, 'users', attackerId, 'battleHistory'));
+        transaction.set(attackerHistoryRef, { type: 'attack', opponentName: defenderName, opponentId: defenderId, result: 'loss', goldChange: -goldTransferAmount, timestamp: battleTimestamp });
+        
+        const defenderHistoryRef = doc(collection(db, 'users', defenderId, 'battleHistory'));
+        transaction.set(defenderHistoryRef, {
+            type: 'defense', opponentName: attackerName, opponentId: attackerId, result: 'win',
+            goldChange: goldTransferAmount, // The potential reward
+            timestamp: battleTimestamp,
+            status: 'unclaimed' // Mark as needing to be claimed
+        });
+      }
     });
   } catch (error) {
     console.error("[TRANSACTION FAILED] Lỗi chi tiết:", error);
     throw new Error("Không thể ghi lại kết quả trận đấu.");
+  }
+};
+
+export const claimDefenseReward = async (userId: string, historyId: string): Promise<number> => {
+  const userRef = doc(db, 'users', userId);
+  const historyRef = doc(db, 'users', userId, 'battleHistory', historyId);
+
+  try {
+    const claimedAmount = await runTransaction(db, async (transaction) => {
+      const historyDoc = await transaction.get(historyRef);
+      if (!historyDoc.exists()) throw new Error("Lịch sử trận đấu không tồn tại.");
+
+      const data = historyDoc.data();
+      if (data.status !== 'unclaimed' || data.type !== 'defense' || data.result !== 'win' || !data.goldChange || data.goldChange <= 0) {
+        throw new Error("Phần thưởng không hợp lệ hoặc đã được nhận.");
+      }
+
+      const rewardAmount = data.goldChange;
+
+      // Update user's coins and mark the history entry as claimed
+      transaction.update(userRef, { coins: increment(rewardAmount) });
+      transaction.update(historyRef, { status: 'claimed' });
+
+      return rewardAmount;
+    });
+    return claimedAmount;
+  } catch (error) {
+     console.error("[CLAIM FAILED] Lỗi chi tiết:", error);
+     throw new Error("Không thể nhận thưởng. Vui lòng thử lại.");
   }
 };
