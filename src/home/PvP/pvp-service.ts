@@ -1,10 +1,5 @@
 // --- START OF FILE src/pvp-service.ts ---
 
-// *** TÓM TẮT THAY ĐỔI ***
-// 1. Cập nhật hàm `resolveInvasionBattleClientSide` để nhận thêm tham số `goldAmountToSteal`.
-// 2. Thay thế logic tính toán vàng cướp được bằng tham số này.
-// 3. Thêm bước kiểm tra để đảm bảo không cướp nhiều hơn số vàng đối thủ có.
-
 import { db } from '../../firebase'; // Đảm bảo đường dẫn chính xác
 import { 
   collection, 
@@ -44,9 +39,6 @@ export interface BattleResult {
 
 /**
  * Tìm kiếm đối thủ có tổng số vàng lớn hơn hoặc bằng số vàng mục tiêu.
- * @param currentUserId - ID của người chơi hiện tại để loại trừ.
- * @param minCoins - Số vàng tối thiểu mà mục tiêu phải có (chính là số vàng muốn cướp).
- * @returns {Promise<PvpOpponent[]>} Một danh sách đối thủ.
  */
 export const findInvasionOpponents = async (currentUserId: string, minCoins: number): Promise<PvpOpponent[]> => {
   if (!currentUserId) return [];
@@ -86,7 +78,7 @@ export const findInvasionOpponents = async (currentUserId: string, minCoins: num
 
 
 /**
- * Xử lý kết quả trận đấu, cướp một lượng vàng cụ thể.
+ * [ĐÃ CẬP NHẬT - AN TOÀN HƠN] Xử lý kết quả trận đấu, cướp một lượng vàng cụ thể.
  * @param attackerId - ID người tấn công.
  * @param defenderId - ID người phòng thủ.
  * @param attackerStats - Chỉ số của người tấn công.
@@ -116,7 +108,9 @@ export const resolveInvasionBattleClientSide = async (
       const attackerData = attackerDoc.data();
       const defenderData = defenderDoc.data();
 
-      const defenderStats = defenderData.stats_value || { atk: 10, def: 10 };
+      // Xử lý 'stats_value' an toàn hơn, đảm bảo luôn có giá trị mặc định
+      const baseStats = { atk: 10, def: 10 };
+      const defenderStats = { ...baseStats, ...(defenderData.stats_value || {}) };
 
       const attackerPower = attackerStats.atk * 1.5 + attackerStats.def;
       const defenderPower = defenderStats.atk * 1.5 + defenderStats.def;
@@ -129,8 +123,6 @@ export const resolveInvasionBattleClientSide = async (
 
       if (playerWins) {
         const defenderTotalCoins = defenderData.coins || 0;
-        
-        // Đảm bảo chỉ cướp số vàng mà đối thủ có, không vượt quá mục tiêu
         const actualGoldStolen = Math.min(defenderTotalCoins, goldAmountToSteal);
         
         if (actualGoldStolen > 0) {
@@ -149,7 +141,9 @@ export const resolveInvasionBattleClientSide = async (
         timestamp: serverTimestamp(),
       };
       
-      const existingLog = defenderData.invasionLog || [];
+      // Xử lý 'invasionLog' một cách an toàn bằng Array.isArray
+      // Luôn đảm bảo existingLog là một mảng, ngay cả khi dữ liệu trong DB bị sai
+      const existingLog = Array.isArray(defenderData.invasionLog) ? defenderData.invasionLog : [];
       const updatedLog = [defenseLogEntry, ...existingLog].slice(0, 20);
       transaction.update(defenderRef, { invasionLog: updatedLog });
 
@@ -158,10 +152,8 @@ export const resolveInvasionBattleClientSide = async (
     
     return result;
   } catch (error) {
-    console.error("Lỗi transaction khi xử lý trận đấu:", error);
+    console.error("Lỗi transaction khi xử lý trận đấu:", error); // Lỗi chi tiết sẽ in ra console
     alert("Trận đấu không thể hoàn thành do có lỗi xảy ra. Vui lòng thử lại.");
     return { result: 'loss', goldStolen: 0 };
   }
 };
-
-// --- END OF FILE src/pvp-service.ts ---
