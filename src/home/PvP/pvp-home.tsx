@@ -1,5 +1,3 @@
-// --- START OF FULL FILE: src/home/PvP/pvp-home.tsx ---
-
 import React, { useState, Fragment, useEffect, useCallback, useRef, createContext, useContext, ReactNode, memo } from 'react';
 import { useGame } from '../../GameContext.tsx'; 
 import { auth } from '../../firebase';
