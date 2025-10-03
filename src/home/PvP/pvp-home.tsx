@@ -199,7 +199,11 @@ function PvpSelection({ onClose, playerData, onSelectMode }: PvpSelectionProps) 
                 <CoinDisplay displayedCoins={playerData.coins} />
             </div>
         </header>
-        <main className="w-full flex-1 overflow-y-auto p-4 flex flex-col justify-center items-center">
+        {/* 
+          FIX: Removed 'justify-center' and added 'pt-20' to align the content to the top
+          with some padding, instead of vertically centering it.
+        */}
+        <main className="w-full flex-1 overflow-y-auto p-4 pt-20 flex flex-col items-center">
             <div className="flex justify-center w-full max-w-md">
                 {/* Invasion Mode Card */}
                 <div className="group relative bg-slate-900/50 border-2 border-slate-700 rounded-2xl p-6 flex flex-col items-center text-center backdrop-blur-sm transition-all duration-300 hover:border-sky-500/80 hover:scale-105 hover:shadow-2xl hover:shadow-sky-500/10 w-full">
@@ -281,12 +285,12 @@ function PvpInvasion({ onClose, player1, onCoinChange }: PvpInvasionProps) {
                 </div>
             </header>
             {/* 
-              FIX: Removed 'justify-center' to align content to the top and allow scrolling.
-              The 'items-center' class is kept to horizontally center the content blocks.
+              FIX: Removed 'justify-center' from this component in the previous step.
+              Now adding 'pt-20' to give consistent top spacing.
             */}
-            <main className="w-full flex-1 overflow-y-auto p-4 flex flex-col items-center">
+            <main className="w-full flex-1 overflow-y-auto p-4 pt-20 flex flex-col items-center">
                 {view === 'main' && (
-                    <div className="text-center animate-fade-in-scale-fast mt-20"> {/* Added margin-top for better spacing */}
+                    <div className="text-center animate-fade-in-scale-fast">
                         <h2 className="text-4xl">Chuẩn bị Xâm Lược</h2>
                         <p className="font-sans text-slate-400 mt-2 mb-8">Tấn công người chơi khác để cướp vàng hoặc củng cố phòng tuyến.</p>
                         <div className="flex flex-col gap-4 max-w-xs mx-auto">
