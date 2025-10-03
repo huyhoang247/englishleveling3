@@ -1,4 +1,4 @@
-// --- START OF FILE src/pvp-service.ts ---
+// --- START OF FILE src/pvp-service.ts (VERSION SIÊU AN TOÀN) ---
 
 import { db } from '../../firebase'; // Đảm bảo đường dẫn chính xác
 import { 
@@ -37,22 +37,11 @@ export interface BattleResult {
   goldStolen: number;
 }
 
-/**
- * Tìm kiếm đối thủ có tổng số vàng lớn hơn hoặc bằng số vàng mục tiêu.
- */
+// Hàm này đã ổn, không cần thay đổi
 export const findInvasionOpponents = async (currentUserId: string, minCoins: number): Promise<PvpOpponent[]> => {
   if (!currentUserId) return [];
-
   const profilesRef = collection(db, 'users');
-
-  console.log(`Searching for opponents with at least ${minCoins} coins in 'users' collection.`);
-
-  const q = query(
-    profilesRef,
-    where('coins', '>=', minCoins),
-    limit(20)
-  );
-
+  const q = query(profilesRef, where('coins', '>=', minCoins), limit(20));
   const querySnapshot = await getDocs(q);
   const potentialOpponents: PvpOpponent[] = [];
   querySnapshot.forEach((doc) => {
@@ -67,23 +56,14 @@ export const findInvasionOpponents = async (currentUserId: string, minCoins: num
         });
     }
   });
-
-  if (potentialOpponents.length <= 3) {
-    return potentialOpponents;
-  }
-
+  if (potentialOpponents.length <= 3) return potentialOpponents;
   const shuffled = potentialOpponents.sort(() => 0.5 - Math.random());
   return shuffled.slice(0, 3);
 };
 
 
 /**
- * [ĐÃ CẬP NHẬT - AN TOÀN HƠN] Xử lý kết quả trận đấu, cướp một lượng vàng cụ thể.
- * @param attackerId - ID người tấn công.
- * @param defenderId - ID người phòng thủ.
- * @param attackerStats - Chỉ số của người tấn công.
- * @param goldAmountToSteal - Số vàng mục tiêu mà người tấn công muốn cướp.
- * @returns {Promise<BattleResult>} Kết quả cuối cùng của trận đấu.
+ * [PHIÊN BẢN SIÊU AN TOÀN] Xử lý kết quả trận đấu với kiểm tra dữ liệu và ghi log chi tiết.
  */
 export const resolveInvasionBattleClientSide = async (
   attackerId: string,
@@ -92,6 +72,8 @@ export const resolveInvasionBattleClientSide = async (
   goldAmountToSteal: number 
 ): Promise<BattleResult> => {
   try {
+    console.log(`[BATTLE START] Attacker: ${attackerId}, Defender: ${defenderId}, Amount: ${goldAmountToSteal}`);
+
     const result = await runTransaction(db, async (transaction) => {
       const attackerRef = doc(db, 'users', attackerId);
       const defenderRef = doc(db, 'users', defenderId);
@@ -102,19 +84,30 @@ export const resolveInvasionBattleClientSide = async (
       ]);
 
       if (!attackerDoc.exists() || !defenderDoc.exists()) {
+        console.error("Player document not found. Attacker exists:", attackerDoc.exists(), "Defender exists:", defenderDoc.exists());
         throw new Error("Không tìm thấy người chơi.");
       }
 
       const attackerData = attackerDoc.data();
       const defenderData = defenderDoc.data();
 
-      // Xử lý 'stats_value' an toàn hơn, đảm bảo luôn có giá trị mặc định
+      // Ghi log dữ liệu gốc để debug
+      console.log("Attacker Data:", JSON.stringify(attackerData));
+      console.log("Defender Data:", JSON.stringify(defenderData));
+
+      // --- KIỂM TRA DỮ LIỆU AN TOÀN ---
+      const attackerCoins = (typeof attackerData.coins === 'number') ? attackerData.coins : 0;
+      const defenderCoins = (typeof defenderData.coins === 'number') ? defenderData.coins : 0;
+      
       const baseStats = { atk: 10, def: 10 };
       const defenderStats = { ...baseStats, ...(defenderData.stats_value || {}) };
 
-      const attackerPower = attackerStats.atk * 1.5 + attackerStats.def;
-      const defenderPower = defenderStats.atk * 1.5 + defenderStats.def;
+      // --- TÍNH TOÁN KẾT QUẢ ---
+      const attackerPower = (attackerStats.atk || 10) * 1.5 + (attackerStats.def || 10);
+      const defenderPower = (defenderStats.atk || 10) * 1.5 + (defenderStats.def || 10);
       const playerWins = attackerPower > defenderPower * (0.8 + Math.random() * 0.4);
+
+      console.log(`Power check: Attacker (${attackerPower.toFixed(2)}) vs Defender (${defenderPower.toFixed(2)}). Player wins: ${playerWins}`);
 
       const battleResult: BattleResult = {
         result: 'loss',
@@ -122,18 +115,26 @@ export const resolveInvasionBattleClientSide = async (
       };
 
       if (playerWins) {
-        const defenderTotalCoins = defenderData.coins || 0;
-        const actualGoldStolen = Math.min(defenderTotalCoins, goldAmountToSteal);
+        // Chỉ cướp số vàng mà đối thủ có, không vượt quá mục tiêu
+        const actualGoldStolen = Math.min(defenderCoins, goldAmountToSteal);
         
         if (actualGoldStolen > 0) {
+          console.log(`Updating coins. Attacker +${actualGoldStolen}, Defender -${actualGoldStolen}`);
+          // Cập nhật cả hai tài liệu
           transaction.update(attackerRef, { coins: increment(actualGoldStolen) });
           transaction.update(defenderRef, { coins: increment(-actualGoldStolen) });
           
           battleResult.result = 'win';
           battleResult.goldStolen = actualGoldStolen;
+        } else {
+            console.log("Win, but defender has no coins to steal or target amount is zero.");
+            // Vẫn tính là thắng nhưng không có vàng
+            battleResult.result = 'win';
+            battleResult.goldStolen = 0;
         }
       }
 
+      // --- CẬP NHẬT NHẬT KÝ ---
       const defenseLogEntry = {
         opponent: attackerData.displayName || attackerData.username || "Một người chơi",
         result: battleResult.result === 'win' ? 'loss' : 'win',
@@ -141,18 +142,17 @@ export const resolveInvasionBattleClientSide = async (
         timestamp: serverTimestamp(),
       };
       
-      // Xử lý 'invasionLog' một cách an toàn bằng Array.isArray
-      // Luôn đảm bảo existingLog là một mảng, ngay cả khi dữ liệu trong DB bị sai
       const existingLog = Array.isArray(defenderData.invasionLog) ? defenderData.invasionLog : [];
       const updatedLog = [defenseLogEntry, ...existingLog].slice(0, 20);
       transaction.update(defenderRef, { invasionLog: updatedLog });
 
+      console.log("[TRANSACTION SUCCESS]", battleResult);
       return battleResult;
     });
     
     return result;
   } catch (error) {
-    console.error("Lỗi transaction khi xử lý trận đấu:", error); // Lỗi chi tiết sẽ in ra console
+    console.error("[TRANSACTION FAILED] Lỗi chi tiết:", error);
     alert("Trận đấu không thể hoàn thành do có lỗi xảy ra. Vui lòng thử lại.");
     return { result: 'loss', goldStolen: 0 };
   }
