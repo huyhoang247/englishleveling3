@@ -1,4 +1,4 @@
-// --- START OF FILE: src/pvp-service.ts ---
+// --- START OF FULL FILE: src/pvp-service.ts ---
 
 import { db } from '../../firebase'; // Đảm bảo đường dẫn chính xác
 import { 
@@ -33,7 +33,7 @@ export interface PvpOpponent {
   name: string;
   avatarUrl: string;
   coins: number;
-  powerLevel: number;
+  powerLevel: number; // Vẫn giữ lại để có thể hiển thị nếu muốn
 }
 
 // Interface cho kết quả trận đấu
@@ -43,26 +43,23 @@ export interface BattleResult {
 }
 
 /**
- * Tìm kiếm các đối thủ thực từ Firestore.
+ * [ĐÃ CẬP NHẬT] Tìm kiếm đối thủ dựa trên số vàng tối thiểu.
  * @param currentUserId - ID của người chơi hiện tại để loại trừ.
- * @param currentUserPower - Sức mạnh của người chơi hiện tại để tìm đối thủ tương xứng.
+ * @param minCoins - Số vàng tối thiểu mà mục tiêu phải có.
  * @returns {Promise<PvpOpponent[]>} Một danh sách đối thủ thực.
  */
-export const findInvasionOpponents = async (currentUserId: string, currentUserPower: number): Promise<PvpOpponent[]> => {
+export const findInvasionOpponents = async (currentUserId: string, minCoins: number): Promise<PvpOpponent[]> => {
   if (!currentUserId) return [];
 
   const profilesRef = collection(db, 'pvp_profiles');
-  const powerMargin = currentUserPower * 0.3; // Tìm đối thủ mạnh/yếu hơn 30%
-  const minPower = Math.max(0, currentUserPower - powerMargin);
-  const maxPower = currentUserPower + powerMargin;
 
-  console.log(`Searching for opponents with power between ${minPower} and ${maxPower}`);
+  console.log(`Searching for opponents with at least ${minCoins} coins.`);
 
+  // Thay đổi query: Bỏ `powerLevel`, thay bằng `coins`
   const q = query(
     profilesRef,
-    where('powerLevel', '>=', minPower),
-    where('powerLevel', '<=', maxPower),
-    limit(20) // Lấy 20 người để chọn ngẫu nhiên
+    where('coins', '>=', minCoins), // Tìm người có số vàng LỚN HƠN HOẶC BẰNG mức nhập
+    limit(20) // Vẫn lấy 20 người để chọn ngẫu nhiên
   );
 
   const querySnapshot = await getDocs(q);
@@ -133,7 +130,6 @@ export const resolveInvasionBattleClientSide = async (
 
       if (playerWins) {
         const potentialGold = (defenderData.coins || 0);
-        // Cướp 10-15% số vàng, nhưng không được cướp nhiều hơn số vàng hiện có
         const goldToSteal = Math.min(potentialGold, Math.floor(potentialGold * (0.1 + Math.random() * 0.05)));
         
         if (goldToSteal > 0) {
@@ -151,7 +147,6 @@ export const resolveInvasionBattleClientSide = async (
         resources: -battleResult.goldStolen,
         timestamp: serverTimestamp(),
       };
-      // Giới hạn nhật ký ở 20 mục gần nhất
       const existingLog = defenderData.invasionLog || [];
       const updatedLog = [defenseLogEntry, ...existingLog].slice(0, 20);
       transaction.update(defenderRef, { invasionLog: updatedLog });
@@ -167,4 +162,4 @@ export const resolveInvasionBattleClientSide = async (
   }
 };
 
-// --- END OF FILE: src/pvp-service.ts ---
+// --- END OF FULL FILE: src/pvp-service.ts ---
