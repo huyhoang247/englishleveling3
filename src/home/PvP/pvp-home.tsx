@@ -1,7 +1,7 @@
 // --- START OF FULL FILE: src/home/PvP/pvp-home.tsx ---
 
 import React, { useState, Fragment } from 'react';
-import { useGame } from '../../GameContext'; // Điều chỉnh đường dẫn nếu cần
+import { useGame } from '../../GameContext.tsx'; // Điều chỉnh đường dẫn nếu cần
 import { auth } from '../../firebase'; // Điều chỉnh đường dẫn nếu cần
 import { 
     findInvasionOpponents, 
