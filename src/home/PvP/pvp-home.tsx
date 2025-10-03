@@ -1,12 +1,14 @@
+// --- START OF FILE pvp-home.tsx ---
+
 import React, { useState, Fragment, useEffect, useCallback, useRef, createContext, useContext, ReactNode, memo } from 'react';
-import { useGame } from '../../GameContext.tsx'; 
+import { useGame } from '../../GameContext.tsx';
 import { auth } from '../../firebase';
-import { 
-    findInvasionOpponents, 
+import {
+    findInvasionOpponents,
     getBattleHistory,
     getOpponentForBattle,
     recordInvasionResult,
-    PvpOpponent, 
+    PvpOpponent,
     BattleHistoryEntry,
     CombatStats
 } from './pvp-service.ts';
@@ -18,11 +20,11 @@ export interface PlayerData {
   name: string;
   avatarUrl: string;
   coins: number;
-  initialStats: CombatStats; 
+  initialStats: CombatStats;
 }
 
 // ===================================================================================
-// --- START OF SHARED UI COMPONENTS ---
+// --- START OF SHARED UI COMPONENTS (Unchanged) ---
 // ===================================================================================
 
 const PvpStyles = () => (
@@ -68,7 +70,7 @@ const PvpStyles = () => (
         .scrollbar-thin::-webkit-scrollbar { width: 4px; }
         .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
         .scrollbar-thin::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 20px; }
-        @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } 
+        @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } }
         .animate-float-up { animation: float-up 1.5s ease-out forwards; }
     `}</style>
 );
@@ -94,9 +96,9 @@ const CoinDisplay = ({ displayedCoins }: { displayedCoins: number }) => (
     </div>
 );
 
-const SearchingModal = () => (
+const SearchingModal = ({ text = "Đang tìm kiếm..." }: { text?: string }) => (
     <div className="text-center animate-fade-in">
-        <h2 className="text-3xl mb-4">Đang tìm kiếm...</h2>
+        <h2 className="text-3xl mb-4">{text}</h2>
         <div className="flex justify-center items-center gap-2">
             <div className="w-4 h-4 bg-sky-400 rounded-full animate-pulse"></div>
             <div className="w-4 h-4 bg-sky-400 rounded-full animate-pulse [animation-delay:0.2s]"></div>
@@ -117,7 +119,7 @@ const BattleHistoryModal = ({ history, onClose }: { history: BattleHistoryEntry[
                 <span className={`font-bold ${entry.type === 'attack' ? 'text-red-400' : 'text-cyan-400'}`}>
                     {entry.type === 'attack' ? 'Tấn Công' : 'Phòng Thủ'}
                 </span>
-                <span className='text-slate-400'> vs </span> 
+                <span className='text-slate-400'> vs </span>
                 <span className="font-bold text-slate-200">{entry.opponentName}</span>
               </p>
               <p className="text-xs text-slate-400">{entry.timestamp.toLocaleString()}</p>
@@ -216,7 +218,7 @@ const PvpDefeatModal = memo(({ onFinish, opponentName }: { onFinish: () => void,
 type TurnEvents = { attackerDmg: number; defenderDmg: number; timestamp: number };
 type AttackerInfo = { name: string; avatarUrl: string; stats: CombatStats; };
 interface PvpBattleState {
-    isLoading: boolean; error: string | null; 
+    isLoading: boolean; error: string | null;
     attacker: AttackerInfo | null;
     defender: { name: string; avatarUrl: string; stats: CombatStats; initialCoins: number } | null;
     combatLog: string[]; gameOver: 'win' | 'loss' | null; battleState: 'idle' | 'fighting' | 'finished';
@@ -226,8 +228,8 @@ interface PvpBattleActions { startGame: () => void; skipBattle: () => void; }
 type PvpBattleContextType = PvpBattleState & PvpBattleActions;
 const PvpBattleContext = createContext<PvpBattleContextType | undefined>(undefined);
 
-const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, onFinish }: { 
-    children: ReactNode; attackerData: PlayerData; defenderId: string; goldToSteal: number; onFinish: (result: 'win' | 'loss', stolen: number) => void 
+const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal }: {
+    children: ReactNode; attackerData: PlayerData; defenderId: string; goldToSteal: number;
 }) => {
     const game = useGame();
     const [isLoading, setIsLoading] = useState(true);
@@ -280,19 +282,20 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, on
         if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
         const finalGoldStolen = result === 'win' ? Math.min(defender?.initialCoins ?? 0, goldToSteal) : 0;
         try {
+            console.log(`[BATTLE END] Kết quả: ${result}. Vàng cướp được: ${finalGoldStolen}. Ghi nhận kết quả...`);
             await recordInvasionResult(auth.currentUser!.uid, defenderId, result, finalGoldStolen);
             if (finalGoldStolen > 0) {
                 game.updateUserCurrency({ coins: game.coins + finalGoldStolen });
             }
+            console.log("[BATTLE END] Ghi nhận kết quả thành công.");
         } catch(e) {
-            console.error("Failed to record battle result:", e);
+            console.error("[BATTLE END] Lỗi khi ghi nhận kết quả trận đấu:", e);
             setError("Lỗi khi ghi nhận kết quả trận đấu.");
         } finally {
             setGameOver(result);
             setBattleState('finished');
-            onFinish(result, finalGoldStolen);
         }
-    }, [defenderId, goldToSteal, defender, game, onFinish]);
+    }, [defenderId, goldToSteal, defender, game]);
 
     const runBattleTurn = useCallback(() => {
         if (!attacker?.stats || !defender?.stats || gameOver) return;
@@ -305,7 +308,7 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, on
         setTurnCounter(nextTurn);
         if (winner) endGame(winner);
     }, [turnCounter, attacker, defender, executeFullTurn, endGame, gameOver]);
-    
+
     const skipBattle = useCallback(() => {
         if (!attacker?.stats || !defender?.stats || gameOver) return;
         if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
@@ -326,52 +329,60 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, on
         setDefender(prev => prev ? { ...prev, stats: tempDefender } : null);
         endGame(finalWinner);
     }, [attacker, defender, turnCounter, executeFullTurn, endGame, gameOver]);
-    
-    // ==========================================================
-    // --- START OF FIX ---
-    // Removed useCallback with empty dependency array which caused the bug.
+
     const startGame = () => {
+        console.log("[BATTLE] Hàm startGame() được gọi.");
         setBattleState(prev => {
+            console.log(`[BATTLE] Cập nhật trạng thái từ '${prev}'...`);
             if (prev === 'idle') {
                 isEndingGame.current = false;
+                console.log("[BATTLE] Trạng thái được chuyển thành 'fighting'.");
                 return 'fighting';
             }
             return prev;
         });
     };
-    // --- END OF FIX ---
-    // ==========================================================
 
     useEffect(() => {
         const fetchDefender = async () => {
+            console.log(`[BATTLE] Bắt đầu fetch dữ liệu của defender ID: ${defenderId}`);
+            console.time('fetchDefender_duration'); // BẮT ĐẦU ĐẾM GIỜ
             try {
                 const opponentData = await getOpponentForBattle(defenderId);
+                console.log("[BATTLE] Fetch defender thành công!", opponentData);
                 setDefender({ name: opponentData.name, avatarUrl: opponentData.avatarUrl, stats: opponentData.stats, initialCoins: opponentData.coins, });
                 setCombatLog([`[Lượt 0] Trận đấu với ${opponentData.name} bắt đầu!`]);
-            } catch (e) { setError("Không thể tải dữ liệu đối thủ."); console.error(e); } finally { setIsLoading(false); }
+            } catch (e) { setError("Không thể tải dữ liệu đối thủ."); console.error("[BATTLE] Lỗi nghiêm trọng khi fetch defender:", e); }
+            finally {
+                setIsLoading(false);
+                console.timeEnd('fetchDefender_duration'); // DỪNG ĐẾM GIỜ VÀ IN KẾT QUẢ
+                console.log("[BATTLE] Hoàn tất quá trình fetch, isLoading được set thành false.");
+            }
         };
         fetchDefender();
     }, [defenderId]);
-    
-    // --- MODIFICATION: TỰ ĐỘNG BẮT ĐẦU TRẬN ĐẤU ---
+
     useEffect(() => {
-        // Nếu không đang tải, đang ở trạng thái chờ và có đủ dữ liệu
+        console.log(`[AUTO-START CHECK] isLoading: ${isLoading}, battleState: ${battleState}, attacker: ${!!attacker}, defender: ${!!defender}`);
         if (!isLoading && battleState === 'idle' && attacker && defender) {
-            // Đặt một khoảng trễ nhỏ để người chơi kịp nhìn thấy đối thủ
+            console.log("[AUTO-START] Điều kiện được đáp ứng! Sẽ gọi startGame() sau 800ms.");
             const startTimeout = setTimeout(() => {
                 startGame();
-            }, 800); // 0.8 giây
-
-            // Cleanup function để tránh lỗi
+            }, 800);
             return () => clearTimeout(startTimeout);
         }
     }, [isLoading, battleState, attacker, defender, startGame]);
 
     useEffect(() => {
+        console.log(`[BATTLE INTERVAL CHECK] battleState: ${battleState}, gameOver: ${gameOver}`);
         if (battleState === 'fighting' && !gameOver) {
+          console.log("[BATTLE INTERVAL] Thiết lập interval chạy mỗi 1.2s");
           battleIntervalRef.current = setInterval(runBattleTurn, 1200);
         }
-        return () => { if (battleIntervalRef.current) clearInterval(battleIntervalRef.current) };
+        return () => { if (battleIntervalRef.current) {
+            console.log("[BATTLE INTERVAL] Dọn dẹp interval.");
+            clearInterval(battleIntervalRef.current)
+        }};
     }, [battleState, gameOver, runBattleTurn]);
 
     const value: PvpBattleContextType = { isLoading, error, attacker, defender, combatLog, gameOver, battleState, lastTurnEvents, startGame, skipBattle };
@@ -380,7 +391,7 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, on
 const usePvpBattle = () => { const context = useContext(PvpBattleContext); if (!context) throw new Error('usePvpBattle must be used within a PvpBattleProvider'); return context; };
 
 // --- MAIN BATTLE VIEW ---
-const PvpBattleView = ({ onFinishBattle, goldToSteal }: { onFinishBattle: (result: 'win' | 'loss', stolen: number) => void, goldToSteal: number }) => {
+const PvpBattleView = ({ onFinishBattle }: { onFinishBattle: () => void }) => {
     const { isLoading, error, attacker, defender, combatLog, gameOver, battleState, lastTurnEvents, skipBattle } = usePvpBattle();
     const [damages, setDamages] = useState<{ id: number, text: string, extraClasses: string }[]>([]);
 
@@ -399,27 +410,26 @@ const PvpBattleView = ({ onFinishBattle, goldToSteal }: { onFinishBattle: (resul
         }, 500);
     }, [lastTurnEvents, showFloatingText]);
 
-    if (isLoading) return <div className="flex-grow flex items-center justify-center"><SearchingModal /></div>;
+    // [FIX] Cải thiện thông báo loading
+    if (isLoading) return <div className="flex-grow flex items-center justify-center"><SearchingModal text="Đang tải dữ liệu đối thủ..." /></div>;
     if (error || !attacker || !defender) return <div className="text-red-400 text-center">{error || "Không có dữ liệu trận đấu."}</div>;
-    
+
+    const goldToSteal = defender.initialCoins; // Lấy giá trị gold từ defender data
     const goldStolen = gameOver === 'win' ? Math.min(defender.initialCoins, goldToSteal) : 0;
 
     return (
         <div className="w-full flex-1 flex flex-col items-center justify-between font-lilita text-white p-4 pt-12 animate-fade-in relative">
             {damages.map(d => (<FloatingText key={d.id} text={String(d.text)} id={d.id} extraClasses={d.extraClasses} />))}
-            {gameOver === 'win' && <PvpVictoryModal onFinish={() => onFinishBattle('win', goldStolen)} goldStolen={goldStolen} opponentName={defender.name} />}
-            {gameOver === 'loss' && <PvpDefeatModal onFinish={() => onFinishBattle('loss', 0)} opponentName={defender.name} />}
+            {gameOver === 'win' && <PvpVictoryModal onFinish={onFinishBattle} goldStolen={goldStolen} opponentName={defender.name} />}
+            {gameOver === 'loss' && <PvpDefeatModal onFinish={onFinishBattle} opponentName={defender.name} />}
 
-            {/* Top section with player panels */}
             <div className="w-full flex justify-between items-start">
-                {/* Attacker Panel (Left) */}
                 <div className="flex flex-col items-center gap-2 w-full max-w-[45%] sm:max-w-xs">
                     <h2 className="text-xl sm:text-2xl text-sky-400 text-shadow truncate w-full text-center">{attacker.name}</h2>
                     <img src={attacker.avatarUrl} alt={attacker.name} className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-slate-600" />
                     <HealthBar current={attacker.stats.hp} max={attacker.stats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
                 </div>
-                
-                {/* Defender Panel (Right) */}
+
                 <div className="flex flex-col items-center gap-2 w-full max-w-[45%] sm:max-w-xs">
                     <h2 className="text-xl sm:text-2xl text-red-400 text-shadow truncate w-full text-center">{defender.name}</h2>
                     <img src={defender.avatarUrl} alt={defender.name} className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-slate-600" />
@@ -427,7 +437,6 @@ const PvpBattleView = ({ onFinishBattle, goldToSteal }: { onFinishBattle: (resul
                 </div>
             </div>
 
-            {/* Bottom section with combat log */}
             <div className="w-full max-w-lg h-48 flex flex-col items-center justify-center my-4">
                 {battleState !== 'idle' && (
                     <div className="h-full w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
@@ -435,11 +444,10 @@ const PvpBattleView = ({ onFinishBattle, goldToSteal }: { onFinishBattle: (resul
                     </div>
                 )}
             </div>
-            
-            {/* Skip button is now absolutely positioned for better control */}
+
             {battleState === 'fighting' && !gameOver && (
-                <button 
-                    onClick={skipBattle} 
+                <button
+                    onClick={skipBattle}
                     className="absolute bottom-4 right-4 font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">
                         Bỏ Qua
                 </button>
@@ -513,30 +521,34 @@ function PvpInvasion({ onClose, player1, battleHistory }: { onClose: () => void;
             setIsActionInProgress(false);
         }
     };
-    
+
     const handleAttack = (target: PvpOpponent) => {
         if (isActionInProgress) return;
         setCurrentTarget(target);
         setView('battleUI');
     };
 
-    const reset = () => {
+    const reset = useCallback(() => {
+        console.log("[PVP] Resetting view to 'main'.");
         setView('main');
         setOpponents([]);
         setCurrentTarget(null);
         setSearchAmount(0);
         setIsActionInProgress(false);
-    };
-    
-    const handleBattleFinish = (result: 'win' | 'loss', stolen: number) => {
+    }, []);
+
+    // [FIX] onFinishBattle bây giờ chỉ gọi reset()
+    const handleBattleFinish = useCallback(() => {
+        console.log("[PVP] Battle finished, calling reset.");
         reset();
-    };
+    }, [reset]);
+
 
     return (
         <div className="main-bg relative w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
             <ScoutByGoldModal isOpen={isScoutModalOpen} onClose={() => setIsScoutModalOpen(false)} onSearch={executeSearch} initialCoins={1000} />
             {showHistoryModal && <BattleHistoryModal history={battleHistory} onClose={() => setShowHistoryModal(false)} />}
-            
+
             <header className="w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14 flex-shrink-0">
                 <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
                     <button onClick={view === 'battleUI' ? reset : onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors">
@@ -547,7 +559,7 @@ function PvpInvasion({ onClose, player1, battleHistory }: { onClose: () => void;
                     <CoinDisplay displayedCoins={animatedCoins} />
                 </div>
             </header>
-            
+
             <main className="w-full flex-1 flex flex-col items-center">
                 {view === 'main' && (
                     <div className="flex-grow flex flex-col items-center justify-center text-center animate-fade-in-scale-fast w-full max-w-sm p-4">
@@ -563,7 +575,7 @@ function PvpInvasion({ onClose, player1, battleHistory }: { onClose: () => void;
                 {view === 'scouting' && (
                     <div className="w-full max-w-4xl animate-fade-in p-4 pt-20">
                         <h2 className="text-3xl text-center mb-6">Chọn Mục Tiêu Tấn Công</h2>
-                        {isActionInProgress && opponents.length === 0 ? <SearchingModal /> : 
+                        {isActionInProgress && opponents.length === 0 ? <SearchingModal /> :
                          !isActionInProgress && opponents.length === 0 ? (
                             <div className="text-center text-slate-400 font-sans p-8 bg-slate-900/50 rounded-lg">
                                 <h3 className="text-xl text-white mb-2">Không tìm thấy đối thủ</h3>
@@ -575,7 +587,7 @@ function PvpInvasion({ onClose, player1, battleHistory }: { onClose: () => void;
                                     <div key={index} className="bg-slate-900/70 p-4 rounded-lg border border-slate-700 flex flex-col items-center gap-2 text-center">
                                         <img src={op.avatarUrl} alt={op.name} className="w-24 h-24 rounded-full border-2 border-slate-600 mb-2" />
                                         <h3 className="text-xl font-bold">{op.name}</h3>
-                                        <p className="font-sans text-sm text-slate-400">Tổng Vàng: <span className="text-slate-200 font-semibold">{op.coins.toLocaleString()}</span></p> 
+                                        <p className="font-sans text-sm text-slate-400">Tổng Vàng: <span className="text-slate-200 font-semibold">{op.coins.toLocaleString()}</span></p>
                                         <div className='mt-2'><p className="font-sans text-sm text-slate-400">Vàng có thể cướp:</p><p className="font-bold text-lg text-yellow-300">{searchAmount.toLocaleString()}</p></div>
                                         <button onClick={() => handleAttack(op)} className="mt-4 w-full py-2 bg-red-600/50 hover:bg-red-600 rounded-lg font-bold border border-red-500">Tấn Công</button>
                                     </div>
@@ -588,13 +600,12 @@ function PvpInvasion({ onClose, player1, battleHistory }: { onClose: () => void;
                     </div>
                 )}
                 {view === 'battleUI' && currentTarget && (
-                    <PvpBattleProvider 
-                        attackerData={player1} 
-                        defenderId={currentTarget.userId} 
+                    <PvpBattleProvider
+                        attackerData={player1}
+                        defenderId={currentTarget.userId}
                         goldToSteal={searchAmount}
-                        onFinish={handleBattleFinish}
                     >
-                        <PvpBattleView onFinishBattle={handleBattleFinish} goldToSteal={searchAmount} />
+                        <PvpBattleView onFinishBattle={handleBattleFinish} />
                     </PvpBattleProvider>
                 )}
             </main>
@@ -609,7 +620,7 @@ function PvpInvasion({ onClose, player1, battleHistory }: { onClose: () => void;
 export default function PvpArena({ onClose }: { onClose: () => void }) {
   const { coins, getPlayerBattleStats } = useGame();
   const currentUser = auth.currentUser;
-  
+
   const [battleHistory, setBattleHistory] = useState<BattleHistoryEntry[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
@@ -632,7 +643,7 @@ export default function PvpArena({ onClose }: { onClose: () => void }) {
       coins: coins,
       initialStats: { ...battleStats, maxHp: battleStats.hp, critRate: 0.1, critDmg: 1.5, healPower: 50, reflectDmg: 10, }
   };
-  
+
   const [mode, setMode] = useState<'selection' | 'invasion'>('selection');
 
   const renderContent = () => {
