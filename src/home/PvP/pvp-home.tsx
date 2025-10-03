@@ -343,8 +343,7 @@ function PvpInvasion({ onClose, player1, battleHistory }: {
                                             <p className="font-sans text-sm text-slate-400">Vàng có thể cướp:</p>
                                             <p className="font-bold text-lg text-yellow-300">{searchAmount.toLocaleString()}</p>
                                         </div>
-                                        <p className="font-sans text-xs text-slate-500 mt-1">Sức mạnh: {op.powerLevel.toLocaleString()}</p>
-                                        <button onClick={() => handleAttack(op)} disabled={isActionInProgress} className="mt-auto w-full py-2 bg-red-600/50 hover:bg-red-600 rounded-lg font-bold border border-red-500 disabled:bg-slate-600/50 disabled:cursor-not-allowed">
+                                        <button onClick={() => handleAttack(op)} disabled={isActionInProgress} className="mt-4 w-full py-2 bg-red-600/50 hover:bg-red-600 rounded-lg font-bold border border-red-500 disabled:bg-slate-600/50 disabled:cursor-not-allowed">
                                             {isActionInProgress ? '...' : 'Tấn Công'}
                                         </button>
                                     </div>
