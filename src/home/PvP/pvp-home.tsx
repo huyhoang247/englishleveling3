@@ -1,20 +1,16 @@
-// --- START OF FILE src/home/PvP/pvp-home.tsx ---
+// --- START OF FULL FILE: src/home/PvP/pvp-home.tsx ---
 
-// *** TÓM TẮT THAY ĐỔI ***
-// 1. Thêm state `searchAmount` để lưu lại số vàng người chơi đã nhập khi tìm kiếm.
-// 2. Khi tìm kiếm, cập nhật state `searchAmount` này.
-// 3. Khi hiển thị đối thủ, "Vàng có thể cướp" sẽ chính là `searchAmount`.
-// 4. Khi tấn công, truyền `searchAmount` vào hàm `resolveInvasionBattleClientSide`.
-
-import React, { useState, Fragment } from 'react';
+import React, { useState, Fragment, useEffect } from 'react';
 import { useGame } from '../../GameContext.tsx'; // Điều chỉnh đường dẫn nếu cần
 import { auth } from '../../firebase'; // Điều chỉnh đường dẫn nếu cần
 import { 
     findInvasionOpponents, 
     resolveInvasionBattleClientSide, 
+    getBattleHistory, // Import hàm mới
     PvpOpponent, 
     BattleResult,
-    CombatStats 
+    CombatStats,
+    BattleHistoryEntry // Import interface mới
 } from './pvp-service.ts'; // Điều chỉnh đường dẫn nếu cần
 
 // --- INTERFACES ---
@@ -24,12 +20,7 @@ export interface PlayerData {
   avatarUrl: string;
   coins: number;
   initialStats: CombatStats; 
-  invasionLog: {
-    opponent: string;
-    result: 'win' | 'loss';
-    resources: number;
-    timestamp: Date;
-  }[];
+  invasionLog: any[]; // Trường này không còn được dùng nữa, để trống
 }
 
 // ===================================================================================
@@ -114,21 +105,30 @@ const SearchingModal = () => (
     </div>
 );
 
-const DefenseLogModal = ({ log, onClose }: { log: PlayerData['invasionLog'], onClose: () => void }) => (
+const BattleHistoryModal = ({ history, onClose }: { history: BattleHistoryEntry[], onClose: () => void }) => (
   <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-center items-center" onClick={onClose}>
-    <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 w-full max-w-md animate-fade-in-scale-fast" onClick={e => e.stopPropagation()}>
-      <h2 className="text-2xl font-bold text-center mb-4 text-sky-400">Nhật Ký Phòng Thủ</h2>
+    <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 w-full max-w-lg animate-fade-in-scale-fast" onClick={e => e.stopPropagation()}>
+      <h2 className="text-2xl font-bold text-center mb-4 text-sky-400">Lịch Sử Chiến Đấu</h2>
       <div className="max-h-96 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
-        {log.length > 0 ? log.map((entry, index) => (
-          <div key={index} className="bg-slate-900/70 p-3 rounded-lg flex justify-between items-center text-sm font-sans">
+        {history.length > 0 ? history.map((entry) => (
+          <div key={entry.id} className="bg-slate-900/70 p-3 rounded-lg flex justify-between items-center text-sm font-sans">
             <div>
-              <p>Đối thủ: <span className="font-bold text-slate-200">{entry.opponent}</span></p>
+              <p>
+                <span className={`font-bold ${entry.type === 'attack' ? 'text-red-400' : 'text-cyan-400'}`}>
+                    {entry.type === 'attack' ? 'Tấn Công' : 'Phòng Thủ'}
+                </span>
+                <span className='text-slate-400'> vs </span> 
+                <span className="font-bold text-slate-200">{entry.opponentName}</span>
+              </p>
               <p className="text-xs text-slate-400">{entry.timestamp.toLocaleString()}</p>
             </div>
-            <div>
+            <div className='text-right'>
               <span className={`font-bold text-lg ${entry.result === 'win' ? 'text-green-400' : 'text-red-400'}`}>
                 {entry.result === 'win' ? 'THẮNG' : 'THUA'}
               </span>
+              <p className={`font-semibold ${entry.goldChange >= 0 ? 'text-yellow-400' : 'text-slate-400'}`}>
+                {entry.goldChange > 0 ? `+${entry.goldChange.toLocaleString()}` : entry.goldChange.toLocaleString()}
+              </p>
             </div>
           </div>
         )) : <p className="text-center text-slate-400 font-sans">Không có dữ liệu.</p>}
@@ -214,11 +214,7 @@ function PvpSelection({ onClose, playerData, onSelectMode }: {
                     <div className="group relative bg-slate-900/50 border-2 border-slate-700 rounded-2xl p-6 flex flex-col items-center text-center backdrop-blur-sm transition-all duration-300 hover:border-sky-500/80 hover:scale-105 hover:shadow-2xl hover:shadow-sky-500/10 w-full">
                          <div className="absolute -top-8 w-16 h-16 bg-slate-800 border-4 border-slate-600 rounded-full flex items-center justify-center transition-colors duration-300 group-hover:bg-sky-900/50 group-hover:border-sky-500"><InvasionIcon className="w-9 h-9 text-slate-400 transition-colors duration-300 group-hover:text-sky-400" /></div>
                         <h2 className="text-3xl font-bold mt-8 text-shadow text-sky-400">XÂM LƯỢC</h2>
-                        <p className="font-sans text-sm text-slate-400 mt-2 mb-6 h-10">Tấn công người chơi khác, cướp tài nguyên, hoặc xây dựng phòng tuyến bất khả xâm phạm.</p>
-                        <div className="w-full bg-black/30 p-3 rounded-lg border border-slate-700 mb-6 flex flex-col items-center justify-center h-[76px]">
-                            <span className='font-sans text-sm text-slate-300'>Phòng thủ gần nhất: {playerData.invasionLog[0] ? <span className={`font-bold ${playerData.invasionLog[0].result === 'win' ? 'text-green-400' : 'text-red-400'}`}>{playerData.invasionLog[0].result === 'win' ? 'THẮNG' : 'THUA'}</span> : <span className='text-slate-400'>N/A</span>}</span>
-                            <button onClick={() => alert("Mở nhật ký")} className="mt-2 text-xs font-sans text-slate-400 hover:text-white underline">Xem nhật ký</button>
-                        </div>
+                        <p className="font-sans text-sm text-slate-400 mt-2 mb-6 h-10">Tấn công người chơi khác để cướp tài nguyên và leo lên bảng xếp hạng.</p>
                         <div className="mt-auto w-full flex gap-3">
                              <button onClick={() => onSelectMode('invasion')} className="w-full py-3 bg-sky-600/50 hover:bg-sky-600 rounded-lg font-bold tracking-wider uppercase border border-sky-500 hover:border-sky-400 transition-all">Hành Động</button>
                         </div>
@@ -229,15 +225,16 @@ function PvpSelection({ onClose, playerData, onSelectMode }: {
     );
 }
 
-function PvpInvasion({ onClose, player1 }: {
+function PvpInvasion({ onClose, player1, battleHistory }: {
     onClose: () => void;
     player1: PlayerData;
+    battleHistory: BattleHistoryEntry[];
 }) {
     const [view, setView] = useState<'main' | 'scouting' | 'battle'>('main');
     const [opponents, setOpponents] = useState<PvpOpponent[]>([]);
     const [currentTarget, setCurrentTarget] = useState<PvpOpponent | null>(null);
     const [battleResult, setBattleResult] = useState<BattleResult | null>(null);
-    const [showLogModal, setShowLogModal] = useState(false);
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [isActionInProgress, setIsActionInProgress] = useState(false);
     const [isScoutModalOpen, setIsScoutModalOpen] = useState(false);
     const [searchAmount, setSearchAmount] = useState(0);
@@ -293,7 +290,7 @@ function PvpInvasion({ onClose, player1 }: {
                 onSearch={executeSearch}
                 initialCoins={1000}
             />
-            {showLogModal && <DefenseLogModal log={player1.invasionLog} onClose={() => setShowLogModal(false)} />}
+            {showHistoryModal && <BattleHistoryModal history={battleHistory} onClose={() => setShowHistoryModal(false)} />}
             
             <header className="w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14 flex-shrink-0">
                 <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
@@ -320,7 +317,9 @@ function PvpInvasion({ onClose, player1 }: {
                                 Dò Tìm Mục Tiêu
                             </button>
                             <button onClick={() => alert("Tính năng đang phát triển!")} className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold tracking-wider uppercase border border-slate-600">Thiết Lập Phòng Thủ</button>
-                            <button onClick={() => setShowLogModal(true)} className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold tracking-wider uppercase border border-slate-600">Nhật Ký Phòng Thủ</button>
+                            <button onClick={() => setShowHistoryModal(true)} className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold tracking-wider uppercase border border-slate-600">
+                                Lịch Sử Chiến Đấu
+                            </button>
                         </div>
                     </div>
                 )}
@@ -388,6 +387,26 @@ function PvpInvasion({ onClose, player1 }: {
 export default function PvpArena({ onClose }: { onClose: () => void }) {
   const { coins, getPlayerBattleStats } = useGame();
   const currentUser = auth.currentUser;
+  
+  const [battleHistory, setBattleHistory] = useState<BattleHistoryEntry[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+
+  useEffect(() => {
+    if (currentUser) {
+      setIsLoadingHistory(true);
+      getBattleHistory(currentUser.uid)
+        .then(history => {
+          setBattleHistory(history);
+        })
+        .catch(err => {
+          console.error("Failed to fetch battle history:", err);
+          alert("Không thể tải lịch sử chiến đấu.");
+        })
+        .finally(() => {
+          setIsLoadingHistory(false);
+        });
+    }
+  }, [currentUser]);
 
   if (!currentUser) {
     return (
@@ -409,14 +428,14 @@ export default function PvpArena({ onClose }: { onClose: () => void }) {
         healPower: 50,
         reflectDmg: 10,
       },
-      invasionLog: [] // Dữ liệu này nên được lấy từ GameContext trong tương lai
+      invasionLog: [] // Trường này không còn được dùng, giữ để không lỗi type
   };
   
   const [mode, setMode] = useState<'selection' | 'invasion'>('selection');
 
   const renderContent = () => {
     if (mode === 'invasion') {
-        return <PvpInvasion player1={playerData} onClose={() => setMode('selection')} />;
+        return <PvpInvasion player1={playerData} battleHistory={battleHistory} onClose={() => setMode('selection')} />;
     }
     return <PvpSelection playerData={playerData} onSelectMode={setMode} onClose={onClose} />;
   }
@@ -424,8 +443,7 @@ export default function PvpArena({ onClose }: { onClose: () => void }) {
   return (
     <Fragment>
         <PvpStyles />
-        {renderContent()}
+        {isLoadingHistory ? <div className="w-full h-screen bg-black flex items-center justify-center text-white">Đang tải dữ liệu...</div> : renderContent()}
     </Fragment>
   );
 }
-// --- END OF FILE src/home/PvP/pvp-home.tsx ---
