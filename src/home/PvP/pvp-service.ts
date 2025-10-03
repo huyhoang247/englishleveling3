@@ -1,4 +1,4 @@
-// --- START OF FILE src/pvp-service.ts ---
+// --- START OF FILE pvp-service.ts ---
 
 import { db } from '../../firebase';
 import { 
@@ -10,16 +10,15 @@ import {
   runTransaction, 
   doc, 
   orderBy,
-  increment 
+  increment,
+  getDoc // Import getDoc for single document reads
 } from 'firebase/firestore';
 
-// ... (Các interface CombatStats, PvpOpponent, BattleResult giữ nguyên)
+// --- INTERFACES ---
 export interface CombatStats { hp: number; maxHp: number; atk: number; def: number; critRate: number; critDmg: number; healPower: number; reflectDmg: number; }
 export interface PvpOpponent { userId: string; name: string; avatarUrl: string; coins: number; powerLevel: number; }
 export interface BattleResult { result: 'win' | 'loss'; goldStolen: number; }
 
-
-// Interface mới cho lịch sử chiến đấu
 export interface BattleHistoryEntry {
   id: string;
   type: 'attack' | 'defense';
@@ -30,7 +29,9 @@ export interface BattleHistoryEntry {
   timestamp: Date;
 }
 
-// Hàm tìm đối thủ không đổi
+// --- SERVICE FUNCTIONS ---
+
+// Function remains unchanged
 export const findInvasionOpponents = async (currentUserId: string, minCoins: number): Promise<PvpOpponent[]> => {
   if (!currentUserId) return [];
   const profilesRef = collection(db, 'users');
@@ -54,11 +55,7 @@ export const findInvasionOpponents = async (currentUserId: string, minCoins: num
   return shuffled.slice(0, 3);
 };
 
-/**
- * [MỚI] Lấy lịch sử chiến đấu của người chơi
- * @param userId - ID của người chơi cần lấy lịch sử
- * @returns {Promise<BattleHistoryEntry[]>} Mảng lịch sử
- */
+// Function remains unchanged
 export const getBattleHistory = async (userId: string): Promise<BattleHistoryEntry[]> => {
     const historyRef = collection(db, 'users', userId, 'battleHistory');
     const q = query(historyRef, orderBy('timestamp', 'desc'), limit(20));
@@ -74,23 +71,84 @@ export const getBattleHistory = async (userId: string): Promise<BattleHistoryEnt
             opponentId: data.opponentId,
             result: data.result,
             goldChange: data.goldChange,
-            timestamp: data.timestamp.toDate(), // Chuyển Firestore Timestamp về Date
+            timestamp: data.timestamp.toDate(),
         });
     });
     return history;
 };
 
 /**
- * [ĐÃ VIẾT LẠI] Xử lý trận đấu và ghi lịch sử cho cả hai người chơi.
+ * [NEW] Fetches an opponent's full, calculated combat stats for a battle simulation.
+ * @param defenderId The ID of the user being attacked.
+ * @returns An object containing the defender's display info and complete combat stats.
  */
-export const resolveInvasionBattleClientSide = async (
+export const getOpponentForBattle = async (defenderId: string): Promise<{
+    name: string;
+    avatarUrl: string;
+    stats: CombatStats;
+    coins: number;
+}> => {
+    const defenderRef = doc(db, 'users', defenderId);
+    const defenderDoc = await getDoc(defenderRef);
+
+    if (!defenderDoc.exists()) {
+        throw new Error("Defender not found.");
+    }
+
+    const defenderData = defenderDoc.data();
+
+    // --- Calculate total stats from base stats + equipment ---
+    const defenderBaseStats = defenderData.stats_value || { hp: 100, atk: 10, def: 10 };
+    const defenderOwnedItems: any[] = defenderData.equipment?.owned || [];
+    const defenderEquippedIds = defenderData.equipment?.equipped || {};
+
+    const defenderEquipmentStats = { hp: 0, atk: 0, def: 0 };
+    Object.values(defenderEquippedIds).forEach(itemId => {
+        if (itemId) {
+            const item = defenderOwnedItems.find(i => i.id === itemId);
+            if (item && item.stats) {
+                defenderEquipmentStats.hp += item.stats.hp || 0;
+                defenderEquipmentStats.atk += item.stats.atk || 0;
+                defenderEquipmentStats.def += item.stats.def || 0;
+            }
+        }
+    });
+    
+    const totalDefenderStats: CombatStats = {
+        maxHp: (defenderBaseStats.hp || 100) + defenderEquipmentStats.hp,
+        hp: (defenderBaseStats.hp || 100) + defenderEquipmentStats.hp,
+        atk: (defenderBaseStats.atk || 10) + defenderEquipmentStats.atk,
+        def: (defenderBaseStats.def || 10) + defenderEquipmentStats.def,
+        critRate: defenderBaseStats.critRate || 0.05,
+        critDmg: defenderBaseStats.critDmg || 1.5,
+        healPower: defenderBaseStats.healPower || 0,
+        reflectDmg: defenderBaseStats.reflectDmg || 0,
+    };
+
+    return {
+        name: defenderData.displayName || defenderData.username || "Anonymous",
+        avatarUrl: defenderData.avatarUrl || `https://api.dicebear.com/8.x/adventurer/svg?seed=${defenderId}`,
+        stats: totalDefenderStats,
+        coins: defenderData.coins || 0,
+    };
+};
+
+/**
+ * [NEW] Executes a Firestore transaction to record the outcome of a PvP battle.
+ * This function updates coin balances and writes to both players' battle histories.
+ * @param attackerId The ID of the attacker.
+ * @param defenderId The ID of the defender.
+ * @param result The outcome of the battle ('win' or 'loss' for the attacker).
+ * @param goldStolen The amount of gold transferred.
+ */
+export const recordInvasionResult = async (
   attackerId: string,
   defenderId: string,
-  attackerStats: CombatStats,
-  goldAmountToSteal: number 
-): Promise<BattleResult> => {
+  result: 'win' | 'loss',
+  goldStolen: number
+): Promise<void> => {
   try {
-    const result = await runTransaction(db, async (transaction) => {
+    await runTransaction(db, async (transaction) => {
       const attackerRef = doc(db, 'users', attackerId);
       const defenderRef = doc(db, 'users', defenderId);
 
@@ -102,95 +160,36 @@ export const resolveInvasionBattleClientSide = async (
       if (!attackerDoc.exists() || !defenderDoc.exists()) {
         throw new Error("Không tìm thấy người chơi.");
       }
-
       const attackerData = attackerDoc.data();
       const defenderData = defenderDoc.data();
 
-      const defenderCoins = (typeof defenderData.coins === 'number') ? defenderData.coins : 0;
-      
-      // --- START: Lấy chỉ số tổng của người phòng thủ ---
-      const defenderBaseStats = defenderData.stats_value || { hp: 0, atk: 0, def: 0 };
-      // Giả định cấu trúc data: user.equipment.owned và user.equipment.equipped
-      const defenderOwnedItems: any[] = defenderData.equipment?.owned || []; 
-      const defenderEquippedIds = defenderData.equipment?.equipped || {};
-
-      const defenderEquipmentStats = { hp: 0, atk: 0, def: 0 };
-      // Lặp qua các ID trang bị đã mặc
-      Object.values(defenderEquippedIds).forEach(itemId => {
-          if (itemId) {
-              const item = defenderOwnedItems.find(i => i.id === itemId);
-              if (item && item.stats) {
-                  defenderEquipmentStats.hp += item.stats.hp || 0;
-                  defenderEquipmentStats.atk += item.stats.atk || 0;
-                  defenderEquipmentStats.def += item.stats.def || 0;
-              }
-          }
-      });
-
-      // Tính toán chỉ số cuối cùng
-      const totalDefenderStats = {
-          hp: (defenderBaseStats.hp || 0) + defenderEquipmentStats.hp,
-          atk: (defenderBaseStats.atk || 0) + defenderEquipmentStats.atk,
-          def: (defenderBaseStats.def || 0) + defenderEquipmentStats.def,
-      };
-      // --- END: Lấy chỉ số tổng của người phòng thủ ---
-
-      const attackerPower = (attackerStats.atk || 10) * 1.5 + (attackerStats.def || 10);
-      const defenderPower = (totalDefenderStats.atk || 10) * 1.5 + (totalDefenderStats.def || 10);
-      const playerWins = attackerPower > defenderPower * (0.8 + Math.random() * 0.4);
-
-      const battleResult: BattleResult = { result: 'loss', goldStolen: 0 };
-
-      if (playerWins) {
-        const actualGoldStolen = Math.min(defenderCoins, goldAmountToSteal);
-        if (actualGoldStolen > 0) {
-          transaction.update(attackerRef, { coins: increment(actualGoldStolen) });
-          transaction.update(defenderRef, { coins: increment(-actualGoldStolen) });
-          battleResult.result = 'win';
-          battleResult.goldStolen = actualGoldStolen;
-        } else {
-            battleResult.result = 'win';
-            battleResult.goldStolen = 0;
-        }
+      // Update coin balances if the attacker won and stole gold
+      if (result === 'win' && goldStolen > 0) {
+        transaction.update(attackerRef, { coins: increment(goldStolen) });
+        transaction.update(defenderRef, { coins: increment(-goldStolen) });
       }
 
-      // --- LOGIC GHI LỊCH SỬ MỚI ---
+      // --- Write to battle history for both players ---
       const battleTimestamp = new Date();
       const attackerName = attackerData.displayName || attackerData.username || "Anonymous";
       const defenderName = defenderData.displayName || defenderData.username || "Anonymous";
 
-      // 1. Tạo bản ghi cho người tấn công
       const attackerHistoryRef = doc(collection(db, 'users', attackerId, 'battleHistory'));
       transaction.set(attackerHistoryRef, {
-        type: 'attack',
-        opponentName: defenderName,
-        opponentId: defenderId,
-        result: battleResult.result,
-        goldChange: battleResult.goldStolen,
-        timestamp: battleTimestamp
+        type: 'attack', opponentName: defenderName, opponentId: defenderId,
+        result: result, goldChange: goldStolen, timestamp: battleTimestamp
       });
 
-      // 2. Tạo bản ghi cho người phòng thủ
       const defenderHistoryRef = doc(collection(db, 'users', defenderId, 'battleHistory'));
       transaction.set(defenderHistoryRef, {
-        type: 'defense',
-        opponentName: attackerName,
-        opponentId: attackerId,
-        result: battleResult.result === 'win' ? 'loss' : 'win', // Kết quả đảo ngược
-        goldChange: -battleResult.goldStolen, // Vàng bị trừ
-        timestamp: battleTimestamp
+        type: 'defense', opponentName: attackerName, opponentId: attackerId,
+        result: result === 'win' ? 'loss' : 'win', // Result is inverted for the defender
+        goldChange: -goldStolen, timestamp: battleTimestamp
       });
-      
-      // Xóa logic cập nhật invasionLog cũ
-      // transaction.update(defenderRef, { invasionLog: ... }); // <-- Dòng này được xóa
-
-      return battleResult;
     });
-    
-    return result;
   } catch (error) {
     console.error("[TRANSACTION FAILED] Lỗi chi tiết:", error);
-    alert("Trận đấu không thể hoàn thành do có lỗi xảy ra. Vui lòng thử lại.");
-    return { result: 'loss', goldStolen: 0 };
+    // Re-throw the error so the calling function knows the transaction failed
+    throw new Error("Không thể ghi lại kết quả trận đấu.");
   }
 };
