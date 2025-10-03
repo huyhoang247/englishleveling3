@@ -252,28 +252,23 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, on
         const turnLogs: string[] = [];
         const log = (msg: string) => turnLogs.push(`[Lượt ${turn}] ${msg}`);
         const calculateDamage = (atk: number, def: number) => Math.max(1, Math.floor(atk * (0.8 + Math.random() * 0.4) * (1 - def / (def + 100))));
-        
         let attacker = { ...currentAttacker };
         let defender = { ...currentDefender };
         let winner: 'win' | 'loss' | null = null;
         let turnEvents: Omit<TurnEvents, 'timestamp'> = { attackerDmg: 0, defenderDmg: 0 };
-
         const attackerDmg = calculateDamage(attacker.atk, defender.def);
         turnEvents.defenderDmg = attackerDmg;
         log(`Bạn tấn công, gây <b class="text-red-400">${attackerDmg}</b> sát thương.`);
         defender.hp -= attackerDmg;
-        
         if (defender.hp <= 0) {
             defender.hp = 0; winner = 'win';
             log(`Đối thủ đã bị đánh bại!`);
             return { attacker, defender, turnLogs, winner, turnEvents };
         }
-
         const defenderDmg = calculateDamage(defender.atk, attacker.def);
         turnEvents.attackerDmg = defenderDmg;
         log(`Đối thủ phản công, gây <b class="text-red-400">${defenderDmg}</b> sát thương.`);
         attacker.hp -= defenderDmg;
-
         if (attacker.hp <= 0) {
             attacker.hp = 0; winner = 'loss';
             log("Bạn đã gục ngã... THẤT BẠI!");
@@ -285,9 +280,7 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, on
         if (isEndingGame.current) return;
         isEndingGame.current = true;
         if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
-        
         const finalGoldStolen = result === 'win' ? Math.min(defender?.initialCoins ?? 0, goldToSteal) : 0;
-        
         try {
             await recordInvasionResult(auth.currentUser!.uid, defenderId, result, finalGoldStolen);
             if (finalGoldStolen > 0) {
@@ -307,7 +300,6 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, on
         if (!attacker?.stats || !defender?.stats || gameOver) return;
         const nextTurn = turnCounter + 1;
         const { attacker: newAttackerStats, defender: newDefender, turnLogs, winner, turnEvents } = executeFullTurn(attacker.stats, defender.stats, nextTurn);
-        
         setAttacker(prev => prev ? { ...prev, stats: newAttackerStats } : null);
         setDefender(prev => prev ? { ...prev, stats: newDefender } : null);
         setLastTurnEvents({ ...turnEvents, timestamp: Date.now() });
@@ -320,12 +312,10 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, on
         if (!attacker?.stats || !defender?.stats || gameOver) return;
         if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
         setBattleState('finished');
-
         let tempAttacker = { ...attacker.stats };
         let tempDefender = { ...defender.stats };
         let tempTurn = turnCounter;
         let finalWinner: 'win' | 'loss' | null = null;
-        
         while (finalWinner === null && tempTurn < 500) {
             tempTurn++;
             const { attacker: newAttacker, defender: def, winner } = executeFullTurn(tempAttacker, tempDefender, tempTurn);
@@ -333,40 +323,39 @@ const PvpBattleProvider = ({ children, attackerData, defenderId, goldToSteal, on
             tempDefender = def;
             finalWinner = winner;
         }
-        if (!finalWinner) finalWinner = 'loss'; 
-        
+        if (!finalWinner) finalWinner = 'loss';
         setAttacker(prev => prev ? { ...prev, stats: tempAttacker } : null);
         setDefender(prev => prev ? { ...prev, stats: tempDefender } : null);
         endGame(finalWinner);
     }, [attacker, defender, turnCounter, executeFullTurn, endGame, gameOver]);
 
-    const startGame = useCallback(() => {
-        if (battleState !== 'idle') return;
-        isEndingGame.current = false;
-        setBattleState('fighting');
-    }, [battleState]);
+    const startGame = useCallback(() => { if (battleState !== 'idle') return; isEndingGame.current = false; setBattleState('fighting'); }, [battleState]);
 
     useEffect(() => {
         const fetchDefender = async () => {
             try {
                 const opponentData = await getOpponentForBattle(defenderId);
-                setDefender({
-                    name: opponentData.name,
-                    avatarUrl: opponentData.avatarUrl,
-                    stats: opponentData.stats,
-                    initialCoins: opponentData.coins,
-                });
+                setDefender({ name: opponentData.name, avatarUrl: opponentData.avatarUrl, stats: opponentData.stats, initialCoins: opponentData.coins, });
                 setAttacker({ name: attackerData.name, avatarUrl: attackerData.avatarUrl, stats: attackerData.initialStats }); 
                 setCombatLog([`[Lượt 0] Trận đấu với ${opponentData.name} bắt đầu!`]);
-            } catch (e) {
-                setError("Không thể tải dữ liệu đối thủ.");
-                console.error(e);
-            } finally {
-                setIsLoading(false);
-            }
+            } catch (e) { setError("Không thể tải dữ liệu đối thủ."); console.error(e); } finally { setIsLoading(false); }
         };
         fetchDefender();
     }, [defenderId, attackerData]);
+    
+    // --- MODIFICATION: TỰ ĐỘNG BẮT ĐẦU TRẬN ĐẤU ---
+    useEffect(() => {
+        // Nếu không đang tải, đang ở trạng thái chờ và có đủ dữ liệu
+        if (!isLoading && battleState === 'idle' && attacker && defender) {
+            // Đặt một khoảng trễ nhỏ để người chơi kịp nhìn thấy đối thủ
+            const startTimeout = setTimeout(() => {
+                startGame();
+            }, 800); // 0.8 giây
+
+            // Cleanup function để tránh lỗi
+            return () => clearTimeout(startTimeout);
+        }
+    }, [isLoading, battleState, attacker, defender, startGame]);
 
     useEffect(() => {
         if (battleState === 'fighting' && !gameOver) {
@@ -382,7 +371,7 @@ const usePvpBattle = () => { const context = useContext(PvpBattleContext); if (!
 
 // --- MAIN BATTLE VIEW ---
 const PvpBattleView = ({ onFinishBattle, goldToSteal }: { onFinishBattle: (result: 'win' | 'loss', stolen: number) => void, goldToSteal: number }) => {
-    const { isLoading, error, attacker, defender, combatLog, gameOver, battleState, lastTurnEvents, startGame, skipBattle } = usePvpBattle();
+    const { isLoading, error, attacker, defender, combatLog, gameOver, battleState, lastTurnEvents, skipBattle } = usePvpBattle();
     const [damages, setDamages] = useState<{ id: number, text: string, extraClasses: string }[]>([]);
 
     const showFloatingText = useCallback((text: string, colorClass: string, isAttackerSide: boolean) => {
@@ -411,21 +400,15 @@ const PvpBattleView = ({ onFinishBattle, goldToSteal }: { onFinishBattle: (resul
              {gameOver === 'win' && <PvpVictoryModal onFinish={() => onFinishBattle('win', goldStolen)} goldStolen={goldStolen} opponentName={defender.name} />}
              {gameOver === 'loss' && <PvpDefeatModal onFinish={() => onFinishBattle('loss', 0)} opponentName={defender.name} />}
 
-            {/* --- Top Row: Defender --- */}
             <div className="flex flex-col items-center gap-3 w-full max-w-sm">
                 <h2 className="text-2xl text-red-400 text-shadow">{defender.name}</h2>
                 <img src={defender.avatarUrl} alt={defender.name} className="w-32 h-32 rounded-full border-4 border-slate-600" />
                 <HealthBar current={defender.stats.hp} max={defender.stats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
             </div>
 
-            {/* --- Middle Row: Controls / Log --- */}
             <div className="w-full max-w-lg h-48 flex flex-col items-center justify-center my-4">
-                {battleState === 'idle' && (
-                    <button onClick={startGame} className="btn-shine relative overflow-hidden px-10 py-3 bg-red-800/80 rounded-lg text-red-200 border border-red-500/40 transition-all duration-300 hover:text-white hover:border-red-400 hover:shadow-[0_0_20px_theme(colors.red.500/0.6)] active:scale-95">
-                        <span className="font-bold text-lg tracking-widest uppercase">Tấn Công</span>
-                    </button>
-                )}
-                 {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="absolute bottom-4 right-4 font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Bỏ Qua</button> )}
+                {/* --- MODIFICATION: NÚT TẤN CÔNG ĐÃ BỊ XÓA --- */}
+                {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="absolute bottom-4 right-4 font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Bỏ Qua</button> )}
                 {battleState !== 'idle' && (
                     <div className="h-full w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
                        {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
@@ -433,7 +416,6 @@ const PvpBattleView = ({ onFinishBattle, goldToSteal }: { onFinishBattle: (resul
                 )}
             </div>
 
-            {/* --- Bottom Row: Attacker --- */}
             <div className="flex flex-col items-center gap-3 w-full max-w-sm">
                 <HealthBar current={attacker.stats.hp} max={attacker.stats.maxHp} colorGradient="bg-gradient-to-r from-green-500 to-lime-400" shadowColor="rgba(132, 204, 22, 0.5)" />
                 <img src={attacker.avatarUrl} alt={attacker.name} className="w-32 h-32 rounded-full border-4 border-slate-600" />
