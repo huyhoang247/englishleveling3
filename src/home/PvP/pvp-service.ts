@@ -107,11 +107,36 @@ export const resolveInvasionBattleClientSide = async (
       const defenderData = defenderDoc.data();
 
       const defenderCoins = (typeof defenderData.coins === 'number') ? defenderData.coins : 0;
-      const baseStats = { atk: 10, def: 10 };
-      const defenderStats = { ...baseStats, ...(defenderData.stats_value || {}) };
+      
+      // --- START: Lấy chỉ số tổng của người phòng thủ ---
+      const defenderBaseStats = defenderData.stats_value || { hp: 0, atk: 0, def: 0 };
+      // Giả định cấu trúc data: user.equipment.owned và user.equipment.equipped
+      const defenderOwnedItems: any[] = defenderData.equipment?.owned || []; 
+      const defenderEquippedIds = defenderData.equipment?.equipped || {};
+
+      const defenderEquipmentStats = { hp: 0, atk: 0, def: 0 };
+      // Lặp qua các ID trang bị đã mặc
+      Object.values(defenderEquippedIds).forEach(itemId => {
+          if (itemId) {
+              const item = defenderOwnedItems.find(i => i.id === itemId);
+              if (item && item.stats) {
+                  defenderEquipmentStats.hp += item.stats.hp || 0;
+                  defenderEquipmentStats.atk += item.stats.atk || 0;
+                  defenderEquipmentStats.def += item.stats.def || 0;
+              }
+          }
+      });
+
+      // Tính toán chỉ số cuối cùng
+      const totalDefenderStats = {
+          hp: (defenderBaseStats.hp || 0) + defenderEquipmentStats.hp,
+          atk: (defenderBaseStats.atk || 0) + defenderEquipmentStats.atk,
+          def: (defenderBaseStats.def || 0) + defenderEquipmentStats.def,
+      };
+      // --- END: Lấy chỉ số tổng của người phòng thủ ---
 
       const attackerPower = (attackerStats.atk || 10) * 1.5 + (attackerStats.def || 10);
-      const defenderPower = (defenderStats.atk || 10) * 1.5 + (defenderStats.def || 10);
+      const defenderPower = (totalDefenderStats.atk || 10) * 1.5 + (totalDefenderStats.def || 10);
       const playerWins = attackerPower > defenderPower * (0.8 + Math.random() * 0.4);
 
       const battleResult: BattleResult = { result: 'loss', goldStolen: 0 };
