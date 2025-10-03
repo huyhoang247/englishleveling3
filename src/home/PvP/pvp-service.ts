@@ -1,6 +1,6 @@
-// --- START OF FILE src/pvp-service.ts (VERSION CUỐI CÙNG ĐÃ SỬA LỖI) ---
+// --- START OF FILE src/pvp-service.ts ---
 
-import { db } from '../../firebase'; // Đảm bảo đường dẫn chính xác
+import { db } from '../../firebase';
 import { 
   collection, 
   query, 
@@ -9,35 +9,28 @@ import {
   limit, 
   runTransaction, 
   doc, 
-  serverTimestamp, 
+  orderBy,
   increment 
 } from 'firebase/firestore';
 
-export interface CombatStats {
-  hp: number;
-  maxHp: number;
-  atk: number;
-  def: number;
-  critRate: number;
-  critDmg: number;
-  healPower: number;
-  reflectDmg: number;
-}
+// ... (Các interface CombatStats, PvpOpponent, BattleResult giữ nguyên)
+export interface CombatStats { hp: number; maxHp: number; atk: number; def: number; critRate: number; critDmg: number; healPower: number; reflectDmg: number; }
+export interface PvpOpponent { userId: string; name: string; avatarUrl: string; coins: number; powerLevel: number; }
+export interface BattleResult { result: 'win' | 'loss'; goldStolen: number; }
 
-export interface PvpOpponent {
-  userId: string;
-  name: string;
-  avatarUrl: string;
-  coins: number;
-  powerLevel: number;
-}
 
-export interface BattleResult {
+// Interface mới cho lịch sử chiến đấu
+export interface BattleHistoryEntry {
+  id: string;
+  type: 'attack' | 'defense';
+  opponentName: string;
+  opponentId: string;
   result: 'win' | 'loss';
-  goldStolen: number;
+  goldChange: number;
+  timestamp: Date;
 }
 
-// Hàm này đã ổn, không cần thay đổi
+// Hàm tìm đối thủ không đổi
 export const findInvasionOpponents = async (currentUserId: string, minCoins: number): Promise<PvpOpponent[]> => {
   if (!currentUserId) return [];
   const profilesRef = collection(db, 'users');
@@ -61,9 +54,34 @@ export const findInvasionOpponents = async (currentUserId: string, minCoins: num
   return shuffled.slice(0, 3);
 };
 
+/**
+ * [MỚI] Lấy lịch sử chiến đấu của người chơi
+ * @param userId - ID của người chơi cần lấy lịch sử
+ * @returns {Promise<BattleHistoryEntry[]>} Mảng lịch sử
+ */
+export const getBattleHistory = async (userId: string): Promise<BattleHistoryEntry[]> => {
+    const historyRef = collection(db, 'users', userId, 'battleHistory');
+    const q = query(historyRef, orderBy('timestamp', 'desc'), limit(20));
+    const querySnapshot = await getDocs(q);
+
+    const history: BattleHistoryEntry[] = [];
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        history.push({
+            id: doc.id,
+            type: data.type,
+            opponentName: data.opponentName,
+            opponentId: data.opponentId,
+            result: data.result,
+            goldChange: data.goldChange,
+            timestamp: data.timestamp.toDate(), // Chuyển Firestore Timestamp về Date
+        });
+    });
+    return history;
+};
 
 /**
- * [PHIÊN BẢN HOÀN CHỈNH] Xử lý kết quả trận đấu.
+ * [ĐÃ VIẾT LẠI] Xử lý trận đấu và ghi lịch sử cho cả hai người chơi.
  */
 export const resolveInvasionBattleClientSide = async (
   attackerId: string,
@@ -88,13 +106,7 @@ export const resolveInvasionBattleClientSide = async (
       const attackerData = attackerDoc.data();
       const defenderData = defenderDoc.data();
 
-      // === Vô hiệu hóa các log không cần thiết nữa ===
-      // console.log("Attacker Data:", JSON.stringify(attackerData));
-      // console.log("Defender Data:", JSON.stringify(defenderData));
-
-      const attackerCoins = (typeof attackerData.coins === 'number') ? attackerData.coins : 0;
       const defenderCoins = (typeof defenderData.coins === 'number') ? defenderData.coins : 0;
-      
       const baseStats = { atk: 10, def: 10 };
       const defenderStats = { ...baseStats, ...(defenderData.stats_value || {}) };
 
@@ -102,18 +114,13 @@ export const resolveInvasionBattleClientSide = async (
       const defenderPower = (defenderStats.atk || 10) * 1.5 + (defenderStats.def || 10);
       const playerWins = attackerPower > defenderPower * (0.8 + Math.random() * 0.4);
 
-      const battleResult: BattleResult = {
-        result: 'loss',
-        goldStolen: 0,
-      };
+      const battleResult: BattleResult = { result: 'loss', goldStolen: 0 };
 
       if (playerWins) {
         const actualGoldStolen = Math.min(defenderCoins, goldAmountToSteal);
-        
         if (actualGoldStolen > 0) {
           transaction.update(attackerRef, { coins: increment(actualGoldStolen) });
           transaction.update(defenderRef, { coins: increment(-actualGoldStolen) });
-          
           battleResult.result = 'win';
           battleResult.goldStolen = actualGoldStolen;
         } else {
@@ -122,20 +129,35 @@ export const resolveInvasionBattleClientSide = async (
         }
       }
 
-      const defenseLogEntry = {
-        opponent: attackerData.displayName || attackerData.username || "Một người chơi",
-        result: battleResult.result === 'win' ? 'loss' : 'win',
-        resources: -battleResult.goldStolen,
-        // =======================================================
-        // <<< SỬA LỖI Ở ĐÂY >>>
-        // Thay serverTimestamp() bằng new Date() để tránh lỗi
-        timestamp: new Date(),
-        // =======================================================
-      };
+      // --- LOGIC GHI LỊCH SỬ MỚI ---
+      const battleTimestamp = new Date();
+      const attackerName = attackerData.displayName || attackerData.username || "Anonymous";
+      const defenderName = defenderData.displayName || defenderData.username || "Anonymous";
+
+      // 1. Tạo bản ghi cho người tấn công
+      const attackerHistoryRef = doc(collection(db, 'users', attackerId, 'battleHistory'));
+      transaction.set(attackerHistoryRef, {
+        type: 'attack',
+        opponentName: defenderName,
+        opponentId: defenderId,
+        result: battleResult.result,
+        goldChange: battleResult.goldStolen,
+        timestamp: battleTimestamp
+      });
+
+      // 2. Tạo bản ghi cho người phòng thủ
+      const defenderHistoryRef = doc(collection(db, 'users', defenderId, 'battleHistory'));
+      transaction.set(defenderHistoryRef, {
+        type: 'defense',
+        opponentName: attackerName,
+        opponentId: attackerId,
+        result: battleResult.result === 'win' ? 'loss' : 'win', // Kết quả đảo ngược
+        goldChange: -battleResult.goldStolen, // Vàng bị trừ
+        timestamp: battleTimestamp
+      });
       
-      const existingLog = Array.isArray(defenderData.invasionLog) ? defenderData.invasionLog : [];
-      const updatedLog = [defenseLogEntry, ...existingLog].slice(0, 20);
-      transaction.update(defenderRef, { invasionLog: updatedLog });
+      // Xóa logic cập nhật invasionLog cũ
+      // transaction.update(defenderRef, { invasionLog: ... }); // <-- Dòng này được xóa
 
       return battleResult;
     });
