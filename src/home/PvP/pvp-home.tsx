@@ -11,7 +11,7 @@ import {
     CombatStats 
 } from './pvp-service.ts'; // Điều chỉnh đường dẫn nếu cần
 
-// --- INTERFACES (có thể chuyển ra file riêng) ---
+// --- INTERFACES ---
 
 export interface PlayerData {
   name: string;
@@ -132,6 +132,58 @@ const DefenseLogModal = ({ log, onClose }: { log: PlayerData['invasionLog'], onC
   </div>
 );
 
+// --- COMPONENT MỚI CHO POPUP DÒ TÌM ---
+interface ScoutByGoldModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSearch: (goldAmount: number) => void;
+  initialCoins: number;
+}
+
+function ScoutByGoldModal({ isOpen, onClose, onSearch, initialCoins }: ScoutByGoldModalProps) {
+  const [amount, setAmount] = useState(initialCoins);
+  const step = 1000; // Bước nhảy khi nhấn +/-
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    setAmount(isNaN(value) ? 0 : value);
+  };
+  
+  const handleIncrement = () => setAmount(prev => prev + step);
+  const handleDecrement = () => setAmount(prev => Math.max(0, prev - step));
+  
+  const handleSearchClick = () => {
+    onSearch(amount);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-center items-center" onClick={onClose}>
+      <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 w-full max-w-sm animate-fade-in-scale-fast" onClick={e => e.stopPropagation()}>
+        <h2 className="text-2xl font-bold text-center mb-4 text-sky-400">Dò Tìm Theo Vàng</h2>
+        <p className="text-center font-sans text-slate-400 mb-6 text-sm">Nhập số vàng tối thiểu của mục tiêu bạn muốn tìm.</p>
+        
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <button onClick={handleDecrement} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold text-2xl">-</button>
+          <input 
+            type="number"
+            value={amount}
+            onChange={handleAmountChange}
+            className="w-40 text-center bg-slate-900 border border-slate-600 rounded-lg p-3 text-2xl font-bold text-yellow-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
+          />
+          <button onClick={handleIncrement} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold text-2xl">+</button>
+        </div>
+        
+        <button onClick={handleSearchClick} className="w-full py-3 bg-sky-600/80 hover:bg-sky-600 rounded-lg font-bold tracking-wider uppercase border border-sky-500 transition-all">
+          Tìm Kiếm
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
 // ===================================================================================
 // --- START OF PVP COMPONENTS ---
 // ===================================================================================
@@ -182,24 +234,25 @@ function PvpInvasion({ onClose, player1 }: {
     const [battleResult, setBattleResult] = useState<BattleResult | null>(null);
     const [showLogModal, setShowLogModal] = useState(false);
     const [isActionInProgress, setIsActionInProgress] = useState(false);
+    const [isScoutModalOpen, setIsScoutModalOpen] = useState(false);
 
-    const handleScout = async () => {
+    const executeSearch = async (goldAmount: number) => {
+        setIsScoutModalOpen(false);
         if (isActionInProgress) return;
         setIsActionInProgress(true);
         setView('scouting');
         try {
-            const playerPower = player1.initialStats.atk * 1.5 + player1.initialStats.def;
-            const foundOpponents = await findInvasionOpponents(auth.currentUser!.uid, playerPower);
+            const foundOpponents = await findInvasionOpponents(auth.currentUser!.uid, goldAmount);
             setOpponents(foundOpponents);
         } catch (error) {
-            console.error("Failed to scout opponents:", error);
+            console.error("Failed to scout opponents by gold:", error);
             alert("Không thể tìm thấy đối thủ. Vui lòng thử lại.");
             setView('main');
         } finally {
             setIsActionInProgress(false);
         }
     };
-
+    
     const handleAttack = async (target: PvpOpponent) => {
         if (isActionInProgress) return;
         setIsActionInProgress(true);
@@ -214,7 +267,6 @@ function PvpInvasion({ onClose, player1 }: {
         
         setBattleResult(result);
         setIsActionInProgress(false);
-        // Dữ liệu coins sẽ tự cập nhật qua real-time listener của GameContext
     };
 
     const reset = () => {
@@ -226,7 +278,14 @@ function PvpInvasion({ onClose, player1 }: {
 
     return (
         <div className="main-bg relative w-full h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
+            <ScoutByGoldModal 
+                isOpen={isScoutModalOpen}
+                onClose={() => setIsScoutModalOpen(false)}
+                onSearch={executeSearch}
+                initialCoins={10000}
+            />
             {showLogModal && <DefenseLogModal log={player1.invasionLog} onClose={() => setShowLogModal(false)} />}
+            
             <header className="w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14 flex-shrink-0">
                 <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
                     <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors">
@@ -237,14 +296,19 @@ function PvpInvasion({ onClose, player1 }: {
                     <CoinDisplay displayedCoins={player1.coins} />
                 </div>
             </header>
+            
             <main className="w-full flex-1 overflow-y-auto p-4 pt-20 flex flex-col items-center">
                 {view === 'main' && (
                     <div className="text-center animate-fade-in-scale-fast w-full max-w-sm">
                         <h2 className="text-4xl">Chuẩn bị Xâm Lược</h2>
                         <p className="font-sans text-slate-400 mt-2 mb-8">Tấn công người chơi khác để cướp vàng hoặc củng cố phòng tuyến.</p>
                         <div className="flex flex-col gap-4 max-w-xs mx-auto">
-                            <button onClick={handleScout} disabled={isActionInProgress} className="w-full py-3 bg-sky-600/50 hover:bg-sky-600 rounded-lg font-bold tracking-wider uppercase border border-sky-500 disabled:bg-slate-600/50 disabled:cursor-not-allowed">
-                                {isActionInProgress ? 'Đang tìm...' : 'Dò Tìm Mục Tiêu'}
+                            <button 
+                                onClick={() => setIsScoutModalOpen(true)}
+                                disabled={isActionInProgress} 
+                                className="w-full py-3 bg-sky-600/50 hover:bg-sky-600 rounded-lg font-bold tracking-wider uppercase border border-sky-500 disabled:bg-slate-600/50 disabled:cursor-not-allowed"
+                            >
+                                Dò Tìm Mục Tiêu
                             </button>
                             <button onClick={() => alert("Tính năng đang phát triển!")} className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold tracking-wider uppercase border border-slate-600">Thiết Lập Phòng Thủ</button>
                             <button onClick={() => setShowLogModal(true)} className="w-full py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold tracking-wider uppercase border border-slate-600">Nhật Ký Phòng Thủ</button>
@@ -258,7 +322,7 @@ function PvpInvasion({ onClose, player1 }: {
                          !isActionInProgress && opponents.length === 0 ? (
                             <div className="text-center text-slate-400 font-sans p-8 bg-slate-900/50 rounded-lg">
                                 <h3 className="text-xl text-white mb-2">Không tìm thấy đối thủ</h3>
-                                <p>Không có người chơi nào trong tầm sức mạnh của bạn. Hãy thử lại sau.</p>
+                                <p>Không có người chơi nào thỏa mãn điều kiện tìm kiếm. Hãy thử với số vàng thấp hơn.</p>
                             </div>
                          ) : (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -310,7 +374,7 @@ function PvpInvasion({ onClose, player1 }: {
 // ===================================================================================
 
 export default function PvpArena({ onClose }: { onClose: () => void }) {
-  const { coins, getPlayerBattleStats } = useGame(); // Giả sử GameContext có invasionLog
+  const { coins, getPlayerBattleStats } = useGame();
   const currentUser = auth.currentUser;
 
   if (!currentUser) {
@@ -328,17 +392,12 @@ export default function PvpArena({ onClose }: { onClose: () => void }) {
       coins: coins,
       initialStats: {
         ...battleStats,
-        // Các giá trị này nên được lấy từ context trong tương lai
         critRate: 0.1, 
         critDmg: 1.5,
         healPower: 50,
         reflectDmg: 10,
       },
-      // Dữ liệu này cũng nên được lấy từ GameContext sau này
-      invasionLog: [
-          { opponent: 'Bot Phòng Thủ', result: 'win', resources: 100, timestamp: new Date() },
-          { opponent: 'Bot Xâm Lược', result: 'loss', resources: -50, timestamp: new Date() },
-      ]
+      invasionLog: [] // Dữ liệu này nên được lấy từ GameContext trong tương lai
   };
   
   const [mode, setMode] = useState<'selection' | 'invasion'>('selection');
@@ -347,7 +406,6 @@ export default function PvpArena({ onClose }: { onClose: () => void }) {
     if (mode === 'invasion') {
         return <PvpInvasion player1={playerData} onClose={() => setMode('selection')} />;
     }
-    // Chuyển onClose về cho component PvpSelection để đóng toàn bộ modal
     return <PvpSelection playerData={playerData} onSelectMode={setMode} onClose={onClose} />;
   }
 
