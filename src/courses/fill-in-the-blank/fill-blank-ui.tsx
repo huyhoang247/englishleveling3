@@ -44,80 +44,30 @@ const allPhraseParts = Array.from( new Map( phraseData.flatMap(sentence => sente
 const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => ( <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} title="Phrases" dataSource={allPhraseParts} noResultsMessage="Không tìm thấy cụm từ" isPhrase={true} /> );
 const ExamPopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => ( <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} title="Exams" dataSource={exampleData} noResultsMessage="Không tìm thấy ví dụ" /> );
 
-// <<< START: CẬP NHẬT AUDIO PLAYER COMPONENT (KHÔNG CẦN THAY ĐỔI)
-const AudioPlayerUI: React.FC<{
-  audioUrls: { [voiceName: string]: string };
-}> = ({ audioUrls }) => {
+const AudioPlayerUI: React.FC<{ audioUrls: { [voiceName: string]: string }; }> = ({ audioUrls }) => {
   const [selectedVoice, setSelectedVoice] = useState('Matilda');
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
-
   const availableVoices = useMemo(() => Object.keys(audioUrls), [audioUrls]);
   const currentAudioUrl = audioUrls[selectedVoice];
-
-  const handleNavigateVoice = useCallback((direction: 'next' | 'previous') => {
-    if (availableVoices.length <= 1) return;
-    const currentIndex = availableVoices.indexOf(selectedVoice);
-    let nextIndex;
-    if (direction === 'next') {
-      nextIndex = (currentIndex + 1) % availableVoices.length;
-    } else {
-      nextIndex = (currentIndex - 1 + availableVoices.length) % availableVoices.length;
-    }
-    setSelectedVoice(availableVoices[nextIndex]);
-  }, [availableVoices, selectedVoice]);
-
-  const togglePlay = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (audio.paused) {
-      audio.play().catch(e => console.error("Error playing audio:", e));
-    } else {
-      audio.pause();
-    }
-  }, []);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const onPlay = () => setIsPlaying(true);
-    const onPauseOrEnd = () => setIsPlaying(false);
-    audio.addEventListener('play', onPlay);
-    audio.addEventListener('pause', onPauseOrEnd);
-    audio.addEventListener('ended', onPauseOrEnd);
-    if (currentAudioUrl) {
-      audio.play().catch(e => console.log("Autoplay prevented by browser"));
-    }
-    return () => {
-      audio.removeEventListener('play', onPlay);
-      audio.removeEventListener('pause', onPauseOrEnd);
-      audio.removeEventListener('ended', onPauseOrEnd);
-    };
-  }, [currentAudioUrl]);
-
+  const handleNavigateVoice = useCallback((direction: 'next' | 'previous') => { if (availableVoices.length <= 1) return; const currentIndex = availableVoices.indexOf(selectedVoice); let nextIndex; if (direction === 'next') { nextIndex = (currentIndex + 1) % availableVoices.length; } else { nextIndex = (currentIndex - 1 + availableVoices.length) % availableVoices.length; } setSelectedVoice(availableVoices[nextIndex]); }, [availableVoices, selectedVoice]);
+  const togglePlay = useCallback(() => { const audio = audioRef.current; if (!audio) return; if (audio.paused) { audio.play().catch(e => console.error("Error playing audio:", e)); } else { audio.pause(); } }, []);
+  useEffect(() => { const audio = audioRef.current; if (!audio) return; const onPlay = () => setIsPlaying(true); const onPauseOrEnd = () => setIsPlaying(false); audio.addEventListener('play', onPlay); audio.addEventListener('pause', onPauseOrEnd); audio.addEventListener('ended', onPauseOrEnd); if (currentAudioUrl) { audio.play().catch(e => console.log("Autoplay prevented by browser")); } return () => { audio.removeEventListener('play', onPlay); audio.removeEventListener('pause', onPauseOrEnd); audio.removeEventListener('ended', onPauseOrEnd); }; }, [currentAudioUrl]);
   return (
     <div className="w-full flex justify-between items-center">
         <audio ref={audioRef} src={currentAudioUrl} key={currentAudioUrl} preload="auto" className="hidden"/>
-        <button 
-          onClick={togglePlay} 
-          className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} 
-          aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
+        <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
           {isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" />}
         </button>
         <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
-            <button onClick={() => handleNavigateVoice('previous')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors" aria-label="Giọng đọc trước">
-                <ChevronLeftIcon className="w-3 h-3 text-white/80" />
-            </button>
+            <button onClick={() => handleNavigateVoice('previous')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors" aria-label="Giọng đọc trước"><ChevronLeftIcon className="w-3 h-3 text-white/80" /></button>
             <div className="text-center w-20 overflow-hidden"><span key={selectedVoice} className="text-xs font-semibold text-white animate-fade-in-short">{selectedVoice}</span></div>
-            <button onClick={() => handleNavigateVoice('next')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors" aria-label="Giọng đọc tiếp theo">
-                <ChevronRightIcon className="w-3 h-3 text-white/80" />
-            </button>
+            <button onClick={() => handleNavigateVoice('next')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors" aria-label="Giọng đọc tiếp theo"><ChevronRightIcon className="w-3 h-3 text-white/80" /></button>
         </div>
         <style jsx>{` @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; }`}</style>
     </div>
   );
 };
-// <<< END: AUDIO PLAYER COMPONENT
 
 // --- UI Component ---
 const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number; }> = ({ onGoBack, selectedPractice }) => {
@@ -161,7 +111,8 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
   const displayCount = gameOver || !currentWord ? completedCount : Math.min(completedCount + 1, totalCount);
 
   return (
-    <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans">
+    // <<< THAY ĐỔI 1: Thêm `overflow-hidden` để ngăn toàn bộ component bị cuộn
+    <div className="flex flex-col h-full w-full max-w-xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 shadow-xl font-sans overflow-hidden">
       <style jsx global>{` @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } } .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; } `}</style>
 
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
@@ -171,7 +122,8 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
         <div className="flex items-center gap-2 sm:gap-3"><CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} /><MasteryDisplay masteryCount={masteryCount} /><StreakDisplay displayedStreak={streak} isAnimating={streakAnimation} /></div>
       </header>
       
-      <main className="flex-grow px-4 sm:px-8 pt-8 pb-8 w-full flex flex-col items-center">
+      {/* <<< THAY ĐỔI 2: Thay `flex-grow` bằng `flex-1` và thêm `overflow-y-auto` để chỉ vùng này được cuộn */}
+      <main className="flex-1 overflow-y-auto px-4 sm:px-8 pt-8 pb-8 w-full flex flex-col items-center hide-scrollbar">
         {showConfetti && <Confetti />}
         <div className="w-full flex flex-col items-center">
           {gameOver ? (
@@ -181,7 +133,6 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
             </div>
           ) : (
             <>
-              {/* <<< START: KHỐI HEADER ĐƯỢC THAY ĐỔI */}
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-xl">
                 <div className="flex justify-between items-center mb-4">
                   <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{displayCount}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{totalCount}</span></div></div>
@@ -197,15 +148,12 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
                 </div>
                 <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${progressPercentage}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                 
-                {/* <<< START: THÊM CONTAINER CHO AUDIO PLAYER */}
                 {(selectedPractice % 100 === 8) && currentWord?.audioUrls && (
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-white/25 mt-4 min-h-[60px] flex items-center">
                      <AudioPlayerUI audioUrls={currentWord.audioUrls} />
                   </div>
                 )}
-                {/* <<< END: THÊM CONTAINER CHO AUDIO PLAYER */}
 
-                {/* Điều kiện hiển thị câu hỏi cho các practice khác */}
                 {(selectedPractice % 100 !== 1 && selectedPractice % 100 !== 8) && currentWord && (
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
                     <p className="text-lg sm:text-xl font-semibold text-white leading-tight">{currentWord.question?.split('___').map((part, i, arr) => ( <React.Fragment key={i}> {part} {i < arr.length - 1 && <span className="font-bold text-indigo-300">___</span>} </React.Fragment> ))}</p>
@@ -213,7 +161,6 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
                   </div>
                 )}
               </div>
-              {/* <<< END: KHỐI HEADER ĐƯỢC THAY ĐỔI */}
               
               {currentWord ? (
                 <div className="w-full mt-6 space-y-6">
@@ -276,6 +223,11 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
         {showPhrasePopup && currentWord && ( <PhrasePopup isOpen={showPhrasePopup} onClose={() => setShowPhrasePopup(false)} currentWord={currentWord.word} /> )}
         {showExamPopup && currentWord && ( <ExamPopup isOpen={showExamPopup} onClose={() => setShowExamPopup(false)} currentWord={currentWord.word} /> )}
       </main>
+      {/* <<< THAY ĐỔI 3: Thêm style để ẩn thanh cuộn (tùy chọn nhưng nên có) */}
+      <style jsx>{`
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+      `}</style>
     </div>
   );
 }
