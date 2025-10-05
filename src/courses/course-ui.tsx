@@ -1,3 +1,4 @@
+
 // quiz-app-home.tsx
 import React, { useMemo, memo, useCallback, useState, useEffect } from 'react';
 import QuizApp from './multiple-choice/multiple-ui.tsx';
@@ -66,7 +67,8 @@ const QuizAppContent: React.FC = () => {
       
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
-            <div className="flex-grow overflow-y-auto">
+            {/* <<< THAY ĐỔI DUY NHẤT TẠI ĐÂY: overflow-y-auto -> overflow-hidden */}
+            <div className="flex-grow overflow-hidden">
                 {ViewComponent}
             </div>
         </div>
