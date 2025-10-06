@@ -254,11 +254,11 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
-            <div className="bg-slate-900 border-2 border-yellow-500 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-end"> <button onClick={onClose} className="text-slate-500 hover:text-white"><Icon path={ICONS.close} /></button> </div>
-                <Icon path={ICONS.star} className="w-16 h-16 text-yellow-400 mx-auto -mt-4 mb-2" />
-                <h2 className="text-2xl font-orbitron font-bold text-slate-100">Upgrade to Premium</h2>
-                <p className="text-slate-400 mt-2 mb-6">Unlock exclusive features, premium recognition, and more rewards!</p>
+            <div className="bg-slate-900 border-2 border-yellow-500 rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center" onClick={e => e.stopPropagation()}>
+                
+                <h2 className="text-2xl font-roboto font-bold text-slate-100">Upgrade to Premium</h2>
+                <p className="text-slate-400 mt-2 mb-6">Mở khóa các tính năng độc quyền, sự công nhận cao cấp và nhiều phần thưởng hơn!</p>
+                
                 <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-slate-700">
                     <div className="flex justify-between items-center text-lg">
                         <span className="text-slate-300">Cost:</span>
@@ -269,7 +269,17 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
                         <div className="flex items-center space-x-2 font-mono text-slate-200"> <Icon path={ICONS.gem} className="w-4 h-4 text-cyan-400" /> <span>{currentGems}</span> </div>
                     </div>
                 </div>
-                {status === 'idle' && (<button onClick={handleConfirm} className="w-full bg-yellow-500 text-slate-900 font-bold py-3 rounded-lg hover:bg-yellow-400 transition-colors shadow-lg">Confirm Upgrade</button>)}
+
+                {status === 'idle' && (
+                    <div className="flex items-center gap-4">
+                        <button onClick={onClose} className="w-full bg-slate-700 text-slate-200 font-bold py-3 rounded-lg hover:bg-slate-600 transition-colors">
+                            Cancel
+                        </button>
+                        <button onClick={handleConfirm} className="w-full bg-yellow-500 text-slate-900 font-bold py-3 rounded-lg hover:bg-yellow-400 transition-colors shadow-lg">
+                            Upgrade
+                        </button>
+                    </div>
+                )}
                 {status === 'error' && (<p className="text-red-500 font-bold py-3">Not enough Gems to upgrade!</p>)}
                 {status === 'success' && (<p className="text-green-500 font-bold py-3">Upgrade Successful!</p>)}
             </div>
