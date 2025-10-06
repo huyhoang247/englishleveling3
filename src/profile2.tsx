@@ -492,9 +492,13 @@ export default function GameProfile() {
                         {playerInfo.accountType === 'Normal' && (
                             <button 
                                 onClick={() => handleModal('upgrade', true)} 
-                                className="flex items-center space-x-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xs px-3 py-1 rounded-full shadow-md shadow-purple-500/30 transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-pink-500/50"
+                                className="flex items-center space-x-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xs pl-2 pr-3 py-1 rounded-full shadow-md shadow-purple-500/30 transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-pink-500/50"
                             >
-                                <Icon path={ICONS.star} className="w-3.5 h-3.5"/>
+                                <img 
+                                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-premium.webp" 
+                                    alt="Premium" 
+                                    className="w-4 h-4"
+                                />
                                 <span>Upgrade</span>
                             </button>
                         )}
