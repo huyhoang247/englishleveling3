@@ -1,4 +1,4 @@
-// --- START OF FILE profile2.tsx (updated) ---
+// --- START OF FILE profile.tsx ---
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
@@ -8,10 +8,7 @@ import {
     performPremiumUpgrade,
     ProfileData
 } from './profileService.ts'; // Import the new service
-
-// --- ALL HELPER FUNCTIONS AND ICON DEFINITIONS REMAIN THE SAME ---
-// (enterFullScreen, exitFullScreen, formatBytes, Icon, ICONS, etc.)
-// ... (pasting them here for completeness, no changes made)
+import { auth } from '../firebase'; // Import auth để lấy thông tin người dùng
 
 // Định nghĩa các loại chế độ hiển thị
 type DisplayMode = 'fullscreen' | 'normal';
@@ -73,9 +70,7 @@ const ICONS = {
   warning: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",
   checkCircle: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
 };
-// --- ALL CHILD COMPONENTS REMAIN THE SAME ---
-// (StatBar, MenuItem, DisplayModeSelector, CacheInfoItem, AvatarModal, etc.)
-// ... (pasting them here for completeness, no changes made)
+
 const StatBar = ({ label, value, maxValue, icon }) => {
     const percentage = (value / maxValue) * 100;
     return (
@@ -328,8 +323,7 @@ const SystemModal = ({ isOpen, onClose, icon, iconColor, title, children, action
 
 // --- Main App Component ---
 export default function GameProfile() {
-  // Replace with your actual user ID logic (e.g., from auth context)
-  const userId = 'testUser123';
+  const [userId, setUserId] = useState<string | null>(null);
   const UPGRADE_COST = 500;
   const avatarOptions = [ 'https://robohash.org/Cyber.png?set=set2&bgset=bg1', 'https://robohash.org/Warrior.png?set=set4&bgset=bg2', 'https://robohash.org/Glitch.png?set=set3&bgset=bg1', 'https://robohash.org/Sentinel.png?set=set1&bgset=bg2', 'https://robohash.org/Phantom.png?set=set4&bgset=bg1', 'https://robohash.org/Jester.png?set=set2&bgset=bg2' ];
 
@@ -341,8 +335,25 @@ export default function GameProfile() {
   const [cacheInfo, setCacheInfo] = useState({ usage: 0, quota: 0 });
   const [isCacheLoading, setIsCacheLoading] = useState(true);
 
+  // Lắng nghe trạng thái xác thực của người dùng
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        setUserId(user.uid);
+      } else {
+        setUserId(null);
+        setPlayerInfo(null); // Xóa dữ liệu người dùng cũ khi đăng xuất
+        setIsLoading(false); // Dừng màn hình loading
+      }
+    });
+
+    return () => unsubscribe(); // Hủy lắng nghe khi component unmount
+  }, []);
+
+
   // --- DATA HANDLING ---
   const loadProfileData = useCallback(async () => {
+    // Hàm này bây giờ phụ thuộc vào userId từ state, nên nó sẽ chỉ chạy khi userId hợp lệ
     if (!userId) return;
     try {
         setIsLoading(true);
@@ -354,29 +365,31 @@ export default function GameProfile() {
     } finally {
         setIsLoading(false);
     }
-  }, [userId]);
+  }, [userId]); // Phụ thuộc vào userId
 
+  // Chỉ gọi loadProfileData khi có userId
   useEffect(() => {
-    loadProfileData();
-  }, [loadProfileData]);
+    if (userId) {
+      loadProfileData();
+    }
+  }, [userId, loadProfileData]);
   
   // --- UI HANDLERS ---
   const handleModal = (modal, state) => setModals(prev => ({ ...prev, [modal]: state }));
 
   const handleSelectAvatar = async (avatarUrl: string) => {
-    if (!playerInfo) return;
+    if (!playerInfo || !userId) return;
     try {
         await updateAvatar(userId, avatarUrl);
         setPlayerInfo(prev => prev ? { ...prev, avatarUrl } : null);
         handleModal('avatar', false);
     } catch (error) {
         console.error("Failed to update avatar:", error);
-        // Optionally show an error message
     }
   };
 
   const handleSaveProfile = async (newInfo: { name: string; title: string }) => {
-    if (!playerInfo) return;
+    if (!playerInfo || !userId) return;
     try {
         await updateProfileInfo(userId, newInfo);
         setPlayerInfo(prev => prev ? { ...prev, ...newInfo } : null);
@@ -386,6 +399,7 @@ export default function GameProfile() {
   };
 
   const handleUpgrade = async () => {
+    if (!userId) return;
     try {
         await performPremiumUpgrade(userId, UPGRADE_COST);
         // Refresh data to get new gem count and premium status
@@ -397,7 +411,6 @@ export default function GameProfile() {
     }
   };
 
-  // --- (The rest of the component logic remains largely the same) ---
   const handleModeChange = (newMode: DisplayMode) => {
       setDisplayMode(newMode);
       localStorage.setItem('displayMode', newMode);
@@ -503,9 +516,12 @@ export default function GameProfile() {
       if (savedMode) setDisplayMode(savedMode);
   }, []);
 
-  if (isLoading || !playerInfo) {
-      // You can add a more sophisticated loading spinner here
+  if (isLoading) {
       return <div className="bg-slate-900 w-full h-full flex items-center justify-center text-white">Loading Profile...</div>;
+  }
+  
+  if (!userId || !playerInfo) {
+      return <div className="bg-slate-900 w-full h-full flex items-center justify-center text-white p-8 text-center">Please log in to view your profile.</div>;
   }
   
   return (
@@ -613,3 +629,5 @@ export default function GameProfile() {
     </div>
   );
 }
+
+// --- END OF FILE profile.tsx ---
