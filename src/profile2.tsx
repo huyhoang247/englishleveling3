@@ -56,7 +56,6 @@ const ICONS = {
   star: "M12 17.25l-6.1875 3.25 1.1875-6.875-5-4.875h6.1875l2.8125-6.25 2.8125 6.25h6.1875l-5 4.875 1.1875 6.875z",
   trendingUp: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z",
   users: "M9 8.25c-2.07 0-3.75-1.68-3.75-3.75S6.93.75 9 .75s3.75 1.68 3.75 3.75S11.07 8.25 9 8.25zm5.18 2.53c-1.28-1-2.9-1.53-4.68-1.53H9c-1.78 0-3.4.53-4.68 1.53C2.43 12.06 1.5 14.16 1.5 16.5v1.5c0 .83.67 1.5 1.5 1.5h12c.83 0 1.5-.67 1.5-1.5v-1.5c0-2.34-.93-4.44-2.82-5.72zM22.5 16.5c0-1.23-.42-2.34-1.13-3.25.34-.11.68-.24 1.02-.38 1.13-.48 1.86-1.63 1.86-2.99 0-1.77-1.43-3.2-3.2-3.2-1.3 0-2.4.77-2.92 1.84-.6-.2-1.26-.34-1.97-.34-1.2 0-2.31.33-3.28.89.29.3.56.63.79 1 .53-.25 1.12-.4 1.74-.4.18 0 .36 0 .53.02 1.77.18 3.16 1.63 3.16 3.48z",
-  hardDrive: "M22 12H2 M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z M6 16h.01 M10 16h.01",
   trash: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
   warning: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",
   checkCircle: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
@@ -153,7 +152,7 @@ const CacheInfoItem: React.FC<{
         <div className="p-4 bg-slate-800/50 rounded-lg border-2 border-slate-700 shadow-lg space-y-3">
             <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                    <div className="text-purple-400"><Icon path={ICONS.hardDrive} /></div>
+                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/cache.webp" alt="Cache Icon" className="w-6 h-6" />
                     <span className="text-slate-200 font-semibold">Cache</span>
                 </div>
                 <button 
@@ -161,11 +160,11 @@ const CacheInfoItem: React.FC<{
                     className="flex items-center space-x-1.5 text-xs font-semibold text-red-400 bg-red-500/10 px-3 py-1.5 rounded-md hover:bg-red-500/20 transition-colors"
                 >
                     <Icon path={ICONS.trash} className="w-4 h-4" />
-                    <span>Xóa</span>
+                    <span>Delete</span>
                 </button>
             </div>
             {isLoading ? (
-                <div className="text-sm text-slate-400 animate-pulse">Đang kiểm tra dung lượng...</div>
+                <div className="text-sm text-slate-400 animate-pulse">Checking storage capacity...</div>
             ) : (
                 <>
                     <div className="h-2.5 bg-gray-900/50 rounded-full overflow-hidden w-full">
@@ -175,8 +174,8 @@ const CacheInfoItem: React.FC<{
                         />
                     </div>
                     <div className="flex justify-between text-xs text-slate-400 font-mono">
-                        <span>{formatBytes(usage)} đã dùng</span>
-                        <span>Tổng: {formatBytes(quota)}</span>
+                        <span>{formatBytes(usage)} used</span>
+                        <span>Total: {formatBytes(quota)}</span>
                     </div>
                 </>
             )}
@@ -190,7 +189,7 @@ const AvatarModal = ({ isOpen, onClose, onSelectAvatar, avatars, currentAvatar }
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
       <div className="bg-slate-900 border-2 border-purple-500 rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-roboto font-bold text-slate-100">Chọn Avatar</h2>
+            <h2 className="text-xl font-roboto font-bold text-slate-100">Select Avatar</h2>
             <button onClick={onClose} className="text-slate-500 hover:text-white"><Icon path={ICONS.close} /></button>
         </div>
         <div className="grid grid-cols-3 gap-4">
@@ -217,19 +216,19 @@ const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
       <div className="bg-slate-900 border-2 border-purple-500 rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-roboto font-bold text-slate-100">Chỉnh Sửa Hồ Sơ</h2>
+          <h2 className="text-xl font-roboto font-bold text-slate-100">Edit Profile</h2>
           <button onClick={onClose} className="text-slate-500 hover:text-white"><Icon path={ICONS.close} /></button>
         </div>
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-purple-400 mb-1">Tên Người Chơi</label>
+            <label htmlFor="name" className="block text-sm font-medium text-purple-400 mb-1">Player Name</label>
             <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} className="w-full bg-slate-800 border-2 border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500"/>
           </div>
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-purple-400 mb-1">Danh Hiệu</label>
+            <label htmlFor="title" className="block text-sm font-medium text-purple-400 mb-1">Title</label>
             <input type="text" id="title" name="title" value={formData.title} onChange={handleChange} className="w-full bg-slate-800 border-2 border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500"/>
           </div>
-          <button type="submit" className="w-full bg-green-500 text-slate-900 font-bold py-2 rounded-lg hover:bg-green-400 transition-colors">Lưu Thay Đổi</button>
+          <button type="submit" className="w-full bg-green-500 text-slate-900 font-bold py-2 rounded-lg hover:bg-green-400 transition-colors">Save Changes</button>
         </form>
       </div>
     </div>
@@ -258,21 +257,21 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
             <div className="bg-slate-900 border-2 border-yellow-500 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-end"> <button onClick={onClose} className="text-slate-500 hover:text-white"><Icon path={ICONS.close} /></button> </div>
                 <Icon path={ICONS.star} className="w-16 h-16 text-yellow-400 mx-auto -mt-4 mb-2" />
-                <h2 className="text-2xl font-orbitron font-bold text-slate-100">Nâng Cấp Premium</h2>
-                <p className="text-slate-400 mt-2 mb-6">Mở khóa các tính năng độc quyền, nhận diện cao cấp và nhiều phần thưởng hơn!</p>
+                <h2 className="text-2xl font-orbitron font-bold text-slate-100">Upgrade to Premium</h2>
+                <p className="text-slate-400 mt-2 mb-6">Unlock exclusive features, premium recognition, and more rewards!</p>
                 <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-slate-700">
                     <div className="flex justify-between items-center text-lg">
-                        <span className="text-slate-300">Chi phí:</span>
+                        <span className="text-slate-300">Cost:</span>
                         <div className="flex items-center space-x-2 font-bold text-yellow-400"> <Icon path={ICONS.gem} className="w-5 h-5" /> <span>{cost}</span> </div>
                     </div>
                     <div className="flex justify-between items-center text-sm mt-2">
-                        <span className="text-slate-400">Gems của bạn:</span>
+                        <span className="text-slate-400">Your Gems:</span>
                         <div className="flex items-center space-x-2 font-mono text-slate-200"> <Icon path={ICONS.gem} className="w-4 h-4 text-cyan-400" /> <span>{currentGems}</span> </div>
                     </div>
                 </div>
-                {status === 'idle' && (<button onClick={handleConfirm} className="w-full bg-yellow-500 text-slate-900 font-bold py-3 rounded-lg hover:bg-yellow-400 transition-colors shadow-lg">Xác Nhận Nâng Cấp</button>)}
-                {status === 'error' && (<p className="text-red-500 font-bold py-3">Không đủ Gems để nâng cấp!</p>)}
-                {status === 'success' && (<p className="text-green-500 font-bold py-3">Nâng cấp thành công!</p>)}
+                {status === 'idle' && (<button onClick={handleConfirm} className="w-full bg-yellow-500 text-slate-900 font-bold py-3 rounded-lg hover:bg-yellow-400 transition-colors shadow-lg">Confirm Upgrade</button>)}
+                {status === 'error' && (<p className="text-red-500 font-bold py-3">Not enough Gems to upgrade!</p>)}
+                {status === 'success' && (<p className="text-green-500 font-bold py-3">Upgrade Successful!</p>)}
             </div>
         </div>
     );
@@ -292,7 +291,7 @@ const SystemModal = ({ isOpen, onClose, icon, iconColor, title, children, action
             <Icon path={icon} className="w-8 h-8" />
           </div>
         )}
-        <h2 className="text-2xl font-orbitron font-bold text-slate-100">{title}</h2>
+        <h2 className="text-2xl font-roboto font-bold text-slate-100">{title}</h2>
         <div className="text-slate-400 mt-2 mb-6">{children}</div>
         <div className="flex justify-center gap-4">
           {actions && actions.map((action, index) => (
@@ -335,17 +334,17 @@ export default function GameProfile() {
 
   const clearAppCache = async () => {
     if (!('caches' in window)) {
-      console.warn("Cache API không được hỗ trợ.");
-      throw new Error("Trình duyệt của bạn không hỗ trợ xóa cache tự động.");
+      console.warn("Cache API is not supported.");
+      throw new Error("Your browser does not support automatic cache clearing.");
     }
     try {
       const cacheKeys = await caches.keys();
       const cachesToDelete = cacheKeys.filter(key => key.startsWith(ASSET_CACHE_PREFIX));
       await Promise.all(cachesToDelete.map(key => caches.delete(key)));
-      console.log("Tất cả cache của ứng dụng đã được xóa:", cachesToDelete);
+      console.log("All application caches have been deleted:", cachesToDelete);
     } catch (error) {
-      console.error("Lỗi khi xóa cache:", error);
-      throw new Error("Đã xảy ra lỗi khi cố gắng xóa cache.");
+      console.error("Error while clearing cache:", error);
+      throw new Error("An error occurred while trying to clear the cache.");
     }
   };
   
@@ -356,11 +355,11 @@ export default function GameProfile() {
         const estimate = await navigator.storage.estimate();
         setCacheInfo({ usage: estimate.usage || 0, quota: estimate.quota || 0 });
       } catch (error) {
-        console.error("Không thể lấy thông tin storage:", error);
+        console.error("Could not retrieve storage estimate:", error);
         setCacheInfo({ usage: 0, quota: 0 });
       }
     } else {
-      console.warn("StorageManager API không được hỗ trợ trên trình duyệt này.");
+      console.warn("StorageManager API is not supported in this browser.");
     }
     setIsCacheLoading(false);
   }, []);
@@ -370,10 +369,10 @@ export default function GameProfile() {
   const executeCacheClear = async () => {
     setSystemModal({
       isOpen: true,
-      title: 'Đang Xóa Cache',
+      title: 'Deleting Cache',
       icon: ICONS.trash,
       iconColor: 'text-blue-400 animate-pulse',
-      message: 'Vui lòng chờ trong giây lát, hệ thống đang dọn dẹp dữ liệu đã tải...',
+      message: 'Please wait a moment while the system cleans up downloaded data...',
       actions: []
     });
     
@@ -383,12 +382,12 @@ export default function GameProfile() {
       
       setSystemModal({
         isOpen: true,
-        title: 'Thành Công!',
+        title: 'Success!',
         icon: ICONS.checkCircle,
         iconColor: 'text-green-400',
-        message: 'Toàn bộ cache của ứng dụng đã được xóa sạch.',
+        message: 'All application cache has been cleared successfully.',
         actions: [{
-          text: 'Đóng',
+          text: 'Close',
           onClick: closeSystemModal,
           className: 'bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-500 transition-colors w-full'
         }]
@@ -397,12 +396,12 @@ export default function GameProfile() {
     } catch (error) {
       setSystemModal({
         isOpen: true,
-        title: 'Có Lỗi Xảy Ra',
+        title: 'An Error Occurred',
         icon: ICONS.warning,
         iconColor: 'text-red-400',
-        message: 'Không thể hoàn tất việc xóa cache. Vui lòng thử lại sau.',
+        message: 'Could not complete the cache clearing process. Please try again later.',
         actions: [{
-          text: 'Đóng',
+          text: 'Close',
           onClick: closeSystemModal,
           className: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-500 transition-colors w-full'
         }]
@@ -413,18 +412,18 @@ export default function GameProfile() {
   const handleClearCache = () => {
     setSystemModal({
       isOpen: true,
-      title: 'Xác Nhận Xóa Cache',
+      title: 'Confirm Cache Deletion',
       icon: ICONS.warning,
       iconColor: 'text-yellow-400',
-      message: 'Bạn có chắc chắn muốn xóa tất cả dữ liệu game đã tải về không? Việc này không thể hoàn tác và bạn sẽ phải tải lại ở lần chơi tiếp theo.',
+      message: 'Are you sure you want to delete all cached game data? This action cannot be undone and will require a full re-download on your next visit.',
       actions: [
         {
-          text: 'Hủy',
+          text: 'Cancel',
           onClick: closeSystemModal,
           className: 'bg-slate-700 text-slate-200 font-bold py-2 px-6 rounded-lg hover:bg-slate-600 transition-colors'
         },
         {
-          text: 'Xác Nhận Xóa',
+          text: 'Confirm',
           onClick: executeCacheClear,
           className: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-500 transition-colors'
         }
@@ -491,7 +490,7 @@ export default function GameProfile() {
                             <span className="text-xs bg-slate-600/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500">Normal</span>
                         )}
                         {playerInfo.accountType === 'Normal' && (
-                            <button onClick={() => handleModal('upgrade', true)} className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full hover:bg-purple-500 transition-colors">Nâng cấp</button>
+                            <button onClick={() => handleModal('upgrade', true)} className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full hover:bg-purple-500 transition-colors">Upgrade</button>
                         )}
                    </div>
                 </div>
@@ -503,16 +502,16 @@ export default function GameProfile() {
         </div>
 
         <div className="p-4 pb-24 space-y-3 overflow-y-auto flex-grow no-scrollbar">
-            <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2">Hành trang</h2>
-            <MenuItem icon={ICONS.sword} label="Trang bị & Vật phẩm" />
-            <MenuItem icon={ICONS.shield} label="Thành tựu" />
-            <MenuItem icon={ICONS.potion} label="Cửa hàng" />
+            <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2">Inventory</h2>
+            <MenuItem icon={ICONS.sword} label="Equipment & Items" />
+            <MenuItem icon={ICONS.shield} label="Achievements" />
+            <MenuItem icon={ICONS.potion} label="Store" />
             
-            <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Bang hội & Bạn bè</h2>
-            <MenuItem icon={ICONS.users} label="Danh sách bạn bè" />
-            <MenuItem icon={ICONS.shield} label="Bang hội của tôi" />
+            <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Guild & Friends</h2>
+            <MenuItem icon={ICONS.users} label="Friends List" />
+            <MenuItem icon={ICONS.shield} label="My Guild" />
             
-            <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Hệ thống</h2>
+            <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">System</h2>
             
             <CacheInfoItem 
               usage={cacheInfo.usage} 
@@ -522,9 +521,9 @@ export default function GameProfile() {
             />
             
             <DisplayModeSelector currentMode={displayMode} onModeChange={handleModeChange} />
-            <MenuItem icon={ICONS.map} label="Lịch sử Phiêu lưu" />
-            <MenuItem icon={ICONS.cog} label="Âm thanh" hasToggle={true} />
-            <MenuItem icon={ICONS.map} label="Đăng xuất" />
+            <MenuItem icon={ICONS.map} label="Adventure Log" />
+            <MenuItem icon={ICONS.cog} label="Sound" hasToggle={true} />
+            <MenuItem icon={ICONS.map} label="Logout" />
         </div>
       </main>
 
