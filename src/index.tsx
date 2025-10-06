@@ -16,11 +16,10 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { allImageUrls } from './game-assets.ts';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx';
 
-// Định nghĩa các loại tab và chế độ hiển thị
+// Định nghĩa các loại tab
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
-type DisplayMode = 'fullscreen' | 'normal';
-// Định nghĩa các bước của quá trình tải
-type LoadingStep = 'authenticating' | 'downloading' | 'selecting_mode' | 'launching' | 'ready';
+// Định nghĩa các bước của quá trình tải (ĐÃ ĐƠN GIẢN HÓA)
+type LoadingStep = 'authenticating' | 'downloading' | 'launching' | 'ready';
 
 // ==================================================================
 // HÀM HELPER (Không thay đổi)
@@ -66,14 +65,13 @@ const enterFullScreen = async () => {
 const appVersion = "1.0.1";
 
 // ==================================================================
-// THÊM MỚI: CÁC HÀM HELPER ĐỂ QUẢN LÝ CACHE
+// CÁC HÀM HELPER ĐỂ QUẢN LÝ CACHE (Không thay đổi)
 // ==================================================================
 const ASSET_CACHE_PREFIX = 'english-leveling-assets';
 const ASSET_CACHE_NAME = `${ASSET_CACHE_PREFIX}-v${appVersion}`;
 
-// Hàm kiểm tra xem tất cả assets cần thiết đã có trong cache chưa
 async function checkAreAllAssetsCached(urls: string[]): Promise<boolean> {
-  if (!('caches' in window)) return false; // Trình duyệt không hỗ trợ Cache API
+  if (!('caches' in window)) return false;
   try {
     const cache = await caches.open(ASSET_CACHE_NAME);
     const cachedRequests = await cache.keys();
@@ -85,7 +83,6 @@ async function checkAreAllAssetsCached(urls: string[]): Promise<boolean> {
   }
 }
 
-// Hàm lưu một asset vào cache
 async function cacheAsset(url: string): Promise<void> {
     if (!('caches' in window)) return;
     try {
@@ -97,12 +94,10 @@ async function cacheAsset(url: string): Promise<void> {
             console.warn(`Failed to fetch and cache asset: ${url}, status: ${response.status}`);
         }
     } catch (error) {
-        // Bỏ qua lỗi CORS nếu có, vì một số ảnh có thể không cache được nhưng game vẫn chạy
         console.warn(`Could not cache asset ${url}:`, error);
     }
 }
 
-// Hàm dọn dẹp các cache cũ không còn dùng đến
 async function cleanupOldCaches() {
     if (!('caches' in window)) return;
     try {
@@ -115,14 +110,8 @@ async function cleanupOldCaches() {
     }
 }
 
-
-const ModeIcon: React.FC<{ mode: DisplayMode; className?: string }> = ({ mode, className }) => {
-  if (mode === 'fullscreen') { return (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" /></svg>); }
-  return (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>);
-};
-
 // ==================================================================
-// COMPONENT LAYOUT CHUNG CHO MÀN HÌNH LOADING
+// COMPONENT LAYOUT CHUNG CHO MÀN HÌNH LOADING (Không thay đổi)
 // ==================================================================
 interface LoadingScreenLayoutProps {
   logoFloating: boolean;
@@ -151,11 +140,6 @@ const App: React.FC = () => {
   const [logoFloating, setLogoFloating] = useState(true);
   const [authLoadProgress, setAuthLoadProgress] = useState(0);
   const [ellipsis, setEllipsis] = useState('.');
-  const [selectedMode, setSelectedMode] = useState<DisplayMode>('normal');
-  const [rememberChoice, setRememberChoice] = useState(true);
-  const [isModeModalOpen, setIsModeModalOpen] = useState(false);
-  const [isAnimatingStart, setIsAnimatingStart] = useState(false);
-  // THÊM MỚI: State để hiển thị thông báo cache
   const [loadingText, setLoadingText] = useState('Authenticating');
 
   const isInitialAuthCheck = useRef(true);
@@ -178,18 +162,16 @@ const App: React.FC = () => {
     }
   }, [loadingStep]);
 
-  // --- THAY ĐỔI: Hàm handleAuthChange chỉ cập nhật state ---
   const handleAuthChange = (user: User | null) => {
     setCurrentUser(user);
     if (user) {
-        setLoadingText('Verifying assets'); // Cập nhật text
+        setLoadingText('Verifying assets');
         setLoadingStep('downloading');
     } else {
         setLoadingStep('ready');
     }
   };
 
-  // --- THAY ĐỔI: Cập nhật useEffect để chạy xác thực nền song song với timer ---
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (isInitialAuthCheck.current) {
@@ -213,51 +195,42 @@ const App: React.FC = () => {
     });
     return () => unsub();
   }, []);
-  
-  const handleStartClick = async (mode: DisplayMode, savePreference: boolean) => {
-    if (isAnimatingStart) return;
-    setIsAnimatingStart(true);
-    if (savePreference) localStorage.setItem('displayMode', mode);
-    if (mode === 'fullscreen') await enterFullScreen();
-  };
 
-  // --- THAY ĐỔI LỚN: Logic tải và cache tài nguyên ---
+  // --- THAY ĐỔI LỚN: Logic tải và cache tài nguyên, tự động chuyển tiếp ---
   useEffect(() => {
     if (loadingStep !== 'downloading' || !currentUser) return;
     let isCancelled = false;
 
     async function preloadAndCacheAssets() {
-      // 1. Kiểm tra xem cache đã hợp lệ chưa
       const isCacheValid = await checkAreAllAssetsCached(allImageUrls);
       
       if (isCacheValid) {
         console.log("All assets are already cached. Skipping download.");
         setLoadingText("Assets loaded from cache");
         setLoadingProgress(100);
-        // Chờ một chút để người dùng thấy thông báo rồi chuyển bước
         await new Promise(resolve => setTimeout(resolve, 1000));
       } else {
         console.log("Cache is outdated or incomplete. Starting download...");
         setLoadingText("Downloading assets");
-        await cleanupOldCaches(); // Dọn dẹp cache cũ trước khi tải mới
+        await cleanupOldCaches();
 
-        // 2. Nếu cache không hợp lệ, tiến hành download và cache
         const totalAssets = allImageUrls.length;
         for (let i = 0; i < totalAssets; i++) {
           if (isCancelled) return;
-          await cacheAsset(allImageUrls[i]); // Thay preloadImage bằng cacheAsset
+          await cacheAsset(allImageUrls[i]);
           setLoadingProgress(Math.round(((i + 1) / totalAssets) * 100));
         }
       }
 
-      // 3. Sau khi hoàn tất, chuyển sang bước tiếp theo
+      // 3. Sau khi hoàn tất, tự động chuyển sang bước launching
       if (!isCancelled) {
-        const savedMode = localStorage.getItem('displayMode') as DisplayMode | null;
-         if (savedMode) {
-            handleStartClick(savedMode, false); 
-         } else {
-            setLoadingStep('selecting_mode');
-         }
+        // Tự động vào game sau khi tải xong, không cần hỏi
+        // Thử vào chế độ toàn màn hình nếu đã lưu trước đó
+        const savedMode = localStorage.getItem('displayMode');
+        if (savedMode === 'fullscreen') {
+            await enterFullScreen();
+        }
+        setLoadingStep('launching');
       }
     }
 
@@ -265,22 +238,12 @@ const App: React.FC = () => {
     return () => { isCancelled = true; };
   }, [loadingStep, currentUser]);
   
-  useEffect(() => {
-    if (!isAnimatingStart) return;
-    
-    const transitionTimer = setTimeout(() => {
-        setLoadingStep('launching');
-    }, 2000);
-
-    return () => clearTimeout(transitionTimer);
-  }, [isAnimatingStart]);
-
-
+  // Tự động chuyển từ launching sang ready sau một khoảng thời gian
   useEffect(() => {
     if (loadingStep === 'launching') {
       const stepTimer = setTimeout(() => {
           setLoadingStep('ready');
-      }, 2000);
+      }, 2000); // Thời gian cho hiệu ứng chuyển cảnh
       return () => { clearTimeout(stepTimer); };
     }
   }, [loadingStep]);
@@ -290,10 +253,11 @@ const App: React.FC = () => {
   const hideNavBar = () => setIsNavBarVisible(false);
   const showNavBar = () => setIsNavBarVisible(true);
 
+  // Màn hình loading (authenticating và downloading)
   if (loadingStep === 'authenticating' || loadingStep === 'downloading') {
     const isAuthenticating = loadingStep === 'authenticating';
     const progress = isAuthenticating ? authLoadProgress : loadingProgress;
-    const text = isAuthenticating ? 'Authenticating' : loadingText; // Sử dụng state loadingText
+    const text = isAuthenticating ? 'Authenticating' : loadingText;
     return (
       <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
         <div className="w-full flex flex-col items-center px-4">
@@ -313,73 +277,10 @@ const App: React.FC = () => {
     );
   }
 
+  // Màn hình đăng nhập nếu chưa có user
   if (!currentUser) { return <AuthComponent appVersion={appVersion} />; }
-
-  if (loadingStep === 'selecting_mode' || (loadingStep === 'launching' && isAnimatingStart)) {
-    const ModeSelectionModal: React.FC<{ onSelect: (mode: DisplayMode) => void, onClose: () => void, currentMode: DisplayMode }> = ({ onSelect, onClose, currentMode }) => {
-        const modes: DisplayMode[] = ['fullscreen', 'normal'];
-        return (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
-            <div className="relative w-72 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
-              <div className="p-5">
-                <h3 className="text-lg font-bold text-center text-cyan-300 text-shadow-sm tracking-wide mb-5 uppercase">Display Mode</h3>
-                <div className="flex justify-center gap-4">
-                  {modes.map(mode => {
-                    const isSelected = currentMode === mode;
-                    return (
-                      <button
-                        key={mode}
-                        onClick={() => onSelect(mode)}
-                        className={`w-28 h-28 flex flex-col items-center justify-center p-2 rounded-lg border-2 transform transition-all duration-200 hover:scale-105 ${isSelected ? 'bg-cyan-500/20 border-cyan-400 ring-2 ring-cyan-500/50' : 'bg-slate-800/50 border-slate-700 hover:bg-slate-700/70 hover:border-slate-500'}`}
-                      >
-                        <ModeIcon mode={mode} className="w-8 h-8 mb-2 text-cyan-300" />
-                        <span className="font-semibold tracking-wide text-sm">{mode === 'fullscreen' ? 'Full Screen' : 'Normal'}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-    };
-    const handleModeSelect = (mode: DisplayMode) => { setSelectedMode(mode); setIsModeModalOpen(false); };
-
-    return (
-      <div className="relative w-full h-screen">
-        <GameSkeletonLoader show={isAnimatingStart} />
-        
-        <div className={`absolute inset-0 transition-opacity duration-500 ${isAnimatingStart ? 'opacity-0 delay-[2000ms]' : 'opacity-100'}`}>
-            <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
-            {isModeModalOpen && <ModeSelectionModal onSelect={handleModeSelect} onClose={() => setIsModeModalOpen(false)} currentMode={selectedMode} />}
-            <div className="w-full flex flex-col items-center px-4 mt-5">
-                <div className="relative w-full max-w-xs">
-                <button onClick={() => !isAnimatingStart && setIsModeModalOpen(true)} className="w-full flex items-center justify-between p-3 bg-black/40 border-2 border-gray-600 rounded-lg text-white hover:border-cyan-400 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-colors duration-300">
-                    <span className="flex items-center"><ModeIcon mode={selectedMode} className="w-5 h-5 mr-3 text-cyan-300" /><span className="font-semibold tracking-wide">{selectedMode === 'fullscreen' ? 'Full Screen' : 'Normal Mode'}</span></span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-                </button>
-                </div>
-                <div onClick={() => !isAnimatingStart && setRememberChoice(p => !p)} className="mt-4 flex items-center cursor-pointer p-2 rounded-md hover:bg-white/10 transition-colors">
-                {rememberChoice ? (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-cyan-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>) : (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>)}
-                <span className="ml-2 text-sm text-gray-300">Remember choice</span>
-                </div>
-                <button
-                  onClick={() => handleStartClick(selectedMode, rememberChoice)}
-                  disabled={isAnimatingStart}
-                  className="mt-6 w-48 mx-auto flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full text-white font-semibold text-lg tracking-wide hover:from-cyan-400 hover:to-blue-500 hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-400/40 focus:outline-none focus:ring-4 focus:ring-cyan-300/50"
-                >
-                  Start
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transform transition-all ease-in-out ${isAnimatingStart ? 'duration-[2000ms] scale-[2.5] rotate-[360deg] opacity-0' : 'duration-300 scale-100 rotate-0 opacity-100'}`} viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                  </svg>
-                </button>
-            </div>
-            </LoadingScreenLayout>
-        </div>
-      </div>
-    );
-  }
-
+  
+  // Khi loadingStep đã là 'ready' hoặc 'launching', hiển thị giao diện game
   return (
     <div className="relative w-screen h-screen">
       <div className="app-container" style={{ height: 'var(--app-height, 100vh)' }}>
@@ -395,6 +296,7 @@ const App: React.FC = () => {
         {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
       </div>
       
+      {/* Hiệu ứng mờ dần khi game bắt đầu */}
       <GameSkeletonLoader show={loadingStep === 'launching'} />
     </div>
   );
