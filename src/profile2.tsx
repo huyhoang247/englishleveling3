@@ -415,7 +415,7 @@ export default function GameProfile() {
       title: 'Confirm Cache Deletion',
       icon: ICONS.warning,
       iconColor: 'text-yellow-400',
-      message: 'Are you sure you want to delete all cached game data? This action cannot be undone and will require a full re-download on your next visit.',
+      message: 'Bạn có chắc chắn muốn xóa tất cả dữ liệu trò chơi đã lưu trong bộ nhớ đệm không? Hành động này không thể hoàn tác và sẽ yêu cầu tải lại toàn bộ vào lần truy cập tiếp theo.',
       actions: [
         {
           text: 'Cancel',
