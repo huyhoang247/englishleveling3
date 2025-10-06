@@ -23,7 +23,6 @@ const exitFullScreen = async () => {
   } catch (error) { console.warn("Failed to exit full-screen mode:", error); }
 };
 
-// --- START: ĐƯỢC CHUYỂN TỪ SystemCheckScreen.tsx ---
 // Helper function để định dạng bytes
 const formatBytes = (bytes: number, decimals = 2): string => {
   if (!+bytes) return '0 Bytes';
@@ -33,11 +32,8 @@ const formatBytes = (bytes: number, decimals = 2): string => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 };
-// --- END: ĐƯỢC CHUYỂN TỪ SystemCheckScreen.tsx ---
 
-// --- START: THÊM CÁC HẰNG SỐ ĐỂ QUẢN LÝ CACHE ---
 const ASSET_CACHE_PREFIX = 'english-leveling-assets';
-// --- END: THÊM CÁC HẰNG SỐ ĐỂ QUẢN LÝ CACHE ---
 
 // --- Icon Component ---
 const Icon = ({ path, className = "w-6 h-6" }) => (
@@ -62,11 +58,15 @@ const ICONS = {
   users: "M9 8.25c-2.07 0-3.75-1.68-3.75-3.75S6.93.75 9 .75s3.75 1.68 3.75 3.75S11.07 8.25 9 8.25zm5.18 2.53c-1.28-1-2.9-1.53-4.68-1.53H9c-1.78 0-3.4.53-4.68 1.53C2.43 12.06 1.5 14.16 1.5 16.5v1.5c0 .83.67 1.5 1.5 1.5h12c.83 0 1.5-.67 1.5-1.5v-1.5c0-2.34-.93-4.44-2.82-5.72zM22.5 16.5c0-1.23-.42-2.34-1.13-3.25.34-.11.68-.24 1.02-.38 1.13-.48 1.86-1.63 1.86-2.99 0-1.77-1.43-3.2-3.2-3.2-1.3 0-2.4.77-2.92 1.84-.6-.2-1.26-.34-1.97-.34-1.2 0-2.31.33-3.28.89.29.3.56.63.79 1 .53-.25 1.12-.4 1.74-.4.18 0 .36 0 .53.02 1.77.18 3.16 1.63 3.16 3.48z",
   hardDrive: "M22 12H2 M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z M6 16h.01 M10 16h.01",
   trash: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
+  warning: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",
+  checkCircle: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
 };
 
 // --- Child Components ---
+
 const StatBar = ({ label, value, maxValue, icon }) => {
     const percentage = (value / maxValue) * 100;
+    
     return (
         <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -85,6 +85,7 @@ const StatBar = ({ label, value, maxValue, icon }) => {
                     </div>
                 </div>
             </div>
+            
             <div className="h-4 bg-gray-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
                 <div
                     className="h-full bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-500 rounded-full transition-all duration-500 ease-out relative"
@@ -183,7 +184,6 @@ const CacheInfoItem: React.FC<{
     );
 };
 
-// --- Modal Components (Không thay đổi) ---
 const AvatarModal = ({ isOpen, onClose, onSelectAvatar, avatars, currentAvatar }) => {
   if (!isOpen) return null;
   return (
@@ -205,6 +205,7 @@ const AvatarModal = ({ isOpen, onClose, onSelectAvatar, avatars, currentAvatar }
     </div>
   );
 };
+
 const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
   const [formData, setFormData] = useState(currentPlayerInfo);
   useEffect(() => { if (isOpen) setFormData(currentPlayerInfo); }, [currentPlayerInfo, isOpen]);
@@ -234,6 +235,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
     </div>
   );
 };
+
 const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
     const [status, setStatus] = useState('idle'); // 'idle', 'error', 'success'
 
@@ -276,10 +278,46 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
     );
 };
 
+const SystemModal = ({ isOpen, onClose, icon, iconColor, title, children, actions }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-opacity duration-300" onClick={onClose}>
+      <div 
+        className="bg-slate-900 border-2 border-purple-500 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center transform transition-all duration-300 scale-95 opacity-0 animate-scale-in"
+        onClick={e => e.stopPropagation()}
+      >
+        {icon && (
+          <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center -mt-14 mb-4 bg-slate-800 border-4 border-slate-900 ${iconColor}`}>
+            <Icon path={icon} className="w-8 h-8" />
+          </div>
+        )}
+        <h2 className="text-2xl font-orbitron font-bold text-slate-100">{title}</h2>
+        <div className="text-slate-400 mt-2 mb-6">{children}</div>
+        <div className="flex justify-center gap-4">
+          {actions && actions.map((action, index) => (
+            <button key={index} onClick={action.onClick} className={action.className}>
+              {action.text}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // --- Main App Component ---
 export default function GameProfile() {
   const [modals, setModals] = useState({ avatar: false, edit: false, upgrade: false });
+  const [systemModal, setSystemModal] = useState({
+    isOpen: false,
+    title: '',
+    icon: null,
+    iconColor: '',
+    message: '',
+    actions: []
+  });
+
   const [currentAvatar, setCurrentAvatar] = useState('https://robohash.org/Player.png?set=set4&bgset=bg1');
   const [playerInfo, setPlayerInfo] = useState({
       name: 'CyberWarrior',
@@ -290,17 +328,15 @@ export default function GameProfile() {
       maxExp: 1500
   });
   const [displayMode, setDisplayMode] = useState<DisplayMode>('normal');
-  
-  // --- START: STATE VÀ LOGIC MỚI CHO CACHE ---
   const [cacheInfo, setCacheInfo] = useState({ usage: 0, quota: 0 });
   const [isCacheLoading, setIsCacheLoading] = useState(true);
+  
+  const closeSystemModal = () => setSystemModal(prev => ({ ...prev, isOpen: false }));
 
-  // --- START: LOGIC XÓA CACHE THỰC TẾ ---
   const clearAppCache = async () => {
     if (!('caches' in window)) {
       console.warn("Cache API không được hỗ trợ.");
-      alert("Trình duyệt của bạn không hỗ trợ xóa cache tự động.");
-      return;
+      throw new Error("Trình duyệt của bạn không hỗ trợ xóa cache tự động.");
     }
     try {
       const cacheKeys = await caches.keys();
@@ -309,49 +345,92 @@ export default function GameProfile() {
       console.log("Tất cả cache của ứng dụng đã được xóa:", cachesToDelete);
     } catch (error) {
       console.error("Lỗi khi xóa cache:", error);
-      alert("Đã xảy ra lỗi khi cố gắng xóa cache.");
+      throw new Error("Đã xảy ra lỗi khi cố gắng xóa cache.");
     }
   };
   
   const fetchCacheData = useCallback(async () => {
     setIsCacheLoading(true);
-    // Kiểm tra xem API có được hỗ trợ không
     if ('storage' in navigator && 'estimate' in navigator.storage) {
       try {
         const estimate = await navigator.storage.estimate();
         setCacheInfo({ usage: estimate.usage || 0, quota: estimate.quota || 0 });
       } catch (error) {
         console.error("Không thể lấy thông tin storage:", error);
-        setCacheInfo({ usage: 0, quota: 0 }); // Reset khi có lỗi
+        setCacheInfo({ usage: 0, quota: 0 });
       }
     } else {
       console.warn("StorageManager API không được hỗ trợ trên trình duyệt này.");
     }
     setIsCacheLoading(false);
   }, []);
+  
+  useEffect(() => { fetchCacheData(); }, [fetchCacheData]);
 
-  useEffect(() => {
-    fetchCacheData();
-  }, [fetchCacheData]);
+  const executeCacheClear = async () => {
+    setSystemModal({
+      isOpen: true,
+      title: 'Đang Xóa Cache',
+      icon: ICONS.trash,
+      iconColor: 'text-blue-400 animate-pulse',
+      message: 'Vui lòng chờ trong giây lát, hệ thống đang dọn dẹp dữ liệu đã tải...',
+      actions: []
+    });
+    
+    try {
+      await clearAppCache();
+      await fetchCacheData();
+      
+      setSystemModal({
+        isOpen: true,
+        title: 'Thành Công!',
+        icon: ICONS.checkCircle,
+        iconColor: 'text-green-400',
+        message: 'Toàn bộ cache của ứng dụng đã được xóa sạch.',
+        actions: [{
+          text: 'Đóng',
+          onClick: closeSystemModal,
+          className: 'bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-500 transition-colors w-full'
+        }]
+      });
 
-  const handleClearCache = async () => {
-    const confirmation = window.confirm("Bạn có chắc chắn muốn xóa tất cả dữ liệu game đã tải về không? Lần tới bạn sẽ phải tải lại toàn bộ.");
-    if (!confirmation) {
-      return; // Dừng lại nếu người dùng nhấn "Cancel"
+    } catch (error) {
+      setSystemModal({
+        isOpen: true,
+        title: 'Có Lỗi Xảy Ra',
+        icon: ICONS.warning,
+        iconColor: 'text-red-400',
+        message: 'Không thể hoàn tất việc xóa cache. Vui lòng thử lại sau.',
+        actions: [{
+          text: 'Đóng',
+          onClick: closeSystemModal,
+          className: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-500 transition-colors w-full'
+        }]
+      });
     }
-
-    alert("Đang tiến hành xóa cache...");
-    
-    // Gọi hàm xóa cache thực tế và chờ nó hoàn thành
-    await clearAppCache();
-
-    alert("Cache đã được xóa thành công. Đang cập nhật lại thông tin dung lượng.");
-    
-    // Lấy lại thông tin dung lượng mới nhất sau khi xóa
-    await fetchCacheData();
   };
-  // --- END: LOGIC XÓA CACHE THỰC TẾ ---
-  // --- END: STATE VÀ LOGIC MỚI CHO CACHE ---
+
+  const handleClearCache = () => {
+    setSystemModal({
+      isOpen: true,
+      title: 'Xác Nhận Xóa Cache',
+      icon: ICONS.warning,
+      iconColor: 'text-yellow-400',
+      message: 'Bạn có chắc chắn muốn xóa tất cả dữ liệu game đã tải về không? Việc này không thể hoàn tác và bạn sẽ phải tải lại ở lần chơi tiếp theo.',
+      actions: [
+        {
+          text: 'Hủy',
+          onClick: closeSystemModal,
+          className: 'bg-slate-700 text-slate-200 font-bold py-2 px-6 rounded-lg hover:bg-slate-600 transition-colors'
+        },
+        {
+          text: 'Xác Nhận Xóa',
+          onClick: executeCacheClear,
+          className: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-500 transition-colors'
+        }
+      ]
+    });
+  };
 
   const UPGRADE_COST = 500;
   const avatarOptions = [ 'https://robohash.org/Cyber.png?set=set2&bgset=bg1', 'https://robohash.org/Warrior.png?set=set4&bgset=bg2', 'https://robohash.org/Glitch.png?set=set3&bgset=bg1', 'https://robohash.org/Sentinel.png?set=set1&bgset=bg2', 'https://robohash.org/Phantom.png?set=set4&bgset=bg1', 'https://robohash.org/Jester.png?set=set2&bgset=bg2' ];
@@ -364,9 +443,7 @@ export default function GameProfile() {
   const handleModal = (modal, state) => setModals(prev => ({ ...prev, [modal]: state }));
   const handleSelectAvatar = (avatarUrl) => { setCurrentAvatar(avatarUrl); handleModal('avatar', false); };
   const handleSaveProfile = (newInfo) => { setPlayerInfo(prev => ({ ...prev, ...newInfo })); };
-  const handleUpgrade = () => {
-    setPlayerInfo(prev => ({ ...prev, accountType: 'Premium', gems: prev.gems - UPGRADE_COST }));
-  };
+  const handleUpgrade = () => { setPlayerInfo(prev => ({ ...prev, accountType: 'Premium', gems: prev.gems - UPGRADE_COST })); };
   const handleModeChange = (newMode: DisplayMode) => {
       setDisplayMode(newMode);
       localStorage.setItem('displayMode', newMode);
@@ -381,6 +458,8 @@ export default function GameProfile() {
         .font-roboto { font-family: 'Roboto', sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes scale-in { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .animate-scale-in { animation: scale-in 0.2s ease-out forwards; }
       `}</style>
       
       <main className="w-full max-w-md mx-auto h-full bg-slate-800/30 rounded-2xl shadow-2xl shadow-purple-900/20 flex flex-col">
@@ -452,6 +531,17 @@ export default function GameProfile() {
       <AvatarModal isOpen={modals.avatar} onClose={() => handleModal('avatar', false)} onSelectAvatar={handleSelectAvatar} avatars={avatarOptions} currentAvatar={currentAvatar}/>
       <EditProfileModal isOpen={modals.edit} onClose={() => handleModal('edit', false)} onSave={handleSaveProfile} currentPlayerInfo={playerInfo}/>
       <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={playerInfo.gems} cost={UPGRADE_COST}/>
+      
+      <SystemModal
+        isOpen={systemModal.isOpen}
+        onClose={closeSystemModal}
+        icon={systemModal.icon}
+        iconColor={systemModal.iconColor}
+        title={systemModal.title}
+        actions={systemModal.actions}
+      >
+        <p>{systemModal.message}</p>
+      </SystemModal>
     </div>
   );
 }
