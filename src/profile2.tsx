@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useGame } from './GameContext.tsx'; // BƯỚC 1: IMPORT USEGAME HOOK
+import { 
+    fetchOrCreateUserGameData, 
+    updateUserProfileInfo, 
+    upgradeUserToPremium,
+    UserGameData
+} from './gameDataService.ts'; // Giả sử đường dẫn đúng
 
 // Định nghĩa các loại chế độ hiển thị
 type DisplayMode = 'fullscreen' | 'normal';
@@ -239,14 +244,20 @@ const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
 const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
     const [status, setStatus] = useState('idle'); // 'idle', 'error', 'success'
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (currentGems >= cost) {
-            setStatus('success');
-            onConfirm();
-            setTimeout(() => {
-                onClose();
-                setStatus('idle');
-            }, 1500);
+            try {
+                await onConfirm(); // Chờ đợi hoạt động bất đồng bộ hoàn thành
+                setStatus('success');
+                setTimeout(() => {
+                    onClose();
+                    setStatus('idle');
+                }, 1500);
+            } catch (error) {
+                console.error("Upgrade failed:", error);
+                setStatus('error');
+                setTimeout(() => setStatus('idle'), 2000);
+            }
         } else {
             setStatus('error');
             setTimeout(() => setStatus('idle'), 2000);
@@ -318,9 +329,9 @@ const SystemModal = ({ isOpen, onClose, icon, iconColor, title, children, action
 
 // --- Main App Component ---
 export default function GameProfile() {
-  // BƯỚC 2: LẤY DỮ LIỆU VÀ HÀM TỪ CONTEXT
-  const { gems, masteryCards, updateUserCurrency } = useGame();
-
+  // ID người dùng - Trong ứng dụng thực tế, ID này sẽ đến từ context xác thực hoặc props
+  const USER_ID = 'test-user-123';
+  
   const [modals, setModals] = useState({ avatar: false, edit: false, upgrade: false });
   const [systemModal, setSystemModal] = useState({
     isOpen: false,
@@ -332,18 +343,30 @@ export default function GameProfile() {
   });
 
   const [currentAvatar, setCurrentAvatar] = useState('https://robohash.org/Player.png?set=set4&bgset=bg1');
-  
-  // BƯỚC 3: ĐƠN GIẢN HÓA STATE CỤC BỘ, LOẠI BỎ DỮ LIỆU ĐÃ CÓ TRONG CONTEXT
-  const [playerInfo, setPlayerInfo] = useState({
-      name: 'CyberWarrior',
-      title: 'Lv. 42 - Elite Vanguard',
-      accountType: 'Normal',
-  });
+  const [playerInfo, setPlayerInfo] = useState<UserGameData | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   const [displayMode, setDisplayMode] = useState<DisplayMode>('normal');
   const [cacheInfo, setCacheInfo] = useState({ usage: 0, quota: 0 });
   const [isCacheLoading, setIsCacheLoading] = useState(true);
   
+  // Nạp dữ liệu người dùng khi component được mount
+  useEffect(() => {
+    const loadData = async () => {
+      if (!USER_ID) return;
+      setIsLoadingProfile(true);
+      try {
+        const data = await fetchOrCreateUserGameData(USER_ID);
+        setPlayerInfo(data);
+      } catch (error) {
+        console.error("Failed to load user data:", error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+    loadData();
+  }, [USER_ID]);
+
   const closeSystemModal = () => setSystemModal(prev => ({ ...prev, isOpen: false }));
 
   const clearAppCache = async () => {
@@ -455,19 +478,48 @@ export default function GameProfile() {
 
   const handleModal = (modal, state) => setModals(prev => ({ ...prev, [modal]: state }));
   const handleSelectAvatar = (avatarUrl) => { setCurrentAvatar(avatarUrl); handleModal('avatar', false); };
-  const handleSaveProfile = (newInfo) => { setPlayerInfo(prev => ({ ...prev, ...newInfo })); };
   
-  // BƯỚC 4: SỬA LOGIC ĐỂ GỌI HÀM CẬP NHẬT CỦA CONTEXT
-  const handleUpgrade = () => { 
-      setPlayerInfo(prev => ({ ...prev, accountType: 'Premium' })); 
-      updateUserCurrency({ gems: gems - UPGRADE_COST });
+  const handleSaveProfile = async (newInfo) => {
+    setPlayerInfo(prev => ({ ...prev, ...newInfo })); // Cập nhật giao diện ngay lập tức
+    try {
+      await updateUserProfileInfo(USER_ID, { name: newInfo.name, title: newInfo.title });
+    } catch (error) {
+      console.error("Failed to save profile:", error);
+      // Có thể thêm logic để hoàn tác thay đổi trên UI nếu lưu thất bại
+    }
   };
-  
+
+  const handleUpgrade = async () => {
+    try {
+      const updatedData = await upgradeUserToPremium(USER_ID, UPGRADE_COST);
+      setPlayerInfo(updatedData); // Cập nhật state với dữ liệu mới từ server
+    } catch (error) {
+      console.error("Upgrade failed:", error);
+      throw error; // Ném lỗi để modal có thể bắt và hiển thị thông báo lỗi
+    }
+  };
+
   const handleModeChange = (newMode: DisplayMode) => {
       setDisplayMode(newMode);
       localStorage.setItem('displayMode', newMode);
       if (newMode === 'fullscreen') { enterFullScreen(); } else { exitFullScreen(); }
   };
+
+  if (isLoadingProfile) {
+    return (
+        <div className="bg-slate-900 w-full h-full flex items-center justify-center text-white">
+            <p className="animate-pulse text-lg">Loading Profile...</p>
+        </div>
+    );
+  }
+
+  if (!playerInfo) {
+      return (
+          <div className="bg-slate-900 w-full h-full flex items-center justify-center text-red-400">
+              <p>Error: Could not load player data.</p>
+          </div>
+      );
+  }
 
   return (
     <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
@@ -526,8 +578,7 @@ export default function GameProfile() {
                 </div>
               </div>
               <div className="mt-6">
-                {/* BƯỚC 5: CẬP NHẬT JSX ĐỂ SỬ DỤNG DỮ LIỆU TỪ CONTEXT */}
-                <StatBar label="Mastery" value={masteryCards} maxValue={1000} icon={ICONS.gem} />
+                <StatBar label="Mastery" value={playerInfo.masteryCards} maxValue={playerInfo.cardCapacity} icon={ICONS.star} />
               </div>
            </div>
         </div>
@@ -560,8 +611,7 @@ export default function GameProfile() {
 
       <AvatarModal isOpen={modals.avatar} onClose={() => handleModal('avatar', false)} onSelectAvatar={handleSelectAvatar} avatars={avatarOptions} currentAvatar={currentAvatar}/>
       <EditProfileModal isOpen={modals.edit} onClose={() => handleModal('edit', false)} onSave={handleSaveProfile} currentPlayerInfo={playerInfo}/>
-      {/* BƯỚC 5 (tiếp): CẬP NHẬT JSX ĐỂ SỬ DỤNG DỮ LIỆU TỪ CONTEXT */}
-      <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={gems} cost={UPGRADE_COST}/>
+      <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={playerInfo.gems} cost={UPGRADE_COST}/>
       
       <SystemModal
         isOpen={systemModal.isOpen}
