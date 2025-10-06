@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // Định nghĩa các loại chế độ hiển thị
 type DisplayMode = 'fullscreen' | 'normal';
@@ -23,9 +23,20 @@ const exitFullScreen = async () => {
   } catch (error) { console.warn("Failed to exit full-screen mode:", error); }
 };
 
+// --- START: ĐƯỢC CHUYỂN TỪ SystemCheckScreen.tsx ---
+// Helper function để định dạng bytes
+const formatBytes = (bytes: number, decimals = 2): string => {
+  if (!+bytes) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+};
+// --- END: ĐƯỢC CHUYỂN TỪ SystemCheckScreen.tsx ---
+
 
 // --- Icon Component ---
-// Using inline SVG to avoid external libraries
 const Icon = ({ path, className = "w-6 h-6" }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
     <path d={path} />
@@ -38,14 +49,18 @@ const ICONS = {
   shield: "M12 1.09375l-9 4.5v6.09375c0 4.57812 3.82812 8.42188 9 9.28125c5.17188-0.85937 9-4.70313 9-9.28125v-6.09375l-9-4.5zM12 3.92188l6.75 3.375v4.40624c0 3.23438-2.67187 5.90625-6.75 6.64063c-4.07812-0.73438-6.75-3.40625-6.75-6.64063v-4.40624z",
   potion: "M15 3c-0.828 0-1.5 0.672-1.5 1.5v1.5h-3v-1.5c0-0.828-0.672-1.5-1.5-1.5s-1.5 0.672-1.5 1.5v1.5h-1.5c-0.828 0-1.5 0.672-1.5 1.5s0.672 1.5 1.5 1.5h1.5v10.5c0 0.828 0.672 1.5 1.5 1.5h6c0.828 0 1.5-0.672 1.5-1.5v-10.5h1.5c0.828 0 1.5-0.672 1.5-1.5s-0.672-1.5-1.5-1.5h-1.5v-1.5c0-0.828-0.672-1.5-1.5-1.5zM9 19.5v-10.5h6v10.5z",
   chest: "M5.25 5.25c-0.828 0-1.5 0.672-1.5 1.5v1.5h15v-1.5c0-0.828-0.672-1.5-1.5-1.5zM3.75 9.75v7.5c0 0.828 0.672 1.5 1.5 1.5h13.5c0.828 0 1.5-0.672 1.5-1.5v-7.5h-16.5zM11.25 12.75h1.5v3h-1.5z",
-  cog: "M12 8.25c-2.078 0-3.75 1.672-3.75 3.75s1.672 3.75 3.75 3.75 3.75-1.672 3.75-3.75-1.672-3.75-3.75-3.75zM12 14.25c-1.25 0-2.25-1-2.25-2.25s1-2.25 2.25-2.25 2.25 1 2.25 2.25-1 2.25-2.25 2.25zM22.5 12.75h-1.781c-0.141 0.703-0.375 1.359-0.656 1.969l1.266 1.266c0.234 0.234 0.352 0.516 0.352 0.844s-0.117 0.609-0.352 0.844l-1.063 1.063c-0.234 0.234-0.516 0.352-0.844 0.352s-0.609-0.117-0.844-0.352l-1.266-1.266c-0.609 0.281-1.266 0.516-1.969 0.656v1.781c0 0.828-0.672 1.5-1.5 1.5h-1.5c-0.828 0-1.5-0.672-1.5-1.5v-1.781c-0.703-0.141-1.359-0.375-1.969-0.656l-1.266 1.266c-0.234 0.234-0.516 0.352-0.844 0.352s-0.609-0.117-0.844-0.352l-1.063-1.063c-0.234 0.234-0.352-0.516-0.352-0.844s0.117-0.609 0.352-0.844l1.266-1.266c-0.281-0.609-0.516-1.266-0.656-1.969h-1.781c-0.828 0-1.5-0.672-1.5-1.5v-1.5c0-0.828 0.672-1.5 1.5-1.5h1.781c0.141-0.703 0.375-1.359 0.656-1.969l-1.266-1.266c-0.234-0.234-0.352-0.516-0.352-0.844s0.117-0.609 0.352-0.844l1.063-1.063c0.234-0.234 0.516 0.352 0.844 0.352s0.609 0.117 0.844 0.352l1.266 1.266c0.609-0.281 1.266-0.516 1.969-0.656v-1.781c0-0.828 0.672-1.5 1.5-1.5h1.5c0.828 0 1.5 0.672 1.5 1.5v1.781c0.703 0.141 1.359 0.375 1.969 0.656l1.266-1.266c0.234-0.234 0.516-0.352 0.844-0.352s0.609 0.117 0.844 0.352l1.063 1.063c0.234 0.234 0.352 0.516 0.352 0.844s-0.117 0.609-0.352-0.844l-1.266 1.266c0.281 0.609 0.516 1.266 0.656 1.969h1.781c0.828 0 1.5 0.672 1.5 1.5v1.5c0 0.828-0.672 1.5-1.5 1.5z",
+  cog: "M12 8.25c-2.078 0-3.75 1.672-3.75 3.75s1.672 3.75 3.75 3.75 3.75-1.672 3.75-3.75-1.672-3.75-3.75-3.75zM12 14.25c-1.25 0-2.25-1-2.25-2.25s1-2.25 2.25-2.25 2.25 1 2.25 2.25-1 2.25-2.25 2.25zM22.5 12.75h-1.781c-0.141 0.703-0.375 1.359-0.656 1.969l1.266 1.266c0.234 0.234 0.352 0.516 0.352 0.844s-0.117 0.609-0.352 0.844l-1.063 1.063c-0.234 0.234-0.516 0.352-0.844 0.352s-0.609-0.117-0.844-0.352l-1.266-1.266c-0.609 0.281-1.266 0.516-1.969 0.656v1.781c0 0.828-0.672 1.5-1.5 1.5h-1.5c-0.828 0-1.5-0.672-1.5-1.5v-1.781c-0.703-0.141-1.359-0.375-1.969-0.656l-1.266 1.266c-0.234 0.234-0.516 0.352-0.844 0.352s-0.609-0.117-0.844-0.352l-1.063-1.063c-0.234 0.234-0.352-0.516-0.352-0.844s0.117-0.609 0.352-0.844l1.266-1.266c-0.281-0.609-0.516-1.266-0.656-1.969h-1.781c-0.828 0-1.5-0.672-1.5-1.5v-1.5c0-0.828 0.672-1.5 1.5-1.5h1.781c0.141-0.703 0.375-1.359 0.656-1.969l-1.266-1.266c-0.234-0.234-0.352-0.516-0.352-0.844s0.117-0.609 0.352-0.844l1.063-1.063c0.234 0.234 0.516 0.352 0.844 0.352s0.609 0.117 0.844 0.352l1.266 1.266c0.609-0.281 1.266-0.516 1.969-0.656v-1.781c0-0.828 0.672-1.5 1.5-1.5h1.5c0.828 0 1.5 0.672 1.5 1.5v1.781c0.703 0.141 1.359 0.375 1.969 0.656l1.266-1.266c0.234-0.234 0.516-0.352 0.844-0.352s0.609 0.117 0.844 0.352l1.063 1.063c0.234 0.234 0.352 0.516 0.352 0.844s-0.117 0.609-0.352-0.844l-1.266 1.266c0.281 0.609 0.516 1.266 0.656 1.969h1.781c0.828 0 1.5 0.672 1.5 1.5v1.5c0 0.828-0.672 1.5-1.5 1.5z",
   map: "M12 0c-4.148 0-7.5 3.352-7.5 7.5c0 4.148 7.5 16.5 7.5 16.5s7.5-12.352 7.5-16.5c0-4.148-3.352-7.5-7.5-7.5zM12 11.25c-2.078 0-3.75-1.672-3.75-3.75s1.672-3.75 3.75-3.75 3.75 1.672 3.75 3.75-1.672 3.75-3.75 3.75z",
   camera: "M6 6c-1.657 0-3 1.343-3 3v9c0 1.657 1.343 3 3 3h12c1.657 0 3-1.343 3-3v-9c0-1.657-1.343-3-3-3h-2.25l-1.5-1.5h-4.5l-1.5 1.5h-2.25zm6 12c-2.485 0-4.5-2.015-4.5-4.5s2.015-4.5 4.5-4.5 4.5 2.015 4.5 4.5-2.015 4.5-4.5 4.5z",
   close: "M6.46875 4.96875l-1.5 1.5 5.53125 5.53125-5.53125 5.53125 1.5 1.5 5.53125-5.53125 5.53125 5.53125 1.5-1.5-5.53125-5.53125 5.53125-5.53125-1.5-1.5-5.53125 5.53125z",
   gem: "M12 0.75l-4.5 4.5h9zM12 23.25l4.5-4.5h-9zM6 6l-5.25 5.25v1.5l5.25 5.25h12l5.25-5.25v-1.5l-5.25-5.25z",
   star: "M12 17.25l-6.1875 3.25 1.1875-6.875-5-4.875h6.1875l2.8125-6.25 2.8125 6.25h6.1875l-5 4.875 1.1875 6.875z",
   trendingUp: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z",
-  users: "M9 8.25c-2.07 0-3.75-1.68-3.75-3.75S6.93.75 9 .75s3.75 1.68 3.75 3.75S11.07 8.25 9 8.25zm5.18 2.53c-1.28-1-2.9-1.53-4.68-1.53H9c-1.78 0-3.4.53-4.68 1.53C2.43 12.06 1.5 14.16 1.5 16.5v1.5c0 .83.67 1.5 1.5 1.5h12c.83 0 1.5-.67 1.5-1.5v-1.5c0-2.34-.93-4.44-2.82-5.72zM22.5 16.5c0-1.23-.42-2.34-1.13-3.25.34-.11.68-.24 1.02-.38 1.13-.48 1.86-1.63 1.86-2.99 0-1.77-1.43-3.2-3.2-3.2-1.3 0-2.4.77-2.92 1.84-.6-.2-1.26-.34-1.97-.34-1.2 0-2.31.33-3.28.89.29.3.56.63.79 1 .53-.25 1.12-.4 1.74-.4.18 0 .36 0 .53.02 1.77.18 3.16 1.63 3.16 3.48z"
+  users: "M9 8.25c-2.07 0-3.75-1.68-3.75-3.75S6.93.75 9 .75s3.75 1.68 3.75 3.75S11.07 8.25 9 8.25zm5.18 2.53c-1.28-1-2.9-1.53-4.68-1.53H9c-1.78 0-3.4.53-4.68 1.53C2.43 12.06 1.5 14.16 1.5 16.5v1.5c0 .83.67 1.5 1.5 1.5h12c.83 0 1.5-.67 1.5-1.5v-1.5c0-2.34-.93-4.44-2.82-5.72zM22.5 16.5c0-1.23-.42-2.34-1.13-3.25.34-.11.68-.24 1.02-.38 1.13-.48 1.86-1.63 1.86-2.99 0-1.77-1.43-3.2-3.2-3.2-1.3 0-2.4.77-2.92 1.84-.6-.2-1.26-.34-1.97-.34-1.2 0-2.31.33-3.28.89.29.3.56.63.79 1 .53-.25 1.12-.4 1.74-.4.18 0 .36 0 .53.02 1.77.18 3.16 1.63 3.16 3.48z",
+  // --- START: ICONS MỚI ĐƯỢC THÊM ---
+  hardDrive: "M22 12H2 M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z M6 16h.01 M10 16h.01",
+  trash: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
+  // --- END: ICONS MỚI ĐƯỢC THÊM ---
 };
 
 // --- Child Components ---
@@ -105,16 +120,12 @@ const MenuItem = ({ icon, label, hasToggle }) => {
   );
 };
 
-// --- THAY ĐỔI: Component chọn chế độ hiển thị bằng nút gạt ---
 const DisplayModeSelector: React.FC<{
     currentMode: DisplayMode;
     onModeChange: (mode: DisplayMode) => void;
 }> = ({ currentMode, onModeChange }) => {
     const isFullscreen = currentMode === 'fullscreen';
-
-    const handleToggle = () => {
-        onModeChange(isFullscreen ? 'normal' : 'fullscreen');
-    };
+    const handleToggle = () => onModeChange(isFullscreen ? 'normal' : 'fullscreen');
 
     return (
         <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border-2 border-slate-700 shadow-lg">
@@ -131,9 +142,52 @@ const DisplayModeSelector: React.FC<{
     );
 };
 
+// --- START: COMPONENT MỚI CHO THÔNG TIN CACHE ---
+const CacheInfoItem: React.FC<{
+    usage: number;
+    quota: number;
+    onClearCache: () => void;
+    isLoading: boolean;
+}> = ({ usage, quota, onClearCache, isLoading }) => {
+    const percentage = quota > 0 ? (usage / quota) * 100 : 0;
+    
+    return (
+        <div className="p-4 bg-slate-800/50 rounded-lg border-2 border-slate-700 shadow-lg space-y-3">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                    <div className="text-purple-400"><Icon path={ICONS.hardDrive} /></div>
+                    <span className="text-slate-200 font-semibold">Cache</span>
+                </div>
+                <button 
+                    onClick={onClearCache}
+                    className="flex items-center space-x-1.5 text-xs font-semibold text-red-400 bg-red-500/10 px-3 py-1.5 rounded-md hover:bg-red-500/20 transition-colors"
+                >
+                    <Icon path={ICONS.trash} className="w-4 h-4" />
+                    <span>Xóa</span>
+                </button>
+            </div>
+            {isLoading ? (
+                <div className="text-sm text-slate-400 animate-pulse">Đang kiểm tra dung lượng...</div>
+            ) : (
+                <>
+                    <div className="h-2.5 bg-gray-900/50 rounded-full overflow-hidden w-full">
+                        <div
+                            className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 rounded-full transition-all duration-500 ease-out"
+                            style={{ width: `${percentage.toFixed(2)}%` }}
+                        />
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-400 font-mono">
+                        <span>{formatBytes(usage)} đã dùng</span>
+                        <span>Tổng: {formatBytes(quota)}</span>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
+// --- END: COMPONENT MỚI CHO THÔNG TIN CACHE ---
 
 // --- Modal Components (Không thay đổi) ---
-
 const AvatarModal = ({ isOpen, onClose, onSelectAvatar, avatars, currentAvatar }) => {
   if (!isOpen) return null;
   return (
@@ -155,7 +209,6 @@ const AvatarModal = ({ isOpen, onClose, onSelectAvatar, avatars, currentAvatar }
     </div>
   );
 };
-
 const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
   const [formData, setFormData] = useState(currentPlayerInfo);
   useEffect(() => { if (isOpen) setFormData(currentPlayerInfo); }, [currentPlayerInfo, isOpen]);
@@ -185,7 +238,6 @@ const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
     </div>
   );
 };
-
 const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
     const [status, setStatus] = useState('idle'); // 'idle', 'error', 'success'
 
@@ -202,49 +254,32 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
             setTimeout(() => setStatus('idle'), 2000);
         }
     };
-
     if (!isOpen) return null;
-
     return (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
             <div className="bg-slate-900 border-2 border-yellow-500 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center" onClick={e => e.stopPropagation()}>
-                <div className="flex justify-end">
-                    <button onClick={onClose} className="text-slate-500 hover:text-white"><Icon path={ICONS.close} /></button>
-                </div>
+                <div className="flex justify-end"> <button onClick={onClose} className="text-slate-500 hover:text-white"><Icon path={ICONS.close} /></button> </div>
                 <Icon path={ICONS.star} className="w-16 h-16 text-yellow-400 mx-auto -mt-4 mb-2" />
                 <h2 className="text-2xl font-orbitron font-bold text-slate-100">Nâng Cấp Premium</h2>
                 <p className="text-slate-400 mt-2 mb-6">Mở khóa các tính năng độc quyền, nhận diện cao cấp và nhiều phần thưởng hơn!</p>
-                
                 <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-slate-700">
                     <div className="flex justify-between items-center text-lg">
                         <span className="text-slate-300">Chi phí:</span>
-                        <div className="flex items-center space-x-2 font-bold text-yellow-400">
-                            <Icon path={ICONS.gem} className="w-5 h-5" />
-                            <span>{cost}</span>
-                        </div>
+                        <div className="flex items-center space-x-2 font-bold text-yellow-400"> <Icon path={ICONS.gem} className="w-5 h-5" /> <span>{cost}</span> </div>
                     </div>
                     <div className="flex justify-between items-center text-sm mt-2">
                         <span className="text-slate-400">Gems của bạn:</span>
-                        <div className="flex items-center space-x-2 font-mono text-slate-200">
-                            <Icon path={ICONS.gem} className="w-4 h-4 text-cyan-400" />
-                            <span>{currentGems}</span>
-                        </div>
+                        <div className="flex items-center space-x-2 font-mono text-slate-200"> <Icon path={ICONS.gem} className="w-4 h-4 text-cyan-400" /> <span>{currentGems}</span> </div>
                     </div>
                 </div>
-
-                {status === 'idle' && (
-                    <button onClick={handleConfirm} className="w-full bg-yellow-500 text-slate-900 font-bold py-3 rounded-lg hover:bg-yellow-400 transition-colors shadow-lg">Xác Nhận Nâng Cấp</button>
-                )}
-                {status === 'error' && (
-                    <p className="text-red-500 font-bold py-3">Không đủ Gems để nâng cấp!</p>
-                )}
-                {status === 'success' && (
-                    <p className="text-green-500 font-bold py-3">Nâng cấp thành công!</p>
-                )}
+                {status === 'idle' && (<button onClick={handleConfirm} className="w-full bg-yellow-500 text-slate-900 font-bold py-3 rounded-lg hover:bg-yellow-400 transition-colors shadow-lg">Xác Nhận Nâng Cấp</button>)}
+                {status === 'error' && (<p className="text-red-500 font-bold py-3">Không đủ Gems để nâng cấp!</p>)}
+                {status === 'success' && (<p className="text-green-500 font-bold py-3">Nâng cấp thành công!</p>)}
             </div>
         </div>
     );
 };
+
 
 // --- Main App Component ---
 export default function GameProfile() {
@@ -260,45 +295,64 @@ export default function GameProfile() {
   });
   const [displayMode, setDisplayMode] = useState<DisplayMode>('normal');
   
+  // --- START: STATE VÀ LOGIC MỚI CHO CACHE ---
+  const [cacheInfo, setCacheInfo] = useState({ usage: 0, quota: 0 });
+  const [isCacheLoading, setIsCacheLoading] = useState(true);
+
+  const fetchCacheData = useCallback(async () => {
+    setIsCacheLoading(true);
+    // Kiểm tra xem API có được hỗ trợ không
+    if ('storage' in navigator && 'estimate' in navigator.storage) {
+      try {
+        const estimate = await navigator.storage.estimate();
+        setCacheInfo({ usage: estimate.usage || 0, quota: estimate.quota || 0 });
+      } catch (error) {
+        console.error("Không thể lấy thông tin storage:", error);
+        setCacheInfo({ usage: 0, quota: 0 }); // Reset khi có lỗi
+      }
+    } else {
+      console.warn("StorageManager API không được hỗ trợ trên trình duyệt này.");
+    }
+    setIsCacheLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchCacheData();
+  }, [fetchCacheData]);
+
+  const handleClearCache = () => {
+    // Lưu ý: Việc xóa cache thực tế rất phức tạp và phụ thuộc vào từng loại cache
+    // (Cache API, Service Workers, IndexedDB, etc.)
+    // Đây là một mô phỏng đơn giản cho mục đích UI.
+    alert("Cache đã được xóa (mô phỏng). Đang làm mới lại thông tin.");
+    // Mô phỏng việc cache được xóa và tải lại thông tin
+    setCacheInfo({ usage: 0, quota: cacheInfo.quota }); 
+    // Sau một lúc, tải lại thông tin thật
+    setTimeout(() => {
+        fetchCacheData();
+    }, 1500);
+  };
+  // --- END: STATE VÀ LOGIC MỚI CHO CACHE ---
+
   const UPGRADE_COST = 500;
   const avatarOptions = [ 'https://robohash.org/Cyber.png?set=set2&bgset=bg1', 'https://robohash.org/Warrior.png?set=set4&bgset=bg2', 'https://robohash.org/Glitch.png?set=set3&bgset=bg1', 'https://robohash.org/Sentinel.png?set=set1&bgset=bg2', 'https://robohash.org/Phantom.png?set=set4&bgset=bg1', 'https://robohash.org/Jester.png?set=set2&bgset=bg2' ];
 
   useEffect(() => {
       const savedMode = localStorage.getItem('displayMode') as DisplayMode;
-      if (savedMode) {
-          setDisplayMode(savedMode);
-      }
+      if (savedMode) setDisplayMode(savedMode);
   }, []);
 
   const handleModal = (modal, state) => setModals(prev => ({ ...prev, [modal]: state }));
-
-  const handleSelectAvatar = (avatarUrl) => {
-      setCurrentAvatar(avatarUrl);
-      handleModal('avatar', false);
-  };
-  
-  const handleSaveProfile = (newInfo) => {
-      setPlayerInfo(prev => ({ ...prev, ...newInfo }));
-  };
-
+  const handleSelectAvatar = (avatarUrl) => { setCurrentAvatar(avatarUrl); handleModal('avatar', false); };
+  const handleSaveProfile = (newInfo) => { setPlayerInfo(prev => ({ ...prev, ...newInfo })); };
   const handleUpgrade = () => {
-    setPlayerInfo(prev => ({
-        ...prev,
-        accountType: 'Premium',
-        gems: prev.gems - UPGRADE_COST
-    }));
+    setPlayerInfo(prev => ({ ...prev, accountType: 'Premium', gems: prev.gems - UPGRADE_COST }));
   };
-
   const handleModeChange = (newMode: DisplayMode) => {
       setDisplayMode(newMode);
       localStorage.setItem('displayMode', newMode);
-      if (newMode === 'fullscreen') {
-          enterFullScreen();
-      } else {
-          exitFullScreen();
-      }
+      if (newMode === 'fullscreen') { enterFullScreen(); } else { exitFullScreen(); }
   };
-
 
   return (
     <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
@@ -361,9 +415,18 @@ export default function GameProfile() {
             <MenuItem icon={ICONS.shield} label="Bang hội của tôi" />
             
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Hệ thống</h2>
+            
+            {/* --- START: COMPONENT CACHE ĐƯỢC THÊM VÀO ĐÂY --- */}
+            <CacheInfoItem 
+              usage={cacheInfo.usage} 
+              quota={cacheInfo.quota}
+              onClearCache={handleClearCache}
+              isLoading={isCacheLoading}
+            />
+            {/* --- END: COMPONENT CACHE ĐƯỢC THÊM VÀO ĐÂY --- */}
+            
             <DisplayModeSelector currentMode={displayMode} onModeChange={handleModeChange} />
             <MenuItem icon={ICONS.map} label="Lịch sử Phiêu lưu" />
-            <MenuItem icon={ICONS.chest} label="Kho báu" />
             <MenuItem icon={ICONS.cog} label="Âm thanh" hasToggle={true} />
             <MenuItem icon={ICONS.map} label="Đăng xuất" />
         </div>
