@@ -119,8 +119,8 @@ const DisplayModeSelector: React.FC<{
     return (
         <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border-2 border-slate-700 shadow-lg">
             <div className="flex items-center space-x-4">
-                <div className="text-purple-400">
-                    <Icon path={ICONS.cog} />
+                <div>
+                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/fullscreen.webp" alt="Fullscreen Icon" className="w-6 h-6" />
                 </div>
                 <span className="text-slate-200 font-semibold">Full Screen Mode</span>
             </div>
