@@ -122,7 +122,7 @@ const DisplayModeSelector: React.FC<{
                 <div className="text-purple-400">
                     <Icon path={ICONS.cog} />
                 </div>
-                <span className="text-slate-200 font-semibold">Fullscreen Mode</span>
+                <span className="text-slate-200 font-semibold">Full Screen Mode</span>
             </div>
             <div onClick={handleToggle} className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${isFullscreen ? 'bg-green-500' : 'bg-slate-600'}`}>
                 <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${isFullscreen ? 'translate-x-7' : ''}`}></div>
@@ -140,7 +140,7 @@ const AvatarModal = ({ isOpen, onClose, onSelectAvatar, avatars, currentAvatar }
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
       <div className="bg-slate-900 border-2 border-purple-500 rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-orbitron font-bold text-slate-100">Chọn Avatar</h2>
+            <h2 className="text-xl font-roboto font-bold text-slate-100">Chọn Avatar</h2>
             <button onClick={onClose} className="text-slate-500 hover:text-white"><Icon path={ICONS.close} /></button>
         </div>
         <div className="grid grid-cols-3 gap-4">
