@@ -490,7 +490,13 @@ export default function GameProfile() {
                             <span className="text-xs bg-slate-600/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500">Normal</span>
                         )}
                         {playerInfo.accountType === 'Normal' && (
-                            <button onClick={() => handleModal('upgrade', true)} className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full hover:bg-purple-500 transition-colors">Upgrade</button>
+                            <button 
+                                onClick={() => handleModal('upgrade', true)} 
+                                className="flex items-center space-x-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xs px-3 py-1 rounded-full shadow-md shadow-purple-500/30 transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-pink-500/50"
+                            >
+                                <Icon path={ICONS.star} className="w-3.5 h-3.5"/>
+                                <span>Upgrade</span>
+                            </button>
                         )}
                    </div>
                 </div>
