@@ -35,6 +35,9 @@ const formatBytes = (bytes: number, decimals = 2): string => {
 };
 // --- END: ĐƯỢC CHUYỂN TỪ SystemCheckScreen.tsx ---
 
+// --- START: THÊM CÁC HẰNG SỐ ĐỂ QUẢN LÝ CACHE ---
+const ASSET_CACHE_PREFIX = 'english-leveling-assets';
+// --- END: THÊM CÁC HẰNG SỐ ĐỂ QUẢN LÝ CACHE ---
 
 // --- Icon Component ---
 const Icon = ({ path, className = "w-6 h-6" }) => (
@@ -57,17 +60,13 @@ const ICONS = {
   star: "M12 17.25l-6.1875 3.25 1.1875-6.875-5-4.875h6.1875l2.8125-6.25 2.8125 6.25h6.1875l-5 4.875 1.1875 6.875z",
   trendingUp: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z",
   users: "M9 8.25c-2.07 0-3.75-1.68-3.75-3.75S6.93.75 9 .75s3.75 1.68 3.75 3.75S11.07 8.25 9 8.25zm5.18 2.53c-1.28-1-2.9-1.53-4.68-1.53H9c-1.78 0-3.4.53-4.68 1.53C2.43 12.06 1.5 14.16 1.5 16.5v1.5c0 .83.67 1.5 1.5 1.5h12c.83 0 1.5-.67 1.5-1.5v-1.5c0-2.34-.93-4.44-2.82-5.72zM22.5 16.5c0-1.23-.42-2.34-1.13-3.25.34-.11.68-.24 1.02-.38 1.13-.48 1.86-1.63 1.86-2.99 0-1.77-1.43-3.2-3.2-3.2-1.3 0-2.4.77-2.92 1.84-.6-.2-1.26-.34-1.97-.34-1.2 0-2.31.33-3.28.89.29.3.56.63.79 1 .53-.25 1.12-.4 1.74-.4.18 0 .36 0 .53.02 1.77.18 3.16 1.63 3.16 3.48z",
-  // --- START: ICONS MỚI ĐƯỢC THÊM ---
   hardDrive: "M22 12H2 M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z M6 16h.01 M10 16h.01",
   trash: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
-  // --- END: ICONS MỚI ĐƯỢC THÊM ---
 };
 
 // --- Child Components ---
-
 const StatBar = ({ label, value, maxValue, icon }) => {
     const percentage = (value / maxValue) * 100;
-    
     return (
         <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -86,7 +85,6 @@ const StatBar = ({ label, value, maxValue, icon }) => {
                     </div>
                 </div>
             </div>
-            
             <div className="h-4 bg-gray-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
                 <div
                     className="h-full bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-500 rounded-full transition-all duration-500 ease-out relative"
@@ -142,7 +140,6 @@ const DisplayModeSelector: React.FC<{
     );
 };
 
-// --- START: COMPONENT MỚI CHO THÔNG TIN CACHE ---
 const CacheInfoItem: React.FC<{
     usage: number;
     quota: number;
@@ -185,7 +182,6 @@ const CacheInfoItem: React.FC<{
         </div>
     );
 };
-// --- END: COMPONENT MỚI CHO THÔNG TIN CACHE ---
 
 // --- Modal Components (Không thay đổi) ---
 const AvatarModal = ({ isOpen, onClose, onSelectAvatar, avatars, currentAvatar }) => {
@@ -299,6 +295,24 @@ export default function GameProfile() {
   const [cacheInfo, setCacheInfo] = useState({ usage: 0, quota: 0 });
   const [isCacheLoading, setIsCacheLoading] = useState(true);
 
+  // --- START: LOGIC XÓA CACHE THỰC TẾ ---
+  const clearAppCache = async () => {
+    if (!('caches' in window)) {
+      console.warn("Cache API không được hỗ trợ.");
+      alert("Trình duyệt của bạn không hỗ trợ xóa cache tự động.");
+      return;
+    }
+    try {
+      const cacheKeys = await caches.keys();
+      const cachesToDelete = cacheKeys.filter(key => key.startsWith(ASSET_CACHE_PREFIX));
+      await Promise.all(cachesToDelete.map(key => caches.delete(key)));
+      console.log("Tất cả cache của ứng dụng đã được xóa:", cachesToDelete);
+    } catch (error) {
+      console.error("Lỗi khi xóa cache:", error);
+      alert("Đã xảy ra lỗi khi cố gắng xóa cache.");
+    }
+  };
+  
   const fetchCacheData = useCallback(async () => {
     setIsCacheLoading(true);
     // Kiểm tra xem API có được hỗ trợ không
@@ -320,18 +334,23 @@ export default function GameProfile() {
     fetchCacheData();
   }, [fetchCacheData]);
 
-  const handleClearCache = () => {
-    // Lưu ý: Việc xóa cache thực tế rất phức tạp và phụ thuộc vào từng loại cache
-    // (Cache API, Service Workers, IndexedDB, etc.)
-    // Đây là một mô phỏng đơn giản cho mục đích UI.
-    alert("Cache đã được xóa (mô phỏng). Đang làm mới lại thông tin.");
-    // Mô phỏng việc cache được xóa và tải lại thông tin
-    setCacheInfo({ usage: 0, quota: cacheInfo.quota }); 
-    // Sau một lúc, tải lại thông tin thật
-    setTimeout(() => {
-        fetchCacheData();
-    }, 1500);
+  const handleClearCache = async () => {
+    const confirmation = window.confirm("Bạn có chắc chắn muốn xóa tất cả dữ liệu game đã tải về không? Lần tới bạn sẽ phải tải lại toàn bộ.");
+    if (!confirmation) {
+      return; // Dừng lại nếu người dùng nhấn "Cancel"
+    }
+
+    alert("Đang tiến hành xóa cache...");
+    
+    // Gọi hàm xóa cache thực tế và chờ nó hoàn thành
+    await clearAppCache();
+
+    alert("Cache đã được xóa thành công. Đang cập nhật lại thông tin dung lượng.");
+    
+    // Lấy lại thông tin dung lượng mới nhất sau khi xóa
+    await fetchCacheData();
   };
+  // --- END: LOGIC XÓA CACHE THỰC TẾ ---
   // --- END: STATE VÀ LOGIC MỚI CHO CACHE ---
 
   const UPGRADE_COST = 500;
@@ -416,14 +435,12 @@ export default function GameProfile() {
             
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Hệ thống</h2>
             
-            {/* --- START: COMPONENT CACHE ĐƯỢC THÊM VÀO ĐÂY --- */}
             <CacheInfoItem 
               usage={cacheInfo.usage} 
               quota={cacheInfo.quota}
               onClearCache={handleClearCache}
               isLoading={isCacheLoading}
             />
-            {/* --- END: COMPONENT CACHE ĐƯỢC THÊM VÀO ĐÂY --- */}
             
             <DisplayModeSelector currentMode={displayMode} onModeChange={handleModeChange} />
             <MenuItem icon={ICONS.map} label="Lịch sử Phiêu lưu" />
