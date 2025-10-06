@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useGame } from './GameContext.tsx'; // ADDED: Import the context hook
 
 // Định nghĩa các loại chế độ hiển thị
 type DisplayMode = 'fullscreen' | 'normal';
@@ -64,7 +65,7 @@ const ICONS = {
 // --- Child Components ---
 
 const StatBar = ({ label, value, maxValue, icon }) => {
-    const percentage = (value / maxValue) * 100;
+    const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
     
     return (
         <div className="space-y-2">
@@ -317,6 +318,9 @@ const SystemModal = ({ isOpen, onClose, icon, iconColor, title, children, action
 
 // --- Main App Component ---
 export default function GameProfile() {
+  // ADDED: Get data and functions from GameContext
+  const { gems, masteryCards, updateUserCurrency } = useGame();
+
   const [modals, setModals] = useState({ avatar: false, edit: false, upgrade: false });
   const [systemModal, setSystemModal] = useState({
     isOpen: false,
@@ -328,14 +332,14 @@ export default function GameProfile() {
   });
 
   const [currentAvatar, setCurrentAvatar] = useState('https://robohash.org/Player.png?set=set4&bgset=bg1');
+  
+  // CHANGED: Removed gems, exp, maxExp from local state as they now come from context
   const [playerInfo, setPlayerInfo] = useState({
       name: 'CyberWarrior',
       title: 'Lv. 42 - Elite Vanguard',
       accountType: 'Normal',
-      gems: 250,
-      exp: 420,
-      maxExp: 1500
   });
+
   const [displayMode, setDisplayMode] = useState<DisplayMode>('normal');
   const [cacheInfo, setCacheInfo] = useState({ usage: 0, quota: 0 });
   const [isCacheLoading, setIsCacheLoading] = useState(true);
@@ -452,12 +456,24 @@ export default function GameProfile() {
   const handleModal = (modal, state) => setModals(prev => ({ ...prev, [modal]: state }));
   const handleSelectAvatar = (avatarUrl) => { setCurrentAvatar(avatarUrl); handleModal('avatar', false); };
   const handleSaveProfile = (newInfo) => { setPlayerInfo(prev => ({ ...prev, ...newInfo })); };
-  const handleUpgrade = () => { setPlayerInfo(prev => ({ ...prev, accountType: 'Premium', gems: prev.gems - UPGRADE_COST })); };
+  
+  // CHANGED: Updated to use updateUserCurrency from context
+  const handleUpgrade = () => { 
+      // Update local state for non-context info
+      setPlayerInfo(prev => ({ ...prev, accountType: 'Premium' }));
+      // Update global state via context
+      updateUserCurrency({ gems: gems - UPGRADE_COST });
+      // TODO: This should ideally trigger a backend update via a service function in the context.
+  };
+
   const handleModeChange = (newMode: DisplayMode) => {
       setDisplayMode(newMode);
       localStorage.setItem('displayMode', newMode);
       if (newMode === 'fullscreen') { enterFullScreen(); } else { exitFullScreen(); }
   };
+
+  // ADDED: Define a max value for the Mastery bar. This could be dynamic in the future.
+  const MAX_MASTERY = 1000;
 
   return (
     <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
@@ -516,7 +532,8 @@ export default function GameProfile() {
                 </div>
               </div>
               <div className="mt-6">
-                <StatBar label="EXP" value={playerInfo.exp} maxValue={playerInfo.maxExp} icon={ICONS.trendingUp} />
+                {/* CHANGED: Replaced EXP bar with Mastery bar */}
+                <StatBar label="Mastery" value={masteryCards} maxValue={MAX_MASTERY} icon={ICONS.star} />
               </div>
            </div>
         </div>
@@ -549,7 +566,15 @@ export default function GameProfile() {
 
       <AvatarModal isOpen={modals.avatar} onClose={() => handleModal('avatar', false)} onSelectAvatar={handleSelectAvatar} avatars={avatarOptions} currentAvatar={currentAvatar}/>
       <EditProfileModal isOpen={modals.edit} onClose={() => handleModal('edit', false)} onSave={handleSaveProfile} currentPlayerInfo={playerInfo}/>
-      <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={playerInfo.gems} cost={UPGRADE_COST}/>
+      
+      {/* CHANGED: `currentGems` now comes directly from the context hook */}
+      <UpgradeModal 
+        isOpen={modals.upgrade} 
+        onClose={() => handleModal('upgrade', false)} 
+        onConfirm={handleUpgrade} 
+        currentGems={gems} 
+        cost={UPGRADE_COST}
+      />
       
       <SystemModal
         isOpen={systemModal.isOpen}
