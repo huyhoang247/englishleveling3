@@ -280,10 +280,12 @@ const App: React.FC = () => {
   // Màn hình đăng nhập nếu chưa có user
   if (!currentUser) { return <AuthComponent appVersion={appVersion} />; }
   
+  // --- CHANGE START ---
   // Khi loadingStep đã là 'ready' hoặc 'launching', hiển thị giao diện game
+  // Sử dụng `var(--app-height)` thay vì `h-screen` để đảm bảo chiều cao chính xác trên di động.
   return (
-    <div className="relative w-screen h-screen">
-      <div className="app-container" style={{ height: 'var(--app-height, 100vh)' }}>
+    <div className="relative w-screen" style={{ height: 'var(--app-height, 100vh)' }}>
+      <div className="app-container" style={{ height: '100%' }}>
         {activeTab === 'home' && (
           <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
             <Home hideNavBar={hideNavBar} showNavBar={showNavBar} />
@@ -300,6 +302,7 @@ const App: React.FC = () => {
       <GameSkeletonLoader show={loadingStep === 'launching'} />
     </div>
   );
+  // --- CHANGE END ---
 };
 
 const container = document.getElementById('root');
