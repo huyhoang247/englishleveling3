@@ -5,7 +5,7 @@ import {
   doc, getDoc, setDoc, runTransaction, 
   collection, getDocs, writeBatch,
   query, where, orderBy, onSnapshot, Timestamp, serverTimestamp, addDoc,
-  updateDoc, increment, Unsubscribe 
+  updateDoc, increment, Unsubscribe // --- THÊM CÁC IMPORT CẦN THIẾT ---
 } from 'firebase/firestore';
 
 // Các interface này nên được định nghĩa ở một nơi tập trung (ví dụ: types.ts) và import vào
@@ -13,6 +13,7 @@ import {
 export type Rarity = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' | 'SSR';
 export interface OwnedSkill { id: string; skillId: string; level: number; rarity: Rarity; }
 
+// Sửa lại interface OwnedItem và EquippedItems để khớp với equipment.tsx
 export interface OwnedItem {
     id: string;
     itemId: number;
@@ -25,9 +26,6 @@ export type EquippedItems = {
 };
 
 export interface UserGameData {
-  name: string;
-  title: string;
-  accountType: 'Normal' | 'Premium';
   coins: number;
   gems: number;
   masteryCards: number;
@@ -68,9 +66,6 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
     const equipmentData = { ...defaultEquipment, ...(data.equipment || {}) };
 
     return {
-      name: data.name || 'CyberWarrior',
-      title: data.title || 'Lv. 42 - Elite Vanguard',
-      accountType: data.accountType || 'Normal',
       coins: data.coins || 0,
       gems: data.gems || 0,
       masteryCards: data.masteryCards || 0,
@@ -81,21 +76,18 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       ancientBooks: data.ancientBooks || 0,
       skills: skillsData,
       totalVocabCollected: data.totalVocabCollected || 0,
-      cardCapacity: data.cardCapacity || 1000, // Tăng giá trị mặc định cho hợp lý
+      cardCapacity: data.cardCapacity || 100,
       equipment: equipmentData,
       lastCheckIn: data.lastCheckIn || null,
       loginStreak: data.loginStreak || 0,
     };
   } else {
     const newUserData: UserGameData & { createdAt: Date; claimedDailyGoals: object; claimedVocabMilestones: any[], claimedQuizRewards: object; } = {
-      name: 'CyberWarrior',
-      title: 'Lv. 42 - Elite Vanguard',
-      accountType: 'Normal',
-      coins: 0, gems: 250, masteryCards: 420, pickaxes: 50,
+      coins: 0, gems: 0, masteryCards: 0, pickaxes: 50,
       minerChallengeHighestFloor: 0, stats: { hp: 0, atk: 0, def: 0 },
       bossBattleHighestFloor: 0, ancientBooks: 0,
       skills: { owned: [], equipped: [null, null, null] },
-      totalVocabCollected: 0, cardCapacity: 1000,
+      totalVocabCollected: 0, cardCapacity: 100,
       equipment: { pieces: 100, owned: [], equipped: { weapon: null, armor: null, Helmet: null } },
       lastCheckIn: null,
       loginStreak: 0,
@@ -105,55 +97,8 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       claimedQuizRewards: {}
     };
     await setDoc(userDocRef, newUserData);
-    return newUserData as UserGameData;
+    return newUserData;
   }
-};
-
-/**
- * Cập nhật thông tin hồ sơ cơ bản của người dùng.
- * @param userId - ID của người dùng.
- * @param profileData - Dữ liệu cần cập nhật (name, title).
- */
-export const updateUserProfileInfo = async (userId: string, profileData: { name?: string; title?: string; }): Promise<void> => {
-    if (!userId) throw new Error("User ID is required.");
-    const userDocRef = doc(db, 'users', userId);
-    await updateDoc(userDocRef, profileData);
-};
-
-/**
- * Nâng cấp tài khoản người dùng lên Premium bằng cách sử dụng transaction.
- * @param userId - ID của người dùng.
- * @param cost - Chi phí nâng cấp (gems).
- * @returns {Promise<UserGameData>} Dữ liệu người dùng đã được cập nhật.
- */
-export const upgradeUserToPremium = async (userId: string, cost: number): Promise<UserGameData> => {
-    if (!userId) throw new Error("User ID is required.");
-    const userDocRef = doc(db, 'users', userId);
-
-    return runTransaction(db, async (t) => {
-        const userDoc = await t.get(userDocRef);
-        if (!userDoc.exists()) throw new Error("User document does not exist!");
-
-        const data = userDoc.data() as UserGameData;
-        const currentGems = data.gems || 0;
-
-        if (currentGems < cost) {
-            throw new Error("Not enough gems to upgrade.");
-        }
-
-        const updatedData = {
-            ...data,
-            gems: currentGems - cost,
-            accountType: 'Premium' as const,
-        };
-        
-        t.update(userDocRef, {
-            gems: updatedData.gems,
-            accountType: updatedData.accountType,
-        });
-
-        return updatedData;
-    });
 };
 
 
@@ -257,8 +202,10 @@ export const updateUserSkills = async (userId: string, updates: { newOwned: Owne
 
 // --- ADDITIONS START: SLOT MACHINE (777) GAME SERVICES ---
 
+// Tham chiếu đến document lưu trữ tất cả jackpot pools của game 777
 const slotJackpotDocRef = doc(db, 'miniGames', 'slotMachineJackpots');
 
+// Hàm để khởi tạo jackpot nếu document chưa tồn tại
 const initializeSlotJackpots = async (initialPools: { [key: number]: number }) => {
     try {
         await setDoc(slotJackpotDocRef, initialPools);
@@ -268,6 +215,12 @@ const initializeSlotJackpots = async (initialPools: { [key: number]: number }) =
     }
 };
 
+/**
+ * Lắng nghe sự thay đổi của jackpot pools trong real-time.
+ * @param callback Hàm sẽ được gọi mỗi khi dữ liệu jackpot thay đổi.
+ * @param initialPools Dữ liệu jackpot ban đầu để khởi tạo nếu chưa có trên DB.
+ * @returns Một hàm để hủy lắng nghe (unsubscribe).
+ */
 export const listenToJackpotPools = (
     callback: (pools: { [key: number]: number }) => void,
     initialPools: { [key: number]: number }
@@ -287,6 +240,12 @@ export const listenToJackpotPools = (
     return unsubscribe;
 };
 
+/**
+ * Đóng góp vào jackpot pool của một phòng cụ thể trong game Slot Machine.
+ * Sử dụng `increment` của Firestore để đảm bảo an toàn khi nhiều người chơi cùng lúc.
+ * @param roomId ID của phòng.
+ * @param contribution Số tiền đóng góp.
+ */
 export const contributeToJackpot = async (roomId: number, contribution: number) => {
     if (contribution <= 0) return;
     try {
@@ -298,6 +257,11 @@ export const contributeToJackpot = async (roomId: number, contribution: number) 
     }
 };
 
+/**
+ * Reset jackpot của một phòng về giá trị ban đầu sau khi có người thắng.
+ * @param roomId ID của phòng.
+ * @param initialValue Giá trị jackpot ban đầu.
+ */
 export const resetJackpot = async (roomId: number, initialValue: number) => {
      try {
         await updateDoc(slotJackpotDocRef, {
@@ -318,6 +282,10 @@ export interface SimpleUser {
   username?: string;
 }
 
+/**
+ * Lấy danh sách ID, email và username của tất cả người dùng.
+ * @returns {Promise<SimpleUser[]>} Một mảng các object người dùng.
+ */
 export const fetchAllUsers = async (): Promise<SimpleUser[]> => {
   const usersCollectionRef = collection(db, 'users');
   const querySnapshot = await getDocs(usersCollectionRef);
@@ -333,6 +301,13 @@ export const fetchAllUsers = async (): Promise<SimpleUser[]> => {
   return users;
 };
 
+/**
+ * Cập nhật nhiều trường dữ liệu của người dùng cùng lúc cho mục đích quản trị.
+ * Hàm này sử dụng dot notation cho các object lồng nhau (vd: 'stats.hp').
+ * @param userId - ID của người dùng cần cập nhật.
+ * @param updates - Object chứa các trường và giá trị cần thay đổi (giá trị là số lượng cộng thêm/trừ đi).
+ * @returns {Promise<UserGameData>} Dữ liệu mới nhất của người dùng sau khi cập nhật.
+ */
 export const adminUpdateUserData = async (userId: string, updates: { [key: string]: number }): Promise<UserGameData> => {
   if (!userId) throw new Error("User ID is required.");
   if (Object.keys(updates).length === 0) throw new Error("No updates provided.");
