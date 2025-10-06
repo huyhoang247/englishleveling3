@@ -1,16 +1,22 @@
-// --- START OF FILE profile2.tsx (Integrated with GameContext) ---
+// --- START OF FILE profile2.tsx (updated) ---
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useGame } from '../GameContext.tsx'; // <-- SỬ DỤNG HOOK TỪ GAMECONTEXT
-// Giả sử các hàm cập nhật này sẽ được thêm vào hoặc đã có trong GameContext
-// import { updateUserProfile, updateUserAvatar, upgradeToPremium } from './gameDataService';
+import { 
+    fetchProfileData, 
+    updateProfileInfo, 
+    updateAvatar, 
+    performPremiumUpgrade,
+    ProfileData
+} from './profileService.ts'; // Import the new service
 
-// --- ĐỊNH NGHĨA CÁC HELPER VÀ ICON (KHÔNG THAY ĐỔI) ---
+// --- ALL HELPER FUNCTIONS AND ICON DEFINITIONS REMAIN THE SAME ---
+// (enterFullScreen, exitFullScreen, formatBytes, Icon, ICONS, etc.)
+// ... (pasting them here for completeness, no changes made)
 
 // Định nghĩa các loại chế độ hiển thị
 type DisplayMode = 'fullscreen' | 'normal';
 
-// HÀM HELPER CHO CHẾ ĐỘ TOÀN MÀN HÌNH
+// --- HÀM HELPER CHO CHẾ ĐỘ TOÀN MÀN HÌNH ---
 const enterFullScreen = async () => {
   const element = document.documentElement;
   try {
@@ -67,10 +73,11 @@ const ICONS = {
   warning: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",
   checkCircle: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
 };
-
-// --- CÁC COMPONENT CON (KHÔNG THAY ĐỔI) ---
+// --- ALL CHILD COMPONENTS REMAIN THE SAME ---
+// (StatBar, MenuItem, DisplayModeSelector, CacheInfoItem, AvatarModal, etc.)
+// ... (pasting them here for completeness, no changes made)
 const StatBar = ({ label, value, maxValue, icon }) => {
-    const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
+    const percentage = (value / maxValue) * 100;
     return (
         <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -221,7 +228,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
         <form onSubmit={handleSave} className="space-y-4">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-purple-400 mb-1">Player Name</label>
-            <input type="text" id="name" name="username" value={formData.username} onChange={handleChange} className="w-full bg-slate-800 border-2 border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500"/>
+            <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} className="w-full bg-slate-800 border-2 border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500"/>
           </div>
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-purple-400 mb-1">Title</label>
@@ -247,7 +254,7 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
                 }, 1500);
             } catch (error) {
                 console.error("Upgrade failed:", error);
-                setStatus('error'); 
+                setStatus('error'); // Show error if onConfirm promise rejects
                 setTimeout(() => setStatus('idle'), 2000);
             }
         } else {
@@ -259,8 +266,10 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
     return (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
             <div className="bg-slate-900 border-2 border-yellow-500 rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center" onClick={e => e.stopPropagation()}>
+                
                 <h2 className="text-2xl font-roboto font-bold text-slate-100">Upgrade to Premium</h2>
                 <p className="text-slate-400 mt-2 mb-6">Mở khóa các tính năng độc quyền, sự công nhận cao cấp và nhiều phần thưởng hơn!</p>
+                
                 <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-slate-700">
                     <div className="flex justify-between items-center text-lg">
                         <span className="text-slate-300">Cost:</span>
@@ -271,10 +280,15 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
                         <div className="flex items-center space-x-2 font-mono text-slate-200"> <Icon path={ICONS.gem} className="w-4 h-4 text-cyan-400" /> <span>{currentGems}</span> </div>
                     </div>
                 </div>
+
                 {status === 'idle' && (
                     <div className="flex items-center gap-4">
-                        <button onClick={onClose} className="w-full bg-slate-700 text-slate-200 font-bold py-3 rounded-lg hover:bg-slate-600 transition-colors">Cancel</button>
-                        <button onClick={handleConfirm} className="w-full bg-yellow-500 text-slate-900 font-bold py-3 rounded-lg hover:bg-yellow-400 transition-colors shadow-lg">Upgrade</button>
+                        <button onClick={onClose} className="w-full bg-slate-700 text-slate-200 font-bold py-3 rounded-lg hover:bg-slate-600 transition-colors">
+                            Cancel
+                        </button>
+                        <button onClick={handleConfirm} className="w-full bg-yellow-500 text-slate-900 font-bold py-3 rounded-lg hover:bg-yellow-400 transition-colors shadow-lg">
+                            Upgrade
+                        </button>
                     </div>
                 )}
                 {status === 'error' && (<p className="text-red-500 font-bold py-3">Not enough Gems to upgrade!</p>)}
@@ -285,6 +299,7 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
 };
 const SystemModal = ({ isOpen, onClose, icon, iconColor, title, children, actions }) => {
   if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-opacity duration-300" onClick={onClose}>
       <div 
@@ -310,72 +325,79 @@ const SystemModal = ({ isOpen, onClose, icon, iconColor, title, children, action
   );
 };
 
+
 // --- Main App Component ---
 export default function GameProfile() {
-  // Lấy dữ liệu trực tiếp từ GameContext
-  const {
-      gems,
-      masteryCards,
-      // Giả sử các trường này được thêm vào GameContext
-      username = 'CyberWarrior', 
-      title = 'Lv. 1 - Rookie',
-      avatarUrl = 'https://robohash.org/Player.png?set=set4&bgset=bg1',
-      accountType = 'Normal',
-      // Giả sử các hàm cập nhật này được thêm vào GameContext
-      updateUserProfile, // (newInfo: { username: string, title: string }) => Promise<void>
-      updateUserAvatar,  // (newAvatarUrl: string) => Promise<void>
-      performPremiumUpgrade, // (cost: number) => Promise<void>
-  } = useGame();
-
+  // Replace with your actual user ID logic (e.g., from auth context)
+  const userId = 'testUser123';
   const UPGRADE_COST = 500;
-  const MAX_MASTERY = 1000; // Giá trị mục tiêu cho thanh Mastery
   const avatarOptions = [ 'https://robohash.org/Cyber.png?set=set2&bgset=bg1', 'https://robohash.org/Warrior.png?set=set4&bgset=bg2', 'https://robohash.org/Glitch.png?set=set3&bgset=bg1', 'https://robohash.org/Sentinel.png?set=set1&bgset=bg2', 'https://robohash.org/Phantom.png?set=set4&bgset=bg1', 'https://robohash.org/Jester.png?set=set2&bgset=bg2' ];
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [playerInfo, setPlayerInfo] = useState<ProfileData | null>(null);
   const [modals, setModals] = useState({ avatar: false, edit: false, upgrade: false });
   const [systemModal, setSystemModal] = useState({ isOpen: false, title: '', icon: null, iconColor: '', message: '', actions: [] });
   const [displayMode, setDisplayMode] = useState<DisplayMode>('normal');
   const [cacheInfo, setCacheInfo] = useState({ usage: 0, quota: 0 });
   const [isCacheLoading, setIsCacheLoading] = useState(true);
+
+  // --- DATA HANDLING ---
+  const loadProfileData = useCallback(async () => {
+    if (!userId) return;
+    try {
+        setIsLoading(true);
+        const data = await fetchProfileData(userId);
+        setPlayerInfo(data);
+    } catch (error) {
+        console.error("Failed to load profile data:", error);
+        // Here you could set an error state to show a message to the user
+    } finally {
+        setIsLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    loadProfileData();
+  }, [loadProfileData]);
   
-  // --- HANDLERS - Giờ sẽ gọi các hàm từ context ---
+  // --- UI HANDLERS ---
   const handleModal = (modal, state) => setModals(prev => ({ ...prev, [modal]: state }));
 
-  const handleSelectAvatar = async (newAvatarUrl: string) => {
+  const handleSelectAvatar = async (avatarUrl: string) => {
+    if (!playerInfo) return;
     try {
-        if (updateUserAvatar) {
-            await updateUserAvatar(newAvatarUrl);
-        } else {
-            console.warn("updateUserAvatar function not provided by GameContext");
-        }
+        await updateAvatar(userId, avatarUrl);
+        setPlayerInfo(prev => prev ? { ...prev, avatarUrl } : null);
         handleModal('avatar', false);
-    } catch (error) { console.error("Failed to update avatar:", error); }
+    } catch (error) {
+        console.error("Failed to update avatar:", error);
+        // Optionally show an error message
+    }
   };
 
-  const handleSaveProfile = async (newInfo: { username: string; title: string }) => {
-     try {
-        if (updateUserProfile) {
-            await updateUserProfile(newInfo);
-        } else {
-            console.warn("updateUserProfile function not provided by GameContext");
-        }
-    } catch (error) { console.error("Failed to save profile:", error); }
+  const handleSaveProfile = async (newInfo: { name: string; title: string }) => {
+    if (!playerInfo) return;
+    try {
+        await updateProfileInfo(userId, newInfo);
+        setPlayerInfo(prev => prev ? { ...prev, ...newInfo } : null);
+    } catch (error) {
+        console.error("Failed to save profile:", error);
+    }
   };
 
   const handleUpgrade = async () => {
     try {
-        if (performPremiumUpgrade) {
-            await performPremiumUpgrade(UPGRADE_COST);
-        } else {
-            console.warn("performPremiumUpgrade function not provided by GameContext");
-            throw new Error("Upgrade functionality not available.");
-        }
+        await performPremiumUpgrade(userId, UPGRADE_COST);
+        // Refresh data to get new gem count and premium status
+        await loadProfileData(); 
     } catch (error) {
         console.error("Upgrade failed:", error);
-        throw error; // Ném lỗi để modal có thể xử lý
+        // The modal will show its own error message, but we re-throw to prevent it from closing
+        throw error;
     }
   };
 
-  // --- LOGIC CACHE VÀ HIỂN THỊ (KHÔNG THAY ĐỔI) ---
+  // --- (The rest of the component logic remains largely the same) ---
   const handleModeChange = (newMode: DisplayMode) => {
       setDisplayMode(newMode);
       localStorage.setItem('displayMode', newMode);
@@ -383,11 +405,15 @@ export default function GameProfile() {
   };
   const closeSystemModal = () => setSystemModal(prev => ({ ...prev, isOpen: false }));
   const clearAppCache = async () => {
-    if (!('caches' in window)) { throw new Error("Your browser does not support automatic cache clearing."); }
+    if (!('caches' in window)) {
+      console.warn("Cache API is not supported.");
+      throw new Error("Your browser does not support automatic cache clearing.");
+    }
     try {
       const cacheKeys = await caches.keys();
       const cachesToDelete = cacheKeys.filter(key => key.startsWith(ASSET_CACHE_PREFIX));
       await Promise.all(cachesToDelete.map(key => caches.delete(key)));
+      console.log("All application caches have been deleted:", cachesToDelete);
     } catch (error) {
       console.error("Error while clearing cache:", error);
       throw new Error("An error occurred while trying to clear the cache.");
@@ -403,18 +429,52 @@ export default function GameProfile() {
         console.error("Could not retrieve storage estimate:", error);
         setCacheInfo({ usage: 0, quota: 0 });
       }
+    } else {
+      console.warn("StorageManager API is not supported in this browser.");
     }
     setIsCacheLoading(false);
   }, []);
   useEffect(() => { fetchCacheData(); }, [fetchCacheData]);
   const executeCacheClear = async () => {
-    setSystemModal({ isOpen: true, title: 'Deleting Cache', icon: ICONS.trash, iconColor: 'text-blue-400 animate-pulse', message: 'Please wait...', actions: [] });
+    setSystemModal({
+      isOpen: true,
+      title: 'Deleting Cache',
+      icon: ICONS.trash,
+      iconColor: 'text-blue-400 animate-pulse',
+      message: 'Please wait a moment while the system cleans up downloaded data...',
+      actions: []
+    });
+    
     try {
       await clearAppCache();
       await fetchCacheData();
-      setSystemModal({ isOpen: true, title: 'Success!', icon: ICONS.checkCircle, iconColor: 'text-green-400', message: 'All application cache has been cleared.', actions: [{ text: 'Close', onClick: closeSystemModal, className: 'bg-green-600 text-white font-bold py-2 px-6 rounded-lg w-full' }] });
+      
+      setSystemModal({
+        isOpen: true,
+        title: 'Success!',
+        icon: ICONS.checkCircle,
+        iconColor: 'text-green-400',
+        message: 'All application cache has been cleared successfully.',
+        actions: [{
+          text: 'Close',
+          onClick: closeSystemModal,
+          className: 'bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-500 transition-colors w-full'
+        }]
+      });
+
     } catch (error) {
-      setSystemModal({ isOpen: true, title: 'An Error Occurred', icon: ICONS.warning, iconColor: 'text-red-400', message: 'Could not complete the cache clearing process.', actions: [{ text: 'Close', onClick: closeSystemModal, className: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg w-full' }] });
+      setSystemModal({
+        isOpen: true,
+        title: 'An Error Occurred',
+        icon: ICONS.warning,
+        iconColor: 'text-red-400',
+        message: 'Could not complete the cache clearing process. Please try again later.',
+        actions: [{
+          text: 'Close',
+          onClick: closeSystemModal,
+          className: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-500 transition-colors w-full'
+        }]
+      });
     }
   };
   const handleClearCache = () => {
@@ -423,10 +483,18 @@ export default function GameProfile() {
       title: 'Confirm Cache Deletion',
       icon: ICONS.warning,
       iconColor: 'text-yellow-400',
-      message: 'Bạn có chắc chắn muốn xóa tất cả dữ liệu trò chơi đã lưu trong bộ nhớ đệm không? Hành động này không thể hoàn tác.',
+      message: 'Bạn có chắc chắn muốn xóa tất cả dữ liệu trò chơi đã lưu trong bộ nhớ đệm không? Hành động này không thể hoàn tác và sẽ yêu cầu tải lại toàn bộ vào lần truy cập tiếp theo.',
       actions: [
-        { text: 'Cancel', onClick: closeSystemModal, className: 'bg-slate-700 text-slate-200 font-bold py-2 px-6 rounded-lg' },
-        { text: 'Confirm', onClick: executeCacheClear, className: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg' }
+        {
+          text: 'Cancel',
+          onClick: closeSystemModal,
+          className: 'bg-slate-700 text-slate-200 font-bold py-2 px-6 rounded-lg hover:bg-slate-600 transition-colors'
+        },
+        {
+          text: 'Confirm',
+          onClick: executeCacheClear,
+          className: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-500 transition-colors'
+        }
       ]
     });
   };
@@ -434,6 +502,11 @@ export default function GameProfile() {
       const savedMode = localStorage.getItem('displayMode') as DisplayMode;
       if (savedMode) setDisplayMode(savedMode);
   }, []);
+
+  if (isLoading || !playerInfo) {
+      // You can add a more sophisticated loading spinner here
+      return <div className="bg-slate-900 w-full h-full flex items-center justify-center text-white">Loading Profile...</div>;
+  }
   
   return (
     <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
@@ -453,21 +526,21 @@ export default function GameProfile() {
            <div className="relative">
               <div className="flex items-center space-x-4">
                 <div className="relative flex-shrink-0">
-                  <img src={avatarUrl} alt="Player Avatar" className="w-20 h-20 rounded-full border-4 border-purple-500 shadow-lg object-cover"/>
+                  <img src={playerInfo.avatarUrl} alt="Player Avatar" className="w-20 h-20 rounded-full border-4 border-purple-500 shadow-lg object-cover"/>
                   <button onClick={() => handleModal('avatar', true)} className="absolute -bottom-1 -right-1 bg-slate-700 w-8 h-8 rounded-full border-2 border-slate-900 flex items-center justify-center text-slate-300 hover:bg-purple-600 transition-all">
                      <Icon path={ICONS.camera} className="w-5 h-5"/>
                   </button>
                 </div>
                 <div className="flex-grow">
                   <div className="flex items-center space-x-2 mb-1">
-                      <h1 className="text-xl font-bold font-roboto text-slate-100 tracking-wider">{username}</h1>
+                      <h1 className="text-xl font-bold font-roboto text-slate-100 tracking-wider">{playerInfo.name}</h1>
                       <button onClick={() => handleModal('edit', true)} className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full hover:bg-purple-600 hover:text-white transition-colors">
                         Edit
                       </button>
                   </div>
-                  <p className="text-purple-400 font-semibold text-sm">{title}</p>
+                  <p className="text-purple-400 font-semibold text-sm">{playerInfo.title}</p>
                    <div className="flex items-center space-x-2 mt-2">
-                        {accountType === 'Premium' ? (
+                        {playerInfo.accountType === 'Premium' ? (
                             <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-full border border-yellow-500 flex items-center space-x-1">
                                 <Icon path={ICONS.star} className="w-3 h-3"/>
                                 <span>Premium</span>
@@ -475,12 +548,16 @@ export default function GameProfile() {
                         ) : (
                             <span className="text-xs bg-slate-600/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500">Normal</span>
                         )}
-                        {accountType === 'Normal' && (
+                        {playerInfo.accountType === 'Normal' && (
                             <button 
                                 onClick={() => handleModal('upgrade', true)} 
-                                className="flex items-center space-x-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xs pl-2 pr-3 py-1 rounded-full shadow-md transform transition-all"
+                                className="flex items-center space-x-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xs pl-2 pr-3 py-1 rounded-full shadow-md shadow-purple-500/30 transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-pink-500/50"
                             >
-                                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-premium.webp" alt="Premium" className="w-4 h-4"/>
+                                <img 
+                                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-premium.webp" 
+                                    alt="Premium" 
+                                    className="w-4 h-4"
+                                />
                                 <span>Upgrade</span>
                             </button>
                         )}
@@ -488,7 +565,7 @@ export default function GameProfile() {
                 </div>
               </div>
               <div className="mt-6">
-                <StatBar label="Mastery" value={masteryCards} maxValue={MAX_MASTERY} icon={ICONS.trendingUp} />
+                <StatBar label="Mastery" value={playerInfo.masteryPoints} maxValue={playerInfo.maxMasteryPoints} icon={ICONS.trendingUp} />
               </div>
            </div>
         </div>
@@ -505,7 +582,13 @@ export default function GameProfile() {
             
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">System</h2>
             
-            <CacheInfoItem usage={cacheInfo.usage} quota={cacheInfo.quota} onClearCache={handleClearCache} isLoading={isCacheLoading} />
+            <CacheInfoItem 
+              usage={cacheInfo.usage} 
+              quota={cacheInfo.quota}
+              onClearCache={handleClearCache}
+              isLoading={isCacheLoading}
+            />
+            
             <DisplayModeSelector currentMode={displayMode} onModeChange={handleModeChange} />
             <MenuItem icon={ICONS.map} label="Adventure Log" />
             <MenuItem icon={ICONS.cog} label="Sound" hasToggle={true} />
@@ -513,15 +596,20 @@ export default function GameProfile() {
         </div>
       </main>
 
-      <AvatarModal isOpen={modals.avatar} onClose={() => handleModal('avatar', false)} onSelectAvatar={handleSelectAvatar} avatars={avatarOptions} currentAvatar={avatarUrl}/>
-      <EditProfileModal isOpen={modals.edit} onClose={() => handleModal('edit', false)} onSave={handleSaveProfile} currentPlayerInfo={{ username, title }}/>
-      <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={gems} cost={UPGRADE_COST}/>
+      <AvatarModal isOpen={modals.avatar} onClose={() => handleModal('avatar', false)} onSelectAvatar={handleSelectAvatar} avatars={avatarOptions} currentAvatar={playerInfo.avatarUrl}/>
+      <EditProfileModal isOpen={modals.edit} onClose={() => handleModal('edit', false)} onSave={handleSaveProfile} currentPlayerInfo={playerInfo}/>
+      <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={playerInfo.gems} cost={UPGRADE_COST}/>
       
-      <SystemModal isOpen={systemModal.isOpen} onClose={closeSystemModal} icon={systemModal.icon} iconColor={systemModal.iconColor} title={systemModal.title} actions={systemModal.actions}>
+      <SystemModal
+        isOpen={systemModal.isOpen}
+        onClose={closeSystemModal}
+        icon={systemModal.icon}
+        iconColor={systemModal.iconColor}
+        title={systemModal.title}
+        actions={systemModal.actions}
+      >
         <p>{systemModal.message}</p>
       </SystemModal>
     </div>
   );
 }
-
-// --- END OF FILE profile2.tsx ---
