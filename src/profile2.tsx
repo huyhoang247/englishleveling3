@@ -105,36 +105,27 @@ const MenuItem = ({ icon, label, hasToggle }) => {
   );
 };
 
-// --- THÊM MỚI: Component chọn chế độ hiển thị ---
+// --- THAY ĐỔI: Component chọn chế độ hiển thị bằng nút gạt ---
 const DisplayModeSelector: React.FC<{
     currentMode: DisplayMode;
     onModeChange: (mode: DisplayMode) => void;
 }> = ({ currentMode, onModeChange }) => {
+    const isFullscreen = currentMode === 'fullscreen';
+
+    const handleToggle = () => {
+        onModeChange(isFullscreen ? 'normal' : 'fullscreen');
+    };
+
     return (
         <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border-2 border-slate-700 shadow-lg">
             <div className="flex items-center space-x-4">
                 <div className="text-purple-400">
                     <Icon path={ICONS.cog} />
                 </div>
-                <span className="text-slate-200 font-semibold">Mode Display</span>
+                <span className="text-slate-200 font-semibold">Fullscreen Mode</span>
             </div>
-            <div className="flex items-center bg-slate-900/50 rounded-full p-1 border border-slate-600">
-                <button
-                    onClick={() => onModeChange('normal')}
-                    className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${
-                        currentMode === 'normal' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:bg-slate-700'
-                    }`}
-                >
-                    Normal
-                </button>
-                <button
-                    onClick={() => onModeChange('fullscreen')}
-                    className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${
-                        currentMode === 'fullscreen' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:bg-slate-700'
-                    }`}
-                >
-                    Fullscreen
-                </button>
+            <div onClick={handleToggle} className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${isFullscreen ? 'bg-green-500' : 'bg-slate-600'}`}>
+                <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${isFullscreen ? 'translate-x-7' : ''}`}></div>
             </div>
         </div>
     );
@@ -267,13 +258,11 @@ export default function GameProfile() {
       exp: 420,
       maxExp: 1500
   });
-  // THÊM MỚI: State cho chế độ hiển thị
   const [displayMode, setDisplayMode] = useState<DisplayMode>('normal');
   
   const UPGRADE_COST = 500;
   const avatarOptions = [ 'https://robohash.org/Cyber.png?set=set2&bgset=bg1', 'https://robohash.org/Warrior.png?set=set4&bgset=bg2', 'https://robohash.org/Glitch.png?set=set3&bgset=bg1', 'https://robohash.org/Sentinel.png?set=set1&bgset=bg2', 'https://robohash.org/Phantom.png?set=set4&bgset=bg1', 'https://robohash.org/Jester.png?set=set2&bgset=bg2' ];
 
-  // THÊM MỚI: useEffect để đọc chế độ đã lưu
   useEffect(() => {
       const savedMode = localStorage.getItem('displayMode') as DisplayMode;
       if (savedMode) {
@@ -300,7 +289,6 @@ export default function GameProfile() {
     }));
   };
 
-  // THÊM MỚI: Hàm xử lý thay đổi chế độ hiển thị
   const handleModeChange = (newMode: DisplayMode) => {
       setDisplayMode(newMode);
       localStorage.setItem('displayMode', newMode);
@@ -373,9 +361,7 @@ export default function GameProfile() {
             <MenuItem icon={ICONS.shield} label="Bang hội của tôi" />
             
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Hệ thống</h2>
-            {/* THAY ĐỔI: Thêm component chọn chế độ hiển thị */}
             <DisplayModeSelector currentMode={displayMode} onModeChange={handleModeChange} />
-            <MenuItem icon={ICONS.cog} label="Cài đặt Giao diện" hasToggle={true} />
             <MenuItem icon={ICONS.map} label="Lịch sử Phiêu lưu" />
             <MenuItem icon={ICONS.chest} label="Kho báu" />
             <MenuItem icon={ICONS.cog} label="Âm thanh" hasToggle={true} />
