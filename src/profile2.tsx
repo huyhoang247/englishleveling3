@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useGame } from './GameContext.tsx'; // ADDED: Import the context hook
+import { useGame } from './GameContext.tsx'; // BƯỚC 1: IMPORT USEGAME HOOK
 
 // Định nghĩa các loại chế độ hiển thị
 type DisplayMode = 'fullscreen' | 'normal';
@@ -318,7 +318,7 @@ const SystemModal = ({ isOpen, onClose, icon, iconColor, title, children, action
 
 // --- Main App Component ---
 export default function GameProfile() {
-  // ADDED: Get data and functions from GameContext
+  // BƯỚC 2: LẤY DỮ LIỆU VÀ HÀM TỪ CONTEXT
   const { gems, masteryCards, updateUserCurrency } = useGame();
 
   const [modals, setModals] = useState({ avatar: false, edit: false, upgrade: false });
@@ -333,7 +333,7 @@ export default function GameProfile() {
 
   const [currentAvatar, setCurrentAvatar] = useState('https://robohash.org/Player.png?set=set4&bgset=bg1');
   
-  // CHANGED: Removed gems, exp, maxExp from local state as they now come from context
+  // BƯỚC 3: ĐƠN GIẢN HÓA STATE CỤC BỘ, LOẠI BỎ DỮ LIỆU ĐÃ CÓ TRONG CONTEXT
   const [playerInfo, setPlayerInfo] = useState({
       name: 'CyberWarrior',
       title: 'Lv. 42 - Elite Vanguard',
@@ -457,23 +457,17 @@ export default function GameProfile() {
   const handleSelectAvatar = (avatarUrl) => { setCurrentAvatar(avatarUrl); handleModal('avatar', false); };
   const handleSaveProfile = (newInfo) => { setPlayerInfo(prev => ({ ...prev, ...newInfo })); };
   
-  // CHANGED: Updated to use updateUserCurrency from context
+  // BƯỚC 4: SỬA LOGIC ĐỂ GỌI HÀM CẬP NHẬT CỦA CONTEXT
   const handleUpgrade = () => { 
-      // Update local state for non-context info
-      setPlayerInfo(prev => ({ ...prev, accountType: 'Premium' }));
-      // Update global state via context
+      setPlayerInfo(prev => ({ ...prev, accountType: 'Premium' })); 
       updateUserCurrency({ gems: gems - UPGRADE_COST });
-      // TODO: This should ideally trigger a backend update via a service function in the context.
   };
-
+  
   const handleModeChange = (newMode: DisplayMode) => {
       setDisplayMode(newMode);
       localStorage.setItem('displayMode', newMode);
       if (newMode === 'fullscreen') { enterFullScreen(); } else { exitFullScreen(); }
   };
-
-  // ADDED: Define a max value for the Mastery bar. This could be dynamic in the future.
-  const MAX_MASTERY = 1000;
 
   return (
     <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
@@ -532,8 +526,8 @@ export default function GameProfile() {
                 </div>
               </div>
               <div className="mt-6">
-                {/* CHANGED: Replaced EXP bar with Mastery bar */}
-                <StatBar label="Mastery" value={masteryCards} maxValue={MAX_MASTERY} icon={ICONS.star} />
+                {/* BƯỚC 5: CẬP NHẬT JSX ĐỂ SỬ DỤNG DỮ LIỆU TỪ CONTEXT */}
+                <StatBar label="Mastery" value={masteryCards} maxValue={1000} icon={ICONS.gem} />
               </div>
            </div>
         </div>
@@ -566,15 +560,8 @@ export default function GameProfile() {
 
       <AvatarModal isOpen={modals.avatar} onClose={() => handleModal('avatar', false)} onSelectAvatar={handleSelectAvatar} avatars={avatarOptions} currentAvatar={currentAvatar}/>
       <EditProfileModal isOpen={modals.edit} onClose={() => handleModal('edit', false)} onSave={handleSaveProfile} currentPlayerInfo={playerInfo}/>
-      
-      {/* CHANGED: `currentGems` now comes directly from the context hook */}
-      <UpgradeModal 
-        isOpen={modals.upgrade} 
-        onClose={() => handleModal('upgrade', false)} 
-        onConfirm={handleUpgrade} 
-        currentGems={gems} 
-        cost={UPGRADE_COST}
-      />
+      {/* BƯỚC 5 (tiếp): CẬP NHẬT JSX ĐỂ SỬ DỤNG DỮ LIỆU TỪ CONTEXT */}
+      <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={gems} cost={UPGRADE_COST}/>
       
       <SystemModal
         isOpen={systemModal.isOpen}
