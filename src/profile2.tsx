@@ -1,9 +1,33 @@
 import React, { useState, useEffect } from 'react';
 
+// Định nghĩa các loại chế độ hiển thị
+type DisplayMode = 'fullscreen' | 'normal';
+
+// --- HÀM HELPER CHO CHẾ ĐỘ TOÀN MÀN HÌNH ---
+const enterFullScreen = async () => {
+  const element = document.documentElement;
+  try {
+    if (element.requestFullscreen) { await element.requestFullscreen(); }
+    else if ((element as any).mozRequestFullScreen) { await (element as any).mozRequestFullScreen(); }
+    else if ((element as any).webkitRequestFullscreen) { await (element as any).webkitRequestFullscreen(); }
+    else if ((element as any).msRequestFullscreen) { await (element as any).msRequestFullscreen(); }
+  } catch (error) { console.warn("Failed to enter full-screen mode:", error); }
+};
+
+const exitFullScreen = async () => {
+  try {
+    if (document.exitFullscreen) { await document.exitFullscreen(); }
+    else if ((document as any).mozCancelFullScreen) { await (document as any).mozCancelFullScreen(); }
+    else if ((document as any).webkitExitFullscreen) { await (document as any).webkitExitFullscreen(); }
+    else if ((document as any).msExitFullscreen) { await (document as any).msExitFullscreen(); }
+  } catch (error) { console.warn("Failed to exit full-screen mode:", error); }
+};
+
+
 // --- Icon Component ---
 // Using inline SVG to avoid external libraries
 const Icon = ({ path, className = "w-6 h-6" }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/24/24" fill="currentColor" className={className}>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
     <path d={path} />
   </svg>
 );
@@ -81,7 +105,43 @@ const MenuItem = ({ icon, label, hasToggle }) => {
   );
 };
 
-// --- Modal Components ---
+// --- THÊM MỚI: Component chọn chế độ hiển thị ---
+const DisplayModeSelector: React.FC<{
+    currentMode: DisplayMode;
+    onModeChange: (mode: DisplayMode) => void;
+}> = ({ currentMode, onModeChange }) => {
+    return (
+        <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border-2 border-slate-700 shadow-lg">
+            <div className="flex items-center space-x-4">
+                <div className="text-purple-400">
+                    <Icon path={ICONS.cog} />
+                </div>
+                <span className="text-slate-200 font-semibold">Chế độ hiển thị</span>
+            </div>
+            <div className="flex items-center bg-slate-900/50 rounded-full p-1 border border-slate-600">
+                <button
+                    onClick={() => onModeChange('normal')}
+                    className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${
+                        currentMode === 'normal' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:bg-slate-700'
+                    }`}
+                >
+                    Bình thường
+                </button>
+                <button
+                    onClick={() => onModeChange('fullscreen')}
+                    className={`px-3 py-1 text-sm font-semibold rounded-full transition-colors ${
+                        currentMode === 'fullscreen' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:bg-slate-700'
+                    }`}
+                >
+                    Toàn màn hình
+                </button>
+            </div>
+        </div>
+    );
+};
+
+
+// --- Modal Components (Không thay đổi) ---
 
 const AvatarModal = ({ isOpen, onClose, onSelectAvatar, avatars, currentAvatar }) => {
   if (!isOpen) return null;
@@ -202,15 +262,24 @@ export default function GameProfile() {
   const [playerInfo, setPlayerInfo] = useState({
       name: 'CyberWarrior',
       title: 'Lv. 42 - Elite Vanguard',
-      accountType: 'Normal', // 'Normal' or 'Premium'
+      accountType: 'Normal',
       gems: 250,
       exp: 420,
       maxExp: 1500
   });
+  // THÊM MỚI: State cho chế độ hiển thị
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('normal');
   
   const UPGRADE_COST = 500;
-
   const avatarOptions = [ 'https://robohash.org/Cyber.png?set=set2&bgset=bg1', 'https://robohash.org/Warrior.png?set=set4&bgset=bg2', 'https://robohash.org/Glitch.png?set=set3&bgset=bg1', 'https://robohash.org/Sentinel.png?set=set1&bgset=bg2', 'https://robohash.org/Phantom.png?set=set4&bgset=bg1', 'https://robohash.org/Jester.png?set=set2&bgset=bg2' ];
+
+  // THÊM MỚI: useEffect để đọc chế độ đã lưu
+  useEffect(() => {
+      const savedMode = localStorage.getItem('displayMode') as DisplayMode;
+      if (savedMode) {
+          setDisplayMode(savedMode);
+      }
+  }, []);
 
   const handleModal = (modal, state) => setModals(prev => ({ ...prev, [modal]: state }));
 
@@ -231,26 +300,29 @@ export default function GameProfile() {
     }));
   };
 
+  // THÊM MỚI: Hàm xử lý thay đổi chế độ hiển thị
+  const handleModeChange = (newMode: DisplayMode) => {
+      setDisplayMode(newMode);
+      localStorage.setItem('displayMode', newMode);
+      if (newMode === 'fullscreen') {
+          enterFullScreen();
+      } else {
+          exitFullScreen();
+      }
+  };
+
+
   return (
-    // FIX 1: Removed `min-h-screen`, `flex`, `justify-center`, `items-center`. 
-    // Added `w-full h-full` to make it fill the container from `index.tsx`.
     <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;500;700&display=swap'); 
         .font-orbitron { font-family: 'Orbitron', sans-serif; } 
         .font-roboto { font-family: 'Roboto', sans-serif; }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
       
-      {/* FIX 1 (cont.): Removed inline style with fixed height and added `mx-auto` and `h-full` to make it flexible. */}
       <main className="w-full max-w-md mx-auto h-full bg-slate-800/30 rounded-2xl shadow-2xl shadow-purple-900/20 flex flex-col">
-        {/* --- Profile Header (Non-scrollable) --- */}
         <div className="p-6 bg-gradient-to-br from-gray-900 to-slate-900 relative flex-shrink-0">
            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
            <div className="relative">
@@ -290,8 +362,6 @@ export default function GameProfile() {
            </div>
         </div>
 
-        {/* --- Content (Scrollable) --- */}
-        {/* FIX 2: Changed `pb-6` to `pb-24` to add space for the bottom navigation bar */}
         <div className="p-4 pb-24 space-y-3 overflow-y-auto flex-grow no-scrollbar">
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2">Hành trang</h2>
             <MenuItem icon={ICONS.sword} label="Trang bị & Vật phẩm" />
@@ -303,6 +373,8 @@ export default function GameProfile() {
             <MenuItem icon={ICONS.shield} label="Bang hội của tôi" />
             
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Hệ thống</h2>
+            {/* THAY ĐỔI: Thêm component chọn chế độ hiển thị */}
+            <DisplayModeSelector currentMode={displayMode} onModeChange={handleModeChange} />
             <MenuItem icon={ICONS.cog} label="Cài đặt Giao diện" hasToggle={true} />
             <MenuItem icon={ICONS.map} label="Lịch sử Phiêu lưu" />
             <MenuItem icon={ICONS.chest} label="Kho báu" />
@@ -311,7 +383,6 @@ export default function GameProfile() {
         </div>
       </main>
 
-      {/* --- Render Modals --- */}
       <AvatarModal isOpen={modals.avatar} onClose={() => handleModal('avatar', false)} onSelectAvatar={handleSelectAvatar} avatars={avatarOptions} currentAvatar={currentAvatar}/>
       <EditProfileModal isOpen={modals.edit} onClose={() => handleModal('edit', false)} onSave={handleSaveProfile} currentPlayerInfo={playerInfo}/>
       <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={playerInfo.gems} cost={UPGRADE_COST}/>
