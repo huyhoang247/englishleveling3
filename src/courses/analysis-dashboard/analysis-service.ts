@@ -1,26 +1,21 @@
 // --- START OF FILE: src/services/analysis-service.ts ---
 
-import { db } from '../../firebase';
+import { db } from '../firebase';
 import { 
-    doc, 
     getDocs, 
     collection, 
     updateDoc, 
+    doc,
     increment, 
     arrayUnion,
     Timestamp
 } from 'firebase/firestore';
-import { fetchOrCreateUser } from '../course-data-service.ts'; // Import hàm cần thiết từ service cũ
 
-// --- TYPE DEFINITIONS (Copied from analysis-context and course-data-service) ---
+
+// --- TYPE DEFINITIONS (Copied from analysis-context) ---
 interface WordMastery { word: string; mastery: number; lastPracticed: Date; }
-interface AnalysisDashboardDataPayload {
-  userData: {
-    coins: number;
-    masteryCards: number;
-    claimedDailyGoals: number[];
-    claimedVocabMilestones: number[];
-  };
+// [SỬA] Đơn giản hóa Payload, chỉ chứa dữ liệu phân tích
+interface AnalysisDataPayload {
   analysisData: {
     totalWordsLearned: number;
     totalWordsAvailable: number;
@@ -46,23 +41,22 @@ const formatDateToLocalYYYYMMDD = (date: Date): string => {
 };
 
 /**
- * Lấy và xử lý tất cả dữ liệu cần thiết cho trang Analysis Dashboard.
+ * Lấy và xử lý dữ liệu cần thiết cho trang Analysis Dashboard.
+ * [SỬA] Hàm này không còn fetch dữ liệu người dùng (coins, mastery, etc.)
  * @param userId - ID của người dùng.
  * @param totalWordsAvailable - Tổng số từ vựng có trong hệ thống (từ defaultVocabulary.length).
- * @returns {Promise<AnalysisDashboardDataPayload>} Dữ liệu đã được xử lý cho dashboard.
+ * @returns {Promise<AnalysisDataPayload>} Dữ liệu đã được xử lý cho dashboard.
  */
-export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvailable: number): Promise<AnalysisDashboardDataPayload> => {
+export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvailable: number): Promise<AnalysisDataPayload> => {
   if (!userId) throw new Error("User ID is required.");
 
-  const [userData, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
-    fetchOrCreateUser(userId),
+  // [SỬA] Chỉ fetch dữ liệu về việc hoàn thành từ vựng, không fetch user data
+  const [completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
     getDocs(collection(db, 'users', userId, 'completedWords')),
     getDocs(collection(db, 'users', userId, 'completedMultiWord'))
   ]);
 
-  const todayString = formatDateToLocalYYYYMMDD(new Date());
-
-  // Xử lý dữ liệu
+  // Xử lý dữ liệu (logic này không thay đổi)
   const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
   const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
   const dailyActivityMap: { [date: string]: { new: number; review: number } } = {};
@@ -114,13 +108,8 @@ export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvail
   const recentCompletions = [...allCompletionsForRecent].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5).map(c => ({ word: c.word, date: c.date.toLocaleString('vi-VN') }));
   const wordMasteryData = Object.entries(wordMasteryMap).map(([word, data]) => ({ word, ...data }));
 
+  // [SỬA] Chỉ trả về dữ liệu phân tích
   return {
-    userData: {
-      coins: userData.coins || 0,
-      masteryCards: userData.masteryCards || 0,
-      claimedDailyGoals: userData.claimedDailyGoals?.[todayString] || [],
-      claimedVocabMilestones: userData.claimedVocabMilestones || [],
-    },
     analysisData: {
       totalWordsLearned: completedWordsSnapshot.size,
       totalWordsAvailable,
