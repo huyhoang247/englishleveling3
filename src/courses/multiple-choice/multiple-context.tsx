@@ -3,10 +3,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuizApp } from '../course-context.tsx';
 import quizData from './multiple-data.ts';
-import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
-import { exampleData } from '../../voca-data/example-data.ts';
-import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
-import { generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../../voca-data/audio-quiz-generator.ts';
 
 // --- CÁC HÀM TIỆN ÍCH VÀ INTERFACE ---
 const shuffleArray = (array: any[]) => {
@@ -73,7 +69,13 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getCompletedWords, 
     recordGameSuccess,
     updateUserCoins,
-    fetchOrCreateUser
+    fetchOrCreateUser,
+    // NEW: Get data and utilities from the main context
+    definitionsMap,
+    exampleData,
+    defaultVocabulary,
+    generateAudioQuizQuestions,
+    generateAudioUrlsForExamSentence
   } = useQuizApp();
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -134,19 +136,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   }, [currentQuestion, playableQuestions, selectedVoice]);
 
-  const definitionsMap = useMemo(() => {
-    const definitions: { [key: string]: Definition } = {};
-    const lines = detailedMeaningsText.trim().split('\n');
-    lines.forEach(line => {
-      if (line.trim() === '') return;
-      const match = line.match(/^(.+?)\s+\((.+?)\)\s+là\s+(.*)/);
-      if (match) {
-        const vietnameseWord = match[1].trim(); const englishWord = match[2].trim(); const explanation = match[3].trim();
-        definitions[englishWord.toLowerCase()] = { vietnamese: vietnameseWord, english: englishWord, explanation: explanation };
-      }
-    });
-    return definitions;
-  }, []);
+  // REMOVED: definitionsMap is now provided by useQuizApp()
 
   useEffect(() => {
     const loadQuizData = async () => {
@@ -235,7 +225,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     loadQuizData();
-  }, [user, selectedPractice, fetchOrCreateUser, getOpenedVocab, getCompletedWords]);
+  }, [user, selectedPractice, fetchOrCreateUser, getOpenedVocab, getCompletedWords, exampleData, defaultVocabulary, generateAudioQuizQuestions, generateAudioUrlsForExamSentence]);
 
   const resetQuiz = useCallback(() => {
     const completedWordsForSession = new Set(
