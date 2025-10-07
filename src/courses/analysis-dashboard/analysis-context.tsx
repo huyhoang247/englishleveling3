@@ -12,11 +12,12 @@ import React, {
 } from 'react';
 import { auth } from '../../firebase.js'; 
 import { onAuthStateChanged, User } from 'firebase/auth';
+// [SỬA] Thay đổi đường dẫn import để trỏ đến service mới
 import { 
     fetchAnalysisDashboardData, 
     claimDailyMilestoneReward,
     claimVocabMilestoneReward
-} from '../course-data-service.ts'; 
+} from './analysis-service.ts'; // <--- ĐÃ THAY ĐỔI
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
 
 // --- TYPE DEFINITIONS (Should be in a shared types file, but kept here for context) ---
@@ -87,6 +88,7 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
             setLoading(true);
             setError(null);
             try {
+                // Không cần thay đổi gì ở đây vì tên hàm vẫn giữ nguyên
                 const dataPayload = await fetchAnalysisDashboardData(user.uid, defaultVocabulary.length);
                 setUserProgress({
                     coins: dataPayload.userData.coins,
@@ -132,9 +134,6 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
         }));
     }, [user]);
 
-    // [SỬA] Sử dụng useMemo để memoize context value.
-    // GIẢI THÍCH: Điều này ngăn việc tạo một object `value` mới trên mỗi lần render,
-    // từ đó tránh re-render không cần thiết cho tất cả các component con sử dụng context này.
     const value = useMemo(() => ({
         user,
         loading,
