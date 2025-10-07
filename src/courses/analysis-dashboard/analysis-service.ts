@@ -1,6 +1,6 @@
 // --- START OF FILE: src/services/analysis-service.ts ---
 
-import { db } from '../../firebase';
+import { db } from '../firebase';
 import { 
     doc, 
     getDocs, 
@@ -10,17 +10,12 @@ import {
     arrayUnion,
     Timestamp
 } from 'firebase/firestore';
-import { fetchOrCreateUser } from '../course-data-service.ts'; // Import hàm cần thiết từ service cũ
 
-// --- TYPE DEFINITIONS (Copied from analysis-context and course-data-service) ---
+// --- TYPE DEFINITIONS ---
 interface WordMastery { word: string; mastery: number; lastPracticed: Date; }
-interface AnalysisDashboardDataPayload {
-  userData: {
-    coins: number;
-    masteryCards: number;
-    claimedDailyGoals: number[];
-    claimedVocabMilestones: number[];
-  };
+
+// Kiểu dữ liệu trả về của hàm fetch, không còn chứa userData
+interface FetchAnalysisDataResponse {
   analysisData: {
     totalWordsLearned: number;
     totalWordsAvailable: number;
@@ -46,23 +41,21 @@ const formatDateToLocalYYYYMMDD = (date: Date): string => {
 };
 
 /**
- * Lấy và xử lý tất cả dữ liệu cần thiết cho trang Analysis Dashboard.
+ * Lấy và xử lý dữ liệu phân tích (KHÔNG bao gồm dữ liệu người dùng cơ bản).
  * @param userId - ID của người dùng.
- * @param totalWordsAvailable - Tổng số từ vựng có trong hệ thống (từ defaultVocabulary.length).
- * @returns {Promise<AnalysisDashboardDataPayload>} Dữ liệu đã được xử lý cho dashboard.
+ * @param totalWordsAvailable - Tổng số từ vựng có trong hệ thống.
+ * @returns {Promise<FetchAnalysisDataResponse>} Dữ liệu đã được xử lý cho dashboard.
  */
-export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvailable: number): Promise<AnalysisDashboardDataPayload> => {
+export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvailable: number): Promise<FetchAnalysisDataResponse> => {
   if (!userId) throw new Error("User ID is required.");
 
-  const [userData, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
-    fetchOrCreateUser(userId),
+  // Chỉ fetch dữ liệu liên quan đến phân tích, không fetch user data
+  const [completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
     getDocs(collection(db, 'users', userId, 'completedWords')),
     getDocs(collection(db, 'users', userId, 'completedMultiWord'))
   ]);
 
-  const todayString = formatDateToLocalYYYYMMDD(new Date());
-
-  // Xử lý dữ liệu
+  // Logic xử lý dữ liệu phân tích không thay đổi
   const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
   const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
   const dailyActivityMap: { [date: string]: { new: number; review: number } } = {};
@@ -114,13 +107,8 @@ export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvail
   const recentCompletions = [...allCompletionsForRecent].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5).map(c => ({ word: c.word, date: c.date.toLocaleString('vi-VN') }));
   const wordMasteryData = Object.entries(wordMasteryMap).map(([word, data]) => ({ word, ...data }));
 
+  // Cấu trúc dữ liệu trả về đã được đơn giản hóa
   return {
-    userData: {
-      coins: userData.coins || 0,
-      masteryCards: userData.masteryCards || 0,
-      claimedDailyGoals: userData.claimedDailyGoals?.[todayString] || [],
-      claimedVocabMilestones: userData.claimedVocabMilestones || [],
-    },
     analysisData: {
       totalWordsLearned: completedWordsSnapshot.size,
       totalWordsAvailable,
@@ -139,7 +127,6 @@ export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvail
  * @param userId - ID của người dùng.
  * @param milestone - Cột mốc đã đạt (ví dụ: 5, 10, 20).
  * @param rewardAmount - Số coin thưởng.
- * @returns {Promise<void>}
  */
 export const claimDailyMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
   if (!userId) return;
@@ -148,22 +135,34 @@ export const claimDailyMilestoneReward = async (userId: string, milestone: numbe
   const fieldKey = `claimedDailyGoals.${todayString}`;
 
   try {
+    // Thử cập nhật bằng dot notation, cách này hiệu quả nếu object claimedDailyGoals đã tồn tại
     await updateDoc(userDocRef, {
       coins: increment(rewardAmount),
       [fieldKey]: arrayUnion(milestone)
     });
   } catch (error) {
-    console.error(`Failed to claim daily milestone for user ${userId}:`, error);
-    throw error;
+    console.error(`Failed to claim daily milestone with dot notation for user ${userId}. Retrying with merge.`, error);
+    // Nếu lỗi (thường do claimedDailyGoals chưa tồn tại), thử lại bằng cách merge
+    try {
+        await updateDoc(userDocRef, {
+            coins: increment(rewardAmount),
+            claimedDailyGoals: {
+                [todayString]: arrayUnion(milestone)
+            }
+        }, { merge: true });
+    } catch (mergeError) {
+        console.error(`Failed to claim daily milestone with merge for user ${userId}:`, mergeError);
+        throw mergeError;
+    }
   }
 };
+
 
 /**
  * Ghi nhận việc người dùng nhận thưởng cột mốc từ vựng trọn đời.
  * @param userId - ID của người dùng.
  * @param milestone - Cột mốc đã đạt (ví dụ: 100, 200, 500).
  * @param rewardAmount - Số coin thưởng.
- * @returns {Promise<void>}
  */
 export const claimVocabMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
   if (!userId) return;
