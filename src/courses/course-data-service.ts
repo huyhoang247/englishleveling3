@@ -1,3 +1,5 @@
+// --- START OF FILE: course-data-service.ts ---
+
 import { db } from '../firebase';
 import { 
   doc, getDoc, setDoc, updateDoc, increment, collection, 
@@ -6,7 +8,7 @@ import {
 // Import các dữ liệu local cần thiết cho hàm mới
 import quizData from './multiple-choice/multiple-data.ts'; 
 import { exampleData } from '../voca-data/example-data.ts';
-import { allWordPairs } from './voca-match/voca-match-data.ts'; // ADDED
+import { allWordPairs } from './voca-match/voca-match-data.ts';
 
 /**
  * Lấy dữ liệu người dùng. Nếu người dùng chưa tồn tại trong Firestore, tạo mới với giá trị mặc định.
@@ -45,7 +47,7 @@ export const fetchOrCreateUser = async (userId: string) => {
  */
 export const updateUserCoins = async (userId: string, amount: number): Promise<void> => {
   if (!userId || amount === 0) {
-    return; // Không thực hiện nếu không có userId hoặc số lượng thay đổi là 0
+    return;
   }
   const userDocRef = doc(db, 'users', userId);
   try {
@@ -54,7 +56,7 @@ export const updateUserCoins = async (userId: string, amount: number): Promise<v
     });
   } catch (error) {
     console.error(`Failed to update coins for user ${userId}:`, error);
-    throw error; // Ném lỗi ra để component gốc có thể xử lý
+    throw error;
   }
 };
 
@@ -66,7 +68,7 @@ export const updateUserCoins = async (userId: string, amount: number): Promise<v
  */
 export const updateUserMastery = async (userId: string, amount: number): Promise<void> => {
   if (!userId || amount === 0) {
-    return; // Không thực hiện nếu không có userId hoặc số lượng thay đổi là 0
+    return;
   }
   const userDocRef = doc(db, 'users', userId);
   try {
@@ -75,7 +77,7 @@ export const updateUserMastery = async (userId: string, amount: number): Promise
     });
   } catch (error) {
     console.error(`Failed to update mastery cards for user ${userId}:`, error);
-    throw error; // Ném lỗi ra để component gốc có thể xử lý
+    throw error;
   }
 };
 
@@ -105,8 +107,6 @@ export const getCompletedWordsForGameMode = async (userId: string, gameModeId: s
     });
     return completedSet;
 };
-
-// --- CÁC HÀM MỚI ĐƯỢỢC THÊM VÀO ---
 
 /**
  * Interface cho dữ liệu khởi tạo game.
@@ -181,7 +181,6 @@ export const recordGameSuccess = async (
   const userDocRef = doc(db, 'users', userId);
 
   if (isMultiWordGame) {
-    // Ghi lại việc hoàn thành câu hỏi nhiều từ
     const multiWordId = completedWord.toLowerCase();
     const completedMultiWordRef = doc(db, 'users', userId, 'completedMultiWord', multiWordId);
     batch.set(completedMultiWordRef, {
@@ -189,7 +188,6 @@ export const recordGameSuccess = async (
       lastCompletedAt: new Date()
     }, { merge: true });
 
-    // Ghi lại việc hoàn thành từng từ đơn lẻ trong câu
     const individualWords = completedWord.split(' ');
     individualWords.forEach(word => {
       const individualWordRef = doc(db, 'users', userId, 'completedWords', word.toLowerCase());
@@ -200,7 +198,6 @@ export const recordGameSuccess = async (
     });
 
   } else {
-    // Ghi lại việc hoàn thành từ đơn
     const wordId = completedWord.toLowerCase();
     const completedWordRef = doc(db, 'users', userId, 'completedWords', wordId);
     batch.set(completedWordRef, { 
@@ -209,7 +206,6 @@ export const recordGameSuccess = async (
     }, { merge: true });
   }
 
-  // Cập nhật coin thưởng nếu có
   if (coinReward > 0) {
     batch.update(userDocRef, { coins: increment(coinReward) });
   }
@@ -218,176 +214,8 @@ export const recordGameSuccess = async (
 };
 
 
-// --- CÁC HÀM MỚI TÍCH HỢP TỪ ANALYSISDASHBOARD ---
+// [XÓA] Các hàm fetchAnalysisDashboardData, claimDailyMilestoneReward, claimVocabMilestoneReward đã được chuyển sang analysis-service.ts
 
-/**
- * Interface cho dữ liệu được trả về cho trang Analysis Dashboard.
- */
-interface AnalysisDashboardDataPayload {
-  userData: {
-    coins: number;
-    masteryCards: number;
-    claimedDailyGoals: number[];
-    claimedVocabMilestones: number[];
-  };
-  analysisData: {
-    totalWordsLearned: number;
-    totalWordsAvailable: number;
-    learningActivity: { date: string; new: number; review: number; }[];
-    masteryByGame: { game: string; completed: number; }[];
-    vocabularyGrowth: { date: string; cumulative: number; }[];
-    recentCompletions: { word: string; date: string }[];
-    wordMastery: { word: string; mastery: number; lastPracticed: Date; }[];
-  };
-  dailyActivityMap: { [date: string]: { new: number; review: number } };
-}
-
-/**
- * Hàm trợ giúp để định dạng ngày theo giờ địa phương (YYYY-MM-DD).
- * @param date - Đối tượng Date cần định dạng.
- * @returns {string} Chuỗi ngày tháng theo định dạng YYYY-MM-DD.
- */
-const formatDateToLocalYYYYMMDD = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-
-/**
- * Lấy và xử lý tất cả dữ liệu cần thiết cho trang Analysis Dashboard.
- * @param userId - ID của người dùng.
- * @param totalWordsAvailable - Tổng số từ vựng có trong hệ thống (từ defaultVocabulary.length).
- * @returns {Promise<AnalysisDashboardDataPayload>} Dữ liệu đã được xử lý cho dashboard.
- */
-export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvailable: number): Promise<AnalysisDashboardDataPayload> => {
-  if (!userId) throw new Error("User ID is required.");
-
-  const [userData, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
-    fetchOrCreateUser(userId),
-    getDocs(collection(db, 'users', userId, 'completedWords')),
-    getDocs(collection(db, 'users', userId, 'completedMultiWord'))
-  ]);
-
-  const todayString = formatDateToLocalYYYYMMDD(new Date());
-
-  // Xử lý dữ liệu
-  const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
-  const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
-  const dailyActivityMap: { [date: string]: { new: number; review: number } } = {};
-  const allCompletionsForRecent: { word: string; date: Date }[] = [];
-
-  completedWordsSnapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const lastCompletedAt = data.lastCompletedAt?.toDate();
-    if (!lastCompletedAt) return;
-    
-    allCompletionsForRecent.push({ word: docSnap.id, date: lastCompletedAt });
-    const dateString = formatDateToLocalYYYYMMDD(lastCompletedAt);
-    if (!dailyActivityMap[dateString]) dailyActivityMap[dateString] = { new: 0, review: 0 };
-
-    let totalCompletions = 0, totalCorrectForWord = 0;
-    if (data.gameModes) {
-      Object.values(data.gameModes).forEach((modeData: any) => { totalCompletions += modeData.correctCount || 0; });
-      Object.keys(data.gameModes).forEach(mode => {
-        const correctCount = data.gameModes[mode].correctCount || 0;
-        totalCorrectForWord += correctCount;
-        if (mode.startsWith('quiz-')) masteryByGame['Trắc nghiệm'] += correctCount;
-        else if (mode.startsWith('fill-word-')) masteryByGame['Điền từ'] += correctCount;
-      });
-    }
-
-    if (totalCompletions > 1) dailyActivityMap[dateString].review++;
-    else if (totalCompletions === 1) dailyActivityMap[dateString].new++;
-    
-    if (totalCorrectForWord > 0) wordMasteryMap[docSnap.id] = { mastery: totalCorrectForWord, lastPracticed: lastCompletedAt };
-  });
-
-  completedMultiWordSnapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const lastCompletedAt = data.lastCompletedAt?.toDate();
-    if (!lastCompletedAt) return;
-    allCompletionsForRecent.push({ word: docSnap.id, date: lastCompletedAt });
-    if (data.completedIn) Object.keys(data.completedIn).forEach(mode => { if (mode.startsWith('fill-word-')) masteryByGame['Điền từ']++; });
-  });
-
-  const learningActivityData = Object.entries(dailyActivityMap).map(([date, counts]) => ({ date, ...counts })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  
-  let cumulative = 0;
-  const vocabularyGrowthData = learningActivityData.map(item => {
-    cumulative += item.new;
-    return { date: new Date(item.date).toLocaleDateString('vi-VN'), cumulative };
-  });
-
-  const masteryData = Object.entries(masteryByGame).map(([game, completed]) => ({ game, completed })).filter(item => item.completed > 0);
-  const recentCompletions = [...allCompletionsForRecent].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5).map(c => ({ word: c.word, date: c.date.toLocaleString('vi-VN') }));
-  const wordMasteryData = Object.entries(wordMasteryMap).map(([word, data]) => ({ word, ...data }));
-
-  return {
-    userData: {
-      coins: userData.coins || 0,
-      masteryCards: userData.masteryCards || 0,
-      claimedDailyGoals: userData.claimedDailyGoals?.[todayString] || [],
-      claimedVocabMilestones: userData.claimedVocabMilestones || [],
-    },
-    analysisData: {
-      totalWordsLearned: completedWordsSnapshot.size,
-      totalWordsAvailable,
-      learningActivity: learningActivityData.slice(-30).map(d => ({...d, date: new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })})),
-      masteryByGame: masteryData,
-      vocabularyGrowth: vocabularyGrowthData,
-      recentCompletions,
-      wordMastery: wordMasteryData,
-    },
-    dailyActivityMap,
-  };
-};
-
-/**
- * Ghi nhận việc người dùng nhận thưởng cột mốc hàng ngày.
- * @param userId - ID của người dùng.
- * @param milestone - Cột mốc đã đạt (ví dụ: 5, 10, 20).
- * @param rewardAmount - Số coin thưởng.
- * @returns {Promise<void>}
- */
-export const claimDailyMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
-  if (!userId) return;
-  const userDocRef = doc(db, 'users', userId);
-  const todayString = formatDateToLocalYYYYMMDD(new Date());
-  const fieldKey = `claimedDailyGoals.${todayString}`;
-
-  try {
-    await updateDoc(userDocRef, {
-      coins: increment(rewardAmount),
-      [fieldKey]: arrayUnion(milestone)
-    });
-  } catch (error) {
-    console.error(`Failed to claim daily milestone for user ${userId}:`, error);
-    throw error;
-  }
-};
-
-/**
- * Ghi nhận việc người dùng nhận thưởng cột mốc từ vựng trọn đời.
- * @param userId - ID của người dùng.
- * @param milestone - Cột mốc đã đạt (ví dụ: 100, 200, 500).
- * @param rewardAmount - Số coin thưởng.
- * @returns {Promise<void>}
- */
-export const claimVocabMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
-  if (!userId) return;
-  const userDocRef = doc(db, 'users', userId);
-
-  try {
-    await updateDoc(userDocRef, {
-      coins: increment(rewardAmount),
-      claimedVocabMilestones: arrayUnion(milestone)
-    });
-  } catch (error) {
-    console.error(`Failed to claim vocabulary milestone for user ${userId}:`, error);
-    throw error;
-  }
-};
 
 /**
  * Interface cho dữ liệu cốt lõi của người dùng được lắng nghe.
@@ -428,9 +256,6 @@ export const listenToUserData = (userId: string, callback: (data: UserCoreData |
 
   return unsubscribe;
 };
-
-
-// --- CÁC HÀM MỚI TÁI CẤU TRÚC TỪ QUIZ-APP-HOME ---
 
 /**
  * Interface cho dữ liệu tiến trình trả về.
@@ -530,11 +355,10 @@ export const fetchPracticeListProgress = async (
               }
           });
       } 
-      else if (selectedType === 'vocaMatch') { // <<< MODIFIED
+      else if (selectedType === 'vocaMatch') {
           const relevantPairs = allWordPairs.filter(pair => userVocabSet.has(pair.english.toLowerCase()));
           const totalWords = relevantPairs.length;
           
-          // Calculate progress for both Practice 1 and 2
           [1, 2].forEach(num => {
               const practiceModeId = `match-${num}`;
               const completedSet = completedWordsByGameMode[practiceModeId] || new Set();
@@ -555,11 +379,8 @@ export const fetchPracticeListProgress = async (
               });
           });
 
-          // <<< START: THAY ĐỔI Ở ĐÂY
           const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1,2,3,4,5,6,7,8] : [1,2,3,4,5,6,7,8].map(n => i*100+n)).flat();
           const totals = { p1: userVocabSet.size, p2: wordToRelevantExampleSentences.size, p3: 0, p4: 0, p5: 0, p6: 0, p7: sentenceToUserVocab.size };
-          // totals.p8 sẽ giống totals.p1 nên không cần định nghĩa riêng
-          // <<< END: THAY ĐỔI Ở ĐÂY
 
           sentenceToUserVocab.forEach(words => {
               if (words.length >= 2) totals.p3++;
@@ -571,11 +392,9 @@ export const fetchPracticeListProgress = async (
           allModes.forEach(num => {
               const modeId = `fill-word-${num}`;
               const baseNum = num % 100;
-              // <<< START: THAY ĐỔI Ở ĐÂY
-              if (baseNum === 1 || baseNum === 8) { // Gộp logic cho practice 1 và 8
+              if (baseNum === 1 || baseNum === 8) {
                   newProgressData[num] = { completed: (completedWordsByGameMode[modeId] || new Set()).size, total: totals.p1 };
               } 
-              // <<< END: THAY ĐỔI Ở ĐÂY
               else if (baseNum === 2) {
                   let completedCount = 0;
                   const completedSet = completedWordsByGameMode[modeId] || new Set();
@@ -593,7 +412,6 @@ export const fetchPracticeListProgress = async (
     claimedRewards: claimedRewards
   };
 };
-
 
 /**
  * Ghi nhận việc người dùng nhận thưởng từ một cột mốc trong quiz.
@@ -616,7 +434,7 @@ export const claimQuizReward = async (
   try {
     await updateDoc(userDocRef, {
       coins: increment(coinAmount),
-      masteryCards: increment(masteryCardAmount), // Sử dụng masteryCards cho nhất quán
+      masteryCards: increment(masteryCardAmount),
       [`claimedQuizRewards.${rewardId}`]: true
     });
   } catch (error) {
