@@ -2,13 +2,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-    fetchProfileData, 
     updateProfileInfo, 
     updateAvatar, 
     performPremiumUpgrade,
-    ProfileData
-} from './profileService.ts'; // Import the new service
-import { auth } from '../firebase'; // Import auth để lấy thông tin người dùng
+} from './profileService.ts'; // Import only mutation services
+import { auth } from '../firebase'; // Import auth to get current user info
+import { useGame } from '../GameContext.tsx'; // Import the useGame hook
 
 // Định nghĩa các loại chế độ hiển thị
 type DisplayMode = 'fullscreen' | 'normal';
@@ -323,65 +322,27 @@ const SystemModal = ({ isOpen, onClose, icon, iconColor, title, children, action
 
 // --- Main App Component ---
 export default function GameProfile() {
-  const [userId, setUserId] = useState<string | null>(null);
+  const game = useGame();
+  const user = auth.currentUser;
+
   const UPGRADE_COST = 500;
   const avatarOptions = [ 'https://robohash.org/Cyber.png?set=set2&bgset=bg1', 'https://robohash.org/Warrior.png?set=set4&bgset=bg2', 'https://robohash.org/Glitch.png?set=set3&bgset=bg1', 'https://robohash.org/Sentinel.png?set=set1&bgset=bg2', 'https://robohash.org/Phantom.png?set=set4&bgset=bg1', 'https://robohash.org/Jester.png?set=set2&bgset=bg2' ];
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [playerInfo, setPlayerInfo] = useState<ProfileData | null>(null);
+  // Component-specific UI state
   const [modals, setModals] = useState({ avatar: false, edit: false, upgrade: false });
   const [systemModal, setSystemModal] = useState({ isOpen: false, title: '', icon: null, iconColor: '', message: '', actions: [] });
   const [displayMode, setDisplayMode] = useState<DisplayMode>('normal');
   const [cacheInfo, setCacheInfo] = useState({ usage: 0, quota: 0 });
   const [isCacheLoading, setIsCacheLoading] = useState(true);
-
-  // Lắng nghe trạng thái xác thực của người dùng
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if (user) {
-        setUserId(user.uid);
-      } else {
-        setUserId(null);
-        setPlayerInfo(null); // Xóa dữ liệu người dùng cũ khi đăng xuất
-        setIsLoading(false); // Dừng màn hình loading
-      }
-    });
-
-    return () => unsubscribe(); // Hủy lắng nghe khi component unmount
-  }, []);
-
-
-  // --- DATA HANDLING ---
-  const loadProfileData = useCallback(async () => {
-    // Hàm này bây giờ phụ thuộc vào userId từ state, nên nó sẽ chỉ chạy khi userId hợp lệ
-    if (!userId) return;
-    try {
-        setIsLoading(true);
-        const data = await fetchProfileData(userId);
-        setPlayerInfo(data);
-    } catch (error) {
-        console.error("Failed to load profile data:", error);
-        // Here you could set an error state to show a message to the user
-    } finally {
-        setIsLoading(false);
-    }
-  }, [userId]); // Phụ thuộc vào userId
-
-  // Chỉ gọi loadProfileData khi có userId
-  useEffect(() => {
-    if (userId) {
-      loadProfileData();
-    }
-  }, [userId, loadProfileData]);
   
   // --- UI HANDLERS ---
   const handleModal = (modal, state) => setModals(prev => ({ ...prev, [modal]: state }));
 
   const handleSelectAvatar = async (avatarUrl: string) => {
-    if (!playerInfo || !userId) return;
+    if (!user) return;
     try {
-        await updateAvatar(userId, avatarUrl);
-        setPlayerInfo(prev => prev ? { ...prev, avatarUrl } : null);
+        await updateAvatar(user.uid, avatarUrl);
+        await game.refreshUserData(); // Refresh context data
         handleModal('avatar', false);
     } catch (error) {
         console.error("Failed to update avatar:", error);
@@ -389,22 +350,22 @@ export default function GameProfile() {
   };
 
   const handleSaveProfile = async (newInfo: { name: string; title: string }) => {
-    if (!playerInfo || !userId) return;
+    if (!user) return;
     try {
-        await updateProfileInfo(userId, newInfo);
-        setPlayerInfo(prev => prev ? { ...prev, ...newInfo } : null);
+        await updateProfileInfo(user.uid, newInfo);
+        await game.refreshUserData(); // Refresh context data
     } catch (error) {
         console.error("Failed to save profile:", error);
     }
   };
 
   const handleUpgrade = async () => {
-    if (!userId) return;
+    if (!user) return;
     try {
-        await performPremiumUpgrade(userId, UPGRADE_COST);
-        // Refresh data to get new gem count and premium status
-        await loadProfileData(); 
-    } catch (error) {
+        await performPremiumUpgrade(user.uid, UPGRADE_COST);
+        await game.refreshUserData(); // Refresh context data
+    } catch (error)
+    {
         console.error("Upgrade failed:", error);
         // The modal will show its own error message, but we re-throw to prevent it from closing
         throw error;
@@ -516,14 +477,26 @@ export default function GameProfile() {
       if (savedMode) setDisplayMode(savedMode);
   }, []);
 
-  if (isLoading) {
+  if (game.isLoadingUserData) {
       return <div className="bg-slate-900 w-full h-full flex items-center justify-center text-white">Loading Profile...</div>;
   }
   
-  if (!userId || !playerInfo) {
+  if (!user) {
       return <div className="bg-slate-900 w-full h-full flex items-center justify-center text-white p-8 text-center">Please log in to view your profile.</div>;
   }
   
+  // Create a playerInfo object from the context for easier prop passing to sub-components
+  // NOTE: This assumes `username`, `title`, `avatarUrl`, `accountType` are available in your GameContext
+  const playerInfo = {
+    name: (game as any).username || user.displayName || 'CyberWarrior',
+    title: (game as any).title || `Lv. ${game.bossBattleHighestFloor + 1} - Rookie`,
+    avatarUrl: (game as any).avatarUrl || user.photoURL || 'https://robohash.org/Player.png?set=set4&bgset=bg1',
+    accountType: (game as any).accountType || 'Normal',
+    gems: game.gems,
+    masteryPoints: game.masteryCards,
+    maxMasteryPoints: 1000, // This can be a constant or derived from context
+  };
+
   return (
     <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
       <style>{`
