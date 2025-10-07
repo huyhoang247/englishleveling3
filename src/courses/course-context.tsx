@@ -10,7 +10,7 @@ import {
   recordGameSuccess as recordGameSuccessService,
   fetchOrCreateUser as fetchOrCreateUserService,
   updateUserCoins as updateUserCoinsService,
-  fetchGameInitialData as fetchGameInitialDataService,
+  fetchGameInitialData as fetchGameInitialDataService, // <<< DÒNG MỚI
 } from './course-data-service.ts';
 // NEW: Import data and generators
 import { generateAudioUrlsForWord, generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
@@ -20,6 +20,7 @@ import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 
 
 // --- Định nghĩa các "hình dạng" (interface) dùng chung ---
+// NEW: Moved Definition interface here
 export interface Definition {
   vietnamese: string;
   english: string;
@@ -34,9 +35,6 @@ interface QuizAppContextType {
   user: User | null;
   userCoins: number;
   masteryCount: number;
-  // [XÓA] Không quản lý state này ở context toàn cục nữa
-  // claimedDailyGoals: { [date: string]: number[] };
-  // claimedVocabMilestones: number[];
   
   goBack: () => void;
   goHome: () => void;
@@ -51,7 +49,7 @@ interface QuizAppContextType {
   recordGameSuccess: (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number) => Promise<void>;
   updateUserCoins: (amount: number) => Promise<void>;
   fetchOrCreateUser: () => Promise<any>;
-  fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>;
+  fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>; // <<< DÒNG MỚI
 
   // --- NEW: Vocabulary data and utilities ---
   definitionsMap: { [key: string]: Definition };
@@ -90,10 +88,8 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
   const [user, setUser] = useState(auth.currentUser);
   const [userCoins, setUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
-  // [XÓA] State cho dữ liệu người dùng được mở rộng không cần ở đây nữa
-  // const [claimedDailyGoals, setClaimedDailyGoals] = useState<{ [date: string]: number[] }>({});
-  // const [claimedVocabMilestones, setClaimedVocabMilestones] = useState<number[]>([]);
   
+  // NEW: Process vocabulary definitions once and provide via context
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
     const lines = detailedMeaningsText.trim().split('\n');
@@ -112,6 +108,8 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     return definitions;
   }, []);
 
+
+  // Effect lắng nghe thay đổi trạng thái đăng nhập
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -119,16 +117,13 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     return () => unsubscribe();
   }, []);
 
-  // [SỬA] Effect lắng nghe dữ liệu người dùng, chỉ cập nhật state chung
+  // Effect lắng nghe dữ liệu người dùng (coins, mastery) real-time
   useEffect(() => {
     if (user) {
       const unsubscribe = listenToUserData(user.uid, (data) => {
         if (data) {
-          setUserCoins(data.coins || 0);
-          setMasteryCount(data.masteryCards || 0);
-          // [XÓA] Không set state milestone ở đây nữa
-          // setClaimedDailyGoals(data.claimedDailyGoals || {});
-          // setClaimedVocabMilestones(data.claimedVocabMilestones || []);
+          setUserCoins(data.coins);
+          setMasteryCount(data.masteryCards);
         } else {
           setUserCoins(0);
           setMasteryCount(0);
@@ -141,6 +136,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     }
   }, [user]);
 
+  // Effect điều khiển NavBar của component cha
   useEffect(() => {
     if (currentView !== 'main') {
       hideNavBar?.();
@@ -151,8 +147,8 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
       showNavBar?.();
     };
   }, [currentView, hideNavBar, showNavBar]);
-  
-  // ... (các hàm handle... và goBack/goHome không thay đổi)
+
+  // --- Các hàm xử lý (Handlers) ---
   const handleQuizSelect = useCallback((quiz) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
@@ -177,6 +173,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     }
   }, [selectedType]);
 
+  // --- Các hàm điều hướng (Navigation) ---
   const goBack = useCallback(() => {
     if (['vocabularyGame', 'quiz', 'vocaMatchGame'].includes(currentView)) {
        setCurrentView('practices');
@@ -198,6 +195,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     setSelectedPractice(null);
   }, []);
 
+  // --- Data service wrapper functions ---
   const getOpenedVocab = useCallback(async (): Promise<string[]> => {
     if (!user) {
       console.warn("getOpenedVocab called without a user.");
@@ -222,6 +220,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     await recordGameSuccessService(user.uid, gameModeId, word, isMastered, coinsToAdd);
   }, [user]);
   
+  // <<< START: HÀM WRAPPER MỚI
   const fetchGameInitialData = useCallback(async (gameModeId: string, isMultiWordGame: boolean): Promise<any> => {
     if (!user) {
       console.warn("fetchGameInitialData called without a user.");
@@ -229,6 +228,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     }
     return fetchGameInitialDataService(user.uid, gameModeId, isMultiWordGame);
   }, [user]);
+  // <<< END: HÀM WRAPPER MỚI
 
   const fetchOrCreateUser = useCallback(async (): Promise<any> => {
     if (!user) {
@@ -247,7 +247,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
   }, [user]);
 
 
-  // [SỬA] Cung cấp giá trị ra context (đã loại bỏ state milestone)
+  // --- Giá trị được cung cấp bởi Context ---
   const value = {
     currentView,
     selectedQuiz,
@@ -267,7 +267,8 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     recordGameSuccess,
     fetchOrCreateUser,
     updateUserCoins,
-    fetchGameInitialData,
+    fetchGameInitialData, // <<< DÒNG MỚI
+    // NEW: Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
     exampleData,
