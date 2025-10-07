@@ -282,24 +282,22 @@ const App: React.FC = () => {
   
   // --- CHANGE START ---
   // Khi loadingStep đã là 'ready' hoặc 'launching', hiển thị giao diện game
-  // Sử dụng `var(--app-height)` thay vì `h-screen` để đảm bảo chiều cao chính xác trên di động.
+  // Bọc toàn bộ ứng dụng trong GameProvider để context có sẵn ở mọi nơi.
   return (
     <div className="relative w-screen" style={{ height: 'var(--app-height, 100vh)' }}>
-      <div className="app-container" style={{ height: '100%' }}>
-        {activeTab === 'home' && (
-          <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
-            <Home hideNavBar={hideNavBar} showNavBar={showNavBar} />
-          </GameProvider>
-        )}
-        {activeTab === 'profile' && <Profile />}
-        {activeTab === 'story' && <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />}
-        {activeTab === 'quiz' && <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />}
-        {activeTab === 'game' && <GameBrowser hideNavBar={hideNavBar} showNavBar={showNavBar} />}
-        {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
-      </div>
-      
-      {/* Hiệu ứng mờ dần khi game bắt đầu */}
-      <GameSkeletonLoader show={loadingStep === 'launching'} />
+      <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
+        <div className="app-container" style={{ height: '100%' }}>
+          {activeTab === 'home' && <Home hideNavBar={hideNavBar} showNavBar={showNavBar} />}
+          {activeTab === 'profile' && <Profile />}
+          {activeTab === 'story' && <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />}
+          {activeTab === 'quiz' && <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />}
+          {activeTab === 'game' && <GameBrowser hideNavBar={hideNavBar} showNavBar={showNavBar} />}
+          {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
+        </div>
+        
+        {/* Hiệu ứng mờ dần khi game bắt đầu */}
+        <GameSkeletonLoader show={loadingStep === 'launching'} />
+      </GameProvider>
     </div>
   );
   // --- CHANGE END ---
