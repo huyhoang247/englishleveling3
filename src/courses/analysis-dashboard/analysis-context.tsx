@@ -10,18 +10,17 @@ import React, {
     FC,
     ReactNode
 } from 'react';
-import { User } from 'firebase/auth';
-// Lấy dữ liệu người dùng từ context cha
-import { useQuizApp } from '../course-context.tsx'; 
-
+import { auth } from '../../firebase.js'; 
+import { onAuthStateChanged, User } from 'firebase/auth';
+// [SỬA] Thay đổi đường dẫn import để trỏ đến service mới
 import { 
     fetchAnalysisDashboardData, 
     claimDailyMilestoneReward,
     claimVocabMilestoneReward
-} from './analysis-service.ts';
+} from './analysis-service.ts'; // <--- ĐÃ THAY ĐỔI
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
 
-// --- TYPE DEFINITIONS ---
+// --- TYPE DEFINITIONS (Should be in a shared types file, but kept here for context) ---
 interface LearningActivity { date: string; new: number; review: number; }
 interface MasteryByGame { game: string; completed: number; }
 interface VocabularyGrowth { date: string; cumulative: number; }
@@ -36,61 +35,52 @@ interface AnalysisData {
   wordMastery: WordMastery[];
 }
 type DailyActivityMap = { [date: string]: { new: number; review: number } };
-
-// Kiểu dữ liệu này phải đồng bộ với course-context.tsx
 interface UserProgress {
     coins: number;
     masteryCount: number;
-    claimedDailyGoals: { [date: string]: number[] };
+    claimedDailyGoals: number[];
     claimedVocabMilestones: number[];
 }
 
+// --- CONTEXT TYPE DEFINITION ---
 interface AnalysisDashboardContextType {
     user: User | null;
     loading: boolean;
     error: string | null;
     analysisData: AnalysisData | null;
-    dailyActivityMap: DailyActivityMap;
-    userProgress: UserProgress; // State cục bộ để cập nhật UI tức thì
+    dailyActivityData: DailyActivityMap;
+    userProgress: UserProgress;
     wordsLearnedToday: number;
-    claimedDailyGoalsToday: number[]; // Thuộc tính tiện ích
     claimDailyReward: (milestone: number, rewardAmount: number) => Promise<void>;
     claimVocabReward: (milestone: number, rewardAmount: number) => Promise<void>;
 }
 
+// --- CREATE CONTEXT ---
 const AnalysisDashboardContext = createContext<AnalysisDashboardContextType | undefined>(undefined);
 
+// --- PROVIDER COMPONENT ---
 export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children }) => {
-    // Lấy dữ liệu người dùng từ context cha (QuizAppProvider)
-    const { user, userProgress: userProgressFromCourse } = useQuizApp();
-
+    const [user, setUser] = useState<User | null>(auth.currentUser);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
     const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
-    
-    // State này vẫn cần thiết để cập nhật UI ngay lập tức khi nhận thưởng (optimistic UI update)
     const [userProgress, setUserProgress] = useState<UserProgress>({
         coins: 0,
         masteryCount: 0,
-        claimedDailyGoals: {},
+        claimedDailyGoals: [],
         claimedVocabMilestones: [],
     });
 
-    // Effect để đồng bộ userProgress từ context cha vào state cục bộ
     useEffect(() => {
-        if (userProgressFromCourse) {
-            setUserProgress(userProgressFromCourse);
-        }
-    }, [userProgressFromCourse]);
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
+        return () => unsubscribe();
+    }, []);
 
-    // Effect fetch dữ liệu phân tích, phụ thuộc vào `user` từ useQuizApp
     useEffect(() => {
         if (!user) {
             setLoading(false);
             setError("Vui lòng đăng nhập để xem phân tích.");
-            setAnalysisData(null);
-            setDailyActivityData({});
             return;
         }
 
@@ -98,7 +88,14 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
             setLoading(true);
             setError(null);
             try {
+                // Không cần thay đổi gì ở đây vì tên hàm vẫn giữ nguyên
                 const dataPayload = await fetchAnalysisDashboardData(user.uid, defaultVocabulary.length);
+                setUserProgress({
+                    coins: dataPayload.userData.coins,
+                    masteryCount: dataPayload.userData.masteryCards,
+                    claimedDailyGoals: dataPayload.userData.claimedDailyGoals,
+                    claimedVocabMilestones: dataPayload.userData.claimedVocabMilestones,
+                });
                 setAnalysisData(dataPayload.analysisData);
                 setDailyActivityData(dataPayload.dailyActivityMap);
             } catch (err: any) {
@@ -117,41 +114,24 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
         return todayActivity ? todayActivity[1].new + todayActivity[1].review : 0;
     }, [dailyActivityData]);
 
-    const claimedDailyGoalsToday = useMemo(() => {
-        const todayString = new Date().toISOString().slice(0, 10);
-        return userProgress.claimedDailyGoals[todayString] || [];
-    }, [userProgress.claimedDailyGoals]);
-
     const claimDailyReward = useCallback(async (milestone: number, rewardAmount: number) => {
         if (!user) throw new Error("User not logged in");
-        const todayString = new Date().toISOString().slice(0, 10);
-        
-        // Cập nhật UI tức thì (Optimistic Update)
+        await claimDailyMilestoneReward(user.uid, milestone, rewardAmount);
         setUserProgress(prev => ({
             ...prev,
             coins: prev.coins + rewardAmount,
-            claimedDailyGoals: {
-                ...prev.claimedDailyGoals,
-                [todayString]: [...(prev.claimedDailyGoals[todayString] || []), milestone]
-            }
+            claimedDailyGoals: [...prev.claimedDailyGoals, milestone],
         }));
-        
-        // Gọi service để cập nhật lên DB
-        await claimDailyMilestoneReward(user.uid, milestone, rewardAmount);
     }, [user]);
 
     const claimVocabReward = useCallback(async (milestone: number, rewardAmount: number) => {
         if (!user) throw new Error("User not logged in");
-        
-        // Cập nhật UI tức thì (Optimistic Update)
+        await claimVocabMilestoneReward(user.uid, milestone, rewardAmount);
         setUserProgress(prev => ({
             ...prev,
             coins: prev.coins + rewardAmount,
             claimedVocabMilestones: [...prev.claimedVocabMilestones, milestone],
         }));
-        
-        // Gọi service để cập nhật lên DB
-        await claimVocabMilestoneReward(user.uid, milestone, rewardAmount);
     }, [user]);
 
     const value = useMemo(() => ({
@@ -162,7 +142,6 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
         dailyActivityData,
         userProgress,
         wordsLearnedToday,
-        claimedDailyGoalsToday,
         claimDailyReward,
         claimVocabReward,
     }), [
@@ -173,7 +152,6 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
         dailyActivityData, 
         userProgress, 
         wordsLearnedToday, 
-        claimedDailyGoalsToday,
         claimDailyReward, 
         claimVocabReward
     ]);
@@ -185,6 +163,7 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
     );
 };
 
+// --- CUSTOM HOOK TO USE THE CONTEXT ---
 export const useAnalysisDashboard = (): AnalysisDashboardContextType => {
     const context = useContext(AnalysisDashboardContext);
     if (context === undefined) {
@@ -193,4 +172,5 @@ export const useAnalysisDashboard = (): AnalysisDashboardContextType => {
     return context;
 };
 
+// --- TYPE EXPORTS (for use in the main component) ---
 export type { AnalysisData, DailyActivityMap, UserProgress, WordMastery };
