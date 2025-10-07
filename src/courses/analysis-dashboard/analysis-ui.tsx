@@ -13,9 +13,10 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets, dashboardAssets } from '../../game-assets.ts'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 import { useAnimateValue } from '../../ui/useAnimateValue.ts'; 
-import HomeButton from '../../ui/home-button.tsx';
+import HomeButton from '../../ui/home-button.tsx'; // << 1. IMPORT COMPONENT MỚI
 
 // --- ICONS (Grouped for better organization) ---
+// HomeIcon đã được xóa vì chúng ta sẽ dùng HomeButton component
 const ActivityCompletedIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none"><defs><linearGradient id="activityGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#2DD4BF" /><stop offset="100%" stopColor="#06B6D4" /></linearGradient></defs><circle cx="12" cy="12" r="12" fill="url(#activityGradient)" /><path d="M8 12.5l3 3 5-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>);
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
@@ -43,8 +44,7 @@ const VOCAB_MILESTONES = [100, 200, 500, 1000, 1500, 2000, 2500, 3000, 3500, 400
 
 interface MilestoneProgressProps {
   title: string; iconSrc: string; milestones: number[]; currentProgress: number; masteryCount: number;
-  claimedMilestones: number[];
-  onClaim: (milestone: number, rewardAmount: number) => Promise<void>;
+  claimedMilestones: number[]; onClaim: (milestone: number, rewardAmount: number) => Promise<void>;
   user: User | null; progressColorClass?: string; completedText?: string;
 }
 
@@ -202,11 +202,13 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+// [TỐI ƯU] Định nghĩa các hằng số cho props của biểu đồ để chúng không bị tạo lại trên mỗi lần render.
 const chartMargin = { top: 5, right: 20, left: -10, bottom: 5 };
 const barChartMargin = { top: 20, right: 20, left: -20, bottom: 5 };
 const legendWrapperStyle = { top: 0, left: 25 };
 const barChartCursorStyle = { fill: 'rgba(136, 132, 216, 0.1)' };
 
+// [TỐI ƯU] Tách biểu đồ thành các component riêng và memoize để ngăn re-render không cần thiết.
 const VocabularyGrowthChart = memo(({ data }: { data: any[] }) => {
     return (
         <ChartCard title="Vocabulary Growth">
@@ -237,18 +239,7 @@ const StudyActivityChart = memo(({ data }: { data: any[] }) => {
 const ITEMS_PER_PAGE = 10;
 
 function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
-  const { 
-    user, 
-    loading, 
-    error, 
-    analysisData, 
-    dailyActivityData, 
-    userProgress, 
-    wordsLearnedToday, 
-    claimedDailyGoalsToday, // <<-- LẤY GIÁ TRỊ ĐÃ ĐƯỢC CHUẨN BỊ SẴN TỪ CONTEXT
-    claimDailyReward, 
-    claimVocabReward 
-  } = useAnalysisDashboard();
+  const { user, loading, error, analysisData, dailyActivityData, userProgress, wordsLearnedToday, claimDailyReward, claimVocabReward } = useAnalysisDashboard();
   
   const [sortConfig, setSortConfig] = useState<{ key: keyof WordMastery, direction: 'asc' | 'desc' }>({ key: 'mastery', direction: 'desc' });
   const [currentPage, setCurrentPage] = useState(1);
@@ -278,6 +269,7 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
         <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
           <div className="flex h-14 items-center justify-between px-4">
             <div className="flex items-center">
+                {/* << 2. THAY THẾ NÚT HOME CŨ BẰNG COMPONENT MỚI */}
                 <HomeButton onClick={onGoBack} title="Về trang chủ" />
             </div>
             <div className="flex items-center justify-end gap-3">
@@ -303,19 +295,7 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                         <div className="max-w-7xl mx-auto">
                             <div className="space-y-6 my-6">
                                 <MilestoneProgress title="Voca Journey" iconSrc={dashboardAssets.vocaJourneyIcon} milestones={VOCAB_MILESTONES} currentProgress={totalWordsLearned} masteryCount={userProgress.masteryCount} claimedMilestones={userProgress.claimedVocabMilestones} onClaim={claimVocabReward} user={user} progressColorClass="from-blue-400 to-purple-500" completedText="Max level reached!" />
-                                
-                                <MilestoneProgress 
-                                    title="Daily Missions" 
-                                    iconSrc={dashboardAssets.dailyMissionsIcon} 
-                                    milestones={GOAL_MILESTONES} 
-                                    currentProgress={wordsLearnedToday} 
-                                    masteryCount={userProgress.masteryCount} 
-                                    claimedMilestones={claimedDailyGoalsToday} // <<-- SỬA LỖI TẠI ĐÂY
-                                    onClaim={claimDailyReward} 
-                                    user={user} 
-                                    progressColorClass="from-green-400 to-blue-500" 
-                                    completedText="All missions completed!" 
-                                />
+                                <MilestoneProgress title="Daily Missions" iconSrc={dashboardAssets.dailyMissionsIcon} milestones={GOAL_MILESTONES} currentProgress={wordsLearnedToday} masteryCount={userProgress.masteryCount} claimedMilestones={userProgress.claimedDailyGoals} onClaim={claimDailyReward} user={user} progressColorClass="from-green-400 to-blue-500" completedText="All missions completed!" />
                             </div>
                             <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
