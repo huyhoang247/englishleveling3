@@ -1,4 +1,4 @@
-// --- START OF FILE: fill-word-context.tsx ---
+// --- START OF FILE fill-blank-context.tsx ---
 
 import React, {
   createContext,
@@ -10,12 +10,12 @@ import React, {
   useMemo,
   ReactNode,
 } from 'react';
-import { User } from 'firebase/auth';
-import { fetchGameInitialData, recordGameSuccess } from '../course-data-service.ts';
-import { exampleData } from '../../voca-data/example-data.ts';
+// <<< START: THAY ĐỔI IMPORT
+// Gỡ bỏ import trực tiếp, thay bằng import hook `useQuizApp`
+import { useQuizApp } from '../course-context.tsx'; // Giả sử đường dẫn này là đúng
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
-// <<< DÒNG MỚI: Import hàm tạo audio
-import { generateAudioUrlsForWord } from '../../voca-data/audio-quiz-generator.ts';
+// <<< END: THAY ĐỔI IMPORT
+
 
 // --- HELPER FUNCTION (Giả sử bạn đã chuyển nó sang một file utils) ---
 const shuffleArray = <T extends any[]>(array: T): T => { 
@@ -34,7 +34,7 @@ interface VocabularyItem {
   imageIndex?: number;
   question?: string;
   vietnameseHint?: string;
-  audioUrls?: { [voiceName: string]: string }; // <<< DÒNG MỚI: Thêm thuộc tính audio
+  audioUrls?: { [voiceName: string]: string }; 
 }
 
 // --- CONTEXT TYPE DEFINITION ---
@@ -87,10 +87,20 @@ const FillWordContext = createContext<FillWordContextType | undefined>(undefined
 interface FillWordProviderProps {
   children: ReactNode;
   selectedPractice: number;
-  user: User | null;
+  // user: User | null; // <<< DÒNG CŨ: Gỡ bỏ prop `user`
 }
 
-export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, selectedPractice, user }) => {
+export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, selectedPractice }) => {
+  // <<< START: SỬ DỤNG HOOK TỪ CONTEXT TRUNG TÂM
+  const { 
+    user, 
+    fetchGameInitialData, 
+    recordGameSuccess, 
+    exampleData, 
+    generateAudioUrlsForWord 
+  } = useQuizApp();
+  // <<< END: SỬ DỤNG HOOK TỪ CONTEXT TRUNG TÂM
+
   // --- STATE MANAGEMENT ---
   const [vocabularyList, setVocabularyList] = useState<VocabularyItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,7 +179,8 @@ export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, se
 
     try {
       const gameModeId = `fill-word-${selectedPractice}`;
-      await recordGameSuccess(user.uid, gameModeId, currentWord.word, isMultiWordGame, coinReward);
+      // <<< DÒNG MỚI: Gọi hàm từ context, không cần uid
+      await recordGameSuccess(gameModeId, currentWord.word, isMultiWordGame, coinReward);
     } catch (e) {
       console.error("Lỗi khi ghi lại kết quả game:", e);
       // Optional: Rollback coins on failure
@@ -178,7 +189,7 @@ export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, se
 
     setTimeout(() => setShowConfetti(false), 2000);
     setTimeout(selectNextWord, 1500);
-  }, [user, currentWord, streak, masteryCount, isMultiWordGame, selectedPractice, selectNextWord]);
+  }, [user, currentWord, streak, masteryCount, isMultiWordGame, selectedPractice, selectNextWord, recordGameSuccess]); // Thêm recordGameSuccess vào dependencies
 
   const checkAnswer = useCallback(async () => {
     if (!currentWord || !userInput.trim() || isCorrect) return;
@@ -251,19 +262,20 @@ export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, se
         try {
             setLoading(true); setError(null);
             const gameModeId = `fill-word-${selectedPractice}`;
-            const initialData = await fetchGameInitialData(user.uid, gameModeId, isMultiWordGame);
+            // <<< DÒNG MỚI: Gọi hàm từ context, không cần uid
+            const initialData = await fetchGameInitialData(gameModeId, isMultiWordGame);
             const { coins: fetchedCoins, masteryCards: fetchedMasteryCount, openedVocabWords, completedWords: fetchedCompletedWords } = initialData;
             const userVocabularyWords = openedVocabWords.map(v => v.word);
             let gameVocabulary: VocabularyItem[] = [];
 
-            // REFACTORED: Logic to build game vocabulary
+            // REFACTORED: Logic to build game vocabulary (sử dụng exampleData và generateAudioUrlsForWord từ context)
             const practiceType = selectedPractice % 100;
             if (practiceType === 1) {
                 openedVocabWords.forEach((vocabItem) => {
                     const imageIndex = Number(vocabItem.id);
                     if (vocabItem.word && !isNaN(imageIndex)) { gameVocabulary.push({ word: vocabItem.word, hint: `Nghĩa của từ "${vocabItem.word}"`, imageIndex: imageIndex }); }
                 });
-            } else if (practiceType === 8) { // <<< START: THÊM LOGIC MỚI CHO PRACTICE 8
+            } else if (practiceType === 8) {
                 openedVocabWords.forEach((vocabItem) => {
                     if (vocabItem.word) {
                         const audioUrls = generateAudioUrlsForWord(vocabItem.word);
@@ -276,9 +288,9 @@ export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, se
                         }
                     }
                 });
-            } // <<< END: THÊM LOGIC MỚI CHO PRACTICE 8
+            }
             else if (practiceType >= 2 && practiceType <= 7) {
-                const minWords = (practiceType === 7) ? 1 : practiceType -1; // Type 7 needs at least 1, type 3 needs 2, etc.
+                const minWords = (practiceType === 7) ? 1 : practiceType -1;
                 exampleData.forEach(sentence => {
                     const wordsInSentence = userVocabularyWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                     
@@ -315,7 +327,7 @@ export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, se
         }
     };
     fetchAndPrepareGameData();
-  }, [user, selectedPractice, isMultiWordGame]);
+  }, [user, selectedPractice, isMultiWordGame, fetchGameInitialData, exampleData, generateAudioUrlsForWord]); // Thêm dependencies mới
 
   // Effect to select the first word or end the game
   useEffect(() => {
