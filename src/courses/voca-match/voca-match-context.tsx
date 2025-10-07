@@ -8,18 +8,10 @@ import React, {
   useCallback,
   ReactNode,
 } from 'react';
-import { useQuizApp } from '../course-context.tsx'; // Import the main app context hook
-import { generateAudioUrlsForWord } from '../../voca-data/audio-quiz-generator.ts';
+// Import a new type if needed
+import { useQuizApp, Definition } from '../course-context.tsx'; 
 import { allWordPairs, shuffleArray } from './voca-match-data.ts';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
-import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
-
-// --- Interfaces ---
-interface Definition {
-  vietnamese: string;
-  english: string;
-  explanation: string;
-}
 
 interface LeftColumnItem {
   word: string;
@@ -80,7 +72,17 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   onGoBack,
   selectedPractice,
 }) => {
-  const { user, userCoins, masteryCount: masteryCountFromCourse, getOpenedVocab, getCompletedWords, recordGameSuccess } = useQuizApp();
+  // Get new data/functions from the main context
+  const { 
+    user, 
+    userCoins, 
+    masteryCount: masteryCountFromCourse, 
+    getOpenedVocab, 
+    getCompletedWords, 
+    recordGameSuccess,
+    definitionsMap,          // NEW
+    generateAudioUrlsForWord // NEW
+  } = useQuizApp();
 
   const [loading, setLoading] = useState(true);
   const [playablePairs, setPlayablePairs] = useState<any[]>([]);
@@ -119,23 +121,10 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     setMasteryCount(masteryCountFromCourse);
   }, [masteryCountFromCourse]);
 
-  const definitionsMap = useMemo(() => {
-    const definitions: { [key: string]: Definition } = {};
-    const lines = detailedMeaningsText.trim().split('\n');
-    lines.forEach(line => {
-      if (line.trim() === '') return;
-      const match = line.match(/^(.+?)\s+\((.+?)\)\s+là\s+(.*)/);
-      if (match) {
-        const [, vietnameseWord, englishWord, explanation] = match;
-        definitions[englishWord.trim().toLowerCase()] = {
-          vietnamese: vietnameseWord.trim(),
-          english: englishWord.trim(),
-          explanation: explanation.trim(),
-        };
-      }
-    });
-    return definitions;
-  }, []);
+  // REMOVED: The definitionsMap is now provided by useQuizApp, so this is no longer needed.
+  /*
+  const definitionsMap = useMemo(() => { ... });
+  */
 
   useEffect(() => {
     const fetchData = async () => {
@@ -154,6 +143,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
           setTotalEligiblePairs(allEligiblePairs);
 
           if (isAudioMatch && remainingPairs.length > 0) {
+            // Use generateAudioUrlsForWord from context
             const firstWordUrls = generateAudioUrlsForWord(remainingPairs[0].english);
             if (firstWordUrls) {
               setAvailableVoices(Object.keys(firstWordUrls));
@@ -170,7 +160,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       }
     };
     fetchData();
-  }, [user, gameModeId, isAudioMatch, getOpenedVocab, getCompletedWords]);
+  }, [user, gameModeId, isAudioMatch, getOpenedVocab, getCompletedWords, generateAudioUrlsForWord]); // Added generateAudioUrlsForWord dependency
 
   const setupNewRound = useCallback(() => {
     const roundStart = currentRound * GAME_SIZE;
@@ -189,6 +179,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     if (isAudioMatch) {
       const leftColumnData = englishWords.map(word => ({
         word: word,
+        // Use generateAudioUrlsForWord from context
         audioUrls: generateAudioUrlsForWord(word)
       }));
       setLeftColumn(leftColumnData);
@@ -206,7 +197,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     setSelectedLeft(null);
     setIncorrectPair(null);
     setLastCorrectDefinition(null);
-  }, [currentRound, playablePairs, loading, isAudioMatch]);
+  }, [currentRound, playablePairs, loading, isAudioMatch, generateAudioUrlsForWord]); // Added generateAudioUrlsForWord dependency
 
   useEffect(() => {
     if (!loading) {
@@ -235,6 +226,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       setCorrectPairs(prev => [...prev, selectedLeft]);
       setSelectedLeft(null);
       setScore(prev => prev + 1);
+      // Use definitionsMap from context
       setLastCorrectDefinition(definitionsMap[selectedLeft.toLowerCase()] || null);
 
       const newStreak = streak + 1;
