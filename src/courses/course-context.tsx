@@ -1,8 +1,12 @@
-
 import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 import { auth } from '../firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { listenToUserData } from './course-data-service.ts';
+import {
+  listenToUserData,
+  getOpenedVocab as getOpenedVocabService,
+  getCompletedWordsForGameMode as getCompletedWordsService,
+  recordGameSuccess as recordGameSuccessService
+} from './course-data-service.ts';
 
 // --- Định nghĩa "hình dạng" của Context ---
 interface QuizAppContextType {
@@ -20,6 +24,11 @@ interface QuizAppContextType {
   handleQuizSelect: (quiz: any) => void;
   handleTypeSelect: (type: string) => void;
   handlePracticeSelect: (practice: number) => void;
+
+  // --- NEW: Data service functions ---
+  getOpenedVocab: () => Promise<string[]>;
+  getCompletedWords: (gameModeId: string) => Promise<Set<string>>;
+  recordGameSuccess: (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number) => Promise<void>;
 }
 
 // --- Tạo Context ---
@@ -137,6 +146,33 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     setSelectedPractice(null);
   }, []);
 
+  // --- NEW: Data service wrapper functions ---
+  const getOpenedVocab = useCallback(async (): Promise<string[]> => {
+    if (!user) {
+      console.warn("getOpenedVocab called without a user.");
+      return [];
+    }
+    return getOpenedVocabService(user.uid);
+  }, [user]);
+
+  const getCompletedWords = useCallback(async (gameModeId: string): Promise<Set<string>> => {
+    if (!user) {
+        console.warn("getCompletedWords called without a user.");
+        return new Set();
+    }
+    return getCompletedWordsService(user.uid, gameModeId);
+  }, [user]);
+
+  const recordGameSuccess = useCallback(async (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number): Promise<void> => {
+    if (!user) {
+        console.warn("recordGameSuccess called without a user.");
+        return;
+    }
+    // This updates Firestore, and the `listenToUserData` listener will automatically update the userCoins state.
+    await recordGameSuccessService(user.uid, gameModeId, word, isMastered, coinsToAdd);
+  }, [user]);
+
+
   // --- Giá trị được cung cấp bởi Context ---
   const value = {
     currentView,
@@ -152,6 +188,9 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     handleQuizSelect,
     handleTypeSelect,
     handlePracticeSelect,
+    getOpenedVocab,
+    getCompletedWords,
+    recordGameSuccess,
   };
 
   return <QuizAppContext.Provider value={value}>{children}</QuizAppContext.Provider>;
