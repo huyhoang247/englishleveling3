@@ -1,6 +1,6 @@
 // --- START OF FILE: src/services/analysis-service.ts ---
 
-import { db } from '../firebase';
+import { db } from '../../firebase';
 import { 
     doc, 
     getDocs, 
