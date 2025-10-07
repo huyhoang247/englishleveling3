@@ -1,4 +1,4 @@
-// --- START OF FILE course-context.tsx ---
+// --- START OF FILE: course-context.tsx ---
 
 import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode, useMemo } from 'react';
 import { auth } from '../firebase.js';
@@ -20,10 +20,19 @@ import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 
 
 // --- Định nghĩa các "hình dạng" (interface) dùng chung ---
+// NEW: Moved Definition interface here
 export interface Definition {
   vietnamese: string;
   english: string;
   explanation: string;
+}
+
+// <<< THÊM: Định nghĩa UserProgress để quản lý tập trung
+export interface UserProgress {
+    coins: number;
+    masteryCount: number;
+    claimedDailyGoals: number[];
+    claimedVocabMilestones: number[];
 }
 
 interface QuizAppContextType {
@@ -33,11 +42,7 @@ interface QuizAppContextType {
   selectedPractice: number | null;
   user: User | null;
   userCoins: number;
-  masteryCount: number;
-  // [MỚI] Thêm dữ liệu người dùng cần cho Analysis
-  claimedDailyGoals: { [date: string]: number[] };
-  claimedVocabMilestones: number[];
-  
+  userProgress: UserProgress; // <<< THAY ĐỔI: Thay thế masteryCount bằng object userProgress
   goBack: () => void;
   goHome: () => void;
   setCurrentView: (view: string) => void;
@@ -88,12 +93,16 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPractice, setSelectedPractice] = useState<number | null>(null);
   const [user, setUser] = useState(auth.currentUser);
-  const [userCoins, setUserCoins] = useState(0);
-  const [masteryCount, setMasteryCount] = useState(0);
-  // [MỚI] State cho dữ liệu người dùng được mở rộng
-  const [claimedDailyGoals, setClaimedDailyGoals] = useState<{ [date: string]: number[] }>({});
-  const [claimedVocabMilestones, setClaimedVocabMilestones] = useState<number[]>([]);
   
+  // <<< THAY ĐỔI: Quản lý toàn bộ tiến trình người dùng trong một state duy nhất
+  const [userProgress, setUserProgress] = useState<UserProgress>({
+    coins: 0,
+    masteryCount: 0,
+    claimedDailyGoals: [],
+    claimedVocabMilestones: [],
+  });
+  
+  // NEW: Process vocabulary definitions once and provide via context
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
     const lines = detailedMeaningsText.trim().split('\n');
@@ -112,38 +121,43 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     return definitions;
   }, []);
 
+
+  // Effect lắng nghe thay đổi trạng thái đăng nhập
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
+      if (!currentUser) {
+        // Reset state khi người dùng đăng xuất
+        setUserProgress({ coins: 0, masteryCount: 0, claimedDailyGoals: [], claimedVocabMilestones: [] });
+      }
     });
     return () => unsubscribe();
   }, []);
 
-  // [SỬA] Effect lắng nghe dữ liệu người dùng được mở rộng
+  // Effect lắng nghe dữ liệu người dùng (coins, mastery, etc.) real-time
   useEffect(() => {
     if (user) {
       const unsubscribe = listenToUserData(user.uid, (data) => {
+        // <<< THAY ĐỔI: Cập nhật state userProgress mới từ listener
         if (data) {
-          setUserCoins(data.coins || 0);
-          setMasteryCount(data.masteryCards || 0);
-          setClaimedDailyGoals(data.claimedDailyGoals || {});
-          setClaimedVocabMilestones(data.claimedVocabMilestones || []);
+          const todayString = new Date().toISOString().slice(0, 10);
+          setUserProgress({
+              coins: data.coins || 0,
+              masteryCount: data.masteryCards || 0,
+              // Lấy đúng mảng claimed cho ngày hôm nay
+              claimedDailyGoals: data.claimedDailyGoals?.[todayString] || [], 
+              claimedVocabMilestones: data.claimedVocabMilestones || [],
+          });
         } else {
-          setUserCoins(0);
-          setMasteryCount(0);
-          setClaimedDailyGoals({});
-          setClaimedVocabMilestones([]);
+          // Reset nếu không có data (ví dụ: tài liệu người dùng bị xóa)
+          setUserProgress({ coins: 0, masteryCount: 0, claimedDailyGoals: [], claimedVocabMilestones: [] });
         }
       });
       return () => unsubscribe();
-    } else {
-      setUserCoins(0);
-      setMasteryCount(0);
-      setClaimedDailyGoals({});
-      setClaimedVocabMilestones([]);
     }
   }, [user]);
 
+  // Effect điều khiển NavBar của component cha
   useEffect(() => {
     if (currentView !== 'main') {
       hideNavBar?.();
@@ -155,6 +169,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     };
   }, [currentView, hideNavBar, showNavBar]);
 
+  // --- Các hàm xử lý (Handlers) ---
   const handleQuizSelect = useCallback((quiz) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
@@ -179,6 +194,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     }
   }, [selectedType]);
 
+  // --- Các hàm điều hướng (Navigation) ---
   const goBack = useCallback(() => {
     if (['vocabularyGame', 'quiz', 'vocaMatchGame'].includes(currentView)) {
        setCurrentView('practices');
@@ -200,6 +216,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     setSelectedPractice(null);
   }, []);
 
+  // --- Data service wrapper functions ---
   const getOpenedVocab = useCallback(async (): Promise<string[]> => {
     if (!user) {
       console.warn("getOpenedVocab called without a user.");
@@ -249,17 +266,15 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
   }, [user]);
 
 
-  // [SỬA] Cung cấp thêm state mới ra context
+  // --- Giá trị được cung cấp bởi Context ---
   const value = {
     currentView,
     selectedQuiz,
     selectedType,
     selectedPractice,
     user,
-    userCoins,
-    masteryCount,
-    claimedDailyGoals,
-    claimedVocabMilestones,
+    userCoins: userProgress.coins, // Vẫn cung cấp để tương thích ngược nếu cần
+    userProgress, // <<< THÊM: Cung cấp object userProgress mới
     goBack,
     goHome,
     setCurrentView,
@@ -272,6 +287,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     fetchOrCreateUser,
     updateUserCoins,
     fetchGameInitialData,
+    // NEW: Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
     exampleData,
