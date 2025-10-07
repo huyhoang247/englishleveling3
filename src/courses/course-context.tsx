@@ -1,4 +1,4 @@
-// --- START OF FILE course-context.tsx (9).txt ---
+// --- START OF FILE course-context.tsx ---
 
 import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode, useMemo } from 'react';
 import { auth } from '../firebase.js';
@@ -10,6 +10,7 @@ import {
   recordGameSuccess as recordGameSuccessService,
   fetchOrCreateUser as fetchOrCreateUserService,
   updateUserCoins as updateUserCoinsService,
+  fetchGameInitialData as fetchGameInitialDataService, // <<< DÒNG MỚI
 } from './course-data-service.ts';
 // NEW: Import data and generators
 import { generateAudioUrlsForWord, generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
@@ -48,6 +49,7 @@ interface QuizAppContextType {
   recordGameSuccess: (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number) => Promise<void>;
   updateUserCoins: (amount: number) => Promise<void>;
   fetchOrCreateUser: () => Promise<any>;
+  fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>; // <<< DÒNG MỚI
 
   // --- NEW: Vocabulary data and utilities ---
   definitionsMap: { [key: string]: Definition };
@@ -217,6 +219,16 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     }
     await recordGameSuccessService(user.uid, gameModeId, word, isMastered, coinsToAdd);
   }, [user]);
+  
+  // <<< START: HÀM WRAPPER MỚI
+  const fetchGameInitialData = useCallback(async (gameModeId: string, isMultiWordGame: boolean): Promise<any> => {
+    if (!user) {
+      console.warn("fetchGameInitialData called without a user.");
+      throw new Error("Người dùng chưa đăng nhập");
+    }
+    return fetchGameInitialDataService(user.uid, gameModeId, isMultiWordGame);
+  }, [user]);
+  // <<< END: HÀM WRAPPER MỚI
 
   const fetchOrCreateUser = useCallback(async (): Promise<any> => {
     if (!user) {
@@ -255,6 +267,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     recordGameSuccess,
     fetchOrCreateUser,
     updateUserCoins,
+    fetchGameInitialData, // <<< DÒNG MỚI
     // NEW: Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
