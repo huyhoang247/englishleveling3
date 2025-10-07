@@ -13,7 +13,7 @@ import React, {
 
 import { User } from 'firebase/auth';
 // [MỚI] Import hook từ course-context để lấy dữ liệu người dùng
-import { useQuizApp } from '../course/course-context.tsx'; 
+import { useQuizApp } from '../course-context.tsx'; 
 import { 
     fetchAnalysisDashboardData, 
     claimDailyMilestoneReward,
