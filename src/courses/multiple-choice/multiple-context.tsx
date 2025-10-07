@@ -1,8 +1,7 @@
 // --- START OF FILE: multiple-context.tsx ---
 
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { db, auth } from '../../firebase.js';
-import { fetchOrCreateUser, updateUserCoins, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../course-data-service.ts';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { useQuizApp } from '../course-context.tsx';
 import quizData from './multiple-data.ts';
 import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
 import { exampleData } from '../../voca-data/example-data.ts';
@@ -64,7 +63,19 @@ interface QuizContextType {
 const QuizContext = createContext<QuizContextType | undefined>(undefined);
 
 // --- TẠO PROVIDER COMPONENT ---
-export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractice: number }> = ({ children, selectedPractice }) => {
+export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { 
+    user, 
+    selectedPractice,
+    userCoins,
+    masteryCount: globalMasteryCount,
+    getOpenedVocab, 
+    getCompletedWords, 
+    recordGameSuccess,
+    updateUserCoins,
+    fetchOrCreateUser
+  } = useQuizApp();
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [showScore, setShowScore] = useState(false);
@@ -74,7 +85,6 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
   const [streak, setStreak] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const TOTAL_TIME = 30;
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
@@ -92,6 +102,10 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
   const [currentQuestionWord, setCurrentQuestionWord] = useState<string | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<string>('Matilda');
 
+  // Sync local UI state with the global state from context
+  useEffect(() => { setCoins(userCoins); }, [userCoins]);
+  useEffect(() => { setMasteryCount(globalMasteryCount); }, [globalMasteryCount]);
+
   const handleVoiceChange = (voice: string) => {
     setSelectedVoice(voice);
   };
@@ -99,20 +113,16 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
   const handleChangeVoiceDirection = useCallback((direction: 'next' | 'previous') => {
     const question = playableQuestions[currentQuestion];
     if (!question?.audioUrls) return;
-    
     const availableVoices = Object.keys(question.audioUrls);
     if (availableVoices.length <= 1) return;
-    
     const currentIndex = availableVoices.indexOf(selectedVoice);
     if (currentIndex === -1) return;
-
     let nextIndex;
     if (direction === 'next') {
       nextIndex = (currentIndex + 1) % availableVoices.length;
-    } else { // previous
+    } else {
       nextIndex = (currentIndex - 1 + availableVoices.length) % availableVoices.length;
     }
-    
     setSelectedVoice(availableVoices[nextIndex]);
   }, [currentQuestion, playableQuestions, selectedVoice]);
 
@@ -139,24 +149,16 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
   }, []);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => setUser(currentUser));
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
     const loadQuizData = async () => {
-      if (user) {
+      if (user && selectedPractice !== null) {
         setLoading(true);
         try {
+          await fetchOrCreateUser(); // Ensure user doc exists
           const gameModeId = `quiz-${selectedPractice}`;
-          const [userData, vocabList, completedSet] = await Promise.all([
-            fetchOrCreateUser(user.uid),
-            getOpenedVocab(user.uid),
-            getCompletedWordsForGameMode(user.uid, gameModeId)
+          const [vocabList, completedSet] = await Promise.all([
+            getOpenedVocab(),
+            getCompletedWords(gameModeId)
           ]);
-
-          setCoins(userData.coins || 0);
-          setMasteryCount(userData.masteryCards || 0);
           setUserVocabulary(vocabList);
           
           const practiceBaseId = selectedPractice % 100;
@@ -188,21 +190,13 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
           } else if (practiceBaseId === 5) {
               allPossibleQuestions = vocabList.flatMap(word => {
                   const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
-                  // Tìm các câu ví dụ chứa từ vựng của người dùng
                   const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
                   if (matchingSentences.length > 0) {
-                      // Chọn ngẫu nhiên một câu
                       const randomSentence = matchingSentences[Math.floor(Math.random() * matchingSentences.length)];
-                      // Tìm index của câu đó trong mảng gốc để tạo URL audio
                       const sentenceIndex = exampleData.findIndex(ex => ex.english === randomSentence.english && ex.vietnamese === randomSentence.vietnamese);
-                      
-                      if (sentenceIndex === -1) return []; // Bỏ qua nếu không tìm thấy câu (trường hợp hiếm)
-
-                      // Tạo URL audio cho câu
+                      if (sentenceIndex === -1) return [];
                       const audioUrls = generateAudioUrlsForExamSentence(sentenceIndex);
-                      if (!audioUrls) return []; // Bỏ qua nếu không tạo được URL
-
-                      // Tạo các lựa chọn sai
+                      if (!audioUrls) return [];
                       const incorrectOptions: string[] = [];
                       const lowerCaseCorrectWord = word.toLowerCase();
                       while (incorrectOptions.length < 3) {
@@ -211,17 +205,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
                               incorrectOptions.push(randomWord);
                           }
                       }
-                      // Tạo câu hỏi dạng điền vào chỗ trống từ câu tiếng Anh
                       const questionText = randomSentence.english.replace(wordRegex, '___');
-
-                      return [{ 
-                          question: questionText,
-                          vietnamese: null, // Yêu cầu: Không hiển thị dịch nghĩa tiếng Việt cho practice 5
-                          audioUrls: audioUrls,
-                          options: [word.toLowerCase(), ...incorrectOptions.map(opt => opt.toLowerCase())], 
-                          correctAnswer: word.toLowerCase(), 
-                          word: word 
-                      }];
+                      return [{ question: questionText, vietnamese: null, audioUrls: audioUrls, options: [word.toLowerCase(), ...incorrectOptions.map(opt => opt.toLowerCase())], correctAnswer: word.toLowerCase(), word: word }];
                   }
                   return [];
               });
@@ -238,37 +223,28 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
     
           setFilteredQuizData(allPossibleQuestions);
           setPlayableQuestions(shuffleArray(remainingQuestions));
-
         } catch (error) {
           console.error("Lỗi khi tải dữ liệu quiz:", error);
-          setCoins(0); setMasteryCount(0); setUserVocabulary([]); 
-          setFilteredQuizData([]); setPlayableQuestions([]);
+          setUserVocabulary([]); setFilteredQuizData([]); setPlayableQuestions([]);
         } finally {
           setLoading(false);
         }
       } else {
         setLoading(false);
-        setCoins(0); setMasteryCount(0); setUserVocabulary([]);
-        setFilteredQuizData([]); setPlayableQuestions([]);
+        setUserVocabulary([]); setFilteredQuizData([]); setPlayableQuestions([]);
       }
     };
     loadQuizData();
-  }, [user, selectedPractice]);
+  }, [user, selectedPractice, fetchOrCreateUser, getOpenedVocab, getCompletedWords]);
 
   const resetQuiz = useCallback(() => {
     const completedWordsForSession = new Set(
-      playableQuestions
-        .slice(0, currentQuestion)
-        .map(q => q.word || userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question)))
-        .filter(Boolean)
-        .map(word => word.toLowerCase())
+      playableQuestions.slice(0, currentQuestion).map(q => q.word || userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question))).filter(Boolean).map(word => word.toLowerCase())
     );
-
     const newRemainingQuestions = filteredQuizData.filter(q => {
         const word = q.word || userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question));
         return word && !completedWordsForSession.has(word.toLowerCase());
     });
-
     setPlayableQuestions(shuffleArray(newRemainingQuestions));
     setCurrentQuestion(0); setScore(0); setShowScore(false); setSelectedOption(null); setAnswered(false); setStreak(0); setTimeLeft(TOTAL_TIME); setShowNextButton(false); setHintUsed(false); setHiddenOptions([]);
     setSelectedVoice('Matilda');
@@ -315,7 +291,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
       if (user && currentQuestionWord) {
         try {
           const gameModeId = `quiz-${selectedPractice}`;
-          await recordGameSuccess(user.uid, gameModeId, currentQuestionWord, false, coinsToAdd);
+          await recordGameSuccess(gameModeId, currentQuestionWord, false, coinsToAdd);
         } catch (error) {
           console.error("Lỗi khi ghi lại kết quả game Quiz:", error);
           if (coinsToAdd > 0) setCoins(prevCoins => prevCoins - coinsToAdd);
@@ -331,7 +307,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode; selectedPractic
     setCoins(prevCoins => prevCoins - HINT_COST);
     if (user) {
       try {
-        await updateUserCoins(user.uid, -HINT_COST);
+        await updateUserCoins(-HINT_COST);
       } catch (error) {
         console.error("Lỗi khi cập nhật vàng cho gợi ý:", error);
         setCoins(prevCoins => prevCoins + HINT_COST);
