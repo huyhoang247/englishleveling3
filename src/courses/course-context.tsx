@@ -10,9 +10,8 @@ import {
   recordGameSuccess as recordGameSuccessService,
   fetchOrCreateUser as fetchOrCreateUserService,
   updateUserCoins as updateUserCoinsService,
-  fetchGameInitialData as fetchGameInitialDataService, // <<< DÒNG MỚI
+  fetchGameInitialData as fetchGameInitialDataService,
 } from './course-data-service.ts';
-// NEW: Import data and generators
 import { generateAudioUrlsForWord, generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
 import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
 import { exampleData } from '../voca-data/example-data.ts';
@@ -20,11 +19,18 @@ import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 
 
 // --- Định nghĩa các "hình dạng" (interface) dùng chung ---
-// NEW: Moved Definition interface here
 export interface Definition {
   vietnamese: string;
   english: string;
   explanation: string;
+}
+
+// Interface cho toàn bộ tiến trình của người dùng
+export interface UserProgress {
+    coins: number;
+    masteryCount: number;
+    claimedDailyGoals: { [date: string]: number[] };
+    claimedVocabMilestones: number[];
 }
 
 interface QuizAppContextType {
@@ -33,8 +39,8 @@ interface QuizAppContextType {
   selectedType: string | null;
   selectedPractice: number | null;
   user: User | null;
-  userCoins: number;
-  masteryCount: number;
+  // Gộp các state riêng lẻ thành một object userProgress
+  userProgress: UserProgress;
   
   goBack: () => void;
   goHome: () => void;
@@ -43,15 +49,13 @@ interface QuizAppContextType {
   handleTypeSelect: (type: string) => void;
   handlePracticeSelect: (practice: number) => void;
 
-  // --- Data service functions ---
   getOpenedVocab: () => Promise<string[]>;
   getCompletedWords: (gameModeId: string) => Promise<Set<string>>;
   recordGameSuccess: (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number) => Promise<void>;
   updateUserCoins: (amount: number) => Promise<void>;
   fetchOrCreateUser: () => Promise<any>;
-  fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>; // <<< DÒNG MỚI
+  fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>;
 
-  // --- NEW: Vocabulary data and utilities ---
   definitionsMap: { [key: string]: Definition };
   generateAudioUrlsForWord: (word: string) => { [key: string]: string } | null;
   exampleData: any[];
@@ -60,10 +64,8 @@ interface QuizAppContextType {
   generateAudioUrlsForExamSentence: (sentenceIndex: number) => { [key: string]: string } | null;
 }
 
-// --- Tạo Context ---
 const QuizAppContext = createContext<QuizAppContextType | null>(null);
 
-// --- Custom Hook để sử dụng Context một cách an toàn và tiện lợi ---
 export const useQuizApp = () => {
   const context = useContext(QuizAppContext);
   if (!context) {
@@ -72,24 +74,27 @@ export const useQuizApp = () => {
   return context;
 };
 
-// --- Props cho Provider ---
 interface QuizAppProviderProps {
   children: ReactNode;
   hideNavBar?: () => void;
   showNavBar?: () => void;
 }
 
-// --- Provider Component: Nơi chứa tất cả State và Logic ---
 export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hideNavBar, showNavBar }) => {
   const [currentView, setCurrentView] = useState('main');
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedPractice, setSelectedPractice] = useState<number | null>(null);
   const [user, setUser] = useState(auth.currentUser);
-  const [userCoins, setUserCoins] = useState(0);
-  const [masteryCount, setMasteryCount] = useState(0);
   
-  // NEW: Process vocabulary definitions once and provide via context
+  // State userProgress là nguồn sự thật duy nhất cho dữ liệu người dùng
+  const [userProgress, setUserProgress] = useState<UserProgress>({
+    coins: 0,
+    masteryCount: 0,
+    claimedDailyGoals: {},
+    claimedVocabMilestones: [],
+  });
+  
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
     const lines = detailedMeaningsText.trim().split('\n');
@@ -108,8 +113,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     return definitions;
   }, []);
 
-
-  // Effect lắng nghe thay đổi trạng thái đăng nhập
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -117,26 +120,27 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     return () => unsubscribe();
   }, []);
 
-  // Effect lắng nghe dữ liệu người dùng (coins, mastery) real-time
+  // Effect lắng nghe toàn bộ dữ liệu người dùng real-time
   useEffect(() => {
     if (user) {
       const unsubscribe = listenToUserData(user.uid, (data) => {
         if (data) {
-          setUserCoins(data.coins);
-          setMasteryCount(data.masteryCards);
+          setUserProgress({
+            coins: data.coins || 0,
+            masteryCount: data.masteryCards || 0,
+            claimedDailyGoals: data.claimedDailyGoals || {},
+            claimedVocabMilestones: data.claimedVocabMilestones || [],
+          });
         } else {
-          setUserCoins(0);
-          setMasteryCount(0);
+          setUserProgress({ coins: 0, masteryCount: 0, claimedDailyGoals: {}, claimedVocabMilestones: [] });
         }
       });
       return () => unsubscribe();
     } else {
-      setUserCoins(0);
-      setMasteryCount(0);
+      setUserProgress({ coins: 0, masteryCount: 0, claimedDailyGoals: {}, claimedVocabMilestones: [] });
     }
   }, [user]);
 
-  // Effect điều khiển NavBar của component cha
   useEffect(() => {
     if (currentView !== 'main') {
       hideNavBar?.();
@@ -148,7 +152,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     };
   }, [currentView, hideNavBar, showNavBar]);
 
-  // --- Các hàm xử lý (Handlers) ---
+  // --- Các hàm xử lý và điều hướng (không thay đổi) ---
   const handleQuizSelect = useCallback((quiz) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
@@ -173,7 +177,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     }
   }, [selectedType]);
 
-  // --- Các hàm điều hướng (Navigation) ---
   const goBack = useCallback(() => {
     if (['vocabularyGame', 'quiz', 'vocaMatchGame'].includes(currentView)) {
        setCurrentView('practices');
@@ -194,68 +197,46 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     setSelectedType(null);
     setSelectedPractice(null);
   }, []);
-
-  // --- Data service wrapper functions ---
+  
+  // --- Các hàm wrapper cho service (không thay đổi) ---
   const getOpenedVocab = useCallback(async (): Promise<string[]> => {
-    if (!user) {
-      console.warn("getOpenedVocab called without a user.");
-      return [];
-    }
+    if (!user) { console.warn("getOpenedVocab called without a user."); return []; }
     return getOpenedVocabService(user.uid);
   }, [user]);
 
   const getCompletedWords = useCallback(async (gameModeId: string): Promise<Set<string>> => {
-    if (!user) {
-        console.warn("getCompletedWords called without a user.");
-        return new Set();
-    }
+    if (!user) { console.warn("getCompletedWords called without a user."); return new Set(); }
     return getCompletedWordsService(user.uid, gameModeId);
   }, [user]);
 
   const recordGameSuccess = useCallback(async (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number): Promise<void> => {
-    if (!user) {
-        console.warn("recordGameSuccess called without a user.");
-        return;
-    }
+    if (!user) { console.warn("recordGameSuccess called without a user."); return; }
     await recordGameSuccessService(user.uid, gameModeId, word, isMastered, coinsToAdd);
   }, [user]);
   
-  // <<< START: HÀM WRAPPER MỚI
   const fetchGameInitialData = useCallback(async (gameModeId: string, isMultiWordGame: boolean): Promise<any> => {
-    if (!user) {
-      console.warn("fetchGameInitialData called without a user.");
-      throw new Error("Người dùng chưa đăng nhập");
-    }
+    if (!user) { console.warn("fetchGameInitialData called without a user."); throw new Error("Người dùng chưa đăng nhập"); }
     return fetchGameInitialDataService(user.uid, gameModeId, isMultiWordGame);
   }, [user]);
-  // <<< END: HÀM WRAPPER MỚI
 
   const fetchOrCreateUser = useCallback(async (): Promise<any> => {
-    if (!user) {
-      console.warn("fetchOrCreateUser called without a user.");
-      return null;
-    }
+    if (!user) { console.warn("fetchOrCreateUser called without a user."); return null; }
     return fetchOrCreateUserService(user.uid);
   }, [user]);
 
   const updateUserCoins = useCallback(async (amount: number): Promise<void> => {
-    if (!user) {
-        console.warn("updateUserCoins called without a user.");
-        return;
-    }
+    if (!user) { console.warn("updateUserCoins called without a user."); return; }
     await updateUserCoinsService(user.uid, amount);
   }, [user]);
 
 
-  // --- Giá trị được cung cấp bởi Context ---
   const value = {
     currentView,
     selectedQuiz,
     selectedType,
     selectedPractice,
     user,
-    userCoins,
-    masteryCount,
+    userProgress, // Cung cấp toàn bộ object userProgress
     goBack,
     goHome,
     setCurrentView,
@@ -267,8 +248,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     recordGameSuccess,
     fetchOrCreateUser,
     updateUserCoins,
-    fetchGameInitialData, // <<< DÒNG MỚI
-    // NEW: Provide data and utilities
+    fetchGameInitialData,
     definitionsMap,
     generateAudioUrlsForWord,
     exampleData,
