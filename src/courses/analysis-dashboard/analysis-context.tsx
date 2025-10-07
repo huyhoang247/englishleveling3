@@ -10,24 +10,17 @@ import React, {
     FC,
     ReactNode
 } from 'react';
-import { User } from 'firebase/auth';
-import { useQuizApp } from '../course-context.tsx'; 
+import { auth } from '../../firebase.js'; 
+import { onAuthStateChanged, User } from 'firebase/auth';
+// [SỬA] Thay đổi đường dẫn import để trỏ đến service mới
 import { 
     fetchAnalysisDashboardData, 
     claimDailyMilestoneReward,
-    claimVocabMilestoneReward,
-    fetchUserMilestoneData // [MỚI] Import hàm fetch mới
-} from './analysis-service.ts';
+    claimVocabMilestoneReward
+} from './analysis-service.ts'; // <--- ĐÃ THAY ĐỔI
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
 
-const formatDateToLocalYYYYMMDD = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-
-// --- TYPE DEFINITIONS ---
+// --- TYPE DEFINITIONS (Should be in a shared types file, but kept here for context) ---
 interface LearningActivity { date: string; new: number; review: number; }
 interface MasteryByGame { game: string; completed: number; }
 interface VocabularyGrowth { date: string; cumulative: number; }
@@ -45,9 +38,8 @@ type DailyActivityMap = { [date: string]: { new: number; review: number } };
 interface UserProgress {
     coins: number;
     masteryCount: number;
-    // [SỬA] Đổi tên để rõ ràng hơn, đây là state cục bộ
-    localClaimedDailyGoals: number[];
-    localClaimedVocabMilestones: number[];
+    claimedDailyGoals: number[];
+    claimedVocabMilestones: number[];
 }
 
 // --- CONTEXT TYPE DEFINITION ---
@@ -68,25 +60,27 @@ const AnalysisDashboardContext = createContext<AnalysisDashboardContextType | un
 
 // --- PROVIDER COMPONENT ---
 export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children }) => {
-    // [SỬA] Chỉ lấy state chung từ context toàn cục
-    const { user, userCoins, masteryCount } = useQuizApp();
-
+    const [user, setUser] = useState<User | null>(auth.currentUser);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
     const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
-    
-    // [MỚI] State cục bộ để quản lý các cột mốc đã nhận
-    const [claimedDailyGoals, setClaimedDailyGoals] = useState<{[date: string]: number[]}>({});
-    const [claimedVocabMilestones, setClaimedVocabMilestones] = useState<number[]>([]);
+    const [userProgress, setUserProgress] = useState<UserProgress>({
+        coins: 0,
+        masteryCount: 0,
+        claimedDailyGoals: [],
+        claimedVocabMilestones: [],
+    });
 
-    // [SỬA] useEffect để fetch cả dữ liệu analysis và milestone
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => setUser(currentUser));
+        return () => unsubscribe();
+    }, []);
+
     useEffect(() => {
         if (!user) {
             setLoading(false);
             setError("Vui lòng đăng nhập để xem phân tích.");
-            setAnalysisData(null);
-            setDailyActivityData({});
             return;
         }
 
@@ -94,17 +88,16 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
             setLoading(true);
             setError(null);
             try {
-                // Fetch đồng thời cả dữ liệu analysis và dữ liệu milestone của user
-                const [dataPayload, milestoneData] = await Promise.all([
-                    fetchAnalysisDashboardData(user.uid, defaultVocabulary.length),
-                    fetchUserMilestoneData(user.uid)
-                ]);
-
+                // Không cần thay đổi gì ở đây vì tên hàm vẫn giữ nguyên
+                const dataPayload = await fetchAnalysisDashboardData(user.uid, defaultVocabulary.length);
+                setUserProgress({
+                    coins: dataPayload.userData.coins,
+                    masteryCount: dataPayload.userData.masteryCards,
+                    claimedDailyGoals: dataPayload.userData.claimedDailyGoals,
+                    claimedVocabMilestones: dataPayload.userData.claimedVocabMilestones,
+                });
                 setAnalysisData(dataPayload.analysisData);
                 setDailyActivityData(dataPayload.dailyActivityMap);
-                setClaimedDailyGoals(milestoneData.claimedDailyGoals);
-                setClaimedVocabMilestones(milestoneData.claimedVocabMilestones);
-
             } catch (err: any) {
                 console.error("Lỗi tải dữ liệu phân tích:", err);
                 setError("Không thể tải dữ liệu phân tích.");
@@ -116,42 +109,30 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
     }, [user]);
 
     const wordsLearnedToday = useMemo(() => {
-        const todayString = formatDateToLocalYYYYMMDD(new Date());
-        return dailyActivityData[todayString]?.new + dailyActivityData[todayString]?.review || 0;
+        const todayString = new Date().toISOString().slice(0, 10);
+        const todayActivity = Object.entries(dailyActivityData).find(([date]) => date.startsWith(todayString));
+        return todayActivity ? todayActivity[1].new + todayActivity[1].review : 0;
     }, [dailyActivityData]);
 
-    // [SỬA] Hàm claim giờ đây sẽ cập nhật state cục bộ ngay lập tức
     const claimDailyReward = useCallback(async (milestone: number, rewardAmount: number) => {
         if (!user) throw new Error("User not logged in");
         await claimDailyMilestoneReward(user.uid, milestone, rewardAmount);
-
-        // [MỚI] CẬP NHẬT STATE CỤC BỘ NGAY LẬP TỨC
-        const todayString = formatDateToLocalYYYYMMDD(new Date());
-        setClaimedDailyGoals(prevGoals => ({
-            ...prevGoals,
-            [todayString]: [...(prevGoals[todayString] || []), milestone]
+        setUserProgress(prev => ({
+            ...prev,
+            coins: prev.coins + rewardAmount,
+            claimedDailyGoals: [...prev.claimedDailyGoals, milestone],
         }));
     }, [user]);
 
     const claimVocabReward = useCallback(async (milestone: number, rewardAmount: number) => {
         if (!user) throw new Error("User not logged in");
         await claimVocabMilestoneReward(user.uid, milestone, rewardAmount);
-
-        // [MỚI] CẬP NHẬT STATE CỤC BỘ NGAY LẬP TỨC
-        setClaimedVocabMilestones(prevMilestones => [...prevMilestones, milestone]);
+        setUserProgress(prev => ({
+            ...prev,
+            coins: prev.coins + rewardAmount,
+            claimedVocabMilestones: [...prev.claimedVocabMilestones, milestone],
+        }));
     }, [user]);
-    
-    const userProgress = useMemo<UserProgress>(() => {
-        const todayString = formatDateToLocalYYYYMMDD(new Date());
-        return {
-            coins: userCoins,
-            masteryCount: masteryCount,
-            // [SỬA] Dùng state cục bộ và tên mới
-            localClaimedDailyGoals: claimedDailyGoals?.[todayString] || [],
-            localClaimedVocabMilestones: claimedVocabMilestones,
-        };
-    }, [userCoins, masteryCount, claimedDailyGoals, claimedVocabMilestones]);
-
 
     const value = useMemo(() => ({
         user,
