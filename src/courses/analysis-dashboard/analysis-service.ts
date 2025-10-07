@@ -2,20 +2,20 @@
 
 import { db } from '../../firebase';
 import { 
-    doc, 
     getDocs, 
     collection, 
     updateDoc, 
+    doc,
+    getDoc, // [MỚI] Import getDoc
     increment, 
     arrayUnion,
     Timestamp
 } from 'firebase/firestore';
-// <<< BỎ: Không cần import fetchOrCreateUser nữa
 
-// --- TYPE DEFINITIONS ---
+
+// --- TYPE DEFINITIONS (Copied from analysis-context) ---
 interface WordMastery { word: string; mastery: number; lastPracticed: Date; }
-// <<< THAY ĐỔI: Tên và nội dung của payload
-interface AnalysisServiceDataPayload {
+interface AnalysisDataPayload {
   analysisData: {
     totalWordsLearned: number;
     totalWordsAvailable: number;
@@ -28,11 +28,6 @@ interface AnalysisServiceDataPayload {
   dailyActivityMap: { [date: string]: { new: number; review: number } };
 }
 
-/**
- * Hàm trợ giúp để định dạng ngày theo giờ địa phương (YYYY-MM-DD).
- * @param date - Đối tượng Date cần định dạng.
- * @returns {string} Chuỗi ngày tháng theo định dạng YYYY-MM-DD.
- */
 const formatDateToLocalYYYYMMDD = (date: Date): string => {
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -40,22 +35,15 @@ const formatDateToLocalYYYYMMDD = (date: Date): string => {
     return `${year}-${month}-${day}`;
 };
 
-/**
- * Lấy và xử lý tất cả dữ liệu cần thiết cho trang Analysis Dashboard.
- * @param userId - ID của người dùng.
- * @param totalWordsAvailable - Tổng số từ vựng có trong hệ thống (từ defaultVocabulary.length).
- * @returns {Promise<AnalysisServiceDataPayload>} Dữ liệu đã được xử lý cho dashboard.
- */
-export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvailable: number): Promise<AnalysisServiceDataPayload> => {
+export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvailable: number): Promise<AnalysisDataPayload> => {
   if (!userId) throw new Error("User ID is required.");
 
-  // <<< THAY ĐỔI: Không gọi fetchOrCreateUser ở đây nữa
   const [completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
     getDocs(collection(db, 'users', userId, 'completedWords')),
     getDocs(collection(db, 'users', userId, 'completedMultiWord'))
   ]);
 
-  // Xử lý dữ liệu
+  // ... (Logic xử lý dữ liệu không thay đổi)
   const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
   const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
   const dailyActivityMap: { [date: string]: { new: number; review: number } } = {};
@@ -108,7 +96,6 @@ export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvail
   const wordMasteryData = Object.entries(wordMasteryMap).map(([word, data]) => ({ word, ...data }));
 
   return {
-    // <<< BỎ: Không trả về userData
     analysisData: {
       totalWordsLearned: completedWordsSnapshot.size,
       totalWordsAvailable,
@@ -123,11 +110,27 @@ export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvail
 };
 
 /**
- * Ghi nhận việc người dùng nhận thưởng cột mốc hàng ngày.
+ * [MỚI] Lấy dữ liệu về các cột mốc người dùng đã nhận.
  * @param userId - ID của người dùng.
- * @param milestone - Cột mốc đã đạt (ví dụ: 5, 10, 20).
- * @param rewardAmount - Số coin thưởng.
+ * @returns {Promise<{claimedDailyGoals: object, claimedVocabMilestones: number[]}>}
  */
+export const fetchUserMilestoneData = async (userId: string) => {
+    if (!userId) {
+        return { claimedDailyGoals: {}, claimedVocabMilestones: [] };
+    }
+    const userDocRef = doc(db, 'users', userId);
+    const userDocSnap = await getDoc(userDocRef);
+
+    if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        return {
+            claimedDailyGoals: userData.claimedDailyGoals || {},
+            claimedVocabMilestones: userData.claimedVocabMilestones || []
+        };
+    }
+    return { claimedDailyGoals: {}, claimedVocabMilestones: [] };
+};
+
 export const claimDailyMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
   if (!userId) return;
   const userDocRef = doc(db, 'users', userId);
@@ -145,12 +148,6 @@ export const claimDailyMilestoneReward = async (userId: string, milestone: numbe
   }
 };
 
-/**
- * Ghi nhận việc người dùng nhận thưởng cột mốc từ vựng trọn đời.
- * @param userId - ID của người dùng.
- * @param milestone - Cột mốc đã đạt (ví dụ: 100, 200, 500).
- * @param rewardAmount - Số coin thưởng.
- */
 export const claimVocabMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
   if (!userId) return;
   const userDocRef = doc(db, 'users', userId);
