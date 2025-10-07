@@ -1,8 +1,10 @@
+// --- START OF FILE achievement-ui.tsx ---
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { AchievementsProvider, useAchievements } from './achievement-context.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import type { VocabularyItem } from '../../gameDataService.ts';
+import type { VocabularyItem } from './achievement-service.ts'; // Đổi đường dẫn nếu cần
 import AchievementsLoadingSkeleton from './achievement-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import HomeButton from '../../ui/home-button.tsx';
@@ -86,51 +88,24 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
             <button
                 onClick={claimAllAchievements}
                 disabled={totalClaimableRewards.masteryCards === 0 || isUpdating}
-                className={`
-                    w-full max-w-md rounded-xl transition-all duration-300
-                    ${totalClaimableRewards.masteryCards > 0 && !isUpdating
-                        ? 'text-white border border-indigo-700/50 bg-gradient-to-r from-slate-900 via-indigo-800 to-slate-900 bg-[length:200%_auto] animate-[background-pan_4s_ease-in-out_infinite] shadow-lg shadow-indigo-500/20 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:border-indigo-600 cursor-pointer'
-                        : 'bg-slate-800/80 border border-slate-700 text-slate-500 cursor-not-allowed'
-                    }
-                `}
-            >
+                className={`w-full max-w-md rounded-xl transition-all duration-300 ${totalClaimableRewards.masteryCards > 0 && !isUpdating ? 'text-white border border-indigo-700/50 bg-gradient-to-r from-slate-900 via-indigo-800 to-slate-900 bg-[length:200%_auto] animate-[background-pan_4s_ease-in-out_infinite] shadow-lg shadow-indigo-500/20 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:border-indigo-600 cursor-pointer' : 'bg-slate-800/80 border border-slate-700 text-slate-500 cursor-not-allowed'}`}>
                 <div className="flex items-center justify-between w-full p-3">
                     <div className="flex items-center gap-3">
-                        <img
-                            src={totalClaimableRewards.masteryCards > 0 && !isUpdating
-                                ? uiAssets.giftBoxIcon
-                                : uiAssets.giftBoxDisabledIcon}
-                            alt="Claim all rewards"
-                            className="w-8 h-8" />
-                        <span className="font-bold text-lg">
-                            {isUpdating ? 'Claiming...' : 'Claim All'}
-                        </span>
+                        <img src={totalClaimableRewards.masteryCards > 0 && !isUpdating ? uiAssets.giftBoxIcon : uiAssets.giftBoxDisabledIcon} alt="Claim all rewards" className="w-8 h-8" />
+                        <span className="font-bold text-lg">{isUpdating ? 'Claiming...' : 'Claim All'}</span>
                     </div>
-
                     <div className="flex items-center gap-3 bg-black/20 rounded-lg px-3 py-1.5 shadow-inner">
                         {totalClaimableRewards.masteryCards > 0 && !isUpdating ? (
                             <>
-                                <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.masteryCards} Thẻ Thông Thạo`}>
-                                    <MasteryCardIcon className="w-7 h-7" />
-                                    <span className="text-base font-semibold">{totalClaimableRewards.masteryCards}</span>
-                                </div>
+                                <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.masteryCards} Thẻ Thông Thạo`}><MasteryCardIcon className="w-7 h-7" /><span className="text-base font-semibold">{totalClaimableRewards.masteryCards}</span></div>
                                 <div className="h-6 w-px bg-white/20"></div>
-                                <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.gold} Vàng`}>
-                                    <GoldIcon className="w-6 h-6" />
-                                    <span className="text-base font-semibold">{totalClaimableRewards.gold}</span>
-                                </div>
+                                <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.gold} Vàng`}><GoldIcon className="w-6 h-6" /><span className="text-base font-semibold">{totalClaimableRewards.gold}</span></div>
                             </>
                         ) : (
                             <>
-                                <div className="flex items-center gap-1.5 opacity-40" title="Thẻ Thông Thạo">
-                                    <MasteryCardIcon className="w-7 h-7" />
-                                    <span className="text-base font-semibold">0</span>
-                                </div>
+                                <div className="flex items-center gap-1.5 opacity-40" title="Thẻ Thông Thạo"><MasteryCardIcon className="w-7 h-7" /><span className="text-base font-semibold">0</span></div>
                                 <div className="h-6 w-px bg-slate-600"></div>
-                                <div className="flex items-center gap-1.5 opacity-40" title="Vàng">
-                                    <GoldIcon className="w-6 h-6" />
-                                    <span className="text-base font-semibold">0</span>
-                                </div>
+                                <div className="flex items-center gap-1.5 opacity-40" title="Vàng"><GoldIcon className="w-6 h-6" /><span className="text-base font-semibold">0</span></div>
                             </>
                         )}
                     </div>
@@ -149,28 +124,14 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
 
           <div className="flex flex-col gap-2">
             {paginatedVocabulary.map((item, index) => (
-              <VocabularyRow
-                key={`${item.id}-${item.level}`}
-                item={item}
-                rank={(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
-                onClaim={claimAchievement}
-                isAnyClaiming={isUpdating}
-              />
+              <VocabularyRow key={`${item.id}-${item.level}`} item={item} rank={(currentPage - 1) * ITEMS_PER_PAGE + index + 1} onClaim={claimAchievement} isAnyClaiming={isUpdating} />
             ))}
-            {paginatedVocabulary.length === 0 && (
-                <div className="text-center py-10 text-slate-400">
-                    <p>Không có từ vựng nào để hiển thị.</p>
-                </div>
-            )}
+            {paginatedVocabulary.length === 0 && (<div className="text-center py-10 text-slate-400"><p>Không có từ vựng nào để hiển thị.</p></div>)}
           </div>
         </main>
 
         <div className="mt-6 mb-4">
-             <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-             />
+             <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </div>
       </div>
     </div>
@@ -194,35 +155,15 @@ const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, i
         <span className="md:hidden text-xs text-slate-400">{`Level ${level}`}</span>
         <span className="hidden md:block text-xs text-slate-400">{`Level ${level}`}</span>
       </div>
-
       <div className="col-span-12 md:col-span-3 md:px-2">
         <div className="h-4 w-full bg-slate-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
-          <div
-            className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-indigo-500 rounded-full transition-all duration-500 ease-out relative"
-            style={{ width: `${progressPercentage}%` }}
-          >
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-full"></div>
-          </div>
+          <div className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-indigo-500 rounded-full transition-all duration-500 ease-out relative" style={{ width: `${progressPercentage}%` }}><div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-full"></div></div>
         </div>
         <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p>
       </div>
-
       <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
-      
       <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center">
-        <button
-          onClick={handleClaimClick}
-          disabled={!isClaimable || isAnyClaiming}
-          className={`
-            flex items-center justify-center w-auto px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border
-            ${isClaimable && !isAnyClaiming
-              ? 'bg-gradient-to-r from-blue-600 to-indigo-500 border-blue-500/50 text-white shadow-lg shadow-blue-500/30 transform hover:scale-105 hover:from-blue-500 hover:to-indigo-400 cursor-pointer'
-              : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70'
-            }
-          `}
-        >
-          {isAnyClaiming ? 'Claiming...' : 'Claim'}
-        </button>
+        <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming} className={`flex items-center justify-center w-auto px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-r from-blue-600 to-indigo-500 border-blue-500/50 text-white shadow-lg shadow-blue-500/30 transform hover:scale-105 hover:from-blue-500 hover:to-indigo-400 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70'}`}>{isAnyClaiming ? 'Claiming...' : 'Claim'}</button>
       </div>
     </div>
   );
@@ -230,18 +171,7 @@ const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, i
 VocabularyRow.displayName = 'VocabularyRow';
 
 const PaginationControls = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void; }) => {
-    const paginationRange = useMemo(() => {
-        const siblingCount = 1; const totalPageNumbers = siblingCount + 5;
-        if (totalPageNumbers >= totalPages) { return Array.from({ length: totalPages }, (_, i) => i + 1); }
-        const range = (start: number, end: number) => { let length = end - start + 1; return Array.from({ length }, (_, idx) => idx + start); };
-        const leftSiblingIndex = Math.max(currentPage - siblingCount, 1); const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
-        const shouldShowLeftDots = leftSiblingIndex > 2; const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
-        const firstPageIndex = 1; const lastPageIndex = totalPages;
-        if (!shouldShowLeftDots && shouldShowRightDots) { let leftItemCount = 3 + 2 * siblingCount; let leftRange = range(1, leftItemCount); return [...leftRange, '...', totalPages]; }
-        if (shouldShowLeftDots && !shouldShowRightDots) { let rightItemCount = 3 + 2 * siblingCount; let rightRange = range(totalPages - rightItemCount + 1, totalPages); return [firstPageIndex, '...', ...rightRange]; }
-        if (shouldShowLeftDots && shouldShowRightDots) { let middleRange = range(leftSiblingIndex, rightSiblingIndex); return [firstPageIndex, '...', ...middleRange, '...', lastPageIndex]; }
-        return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }, [currentPage, totalPages]);
+    const paginationRange = useMemo(() => { const siblingCount = 1; const totalPageNumbers = siblingCount + 5; if (totalPageNumbers >= totalPages) { return Array.from({ length: totalPages }, (_, i) => i + 1); } const range = (start: number, end: number) => { let length = end - start + 1; return Array.from({ length }, (_, idx) => idx + start); }; const leftSiblingIndex = Math.max(currentPage - siblingCount, 1); const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages); const shouldShowLeftDots = leftSiblingIndex > 2; const shouldShowRightDots = rightSiblingIndex < totalPages - 2; const firstPageIndex = 1; const lastPageIndex = totalPages; if (!shouldShowLeftDots && shouldShowRightDots) { let leftItemCount = 3 + 2 * siblingCount; let leftRange = range(1, leftItemCount); return [...leftRange, '...', totalPages]; } if (shouldShowLeftDots && !shouldShowRightDots) { let rightItemCount = 3 + 2 * siblingCount; let rightRange = range(totalPages - rightItemCount + 1, totalPages); return [firstPageIndex, '...', ...rightRange]; } if (shouldShowLeftDots && shouldShowRightDots) { let middleRange = range(leftSiblingIndex, rightSiblingIndex); return [firstPageIndex, '...', ...middleRange, '...', lastPageIndex]; } return Array.from({ length: totalPages }, (_, i) => i + 1); }, [currentPage, totalPages]);
     if (totalPages <= 1) return null;
     return (
         <nav className="flex items-center justify-center gap-1 sm:gap-2" aria-label="Pagination">
@@ -254,17 +184,17 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }: { current
 interface AchievementsScreenProps {
   user: User | null;
   onClose: () => void;
-  onDataUpdate: (updates: { coins?: number, masteryCards?: number }) => void;
 }
 
-export default function AchievementsScreen({ user, onClose, onDataUpdate }: AchievementsScreenProps) {
+export default function AchievementsScreen({ user, onClose }: AchievementsScreenProps) {
   if (!user) {
     return null;
   }
 
   return (
-    <AchievementsProvider user={user} onDataUpdate={onDataUpdate}>
+    <AchievementsProvider>
       <AchievementsScreenUI onClose={onClose} />
     </AchievementsProvider>
   );
 }
+// --- END OF FILE achievement-ui.tsx ---
