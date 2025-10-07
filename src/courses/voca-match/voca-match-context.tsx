@@ -8,8 +8,7 @@ import React, {
   useCallback,
   ReactNode,
 } from 'react';
-import { auth } from '../../firebase.js';
-import { fetchOrCreateUser, getOpenedVocab, getCompletedWordsForGameMode, recordGameSuccess } from '../course-data-service.ts';
+import { useQuizApp } from '../course-context.tsx'; // Import the main app context hook
 import { generateAudioUrlsForWord } from '../../voca-data/audio-quiz-generator.ts';
 import { allWordPairs, shuffleArray } from './voca-match-data.ts';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
@@ -46,9 +45,9 @@ interface VocaMatchContextType {
   streak: number;
   streakAnimation: boolean;
   isAudioMatch: boolean;
-  availableVoices: string[]; // <<< THÊM MỚI
-  selectedVoice: string; // <<< THÊM MỚI
-  setSelectedVoice: (voice: string) => void; // <<< THÊM MỚI
+  availableVoices: string[];
+  selectedVoice: string; 
+  setSelectedVoice: (voice: string) => void;
   handleLeftSelect: (englishWord: string) => void;
   handleRightSelect: (selectedWord: string) => Promise<void>;
   resetGame: () => void;
@@ -81,14 +80,15 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   onGoBack,
   selectedPractice,
 }) => {
-  const [user] = useState(auth.currentUser);
+  const { user, userCoins, masteryCount: masteryCountFromCourse, getOpenedVocab, getCompletedWords, recordGameSuccess } = useQuizApp();
+
   const [loading, setLoading] = useState(true);
   const [playablePairs, setPlayablePairs] = useState<any[]>([]);
   const [totalEligiblePairs, setTotalEligiblePairs] = useState<any[]>([]);
   const [currentRound, setCurrentRound] = useState(0);
 
-  const [coins, setCoins] = useState(0);
-  const displayedCoins = useAnimateValue(coins, 500);
+  const [sessionCoins, setSessionCoins] = useState(0);
+  const displayedCoins = useAnimateValue(sessionCoins, 500);
   const [masteryCount, setMasteryCount] = useState(0);
   const [streak, setStreak] = useState(0);
   const [score, setScore] = useState(0);
@@ -104,12 +104,20 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   const [showConfetti, setShowConfetti] = useState(false);
   const [showEndScreen, setShowEndScreen] = useState(false);
   
-  // --- NEW: State for voice selection ---
   const [availableVoices, setAvailableVoices] = useState<string[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState('Matilda'); // Default voice
+  const [selectedVoice, setSelectedVoice] = useState('Matilda'); 
 
   const isAudioMatch = useMemo(() => selectedPractice % 100 === 2, [selectedPractice]);
   const gameModeId = useMemo(() => `match-${selectedPractice % 100}`, [selectedPractice]);
+
+  // Sync local state with global context state
+  useEffect(() => {
+    setSessionCoins(userCoins);
+  }, [userCoins]);
+
+  useEffect(() => {
+    setMasteryCount(masteryCountFromCourse);
+  }, [masteryCountFromCourse]);
 
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
@@ -134,20 +142,17 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       if (user) {
         setLoading(true);
         try {
-          const [userData, vocabList, completedSet] = await Promise.all([
-            fetchOrCreateUser(user.uid),
-            getOpenedVocab(user.uid),
-            getCompletedWordsForGameMode(user.uid, gameModeId)
+          const [vocabList, completedSet] = await Promise.all([
+            getOpenedVocab(),
+            getCompletedWords(gameModeId)
           ]);
-          setCoins(userData.coins || 0);
-          setMasteryCount(userData.masteryCards || 0);
+          
           const userVocabSet = new Set(vocabList.map(v => v.toLowerCase()));
           const allEligiblePairs = allWordPairs.filter(pair => userVocabSet.has(pair.english.toLowerCase()));
           const remainingPairs = allEligiblePairs.filter(pair => !completedSet.has(pair.english.toLowerCase()));
           setPlayablePairs(shuffleArray(remainingPairs));
           setTotalEligiblePairs(allEligiblePairs);
 
-          // --- NEW: Set available voices from the first generated URL ---
           if (isAudioMatch && remainingPairs.length > 0) {
             const firstWordUrls = generateAudioUrlsForWord(remainingPairs[0].english);
             if (firstWordUrls) {
@@ -165,7 +170,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       }
     };
     fetchData();
-  }, [user, gameModeId, isAudioMatch]);
+  }, [user, gameModeId, isAudioMatch, getOpenedVocab, getCompletedWords]);
 
   const setupNewRound = useCallback(() => {
     const roundStart = currentRound * GAME_SIZE;
@@ -238,14 +243,14 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       setTimeout(() => setStreakAnimation(false), 1500);
 
       const coinsToAdd = masteryCount * newStreak;
-      setCoins(prevCoins => prevCoins + coinsToAdd);
+      setSessionCoins(prevCoins => prevCoins + coinsToAdd);
 
       if (user) {
         try {
-          await recordGameSuccess(user.uid, gameModeId, selectedLeft, false, coinsToAdd);
+          await recordGameSuccess(gameModeId, selectedLeft, false, coinsToAdd);
         } catch (error) {
           console.error("Failed to record match success:", error);
-          setCoins(prevCoins => prevCoins - coinsToAdd);
+          setSessionCoins(prevCoins => prevCoins - coinsToAdd);
         }
       }
 
@@ -296,9 +301,9 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     streak,
     streakAnimation,
     isAudioMatch,
-    availableVoices, // <<< THÊM MỚI
-    selectedVoice,   // <<< THÊM MỚI
-    setSelectedVoice, // <<< THÊM MỚI
+    availableVoices,
+    selectedVoice,
+    setSelectedVoice,
     handleLeftSelect,
     handleRightSelect,
     resetGame,
