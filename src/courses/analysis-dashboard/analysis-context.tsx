@@ -11,23 +11,16 @@ import React, {
     ReactNode
 } from 'react';
 import { User } from 'firebase/auth';
-import { useQuizApp } from '../course-context.tsx'; 
 import { 
     fetchAnalysisDashboardData, 
     claimDailyMilestoneReward,
     claimVocabMilestoneReward
 } from './analysis-service.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
+// <<< THÊM: Import hook từ course-context để lấy dữ liệu người dùng
+import { useQuizApp, UserProgress } from '../course/course-context.tsx'; 
 
-// [MỚI] Hàm trợ giúp để định dạng ngày theo giờ địa phương, đảm bảo tính nhất quán.
-const formatDateToLocalYYYYMMDD = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-
-// --- TYPE DEFINITIONS (Should be in a shared types file, but kept here for context) ---
+// --- TYPE DEFINITIONS ---
 interface LearningActivity { date: string; new: number; review: number; }
 interface MasteryByGame { game: string; completed: number; }
 interface VocabularyGrowth { date: string; cumulative: number; }
@@ -42,12 +35,6 @@ interface AnalysisData {
   wordMastery: WordMastery[];
 }
 type DailyActivityMap = { [date: string]: { new: number; review: number } };
-interface UserProgress {
-    coins: number;
-    masteryCount: number;
-    claimedDailyGoals: number[];
-    claimedVocabMilestones: number[];
-}
 
 // --- CONTEXT TYPE DEFINITION ---
 interface AnalysisDashboardContextType {
@@ -55,7 +42,7 @@ interface AnalysisDashboardContextType {
     loading: boolean;
     error: string | null;
     analysisData: AnalysisData | null;
-    dailyActivityData: DailyActivityMap;
+    dailyActivityMap: DailyActivityMap;
     userProgress: UserProgress;
     wordsLearnedToday: number;
     claimDailyReward: (milestone: number, rewardAmount: number) => Promise<void>;
@@ -67,18 +54,20 @@ const AnalysisDashboardContext = createContext<AnalysisDashboardContextType | un
 
 // --- PROVIDER COMPONENT ---
 export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children }) => {
-    const { user, userCoins, masteryCount, claimedDailyGoals, claimedVocabMilestones } = useQuizApp();
+    // <<< THAY ĐỔI: Lấy user và userProgress trực tiếp từ course-context
+    const { user, userProgress } = useQuizApp();
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
     const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
-    
+
     useEffect(() => {
+        // <<< THAY ĐỔI: Logic giờ phụ thuộc vào `user` từ `useQuizApp`
         if (!user) {
             setLoading(false);
             setError("Vui lòng đăng nhập để xem phân tích.");
-            setAnalysisData(null);
+            setAnalysisData(null); // Xóa dữ liệu cũ khi đăng xuất
             setDailyActivityData({});
             return;
         }
@@ -87,7 +76,9 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
             setLoading(true);
             setError(null);
             try {
+                // <<< THAY ĐỔI: Service giờ chỉ trả về dữ liệu phân tích
                 const dataPayload = await fetchAnalysisDashboardData(user.uid, defaultVocabulary.length);
+                // Không cần setUserProgress nữa vì nó được quản lý bởi course-context
                 setAnalysisData(dataPayload.analysisData);
                 setDailyActivityData(dataPayload.dailyActivityMap);
             } catch (err: any) {
@@ -101,32 +92,24 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
     }, [user]);
 
     const wordsLearnedToday = useMemo(() => {
-        // [SỬA] Sử dụng hàm định dạng ngày nhất quán
-        const todayString = formatDateToLocalYYYYMMDD(new Date());
-        return dailyActivityData[todayString]?.new + dailyActivityData[todayString]?.review || 0;
+        const todayString = new Date().toISOString().slice(0, 10);
+        const todayActivity = Object.entries(dailyActivityData).find(([date]) => date.startsWith(todayString));
+        return todayActivity ? todayActivity[1].new + todayActivity[1].review : 0;
     }, [dailyActivityData]);
 
     const claimDailyReward = useCallback(async (milestone: number, rewardAmount: number) => {
         if (!user) throw new Error("User not logged in");
+        // <<< THAY ĐỔI: Chỉ cần gọi service. Listener trong course-context sẽ tự động cập nhật state.
         await claimDailyMilestoneReward(user.uid, milestone, rewardAmount);
+        // Không cần cập nhật state local ở đây nữa.
     }, [user]);
 
     const claimVocabReward = useCallback(async (milestone: number, rewardAmount: number) => {
         if (!user) throw new Error("User not logged in");
+        // <<< THAY ĐỔI: Tương tự như trên, chỉ gọi service.
         await claimVocabMilestoneReward(user.uid, milestone, rewardAmount);
+        // Không cần cập nhật state local ở đây nữa.
     }, [user]);
-    
-    const userProgress = useMemo<UserProgress>(() => {
-        // [SỬA] Sử dụng hàm định dạng ngày nhất quán để lấy đúng key
-        const todayString = formatDateToLocalYYYYMMDD(new Date());
-        return {
-            coins: userCoins,
-            masteryCount: masteryCount,
-            claimedDailyGoals: claimedDailyGoals?.[todayString] || [],
-            claimedVocabMilestones: claimedVocabMilestones,
-        };
-    }, [userCoins, masteryCount, claimedDailyGoals, claimedVocabMilestones]);
-
 
     const value = useMemo(() => ({
         user,
@@ -134,7 +117,7 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
         error,
         analysisData,
         dailyActivityData,
-        userProgress,
+        userProgress, // userProgress giờ đến từ useQuizApp
         wordsLearnedToday,
         claimDailyReward,
         claimVocabReward,
@@ -157,6 +140,8 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
     );
 };
 
+// QUAN TRỌNG: Để context này hoạt động, <AnalysisDashboardProvider> phải được đặt bên trong <QuizAppProvider> trong cây component của bạn (ví dụ: trong App.tsx).
+
 // --- CUSTOM HOOK TO USE THE CONTEXT ---
 export const useAnalysisDashboard = (): AnalysisDashboardContextType => {
     const context = useContext(AnalysisDashboardContext);
@@ -167,4 +152,4 @@ export const useAnalysisDashboard = (): AnalysisDashboardContextType => {
 };
 
 // --- TYPE EXPORTS (for use in the main component) ---
-export type { AnalysisData, DailyActivityMap, UserProgress, WordMastery };
+export type { AnalysisData, DailyActivityMap, WordMastery };
