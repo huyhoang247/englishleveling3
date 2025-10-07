@@ -10,8 +10,8 @@ import {
   updateUserCoins as updateUserCoinsService,
 } from './course-data-service.ts';
 // NEW: Import data and generators
-import { generateAudioUrlsForWord } from '../../voca-data/audio-quiz-generator.ts';
-import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
+import { generateAudioUrlsForWord } from '../voca-data/audio-quiz-generator.ts';
+import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
 
 
 // --- Định nghĩa các "hình dạng" (interface) dùng chung ---
