@@ -1,3 +1,5 @@
+// --- START OF FILE course-context.tsx (9).txt ---
+
 import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode, useMemo } from 'react';
 import { auth } from '../firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -10,8 +12,10 @@ import {
   updateUserCoins as updateUserCoinsService,
 } from './course-data-service.ts';
 // NEW: Import data and generators
-import { generateAudioUrlsForWord } from '../voca-data/audio-quiz-generator.ts';
+import { generateAudioUrlsForWord, generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
 import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
+import { exampleData } from '../voca-data/example-data.ts';
+import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 
 
 // --- Định nghĩa các "hình dạng" (interface) dùng chung ---
@@ -48,6 +52,10 @@ interface QuizAppContextType {
   // --- NEW: Vocabulary data and utilities ---
   definitionsMap: { [key: string]: Definition };
   generateAudioUrlsForWord: (word: string) => { [key: string]: string } | null;
+  exampleData: any[];
+  defaultVocabulary: string[];
+  generateAudioQuizQuestions: (vocabList: string[]) => any[];
+  generateAudioUrlsForExamSentence: (sentenceIndex: number) => { [key: string]: string } | null;
 }
 
 // --- Tạo Context ---
@@ -250,6 +258,10 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     // NEW: Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
+    exampleData,
+    defaultVocabulary,
+    generateAudioQuizQuestions,
+    generateAudioUrlsForExamSentence,
   };
 
   return <QuizAppContext.Provider value={value}>{children}</QuizAppContext.Provider>;
