@@ -18,7 +18,7 @@ import {
 } from './analysis-service.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
 // <<< THÊM: Import hook từ course-context để lấy dữ liệu người dùng
-import { useQuizApp, UserProgress } from '../course/course-context.tsx'; 
+import { useQuizApp, UserProgress } from '../course-context.tsx'; 
 
 // --- TYPE DEFINITIONS ---
 interface LearningActivity { date: string; new: number; review: number; }
