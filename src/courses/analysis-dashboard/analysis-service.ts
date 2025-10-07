@@ -1,6 +1,6 @@
 // --- START OF FILE: src/services/analysis-service.ts ---
 
-import { db } from '../firebase';
+import { db } from '../../firebase';
 import { 
     doc, 
     getDocs, 
@@ -10,7 +10,7 @@ import {
     arrayUnion,
     Timestamp
 } from 'firebase/firestore';
-import { fetchOrCreateUser } from './course-data-service'; // Import hàm cần thiết từ service cũ
+import { fetchOrCreateUser } from '../course-data-service.ts'; // Import hàm cần thiết từ service cũ
 
 // --- TYPE DEFINITIONS (Copied from analysis-context and course-data-service) ---
 interface WordMastery { word: string; mastery: number; lastPracticed: Date; }
