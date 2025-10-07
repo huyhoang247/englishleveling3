@@ -6,12 +6,14 @@ import { auth, db } from './firebase.js';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
 import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
-
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes
 } from './gameDataService.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
+
+// Import các thành phần cần thiết từ achievement service
+import { VocabularyItem, fetchAndSyncVocabularyData } from './achievements/achievement-service.ts';
 
 // --- Define the shape of the context ---
 interface IGameContext {
@@ -40,6 +42,7 @@ interface IGameContext {
     totalPlayerStats: { hp: number; atk: number; def: number; };
     loginStreak: number;
     lastCheckIn: Date | null;
+    vocabulary: VocabularyItem[]; // Thêm state cho dữ liệu thành tích từ vựng
 
     // UI States
     isBackgroundPaused: boolean;
@@ -60,7 +63,7 @@ interface IGameContext {
     isAuctionHouseOpen: boolean;
     isCheckInOpen: boolean;
     isMailboxOpen: boolean;
-    is777GameOpen: boolean; // ADDED
+    is777GameOpen: boolean;
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
@@ -74,10 +77,11 @@ interface IGameContext {
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
     handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
+    handleVocabularyUpdate: (newVocabulary: VocabularyItem[]) => void; // Thêm hàm để achievement-context cập nhật lại state
     handleSkillScreenClose: (dataUpdated: boolean) => void;
     updateSkillsState: (data: SkillScreenExitData) => void;
     updateUserCurrency: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
-    updateCoins: (amount: number) => Promise<void>; // --- MODIFIED: ADDED THIS ---
+    updateCoins: (amount: number) => Promise<void>;
 
     // Toggles
     toggleRank: () => void;
@@ -96,15 +100,13 @@ interface IGameContext {
     toggleCheckIn: () => void;
     toggleMailbox: () => void;
     toggleBaseBuilding: () => void;
-    toggle777Game: () => void; // ADDED
+    toggle777Game: () => void;
     setCoins: React.Dispatch<React.SetStateAction<number>>;
     setIsSyncingData: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-// --- Create the context ---
 const GameContext = createContext<IGameContext | undefined>(undefined);
 
-// --- Create the Provider component ---
 interface GameProviderProps {
     children: ReactNode;
     hideNavBar: () => void;
@@ -137,6 +139,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
   const [loginStreak, setLoginStreak] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useState<Date | null>(null);
+  const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]); // Khởi tạo state mới
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
@@ -155,7 +158,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isMailboxOpen, setIsMailboxOpen] = useState(false);
-  const [is777GameOpen, setIs777GameOpen] = useState(false); // ADDED
+  const [is777GameOpen, setIs777GameOpen] = useState(false);
   
   // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
@@ -167,7 +170,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     console.log("Refreshing all user data triggered...");
     setIsLoadingUserData(true);
     try {
-      const gameData = await fetchOrCreateUserGameData(userId);
+      // Tải dữ liệu từ vựng cùng lúc với dữ liệu game chính
+      const [gameData, vocabData] = await Promise.all([
+        fetchOrCreateUserGameData(userId),
+        fetchAndSyncVocabularyData(userId)
+      ]);
+      
+      // Cập nhật state dữ liệu game chính
       setCoins(gameData.coins);
       setDisplayedCoins(gameData.coins);
       setGems(gameData.gems);
@@ -187,6 +196,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setEquippedItems(gameData.equipment.equipped);
       setLoginStreak(gameData.loginStreak || 0);
       setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
+
+      // Cập nhật state dữ liệu từ vựng
+      setVocabulary(vocabData);
+
     } catch (error) { console.error("Error refreshing user data:", error);
     } finally { setIsLoadingUserData(false); }
   }, []);
@@ -199,6 +212,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
       if (user) {
         setIsLoadingUserData(true);
+
+        // Tải dữ liệu từ vựng ngay khi có user
+        fetchAndSyncVocabularyData(user.uid)
+          .then(setVocabulary)
+          .catch(err => console.error("Failed to fetch initial vocabulary data:", err));
+        
         const userDocRef = doc(db, 'users', user.uid);
         
         unsubscribeFromUserDoc = onSnapshot(userDocRef, (docSnap) => {
@@ -251,6 +270,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]); setLoginStreak(0); setLastCheckIn(null);
         setEquippedItems({ weapon: null, armor: null, Helmet: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
         setIsMailboxOpen(false);
+        setVocabulary([]); // Reset state từ vựng khi logout
       }
     });
 
@@ -274,10 +294,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     if (!ownedItems || !equippedItems) {
       return totals;
     }
-    
-    // Luôn đảm bảo `ownedItems` có `stats` là object để tránh lỗi
     const safeOwnedItems = ownedItems.map(item => ({ ...item, stats: item.stats || {} }));
-
     Object.values(equippedItems).forEach(itemId => { 
         if(itemId){
             const item = safeOwnedItems.find(i => i.id === itemId);
@@ -299,20 +316,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     };
   }, [userStatsValue, totalEquipmentStats]);
     
-  // --- MODIFIED: ADDED THIS FUNCTION ---
   const updateCoins = async (amount: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId || amount === 0) return;
     setIsSyncingData(true);
     try {
-      // The service function now returns the new coin total after the transaction
       const newTotalCoins = await updateUserCoins(userId, amount);
-      // We set the state here for immediate UI feedback. 
-      // The realtime listener will also receive this update, but this prevents UI lag.
       setCoins(newTotalCoins);
     } catch (error) {
       console.error("Failed to update coins via context:", error);
-      // Optional: show an error toast to the user
     } finally {
       setIsSyncingData(false);
     }
@@ -387,6 +399,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => { setCoins(updates.newCoins); setGems(updates.newGems); setTotalVocabCollected(updates.newTotalVocab); };
   const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => { if (updates.coins !== undefined) setCoins(updates.coins); if (updates.masteryCards !== undefined) setMasteryCards(updates.masteryCards); };
   
+  const handleVocabularyUpdate = (newVocabulary: VocabularyItem[]) => {
+    setVocabulary(newVocabulary);
+  };
+  
   const toggleRank = createToggleFunction(setIsRankOpen);
   const togglePvpArena = createToggleFunction(setIsPvpArenaOpen);
   const toggleLuckyGame = createToggleFunction(setIsLuckyGameOpen);
@@ -403,7 +419,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const toggleCheckIn = createToggleFunction(setIsCheckInOpen);
   const toggleMailbox = createToggleFunction(setIsMailboxOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
-  const toggle777Game = createToggleFunction(setIs777GameOpen); // ADDED
+  const toggle777Game = createToggleFunction(setIs777GameOpen);
   
   const handleSkillScreenClose = (dataUpdated: boolean) => {
     toggleSkillScreen();
@@ -418,25 +434,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   };
 
   const updateUserCurrency = (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => {
-    if (updates.coins !== undefined) {
-        setCoins(updates.coins);
-        setDisplayedCoins(updates.coins);
-    }
-    if (updates.gems !== undefined) {
-        setGems(updates.gems);
-    }
-    if (updates.equipmentPieces !== undefined) {
-        setEquipmentPieces(updates.equipmentPieces);
-    }
-    if (updates.ancientBooks !== undefined) {
-        setAncientBooks(updates.ancientBooks);
-    }
-    if (updates.cardCapacity !== undefined) {
-        setCardCapacity(updates.cardCapacity);
-    }
+    if (updates.coins !== undefined) { setCoins(updates.coins); setDisplayedCoins(updates.coins); }
+    if (updates.gems !== undefined) { setGems(updates.gems); }
+    if (updates.equipmentPieces !== undefined) { setEquipmentPieces(updates.equipmentPieces); }
+    if (updates.ancientBooks !== undefined) { setAncientBooks(updates.ancientBooks); }
+    if (updates.cardCapacity !== undefined) { setCardCapacity(updates.cardCapacity); }
   };
 
-  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen || is777GameOpen; // MODIFIED
+  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen || is777GameOpen;
   const isLoading = isLoadingUserData || !assetsLoaded;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
@@ -453,19 +458,21 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isAuctionHouseOpen,
     isCheckInOpen,
     isMailboxOpen,
-    is777GameOpen, // ADDED
+    is777GameOpen, 
     isAnyOverlayOpen, isGamePaused,
+    vocabulary, // Cung cấp state
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
     getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
     updateUserCurrency,
-    updateCoins, // --- MODIFIED: ADDED THIS ---
+    updateCoins,
+    handleVocabularyUpdate, // Cung cấp hàm cập nhật
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
     toggleAuctionHouse,
     toggleCheckIn,
     toggleMailbox,
     toggleBaseBuilding, 
-    toggle777Game, // ADDED
+    toggle777Game,
     setCoins,
     setIsSyncingData
   };
@@ -473,7 +480,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 };
 
-// --- Create a custom hook for easy context access ---
 export const useGame = (): IGameContext => {
   const context = useContext(GameContext);
   if (context === undefined) {
