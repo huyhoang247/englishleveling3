@@ -10,9 +10,7 @@ import React, {
     FC,
     ReactNode
 } from 'react';
-
 import { User } from 'firebase/auth';
-// [MỚI] Import hook từ course-context để lấy dữ liệu người dùng
 import { useQuizApp } from '../course-context.tsx'; 
 import { 
     fetchAnalysisDashboardData, 
@@ -20,6 +18,14 @@ import {
     claimVocabMilestoneReward
 } from './analysis-service.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
+
+// [MỚI] Hàm trợ giúp để định dạng ngày theo giờ địa phương, đảm bảo tính nhất quán.
+const formatDateToLocalYYYYMMDD = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 
 // --- TYPE DEFINITIONS (Should be in a shared types file, but kept here for context) ---
 interface LearningActivity { date: string; new: number; review: number; }
@@ -39,7 +45,6 @@ type DailyActivityMap = { [date: string]: { new: number; review: number } };
 interface UserProgress {
     coins: number;
     masteryCount: number;
-    // [SỬA] Đây là danh sách các mốc đã nhận trong ngày hôm nay
     claimedDailyGoals: number[];
     claimedVocabMilestones: number[];
 }
@@ -51,7 +56,7 @@ interface AnalysisDashboardContextType {
     error: string | null;
     analysisData: AnalysisData | null;
     dailyActivityData: DailyActivityMap;
-    userProgress: UserProgress; // Giữ nguyên type này để component con không bị ảnh hưởng
+    userProgress: UserProgress;
     wordsLearnedToday: number;
     claimDailyReward: (milestone: number, rewardAmount: number) => Promise<void>;
     claimVocabReward: (milestone: number, rewardAmount: number) => Promise<void>;
@@ -62,7 +67,6 @@ const AnalysisDashboardContext = createContext<AnalysisDashboardContextType | un
 
 // --- PROVIDER COMPONENT ---
 export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children }) => {
-    // [SỬA] Lấy dữ liệu người dùng trực tiếp từ useQuizApp hook
     const { user, userCoins, masteryCount, claimedDailyGoals, claimedVocabMilestones } = useQuizApp();
 
     const [loading, setLoading] = useState(true);
@@ -70,16 +74,11 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
     const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
     const [dailyActivityData, setDailyActivityData] = useState<DailyActivityMap>({});
     
-    // [XÓA] State cho user và userProgress bị loại bỏ vì đã có từ context cha
-    // const [user, setUser] = useState<User | null>(auth.currentUser);
-    // const [userProgress, setUserProgress] = useState<UserProgress>({...});
-    // [XÓA] useEffect lắng nghe auth state cũng bị loại bỏ
-
     useEffect(() => {
         if (!user) {
             setLoading(false);
             setError("Vui lòng đăng nhập để xem phân tích.");
-            setAnalysisData(null); // Xóa dữ liệu cũ khi người dùng đăng xuất
+            setAnalysisData(null);
             setDailyActivityData({});
             return;
         }
@@ -88,9 +87,7 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
             setLoading(true);
             setError(null);
             try {
-                // [SỬA] fetchAnalysisDashboardData không còn trả về userData
                 const dataPayload = await fetchAnalysisDashboardData(user.uid, defaultVocabulary.length);
-                // [XÓA] Không còn setUserProgress ở đây. Dữ liệu này đến từ useQuizApp.
                 setAnalysisData(dataPayload.analysisData);
                 setDailyActivityData(dataPayload.dailyActivityMap);
             } catch (err: any) {
@@ -101,34 +98,31 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
             }
         };
         fetchData();
-    }, [user]); // Phụ thuộc vào user từ context cha
+    }, [user]);
 
     const wordsLearnedToday = useMemo(() => {
-        const todayString = new Date().toISOString().slice(0, 10);
-        const todayActivity = Object.entries(dailyActivityData).find(([date]) => date.startsWith(todayString));
-        return todayActivity ? todayActivity[1].new + todayActivity[1].review : 0;
+        // [SỬA] Sử dụng hàm định dạng ngày nhất quán
+        const todayString = formatDateToLocalYYYYMMDD(new Date());
+        return dailyActivityData[todayString]?.new + dailyActivityData[todayString]?.review || 0;
     }, [dailyActivityData]);
 
     const claimDailyReward = useCallback(async (milestone: number, rewardAmount: number) => {
         if (!user) throw new Error("User not logged in");
         await claimDailyMilestoneReward(user.uid, milestone, rewardAmount);
-        // [XÓA] Không cần cập nhật state cục bộ. 
-        // `course-context` sẽ tự động nhận dữ liệu mới từ Firestore và re-render.
     }, [user]);
 
     const claimVocabReward = useCallback(async (milestone: number, rewardAmount: number) => {
         if (!user) throw new Error("User not logged in");
         await claimVocabMilestoneReward(user.uid, milestone, rewardAmount);
-        // [XÓA] Không cần cập nhật state cục bộ.
     }, [user]);
     
-    // [MỚI] Tạo đối tượng userProgress một cách linh hoạt từ dữ liệu của context cha
     const userProgress = useMemo<UserProgress>(() => {
-        const todayString = new Date().toISOString().slice(0, 10);
+        // [SỬA] Sử dụng hàm định dạng ngày nhất quán để lấy đúng key
+        const todayString = formatDateToLocalYYYYMMDD(new Date());
         return {
             coins: userCoins,
             masteryCount: masteryCount,
-            claimedDailyGoals: claimedDailyGoals?.[todayString] || [], // Lấy mảng của ngày hôm nay
+            claimedDailyGoals: claimedDailyGoals?.[todayString] || [],
             claimedVocabMilestones: claimedVocabMilestones,
         };
     }, [userCoins, masteryCount, claimedDailyGoals, claimedVocabMilestones]);
@@ -140,7 +134,7 @@ export const AnalysisDashboardProvider: FC<{children: ReactNode}> = ({ children 
         error,
         analysisData,
         dailyActivityData,
-        userProgress, // Cung cấp đối tượng đã được tạo
+        userProgress,
         wordsLearnedToday,
         claimDailyReward,
         claimVocabReward,
