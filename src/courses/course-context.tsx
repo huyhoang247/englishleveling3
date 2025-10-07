@@ -5,7 +5,9 @@ import {
   listenToUserData,
   getOpenedVocab as getOpenedVocabService,
   getCompletedWordsForGameMode as getCompletedWordsService,
-  recordGameSuccess as recordGameSuccessService
+  recordGameSuccess as recordGameSuccessService,
+  fetchOrCreateUser as fetchOrCreateUserService, // NEW: Import
+  updateUserCoins as updateUserCoinsService,   // NEW: Import
 } from './course-data-service.ts';
 
 // --- Định nghĩa "hình dạng" của Context ---
@@ -25,10 +27,12 @@ interface QuizAppContextType {
   handleTypeSelect: (type: string) => void;
   handlePracticeSelect: (practice: number) => void;
 
-  // --- NEW: Data service functions ---
+  // --- Data service functions ---
   getOpenedVocab: () => Promise<string[]>;
   getCompletedWords: (gameModeId: string) => Promise<Set<string>>;
   recordGameSuccess: (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number) => Promise<void>;
+  updateUserCoins: (amount: number) => Promise<void>; // NEW
+  fetchOrCreateUser: () => Promise<any>; // NEW
 }
 
 // --- Tạo Context ---
@@ -146,7 +150,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     setSelectedPractice(null);
   }, []);
 
-  // --- NEW: Data service wrapper functions ---
+  // --- Data service wrapper functions ---
   const getOpenedVocab = useCallback(async (): Promise<string[]> => {
     if (!user) {
       console.warn("getOpenedVocab called without a user.");
@@ -168,8 +172,23 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
         console.warn("recordGameSuccess called without a user.");
         return;
     }
-    // This updates Firestore, and the `listenToUserData` listener will automatically update the userCoins state.
     await recordGameSuccessService(user.uid, gameModeId, word, isMastered, coinsToAdd);
+  }, [user]);
+
+  const fetchOrCreateUser = useCallback(async (): Promise<any> => {
+    if (!user) {
+      console.warn("fetchOrCreateUser called without a user.");
+      return null;
+    }
+    return fetchOrCreateUserService(user.uid);
+  }, [user]);
+
+  const updateUserCoins = useCallback(async (amount: number): Promise<void> => {
+    if (!user) {
+        console.warn("updateUserCoins called without a user.");
+        return;
+    }
+    await updateUserCoinsService(user.uid, amount);
   }, [user]);
 
 
@@ -191,6 +210,8 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     getOpenedVocab,
     getCompletedWords,
     recordGameSuccess,
+    fetchOrCreateUser,
+    updateUserCoins,
   };
 
   return <QuizAppContext.Provider value={value}>{children}</QuizAppContext.Provider>;
