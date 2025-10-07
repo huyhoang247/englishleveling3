@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode, useMemo } from 'react';
 import { auth } from '../firebase.js';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import {
@@ -6,11 +6,22 @@ import {
   getOpenedVocab as getOpenedVocabService,
   getCompletedWordsForGameMode as getCompletedWordsService,
   recordGameSuccess as recordGameSuccessService,
-  fetchOrCreateUser as fetchOrCreateUserService, // NEW: Import
-  updateUserCoins as updateUserCoinsService,   // NEW: Import
+  fetchOrCreateUser as fetchOrCreateUserService,
+  updateUserCoins as updateUserCoinsService,
 } from './course-data-service.ts';
+// NEW: Import data and generators
+import { generateAudioUrlsForWord } from '../../voca-data/audio-quiz-generator.ts';
+import detailedMeaningsText from '../../voca-data/vocabulary-definitions.ts';
 
-// --- Định nghĩa "hình dạng" của Context ---
+
+// --- Định nghĩa các "hình dạng" (interface) dùng chung ---
+// NEW: Moved Definition interface here
+export interface Definition {
+  vietnamese: string;
+  english: string;
+  explanation: string;
+}
+
 interface QuizAppContextType {
   currentView: string;
   selectedQuiz: any; 
@@ -31,8 +42,12 @@ interface QuizAppContextType {
   getOpenedVocab: () => Promise<string[]>;
   getCompletedWords: (gameModeId: string) => Promise<Set<string>>;
   recordGameSuccess: (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number) => Promise<void>;
-  updateUserCoins: (amount: number) => Promise<void>; // NEW
-  fetchOrCreateUser: () => Promise<any>; // NEW
+  updateUserCoins: (amount: number) => Promise<void>;
+  fetchOrCreateUser: () => Promise<any>;
+
+  // --- NEW: Vocabulary data and utilities ---
+  definitionsMap: { [key: string]: Definition };
+  generateAudioUrlsForWord: (word: string) => { [key: string]: string } | null;
 }
 
 // --- Tạo Context ---
@@ -63,6 +78,26 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
   const [user, setUser] = useState(auth.currentUser);
   const [userCoins, setUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
+  
+  // NEW: Process vocabulary definitions once and provide via context
+  const definitionsMap = useMemo(() => {
+    const definitions: { [key: string]: Definition } = {};
+    const lines = detailedMeaningsText.trim().split('\n');
+    lines.forEach(line => {
+      if (line.trim() === '') return;
+      const match = line.match(/^(.+?)\s+\((.+?)\)\s+là\s+(.*)/);
+      if (match) {
+        const [, vietnameseWord, englishWord, explanation] = match;
+        definitions[englishWord.trim().toLowerCase()] = {
+          vietnamese: vietnameseWord.trim(),
+          english: englishWord.trim(),
+          explanation: explanation.trim(),
+        };
+      }
+    });
+    return definitions;
+  }, []);
+
 
   // Effect lắng nghe thay đổi trạng thái đăng nhập
   useEffect(() => {
@@ -212,6 +247,9 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
     recordGameSuccess,
     fetchOrCreateUser,
     updateUserCoins,
+    // NEW: Provide data and utilities
+    definitionsMap,
+    generateAudioUrlsForWord,
   };
 
   return <QuizAppContext.Provider value={value}>{children}</QuizAppContext.Provider>;
