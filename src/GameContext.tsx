@@ -13,7 +13,7 @@ import {
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
 // Import các thành phần cần thiết từ achievement service
-import { VocabularyItem, fetchAndSyncVocabularyData } from './achievements/achievement-service.ts';
+import { VocabularyItem, fetchAndSyncVocabularyData } from './home/achievements/achievement-service.ts';
 
 // --- Define the shape of the context ---
 interface IGameContext {
