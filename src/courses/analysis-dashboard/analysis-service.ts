@@ -1,21 +1,21 @@
 // --- START OF FILE: src/services/analysis-service.ts ---
 
-import { db } from '../../firebase';
+import { db } from '../firebase';
 import { 
+    doc, 
     getDocs, 
     collection, 
     updateDoc, 
-    doc,
     increment, 
     arrayUnion,
     Timestamp
 } from 'firebase/firestore';
+// <<< BỎ: Không cần import fetchOrCreateUser nữa
 
-
-// --- TYPE DEFINITIONS (Copied from analysis-context) ---
+// --- TYPE DEFINITIONS ---
 interface WordMastery { word: string; mastery: number; lastPracticed: Date; }
-// [SỬA] Đơn giản hóa Payload, chỉ chứa dữ liệu phân tích
-interface AnalysisDataPayload {
+// <<< THAY ĐỔI: Tên và nội dung của payload
+interface AnalysisServiceDataPayload {
   analysisData: {
     totalWordsLearned: number;
     totalWordsAvailable: number;
@@ -41,22 +41,21 @@ const formatDateToLocalYYYYMMDD = (date: Date): string => {
 };
 
 /**
- * Lấy và xử lý dữ liệu cần thiết cho trang Analysis Dashboard.
- * [SỬA] Hàm này không còn fetch dữ liệu người dùng (coins, mastery, etc.)
+ * Lấy và xử lý tất cả dữ liệu cần thiết cho trang Analysis Dashboard.
  * @param userId - ID của người dùng.
  * @param totalWordsAvailable - Tổng số từ vựng có trong hệ thống (từ defaultVocabulary.length).
- * @returns {Promise<AnalysisDataPayload>} Dữ liệu đã được xử lý cho dashboard.
+ * @returns {Promise<AnalysisServiceDataPayload>} Dữ liệu đã được xử lý cho dashboard.
  */
-export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvailable: number): Promise<AnalysisDataPayload> => {
+export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvailable: number): Promise<AnalysisServiceDataPayload> => {
   if (!userId) throw new Error("User ID is required.");
 
-  // [SỬA] Chỉ fetch dữ liệu về việc hoàn thành từ vựng, không fetch user data
+  // <<< THAY ĐỔI: Không gọi fetchOrCreateUser ở đây nữa
   const [completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
     getDocs(collection(db, 'users', userId, 'completedWords')),
     getDocs(collection(db, 'users', userId, 'completedMultiWord'))
   ]);
 
-  // Xử lý dữ liệu (logic này không thay đổi)
+  // Xử lý dữ liệu
   const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0 };
   const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
   const dailyActivityMap: { [date: string]: { new: number; review: number } } = {};
@@ -108,8 +107,8 @@ export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvail
   const recentCompletions = [...allCompletionsForRecent].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5).map(c => ({ word: c.word, date: c.date.toLocaleString('vi-VN') }));
   const wordMasteryData = Object.entries(wordMasteryMap).map(([word, data]) => ({ word, ...data }));
 
-  // [SỬA] Chỉ trả về dữ liệu phân tích
   return {
+    // <<< BỎ: Không trả về userData
     analysisData: {
       totalWordsLearned: completedWordsSnapshot.size,
       totalWordsAvailable,
@@ -128,7 +127,6 @@ export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvail
  * @param userId - ID của người dùng.
  * @param milestone - Cột mốc đã đạt (ví dụ: 5, 10, 20).
  * @param rewardAmount - Số coin thưởng.
- * @returns {Promise<void>}
  */
 export const claimDailyMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
   if (!userId) return;
@@ -152,7 +150,6 @@ export const claimDailyMilestoneReward = async (userId: string, milestone: numbe
  * @param userId - ID của người dùng.
  * @param milestone - Cột mốc đã đạt (ví dụ: 100, 200, 500).
  * @param rewardAmount - Số coin thưởng.
- * @returns {Promise<void>}
  */
 export const claimVocabMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
   if (!userId) return;
