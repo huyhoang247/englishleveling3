@@ -8,6 +8,7 @@ import {
 } from './profileService.ts'; // Import only mutation services
 import { auth } from '../firebase'; // Import auth to get current user info
 import { useGame } from '../GameContext.tsx'; // Import the useGame hook
+import WorkoutApp from './workout.tsx'; // Import the Workout App component
 
 // Định nghĩa các loại chế độ hiển thị
 type DisplayMode = 'fullscreen' | 'normal';
@@ -68,6 +69,7 @@ const ICONS = {
   trash: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
   warning: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",
   checkCircle: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
+  dumbbell: "M4 9h3v6H4V9zM1 10v4a1 1 0 0 0 1 1h2v-6H2a1 1 0 0 0-1 1zm15-5v14a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1zm8-1a1 1 0 0 0-1-1h-2v14h2a1 1 0 0 0 1-1V5zM9 4v16a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1z"
 };
 
 const StatBar = ({ label, value, maxValue, icon }) => {
@@ -334,6 +336,7 @@ export default function GameProfile() {
   const [displayMode, setDisplayMode] = useState<DisplayMode>('normal');
   const [cacheInfo, setCacheInfo] = useState({ usage: 0, quota: 0 });
   const [isCacheLoading, setIsCacheLoading] = useState(true);
+  const [isWorkoutOpen, setIsWorkoutOpen] = useState(false); // State to control Workout modal
   
   // --- UI HANDLERS ---
   const handleModal = (modal, state) => setModals(prev => ({ ...prev, [modal]: state }));
@@ -564,6 +567,11 @@ export default function GameProfile() {
             <MenuItem icon={ICONS.sword} label="Equipment & Items" />
             <MenuItem icon={ICONS.shield} label="Achievements" />
             <MenuItem icon={ICONS.potion} label="Store" />
+
+            <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Habit</h2>
+            <div onClick={() => setIsWorkoutOpen(true)}>
+                <MenuItem icon={ICONS.dumbbell} label="Workout" />
+            </div>
             
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Guild & Friends</h2>
             <MenuItem icon={ICONS.users} label="Friends List" />
@@ -599,6 +607,12 @@ export default function GameProfile() {
       >
         <p>{systemModal.message}</p>
       </SystemModal>
+      
+      {isWorkoutOpen && (
+        <div className="fixed inset-0 z-[100] bg-gray-900 overflow-y-auto no-scrollbar">
+          <WorkoutApp onClose={() => setIsWorkoutOpen(false)} />
+        </div>
+      )}
     </div>
   );
 }
