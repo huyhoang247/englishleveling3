@@ -1,4 +1,3 @@
-
 // quiz-app-home.tsx
 import React, { useMemo, memo, useCallback, useState, useEffect } from 'react';
 import QuizApp from './multiple-choice/multiple-ui.tsx';
@@ -22,17 +21,8 @@ interface QuizAppHomeProps {
   showNavBar?: () => void;
 }
 
-// --- Component chính trở thành Wrapper cho Provider ---
-export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps) {
-  return (
-    <QuizAppProvider hideNavBar={hideNavBar} showNavBar={showNavBar}>
-      <QuizAppContent />
-    </QuizAppProvider>
-  );
-}
-
 // --- Component hiển thị nội dung, sử dụng Context ---
-const QuizAppContent: React.FC = () => {
+export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps) {
   const { 
     currentView, 
     selectedPractice,
@@ -42,6 +32,22 @@ const QuizAppContent: React.FC = () => {
     handleQuizSelect,
     handleTypeSelect,
   } = useQuizApp();
+
+  // --- START: LOGIC ĐIỀU KHIỂN NAVBAR ---
+  // Effect này sẽ chạy khi component được mount (khi tab 'quiz' active)
+  // và sẽ cập nhật lại visibility của navbar mỗi khi view trong quiz thay đổi.
+  useEffect(() => {
+    if (currentView !== 'main') {
+      hideNavBar?.();
+    } else {
+      showNavBar?.();
+    }
+    // Khi component unmount (chuyển tab khác), đảm bảo navbar hiện lại.
+    return () => {
+      showNavBar?.();
+    };
+  }, [currentView, hideNavBar, showNavBar]);
+  // --- END: LOGIC ĐIỀU KHIỂN NAVBAR ---
 
   // Logic render các màn hình fullscreen
   if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame'].includes(currentView)) {
