@@ -213,33 +213,6 @@ export const recordGameSuccess = async (
   await batch.commit();
 };
 
-/**
- * Lấy toàn bộ dữ liệu từ sub-collection 'completedWords' và tính toán tổng EXP cho mỗi từ.
- * Hàm này được thiết kế để cung cấp dữ liệu thô cho hệ thống thành tích.
- * @param userId - ID của người dùng.
- * @returns {Promise<Map<string, number>>} Một Map với key là từ (word) và value là tổng EXP.
- */
-export const fetchAllCompletedWordsSummary = async (userId: string): Promise<Map<string, number>> => {
-  if (!userId) throw new Error("User ID is required.");
-
-  const completedWordsCol = collection(db, 'users', userId, 'completedWords');
-  const completedWordsSnap = await getDocs(completedWordsCol);
-
-  const wordToExpMap = new Map<string, number>();
-
-  completedWordsSnap.forEach(wordDoc => {
-    const word = wordDoc.id;
-    const gameModes = wordDoc.data().gameModes || {};
-    let totalCorrectCount = 0;
-    Object.values(gameModes).forEach((mode: any) => {
-      totalCorrectCount += mode.correctCount || 0;
-    });
-    wordToExpMap.set(word, totalCorrectCount * 100); // Mỗi lần đúng được 100 EXP
-  });
-
-  return wordToExpMap;
-};
-
 
 // [XÓA] Các hàm fetchAnalysisDashboardData, claimDailyMilestoneReward, claimVocabMilestoneReward đã được chuyển sang analysis-service.ts
 
