@@ -1,10 +1,9 @@
 // --- START OF FILE achievementService.ts (NEW FILE) ---
 
 import { db } from '../../firebase';
-// Thay đổi: Import hàm mới từ course-data-service
-import { fetchAllCompletedWordsSummary } from '../../courses/course-data-service.ts'; 
 import { 
-  doc, getDoc, setDoc, runTransaction
+  doc, getDoc, setDoc, runTransaction, 
+  collection, getDocs
 } from 'firebase/firestore';
 
 // Định nghĩa kiểu dữ liệu được chuyển sang đây từ gameDataService.ts
@@ -25,15 +24,22 @@ export interface VocabularyItem {
 export const fetchAndSyncVocabularyData = async (userId: string): Promise<VocabularyItem[]> => {
   if (!userId) throw new Error("User ID is required.");
   try {
+    const completedWordsCol = collection(db, 'users', userId, 'completedWords');
     const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
-
-    // Thay đổi: Gọi hàm đã được tập trung hóa từ course-data-service
-    const [wordToExpMap, achievementDocSnap] = await Promise.all([
-      fetchAllCompletedWordsSummary(userId),
+    const [completedWordsSnap, achievementDocSnap] = await Promise.all([
+      getDocs(completedWordsCol),
       getDoc(achievementDocRef),
     ]);
-    
-    // Logic còn lại giữ nguyên, không cần thay đổi
+    const wordToExpMap = new Map<string, number>();
+    completedWordsSnap.forEach(wordDoc => {
+      const word = wordDoc.id;
+      const gameModes = wordDoc.data().gameModes || {};
+      let totalCorrectCount = 0;
+      Object.values(gameModes).forEach((mode: any) => {
+        totalCorrectCount += mode.correctCount || 0;
+      });
+      wordToExpMap.set(word, totalCorrectCount * 100);
+    });
     const existingAchievements: VocabularyItem[] = achievementDocSnap.exists()
       ? achievementDocSnap.data().vocabulary || [] : [];
     const finalVocabularyData: VocabularyItem[] = [];
@@ -99,3 +105,5 @@ export const updateAchievementData = async (
     throw error;
   }
 };
+
+// --- END OF FILE achievementService.ts ---
