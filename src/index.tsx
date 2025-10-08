@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { GameProvider } from './GameContext.tsx';
+import { QuizAppProvider } from './courses/course-context.tsx'; // <<< THÊM DÒNG NÀY
 import { createRoot } from 'react-dom/client';
 import Home from './background-game.tsx';
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
@@ -286,17 +287,19 @@ const App: React.FC = () => {
   return (
     <div className="relative w-screen" style={{ height: 'var(--app-height, 100vh)' }}>
       <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
-        <div className="app-container" style={{ height: '100%' }}>
-          {activeTab === 'home' && <Home hideNavBar={hideNavBar} showNavBar={showNavBar} />}
-          {activeTab === 'profile' && <Profile />}
-          {activeTab === 'story' && <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />}
-          {activeTab === 'quiz' && <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />}
-          {activeTab === 'game' && <GameBrowser hideNavBar={hideNavBar} showNavBar={showNavBar} />}
-          {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
-        </div>
-        
-        {/* Hiệu ứng mờ dần khi game bắt đầu */}
-        <GameSkeletonLoader show={loadingStep === 'launching'} />
+        <QuizAppProvider>
+          <div className="app-container" style={{ height: '100%' }}>
+            {activeTab === 'home' && <Home hideNavBar={hideNavBar} showNavBar={showNavBar} />}
+            {activeTab === 'profile' && <Profile />}
+            {activeTab === 'story' && <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />}
+            {activeTab === 'quiz' && <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />}
+            {activeTab === 'game' && <GameBrowser hideNavBar={hideNavBar} showNavBar={showNavBar} />}
+            {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
+          </div>
+          
+          {/* Hiệu ứng mờ dần khi game bắt đầu */}
+          <GameSkeletonLoader show={loadingStep === 'launching'} />
+        </QuizAppProvider>
       </GameProvider>
     </div>
   );
@@ -309,5 +312,3 @@ const root = createRoot(container);
 root.render(<App />);
 
 export default App;
-
-// --- END OF FILE src/index.tsx ---
