@@ -1,3 +1,5 @@
+// --- START OF FILE workout.tsx ---
+
 import React, { useState, useMemo } from 'react';
 
 // --- SVG Icons (No lucide-react) ---
@@ -58,7 +60,7 @@ const initialWorkoutHistory = [];
 const calculateVolume = (sets) => sets.reduce((total, set) => total + (set.reps * set.weight), 0);
 
 // --- Main Application Component ---
-export default function App() {
+export default function WorkoutApp({ onClose }) {
     const [exercises, setExercises] = useState(initialExercises);
     const [workoutHistory, setWorkoutHistory] = useState(initialWorkoutHistory);
     const [myWorkoutIds, setMyWorkoutIds] = useState([2, 1]);
@@ -106,7 +108,7 @@ export default function App() {
     return (
         <div className="bg-gray-900 text-white min-h-screen font-sans">
             <div className="container mx-auto p-4 max-w-4xl">
-                <Header />
+                <Header onClose={onClose} />
                 <main className="mt-8">
                     {renderView()}
                 </main>
@@ -118,13 +120,22 @@ export default function App() {
 
 
 // --- Sub-components ---
-const Header = () => (
-    <header className="flex items-center justify-center text-center">
-        <DumbbellIcon className="text-emerald-400 w-8 h-8 mr-3" />
-        <div>
-            <h1 className="text-3xl font-bold text-white">Workout Tracker Pro</h1>
-            <p className="text-gray-400">Xây dựng. Theo dõi. Chinh phục.</p>
+const Header = ({ onClose }) => (
+    <header className="relative flex items-center justify-center text-center">
+        <div className="flex items-center">
+            <DumbbellIcon className="text-emerald-400 w-8 h-8 mr-3" />
+            <div>
+                <h1 className="text-3xl font-bold text-white">Workout Tracker Pro</h1>
+                <p className="text-gray-400">Xây dựng. Theo dõi. Chinh phục.</p>
+            </div>
         </div>
+        <button 
+            onClick={onClose}
+            className="absolute top-1/2 right-0 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors"
+            aria-label="Close Workout Tracker"
+        >
+            <XIcon className="w-6 h-6" />
+        </button>
     </header>
 );
 
@@ -157,6 +168,7 @@ const NavBar = ({ currentView, setCurrentView }) => {
 
 // --- Custom SVG Line Chart (recharts replacement) ---
 const SimpleSVGChart = ({ data, yKey, strokeColor, title }) => {
+    if (data.length < 2) return null;
     const width = 300;
     const height = 150;
     const padding = 20;
@@ -408,10 +420,16 @@ const WorkoutHistoryView = ({ history, exercises, onDelete }) => {
 };
 
 const Card = ({ children }) => (<div className="bg-gray-800 p-6 rounded-xl shadow-md">{children}</div>);
-const style = document.createElement('style');
-style.textContent = `
-    .card-title { @apply text-xl font-bold text-gray-100 flex items-center; }
-    .form-input { @apply w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition; }
-`;
-document.head.append(style);
 
+// We ensure this runs only once
+if (!document.getElementById('workout-styles')) {
+    const style = document.createElement('style');
+    style.id = 'workout-styles';
+    style.textContent = `
+        .card-title { @apply text-xl font-bold text-gray-100 flex items-center; }
+        .form-input { @apply w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition; }
+    `;
+    document.head.append(style);
+}
+
+// --- END OF FILE workout.tsx ---
