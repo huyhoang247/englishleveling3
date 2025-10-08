@@ -6,13 +6,15 @@ import React, {
   useContext,
   useCallback,
   ReactNode,
-  useMemo
+  useMemo,
+  useEffect
 } from 'react';
 import { auth } from '../../firebase.js';
 import { useGame } from '../../GameContext.tsx';
 import {
   updateAchievementData,
-  VocabularyItem
+  VocabularyItem,
+  fetchAndSyncVocabularyData // Import the fetch function
 } from './achievement-service.ts';
 
 // Định nghĩa shape của Context
@@ -22,7 +24,7 @@ interface AchievementsContextState {
   coins: number;
   masteryCards: number;
   // --- Trạng thái ---
-  isInitialLoading: boolean; // Dùng trạng thái loading của GameContext
+  isInitialLoading: boolean; // Quản lý loading nội bộ
   isUpdating: boolean;     // True khi đang thực hiện hành động (nhận thưởng)
   // --- Hành động ---
   claimAchievement: (id: number) => Promise<void>;
@@ -38,18 +40,41 @@ interface AchievementsProviderProps {
 }
 
 export const AchievementsProvider = ({ children }: AchievementsProviderProps) => {
-  // Lấy dữ liệu và các hàm cập nhật trực tiếp từ GameContext
+  // Lấy dữ liệu và các hàm cập nhật từ GameContext (ngoại trừ vocabulary)
   const {
-    vocabulary,
     coins,
     masteryCards,
-    isLoadingUserData,
     handleAchievementsDataUpdate,
-    handleVocabularyUpdate,
   } = useGame();
   
   const user = auth.currentUser;
+  
+  // Quản lý state của vocabulary và loading tại đây
+  const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Effect để tải dữ liệu vocabulary khi user thay đổi
+  useEffect(() => {
+    if (!user?.uid) {
+      setVocabulary([]);
+      setIsInitialLoading(false);
+      return;
+    }
+    
+    setIsInitialLoading(true);
+    fetchAndSyncVocabularyData(user.uid)
+      .then(vocabData => {
+        setVocabulary(vocabData);
+      })
+      .catch(error => {
+        console.error("Failed to fetch vocabulary in AchievementsProvider:", error);
+      })
+      .finally(() => {
+        setIsInitialLoading(false);
+      });
+  }, [user]);
+
 
   // Hàm nhận một phần thưởng
   const claimAchievement = useCallback(async (id: number) => {
@@ -77,8 +102,8 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
         newVocabularyData: updatedList,
       });
 
-      // Gọi các hàm cập nhật của GameContext
-      handleVocabularyUpdate(updatedList);
+      // Cập nhật state nội bộ và gọi hàm cập nhật của GameContext
+      setVocabulary(updatedList);
       handleAchievementsDataUpdate({ coins: newCoins, masteryCards: newMasteryCards });
 
     } catch (error) {
@@ -86,7 +111,7 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
     } finally {
       setIsUpdating(false);
     }
-  }, [vocabulary, user, isUpdating, handleVocabularyUpdate, handleAchievementsDataUpdate]);
+  }, [vocabulary, user, isUpdating, handleAchievementsDataUpdate]);
 
   // Hàm nhận tất cả phần thưởng
   const claimAllAchievements = useCallback(async () => {
@@ -116,8 +141,8 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
         newVocabularyData: updatedList,
       });
       
-      // Gọi các hàm cập nhật của GameContext
-      handleVocabularyUpdate(updatedList);
+      // Cập nhật state nội bộ và gọi hàm cập nhật của GameContext
+      setVocabulary(updatedList);
       handleAchievementsDataUpdate({ coins: newCoins, masteryCards: newMasteryCards });
 
     } catch (error) {
@@ -125,7 +150,7 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
     } finally {
       setIsUpdating(false);
     }
-  }, [vocabulary, user, isUpdating, handleVocabularyUpdate, handleAchievementsDataUpdate]);
+  }, [vocabulary, user, isUpdating, handleAchievementsDataUpdate]);
 
   const totalClaimableRewards = useMemo(() => {
     const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
@@ -138,13 +163,13 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
     vocabulary,
     coins,
     masteryCards,
-    isInitialLoading: isLoadingUserData, // Dùng trạng thái loading từ GameContext
+    isInitialLoading, // Dùng trạng thái loading nội bộ
     isUpdating,
     claimAchievement,
     claimAllAchievements,
     totalClaimableRewards,
   }), [
-    vocabulary, coins, masteryCards, isLoadingUserData, isUpdating,
+    vocabulary, coins, masteryCards, isInitialLoading, isUpdating,
     claimAchievement, claimAllAchievements, totalClaimableRewards
   ]);
 
