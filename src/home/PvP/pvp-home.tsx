@@ -13,7 +13,7 @@ import {
 } from './pvp-service.ts';
 import { uiAssets } from '../../game-assets.ts';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
-import CoinDisplay from '../../ui/coin-display.tsx'; // Import the new CoinDisplay component
+import CoinDisplay from '../../ui/display/coin-display.tsx'; // Import the new CoinDisplay component
 
 // --- INTERFACES ---
 export interface PlayerData {
