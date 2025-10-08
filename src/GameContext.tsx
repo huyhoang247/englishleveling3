@@ -12,9 +12,6 @@ import {
 } from './gameDataService.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
-// Import các thành phần cần thiết từ achievement service
-import { VocabularyItem, fetchAndSyncVocabularyData } from './home/achievements/achievement-service.ts';
-
 // --- Define the shape of the context ---
 interface IGameContext {
     // User Data States
@@ -42,7 +39,6 @@ interface IGameContext {
     totalPlayerStats: { hp: number; atk: number; def: number; };
     loginStreak: number;
     lastCheckIn: Date | null;
-    vocabulary: VocabularyItem[]; // Thêm state cho dữ liệu thành tích từ vựng
 
     // UI States
     isBackgroundPaused: boolean;
@@ -77,7 +73,6 @@ interface IGameContext {
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
     handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
-    handleVocabularyUpdate: (newVocabulary: VocabularyItem[]) => void; // Thêm hàm để achievement-context cập nhật lại state
     handleSkillScreenClose: (dataUpdated: boolean) => void;
     updateSkillsState: (data: SkillScreenExitData) => void;
     updateUserCurrency: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
@@ -139,7 +134,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
   const [loginStreak, setLoginStreak] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useState<Date | null>(null);
-  const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
@@ -170,10 +164,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     console.log("Refreshing all user data triggered...");
     setIsLoadingUserData(true);
     try {
-      const [gameData, vocabData] = await Promise.all([
-        fetchOrCreateUserGameData(userId),
-        fetchAndSyncVocabularyData(userId)
-      ]);
+      const gameData = await fetchOrCreateUserGameData(userId);
       
       setCoins(gameData.coins);
       setDisplayedCoins(gameData.coins);
@@ -194,7 +185,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setEquippedItems(gameData.equipment.equipped);
       setLoginStreak(gameData.loginStreak || 0);
       setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
-      setVocabulary(vocabData);
     } catch (error) { console.error("Error refreshing user data:", error);
     } finally { setIsLoadingUserData(false); }
   }, []);
@@ -207,10 +197,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
       if (user) {
         setIsLoadingUserData(true);
-        
-        fetchAndSyncVocabularyData(user.uid)
-          .then(setVocabulary)
-          .catch(err => console.error("Failed to fetch initial vocabulary data:", err));
         
         const userDocRef = doc(db, 'users', user.uid);
         
@@ -264,7 +250,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]); setLoginStreak(0); setLastCheckIn(null);
         setEquippedItems({ weapon: null, armor: null, Helmet: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
         setIsMailboxOpen(false);
-        setVocabulary([]);
       }
     });
 
@@ -393,10 +378,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => { setCoins(updates.newCoins); setGems(updates.newGems); setTotalVocabCollected(updates.newTotalVocab); };
   const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => { if (updates.coins !== undefined) setCoins(updates.coins); if (updates.masteryCards !== undefined) setMasteryCards(updates.masteryCards); };
   
-  const handleVocabularyUpdate = (newVocabulary: VocabularyItem[]) => {
-    setVocabulary(newVocabulary);
-  };
-
   const toggleRank = createToggleFunction(setIsRankOpen);
   const togglePvpArena = createToggleFunction(setIsPvpArenaOpen);
   const toggleLuckyGame = createToggleFunction(setIsLuckyGameOpen);
@@ -465,12 +446,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isMailboxOpen,
     is777GameOpen,
     isAnyOverlayOpen, isGamePaused,
-    vocabulary,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
     getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
     updateUserCurrency,
     updateCoins,
-    handleVocabularyUpdate,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
     toggleAuctionHouse,
