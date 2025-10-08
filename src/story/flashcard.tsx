@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import BackButton from '../ui/back-button.tsx';
 import { ExampleSentence, Flashcard as CoreFlashcard } from './flashcard-data.ts';
-import { generateAudioUrlsForWord } from '../voca-data/audio-quiz-generator.ts';
+import { generateAudioUrlsForWord, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
 
 // Đổi tên interface để tránh xung đột với tên component, mặc dù vẫn dùng chung cấu trúc từ file data
 interface FlashcardData extends CoreFlashcard {}
@@ -86,10 +86,18 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'example' | 'vocabulary'>('basic');
   
+  // Audio state for Vocabulary tab
   const [audioUrls, setAudioUrls] = useState<{ [key: string]: string } | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<string>('Matilda');
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  
+  // --- NEW: Audio state for Example tab sentences ---
+  const examAudioRef = useRef<HTMLAudioElement>(null);
+  const [examAudioState, setExamAudioState] = useState<{ index: number | null; isPlaying: boolean }>({
+    index: null,
+    isPlaying: false,
+  });
 
   useEffect(() => {
     if (showVocabDetail && selectedCard) {
@@ -103,6 +111,9 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
       }
+      // Reset example audio player as well
+      if (examAudioRef.current) examAudioRef.current.pause();
+      setExamAudioState({ index: null, isPlaying: false });
     }
   }, [showVocabDetail, selectedCard]);
 
@@ -132,7 +143,35 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     }
     setSelectedVoice(availableVoices[nextIndex]);
   }, [audioUrls, selectedVoice]);
+  
+  // --- NEW: Handler for playing example sentence audio ---
+  const handleToggleExampleAudio = useCallback((sentenceIndex: number) => {
+    const audio = examAudioRef.current;
+    if (!audio) return;
+    
+    // If clicking the currently playing sentence, toggle pause/play
+    if (examAudioState.index === sentenceIndex) {
+      if (audio.paused) {
+        audio.play().catch(e => console.error("Error playing example audio:", e));
+      } else {
+        audio.pause();
+      }
+    } else {
+      // If clicking a new sentence, get its audio and play
+      const urls = generateAudioUrlsForExamSentence(sentenceIndex);
+      if (urls && urls['Matilda']) {
+        audio.src = urls['Matilda'];
+        audio.play().catch(e => console.error("Error playing example audio:", e));
+        setExamAudioState({ index: sentenceIndex, isPlaying: true });
+      } else {
+        console.warn(`No audio found for sentence index: ${sentenceIndex}`);
+        setExamAudioState({ index: null, isPlaying: false });
+      }
+    }
+  }, [examAudioState.index]);
 
+
+  // Effect for Vocabulary Audio Player
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -148,6 +187,26 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     };
   }, []);
 
+  // --- NEW: Effect for Example Audio Player ---
+  useEffect(() => {
+    const audio = examAudioRef.current;
+    if (!audio) return;
+    const handlePlay = () => setExamAudioState(prev => ({ ...prev, isPlaying: true }));
+    const handlePause = () => setExamAudioState(prev => ({ ...prev, isPlaying: false }));
+    const handleEnded = () => setExamAudioState({ index: null, isPlaying: false });
+
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, []);
+
+
   if (!showVocabDetail || !selectedCard) {
     return null;
   }
@@ -161,9 +220,10 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   const renderModalContent = () => {
     const wordToFind = selectedCard.vocabulary.word;
 
-    const filteredSentences = exampleSentencesData.filter(sentence =>
-        new RegExp(`\\b${wordToFind}\\b`, 'i').test(sentence.english)
-    );
+    const filteredSentencesWithIndex = exampleSentencesData
+        .map((sentence, index) => ({ ...sentence, originalIndex: index }))
+        .filter(sentence => new RegExp(`\\b${wordToFind}\\b`, 'i').test(sentence.english));
+
 
     const highlightWord = (sentence: string, word: string) => {
         const parts = sentence.split(new RegExp(`(${word})`, 'gi'));
@@ -224,27 +284,64 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         return (
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
             <div className="max-w-4xl mx-auto">
-              <div className="flex items-center gap-2 mb-8">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 dark:text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="font-sans text-base font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                  {wordToFind}
-                </span>
+              {/* --- MODIFIED: Header with audio player for the word --- */}
+              <div className="flex items-center justify-between gap-4 mb-8">
+                <div className="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 dark:text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-sans text-base font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                    {wordToFind}
+                  </span>
+                </div>
+
+                {audioUrls && (
+                   <div className="flex items-center gap-2 flex-shrink-0">
+                       <button
+                         onClick={togglePlay}
+                         className={`flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 ${isPlaying ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'}`}
+                         aria-label={isPlaying ? 'Dừng phát từ' : 'Phát âm từ'}
+                       >
+                         { isPlaying ? <PauseIcon className="w-4 h-4" /> : <VolumeUpIcon className="w-4 h-4" /> }
+                       </button>
+                       <VoiceStepper
+                          currentVoice={selectedVoice}
+                          onNavigate={handleChangeVoiceDirection}
+                          availableVoiceCount={Object.keys(audioUrls).length}
+                       />
+                   </div>
+                )}
               </div>
 
-              {filteredSentences.length > 0 ? (
+              {filteredSentencesWithIndex.length > 0 ? (
                 <div className="space-y-4">
-                  {filteredSentences.map((sentence, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-900/70 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                      <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed font-medium">
-                        {highlightWord(sentence.english, wordToFind)}
-                      </p>
-                      <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm italic">
-                        {sentence.vietnamese}
-                      </p>
-                    </div>
-                  ))}
+                  {filteredSentencesWithIndex.map((sentence, index) => {
+                    const isCurrentAudio = examAudioState.index === sentence.originalIndex;
+                    const isThisPlaying = isCurrentAudio && examAudioState.isPlaying;
+                    
+                    return (
+                        <div key={index} className="relative bg-gray-50 dark:bg-gray-900/70 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                          <button
+                            onClick={() => handleToggleExampleAudio(sentence.originalIndex)}
+                            className={`absolute top-3 right-3 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 
+                              ${isThisPlaying 
+                                ? 'bg-blue-500 text-white' 
+                                : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700'
+                              }`}
+                            aria-label={isThisPlaying ? 'Dừng phát câu' : 'Phát âm câu'}
+                          >
+                            { isThisPlaying ? <PauseIcon className="w-4 h-4" /> : <VolumeUpIcon className="w-4 h-4" /> }
+                          </button>
+                        
+                          <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed font-medium pr-10">
+                            {highlightWord(sentence.english, wordToFind)}
+                          </p>
+                          <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm italic">
+                            {sentence.vietnamese}
+                          </p>
+                        </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12 px-6 bg-gray-50 dark:bg-gray-900 rounded-xl">
@@ -261,7 +358,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
       case 'vocabulary':
         return (
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
-            <audio ref={audioRef} src={currentAudioUrl || ''} key={currentAudioUrl} preload="auto" className="hidden" />
             <div className="max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
@@ -397,6 +493,10 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   return (
     <>
       <style>{animations}</style>
+
+      {/* Hidden audio players for both vocab and examples */}
+      <audio ref={audioRef} src={currentAudioUrl || ''} key={currentAudioUrl} preload="auto" className="hidden" />
+      <audio ref={examAudioRef} preload="auto" className="hidden" />
 
       <div
         className="fixed inset-0 bg-black bg-opacity-40 z-40"
