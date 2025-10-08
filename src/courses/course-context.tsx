@@ -75,12 +75,10 @@ export const useQuizApp = () => {
 // --- Props cho Provider ---
 interface QuizAppProviderProps {
   children: ReactNode;
-  hideNavBar?: () => void;
-  showNavBar?: () => void;
 }
 
 // --- Provider Component: Nơi chứa tất cả State và Logic ---
-export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hideNavBar, showNavBar }) => {
+export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) => {
   const [currentView, setCurrentView] = useState('main');
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
@@ -135,18 +133,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children, hide
       setMasteryCount(0);
     }
   }, [user]);
-
-  // Effect điều khiển NavBar của component cha
-  useEffect(() => {
-    if (currentView !== 'main') {
-      hideNavBar?.();
-    } else {
-      showNavBar?.();
-    }
-    return () => {
-      showNavBar?.();
-    };
-  }, [currentView, hideNavBar, showNavBar]);
 
   // --- Các hàm xử lý (Handlers) ---
   const handleQuizSelect = useCallback((quiz) => {
