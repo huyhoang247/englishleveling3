@@ -28,7 +28,7 @@ export interface AudioQuizQuestion {
  * Hàm này có thể được tái sử dụng ở nhiều nơi (Quiz, Flashcard Detail, ...).
  *
  * @param word - Từ tiếng Anh cần tạo URL audio.
- * @returns Một object chứa các URL audio cho mỗi giọng đọc, hoặc null nếu không tìm thấy từ hoặc từ nằm trong khoảng bị bỏ qua.
+ * @returns Một object chứa các URL audio cho mỗi giọng đọc, hoặc null nếu không tìm thấy từ hoặc từ nằm trong khoảng không có audio.
  */
 export const generateAudioUrlsForWord = (word: string): { [voiceName: string]: string } | null => {
     const wordLowerCase = word.toLowerCase();
@@ -39,17 +39,11 @@ export const generateAudioUrlsForWord = (word: string): { [voiceName: string]: s
         return null;
     }
 
-    let audioDirectory: string;
+    let audioDirectory: string | null = null; // BẮT ĐẦU SỬA: Khởi tạo là null
     if (index < 1000) { audioDirectory = 'audio1'; }
     else if (index < 2000) { audioDirectory = 'audio2'; }
     else if (index >= 2000 && index < 2400) { audioDirectory = 'audio3'; }
-    // --- THAY ĐỔI CHÍNH Ở ĐÂY ---
-    // Xử lý khoảng trống từ 2400 đến 2999: không tính là từ vựng có audio
-    else if (index >= 2400 && index < 3000) {
-        console.warn(`Word at index ${index} is in a skipped range (2400-2999) and has no associated audio.`);
-        return null; // Trả về null để bỏ qua từ này
-    }
-    // ----------------------------
+    // Khoảng từ 2400 đến 2999 được bỏ trống một cách có chủ đích
     else if (index >= 3000 && index < 4000) { audioDirectory = 'audio4'; }
     else if (index >= 4000 && index < 4700) { audioDirectory = 'audio5'; }
     else if (index >= 5000 && index < 6000) { audioDirectory = 'audio6'; }
@@ -58,11 +52,14 @@ export const generateAudioUrlsForWord = (word: string): { [voiceName: string]: s
     else if (index >= 8000 && index < 9000) { audioDirectory = 'audio9'; }
     else if (index >= 9000 && index < 10000) { audioDirectory = 'audio10'; }
     else if (index >= 10000) { audioDirectory = 'audio11'; }
-    else {
-        // Khối else này giờ chỉ bắt các trường hợp không mong muốn khác
-        audioDirectory = 'audio_default';
-        console.warn(`Word at index ${index} is in an unhandled audio directory range.`);
+    
+    // SỬA: Nếu không có thư mục audio nào được gán, từ này không có file audio.
+    // Trả về null để hàm gọi biết và bỏ qua nó.
+    if (audioDirectory === null) {
+        console.warn(`Word "${word}" at index ${index} is in an unhandled audio directory range. Skipping audio URL generation.`);
+        return null;
     }
+    // KẾT THÚC SỬA
     
     const audioNumber = (index + 1).toString().padStart(3, '0');
     
@@ -139,7 +136,7 @@ export const generateAudioQuizQuestions = (userVocabulary: string[]): AudioQuizQ
         // Sử dụng hàm helper mới để lấy URL audio.
         const generatedAudioUrls = generateAudioUrlsForWord(item.word);
         
-        // Nếu không tạo được URL (từ không tồn tại hoặc bị bỏ qua), bỏ qua câu hỏi này.
+        // Nếu không tạo được URL (từ không tồn tại), bỏ qua câu hỏi này.
         if (!generatedAudioUrls) {
             return null;
         }
