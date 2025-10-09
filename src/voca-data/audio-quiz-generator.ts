@@ -84,6 +84,12 @@ export const generateAudioUrlsForExamSentence = (sentenceIndex: number): { [voic
     if (sentenceIndex < 1000) { audioDirectory = 'audio1'; }
     else if (sentenceIndex < 2000) { audioDirectory = 'audio2'; }
     else if (sentenceIndex < 3000) { audioDirectory = 'audio3'; }
+    else if (sentenceIndex < 4000) { audioDirectory = 'audio4'; }
+    else if (sentenceIndex < 5000) { audioDirectory = 'audio5'; }
+    else if (sentenceIndex < 6000) { audioDirectory = 'audio6'; }
+    else if (sentenceIndex < 7000) { audioDirectory = 'audio7'; }
+    else if (sentenceIndex < 8000) { audioDirectory = 'audio8'; }
+    else if (sentenceIndex < 9000) { audioDirectory = 'audio9'; }
     else {
         // Xử lý các trường hợp ngoài phạm vi nếu cần
         audioDirectory = 'audio_default_exam';
