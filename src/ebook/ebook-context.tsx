@@ -84,7 +84,7 @@ interface EbookContextType {
   hiddenWords: Map<number, HiddenWordState>;
   activeHiddenWordIndex: number | null;
   correctlyGuessedCount: number;
-  isClozeTestModalOpen: boolean; // THÊM MỚI
+  isClozeTestModalOpen: boolean;
 
   // --- NEW: Expose example sentences ---
   exampleSentences: ExampleSentence[];
@@ -123,8 +123,8 @@ interface EbookContextType {
   handleHiddenWordClick: (wordIndex: number) => void;
   handleClozeTestInput: (value: string) => void;
   dismissKeyboard: () => void;
-  setIsClozeTestModalOpen: Dispatch<SetStateAction<boolean>>; // THÊM MỚI
-  closeClozeTestModal: () => void; // THÊM MỚI
+  setIsClozeTestModalOpen: Dispatch<SetStateAction<boolean>>;
+  closeClozeTestModal: () => void; 
 
 }
 
@@ -159,7 +159,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const [selectedVoiceKey, setSelectedVoiceKey] = useState<string | null>(null);
   const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'vi' | 'bilingual'>('en');
 
-  const [isClozeTestModalOpen, setIsClozeTestModalOpen] = useState(false); // THÊM MỚI
+  const [isClozeTestModalOpen, setIsClozeTestModalOpen] = useState(false); 
   const [isClozeTestActive, setIsClozeTestActive] = useState(false);
   const [hiddenWordCount, _setHiddenWordCount] = useState(10);
   const [hiddenWords, setHiddenWords] = useState<Map<number, HiddenWordState>>(new Map());
@@ -208,7 +208,8 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   
   useEffect(() => {
     setSubtitleLanguage('en');
-    closeClozeTestModal(); // Đảm bảo modal và state được reset khi đổi sách
+    stopClozeTest(); // Ensure test is stopped when changing books
+    setIsClozeTestModalOpen(false);
   }, [selectedBookId]);
 
   const availableVoices = useMemo(() => currentBook?.audioUrls ? Object.keys(currentBook.audioUrls) : [], [currentBook]);
@@ -354,6 +355,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     setHiddenWords(newHiddenWords);
     setIsClozeTestActive(true);
     setActiveHiddenWordIndex(null);
+    setIsClozeTestModalOpen(false); // MODIFIED: Close modal on start
   }, [currentBook, hiddenWordCount]);
 
   const stopClozeTest = () => {
@@ -362,8 +364,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     setActiveHiddenWordIndex(null);
   };
   
-  const closeClozeTestModal = () => { // THÊM MỚI
-      stopClozeTest();
+  const closeClozeTestModal = () => { 
       setIsClozeTestModalOpen(false);
   }
 
@@ -423,6 +424,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
 
   // --- UPDATED: Lấy toàn bộ object Flashcard từ map ---
   const handleWordClick = (word: string) => {
+    if (isClozeTestActive) return; // Prevent clicking words during test
     const normalizedWord = word.toLowerCase();
     const foundCard = WORD_TO_CARD_MAP.get(normalizedWord);
     if (foundCard) {
@@ -457,7 +459,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     exampleSentences: exampleData, // Thêm exampleData vào context
     isClozeTestActive, hiddenWordCount, hiddenWords, activeHiddenWordIndex, correctlyGuessedCount,
     setHiddenWordCount, startClozeTest, stopClozeTest, handleHiddenWordClick, handleClozeTestInput, dismissKeyboard,
-    isClozeTestModalOpen, setIsClozeTestModalOpen, closeClozeTestModal, // THÊM MỚI
+    isClozeTestModalOpen, setIsClozeTestModalOpen, closeClozeTestModal,
   };
 
   return <EbookContext.Provider value={value}>{children}</EbookContext.Provider>;
