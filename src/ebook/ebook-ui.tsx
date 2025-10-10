@@ -300,16 +300,13 @@ const EbookReaderContent: React.FC = () => {
       );
     }
     
+    // Đây là chế độ 'en' (bản gốc)
     const contentLines = displayedContent.trim().split(/\n+/);
     return (
       <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
         {contentLines.map((line, index) => {
           if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
           const isHeader = line.length < 80 && !line.includes('.') && !line.includes('?');
-          if (subtitleLanguage === 'vi') {
-             if (isHeader) return <h3 key={`line-${index}`} className="text-xl font-bold dark:text-white mt-6 mb-4 text-center">{line}</h3>;
-            return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{line}</p>;
-          }
           const renderableParts = renderHighlightedText(line);
           if (isHeader) return <h3 key={`line-${index}`} className="text-xl font-bold dark:text-white mt-6 mb-4 text-center">{renderableParts}</h3>;
           return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
@@ -361,8 +358,7 @@ const EbookReaderContent: React.FC = () => {
   };
   
   const getTranslateButtonText = () => {
-    if (subtitleLanguage === 'en') return 'Xem bản dịch';
-    if (subtitleLanguage === 'vi') return 'Xem song ngữ';
+    if (subtitleLanguage === 'en') return 'Xem song ngữ';
     return 'Xem bản gốc';
   };
 
