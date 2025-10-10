@@ -360,24 +360,26 @@ const EbookReaderContent: React.FC = () => {
 
   // --- NEW: Action Toolbar Component ---
   const ActionToolbar = () => (
-    <div className="bg-gray-100/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 py-2">
-        <div className="max-w-3xl mx-auto flex justify-center items-center gap-4 px-4">
-            {currentUser && bookVocabularyCardIds.length > 0 && (
-                <button onClick={() => setIsBatchPlaylistModalOpen(true)} className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-lg transition-colors">
-                    <SaveIcon />
-                    <span>Lưu {bookVocabularyCardIds.length} từ</span>
+    <div className="bg-gray-200 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700">
+        <div className="max-w-3xl mx-auto px-4">
+            <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-2">
+                {currentUser && bookVocabularyCardIds.length > 0 && (
+                    <button onClick={() => setIsBatchPlaylistModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm transition-colors">
+                        <SaveIcon />
+                        <span>Lưu</span>
+                    </button>
+                )}
+                <button onClick={() => setIsStatsModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm transition-colors">
+                    <StatsIcon />
+                    <span>Thống kê</span>
                 </button>
-            )}
-            <button onClick={() => setIsStatsModalOpen(true)} className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-lg transition-colors">
-                <StatsIcon />
-                <span>Thống kê</span>
-            </button>
-            {currentBook && (
-                <button onClick={() => setIsClozeTestModalOpen(true)} className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-lg transition-colors">
-                    <PracticeIcon />
-                    <span>Luyện tập</span>
-                </button>
-            )}
+                {currentBook && (
+                    <button onClick={() => setIsClozeTestModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm transition-colors">
+                        <PracticeIcon />
+                        <span>Luyện tập</span>
+                    </button>
+                )}
+            </div>
         </div>
     </div>
   );
@@ -472,6 +474,8 @@ const EbookReaderContent: React.FC = () => {
         .animate-shake { animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );
