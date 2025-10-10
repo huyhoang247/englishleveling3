@@ -1,4 +1,4 @@
-// --- START OF FILE EbookContext.tsx ---
+// --- START OF FILE EbookContext.tsx (FIXED & UPDATED) ---
 
 import React, {
   createContext,
@@ -16,34 +16,20 @@ import { auth, db } from '../firebase.js';
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 
-// --- DATA IMPORTS ---
-import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
-import { defaultImageUrls as gameImageUrls } from '../voca-data/image-url.ts';
+// --- DATA IMPORTS (UPDATED) ---
+// Thay thế các import cũ bằng import từ flashcard-data làm nguồn dữ liệu duy nhất
+import { 
+  Flashcard, 
+  VocabularyData as Vocabulary, // Dùng alias để nhất quán với code cũ
+  ExampleSentence, 
+  WORD_TO_CARD_MAP, 
+  exampleData 
+} from '../story/flashcard-data.ts'; // Giả sử đây là đường dẫn đúng
 import { Book, sampleBooks as initialSampleBooks } from '../books-data.ts';
 import { phraseData } from '../phrase-data-2.ts';
 
 // --- TYPE DEFINITIONS ---
-export interface Vocabulary {
-  word: string;
-  meaning: string;
-  example: string;
-  phrases: string[];
-  popularity: "Cao" | "Trung bình" | "Thấp";
-  synonyms: string[];
-  antonyms: string[];
-}
-
-export interface Flashcard {
-  id: number;
-  imageUrl: {
-    default: string;
-    anime?: string;
-    comic?: string;
-    realistic?: string;
-  };
-  isFavorite: boolean;
-  vocabulary: Vocabulary;
-}
+// Các interface Vocabulary và Flashcard cục bộ đã được xóa vì giờ chúng ta import chúng
 
 export interface Playlist {
   id: string;
@@ -65,7 +51,6 @@ export interface BookStats {
   wordFrequencies: Map<string, number>;
 }
 
-// --- NEW TYPES FOR CLOZE TEST ---
 export interface HiddenWordState {
   originalWord: string;
   userInput: string;
@@ -73,7 +58,7 @@ export interface HiddenWordState {
 }
 
 
-// --- TYPE FOR THE CONTEXT VALUE ---
+// --- TYPE FOR THE CONTEXT VALUE (UPDATED) ---
 interface EbookContextType {
   // State
   booksData: Book[];
@@ -103,6 +88,9 @@ interface EbookContextType {
   hiddenWords: Map<number, HiddenWordState>;
   activeHiddenWordIndex: number | null;
   correctlyGuessedCount: number;
+
+  // --- NEW: Expose example sentences ---
+  exampleSentences: ExampleSentence[];
 
   // Refs
   audioPlayerRef: React.RefObject<HTMLAudioElement>;
@@ -178,13 +166,11 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const [selectedVoiceKey, setSelectedVoiceKey] = useState<string | null>(null);
   const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'vi' | 'bilingual'>('en');
 
-  // --- NEW STATES FOR CLOZE TEST ---
   const [isClozeTestActive, setIsClozeTestActive] = useState(false);
   const [hiddenWordCount, _setHiddenWordCount] = useState(10);
   const [hiddenWords, setHiddenWords] = useState<Map<number, HiddenWordState>>(new Map());
   const [activeHiddenWordIndex, setActiveHiddenWordIndex] = useState<number | null>(null);
 
-  // --- HOOKS & LOGIC ---
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(user => setCurrentUser(user));
     return unsubscribeAuth;
@@ -203,18 +189,11 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     return unsubscribeFirestore;
   }, [currentUser]);
 
+  // --- UPDATED: Tạo vocabMap từ WORD_TO_CARD_MAP ---
   useEffect(() => {
     const tempMap = new Map<string, Vocabulary>();
-    defaultVocabulary.forEach((word, index) => {
-      tempMap.set(word.toLowerCase(), {
-        word: word,
-        meaning: `Nghĩa của từ "${word}" (ví dụ).`,
-        example: `Đây là một câu ví dụ sử dụng từ "${word}".`,
-        phrases: [`Cụm từ với ${word} A`, `Cụm từ với ${word} B`],
-        popularity: (index % 3 === 0 ? "Cao" : (index % 2 === 0 ? "Trung bình" : "Thấp")),
-        synonyms: [`Từ đồng nghĩa với ${word} 1`, `Từ đồng nghĩa với ${word} 2`],
-        antonyms: [`Từ trái nghĩa với ${word} 1`, `Từ trái nghĩa với ${word} 2`],
-      });
+    WORD_TO_CARD_MAP.forEach(card => {
+      tempMap.set(card.vocabulary.word.toLowerCase(), card.vocabulary);
     });
     setVocabMap(tempMap);
     setIsLoadingVocab(false);
@@ -255,16 +234,18 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     setSelectedVoiceKey(availableVoices.length > 0 ? availableVoices[0] : null);
   }, [availableVoices]);
 
+  // --- UPDATED: Lấy card ID trực tiếp từ WORD_TO_CARD_MAP ---
   const bookVocabularyCardIds = useMemo(() => {
-    if (!currentBook || vocabMap.size === 0) return [];
+    if (!currentBook || WORD_TO_CARD_MAP.size === 0) return [];
     const wordsInBook = new Set<string>();
     const allWords = currentBook.content.match(/\b\w+\b/g) || [];
     allWords.forEach(word => {
-        if (vocabMap.has(word.toLowerCase())) wordsInBook.add(word.toLowerCase());
+        if (WORD_TO_CARD_MAP.has(word.toLowerCase())) wordsInBook.add(word.toLowerCase());
     });
-    const cardIdMap = new Map(defaultVocabulary.map((word, index) => [word.toLowerCase(), index + 1]));
-    return Array.from(wordsInBook).map(word => cardIdMap.get(word)).filter((id): id is number => id !== undefined);
-  }, [currentBook, vocabMap]);
+    return Array.from(wordsInBook)
+      .map(word => WORD_TO_CARD_MAP.get(word)?.id)
+      .filter((id): id is number => id !== undefined);
+  }, [currentBook]);
 
   const bookStats = useMemo<BookStats | null>(() => {
     if (!currentBook || vocabMap.size === 0) return null;
@@ -349,8 +330,6 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
       audio.removeEventListener('ended', endedHandler);
     };
   }, []);
-
-  // --- NEW CLOZE TEST LOGIC ---
 
   const correctlyGuessedCount = useMemo(() => {
     let count = 0;
@@ -453,72 +432,34 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   };
 
 
-  // --- HANDLERS ---
   const handleSelectBook = (bookId: string) => setSelectedBookId(bookId);
   const handleBackToLibrary = () => setSelectedBookId(null);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
+  // --- UPDATED: Lấy toàn bộ object Flashcard từ map ---
   const handleWordClick = (word: string) => {
     const normalizedWord = word.toLowerCase();
-    const foundVocab = vocabMap.get(normalizedWord);
-    if (foundVocab) {
-      const vocabIndex = defaultVocabulary.findIndex(v => v.toLowerCase() === normalizedWord);
-      const cardImageUrl = (vocabIndex !== -1 && vocabIndex < gameImageUrls.length)
-        ? gameImageUrls[vocabIndex]
-        : `https://placehold.co/1024x1536/E0E0E0/333333?text=${encodeURIComponent(foundVocab.word)}`;
-      
-      setSelectedVocabCard({
-        id: vocabIndex !== -1 ? vocabIndex + 1 : Date.now(),
-        imageUrl: { default: cardImageUrl },
-        isFavorite: false,
-        vocabulary: foundVocab,
-      });
+    const foundCard = WORD_TO_CARD_MAP.get(normalizedWord);
+    if (foundCard) {
+      setSelectedVocabCard(foundCard); // Gán cả object card đầy đủ
       setShowVocabDetail(true);
     }
   };
-  const closeVocabDetail = () => { setSelectedVocabCard(null); setShowVocabDetail(false); };
 
+  const closeVocabDetail = () => { setSelectedVocabCard(null); setShowVocabDetail(false); };
   const handlePhraseClick = (phrase: PhraseSentence) => setSelectedPhrase(phrase);
   const closePhraseDetail = () => setSelectedPhrase(null);
-
-  const togglePlayPause = () => {
-    if (!audioPlayerRef.current) return;
-    isAudioPlaying ? audioPlayerRef.current.pause() : audioPlayerRef.current.play().catch(console.error);
-  };
-
-  const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (audioPlayerRef.current) {
-      const newTime = Number(event.target.value);
-      audioPlayerRef.current.currentTime = newTime;
-      setAudioCurrentTime(newTime);
-    }
-  };
-
-  const togglePlaybackSpeed = () => {
-    const speeds = [1.0, 1.25, 1.5];
-    const currentIndex = speeds.indexOf(playbackSpeed);
-    setPlaybackSpeed(speeds[(currentIndex + 1) % speeds.length]);
-  };
-
+  const togglePlayPause = () => { if (!audioPlayerRef.current) return; isAudioPlaying ? audioPlayerRef.current.pause() : audioPlayerRef.current.play().catch(console.error); };
+  const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => { if (audioPlayerRef.current) { const newTime = Number(event.target.value); audioPlayerRef.current.currentTime = newTime; setAudioCurrentTime(newTime); } };
+  const togglePlaybackSpeed = () => { const speeds = [1.0, 1.25, 1.5]; const currentIndex = speeds.indexOf(playbackSpeed); setPlaybackSpeed(speeds[(currentIndex + 1) % speeds.length]); };
   const handleVoiceChange = (direction: 'next' | 'previous') => {
       if (availableVoices.length <= 1 || !selectedVoiceKey) return;
       const currentIndex = availableVoices.indexOf(selectedVoiceKey);
       if (currentIndex === -1) return;
-      const nextIndex = direction === 'next'
-          ? (currentIndex + 1) % availableVoices.length
-          : (currentIndex - 1 + availableVoices.length) % availableVoices.length;
+      const nextIndex = direction === 'next' ? (currentIndex + 1) % availableVoices.length : (currentIndex - 1 + availableVoices.length) % availableVoices.length;
       setSelectedVoiceKey(availableVoices[nextIndex]);
   };
-  
-  const toggleSubtitleLanguage = () => {
-    if (isViSubAvailable) {
-      setSubtitleLanguage(prev => {
-        if (prev === 'en') return 'vi';
-        if (prev === 'vi') return 'bilingual';
-        return 'en';
-      });
-    }
-  };
+  const toggleSubtitleLanguage = () => { if (isViSubAvailable) setSubtitleLanguage(prev => prev === 'en' ? 'vi' : (prev === 'vi' ? 'bilingual' : 'en')); };
   
   const value: EbookContextType = {
     booksData, selectedBookId, vocabMap, isLoadingVocab, selectedVocabCard, showVocabDetail,
@@ -530,24 +471,14 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     togglePlaybackSpeed, setIsDarkMode, toggleSidebar, setIsBatchPlaylistModalOpen,
     setIsStatsModalOpen, setHighlightMode, handleVoiceChange,
     subtitleLanguage, isViSubAvailable, displayedContent, toggleSubtitleLanguage,
-    // --- NEW VALUES FOR CLOZE TEST ---
-    isClozeTestActive,
-    hiddenWordCount,
-    hiddenWords,
-    activeHiddenWordIndex,
-    correctlyGuessedCount,
-    setHiddenWordCount,
-    startClozeTest,
-    stopClozeTest,
-    handleHiddenWordClick,
-    handleClozeTestInput,
-    dismissKeyboard,
+    exampleSentences: exampleData, // Thêm exampleData vào context
+    isClozeTestActive, hiddenWordCount, hiddenWords, activeHiddenWordIndex, correctlyGuessedCount,
+    setHiddenWordCount, startClozeTest, stopClozeTest, handleHiddenWordClick, handleClozeTestInput, dismissKeyboard,
   };
 
   return <EbookContext.Provider value={value}>{children}</EbookContext.Provider>;
 };
 
-// --- CUSTOM HOOK ---
 export const useEbook = (): EbookContextType => {
   const context = useContext(EbookContext);
   if (context === undefined) {
@@ -556,4 +487,4 @@ export const useEbook = (): EbookContextType => {
   return context;
 };
 
-// --- END OF FILE EbookContext.tsx ---
+// --- END OF FILE EbookContext.tsx (FIXED & UPDATED) ---
