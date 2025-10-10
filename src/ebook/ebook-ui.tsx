@@ -1,8 +1,8 @@
 // --- START OF FILE game.tsx (FIXED & UPDATED) ---
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { EbookProvider, useEbook, Book, Vocabulary, PhraseSentence, HiddenWordState } from './ebook-context.tsx';
-import VirtualKeyboard from '../ui/keyboard.tsx'; // Đảm bảo đường dẫn này đúng với cấu trúc dự án của bạn
+import { EbookProvider, useEbook, Book, Vocabulary, PhraseSentence, HiddenWordState, ExampleSentence } from './ebook-context.tsx';
+import VirtualKeyboard from '../ui/keyboard.tsx'; 
 
 // --- COMPONENT & MODAL IMPORTS ---
 import FlashcardDetailModal from '../story/flashcard.tsx';
@@ -87,6 +87,7 @@ const EbookReaderContent: React.FC = () => {
     currentUser, playlists, selectedPhrase, isStatsModalOpen, bookStats, vocabMap,
     availableVoices, selectedVoiceKey, isLoadingVocab, phraseRegex, phraseMap,
     subtitleLanguage, isViSubAvailable, displayedContent,
+    exampleSentences, // THÊM MỚI: Lấy dữ liệu câu ví dụ từ context
 
     // Functions
     handleBackToLibrary, toggleSidebar, setIsDarkMode, handleSelectBook, setIsBatchPlaylistModalOpen,
@@ -164,7 +165,6 @@ const EbookReaderContent: React.FC = () => {
     return renderableParts;
   }
 
-  // --- FINAL VERSION: HiddenWordInput (V5 - Ultra Compact & Seamless) ---
   const HiddenWordInput: React.FC<{
     wordState: HiddenWordState;
     index: number;
@@ -172,8 +172,6 @@ const EbookReaderContent: React.FC = () => {
     isActive: boolean;
   }> = ({ wordState, index, onClick, isActive }) => {
       const { originalWord, userInput, status } = wordState;
-
-      // Khi đã đoán đúng
       if (status === 'correct') {
           return (
               <span 
@@ -183,35 +181,25 @@ const EbookReaderContent: React.FC = () => {
               </span>
           );
       }
-
-      // Các lớp CSS cho ô input được tối ưu
       let containerClasses = `
-          inline-block align-baseline              // <-- THAY ĐỔI: Dùng align-baseline cho căn chỉnh tự nhiên nhất
-          min-w-14                                 // Giảm chiều rộng tối thiểu một chút
-          mx-1 px-1.5 pb-px                        // <-- THAY ĐỔI: Bỏ padding dọc, chỉ thêm 1px đệm dưới
-          cursor-pointer rounded-t-sm              // Bo góc nhẹ phía trên
-          bg-gray-100/50 dark:bg-gray-700/40       // Làm nền mờ hơn
-          border-b-2 border-gray-300 dark:border-gray-600 // <-- THAY ĐỔI: Viền dưới mờ hơn khi không active
+          inline-block align-baseline
+          min-w-14
+          mx-1 px-1.5 pb-px
+          cursor-pointer rounded-t-sm
+          bg-gray-100/50 dark:bg-gray-700/40
+          border-b-2 border-gray-300 dark:border-gray-600
           hover:border-blue-500
           transition-all duration-200
           text-left
       `;
-
-      // Lớp cho chữ
       let textClasses = "font-bold text-gray-800 dark:text-gray-200";
-
-      // Style khi ô được chọn
       if (isActive) {
           containerClasses += " border-blue-500 ring-1 ring-blue-300/70";
       }
-
-      // Style khi trả lời sai
       if (status === 'incorrect') {
           containerClasses += " animate-shake border-red-500";
           textClasses = "font-bold text-red-500";
       }
-
-      // Render ô input
       return (
           <span className={containerClasses} onClick={onClick}>
               <span className={textClasses}>
@@ -221,7 +209,6 @@ const EbookReaderContent: React.FC = () => {
       );
   };
   
-  // --- NEW COMPONENT: ClozeTestControls ---
   const ClozeTestControls = () => (
     <div className="mt-6 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
         <div className="flex items-center justify-between">
@@ -252,14 +239,11 @@ const EbookReaderContent: React.FC = () => {
     </div>
   );
 
-  // --- UPDATED RENDER FUNCTION ---
   const renderBookContent = () => {
     if (isLoadingVocab) return <div className="text-center p-10 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
     if (!currentBook) return <div className="text-center p-10 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
     
-    // IF CLOZE TEST IS ACTIVE, IT OVERRIDES OTHER MODES
     if (isClozeTestActive) {
-        // Tách toàn bộ nội dung thành các đoạn văn dựa trên ký tự xuống dòng
         const paragraphs = currentBook.content.trim().split(/\n+/);
         let globalWordCounter = -1;
 
@@ -268,19 +252,16 @@ const EbookReaderContent: React.FC = () => {
                 {paragraphs.map((paragraph, pIndex) => {
                     if (paragraph.trim() === '') return <div key={`blank-${pIndex}`} className="h-3 sm:h-4"></div>;
 
-                    // Tách từng đoạn văn thành từ và các phần khác (dấu câu, khoảng trắng)
                     const parts = paragraph.split(/(\b[a-zA-Z']+\b)/g);
                     
                     return (
                         <p key={`p-${pIndex}`} className="text-base sm:text-lg leading-loose sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">
                             {parts.map((part, partIndex) => {
-                                // Nếu phần tử là một từ
                                 if (/\b[a-zA-Z']+\b/.test(part)) {
-                                    globalWordCounter++; // Tăng biến đếm từ toàn cục
+                                    globalWordCounter++;
                                     const currentWordIndex = globalWordCounter;
                                     const hiddenWordState = hiddenWords.get(currentWordIndex);
 
-                                    // Nếu từ này nằm trong danh sách ẩn
                                     if (hiddenWordState) {
                                         return (
                                             <HiddenWordInput
@@ -293,7 +274,6 @@ const EbookReaderContent: React.FC = () => {
                                         );
                                     }
                                 }
-                                // Render từ bình thường hoặc các phần tử không phải từ
                                 return <span key={`part-${partIndex}`}>{part}</span>;
                             })}
                         </p>
@@ -303,7 +283,6 @@ const EbookReaderContent: React.FC = () => {
         );
     }
     
-    // BILINGUAL MODE
     if (subtitleLanguage === 'bilingual') {
       return (
         <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
@@ -334,7 +313,6 @@ const EbookReaderContent: React.FC = () => {
       );
     }
 
-    // SINGLE LANGUAGE MODE (EN or VI)
     const contentLines = displayedContent.trim().split(/\n+/);
     return (
       <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
@@ -474,7 +452,9 @@ const EbookReaderContent: React.FC = () => {
         </div>
       )}
 
-      {selectedVocabCard && showVocabDetail && <FlashcardDetailModal selectedCard={selectedVocabCard} showVocabDetail={showVocabDetail} exampleSentencesData={[]} onClose={closeVocabDetail} currentVisualStyle="default" />}
+      {/* --- UPDATED: Truyền exampleSentences vào modal --- */}
+      {selectedVocabCard && showVocabDetail && <FlashcardDetailModal selectedCard={selectedVocabCard} showVocabDetail={showVocabDetail} exampleSentencesData={exampleSentences} onClose={closeVocabDetail} currentVisualStyle="default" />}
+      
       {isBatchPlaylistModalOpen && <AddToPlaylistModal isOpen={isBatchPlaylistModalOpen} onClose={() => setIsBatchPlaylistModalOpen(false)} cardIds={bookVocabularyCardIds} currentUser={currentUser} existingPlaylists={playlists} />}
       <PhraseDetailModal isOpen={!!selectedPhrase} onClose={closePhraseDetail} phrase={selectedPhrase} />
       <BookStatsModal isOpen={isStatsModalOpen} onClose={() => setIsStatsModalOpen(false)} stats={bookStats} bookTitle={currentBook?.title || ''} vocabMap={vocabMap} />
