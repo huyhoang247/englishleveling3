@@ -138,7 +138,7 @@ const EbookReaderContent: React.FC = () => {
     handleBackToLibrary, toggleSidebar, setIsDarkMode, handleSelectBook, setIsBatchPlaylistModalOpen,
     setIsStatsModalOpen, handleWordClick, closeVocabDetail,
     togglePlayPause, handleSeek, togglePlaybackSpeed, handleVoiceChange,
-    toggleSubtitleLanguage,
+    handleSetSubtitleLanguage,
 
     // CLOZE TEST VALUES
     isClozeTestActive, stopClozeTest, hiddenWords, hiddenWordCount, correctlyGuessedCount,
@@ -356,30 +356,40 @@ const EbookReaderContent: React.FC = () => {
     const seconds = Math.floor(time % 60).toString().padStart(2, '0');
     return `${minutes}:${seconds}`;
   };
-  
-  const getTranslateButtonText = () => {
-    if (subtitleLanguage === 'en') return 'Xem song ngữ';
-    return 'Xem bản gốc';
-  };
 
   return (
     <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
       {selectedBookId && (
         <header className="flex items-center justify-between p-3 bg-gray-950 dark:bg-gray-950 shadow-md sticky top-0 z-20 py-2 sm:py-3">
             <BackButton onClick={handleBackToLibrary} />
-            {currentBook && subtitleLanguage !== 'vi' && (
-              isClozeTestActive ? (
-                 <button onClick={stopClozeTest} className="inline-flex items-center px-4 py-2 border border-red-500 text-sm font-medium rounded-md shadow-sm text-red-400 bg-red-500/10 hover:bg-red-500/20">
-                    <XIcon />
-                    <span className="ml-2">Dừng</span>
-                 </button>
-              ) : (
-                <button onClick={() => setIsClozeTestModalOpen(true)} className="inline-flex items-center px-4 py-2 border border-yellow-500 text-sm font-medium rounded-md shadow-sm text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20">
-                  <PracticeIcon />
-                  Luyện tập
-                </button>
-              )
-            )}
+            
+            <div className="flex items-center gap-4">
+              {isViSubAvailable && (
+                <div className="bg-gray-800 p-1 rounded-full flex items-center text-xs">
+                  <button onClick={() => handleSetSubtitleLanguage('en')} className={`px-3 py-1 font-bold text-white rounded-full transition-colors duration-200 ${ subtitleLanguage === 'en' ? 'bg-blue-600' : 'hover:bg-white/10' }`}>
+                    EN
+                  </button>
+                  <button onClick={() => handleSetSubtitleLanguage('bilingual')} className={`px-3 py-1 font-bold text-white rounded-full transition-colors duration-200 ${ subtitleLanguage === 'bilingual' ? 'bg-blue-600' : 'hover:bg-white/10' }`}>
+                    VI
+                  </button>
+                </div>
+              )}
+
+              {currentBook && (
+                isClozeTestActive ? (
+                  <button onClick={stopClozeTest} className="inline-flex items-center px-4 py-2 border border-red-500 text-sm font-medium rounded-md shadow-sm text-red-400 bg-red-500/10 hover:bg-red-500/20">
+                      <XIcon />
+                      <span className="ml-2 hidden sm:inline">Dừng</span>
+                  </button>
+                ) : (
+                  <button onClick={() => setIsClozeTestModalOpen(true)} className="inline-flex items-center px-4 py-2 border border-yellow-500 text-sm font-medium rounded-md shadow-sm text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20">
+                    <PracticeIcon />
+                    <span className="hidden sm:inline">Luyện tập</span>
+                  </button>
+                )
+              )}
+            </div>
+
             <div className="w-12"></div> {/* Spacer to balance header */}
         </header>
       )}
@@ -402,11 +412,6 @@ const EbookReaderContent: React.FC = () => {
                 <div className="mt-6 flex flex-wrap justify-center items-center gap-4">
                   {currentUser && bookVocabularyCardIds.length > 0 && (<button onClick={() => setIsBatchPlaylistModalOpen(true)} className="inline-flex items-center px-4 py-2 border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>Lưu {bookVocabularyCardIds.length} từ vựng</button>)}
                   <button onClick={() => setIsStatsModalOpen(true)} className="inline-flex items-center px-4 py-2 border dark:border-gray-600 text-sm font-medium rounded-md shadow-sm bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"><StatsIcon />Thống kê</button>
-                  {isViSubAvailable && (
-                    <button onClick={toggleSubtitleLanguage} className="inline-flex items-center px-4 py-2 border dark:border-gray-600 text-sm font-medium rounded-md shadow-sm bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                      <TranslateIcon />{getTranslateButtonText()}
-                    </button>
-                  )}
                 </div>
               </div>
             )}
