@@ -146,6 +146,8 @@ const EbookReaderContent: React.FC = () => {
     dismissKeyboard, setIsClozeTestModalOpen,
   } = useEbook();
 
+  const [activeTag, setActiveTag] = useState('All');
+
   const groupedBooks = useMemo(() => groupBooksByCategory(booksData), [booksData]);
 
   const pairedSentences = useMemo(() => {
@@ -320,35 +322,71 @@ const EbookReaderContent: React.FC = () => {
       return hiddenWords.get(activeHiddenWordIndex);
   }, [activeHiddenWordIndex, hiddenWords]);
   
-  const renderLibrary = () => (
-    <div className="p-4 md:p-6 lg:p-8 space-y-8">
-      {Object.entries(groupedBooks).map(([category, booksInCategory]) => (
-        <section key={category}>
-          <div className="flex justify-between items-center mb-3 md:mb-4">
-            {category === 'Technology & Future' ? (
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/youtube-logo.png" alt="YouTube" className="h-8" />
-            ) : (
-              <h2 className="text-xl md:text-2xl font-bold dark:text-white">{category}</h2>
-            )}
-            <button className="text-sm font-medium px-3 py-1 bg-gray-800/50 text-white rounded-lg hover:bg-gray-700/50 transition-colors dark:bg-gray-700/50 dark:hover:bg-gray-600/50">
-              See All
-            </button>
-          </div>
-          <div className="flex overflow-x-auto space-x-4 pb-4 -mx-4 px-4">
-            {booksInCategory.map(book => (
-              <div key={book.id} className="flex-shrink-0 w-36 sm:w-40 md:w-44 cursor-pointer group transform hover:-translate-y-1.5 transition-duration-200" onClick={() => handleSelectBook(book.id)}>
-                <div className="aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden shadow-lg mb-2 group-hover:shadow-xl">
-                  <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" />
-                </div>
-                <h3 className="text-sm font-semibold dark:text-gray-200 truncate group-hover:text-blue-600">{book.title}</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{book.author}</p>
-              </div>
+  const renderLibrary = () => {
+    const tags = ['All', 'Technology', 'Self-help', 'History', 'Business', 'Fiction', 'Science'];
+
+    return (
+      <div className="flex flex-col">
+        {/* --- Tag Bar --- */}
+        <div className="sticky top-0 bg-gray-50 dark:bg-gray-850 z-10 border-b border-gray-200 dark:border-gray-700/50">
+          <div className="flex items-center space-x-3 overflow-x-auto no-scrollbar p-3 px-4">
+            {tags.map(tag => (
+              <button 
+                key={tag}
+                onClick={() => setActiveTag(tag)}
+                className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors duration-200 
+                  ${activeTag === tag 
+                    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' 
+                    : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`
+                }
+              >
+                {tag}
+              </button>
             ))}
           </div>
-        </section>
-      ))}
-    </div>
-  );
+        </div>
+
+        {/* --- Books Grid --- */}
+        <div className="p-4 md:p-6 lg:p-8">
+          {Object.entries(groupedBooks).map(([category, booksInCategory]) => (
+            <section key={category} className="mb-10">
+              <div className="flex justify-between items-center mb-4">
+                 {category === 'Technology & Future' ? (
+                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/youtube-logo.png" alt="YouTube" className="h-8" />
+                ) : (
+                  <h2 className="text-xl md:text-2xl font-bold dark:text-white">{category}</h2>
+                )}
+                <button className="text-sm font-medium px-3 py-1 bg-gray-800/50 text-white rounded-lg hover:bg-gray-700/50 transition-colors dark:bg-gray-700/50 dark:hover:bg-gray-600/50">
+                  See All
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
+                {booksInCategory.map(book => (
+                  <div key={book.id} className="cursor-pointer group" onClick={() => handleSelectBook(book.id)}>
+                    {/* Thumbnail with 16:9 aspect ratio */}
+                    <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-xl overflow-hidden shadow-lg mb-3 group-hover:shadow-xl transition-shadow duration-300">
+                      <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                    {/* Book Info */}
+                    <div className="flex items-start space-x-3">
+                      {/* Optional: Add an author avatar circle here if you have the data */}
+                      {/* <div className="flex-shrink-0 w-9 h-9 bg-gray-300 rounded-full"></div> */}
+                      <div>
+                        <h3 className="text-base font-bold dark:text-gray-100 text-gray-900 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 line-clamp-2">{book.title}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{book.author}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   const formatTime = (time: number) => {
     if (isNaN(time) || time === Infinity) return "00:00";
@@ -482,6 +520,13 @@ const EbookReaderContent: React.FC = () => {
         .animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* For line-clamp */
+        .line-clamp-2 {
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+        }
       `}</style>
     </div>
   );
