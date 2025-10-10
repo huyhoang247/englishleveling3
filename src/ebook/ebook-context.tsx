@@ -78,7 +78,7 @@ interface EbookContextType {
   isBatchPlaylistModalOpen: boolean;
   isStatsModalOpen: boolean;
   selectedVoiceKey: string | null;
-  subtitleLanguage: 'en' | 'vi' | 'bilingual';
+  subtitleLanguage: 'en' | 'bilingual';
 
   // --- NEW STATES FOR CLOZE TEST ---
   isClozeTestActive: boolean;
@@ -159,7 +159,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const [isBatchPlaylistModalOpen, setIsBatchPlaylistModalOpen] = useState(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [selectedVoiceKey, setSelectedVoiceKey] = useState<string | null>(null);
-  const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'vi' | 'bilingual'>('en');
+  const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'bilingual'>('en');
 
   const [isClozeTestModalOpen, setIsClozeTestModalOpen] = useState(false); 
   const [isClozeTestActive, setIsClozeTestActive] = useState(false);
@@ -202,11 +202,9 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const isViSubAvailable = useMemo(() => !!currentBook?.contentVi, [currentBook]);
   
   const displayedContent = useMemo(() => {
-    if (subtitleLanguage === 'vi' && currentBook?.contentVi) {
-      return currentBook.contentVi;
-    }
+    // Chế độ 'vi' đã bị loại bỏ, chỉ còn chế độ 'en' sử dụng state này
     return currentBook?.content || '';
-  }, [currentBook, subtitleLanguage]);
+  }, [currentBook]);
   
   useEffect(() => {
     setSubtitleLanguage('en');
@@ -446,7 +444,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
       const nextIndex = direction === 'next' ? (currentIndex + 1) % availableVoices.length : (currentIndex - 1 + availableVoices.length) % availableVoices.length;
       setSelectedVoiceKey(availableVoices[nextIndex]);
   };
-  const toggleSubtitleLanguage = () => { if (isViSubAvailable) setSubtitleLanguage(prev => prev === 'en' ? 'vi' : (prev === 'vi' ? 'bilingual' : 'en')); };
+  const toggleSubtitleLanguage = () => { if (isViSubAvailable) setSubtitleLanguage(prev => prev === 'en' ? 'bilingual' : 'en'); };
   
   const value: EbookContextType = {
     booksData, selectedBookId, vocabMap, isLoadingVocab, selectedVocabCard, showVocabDetail,
