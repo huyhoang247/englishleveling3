@@ -1,4 +1,4 @@
-// --- START OF FILE course-context.tsx (FULL CODE - MODIFIED) ---
+// --- START OF FILE course-context.tsx ---
 
 import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode, useMemo } from 'react';
 import { auth } from '../firebase.js';
@@ -11,9 +11,11 @@ import {
   fetchOrCreateUser as fetchOrCreateUserService,
   updateUserCoins as updateUserCoinsService,
   fetchGameInitialData as fetchGameInitialDataService,
+  // --- START: DÒNG MỚI ---
   updateAchievementData as updateAchievementDataService,
   fetchAndSyncVocabularyData as fetchAndSyncVocabularyDataService,
   VocabularyItem,
+  // --- END: DÒNG MỚI ---
 } from './course-data-service.ts';
 // NEW: Import data and generators
 import { generateAudioUrlsForWord, generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
@@ -30,7 +32,6 @@ export interface Definition {
   explanation: string;
 }
 
-// <<< THAY ĐỔI: Cập nhật Interface để quản lý state từ vựng toàn cục >>>
 interface QuizAppContextType {
   currentView: string;
   selectedQuiz: any; 
@@ -54,18 +55,14 @@ interface QuizAppContextType {
   updateUserCoins: (amount: number) => Promise<void>;
   fetchOrCreateUser: () => Promise<any>;
   fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>;
+  // --- START: DÒNG MỚI ---
   fetchAndSyncVocabularyData: () => Promise<VocabularyItem[]>;
   updateAchievementData: (updates: {
     coinsToAdd: number;
     cardsToAdd: number;
     newVocabularyData: VocabularyItem[];
   }) => Promise<{ newCoins: number; newMasteryCards: number }>;
-
-  // <<< START: DÒNG MỚI - Quản lý state từ vựng toàn cục >>>
-  vocabulary: VocabularyItem[];
-  isVocabularyLoading: boolean;
-  setVocabularyState: (newVocabulary: VocabularyItem[]) => void; // Hàm để context con cập nhật state
-  // <<< END: DÒNG MỚI >>>
+  // --- END: DÒNG MỚI ---
 
   // --- NEW: Vocabulary data and utilities ---
   definitionsMap: { [key: string]: Definition };
@@ -103,11 +100,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   const [userCoins, setUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
   
-  // <<< START: DÒNG MỚI - State cho dữ liệu từ vựng toàn cục >>>
-  const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
-  const [isVocabularyLoading, setIsVocabularyLoading] = useState(true);
-  // <<< END: DÒNG MỚI >>>
-
   // NEW: Process vocabulary definitions once and provide via context
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
@@ -136,13 +128,10 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     return () => unsubscribe();
   }, []);
 
-  // <<< THAY ĐỔI: Gộp việc lắng nghe dữ liệu người dùng và tải dữ liệu từ vựng vào chung một effect >>>
+  // Effect lắng nghe dữ liệu người dùng (coins, mastery) real-time
   useEffect(() => {
-    let unsubscribeUserData: () => void = () => {};
-
     if (user) {
-      // 1. Lắng nghe dữ liệu người dùng (coins, mastery) real-time
-      unsubscribeUserData = listenToUserData(user.uid, (data) => {
+      const unsubscribe = listenToUserData(user.uid, (data) => {
         if (data) {
           setUserCoins(data.coins);
           setMasteryCount(data.masteryCards);
@@ -151,33 +140,11 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
           setMasteryCount(0);
         }
       });
-      
-      // 2. Tải dữ liệu từ vựng một lần duy nhất khi người dùng đăng nhập
-      setIsVocabularyLoading(true);
-      fetchAndSyncVocabularyDataService(user.uid)
-        .then(vocabData => {
-          setVocabulary(vocabData);
-        })
-        .catch(error => {
-          console.error("Failed to fetch initial vocabulary in QuizAppProvider:", error);
-          setVocabulary([]); // Reset khi có lỗi
-        })
-        .finally(() => {
-          setIsVocabularyLoading(false);
-        });
-
+      return () => unsubscribe();
     } else {
-      // Reset tất cả state khi người dùng đăng xuất
       setUserCoins(0);
       setMasteryCount(0);
-      setVocabulary([]);
-      setIsVocabularyLoading(false);
     }
-    
-    // Cleanup function để hủy listener khi component unmount hoặc user thay đổi
-    return () => {
-      unsubscribeUserData();
-    };
   }, [user]);
 
   // --- Các hàm xử lý (Handlers) ---
@@ -298,14 +265,8 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   }, [user]);
   // --- END: CÁC HÀM WRAPPER MỚI CHO ACHIEVEMENT ---
 
-  // <<< START: DÒNG MỚI - Hàm cho phép component con cập nhật state vocabulary toàn cục >>>
-  const setVocabularyState = useCallback((newVocabulary: VocabularyItem[]) => {
-      setVocabulary(newVocabulary);
-  }, []);
-  // <<< END: DÒNG MỚI >>>
 
-
-  // <<< THAY ĐỔI: Thêm các state và hàm mới vào giá trị của Context >>>
+  // --- Giá trị được cung cấp bởi Context ---
   const value = {
     currentView,
     selectedQuiz,
@@ -326,13 +287,10 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     fetchOrCreateUser,
     updateUserCoins,
     fetchGameInitialData,
+    // --- START: DÒNG MỚI ---
     fetchAndSyncVocabularyData,
     updateAchievementData,
-    // <<< START: DÒNG MỚI >>>
-    vocabulary,
-    isVocabularyLoading,
-    setVocabularyState,
-    // <<< END: DÒNG MỚI >>>
+    // --- END: DÒNG MỚI ---
     // NEW: Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
@@ -344,5 +302,3 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
 
   return <QuizAppContext.Provider value={value}>{children}</QuizAppContext.Provider>;
 };
-
-// --- END OF FILE course-context.tsx (FULL CODE - MODIFIED) ---
