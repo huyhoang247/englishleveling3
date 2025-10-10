@@ -22,6 +22,7 @@ const ChevronLeftIcon = ({ className }: { className: string }) => (<svg xmlns="h
 const ChevronRightIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>);
 const TranslateIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m4 13-4-4-4 4M19 17v-2a2 2 0 00-2-2H5a2 2 0 00-2 2v2a2 2 0 002 2h10a2 2 0 002-2z" /></svg>);
 const PracticeIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>);
+const SaveIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>);
 
 
 // --- HELPER FUNCTION ---
@@ -357,32 +358,52 @@ const EbookReaderContent: React.FC = () => {
     return `${minutes}:${seconds}`;
   };
 
+  // --- NEW: Action Toolbar Component ---
+  const ActionToolbar = () => (
+    <div className="bg-gray-100/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 py-2">
+        <div className="max-w-3xl mx-auto flex justify-center items-center gap-4 px-4">
+            {currentUser && bookVocabularyCardIds.length > 0 && (
+                <button onClick={() => setIsBatchPlaylistModalOpen(true)} className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-lg transition-colors">
+                    <SaveIcon />
+                    <span>Lưu {bookVocabularyCardIds.length} từ</span>
+                </button>
+            )}
+            <button onClick={() => setIsStatsModalOpen(true)} className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-lg transition-colors">
+                <StatsIcon />
+                <span>Thống kê</span>
+            </button>
+            {currentBook && (
+                <button onClick={() => setIsClozeTestModalOpen(true)} className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-lg transition-colors">
+                    <PracticeIcon />
+                    <span>Luyện tập</span>
+                </button>
+            )}
+        </div>
+    </div>
+  );
+
   return (
     <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
       {selectedBookId && (
-        <header className="flex items-center justify-between p-3 bg-gray-950 dark:bg-gray-950 shadow-md sticky top-0 z-20 py-2 sm:py-3">
-            <BackButton onClick={isClozeTestActive ? stopClozeTest : handleBackToLibrary} />
-            
-            <div className="flex items-center gap-2 sm:gap-4">
-              {isViSubAvailable && (
-                <div className="bg-gray-800 p-1 rounded-full flex items-center text-xs">
-                  <button onClick={() => handleSetSubtitleLanguage('en')} className={`px-3 py-1 font-bold text-white rounded-full transition-colors duration-200 ${ subtitleLanguage === 'en' ? 'bg-blue-600' : 'hover:bg-white/10' }`}>
-                    EN
-                  </button>
-                  <button onClick={() => handleSetSubtitleLanguage('bilingual')} className={`px-3 py-1 font-bold text-white rounded-full transition-colors duration-200 ${ subtitleLanguage === 'bilingual' ? 'bg-blue-600' : 'hover:bg-white/10' }`}>
-                    EN/VI
-                  </button>
-                </div>
-              )}
-
-              {currentBook && !isClozeTestActive && (
-                  <button onClick={() => setIsClozeTestModalOpen(true)} className="inline-flex items-center px-3 sm:px-4 py-2 border border-yellow-500 text-sm font-medium rounded-md shadow-sm text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20">
-                    <PracticeIcon />
-                    <span className="hidden sm:inline ml-2">Luyện tập</span>
-                  </button>
-              )}
-            </div>
-        </header>
+        <div className="sticky top-0 z-20">
+          <header className="flex items-center justify-between p-3 bg-gray-950 dark:bg-gray-950 shadow-md py-2 sm:py-3">
+              <BackButton onClick={isClozeTestActive ? stopClozeTest : handleBackToLibrary} />
+              
+              <div className="flex-grow flex justify-end">
+                {isViSubAvailable && (
+                  <div className="bg-gray-800 p-1 rounded-full flex items-center text-xs">
+                    <button onClick={() => handleSetSubtitleLanguage('en')} className={`px-3 py-1 font-bold text-white rounded-full transition-colors duration-200 ${ subtitleLanguage === 'en' ? 'bg-blue-600' : 'hover:bg-white/10' }`}>
+                      EN
+                    </button>
+                    <button onClick={() => handleSetSubtitleLanguage('bilingual')} className={`px-3 py-1 font-bold text-white rounded-full transition-colors duration-200 ${ subtitleLanguage === 'bilingual' ? 'bg-blue-600' : 'hover:bg-white/10' }`}>
+                      EN/VI
+                    </button>
+                  </div>
+                )}
+              </div>
+          </header>
+          {!isClozeTestActive && <ActionToolbar />}
+        </div>
       )}
 
       {currentBook && <BookSidebar isOpen={isSidebarOpen} onClose={toggleSidebar} book={currentBook} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} />}
@@ -393,17 +414,11 @@ const EbookReaderContent: React.FC = () => {
         <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-900 py-6 sm:py-8">
           <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8 md:p-10">
             {!isClozeTestActive && currentBook && (
-              <div className="mb-8 pb-4 border-b dark:border-gray-700">
-                <div className="text-center mb-2">
+              <div className="mb-8 text-center">
                   <h1 className="inline-block bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-1.5 text-xl font-semibold text-gray-800 dark:text-gray-200 shadow-sm">
                     {currentBook.title}
                   </h1>
-                </div>
-                <p className="text-sm text-center text-gray-500 dark:text-gray-400">Tác giả: {currentBook.author}</p>
-                <div className="mt-6 flex flex-wrap justify-center items-center gap-4">
-                  {currentUser && bookVocabularyCardIds.length > 0 && (<button onClick={() => setIsBatchPlaylistModalOpen(true)} className="inline-flex items-center px-4 py-2 border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>Lưu {bookVocabularyCardIds.length} từ vựng</button>)}
-                  <button onClick={() => setIsStatsModalOpen(true)} className="inline-flex items-center px-4 py-2 border dark:border-gray-600 text-sm font-medium rounded-md shadow-sm bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"><StatsIcon />Thống kê</button>
-                </div>
+                  <p className="text-sm text-center text-gray-500 dark:text-gray-400 mt-2">Tác giả: {currentBook.author}</p>
               </div>
             )}
             {isClozeTestActive && <ClozeTestProgress />}
