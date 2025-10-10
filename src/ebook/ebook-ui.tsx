@@ -1,13 +1,15 @@
+// --- START OF FILE ebook-ui.tsx (2).txt ---
+
 // --- START OF FILE game.tsx (FIXED & UPDATED) ---
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { EbookProvider, useEbook, Book, Vocabulary, PhraseSentence, HiddenWordState, ExampleSentence } from './ebook-context.tsx';
+import { EbookProvider, useEbook, Book, Vocabulary, HiddenWordState, ExampleSentence } from './ebook-context.tsx';
 import VirtualKeyboard from '../ui/keyboard.tsx'; 
 
 // --- COMPONENT & MODAL IMPORTS ---
 import FlashcardDetailModal from '../story/flashcard.tsx';
 import AddToPlaylistModal from '../AddToPlaylistModal.tsx';
-import PhraseDetailModal from '../PhraseDetailModal.tsx';
+// PhraseDetailModal has been removed as it's no longer used.
 
 // --- ICONS (Copied from original file for self-containment) ---
 const PlayIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>);
@@ -82,17 +84,17 @@ const EbookReaderContent: React.FC = () => {
   const {
     // State & Derived State
     selectedBookId, isDarkMode, booksData, currentBook, isSidebarOpen, audioPlayerRef,
-    isAudioPlaying, audioCurrentTime, audioDuration, playbackSpeed, highlightMode,
+    isAudioPlaying, audioCurrentTime, audioDuration, playbackSpeed,
     selectedVocabCard, showVocabDetail, isBatchPlaylistModalOpen, bookVocabularyCardIds,
-    currentUser, playlists, selectedPhrase, isStatsModalOpen, bookStats, vocabMap,
-    availableVoices, selectedVoiceKey, isLoadingVocab, phraseRegex, phraseMap,
+    currentUser, playlists, isStatsModalOpen, bookStats, vocabMap,
+    availableVoices, selectedVoiceKey, isLoadingVocab,
     subtitleLanguage, isViSubAvailable, displayedContent,
     exampleSentences, // THÊM MỚI: Lấy dữ liệu câu ví dụ từ context
 
     // Functions
     handleBackToLibrary, toggleSidebar, setIsDarkMode, handleSelectBook, setIsBatchPlaylistModalOpen,
-    setIsStatsModalOpen, setHighlightMode, handleWordClick, closeVocabDetail, handlePhraseClick,
-    closePhraseDetail, togglePlayPause, handleSeek, togglePlaybackSpeed, handleVoiceChange,
+    setIsStatsModalOpen, handleWordClick, closeVocabDetail,
+    togglePlayPause, handleSeek, togglePlaybackSpeed, handleVoiceChange,
     toggleSubtitleLanguage,
 
     // NEW CLOZE TEST VALUES
@@ -146,22 +148,12 @@ const EbookReaderContent: React.FC = () => {
 
 
   const renderHighlightedText = (line: string) => {
-    let renderableParts: (JSX.Element | string)[];
-    if (highlightMode === 'phrase' && phraseRegex) {
-        const parts = line.split(phraseRegex);
-        renderableParts = parts.map((part, partIndex) => {
-            const foundPhrase = phraseMap.get(part.toLowerCase());
-            if (foundPhrase) return <span key={partIndex} className="font-semibold text-green-600 dark:text-green-400 hover:underline cursor-pointer bg-green-50 dark:bg-green-500/10 rounded px-1" onClick={() => handlePhraseClick(foundPhrase)}>{part}</span>;
-            return part;
-        });
-    } else {
-        const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
-        renderableParts = parts.map((part, partIndex) => {
-          if (!part) return null;
-          if (/^\w+$/.test(part) && vocabMap.has(part.toLowerCase())) return <span key={partIndex} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer" onClick={() => handleWordClick(part)}>{part}</span>;
-          return <span key={partIndex}>{part}</span>;
-        }).filter(Boolean) as JSX.Element[];
-    }
+    const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
+    const renderableParts = parts.map((part, partIndex) => {
+      if (!part) return null;
+      if (/^\w+$/.test(part) && vocabMap.has(part.toLowerCase())) return <span key={partIndex} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer" onClick={() => handleWordClick(part)}>{part}</span>;
+      return <span key={partIndex}>{part}</span>;
+    }).filter(Boolean) as JSX.Element[];
     return renderableParts;
   }
 
@@ -419,12 +411,7 @@ const EbookReaderContent: React.FC = () => {
                     </button>
                   )}
                 </div>
-                {subtitleLanguage === 'en' && !isClozeTestActive && (
-                    <div className="mt-6 flex justify-center"><div className="inline-flex rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 p-1">
-                        <button onClick={() => setHighlightMode('word')} className={`px-4 py-2 text-sm font-medium rounded-md ${highlightMode === 'word' ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 shadow' : 'text-gray-500 dark:text-gray-300 hover:bg-gray-200'}`}>In đậm từ đơn</button>
-                        <button onClick={() => setHighlightMode('phrase')} className={`px-4 py-2 text-sm font-medium rounded-md ${highlightMode === 'phrase' ? 'bg-white dark:bg-gray-900 text-green-600 dark:text-green-400 shadow' : 'text-gray-500 dark:text-gray-300 hover:bg-gray-200'}`}>In đậm cụm từ</button>
-                    </div></div>
-                )}
+                {/* Highlight mode toggle has been removed */}
                 {subtitleLanguage === 'en' && <ClozeTestControls />}
               </div>
             )}
@@ -456,7 +443,7 @@ const EbookReaderContent: React.FC = () => {
       {selectedVocabCard && showVocabDetail && <FlashcardDetailModal selectedCard={selectedVocabCard} showVocabDetail={showVocabDetail} exampleSentencesData={exampleSentences} onClose={closeVocabDetail} currentVisualStyle="default" />}
       
       {isBatchPlaylistModalOpen && <AddToPlaylistModal isOpen={isBatchPlaylistModalOpen} onClose={() => setIsBatchPlaylistModalOpen(false)} cardIds={bookVocabularyCardIds} currentUser={currentUser} existingPlaylists={playlists} />}
-      <PhraseDetailModal isOpen={!!selectedPhrase} onClose={closePhraseDetail} phrase={selectedPhrase} />
+      {/* PhraseDetailModal has been removed */}
       <BookStatsModal isOpen={isStatsModalOpen} onClose={() => setIsStatsModalOpen(false)} stats={bookStats} bookTitle={currentBook?.title || ''} vocabMap={vocabMap} />
 
       {activeHiddenWordState && (
