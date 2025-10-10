@@ -72,30 +72,23 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   onGoBack,
   selectedPractice,
 }) => {
-  // --- START: THAY ĐỔI ---
-  // Lấy dữ liệu và hàm đã được tối ưu từ context cha
+  // Get new data/functions from the main context
   const { 
     user, 
     userCoins, 
     masteryCount: masteryCountFromCourse, 
-    openedVocab, // Dữ liệu từ vựng đã mở
-    completedWordsMap, // Map các từ đã hoàn thành
-    loadCompletedWordsForGame, // Hàm để yêu cầu load dữ liệu
+    getOpenedVocab, 
+    getCompletedWords, 
     recordGameSuccess,
-    definitionsMap,
-    generateAudioUrlsForWord
+    definitionsMap,          // NEW
+    generateAudioUrlsForWord // NEW
   } = useQuizApp();
-  // --- END: THAY ĐỔI ---
 
-  const gameModeId = useMemo(() => `match-${selectedPractice % 100}`, [selectedPractice]);
-  
-  // --- START: THAY ĐỔI ---
-  // Trạng thái loading bây giờ phụ thuộc vào việc dữ liệu đã được load trong context cha hay chưa
   const [loading, setLoading] = useState(true);
-  // --- END: THAY ĐỔI ---
-  
+  const [playablePairs, setPlayablePairs] = useState<any[]>([]);
+  const [totalEligiblePairs, setTotalEligiblePairs] = useState<any[]>([]);
   const [currentRound, setCurrentRound] = useState(0);
-  
+
   const [sessionCoins, setSessionCoins] = useState(0);
   const displayedCoins = useAnimateValue(sessionCoins, 500);
   const [masteryCount, setMasteryCount] = useState(0);
@@ -117,6 +110,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   const [selectedVoice, setSelectedVoice] = useState('Matilda'); 
 
   const isAudioMatch = useMemo(() => selectedPractice % 100 === 2, [selectedPractice]);
+  const gameModeId = useMemo(() => `match-${selectedPractice % 100}`, [selectedPractice]);
 
   // Sync local state with global context state
   useEffect(() => {
@@ -127,50 +121,46 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     setMasteryCount(masteryCountFromCourse);
   }, [masteryCountFromCourse]);
 
-  // --- START: THAY ĐỔI ---
-  // Effect này chỉ dùng để yêu cầu context cha load dữ liệu cho game hiện tại
+  // REMOVED: The definitionsMap is now provided by useQuizApp, so this is no longer needed.
+  /*
+  const definitionsMap = useMemo(() => { ... });
+  */
+
   useEffect(() => {
-    if (user) {
-      setLoading(true);
-      loadCompletedWordsForGame(gameModeId).finally(() => {
-        // Có thể không cần setLoading(false) ở đây vì ta sẽ dựa vào sự tồn tại của dữ liệu
-      });
-    }
-  }, [user, gameModeId, loadCompletedWordsForGame]);
+    const fetchData = async () => {
+      if (user) {
+        setLoading(true);
+        try {
+          const [vocabList, completedSet] = await Promise.all([
+            getOpenedVocab(),
+            getCompletedWords(gameModeId)
+          ]);
+          
+          const userVocabSet = new Set(vocabList.map(v => v.toLowerCase()));
+          const allEligiblePairs = allWordPairs.filter(pair => userVocabSet.has(pair.english.toLowerCase()));
+          const remainingPairs = allEligiblePairs.filter(pair => !completedSet.has(pair.english.toLowerCase()));
+          setPlayablePairs(shuffleArray(remainingPairs));
+          setTotalEligiblePairs(allEligiblePairs);
 
-  // Dùng useMemo để tính toán các cặp từ có thể chơi khi dữ liệu từ context cha thay đổi
-  const { playablePairs, totalEligiblePairs } = useMemo(() => {
-    const completedSet = completedWordsMap[gameModeId];
-    // Nếu chưa có dữ liệu hoàn thành cho game này, coi như chưa có gì
-    if (!user || !completedSet) {
-      return { playablePairs: [], totalEligiblePairs: [] };
-    }
+          if (isAudioMatch && remainingPairs.length > 0) {
+            // Use generateAudioUrlsForWord from context
+            const firstWordUrls = generateAudioUrlsForWord(remainingPairs[0].english);
+            if (firstWordUrls) {
+              setAvailableVoices(Object.keys(firstWordUrls));
+            }
+          }
 
-    const userVocabSet = new Set(openedVocab.map(v => v.toLowerCase()));
-    const allEligible = allWordPairs.filter(pair => userVocabSet.has(pair.english.toLowerCase()));
-    const remaining = allEligible.filter(pair => !completedSet.has(pair.english.toLowerCase()));
-
-    // Cập nhật trạng thái loading khi đã có dữ liệu để xử lý
-    setLoading(false);
-
-    // Xáo trộn danh sách từ còn lại để chơi
-    return { 
-      playablePairs: shuffleArray(remaining), 
-      totalEligiblePairs: allEligible 
-    };
-  }, [user, openedVocab, completedWordsMap, gameModeId]);
-
-  // Effect để kiểm tra và set các giọng đọc có sẵn
-  useEffect(() => {
-    if (isAudioMatch && playablePairs.length > 0) {
-      const firstWordUrls = generateAudioUrlsForWord(playablePairs[0].english);
-      if (firstWordUrls) {
-        setAvailableVoices(Object.keys(firstWordUrls));
+        } catch (error) {
+          console.error("Error fetching data for Voca Match:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
       }
-    }
-  }, [isAudioMatch, playablePairs, generateAudioUrlsForWord]); // Phụ thuộc vào playablePairs đã được tính toán
-  // --- END: THAY ĐỔI ---
-
+    };
+    fetchData();
+  }, [user, gameModeId, isAudioMatch, getOpenedVocab, getCompletedWords, generateAudioUrlsForWord]); // Added generateAudioUrlsForWord dependency
 
   const setupNewRound = useCallback(() => {
     const roundStart = currentRound * GAME_SIZE;
@@ -189,6 +179,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     if (isAudioMatch) {
       const leftColumnData = englishWords.map(word => ({
         word: word,
+        // Use generateAudioUrlsForWord from context
         audioUrls: generateAudioUrlsForWord(word)
       }));
       setLeftColumn(leftColumnData);
@@ -206,7 +197,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     setSelectedLeft(null);
     setIncorrectPair(null);
     setLastCorrectDefinition(null);
-  }, [currentRound, playablePairs, loading, isAudioMatch, generateAudioUrlsForWord]);
+  }, [currentRound, playablePairs, loading, isAudioMatch, generateAudioUrlsForWord]); // Added generateAudioUrlsForWord dependency
 
   useEffect(() => {
     if (!loading) {
@@ -214,8 +205,6 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     }
   }, [currentRound, loading, setupNewRound]);
 
-  // --- Các hàm handle... và phần còn lại của component không thay đổi ---
-  // ... (giữ nguyên phần code từ handleLeftSelect trở đi)
   const handleLeftSelect = (englishWord: string) => {
     if (correctPairs.includes(englishWord)) return;
     setSelectedLeft(englishWord);
@@ -237,6 +226,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       setCorrectPairs(prev => [...prev, selectedLeft]);
       setSelectedLeft(null);
       setScore(prev => prev + 1);
+      // Use definitionsMap from context
       setLastCorrectDefinition(definitionsMap[selectedLeft.toLowerCase()] || null);
 
       const newStreak = streak + 1;
