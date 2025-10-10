@@ -7,14 +7,12 @@ import VirtualKeyboard from '../ui/keyboard.tsx';
 // --- COMPONENT & MODAL IMPORTS ---
 import FlashcardDetailModal from '../story/flashcard.tsx';
 import AddToPlaylistModal from '../AddToPlaylistModal.tsx';
-import BackButton from '../ui/back-button.tsx';
+import BackButton from '../ui/back-button.tsx'; 
 // PhraseDetailModal has been removed as it's no longer used.
 
-// --- ICONS (Copied from original file for self-containment) ---
+// --- ICONS (Unused Menu/X icons removed) ---
 const PlayIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>);
 const PauseIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Zm9 0a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" /></svg>);
-const MenuIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>);
-const XIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>);
 const StatsIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zM9 9a1 1 0 00-1 1v6a1 1 0 102 0v-6a1 1 0 00-1-1zm4-5a1 1 0 00-1 1v10a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" /></svg>);
 const ChevronLeftIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>);
 const ChevronRightIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>);
@@ -44,20 +42,7 @@ const VoiceStepper: React.FC<{ currentVoice: string; onNavigate: (direction: 'ne
   );
 };
 
-const BookSidebar: React.FC<{ isOpen: boolean; onClose: () => void; book: Book | undefined; isDarkMode: boolean; toggleDarkMode: () => void; }> = ({ isOpen, onClose, book, isDarkMode, toggleDarkMode }) => {
-  useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
-    if (isOpen) document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? 'hidden' : 'unset';
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isOpen]);
-  return (
-    <><div className={`fixed inset-0 bg-black/60 z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose} aria-hidden="true" /><div className={`fixed inset-y-0 left-0 w-72 sm:w-80 bg-white dark:bg-gray-800 shadow-xl z-40 transform transition-transform duration-300 flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}><div className="flex items-center justify-between p-4 border-b dark:border-gray-700"><h2 className="text-lg font-semibold dark:text-white truncate">{book?.title || "Menu"}</h2><button onClick={onClose} className="p-1.5 rounded-full dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Đóng menu"><XIcon /></button></div><div className="p-4 space-y-6 overflow-y-auto flex-grow"><div><h3 className="mb-2 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nội dung sách</h3><ul className="space-y-1">{['Chương 1: Giới thiệu', 'Chương 2: Phát triển câu chuyện', 'Chương 3: Cao trào', 'Chương 4: Kết luận', 'Phụ lục'].map(item => (<li key={item}><a href="#" className="block px-3 py-2 rounded-md dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">{item}</a></li>))}</ul></div><hr className="dark:border-gray-700" /><div><h3 className="mb-3 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cài đặt hiển thị</h3><div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"><span className="dark:text-gray-300">Chế độ tối</span><button onClick={toggleDarkMode} className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${isDarkMode ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`} role="switch" aria-checked={isDarkMode}><span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`} /></button></div></div></div><div className="p-4 border-t dark:border-gray-700"><p className="text-xs text-center text-gray-500 dark:text-gray-400">© 2024 Ebook Reader</p></div></div></>
-  );
-};
+// --- BookSidebar component has been removed ---
 
 const BookStatsModal: React.FC<{ isOpen: boolean; onClose: () => void; stats: any; bookTitle: string; vocabMap: Map<string, Vocabulary>; }> = ({ isOpen, onClose, stats, bookTitle, vocabMap }) => {
     const [activeTab, setActiveTab] = useState<'in' | 'out'>('in');
@@ -82,16 +67,16 @@ const BookStatsModal: React.FC<{ isOpen: boolean; onClose: () => void; stats: an
 const EbookReaderContent: React.FC = () => {
   const {
     // State & Derived State
-    selectedBookId, isDarkMode, booksData, currentBook, isSidebarOpen, audioPlayerRef,
+    selectedBookId, isDarkMode, booksData, currentBook, audioPlayerRef,
     isAudioPlaying, audioCurrentTime, audioDuration, playbackSpeed,
     selectedVocabCard, showVocabDetail, isBatchPlaylistModalOpen, bookVocabularyCardIds,
     currentUser, playlists, isStatsModalOpen, bookStats, vocabMap,
     availableVoices, selectedVoiceKey, isLoadingVocab,
     subtitleLanguage, isViSubAvailable, displayedContent,
-    exampleSentences, // THÊM MỚI: Lấy dữ liệu câu ví dụ từ context
+    exampleSentences,
 
     // Functions
-    handleBackToLibrary, toggleSidebar, setIsDarkMode, handleSelectBook, setIsBatchPlaylistModalOpen,
+    handleBackToLibrary, handleSelectBook, setIsBatchPlaylistModalOpen,
     setIsStatsModalOpen, handleWordClick, closeVocabDetail,
     togglePlayPause, handleSeek, togglePlaybackSpeed, handleVoiceChange,
     toggleSubtitleLanguage,
@@ -376,13 +361,20 @@ const EbookReaderContent: React.FC = () => {
   return (
     <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
       {selectedBookId && (
-        <header className="flex items-center justify-between p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md sticky top-0 z-20 py-2 sm:py-3">
-            <BackButton onClick={handleBackToLibrary} />
-            <button onClick={toggleSidebar} className="p-2 rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Mở menu"><MenuIcon /></button>
+        <header className="flex items-center justify-between px-4 h-16 bg-gray-900/95 backdrop-blur-sm border-b border-slate-700/60 sticky top-0 z-20">
+            <div className="flex-1 flex justify-start">
+                <BackButton onClick={handleBackToLibrary} label="Library" />
+            </div>
+            <div className="flex-1 text-center px-2">
+                 <h1 className="text-base sm:text-lg font-bold text-gray-100 truncate">
+                    {currentBook?.title}
+                </h1>
+            </div>
+            <div className="flex-1"></div>
         </header>
       )}
 
-      {currentBook && <BookSidebar isOpen={isSidebarOpen} onClose={toggleSidebar} book={currentBook} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} />}
+      {/* BookSidebar has been removed */}
 
       {!selectedBookId ? (
         <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-850">{renderLibrary()}</main>
