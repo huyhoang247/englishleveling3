@@ -7,7 +7,7 @@ import VirtualKeyboard from '../ui/keyboard.tsx';
 // --- COMPONENT & MODAL IMPORTS ---
 import FlashcardDetailModal from '../story/flashcard.tsx';
 import AddToPlaylistModal from '../AddToPlaylistModal.tsx';
-import BackButton from './back-button.tsx';
+import BackButton from '../ui/back-button.tsx';
 // PhraseDetailModal has been removed as it's no longer used.
 
 // --- ICONS (Copied from original file for self-containment) ---
