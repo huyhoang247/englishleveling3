@@ -1,4 +1,4 @@
-// --- START OF FILE achievement-context.tsx (FULL CODE - FIXED) ---
+// --- START OF FILE achievement-context.tsx (FULL CODE - MODIFIED) ---
 
 import React, {
   createContext,
@@ -7,7 +7,9 @@ import React, {
   useCallback,
   ReactNode,
   useMemo,
+  // <<< THAY ĐỔI: useEffect không còn cần thiết nữa >>>
 } from 'react';
+// <<< THAY ĐỔI: useQuizApp giờ là nguồn dữ liệu chính >>>
 import { useQuizApp } from '../../courses/course-context.tsx'; 
 import { VocabularyItem } from '../../courses/course-data-service.ts'; 
 
@@ -18,8 +20,8 @@ interface AchievementsContextState {
   coins: number;
   masteryCards: number;
   // --- Trạng thái ---
-  isInitialLoading: boolean; 
-  isUpdating: boolean;     
+  isInitialLoading: boolean; // Giờ sẽ lấy từ course-context
+  isUpdating: boolean;     // True khi đang thực hiện hành động (nhận thưởng)
   // --- Hành động ---
   claimAchievement: (id: number) => Promise<void>;
   claimAllAchievements: () => Promise<void>;
@@ -34,17 +36,24 @@ interface AchievementsProviderProps {
 }
 
 export const AchievementsProvider = ({ children }: AchievementsProviderProps) => {
+  // <<< THAY ĐỔI: Lấy tất cả state và hàm cập nhật cần thiết từ useQuizApp >>>
   const {
     userCoins: coins,
     masteryCount: masteryCards,
     user,
     updateAchievementData,
+    // Dữ liệu và trình quản lý state mới từ context cha
     vocabulary, 
-    isVocabularyLoading: isInitialLoading,
-    setVocabularyState, 
+    isVocabularyLoading: isInitialLoading, // Đổi tên để khớp với interface của context này
+    setVocabularyState, // Hàm để cập nhật state toàn cục ở context cha
   } = useQuizApp();
   
+  // <<< THAY ĐỔI: Chỉ giữ lại state isUpdating cục bộ. Xóa bỏ state vocabulary và isInitialLoading >>>
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // <<< THAY ĐỔI QUAN TRỌNG: XÓA BỎ TOÀN BỘ `useEffect` dùng để tải dữ liệu ở đây >>>
+  // Dữ liệu 'vocabulary' và 'isInitialLoading' đã được `QuizAppProvider` cung cấp sẵn.
+  // Không cần tải lại, giúp tiết kiệm N document reads mỗi khi vào màn hình.
 
   // Hàm nhận một phần thưởng
   const claimAchievement = useCallback(async (id: number) => {
@@ -72,6 +81,7 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
         newVocabularyData: updatedList,
       });
 
+      // <<< THAY ĐỔI QUAN TRỌNG: Cập nhật state toàn cục thông qua hàm từ context cha >>>
       setVocabularyState(updatedList);
 
     } catch (error) {
@@ -79,6 +89,7 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
     } finally {
       setIsUpdating(false);
     }
+    // <<< THAY ĐỔI: Cập nhật dependency array, thêm `setVocabularyState`
   }, [vocabulary, user, isUpdating, updateAchievementData, setVocabularyState]); 
 
   // Hàm nhận tất cả phần thưởng
@@ -109,6 +120,7 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
         newVocabularyData: updatedList,
       });
       
+      // <<< THAY ĐỔI QUAN TRỌNG: Cập nhật state toàn cục thông qua hàm từ context cha >>>
       setVocabularyState(updatedList);
 
     } catch (error) {
@@ -116,6 +128,7 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
     } finally {
       setIsUpdating(false);
     }
+    // <<< THAY ĐỔI: Cập nhật dependency array, thêm `setVocabularyState`
   }, [vocabulary, user, isUpdating, updateAchievementData, setVocabularyState]);
 
   const totalClaimableRewards = useMemo(() => {
@@ -125,6 +138,7 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
     return { gold, masteryCards };
   }, [vocabulary]);
 
+  // <<< THAY ĐỔI: Dùng isInitialLoading từ context cha >>>
   const value = useMemo(() => ({
     vocabulary,
     coins,
@@ -142,7 +156,7 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
   return (
     <AchievementsContext.Provider value={value}>
       {children}
-    </AchievementsContext.Provider> // <<< SỬA LỖI TẠI ĐÂY
+    </Achievements-context.Provider>
   );
 };
 
@@ -153,4 +167,4 @@ export const useAchievements = () => {
   }
   return context;
 };
-// --- END OF FILE achievement-context.tsx (FULL CODE - FIXED) ---
+// --- END OF FILE achievement-context.tsx (FULL CODE - MODIFIED) ---
