@@ -116,7 +116,7 @@ interface EbookContextType {
   setIsBatchPlaylistModalOpen: Dispatch<SetStateAction<boolean>>;
   setIsStatsModalOpen: Dispatch<SetStateAction<boolean>>;
   handleVoiceChange: (direction: 'next' | 'previous') => void;
-  toggleSubtitleLanguage: () => void;
+  handleSetSubtitleLanguage: (lang: 'en' | 'bilingual') => void;
 
   // --- NEW FUNCTIONS FOR CLOZE TEST ---
   setHiddenWordCount: (count: number) => void;
@@ -444,7 +444,9 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
       const nextIndex = direction === 'next' ? (currentIndex + 1) % availableVoices.length : (currentIndex - 1 + availableVoices.length) % availableVoices.length;
       setSelectedVoiceKey(availableVoices[nextIndex]);
   };
-  const toggleSubtitleLanguage = () => { if (isViSubAvailable) setSubtitleLanguage(prev => prev === 'en' ? 'bilingual' : 'en'); };
+  const handleSetSubtitleLanguage = (lang: 'en' | 'bilingual') => {
+    if (isViSubAvailable) setSubtitleLanguage(lang);
+  };
   
   const value: EbookContextType = {
     booksData, selectedBookId, vocabMap, isLoadingVocab, selectedVocabCard, showVocabDetail,
@@ -455,7 +457,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     handleWordClick, closeVocabDetail, togglePlayPause, handleSeek,
     togglePlaybackSpeed, setIsDarkMode, toggleSidebar, setIsBatchPlaylistModalOpen,
     setIsStatsModalOpen, handleVoiceChange,
-    subtitleLanguage, isViSubAvailable, displayedContent, toggleSubtitleLanguage,
+    subtitleLanguage, isViSubAvailable, displayedContent, handleSetSubtitleLanguage,
     exampleSentences: exampleData, // Thêm exampleData vào context
     isClozeTestActive, hiddenWordCount, hiddenWords, activeHiddenWordIndex, correctlyGuessedCount,
     setHiddenWordCount, startClozeTest, stopClozeTest, handleHiddenWordClick, handleClozeTestInput, dismissKeyboard,
