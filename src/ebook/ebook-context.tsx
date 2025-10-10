@@ -84,6 +84,7 @@ interface EbookContextType {
   hiddenWords: Map<number, HiddenWordState>;
   activeHiddenWordIndex: number | null;
   correctlyGuessedCount: number;
+  isClozeTestModalOpen: boolean; // THÊM MỚI
 
   // --- NEW: Expose example sentences ---
   exampleSentences: ExampleSentence[];
@@ -122,6 +123,9 @@ interface EbookContextType {
   handleHiddenWordClick: (wordIndex: number) => void;
   handleClozeTestInput: (value: string) => void;
   dismissKeyboard: () => void;
+  setIsClozeTestModalOpen: Dispatch<SetStateAction<boolean>>; // THÊM MỚI
+  closeClozeTestModal: () => void; // THÊM MỚI
+
 }
 
 // --- CREATE CONTEXT ---
@@ -155,6 +159,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const [selectedVoiceKey, setSelectedVoiceKey] = useState<string | null>(null);
   const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'vi' | 'bilingual'>('en');
 
+  const [isClozeTestModalOpen, setIsClozeTestModalOpen] = useState(false); // THÊM MỚI
   const [isClozeTestActive, setIsClozeTestActive] = useState(false);
   const [hiddenWordCount, _setHiddenWordCount] = useState(10);
   const [hiddenWords, setHiddenWords] = useState<Map<number, HiddenWordState>>(new Map());
@@ -203,6 +208,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   
   useEffect(() => {
     setSubtitleLanguage('en');
+    closeClozeTestModal(); // Đảm bảo modal và state được reset khi đổi sách
   }, [selectedBookId]);
 
   const availableVoices = useMemo(() => currentBook?.audioUrls ? Object.keys(currentBook.audioUrls) : [], [currentBook]);
@@ -356,9 +362,10 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     setActiveHiddenWordIndex(null);
   };
   
-  useEffect(() => {
-    stopClozeTest();
-  }, [selectedBookId]);
+  const closeClozeTestModal = () => { // THÊM MỚI
+      stopClozeTest();
+      setIsClozeTestModalOpen(false);
+  }
 
   const handleHiddenWordClick = (wordIndex: number) => {
     if (hiddenWords.get(wordIndex)?.status !== 'correct') {
@@ -450,6 +457,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     exampleSentences: exampleData, // Thêm exampleData vào context
     isClozeTestActive, hiddenWordCount, hiddenWords, activeHiddenWordIndex, correctlyGuessedCount,
     setHiddenWordCount, startClozeTest, stopClozeTest, handleHiddenWordClick, handleClozeTestInput, dismissKeyboard,
+    isClozeTestModalOpen, setIsClozeTestModalOpen, closeClozeTestModal, // THÊM MỚI
   };
 
   return <EbookContext.Provider value={value}>{children}</EbookContext.Provider>;
