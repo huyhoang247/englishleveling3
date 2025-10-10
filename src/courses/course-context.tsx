@@ -10,7 +10,12 @@ import {
   recordGameSuccess as recordGameSuccessService,
   fetchOrCreateUser as fetchOrCreateUserService,
   updateUserCoins as updateUserCoinsService,
-  fetchGameInitialData as fetchGameInitialDataService, // <<< DÒNG MỚI
+  fetchGameInitialData as fetchGameInitialDataService,
+  // --- START: DÒNG MỚI ---
+  updateAchievementData as updateAchievementDataService,
+  fetchAndSyncVocabularyData as fetchAndSyncVocabularyDataService,
+  VocabularyItem,
+  // --- END: DÒNG MỚI ---
 } from './course-data-service.ts';
 // NEW: Import data and generators
 import { generateAudioUrlsForWord, generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
@@ -49,7 +54,15 @@ interface QuizAppContextType {
   recordGameSuccess: (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number) => Promise<void>;
   updateUserCoins: (amount: number) => Promise<void>;
   fetchOrCreateUser: () => Promise<any>;
-  fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>; // <<< DÒNG MỚI
+  fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>;
+  // --- START: DÒNG MỚI ---
+  fetchAndSyncVocabularyData: () => Promise<VocabularyItem[]>;
+  updateAchievementData: (updates: {
+    coinsToAdd: number;
+    cardsToAdd: number;
+    newVocabularyData: VocabularyItem[];
+  }) => Promise<{ newCoins: number; newMasteryCards: number }>;
+  // --- END: DÒNG MỚI ---
 
   // --- NEW: Vocabulary data and utilities ---
   definitionsMap: { [key: string]: Definition };
@@ -206,7 +219,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     await recordGameSuccessService(user.uid, gameModeId, word, isMastered, coinsToAdd);
   }, [user]);
   
-  // <<< START: HÀM WRAPPER MỚI
   const fetchGameInitialData = useCallback(async (gameModeId: string, isMultiWordGame: boolean): Promise<any> => {
     if (!user) {
       console.warn("fetchGameInitialData called without a user.");
@@ -214,7 +226,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     }
     return fetchGameInitialDataService(user.uid, gameModeId, isMultiWordGame);
   }, [user]);
-  // <<< END: HÀM WRAPPER MỚI
 
   const fetchOrCreateUser = useCallback(async (): Promise<any> => {
     if (!user) {
@@ -231,6 +242,28 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     }
     await updateUserCoinsService(user.uid, amount);
   }, [user]);
+
+  // --- START: CÁC HÀM WRAPPER MỚI CHO ACHIEVEMENT ---
+  const fetchAndSyncVocabularyData = useCallback(async (): Promise<VocabularyItem[]> => {
+    if (!user) {
+      console.warn("fetchAndSyncVocabularyData called without a user.");
+      return [];
+    }
+    return fetchAndSyncVocabularyDataService(user.uid);
+  }, [user]);
+
+  const updateAchievementData = useCallback(async (updates: {
+    coinsToAdd: number;
+    cardsToAdd: number;
+    newVocabularyData: VocabularyItem[];
+  }): Promise<{ newCoins: number; newMasteryCards: number }> => {
+    if (!user) {
+      console.warn("updateAchievementData called without a user.");
+      throw new Error("Người dùng chưa đăng nhập để cập nhật thành tích.");
+    }
+    return updateAchievementDataService(user.uid, updates);
+  }, [user]);
+  // --- END: CÁC HÀM WRAPPER MỚI CHO ACHIEVEMENT ---
 
 
   // --- Giá trị được cung cấp bởi Context ---
@@ -253,7 +286,11 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     recordGameSuccess,
     fetchOrCreateUser,
     updateUserCoins,
-    fetchGameInitialData, // <<< DÒNG MỚI
+    fetchGameInitialData,
+    // --- START: DÒNG MỚI ---
+    fetchAndSyncVocabularyData,
+    updateAchievementData,
+    // --- END: DÒNG MỚI ---
     // NEW: Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
