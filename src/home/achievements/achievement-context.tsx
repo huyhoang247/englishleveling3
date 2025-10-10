@@ -15,7 +15,7 @@ import {
   updateAchievementData,
   VocabularyItem,
   fetchAndSyncVocabularyData // Import the fetch function
-} from './achievement-service.ts';
+} from '../../courses/course-data-service.ts'; // <<< PATH ĐÃ ĐƯỢC CẬP NHẬT
 
 // Định nghĩa shape của Context
 interface AchievementsContextState {
