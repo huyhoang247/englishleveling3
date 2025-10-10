@@ -361,36 +361,27 @@ const EbookReaderContent: React.FC = () => {
     <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
       {selectedBookId && (
         <header className="flex items-center justify-between p-3 bg-gray-950 dark:bg-gray-950 shadow-md sticky top-0 z-20 py-2 sm:py-3">
-            <BackButton onClick={handleBackToLibrary} />
+            <BackButton onClick={isClozeTestActive ? stopClozeTest : handleBackToLibrary} />
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               {isViSubAvailable && (
                 <div className="bg-gray-800 p-1 rounded-full flex items-center text-xs">
                   <button onClick={() => handleSetSubtitleLanguage('en')} className={`px-3 py-1 font-bold text-white rounded-full transition-colors duration-200 ${ subtitleLanguage === 'en' ? 'bg-blue-600' : 'hover:bg-white/10' }`}>
                     EN
                   </button>
                   <button onClick={() => handleSetSubtitleLanguage('bilingual')} className={`px-3 py-1 font-bold text-white rounded-full transition-colors duration-200 ${ subtitleLanguage === 'bilingual' ? 'bg-blue-600' : 'hover:bg-white/10' }`}>
-                    VI
+                    EN/VI
                   </button>
                 </div>
               )}
 
-              {currentBook && (
-                isClozeTestActive ? (
-                  <button onClick={stopClozeTest} className="inline-flex items-center px-4 py-2 border border-red-500 text-sm font-medium rounded-md shadow-sm text-red-400 bg-red-500/10 hover:bg-red-500/20">
-                      <XIcon />
-                      <span className="ml-2 hidden sm:inline">Dừng</span>
-                  </button>
-                ) : (
-                  <button onClick={() => setIsClozeTestModalOpen(true)} className="inline-flex items-center px-4 py-2 border border-yellow-500 text-sm font-medium rounded-md shadow-sm text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20">
+              {currentBook && !isClozeTestActive && (
+                  <button onClick={() => setIsClozeTestModalOpen(true)} className="inline-flex items-center px-3 sm:px-4 py-2 border border-yellow-500 text-sm font-medium rounded-md shadow-sm text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20">
                     <PracticeIcon />
-                    <span className="hidden sm:inline">Luyện tập</span>
+                    <span className="hidden sm:inline ml-2">Luyện tập</span>
                   </button>
-                )
               )}
             </div>
-
-            <div className="w-12"></div> {/* Spacer to balance header */}
         </header>
       )}
 
