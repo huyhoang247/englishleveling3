@@ -1,5 +1,3 @@
-// --- START OF FILE ebook-ui.tsx (2).txt ---
-
 // --- START OF FILE game.tsx (FIXED & UPDATED) ---
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -9,6 +7,7 @@ import VirtualKeyboard from '../ui/keyboard.tsx';
 // --- COMPONENT & MODAL IMPORTS ---
 import FlashcardDetailModal from '../story/flashcard.tsx';
 import AddToPlaylistModal from '../AddToPlaylistModal.tsx';
+import BackButton from './back-button.tsx';
 // PhraseDetailModal has been removed as it's no longer used.
 
 // --- ICONS (Copied from original file for self-containment) ---
@@ -378,11 +377,8 @@ const EbookReaderContent: React.FC = () => {
     <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
       {selectedBookId && (
         <header className="flex items-center justify-between p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md sticky top-0 z-20 py-2 sm:py-3">
+            <BackButton onClick={handleBackToLibrary} />
             <button onClick={toggleSidebar} className="p-2 rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Mở menu"><MenuIcon /></button>
-            <button onClick={handleBackToLibrary} className="flex items-center h-8 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600" aria-label="Quay lại Thư viện">
-                <span className="bg-gray-400 dark:bg-gray-500 rounded-full w-8 h-8 flex items-center justify-center"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/arrow.png" alt="Back" className="w-5 h-5" /></span>
-                <span className="ml-1.5 mr-2.5 font-semibold text-sm">BACK</span>
-            </button>
         </header>
       )}
 
