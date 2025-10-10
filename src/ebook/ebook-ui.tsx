@@ -1,3 +1,5 @@
+// --- START OF FILE ebook-ui.tsx (7).txt ---
+
 // --- START OF FILE game.tsx (FIXED & UPDATED) ---
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -226,36 +228,66 @@ const EbookReaderContent: React.FC = () => {
   const renderBookContent = () => {
     if (isLoadingVocab) return <div className="text-center p-10 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
     if (!currentBook) return <div className="text-center p-10 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
-    
-    // RE-INTEGRATED: Cloze test now renders in the main view.
+
     if (isClozeTestActive) {
-        const paragraphs = currentBook.content.trim().split(/\n+/);
         let globalWordCounter = -1;
+        
+        const renderClozeEnabledLine = (line: string) => {
+            const parts = line.split(/(\b[a-zA-Z']+\b)/g);
+            return parts.map((part, partIndex) => {
+                if (/\b[a-zA-Z']+\b/.test(part)) {
+                    globalWordCounter++;
+                    const currentWordIndex = globalWordCounter;
+                    const hiddenWordState = hiddenWords.get(currentWordIndex);
+                    if (hiddenWordState) {
+                        return <HiddenWordInput key={`hidden-${currentWordIndex}`} wordState={hiddenWordState} index={currentWordIndex} onClick={() => handleHiddenWordClick(currentWordIndex)} isActive={activeHiddenWordIndex === currentWordIndex} />;
+                    }
+                }
+                return <span key={`part-${partIndex}`}>{part}</span>;
+            });
+        };
+
+        if (subtitleLanguage === 'bilingual') {
+             return (
+                <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
+                    {pairedSentences.map((pair, index) => {
+                        if (!pair.en && !pair.vi) return <div key={`spacer-${index}`} className="h-4"></div>;
+                        const renderedEnContent = renderClozeEnabledLine(pair.en);
+                        if (pair.isHeader) {
+                            return (
+                                <div key={`pair-${index}`} className="my-6">
+                                    <h3 className="text-xl font-bold dark:text-white text-center">{renderedEnContent}</h3>
+                                    <p className="text-lg text-center text-gray-600 dark:text-gray-400 italic mt-1">{pair.vi}</p>
+                                </div>
+                            );
+                        }
+                        return (
+                            <div key={`pair-${index}`} className="mb-5">
+                                <p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-800 dark:text-gray-200 text-left">{renderedEnContent}</p>
+                                <p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-600 dark:text-gray-400 italic text-left">{pair.vi}</p>
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        }
+        
+        // Fallback to English-only cloze test
+        const paragraphs = currentBook.content.trim().split(/\n+/);
         return (
             <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
                 {paragraphs.map((paragraph, pIndex) => {
                     if (paragraph.trim() === '') return <div key={`blank-${pIndex}`} className="h-3 sm:h-4"></div>;
-                    const parts = paragraph.split(/(\b[a-zA-Z']+\b)/g);
                     return (
                         <p key={`p-${pIndex}`} className="text-base sm:text-lg leading-loose sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">
-                            {parts.map((part, partIndex) => {
-                                if (/\b[a-zA-Z']+\b/.test(part)) {
-                                    globalWordCounter++;
-                                    const currentWordIndex = globalWordCounter;
-                                    const hiddenWordState = hiddenWords.get(currentWordIndex);
-                                    if (hiddenWordState) {
-                                        return <HiddenWordInput key={`hidden-${currentWordIndex}`} wordState={hiddenWordState} index={currentWordIndex} onClick={() => handleHiddenWordClick(currentWordIndex)} isActive={activeHiddenWordIndex === currentWordIndex} />;
-                                    }
-                                }
-                                return <span key={`part-${partIndex}`}>{part}</span>;
-                            })}
+                           {renderClozeEnabledLine(paragraph)}
                         </p>
                     );
                 })}
             </div>
         );
     }
-    
+
     if (subtitleLanguage === 'bilingual') {
       return (
         <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
@@ -267,7 +299,7 @@ const EbookReaderContent: React.FC = () => {
         </div>
       );
     }
-
+    
     const contentLines = displayedContent.trim().split(/\n+/);
     return (
       <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
@@ -339,7 +371,7 @@ const EbookReaderContent: React.FC = () => {
       {selectedBookId && (
         <header className="flex items-center justify-between p-3 bg-gray-950 dark:bg-gray-950 shadow-md sticky top-0 z-20 py-2 sm:py-3">
             <BackButton onClick={handleBackToLibrary} />
-            {currentBook && subtitleLanguage === 'en' && (
+            {currentBook && subtitleLanguage !== 'vi' && (
               isClozeTestActive ? (
                  <button onClick={stopClozeTest} className="inline-flex items-center px-4 py-2 border border-red-500 text-sm font-medium rounded-md shadow-sm text-red-400 bg-red-500/10 hover:bg-red-500/20">
                     <XIcon />
