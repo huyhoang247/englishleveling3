@@ -9,7 +9,7 @@ import React, {
   useMemo,
   useEffect
 } from 'react';
-import { useQuizApp } from './course-context.tsx'; // <<< THAY ĐỔI: Import context chính
+import { useQuizApp } from '.../../courses/course-context.tsx'; // <<< THAY ĐỔI: Import context chính
 import { VocabularyItem } from '../../courses/course-data-service.ts'; // <<< Vẫn giữ import type từ service
 
 // Định nghĩa shape của Context
