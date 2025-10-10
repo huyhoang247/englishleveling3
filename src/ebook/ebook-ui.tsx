@@ -377,7 +377,8 @@ const EbookReaderContent: React.FC = () => {
     <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
       {selectedBookId && (
         <header className="flex items-center justify-between p-3 bg-gray-900/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-md sticky top-0 z-20 py-2 sm:py-3">
-            
+            <BackButton onClick={handleBackToLibrary} />
+            <button onClick={toggleSidebar} className="p-2 rounded-full dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Mở menu"><MenuIcon /></button>
         </header>
       )}
 
