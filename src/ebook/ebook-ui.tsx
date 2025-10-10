@@ -231,6 +231,9 @@ const EbookReaderContent: React.FC = () => {
     if (isLoadingVocab) return <div className="text-center p-10 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
     if (!currentBook) return <div className="text-center p-10 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
 
+    const showAudioPlayerSpace = !isClozeTestActive && currentBook?.audioUrls;
+    const paddingBottomClass = showAudioPlayerSpace ? 'pb-24' : 'pb-4';
+
     if (isClozeTestActive) {
         let globalWordCounter = -1;
         
@@ -251,7 +254,7 @@ const EbookReaderContent: React.FC = () => {
 
         if (subtitleLanguage === 'bilingual') {
              return (
-                <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
+                <div className={`font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 ${paddingBottomClass}`}>
                     {pairedSentences.map((pair, index) => {
                         if (!pair.en && !pair.vi) return <div key={`spacer-${index}`} className="h-4"></div>;
                         const renderedEnContent = renderClozeEnabledLine(pair.en);
@@ -277,7 +280,7 @@ const EbookReaderContent: React.FC = () => {
         // Fallback to English-only cloze test
         const paragraphs = currentBook.content.trim().split(/\n+/);
         return (
-            <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
+            <div className={`font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 ${paddingBottomClass}`}>
                 {paragraphs.map((paragraph, pIndex) => {
                     if (paragraph.trim() === '') return <div key={`blank-${pIndex}`} className="h-3 sm:h-4"></div>;
                     return (
@@ -292,7 +295,7 @@ const EbookReaderContent: React.FC = () => {
 
     if (subtitleLanguage === 'bilingual') {
       return (
-        <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
+        <div className={`font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 ${paddingBottomClass}`}>
           {pairedSentences.map((pair, index) => {
             if (!pair.en && !pair.vi) return <div key={`spacer-${index}`} className="h-4"></div>;
             if (pair.isHeader) return <div key={`pair-${index}`} className="my-6"><h3 className="text-xl font-bold dark:text-white text-center">{renderHighlightedText(pair.en)}</h3><p className="text-lg text-center text-gray-600 dark:text-gray-400 italic mt-1">{pair.vi}</p></div>;
@@ -305,7 +308,7 @@ const EbookReaderContent: React.FC = () => {
     // Đây là chế độ 'en' (bản gốc)
     const contentLines = displayedContent.trim().split(/\n+/);
     return (
-      <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
+      <div className={`font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 ${paddingBottomClass}`}>
         {contentLines.map((line, index) => {
           if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
           const isHeader = line.length < 80 && !line.includes('.') && !line.includes('?');
