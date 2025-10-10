@@ -1,3 +1,5 @@
+// --- START OF FILE ebook-context.tsx (2).txt ---
+
 // --- START OF FILE EbookContext.tsx (FIXED & UPDATED) ---
 
 import React, {
@@ -26,7 +28,7 @@ import {
   exampleData 
 } from '../story/flashcard-data.ts'; // Giả sử đây là đường dẫn đúng
 import { Book, sampleBooks as initialSampleBooks } from '../books-data.ts';
-import { phraseData } from '../phrase-data-2.ts';
+// phraseData import has been removed
 
 // --- TYPE DEFINITIONS ---
 // Các interface Vocabulary và Flashcard cục bộ đã được xóa vì giờ chúng ta import chúng
@@ -37,11 +39,7 @@ export interface Playlist {
   cardIds: number[];
 }
 
-export interface PhraseSentence {
-  parts: { english: string; vietnamese: string; }[];
-  fullEnglish: string;
-  fullVietnamese: string;
-}
+// PhraseSentence interface has been removed
 
 export interface BookStats {
   totalWords: number;
@@ -77,8 +75,6 @@ interface EbookContextType {
   playlists: Playlist[];
   isBatchPlaylistModalOpen: boolean;
   isStatsModalOpen: boolean;
-  highlightMode: 'word' | 'phrase';
-  selectedPhrase: PhraseSentence | null;
   selectedVoiceKey: string | null;
   subtitleLanguage: 'en' | 'vi' | 'bilingual';
 
@@ -101,8 +97,6 @@ interface EbookContextType {
   currentAudioUrl: string | null | undefined;
   bookVocabularyCardIds: number[];
   bookStats: BookStats | null;
-  phraseMap: Map<string, PhraseSentence>;
-  phraseRegex: RegExp | null;
   isViSubAvailable: boolean;
   displayedContent: string;
 
@@ -111,8 +105,6 @@ interface EbookContextType {
   handleBackToLibrary: () => void;
   handleWordClick: (word: string) => void;
   closeVocabDetail: () => void;
-  handlePhraseClick: (phrase: PhraseSentence) => void;
-  closePhraseDetail: () => void;
   togglePlayPause: () => void;
   handleSeek: (event: React.ChangeEvent<HTMLInputElement>) => void;
   togglePlaybackSpeed: () => void;
@@ -120,7 +112,6 @@ interface EbookContextType {
   toggleSidebar: () => void;
   setIsBatchPlaylistModalOpen: Dispatch<SetStateAction<boolean>>;
   setIsStatsModalOpen: Dispatch<SetStateAction<boolean>>;
-  setHighlightMode: Dispatch<SetStateAction<'word' | 'phrase'>>;
   handleVoiceChange: (direction: 'next' | 'previous') => void;
   toggleSubtitleLanguage: () => void;
 
@@ -161,8 +152,6 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [isBatchPlaylistModalOpen, setIsBatchPlaylistModalOpen] = useState(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
-  const [highlightMode, setHighlightMode] = useState<'word' | 'phrase'>('word');
-  const [selectedPhrase, setSelectedPhrase] = useState<PhraseSentence | null>(null);
   const [selectedVoiceKey, setSelectedVoiceKey] = useState<string | null>(null);
   const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'vi' | 'bilingual'>('en');
 
@@ -199,18 +188,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     setIsLoadingVocab(false);
   }, []);
 
-  const { phraseMap, phraseRegex } = useMemo(() => {
-    if (phraseData.length === 0) return { phraseMap: new Map(), phraseRegex: null };
-    const sortedPhrases = [...phraseData].sort((a, b) => b.fullEnglish.length - a.fullEnglish.length);
-    const tempMap = new Map<string, PhraseSentence>();
-    const phraseStrings = sortedPhrases.map(phrase => {
-      const lowerCasePhrase = phrase.fullEnglish.toLowerCase();
-      tempMap.set(lowerCasePhrase, phrase);
-      return lowerCasePhrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    });
-    const regex = new RegExp(`(${phraseStrings.join('|')})`, 'gi');
-    return { phraseMap: tempMap, phraseRegex: regex };
-  }, []);
+  // phraseMap and phraseRegex have been removed.
 
   const currentBook = useMemo(() => booksData.find(book => book.id === selectedBookId), [booksData, selectedBookId]);
   
@@ -447,8 +425,6 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   };
 
   const closeVocabDetail = () => { setSelectedVocabCard(null); setShowVocabDetail(false); };
-  const handlePhraseClick = (phrase: PhraseSentence) => setSelectedPhrase(phrase);
-  const closePhraseDetail = () => setSelectedPhrase(null);
   const togglePlayPause = () => { if (!audioPlayerRef.current) return; isAudioPlaying ? audioPlayerRef.current.pause() : audioPlayerRef.current.play().catch(console.error); };
   const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => { if (audioPlayerRef.current) { const newTime = Number(event.target.value); audioPlayerRef.current.currentTime = newTime; setAudioCurrentTime(newTime); } };
   const togglePlaybackSpeed = () => { const speeds = [1.0, 1.25, 1.5]; const currentIndex = speeds.indexOf(playbackSpeed); setPlaybackSpeed(speeds[(currentIndex + 1) % speeds.length]); };
@@ -464,12 +440,12 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const value: EbookContextType = {
     booksData, selectedBookId, vocabMap, isLoadingVocab, selectedVocabCard, showVocabDetail,
     isAudioPlaying, audioCurrentTime, audioDuration, playbackSpeed, isDarkMode, isSidebarOpen,
-    currentUser, playlists, isBatchPlaylistModalOpen, isStatsModalOpen, highlightMode,
-    selectedPhrase, selectedVoiceKey, audioPlayerRef, currentBook, availableVoices, currentAudioUrl,
-    bookVocabularyCardIds, bookStats, phraseMap, phraseRegex, handleSelectBook, handleBackToLibrary,
-    handleWordClick, closeVocabDetail, handlePhraseClick, closePhraseDetail, togglePlayPause, handleSeek,
+    currentUser, playlists, isBatchPlaylistModalOpen, isStatsModalOpen,
+    selectedVoiceKey, audioPlayerRef, currentBook, availableVoices, currentAudioUrl,
+    bookVocabularyCardIds, bookStats, handleSelectBook, handleBackToLibrary,
+    handleWordClick, closeVocabDetail, togglePlayPause, handleSeek,
     togglePlaybackSpeed, setIsDarkMode, toggleSidebar, setIsBatchPlaylistModalOpen,
-    setIsStatsModalOpen, setHighlightMode, handleVoiceChange,
+    setIsStatsModalOpen, handleVoiceChange,
     subtitleLanguage, isViSubAvailable, displayedContent, toggleSubtitleLanguage,
     exampleSentences: exampleData, // Thêm exampleData vào context
     isClozeTestActive, hiddenWordCount, hiddenWords, activeHiddenWordIndex, correctlyGuessedCount,
