@@ -11,11 +11,9 @@ import {
   fetchOrCreateUser as fetchOrCreateUserService,
   updateUserCoins as updateUserCoinsService,
   fetchGameInitialData as fetchGameInitialDataService,
-  // --- START: DÒNG MỚI ---
   updateAchievementData as updateAchievementDataService,
   fetchAndSyncVocabularyData as fetchAndSyncVocabularyDataService,
   VocabularyItem,
-  // --- END: DÒNG MỚI ---
 } from './course-data-service.ts';
 // NEW: Import data and generators
 import { generateAudioUrlsForWord, generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
@@ -49,20 +47,24 @@ interface QuizAppContextType {
   handlePracticeSelect: (practice: number) => void;
 
   // --- Data service functions ---
-  getOpenedVocab: () => Promise<string[]>;
-  getCompletedWords: (gameModeId: string) => Promise<Set<string>>;
+  // --- START: THAY ĐỔI ---
+  // Các hàm này sẽ bị thay thế bằng dữ liệu và hàm load có kiểm soát
+  // getOpenedVocab: () => Promise<string[]>;
+  // getCompletedWords: (gameModeId: string) => Promise<Set<string>>;
+  openedVocab: string[];
+  completedWordsMap: { [key: string]: Set<string> };
+  loadCompletedWordsForGame: (gameModeId: string) => Promise<void>;
+  // --- END: THAY ĐỔI ---
   recordGameSuccess: (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number) => Promise<void>;
   updateUserCoins: (amount: number) => Promise<void>;
   fetchOrCreateUser: () => Promise<any>;
   fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>;
-  // --- START: DÒNG MỚI ---
   fetchAndSyncVocabularyData: () => Promise<VocabularyItem[]>;
   updateAchievementData: (updates: {
     coinsToAdd: number;
     cardsToAdd: number;
     newVocabularyData: VocabularyItem[];
   }) => Promise<{ newCoins: number; newMasteryCards: number }>;
-  // --- END: DÒNG MỚI ---
 
   // --- NEW: Vocabulary data and utilities ---
   definitionsMap: { [key: string]: Definition };
@@ -100,6 +102,12 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   const [userCoins, setUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
   
+  // --- START: THAY ĐỔI ---
+  // State để lưu trữ dữ liệu từ vựng và tiến độ chung
+  const [openedVocab, setOpenedVocab] = useState<string[]>([]);
+  const [completedWordsMap, setCompletedWordsMap] = useState<{ [key: string]: Set<string> }>({});
+  // --- END: THAY ĐỔI ---
+
   // NEW: Process vocabulary definitions once and provide via context
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
@@ -146,6 +154,40 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
       setMasteryCount(0);
     }
   }, [user]);
+
+  // --- START: THAY ĐỔI ---
+  // Effect để fetch dữ liệu chung khi người dùng thay đổi
+  useEffect(() => {
+    if (user) {
+      // Fetch danh sách từ vựng đã mở một lần duy nhất
+      getOpenedVocabService(user.uid).then(vocabList => {
+        setOpenedVocab(vocabList);
+      }).catch(error => {
+        console.error("Failed to fetch opened vocab:", error);
+        setOpenedVocab([]);
+      });
+
+      // Reset completed words map khi người dùng thay đổi
+      setCompletedWordsMap({});
+    } else {
+      // Xóa dữ liệu khi người dùng đăng xuất
+      setOpenedVocab([]);
+      setCompletedWordsMap({});
+    }
+  }, [user]);
+
+  // Hàm để load dữ liệu hoàn thành của một game cụ thể (nếu chưa có)
+  const loadCompletedWordsForGame = useCallback(async (gameModeId: string) => {
+    if (user && !completedWordsMap[gameModeId]) {
+      console.log(`Fetching completed words for ${gameModeId}...`);
+      const completedSet = await getCompletedWordsService(user.uid, gameModeId);
+      setCompletedWordsMap(prevMap => ({
+        ...prevMap,
+        [gameModeId]: completedSet,
+      }));
+    }
+  }, [user, completedWordsMap]);
+  // --- END: THAY ĐỔI ---
 
   // --- Các hàm xử lý (Handlers) ---
   const handleQuizSelect = useCallback((quiz) => {
@@ -195,21 +237,13 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   }, []);
 
   // --- Data service wrapper functions ---
-  const getOpenedVocab = useCallback(async (): Promise<string[]> => {
-    if (!user) {
-      console.warn("getOpenedVocab called without a user.");
-      return [];
-    }
-    return getOpenedVocabService(user.uid);
-  }, [user]);
-
-  const getCompletedWords = useCallback(async (gameModeId: string): Promise<Set<string>> => {
-    if (!user) {
-        console.warn("getCompletedWords called without a user.");
-        return new Set();
-    }
-    return getCompletedWordsService(user.uid, gameModeId);
-  }, [user]);
+  // --- START: THAY ĐỔI ---
+  // Xóa các hàm wrapper cũ không còn cần thiết
+  /*
+  const getOpenedVocab = useCallback(async (): Promise<string[]> => { ... });
+  const getCompletedWords = useCallback(async (gameModeId: string): Promise<Set<string>> => { ... });
+  */
+  // --- END: THAY ĐỔI ---
 
   const recordGameSuccess = useCallback(async (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number): Promise<void> => {
     if (!user) {
@@ -217,6 +251,17 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
         return;
     }
     await recordGameSuccessService(user.uid, gameModeId, word, isMastered, coinsToAdd);
+    // --- START: THAY ĐỔI ---
+    // Cập nhật state cục bộ ngay lập tức để UI phản hồi nhanh hơn
+    setCompletedWordsMap(prevMap => {
+        const newSet = new Set(prevMap[gameModeId] || []);
+        newSet.add(word);
+        return {
+            ...prevMap,
+            [gameModeId]: newSet
+        };
+    });
+    // --- END: THAY ĐỔI ---
   }, [user]);
   
   const fetchGameInitialData = useCallback(async (gameModeId: string, isMultiWordGame: boolean): Promise<any> => {
@@ -281,16 +326,17 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     handleQuizSelect,
     handleTypeSelect,
     handlePracticeSelect,
-    getOpenedVocab,
-    getCompletedWords,
+    // --- START: THAY ĐỔI ---
+    openedVocab,
+    completedWordsMap,
+    loadCompletedWordsForGame,
+    // --- END: THAY ĐỔI ---
     recordGameSuccess,
     fetchOrCreateUser,
     updateUserCoins,
     fetchGameInitialData,
-    // --- START: DÒNG MỚI ---
     fetchAndSyncVocabularyData,
     updateAchievementData,
-    // --- END: DÒNG MỚI ---
     // NEW: Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
