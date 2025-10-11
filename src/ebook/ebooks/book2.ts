@@ -56,7 +56,7 @@ Part 3: The Internal Conflict and the "Dark Playground"
 
 Now, what is going on here? The Instant Gratification Monkey does not seem like a guy you want behind the wheel. He lives entirely in the present moment. He has no memory of the past, no knowledge of the future, and he only cares about two things: easy and fun.
 
-Now, in the animal world, that works fine. If you're a dog and you spend your whole life doing nothing other than easy and fun things, you're a huge success! (Laughter) And to the Monkey, humans are just another animal species. You have to keep well-slept, well-fed and propagating into the next generation, which in tribal times might have worked OK. But, if you haven't noticed, now we're not in tribal times. We're in an advanced civilization, and the Monkey does not know what that is.
+Now, in the animal world, that works fine. If you're a dog and you spend your whole life doing nothing other than easy and fun things, you're a huge success! (Laughter) And to the Monkey, humans are just another animal species. You have to keep well-slept, well-fed and propagating into the next generation. Which in tribal times might have worked OK. But, if you haven't noticed, now we're not in tribal times. We're in an advanced civilization, and the Monkey does not know what that is.
 
 Which is why we have another guy in our brain, the Rational Decision-Maker, who gives us the ability to do things no other animal can do. We can visualize the future. We can see the big picture. We can make long-term plans. And he wants to take all of that into account. And he wants to just have us do whatever makes sense to be doing right now.
 
