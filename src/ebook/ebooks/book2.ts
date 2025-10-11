@@ -29,7 +29,7 @@ And they say, "We need to talk about your thesis." And I say, "OK"
 And they say, "It's the best one we've ever seen"
 (Laughter) (Applause)
 
-That did not happen. (Laughter) It was a very, very bad thesis. (Laughter) I just wanted to enjoy that one moment when all of you thought, "This guy is amazing!" (Laughter) No, no, it was very, very bad.
+That did not happen. (Laughter) It was a very, very bad thesis. (Laughter) I just wanted to enjoy that one moment when all of you thought, This guy is amazing! (Laughter) No, no, it was very, very bad.
 
 Part 2: Inside the Procrastinator's Brain
 
@@ -43,10 +43,10 @@ Now... here's my brain. (Laughter)
 There is a difference. Both brains have a Rational Decision-Maker in them, but the procrastinator's brain also has an Instant Gratification Monkey.
 
 Now, what does this mean for the procrastinator? Well, it means everything's fine until this happens:
-[Rational Decision-Maker: This is a perfect time to get some work done.]
+[Rational Decision-Maker: This is a perfect time to get some work done]
 [Monkey: Nope!]
 
-So the Rational Decision-Maker will make the rational decision to do something productive, but the Monkey doesn't like that plan, so he actually takes the wheel, and he says, "Actually, let's read the entire Wikipedia page of the Nancy Kerrigan/Tonya Harding scandal, because I just remembered that that happened." (Laughter)
+So the Rational Decision-Maker will make the rational decision to do something productive. But the Monkey doesn't like that plan, so he actually takes the wheel, and he says, "Actually, let's read the entire Wikipedia page of the Nancy Kerrigan/Tonya Harding scandal, because I just remembered that that happened." (Laughter)
 
 Then -- (Laughter) -- "Then we're going to go over to the fridge, to see if there's anything new in there since 10 minutes ago. After that, we're going to go on a YouTube spiral that starts with videos of Richard Feynman talking about magnets and ends much, much later with us watching interviews with Justin Bieber's mom." (Laughter)
 
@@ -128,7 +128,7 @@ Họ nói: "Chúng tôi cần nói chuyện về luận văn của cậu." Tôi 
 Và họ nói: "Đó là bài luận văn xuất sắc nhất chúng tôi từng thấy"
 (Tiếng cười) (Vỗ tay)
 
-... Điều đó đã không xảy ra. (Tiếng cười) Đó là một bài luận văn rất, rất tệ. (Tiếng cười) Tôi chỉ muốn tận hưởng khoảnh khắc đó, khi tất cả các bạn đều nghĩ, "Chàng trai này thật tuyệt vời!" (Tiếng cười) Không, không, nó rất, rất tệ.
+... Điều đó đã không xảy ra. (Tiếng cười) Đó là một bài luận văn rất, rất tệ. (Tiếng cười) Tôi chỉ muốn tận hưởng khoảnh khắc đó, khi tất cả các bạn đều nghĩ, Chàng trai này thật tuyệt vời! (Tiếng cười) Không, không, nó rất, rất tệ.
 
 Phần 2: Bên Trong Bộ Não Của Kẻ Trì Hoãn
 
@@ -142,7 +142,7 @@ Bây giờ... đây là bộ não của tôi. (Tiếng cười)
 Có một sự khác biệt. Cả hai bộ não đều có một Người Ra Quyết Định Lý Trí bên trong, nhưng bộ não của kẻ trì hoãn còn có thêm một Chú Khỉ Thỏa Mãn Tức Thì.
 
 Điều này có ý nghĩa gì đối với kẻ trì hoãn? Chà, nó có nghĩa là mọi thứ đều ổn cho đến khi điều này xảy ra:
-[Người Ra Quyết Định Lý Trí: Đây là thời điểm hoàn hảo để làm việc.]
+[Người Ra Quyết Định Lý Trí: Đây là thời điểm hoàn hảo để làm việc]
 [Chú Khỉ: Thôi dẹp!]
 
 Người Ra Quyết Định Lý Trí sẽ đưa ra quyết định hợp lý là làm một việc gì đó hiệu quả. Nhưng Chú Khỉ không thích kế hoạch đó, nên nó cướp lấy tay lái và nói: "Thực ra, chúng ta hãy đọc toàn bộ trang Wikipedia về vụ bê bối Nancy Kerrigan/Tonya Harding đi, vì tôi vừa nhớ ra chuyện đó." (Tiếng cười)
