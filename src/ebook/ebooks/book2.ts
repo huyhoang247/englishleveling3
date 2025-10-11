@@ -23,10 +23,7 @@ But then came my 90-page senior thesis, a paper you're supposed to spend a year 
 
 But then, the funniest thing happened. Those first few months? They came and went, and I couldn't quite do stuff. So we had an awesome new revised plan. (Laughter) And then -- (Laughter) -- But then those middle months actually went by, and I didn't really write words, and so we were here. And then two months turned into one month, which turned into two weeks. And one day I woke up with three days until the deadline, still not having written a word. And so I did the only thing I could: I wrote 90 pages over 72 hours, pulling not one but two all-nighters -- humans are not supposed to pull two all-nighters -- sprinted across campus, dove in slow motion, and got it in just at the deadline.
 
-I thought that was the end of everything. But a week later I get a call, and it's the school.
-And they say, "Is this Tim Urban?" And I say, "Yeah"
-And they say, "We need to talk about your thesis." And I say, "OK"
-And they say, "It's the best one we've ever seen"
+I thought that was the end of everything. But a week later I get a call, and it's the school. And they say, "Is this Tim Urban?" And I say, "Yeah." And they say, "We need to talk about your thesis." And I say, "OK." And they say, "It's the best one we've ever seen."
 (Laughter) (Applause)
 
 That did not happen. (Laughter) It was a very, very bad thesis. (Laughter) I just wanted to enjoy that one moment when all of you thought, This guy is amazing! (Laughter) No, no, it was very, very bad.
@@ -46,11 +43,7 @@ Now, what does this mean for the procrastinator? Well, it means everything's fin
 [Rational Decision-Maker: This is a perfect time to get some work done]
 [Monkey: Nope!]
 
-So the Rational Decision-Maker will make the rational decision to do something productive. But the Monkey doesn't like that plan, so he actually takes the wheel, and he says, "Actually, let's read the entire Wikipedia page of the Nancy Kerrigan/Tonya Harding scandal, because I just remembered that that happened" (Laughter).
-
-Then -- (Laughter) -- "Then we're going to go over to the fridge, to see if there's anything new in there since 10 minutes ago. After that, we're going to go on a YouTube spiral that starts with videos of Richard Feynman talking about magnets and ends much, much later with us watching interviews with Justin Bieber's mom" (Laughter).
-
-"All of that's going to take a while, so we're not going to really have room on the schedule for any work today, Sorry" (Sigh).
+So the Rational Decision-Maker will make the rational decision to do something productive. But the Monkey doesn't like that plan, so he actually takes the wheel, and he says, "Actually, let's read the entire Wikipedia page of the Nancy Kerrigan/Tonya Harding scandal, because I just remembered that that happened" (Laughter). Then -- (Laughter) -- "Then we're going to go over to the fridge, to see if there's anything new in there since 10 minutes ago. After that, we're going to go on a YouTube spiral that starts with videos of Richard Feynman talking about magnets and ends much, much later with us watching interviews with Justin Bieber's mom" (Laughter). "All of that's going to take a while, so we're not going to really have room on the schedule for any work today, Sorry" (Sigh).
 
 Part 3: The Internal Conflict and the "Dark Playground"
 
@@ -122,10 +115,7 @@ Nhưng rồi đến lượt bài luận văn tốt nghiệp dài 90 trang của 
 
 Nhưng rồi, điều hài hước nhất đã xảy ra. Vài tháng đầu tiên ấy à? Chúng đến rồi đi, và tôi không tài nào làm được việc gì cả. Thế là chúng tôi có một kế hoạch mới được sửa đổi tuyệt vời. (Tiếng cười) Và rồi -- (Tiếng cười) -- Nhưng rồi những tháng giữa cũng trôi qua, và tôi thật sự chẳng viết được chữ nào, và thế là chúng tôi ở mốc này. Rồi hai tháng biến thành một tháng, rồi thành hai tuần. Và một ngày nọ, tôi thức dậy khi chỉ còn ba ngày nữa là đến hạn chót, mà vẫn chưa viết được một chữ nào. Thế là tôi đã làm điều duy nhất có thể: Tôi đã viết 90 trang trong vòng 72 giờ, không chỉ thức một mà là hai đêm trắng – con người không được thiết kế để thức hai đêm liền – chạy nước rút qua khuôn viên trường, bay người theo kiểu quay chậm và nộp bài ngay đúng hạn chót.
 
-Tôi đã nghĩ đó là dấu chấm hết cho mọi thứ. Nhưng một tuần sau, tôi nhận được một cuộc gọi từ trường.
-Và họ hỏi: "Có phải Tim Urban không ạ?" Tôi đáp: "Vâng"
-Họ nói: "Chúng tôi cần nói chuyện về luận văn của cậu." Tôi nói: "OK"
-Và họ nói: "Đó là bài luận văn xuất sắc nhất chúng tôi từng thấy"
+Tôi đã nghĩ đó là dấu chấm hết cho mọi thứ. Nhưng một tuần sau, tôi nhận được một cuộc gọi từ trường. Và họ hỏi: "Có phải Tim Urban không ạ?" Tôi đáp: "Vâng." Họ nói: "Chúng tôi cần nói chuyện về luận văn của cậu." Tôi nói: "OK." Và họ nói: "Đó là bài luận văn xuất sắc nhất chúng tôi từng thấy."
 (Tiếng cười) (Vỗ tay)
 
 ... Điều đó đã không xảy ra. (Tiếng cười) Đó là một bài luận văn rất, rất tệ. (Tiếng cười) Tôi chỉ muốn tận hưởng khoảnh khắc đó, khi tất cả các bạn đều nghĩ, Chàng trai này thật tuyệt vời! (Tiếng cười) Không, không, nó rất, rất tệ.
@@ -145,11 +135,7 @@ Có một sự khác biệt. Cả hai bộ não đều có một Người Ra Quy
 [Người Ra Quyết Định Lý Trí: Đây là thời điểm hoàn hảo để làm việc]
 [Chú Khỉ: Thôi dẹp!]
 
-Người Ra Quyết Định Lý Trí sẽ đưa ra quyết định hợp lý là làm một việc gì đó hiệu quả. Nhưng Chú Khỉ không thích kế hoạch đó, nên nó cướp lấy tay lái và nói: "Thực ra, chúng ta hãy đọc toàn bộ trang Wikipedia về vụ bê bối Nancy Kerrigan/Tonya Harding đi, vì tôi vừa nhớ ra chuyện đó" (Tiếng cười).
-
-Rồi -- (Tiếng cười) -- "Sau đó, chúng ta sẽ đi ra tủ lạnh, để xem có gì mới trong đó từ 10 phút trước không. Tiếp theo, chúng ta sẽ sa vào một vòng lặp YouTube bất tận, bắt đầu bằng video Richard Feynman nói về nam châm và kết thúc rất, rất lâu sau đó bằng việc xem các cuộc phỏng vấn với mẹ của Justin Bieber" (Tiếng cười).
-
-"Tất cả những việc đó sẽ tốn khá nhiều thời gian, nên chúng ta sẽ không thực sự có chỗ trống trong lịch trình cho bất kỳ công việc nào hôm nay, Xin lỗi nhé" (Thở dài).
+Người Ra Quyết Định Lý Trí sẽ đưa ra quyết định hợp lý là làm một việc gì đó hiệu quả. Nhưng Chú Khỉ không thích kế hoạch đó, nên nó cướp lấy tay lái và nói: "Thực ra, chúng ta hãy đọc toàn bộ trang Wikipedia về vụ bê bối Nancy Kerrigan/Tonya Harding đi, vì tôi vừa nhớ ra chuyện đó" (Tiếng cười). Rồi -- (Tiếng cười) -- "Sau đó, chúng ta sẽ đi ra tủ lạnh, để xem có gì mới trong đó từ 10 phút trước không. Tiếp theo, chúng ta sẽ sa vào một vòng lặp YouTube bất tận, bắt đầu bằng video Richard Feynman nói về nam châm và kết thúc rất, rất lâu sau đó bằng việc xem các cuộc phỏng vấn với mẹ của Justin Bieber" (Tiếng cười). "Tất cả những việc đó sẽ tốn khá nhiều thời gian, nên chúng ta sẽ không thực sự có chỗ trống trong lịch trình cho bất kỳ công việc nào hôm nay, Xin lỗi nhé" (Thở dài).
 
 Phần 3: Cuộc Xung Đột Nội Tâm & "Sân Chơi Tăm Tối"
 
@@ -201,9 +187,7 @@ Phần 6: Lời Kêu Gọi Thức Tỉnh Cho Mọi Người
 
 Khi đọc những email đó, tôi đã có một sự giác ngộ nhỏ — rằng tôi không nghĩ người không trì hoãn tồn tại. Đúng vậy, tôi nghĩ tất cả các bạn đều là những kẻ trì hoãn. Có thể không phải tất cả các bạn đều là một mớ hỗn độn như một số người trong chúng ta, (Tiếng cười) và một số bạn có thể có một mối quan hệ lành mạnh với các hạn chót. Nhưng hãy nhớ: thủ đoạn tinh vi nhất của Chú Khỉ là khi không có hạn chót.
 
-Tôi muốn cho bạn xem một thứ cuối cùng. Tôi gọi đây là Cuốn Lịch Cuộc Đời. Mỗi ô vuông là một tuần trong một cuộc đời 90 năm. Số ô vuông đó không nhiều đến thế đâu, đặc biệt là khi chúng ta đã sử dụng hết một mớ rồi.
-
-Vì vậy, tôi nghĩ tất cả chúng ta cần phải nhìn thật lâu và thật kỹ vào cuốn lịch đó. Chúng ta cần suy nghĩ về những gì chúng ta đang thực sự trì hoãn, bởi vì mọi người đều đang trì hoãn một điều gì đó trong cuộc sống. Chúng ta cần phải luôn nhận thức về Chú Khỉ Thỏa Mãn Tức Thì. Đó là công việc của tất cả chúng ta. Và bởi vì không có nhiều ô vuông trên đó, đó là một công việc có lẽ nên bắt đầu ngay hôm nay.
+Tôi muốn cho bạn xem một thứ cuối cùng. Tôi gọi đây là Cuốn Lịch Cuộc Đời. Mỗi ô vuông là một tuần trong một cuộc đời 90 năm. Số ô vuông đó không nhiều đến thế đâu, đặc biệt là khi chúng ta đã sử dụng hết một mớ rồi. Vì vậy, tôi nghĩ tất cả chúng ta cần phải nhìn thật lâu và thật kỹ vào cuốn lịch đó. Chúng ta cần suy nghĩ về những gì chúng ta đang thực sự trì hoãn, bởi vì mọi người đều đang trì hoãn một điều gì đó trong cuộc sống. Chúng ta cần phải luôn nhận thức về Chú Khỉ Thỏa Mãn Tức Thì. Đó là công việc của tất cả chúng ta. Và bởi vì không có nhiều ô vuông trên đó, đó là một công việc có lẽ nên bắt đầu ngay hôm nay.
 
 Chà, có thể không phải hôm nay, nhưng... (Tiếng cười) bạn biết đấy. Sớm thôi.
 
