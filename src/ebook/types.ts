@@ -1,8 +1,6 @@
-// src/types/book.ts
+// src/data/types.ts
 
-/**
- * Định nghĩa cấu trúc dữ liệu cho một cuốn sách.
- */
+// Định nghĩa cấu trúc cho một cuốn sách
 export interface Book {
   id: string;
   title: string;
