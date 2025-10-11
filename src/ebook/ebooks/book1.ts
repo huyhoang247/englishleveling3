@@ -4,7 +4,7 @@ export const book1Data: Book = {
   id: 'book1',
   title: 'Why Social Health Is Key to Happiness and Longevity',
   author: 'Kasley Killam',
-  category: 'Technology & Future',
+  category: 'TED',
   coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/001.jpg',
   audioUrls: {
     'Kasley Killam': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/Why%20Social%20Health%20Is%20Key%20to%20Happiness%20and%20Longevity%20%20Kasley%20Killiam%20%20TED.mp3',
