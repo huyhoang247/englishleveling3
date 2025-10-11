@@ -330,15 +330,14 @@ const EbookReaderContent: React.FC = () => {
   };
 
   const renderLibrary = () => {
-    const tags = ['All', 'Technology', 'Self-help', 'History', 'Business', 'Fiction', 'Science'];
+    const tags = useMemo(() => ['All', ...Object.keys(groupedBooks)], [groupedBooks]);
 
-    // Filter books based on the active tag.
-    const filteredBooks = useMemo(() => {
-        if (activeTag === 'All') return booksData;
-        return booksData.filter(book => book.category === activeTag || (activeTag === 'Technology' && book.category === 'Technology & Future'));
-    }, [booksData, activeTag]);
-
-    const filteredGroupedBooks = groupBooksByCategory(filteredBooks);
+    const categoriesToRender = useMemo(() => {
+        if (activeTag === 'All' || !groupedBooks[activeTag]) {
+            return Object.entries(groupedBooks);
+        }
+        return [[activeTag, groupedBooks[activeTag]]];
+    }, [activeTag, groupedBooks]);
 
     return (
       <div className="flex flex-col">
@@ -364,25 +363,34 @@ const EbookReaderContent: React.FC = () => {
 
         {/* --- Books Grid --- */}
         <div className="p-4 md:p-6 lg:p-8">
-          {Object.entries(filteredGroupedBooks)
-            .filter(([category]) => category === 'Technology & Future') // This still ensures only YouTube category is shown as per original request.
-            .map(([category, booksInCategory]) => (
+          {categoriesToRender.map(([category, booksInCategory]) => (
             <section key={category} className="mb-10">
               <div className="flex justify-between items-center mb-4">
-                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/youtube-logo.png" alt="YouTube" className="h-8" />
+                 {category === 'Technology & Future' ? (
+                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/youtube-logo.png" alt="YouTube" className="h-8" />
+                ) : (
+                  <h2 className="text-xl md:text-2xl font-bold dark:text-white">{category}</h2>
+                )}
+                {/* Only show "See All" when all categories are being displayed */}
+                {activeTag === 'All' && (
+                    <button className="text-sm font-medium px-3 py-1 bg-gray-800/50 text-white rounded-lg hover:bg-gray-700/50 transition-colors dark:bg-gray-700/50 dark:hover:bg-gray-600/50">
+                      See All
+                    </button>
+                )}
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
                 {booksInCategory.map(book => (
                   <div key={book.id} className="cursor-pointer group" onClick={() => handleSelectBook(book.id)}>
-                    {/* Thumbnail with 16:9 aspect ratio and relative positioning */}
+                    {/* Thumbnail with 16:9 aspect ratio & duration overlay */}
                     <div className="relative aspect-video bg-gray-200 dark:bg-gray-700 rounded-xl overflow-hidden shadow-lg mb-3 group-hover:shadow-xl transition-shadow duration-300">
                       <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      {/* Audio duration overlay, assuming 'durationInSeconds' exists on the book object */}
-                      {(book as any).durationInSeconds && (
-                        <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs font-semibold px-2 py-1 rounded-md backdrop-blur-sm">
-                          {formatTime((book as any).durationInSeconds)}
-                        </span>
+                      {/* DURATION OVERLAY: Assumes `book.durationInSeconds` exists on the Book object from `books-data.ts`.
+                          This would be the duration of the first audio file. */}
+                      {(book as any).durationInSeconds > 0 && (
+                         <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-sm text-white text-xs font-semibold px-1.5 py-0.5 rounded">
+                           {formatTime((book as any).durationInSeconds)}
+                         </div>
                       )}
                     </div>
                     {/* Book Info */}
@@ -401,7 +409,6 @@ const EbookReaderContent: React.FC = () => {
       </div>
     );
   };
-
 
   const handleRewind = () => {
     if (audioPlayerRef.current) {
