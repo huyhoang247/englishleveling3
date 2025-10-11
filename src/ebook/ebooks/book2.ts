@@ -24,9 +24,9 @@ But then came my 90-page senior thesis, a paper you're supposed to spend a year 
 But then, the funniest thing happened. Those first few months? They came and went, and I couldn't quite do stuff. So we had an awesome new revised plan. (Laughter) And then -- (Laughter) -- But then those middle months actually went by, and I didn't really write words, and so we were here. And then two months turned into one month, which turned into two weeks. And one day I woke up with three days until the deadline, still not having written a word. And so I did the only thing I could: I wrote 90 pages over 72 hours, pulling not one but two all-nighters -- humans are not supposed to pull two all-nighters -- sprinted across campus, dove in slow motion, and got it in just at the deadline.
 
 I thought that was the end of everything. But a week later I get a call, and it's the school.
-And they say, "Is this Tim Urban?" And I say, "Yeah."
-And they say, "We need to talk about your thesis." And I say, "OK."
-And they say, "It's the best one we've ever seen."
+And they say, "Is this Tim Urban?" And I say, "Yeah"
+And they say, "We need to talk about your thesis." And I say, "OK"
+And they say, "It's the best one we've ever seen"
 (Laughter) (Applause)
 
 That did not happen. (Laughter) It was a very, very bad thesis. (Laughter) I just wanted to enjoy that one moment when all of you thought, "This guy is amazing!" (Laughter) No, no, it was very, very bad.
@@ -123,9 +123,9 @@ Nhưng rồi đến lượt bài luận văn tốt nghiệp dài 90 trang của 
 Nhưng rồi, điều hài hước nhất đã xảy ra. Vài tháng đầu tiên ấy à? Chúng đến rồi đi, và tôi không tài nào làm được việc gì cả. Thế là chúng tôi có một kế hoạch mới được sửa đổi tuyệt vời. (Tiếng cười) Và rồi -- (Tiếng cười) -- Nhưng rồi những tháng giữa cũng trôi qua, và tôi thật sự chẳng viết được chữ nào, và thế là chúng tôi ở mốc này. Rồi hai tháng biến thành một tháng, rồi thành hai tuần. Và một ngày nọ, tôi thức dậy khi chỉ còn ba ngày nữa là đến hạn chót, mà vẫn chưa viết được một chữ nào. Thế là tôi đã làm điều duy nhất có thể: Tôi đã viết 90 trang trong vòng 72 giờ, không chỉ thức một mà là hai đêm trắng – con người không được thiết kế để thức hai đêm liền – chạy nước rút qua khuôn viên trường, bay người theo kiểu quay chậm và nộp bài ngay đúng hạn chót.
 
 Tôi đã nghĩ đó là dấu chấm hết cho mọi thứ. Nhưng một tuần sau, tôi nhận được một cuộc gọi từ trường.
-Và họ hỏi: "Có phải Tim Urban không ạ?" Tôi đáp: "Vâng."
-Họ nói: "Chúng tôi cần nói chuyện về luận văn của cậu." Tôi nói: "OK."
-Và họ nói: "Đó là bài luận văn xuất sắc nhất chúng tôi từng thấy."
+Và họ hỏi: "Có phải Tim Urban không ạ?" Tôi đáp: "Vâng"
+Họ nói: "Chúng tôi cần nói chuyện về luận văn của cậu." Tôi nói: "OK"
+Và họ nói: "Đó là bài luận văn xuất sắc nhất chúng tôi từng thấy"
 (Tiếng cười) (Vỗ tay)
 
 ... Điều đó đã không xảy ra. (Tiếng cười) Đó là một bài luận văn rất, rất tệ. (Tiếng cười) Tôi chỉ muốn tận hưởng khoảnh khắc đó, khi tất cả các bạn đều nghĩ, "Chàng trai này thật tuyệt vời!" (Tiếng cười) Không, không, nó rất, rất tệ.
