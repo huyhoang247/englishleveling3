@@ -2,7 +2,7 @@
 import { Book } from '../types.ts';
 
 import { book1Data } from './book1.ts';
-import { book2Data } from './book12.ts';
+import { book2Data } from './book2.ts';
 
 
 
