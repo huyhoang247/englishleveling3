@@ -1,3 +1,5 @@
+// --- START OF FILE ebook-ui.tsx (12).txt ---
+
 // --- START OF FILE game.tsx (FIXED & UPDATED) ---
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -323,8 +325,8 @@ const EbookReaderContent: React.FC = () => {
   }, [activeHiddenWordIndex, hiddenWords]);
   
   const renderLibrary = () => {
-    // MODIFIED: Corrected the tag name to "Technology & Future"
-    const tags = ['All', 'Marketing & Sales', 'Management & Leadership', 'Technology & Future', 'Self-help', 'History', 'Business', 'Fiction', 'Science'];
+    // --- MODIFIED: The tags array is now generated dynamically ---
+    const tags = ['All', ...Object.keys(groupedBooks)];
 
     return (
       <div className="flex flex-col">
