@@ -323,7 +323,8 @@ const EbookReaderContent: React.FC = () => {
   }, [activeHiddenWordIndex, hiddenWords]);
   
   const renderLibrary = () => {
-    const tags = ['All', 'Marketing & Sales', 'Management & Leadership', 'Technology', 'Self-help', 'History', 'Business', 'Fiction', 'Science'];
+    // MODIFIED: Corrected the tag name to "Technology & Future"
+    const tags = ['All', 'Marketing & Sales', 'Management & Leadership', 'Technology & Future', 'Self-help', 'History', 'Business', 'Fiction', 'Science'];
 
     return (
       <div className="flex flex-col">
