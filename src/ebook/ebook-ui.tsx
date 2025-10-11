@@ -330,16 +330,46 @@ const EbookReaderContent: React.FC = () => {
   };
 
   const renderLibrary = () => {
+    const tags = ['All', 'Technology', 'Self-help', 'History', 'Business', 'Fiction', 'Science'];
+
+    // Filter books based on the active tag.
+    const filteredBooks = useMemo(() => {
+        if (activeTag === 'All') return booksData;
+        return booksData.filter(book => book.category === activeTag || (activeTag === 'Technology' && book.category === 'Technology & Future'));
+    }, [booksData, activeTag]);
+
+    const filteredGroupedBooks = groupBooksByCategory(filteredBooks);
+
     return (
       <div className="flex flex-col">
+        {/* --- Tag Bar --- */}
+        <div className="sticky top-0 bg-gray-50 dark:bg-gray-850 z-10 border-b border-gray-200 dark:border-gray-700/50">
+          <div className="flex items-center space-x-3 overflow-x-auto no-scrollbar p-3 px-4">
+            {tags.map(tag => (
+              <button 
+                key={tag}
+                onClick={() => setActiveTag(tag)}
+                className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors duration-200 
+                  ${activeTag === tag 
+                    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' 
+                    : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`
+                }
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* --- Books Grid --- */}
         <div className="p-4 md:p-6 lg:p-8">
-          {Object.entries(groupedBooks)
-            .filter(([category]) => category === 'Technology & Future')
+          {Object.entries(filteredGroupedBooks)
+            .filter(([category]) => category === 'Technology & Future') // This still ensures only YouTube category is shown as per original request.
             .map(([category, booksInCategory]) => (
             <section key={category} className="mb-10">
               <div className="flex justify-between items-center mb-4">
-                 <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/youtube-logo.png" alt="YouTube" className="h-8" />
+                <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/youtube-logo.png" alt="YouTube" className="h-8" />
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
@@ -371,6 +401,7 @@ const EbookReaderContent: React.FC = () => {
       </div>
     );
   };
+
 
   const handleRewind = () => {
     if (audioPlayerRef.current) {
