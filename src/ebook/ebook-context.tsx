@@ -29,7 +29,7 @@ import {
   WORD_TO_CARD_MAP, 
   exampleData 
 } from '../story/flashcard-data.ts'; // Giả sử đây là đường dẫn đúng
-import { Book, sampleBooks as initialSampleBooks } from '../books-data.ts';
+import { Book, sampleBooks as initialSampleBooks } from './books-data.ts';
 // phraseData import has been removed
 
 // --- TYPE DEFINITIONS ---
