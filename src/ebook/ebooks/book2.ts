@@ -1,4 +1,3 @@
---- START OF FILE book2.tgfffs.txt ---
 
 import { Book } from '../types';
 
