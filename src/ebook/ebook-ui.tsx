@@ -150,7 +150,6 @@ const EbookReaderContent: React.FC = () => {
 
   const groupedBooks = useMemo(() => groupBooksByCategory(booksData), [booksData]);
 
-  // ✅ FIX: Moved hooks to the top level of the component.
   const tags = useMemo(() => ['All', ...Object.keys(groupedBooks)], [groupedBooks]);
   
   const categoriesToRender = useMemo(() => {
@@ -372,7 +371,6 @@ const EbookReaderContent: React.FC = () => {
                 ) : (
                   <h2 className="text-xl md:text-2xl font-bold dark:text-white">{category}</h2>
                 )}
-                {/* Only show "See All" when all categories are being displayed */}
                 {activeTag === 'All' && (
                     <button className="text-sm font-medium px-3 py-1 bg-gray-800/50 text-white rounded-lg hover:bg-gray-700/50 transition-colors dark:bg-gray-700/50 dark:hover:bg-gray-600/50">
                       See All
@@ -383,18 +381,18 @@ const EbookReaderContent: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
                 {booksInCategory.map(book => (
                   <div key={book.id} className="cursor-pointer group" onClick={() => handleSelectBook(book.id)}>
-                    {/* Thumbnail with 16:9 aspect ratio & duration overlay */}
                     <div className="relative aspect-video bg-gray-200 dark:bg-gray-700 rounded-xl overflow-hidden shadow-lg mb-3 group-hover:shadow-xl transition-shadow duration-300">
                       <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      {/* DURATION OVERLAY: Assumes `book.durationInSeconds` exists on the Book object from `books-data.ts`.
-                          This would be the duration of the first audio file. */}
+                      
+                      {/* --- AUDIO DURATION OVERLAY --- */}
+                      {/* This conditionally renders if `book.durationInSeconds` exists and is > 0 */}
                       {(book as any).durationInSeconds > 0 && (
                          <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-sm text-white text-xs font-semibold px-1.5 py-0.5 rounded">
                            {formatTime((book as any).durationInSeconds)}
                          </div>
                       )}
                     </div>
-                    {/* Book Info */}
+                    
                     <div className="flex items-start space-x-3">
                       <div>
                         <h3 className="text-base font-bold dark:text-gray-100 text-gray-900 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 line-clamp-2">{book.title}</h3>
