@@ -150,6 +150,16 @@ const EbookReaderContent: React.FC = () => {
 
   const groupedBooks = useMemo(() => groupBooksByCategory(booksData), [booksData]);
 
+  // ✅ FIX: Moved hooks to the top level of the component.
+  const tags = useMemo(() => ['All', ...Object.keys(groupedBooks)], [groupedBooks]);
+  
+  const categoriesToRender = useMemo(() => {
+      if (activeTag === 'All' || !groupedBooks[activeTag]) {
+          return Object.entries(groupedBooks);
+      }
+      return [[activeTag, groupedBooks[activeTag]]];
+  }, [activeTag, groupedBooks]);
+
   const pairedSentences = useMemo(() => {
     if (subtitleLanguage !== 'bilingual' || !currentBook?.content || !currentBook.contentVi) {
       return [];
@@ -330,15 +340,6 @@ const EbookReaderContent: React.FC = () => {
   };
 
   const renderLibrary = () => {
-    const tags = useMemo(() => ['All', ...Object.keys(groupedBooks)], [groupedBooks]);
-
-    const categoriesToRender = useMemo(() => {
-        if (activeTag === 'All' || !groupedBooks[activeTag]) {
-            return Object.entries(groupedBooks);
-        }
-        return [[activeTag, groupedBooks[activeTag]]];
-    }, [activeTag, groupedBooks]);
-
     return (
       <div className="flex flex-col">
         {/* --- Tag Bar --- */}
