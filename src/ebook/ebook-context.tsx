@@ -24,7 +24,7 @@ import {
 } from '../story/flashcard-data.ts'; 
 
 // (SỬA ĐỔI) Thay thế import cũ bằng import từ cấu trúc thư mục data mới
-import { Book, allBooks } from './ebooks'; // <-- THAY ĐỔI QUAN TRỌNG
+import { Book, allBooks } from './ebooks/index.ts'; // <-- THAY ĐỔI QUAN TRỌNG
 // Lưu ý: Hãy đảm bảo đường dẫn '../data' là chính xác so với vị trí file context của bạn.
 
 // --- TYPE DEFINITIONS ---
