@@ -1,6 +1,6 @@
 import { Book } from '../types';
 
-export const book1Data: Book = {
+export const book2Data: Book = {
   id: 'book2',
   title: 'Why Social Health Is Key to Happiness and Longevity',
   author: 'Kasley Killam',
