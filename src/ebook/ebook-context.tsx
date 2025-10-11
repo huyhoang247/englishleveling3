@@ -1,9 +1,3 @@
-// --- START OF FILE ebook-context.tsx (6).txt ---
-
-// --- START OF FILE ebook-context.tsx (2).txt ---
-
-// --- START OF FILE EbookContext.tsx (FIXED & UPDATED) ---
-
 import React, {
   createContext,
   useState,
@@ -20,28 +14,25 @@ import { auth, db } from '../firebase.js';
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 
-// --- DATA IMPORTS (UPDATED) ---
-// Thay thế các import cũ bằng import từ flashcard-data làm nguồn dữ liệu duy nhất
+// --- DATA IMPORTS (UPDATED FOR NEW STRUCTURE) ---
 import { 
   Flashcard, 
-  VocabularyData as Vocabulary, // Dùng alias để nhất quán với code cũ
+  VocabularyData as Vocabulary,
   ExampleSentence, 
   WORD_TO_CARD_MAP, 
   exampleData 
-} from '../story/flashcard-data.ts'; // Giả sử đây là đường dẫn đúng
-import { Book, sampleBooks as initialSampleBooks } from './books-data.ts';
-// phraseData import has been removed
+} from '../story/flashcard-data.ts'; 
+
+// (SỬA ĐỔI) Thay thế import cũ bằng import từ cấu trúc thư mục data mới
+import { Book, allBooks } from './'; // <-- THAY ĐỔI QUAN TRỌNG
+// Lưu ý: Hãy đảm bảo đường dẫn '../data' là chính xác so với vị trí file context của bạn.
 
 // --- TYPE DEFINITIONS ---
-// Các interface Vocabulary và Flashcard cục bộ đã được xóa vì giờ chúng ta import chúng
-
 export interface Playlist {
   id: string;
   name: string;
   cardIds: number[];
 }
-
-// PhraseSentence interface has been removed
 
 export interface BookStats {
   totalWords: number;
@@ -58,7 +49,7 @@ export interface HiddenWordState {
 }
 
 
-// --- TYPE FOR THE CONTEXT VALUE (UPDATED) ---
+// --- TYPE FOR THE CONTEXT VALUE ---
 interface EbookContextType {
   // State
   booksData: Book[];
@@ -141,7 +132,9 @@ interface EbookProviderProps {
 }
 
 export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavBar, showNavBar }) => {
-  const [booksData] = useState<Book[]>(initialSampleBooks);
+  // (SỬA ĐỔI) Khởi tạo state với mảng 'allBooks' đã import
+  const [booksData] = useState<Book[]>(allBooks); // <-- THAY ĐỔI QUAN TRỌNG
+
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [vocabMap, setVocabMap] = useState<Map<string, Vocabulary>>(new Map());
   const [isLoadingVocab, setIsLoadingVocab] = useState(true);
@@ -185,7 +178,6 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     return unsubscribeFirestore;
   }, [currentUser]);
 
-  // --- UPDATED: Tạo vocabMap từ WORD_TO_CARD_MAP ---
   useEffect(() => {
     const tempMap = new Map<string, Vocabulary>();
     WORD_TO_CARD_MAP.forEach(card => {
@@ -195,20 +187,17 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     setIsLoadingVocab(false);
   }, []);
 
-  // phraseMap and phraseRegex have been removed.
-
   const currentBook = useMemo(() => booksData.find(book => book.id === selectedBookId), [booksData, selectedBookId]);
   
   const isViSubAvailable = useMemo(() => !!currentBook?.contentVi, [currentBook]);
   
   const displayedContent = useMemo(() => {
-    // Chế độ 'vi' đã bị loại bỏ, chỉ còn chế độ 'en' sử dụng state này
     return currentBook?.content || '';
   }, [currentBook]);
   
   useEffect(() => {
     setSubtitleLanguage('en');
-    stopClozeTest(); // Ensure test is stopped when changing books
+    stopClozeTest();
     setIsClozeTestModalOpen(false);
   }, [selectedBookId]);
 
@@ -219,7 +208,6 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     setSelectedVoiceKey(availableVoices.length > 0 ? availableVoices[0] : null);
   }, [availableVoices]);
 
-  // --- UPDATED: Lấy card ID trực tiếp từ WORD_TO_CARD_MAP ---
   const bookVocabularyCardIds = useMemo(() => {
     if (!currentBook || WORD_TO_CARD_MAP.size === 0) return [];
     const wordsInBook = new Set<string>();
@@ -355,7 +343,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     setHiddenWords(newHiddenWords);
     setIsClozeTestActive(true);
     setActiveHiddenWordIndex(null);
-    setIsClozeTestModalOpen(false); // MODIFIED: Close modal on start
+    setIsClozeTestModalOpen(false);
   }, [currentBook, hiddenWordCount]);
 
   const stopClozeTest = () => {
@@ -422,13 +410,12 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const handleBackToLibrary = () => setSelectedBookId(null);
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  // --- UPDATED: Lấy toàn bộ object Flashcard từ map ---
   const handleWordClick = (word: string) => {
-    if (isClozeTestActive) return; // Prevent clicking words during test
+    if (isClozeTestActive) return;
     const normalizedWord = word.toLowerCase();
     const foundCard = WORD_TO_CARD_MAP.get(normalizedWord);
     if (foundCard) {
-      setSelectedVocabCard(foundCard); // Gán cả object card đầy đủ
+      setSelectedVocabCard(foundCard);
       setShowVocabDetail(true);
     }
   };
@@ -458,7 +445,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     togglePlaybackSpeed, setIsDarkMode, toggleSidebar, setIsBatchPlaylistModalOpen,
     setIsStatsModalOpen, handleVoiceChange,
     subtitleLanguage, isViSubAvailable, displayedContent, handleSetSubtitleLanguage,
-    exampleSentences: exampleData, // Thêm exampleData vào context
+    exampleSentences: exampleData,
     isClozeTestActive, hiddenWordCount, hiddenWords, activeHiddenWordIndex, correctlyGuessedCount,
     setHiddenWordCount, startClozeTest, stopClozeTest, handleHiddenWordClick, handleClozeTestInput, dismissKeyboard,
     isClozeTestModalOpen, setIsClozeTestModalOpen, closeClozeTestModal,
@@ -474,5 +461,3 @@ export const useEbook = (): EbookContextType => {
   }
   return context;
 };
-
-// --- END OF FILE EbookContext.tsx (FIXED & UPDATED) ---
