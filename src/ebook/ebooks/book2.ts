@@ -46,11 +46,11 @@ Now, what does this mean for the procrastinator? Well, it means everything's fin
 [Rational Decision-Maker: This is a perfect time to get some work done]
 [Monkey: Nope!]
 
-So the Rational Decision-Maker will make the rational decision to do something productive. But the Monkey doesn't like that plan, so he actually takes the wheel, and he says, "Actually, let's read the entire Wikipedia page of the Nancy Kerrigan/Tonya Harding scandal, because I just remembered that that happened." (Laughter)
+So the Rational Decision-Maker will make the rational decision to do something productive. But the Monkey doesn't like that plan, so he actually takes the wheel, and he says, "Actually, let's read the entire Wikipedia page of the Nancy Kerrigan/Tonya Harding scandal, because I just remembered that that happened" (Laughter).
 
 Then -- (Laughter) -- "Then we're going to go over to the fridge, to see if there's anything new in there since 10 minutes ago. After that, we're going to go on a YouTube spiral that starts with videos of Richard Feynman talking about magnets and ends much, much later with us watching interviews with Justin Bieber's mom" (Laughter).
 
-"All of that's going to take a while, so we're not going to really have room on the schedule for any work today. Sorry" (Sigh)
+"All of that's going to take a while, so we're not going to really have room on the schedule for any work today, Sorry" (Sigh).
 
 Part 3: The Internal Conflict and the "Dark Playground"
 
@@ -145,11 +145,11 @@ Có một sự khác biệt. Cả hai bộ não đều có một Người Ra Quy
 [Người Ra Quyết Định Lý Trí: Đây là thời điểm hoàn hảo để làm việc]
 [Chú Khỉ: Thôi dẹp!]
 
-Người Ra Quyết Định Lý Trí sẽ đưa ra quyết định hợp lý là làm một việc gì đó hiệu quả. Nhưng Chú Khỉ không thích kế hoạch đó, nên nó cướp lấy tay lái và nói: "Thực ra, chúng ta hãy đọc toàn bộ trang Wikipedia về vụ bê bối Nancy Kerrigan/Tonya Harding đi, vì tôi vừa nhớ ra chuyện đó." (Tiếng cười)
+Người Ra Quyết Định Lý Trí sẽ đưa ra quyết định hợp lý là làm một việc gì đó hiệu quả. Nhưng Chú Khỉ không thích kế hoạch đó, nên nó cướp lấy tay lái và nói: "Thực ra, chúng ta hãy đọc toàn bộ trang Wikipedia về vụ bê bối Nancy Kerrigan/Tonya Harding đi, vì tôi vừa nhớ ra chuyện đó" (Tiếng cười).
 
 Rồi -- (Tiếng cười) -- "Sau đó, chúng ta sẽ đi ra tủ lạnh, để xem có gì mới trong đó từ 10 phút trước không. Tiếp theo, chúng ta sẽ sa vào một vòng lặp YouTube bất tận, bắt đầu bằng video Richard Feynman nói về nam châm và kết thúc rất, rất lâu sau đó bằng việc xem các cuộc phỏng vấn với mẹ của Justin Bieber" (Tiếng cười).
 
-"Tất cả những việc đó sẽ tốn khá nhiều thời gian, nên chúng ta sẽ không thực sự có chỗ trống trong lịch trình cho bất kỳ công việc nào hôm nay. Xin lỗi nhé" (Thở dài)
+"Tất cả những việc đó sẽ tốn khá nhiều thời gian, nên chúng ta sẽ không thực sự có chỗ trống trong lịch trình cho bất kỳ công việc nào hôm nay, Xin lỗi nhé" (Thở dài).
 
 Phần 3: Cuộc Xung Đột Nội Tâm & "Sân Chơi Tăm Tối"
 
