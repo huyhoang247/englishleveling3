@@ -5,7 +5,7 @@ export const book2Data: Book = {
   id: 'book2',
   title: 'Inside the Mind of a Master Procrastinator',
   author: 'Tim Urban',
-  category: 'Technology & Future',
+  category: 'TED',
   coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/002.jpg',
   audioUrls: {
     'Tim Urban': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/Why%20Social%20Health%20Is%20Key%20to%20Happiness%20and%20Longevity%20%20Kasley%20Killiam%20%20TED.mp3',
