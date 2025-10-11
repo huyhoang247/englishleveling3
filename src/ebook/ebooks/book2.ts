@@ -1,3 +1,4 @@
+--- START OF FILE book2.tgfffs.txt ---
 
 import { Book } from '../types';
 
@@ -92,9 +93,9 @@ Procrastination with deadlines. Everything I've talked about today, the examples
 
 Procrastination with no deadlines. But there's a second kind of procrastination that happens in situations when there is no deadline. So if you wanted a career where you're a self-starter -- something in the arts, something entrepreneurial -- there's no deadlines on those things at first, because nothing's happening, not until you've gone out and done the hard work to get momentum, get things going. There's also all kinds of important things outside of your career that don't involve any deadlines, like seeing your family or exercising and taking care of your health, working on your relationship or getting out of a relationship that isn't working.
 
-Now if the procrastinator's only mechanism of doing these hard things is the Panic Monster, that's a problem, because in all of these non-deadline situations, the Panic Monster doesn't show up. He has nothing to wake up for, so the effects of procrastination, they're not contained; they just extend outward forever.
+Now if the procrastinator's only mechanism of doing these hard things is the Panic Monster, that's a problem. Because in all of these non-deadline situations, the Panic Monster doesn't show up. He has nothing to wake up for, so the effects of procrastination, they're not contained. They just extend outward forever.
 
-And it's this long-term kind of procrastination that's much less visible and much less talked about than the funnier, short-term deadline-based kind. It's usually suffered quietly and privately. And it can be the source of a huge amount of long-term unhappiness, and regrets. And I thought, that's why those people are emailing, and that's why they're in such a bad place. It's not that they're cramming for some project. It's that long-term procrastination has made them feel like a spectator, at times, in their own lives. The frustration is not that they couldn't achieve their dreams; it's that they weren't even able to start chasing them.
+And it's this long-term kind of procrastination that's much less visible and much less talked about than the funnier, short-term deadline-based kind. It's usually suffered quietly and privately. And it can be the source of a huge amount of long-term unhappiness, and regrets. And I thought, that's why those people are emailing, and that's why they're in such a bad place. It's not that they're cramming for some project. It's that long-term procrastination has made them feel like a spectator, at times, in their own lives. The frustration is not that they couldn't achieve their dreams. It's that they weren't even able to start chasing them.
 
 Part 6: A Wake-Up Call for Everyone
 
@@ -188,11 +189,11 @@ Hóa ra, có hai loại trì hoãn.
 
 Trì hoãn có thời hạn. Mọi thứ tôi đã nói hôm nay, các ví dụ tôi đã đưa ra, chúng đều có hạn chót. Khi có hạn chót, tác động của sự trì hoãn chỉ giới hạn trong ngắn hạn vì Quái Vật Hoảng Loạn sẽ tham gia.
 
-Trì hoãn không có thời hạn. Nhưng có một loại trì hoãn thứ hai xảy ra trong các tình huống không có hạn chót. Nếu bạn muốn một sự nghiệp mà bạn là người tự khởi nghiệp — một lĩnh vực nghệ thuật, kinh doanh — ban đầu sẽ không có hạn chót, vì chưa có gì xảy ra cả, cho đến khi bạn ra ngoài và làm việc chăm chỉ để tạo đà. Ngoài ra còn có tất cả các loại việc quan trọng khác ngoài sự nghiệp không liên quan đến hạn chót, như thăm gia đình, tập thể dục và chăm sóc sức khỏe, vun đắp mối quan hệ của bạn hoặc thoát khỏi một mối quan hệ không còn hiệu quả.
+Trì hoãn không có thời hạn. Nhưng có một loại trì hoãn thứ hai xảy ra trong các tình huống không có hạn chót. Nếu bạn muốn một sự nghiệp mà bạn là người tự khởi nghiệp — một lĩnh vực nghệ thuật, kinh doanh — ban đầu sẽ không có hạn chót, vì chưa có gì xảy ra cả, cho đến khi bạn ra ngoài và làm việc chăm chỉ để tạo đà, để mọi thứ bắt đầu. Ngoài ra còn có tất cả các loại việc quan trọng khác ngoài sự nghiệp không liên quan đến hạn chót, như thăm gia đình, tập thể dục và chăm sóc sức khỏe, vun đắp mối quan hệ của bạn hoặc thoát khỏi một mối quan hệ không còn hiệu quả.
 
-Nếu cơ chế duy nhất của kẻ trì hoãn để làm những việc khó khăn này là Quái Vật Hoảng Loạn, đó là một vấn đề. Bởi vì trong tất cả những tình huống không có hạn chót này, Quái Vật Hoảng Loạn không xuất hiện. Nó không có gì để thức dậy, vì vậy tác động của sự trì hoãn không bị giới hạn; chúng chỉ kéo dài ra mãi mãi.
+Nếu cơ chế duy nhất của kẻ trì hoãn để làm những việc khó khăn này là Quái Vật Hoảng Loạn, đó là một vấn đề. Bởi vì trong tất cả những tình huống không có hạn chót này, Quái Vật Hoảng Loạn không xuất hiện. Nó không có gì để thức dậy, vì vậy tác động của sự trì hoãn không bị giới hạn. Chúng chỉ kéo dài ra mãi mãi.
 
-Chính loại trì hoãn dài hạn này ít được nhìn thấy và ít được nói đến hơn nhiều so với loại trì hoãn ngắn hạn, hài hước có thời hạn kia. Nó thường được chịu đựng một cách âm thầm và riêng tư. Và nó có thể là nguồn gốc của một lượng lớn sự bất hạnh và hối tiếc lâu dài. Tôi nghĩ, đó là lý do tại sao những người đó gửi email, và đó là lý do tại sao họ ở trong một tình trạng tồi tệ như vậy. Không phải họ đang nhồi nhét cho một dự án nào đó. Mà là sự trì hoãn dài hạn đã khiến họ đôi khi cảm thấy mình như một khán giả trong chính cuộc đời mình. Sự thất vọng không phải là họ không thể đạt được ước mơ; mà là họ thậm chí còn không thể bắt đầu theo đuổi chúng.
+Chính loại trì hoãn dài hạn này ít được nhìn thấy và ít được nói đến hơn nhiều so với loại trì hoãn ngắn hạn, hài hước có thời hạn kia. Nó thường được chịu đựng một cách âm thầm và riêng tư. Và nó có thể là nguồn gốc của một lượng lớn sự bất hạnh và hối tiếc lâu dài. Tôi nghĩ, đó là lý do tại sao những người đó gửi email, và đó là lý do tại sao họ ở trong một tình trạng tồi tệ như vậy. Không phải họ đang nhồi nhét cho một dự án nào đó. Mà là sự trì hoãn dài hạn đã khiến họ đôi khi cảm thấy mình như một khán giả trong chính cuộc đời mình. Sự thất vọng không phải là họ không thể đạt được ước mơ. Mà là họ thậm chí còn không thể bắt đầu theo đuổi chúng.
 
 Phần 6: Lời Kêu Gọi Thức Tỉnh Cho Mọi Người
 
