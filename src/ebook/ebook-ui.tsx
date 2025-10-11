@@ -371,9 +371,14 @@ const EbookReaderContent: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
                 {booksInCategory.map(book => (
                   <div key={book.id} className="cursor-pointer group" onClick={() => handleSelectBook(book.id)}>
-                    {/* Thumbnail with 16:9 aspect ratio */}
-                    <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-xl overflow-hidden shadow-lg mb-3 group-hover:shadow-xl transition-shadow duration-300">
+                    {/* Thumbnail with 16:9 aspect ratio, now relative for positioning the tag */}
+                    <div className="relative aspect-video bg-gray-200 dark:bg-gray-700 rounded-xl overflow-hidden shadow-lg mb-3 group-hover:shadow-xl transition-shadow duration-300">
                       <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      {book.audioUrls && Object.keys(book.audioUrls).length >= 2 && (
+                        <div className="absolute top-2 right-2 bg-black/70 px-2 py-1 rounded-md text-white text-xs font-bold backdrop-blur-sm">
+                          Voice AI
+                        </div>
+                      )}
                     </div>
                     {/* Book Info */}
                     <div className="flex items-start space-x-3">
