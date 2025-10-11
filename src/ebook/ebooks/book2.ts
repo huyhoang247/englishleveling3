@@ -1,3 +1,4 @@
+
 import { Book } from '../types';
 
 export const book2Data: Book = {
@@ -23,9 +24,10 @@ But then came my 90-page senior thesis, a paper you're supposed to spend a year 
 
 But then, the funniest thing happened. Those first few months? They came and went, and I couldn't quite do stuff. So we had an awesome new revised plan. (Laughter) And then -- (Laughter) -- But then those middle months actually went by, and I didn't really write words, and so we were here. And then two months turned into one month, which turned into two weeks. And one day I woke up with three days until the deadline, still not having written a word. And so I did the only thing I could: I wrote 90 pages over 72 hours, pulling not one but two all-nighters -- humans are not supposed to pull two all-nighters -- sprinted across campus, dove in slow motion, and got it in just at the deadline.
 
-I thought that was the end of everything. But a week later I get a call, and it's the school. And they say, "Is this Tim Urban"? And I say, "Yeah". And they say, "We need to talk about your thesis". And I say, "OK". And they say, "It's the best one we've ever seen". (Laughter) (Applause)
+I thought that was the end of everything. But a week later I get a call, and it's the school. And they say, "Is this Tim Urban"? And I say, "Yeah". And they say, "We need to talk about your thesis". And I say, "OK". And they say, "It's the best one we've ever seen".
+(Laughter) (Applause)
 
-That did not happen. (Laughter) It was a very, very bad thesis. (Laughter) I just wanted to enjoy that one moment when all of you thought, "This guy is amazing"! (Laughter) No, no, it was very, very bad.
+That did not happen. (Laughter) It was a very, very bad thesis. (Laughter) I just wanted to enjoy that one moment when all of you thought, This guy is amazing! (Laughter) No, no, it was very, very bad.
 
 Part 2: Inside the Procrastinator's Brain
 
@@ -33,13 +35,20 @@ Anyway, today I'm a writer-blogger guy. I write the blog Wait But Why. And a cou
 
 Now, I had a hypothesis that the brains of procrastinators were actually different than the brains of other people. And to test this, I found an MRI lab that actually let me scan both my brain and the brain of a proven non-procrastinator, so I could compare them. I actually brought them here to show you today. I want you to take a look carefully to see if you can notice a difference. I know that if you're not a trained brain expert, it's not that obvious, but just take a look, OK?
 
-So here's the brain of a non-procrastinator. (Laughter) Now... here's my brain. (Laughter)
+So here's the brain of a non-procrastinator. (Laughter)
+Now... here's my brain. (Laughter)
 
 There is a difference. Both brains have a Rational Decision-Maker in them, but the procrastinator's brain also has an Instant Gratification Monkey.
 
-Now, what does this mean for the procrastinator? Well, it means everything's fine until this happens: [Rational Decision-Maker: This is a perfect time to get some work done] [Monkey: Nope!]
+Now, what does this mean for the procrastinator? Well, it means everything's fine until this happens:
+[Rational Decision-Maker: This is a perfect time to get some work done]
+[Monkey: Nope]!
 
-So the Rational Decision-Maker will make the rational decision to do something productive. But the Monkey doesn't like that plan, so he actually takes the wheel, and he says, "Actually, let's read the entire Wikipedia page of the Nancy Kerrigan/Tonya Harding scandal, because I just remembered that that happened. Then we're going to go over to the fridge, to see if there's anything new in there since 10 minutes ago. After that, we're going to go on a YouTube spiral that starts with videos of Richard Feynman talking about magnets and ends much, much later with us watching interviews with Justin Bieber's mom. All of that's going to take a while, so we're not going to really have room on the schedule for any work today. Sorry". (Sigh)
+So the Rational Decision-Maker will make the rational decision to do something productive. But the Monkey doesn't like that plan, so he actually takes the wheel, and he says, "Actually, let's read the entire Wikipedia page of the Nancy Kerrigan/Tonya Harding scandal, because I just remembered that that happened". (Laughter)
+
+Then -- (Laughter) -- "Then we're going to go over to the fridge, to see if there's anything new in there since 10 minutes ago. After that, we're going to go on a YouTube spiral that starts with videos of Richard Feynman talking about magnets and ends much, much later with us watching interviews with Justin Bieber's mom". (Laughter)
+
+"All of that's going to take a while, so we're not going to really have room on the schedule for any work today, Sorry". (Sigh)
 
 Part 3: The Internal Conflict and the "Dark Playground"
 
@@ -77,9 +86,11 @@ This is what I decided to write about on the blog a couple of years ago. When I 
 
 But what struck me was the contrast between the light tone of the post and the heaviness of these emails. These people were writing with intense frustration about what procrastination had done to their lives, about what this Monkey had done to them. And I thought about this, and I said, well, if the procrastinator's system works, then what's going on? Why are all of these people in such a dark place?
 
-Well, it turns out that there are two kinds of procrastination. Procrastination with deadlines. Everything I've talked about today, the examples I've given, they all have deadlines. And when there's deadlines, the effects of procrastination are contained to the short term because the Panic Monster gets involved.
+Well, it turns out that there are two kinds of procrastination.
 
-But there's a second kind of procrastination that happens in situations when there is no deadline. So if you wanted a career where you're a self-starter -- something in the arts, something entrepreneurial -- there's no deadlines on those things at first, because nothing's happening, not until you've gone out and done the hard work to get momentum, get things going. There's also all kinds of important things outside of your career that don't involve any deadlines, like seeing your family or exercising and taking care of your health, working on your relationship or getting out of a relationship that isn't working.
+Procrastination with deadlines. Everything I've talked about today, the examples I've given, they all have deadlines. And when there's deadlines, the effects of procrastination are contained to the short term because the Panic Monster gets involved.
+
+Procrastination with no deadlines. But there's a second kind of procrastination that happens in situations when there is no deadline. So if you wanted a career where you're a self-starter -- something in the arts, something entrepreneurial -- there's no deadlines on those things at first, because nothing's happening, not until you've gone out and done the hard work to get momentum, get things going. There's also all kinds of important things outside of your career that don't involve any deadlines, like seeing your family or exercising and taking care of your health, working on your relationship or getting out of a relationship that isn't working.
 
 Now if the procrastinator's only mechanism of doing these hard things is the Panic Monster, that's a problem, because in all of these non-deadline situations, the Panic Monster doesn't show up. He has nothing to wake up for, so the effects of procrastination, they're not contained; they just extend outward forever.
 
@@ -89,7 +100,9 @@ Part 6: A Wake-Up Call for Everyone
 
 So I read these emails and I had a little bit of an epiphany -- that I don't think non-procrastinators exist. That's right -- I think all of you are procrastinators. Now, you might not all be a mess, like some of us, (Laughter) and some of you may have a healthy relationship with deadlines, but remember: the Monkey's sneakiest trick is when the deadlines aren't there.
 
-Now, I want to show you one last thing. I call this a Life Calendar. That's one box for every week of a 90-year life. That's not that many boxes, especially since we've already used a bunch of those. So I think we need to all take a long, hard look at that calendar. We need to think about what we're really procrastinating on, because everyone is procrastinating on something in life. We need to stay aware of the Instant Gratification Monkey. That's a job for all of us. And because there's not that many boxes on there, it's a job that should probably start today.
+Now, I want to show you one last thing. I call this a Life Calendar. That's one box for every week of a 90-year life. That's not that many boxes, especially since we've already used a bunch of those.
+
+So I think we need to all take a long, hard look at that calendar. We need to think about what we're really procrastinating on, because everyone is procrastinating on something in life. We need to stay aware of the Instant Gratification Monkey. That's a job for all of us. And because there's not that many boxes on there, it's a job that should probably start today.
 
 Well, maybe not today, but... (Laughter) You know. Sometime soon.
 
@@ -109,9 +122,10 @@ Nhưng rồi đến lượt bài luận văn tốt nghiệp dài 90 trang của 
 
 Nhưng rồi, điều hài hước nhất đã xảy ra. Vài tháng đầu tiên ấy à? Chúng đến rồi đi, và tôi không tài nào làm được việc gì cả. Thế là chúng tôi có một kế hoạch mới được sửa đổi tuyệt vời. (Tiếng cười) Và rồi -- (Tiếng cười) -- Nhưng rồi những tháng giữa cũng trôi qua, và tôi thật sự chẳng viết được chữ nào, và thế là chúng tôi ở mốc này. Rồi hai tháng biến thành một tháng, rồi thành hai tuần. Và một ngày nọ, tôi thức dậy khi chỉ còn ba ngày nữa là đến hạn chót, mà vẫn chưa viết được một chữ nào. Thế là tôi đã làm điều duy nhất có thể: Tôi đã viết 90 trang trong vòng 72 giờ, không chỉ thức một mà là hai đêm trắng – con người không được thiết kế để thức hai đêm liền – chạy nước rút qua khuôn viên trường, bay người theo kiểu quay chậm và nộp bài ngay đúng hạn chót.
 
-Tôi đã nghĩ đó là dấu chấm hết cho mọi thứ. Nhưng một tuần sau, tôi nhận được một cuộc gọi từ trường. Và họ hỏi: "Có phải Tim Urban không ạ"? Tôi đáp: "Vâng". Họ nói: "Chúng tôi cần nói chuyện về luận văn của cậu". Tôi nói: "OK". Và họ nói: "Đó là bài luận văn xuất sắc nhất chúng tôi từng thấy". (Tiếng cười) (Vỗ tay)
+Tôi đã nghĩ đó là dấu chấm hết cho mọi thứ. Nhưng một tuần sau, tôi nhận được một cuộc gọi từ trường. Và họ hỏi: "Có phải Tim Urban không ạ"? Tôi đáp: "Vâng". Họ nói: "Chúng tôi cần nói chuyện về luận văn của cậu". Tôi nói: "OK". Và họ nói: "Đó là bài luận văn xuất sắc nhất chúng tôi từng thấy".
+(Tiếng cười) (Vỗ tay)
 
-... Điều đó đã không xảy ra. (Laughter) Đó là một bài luận văn rất, rất tệ. (Tiếng cười) Tôi chỉ muốn tận hưởng khoảnh khắc đó, khi tất cả các bạn đều nghĩ, "Chàng trai này thật tuyệt vời"! (Tiếng cười) Không, không, nó rất, rất tệ.
+... Điều đó đã không xảy ra. (Tiếng cười) Đó là một bài luận văn rất, rất tệ. (Tiếng cười) Tôi chỉ muốn tận hưởng khoảnh khắc đó, khi tất cả các bạn đều nghĩ, Chàng trai này thật tuyệt vời! (Tiếng cười) Không, không, nó rất, rất tệ.
 
 Phần 2: Bên Trong Bộ Não Của Kẻ Trì Hoãn
 
@@ -119,13 +133,20 @@ Dù sao thì, hiện tại tôi là một người viết blog. Tôi viết cho 
 
 Tôi có một giả thuyết rằng bộ não của những kẻ trì hoãn thực sự khác biệt so với não của người khác. Để kiểm chứng điều này, tôi đã tìm một phòng thí nghiệm MRI và họ đã cho phép tôi quét cả não của mình và não của một người được chứng minh là không trì hoãn, để tôi có thể so sánh. Tôi thực sự đã mang chúng đến đây để cho các bạn xem hôm nay. Tôi muốn các bạn nhìn thật kỹ xem có nhận ra sự khác biệt nào không. Tôi biết rằng nếu bạn không phải là một chuyên gia về não bộ, điều đó không quá rõ ràng, nhưng cứ thử xem nhé.
 
-Đây là bộ não của một người không trì hoãn. (Tiếng cười) Bây giờ... đây là bộ não của tôi. (Tiếng cười)
+Đây là bộ não của một người không trì hoãn. (Tiếng cười)
+Bây giờ... đây là bộ não của tôi. (Tiếng cười)
 
 Có một sự khác biệt. Cả hai bộ não đều có một Người Ra Quyết Định Lý Trí bên trong, nhưng bộ não của kẻ trì hoãn còn có thêm một Chú Khỉ Thỏa Mãn Tức Thì.
 
-Điều này có ý nghĩa gì đối với kẻ trì hoãn? Chà, nó có nghĩa là mọi thứ đều ổn cho đến khi điều này xảy ra: [Người Ra Quyết Định Lý Trí: Đây là thời điểm hoàn hảo để làm việc] [Chú Khỉ: Thôi dẹp!]
+Điều này có ý nghĩa gì đối với kẻ trì hoãn? Chà, nó có nghĩa là mọi thứ đều ổn cho đến khi điều này xảy ra:
+[Người Ra Quyết Định Lý Trí: Đây là thời điểm hoàn hảo để làm việc]
+[Chú Khỉ: Thôi dẹp]!
 
-Người Ra Quyết Định Lý Trí sẽ đưa ra quyết định hợp lý là làm một việc gì đó hiệu quả. Nhưng Chú Khỉ không thích kế hoạch đó, nên nó cướp lấy tay lái và nói: "Thực ra, chúng ta hãy đọc toàn bộ trang Wikipedia về vụ bê bối Nancy Kerrigan/Tonya Harding đi, vì tôi vừa nhớ ra chuyện đó. Rồi chúng ta sẽ đi ra tủ lạnh, để xem có gì mới trong đó từ 10 phút trước không. Tiếp theo, chúng ta sẽ sa vào một vòng lặp YouTube bất tận, bắt đầu bằng video Richard Feynman nói về nam châm và kết thúc rất, rất lâu sau đó bằng việc xem các cuộc phỏng vấn với mẹ của Justin Bieber. Tất cả những việc đó sẽ tốn khá nhiều thời gian, nên chúng ta sẽ không thực sự có chỗ trống trong lịch trình cho bất kỳ công việc nào hôm nay. Xin lỗi nhé". (Thở dài)
+Người Ra Quyết Định Lý Trí sẽ đưa ra quyết định hợp lý là làm một việc gì đó hiệu quả. Nhưng Chú Khỉ không thích kế hoạch đó, nên nó cướp lấy tay lái và nói: "Thực ra, chúng ta hãy đọc toàn bộ trang Wikipedia về vụ bê bối Nancy Kerrigan/Tonya Harding đi, vì tôi vừa nhớ ra chuyện đó". (Tiếng cười)
+
+Rồi -- (Tiếng cười) -- "Sau đó, chúng ta sẽ đi ra tủ lạnh, để xem có gì mới trong đó từ 10 phút trước không. Tiếp theo, chúng ta sẽ sa vào một vòng lặp YouTube bất tận, bắt đầu bằng video Richard Feynman nói về nam châm và kết thúc rất, rất lâu sau đó bằng việc xem các cuộc phỏng vấn với mẹ của Justin Bieber". (Tiếng cười)
+
+"Tất cả những việc đó sẽ tốn khá nhiều thời gian, nên chúng ta sẽ không thực sự có chỗ trống trong lịch trình cho bất kỳ công việc nào hôm nay, Xin lỗi nhé". (Thở dài)
 
 Phần 3: Cuộc Xung Đột Nội Tâm & "Sân Chơi Tăm Tối"
 
@@ -163,9 +184,11 @@ Quái Vật Hoảng Loạn giải thích tất cả các loại hành vi trì ho
 
 Nhưng điều khiến tôi ấn tượng là sự tương phản giữa giọng văn nhẹ nhàng của bài viết và sự nặng nề của những email đó. Mọi người viết với sự thất vọng tột cùng về những gì sự trì hoãn đã gây ra cho cuộc sống của họ. Và tôi nghĩ, nếu hệ thống của kẻ trì hoãn hoạt động, thì chuyện gì đang xảy ra? Tại sao tất cả những người này lại ở trong một tình trạng tồi tệ như vậy?
 
-Hóa ra, có hai loại trì hoãn. Trì hoãn có thời hạn. Mọi thứ tôi đã nói hôm nay, các ví dụ tôi đã đưa ra, chúng đều có hạn chót. Khi có hạn chót, tác động của sự trì hoãn chỉ giới hạn trong ngắn hạn vì Quái Vật Hoảng Loạn sẽ tham gia.
+Hóa ra, có hai loại trì hoãn.
 
-Nhưng có một loại trì hoãn thứ hai xảy ra trong các tình huống không có hạn chót. Nếu bạn muốn một sự nghiệp mà bạn là người tự khởi nghiệp — một lĩnh vực nghệ thuật, kinh doanh — ban đầu sẽ không có hạn chót, vì chưa có gì xảy ra cả, cho đến khi bạn ra ngoài và làm việc chăm chỉ để tạo đà. Ngoài ra còn có tất cả các loại việc quan trọng khác ngoài sự nghiệp không liên quan đến hạn chót, như thăm gia đình, tập thể dục và chăm sóc sức khỏe, vun đắp mối quan hệ của bạn hoặc thoát khỏi một mối quan hệ không còn hiệu quả.
+Trì hoãn có thời hạn. Mọi thứ tôi đã nói hôm nay, các ví dụ tôi đã đưa ra, chúng đều có hạn chót. Khi có hạn chót, tác động của sự trì hoãn chỉ giới hạn trong ngắn hạn vì Quái Vật Hoảng Loạn sẽ tham gia.
+
+Trì hoãn không có thời hạn. Nhưng có một loại trì hoãn thứ hai xảy ra trong các tình huống không có hạn chót. Nếu bạn muốn một sự nghiệp mà bạn là người tự khởi nghiệp — một lĩnh vực nghệ thuật, kinh doanh — ban đầu sẽ không có hạn chót, vì chưa có gì xảy ra cả, cho đến khi bạn ra ngoài và làm việc chăm chỉ để tạo đà. Ngoài ra còn có tất cả các loại việc quan trọng khác ngoài sự nghiệp không liên quan đến hạn chót, như thăm gia đình, tập thể dục và chăm sóc sức khỏe, vun đắp mối quan hệ của bạn hoặc thoát khỏi một mối quan hệ không còn hiệu quả.
 
 Nếu cơ chế duy nhất của kẻ trì hoãn để làm những việc khó khăn này là Quái Vật Hoảng Loạn, đó là một vấn đề. Bởi vì trong tất cả những tình huống không có hạn chót này, Quái Vật Hoảng Loạn không xuất hiện. Nó không có gì để thức dậy, vì vậy tác động của sự trì hoãn không bị giới hạn; chúng chỉ kéo dài ra mãi mãi.
 
@@ -175,7 +198,9 @@ Phần 6: Lời Kêu Gọi Thức Tỉnh Cho Mọi Người
 
 Khi đọc những email đó, tôi đã có một sự giác ngộ nhỏ — rằng tôi không nghĩ người không trì hoãn tồn tại. Đúng vậy, tôi nghĩ tất cả các bạn đều là những kẻ trì hoãn. Có thể không phải tất cả các bạn đều là một mớ hỗn độn như một số người trong chúng ta, (Tiếng cười) và một số bạn có thể có một mối quan hệ lành mạnh với các hạn chót. Nhưng hãy nhớ: thủ đoạn tinh vi nhất của Chú Khỉ là khi không có hạn chót.
 
-Tôi muốn cho bạn xem một thứ cuối cùng. Tôi gọi đây là Cuốn Lịch Cuộc Đời. Mỗi ô vuông là một tuần trong một cuộc đời 90 năm. Số ô vuông đó không nhiều đến thế đâu, đặc biệt là khi chúng ta đã sử dụng hết một mớ rồi. Vì vậy, tôi nghĩ tất cả chúng ta cần phải nhìn thật lâu và thật kỹ vào cuốn lịch đó. Chúng ta cần suy nghĩ về những gì chúng ta đang thực sự trì hoãn, bởi vì mọi người đều đang trì hoãn một điều gì đó trong cuộc sống. Chúng ta cần phải luôn nhận thức về Chú Khỉ Thỏa Mãn Tức Thì. Đó là công việc của tất cả chúng ta. Và bởi vì không có nhiều ô vuông trên đó, đó là một công việc có lẽ nên bắt đầu ngay hôm nay.
+Tôi muốn cho bạn xem một thứ cuối cùng. Tôi gọi đây là Cuốn Lịch Cuộc Đời. Mỗi ô vuông là một tuần trong một cuộc đời 90 năm. Số ô vuông đó không nhiều đến thế đâu, đặc biệt là khi chúng ta đã sử dụng hết một mớ rồi.
+
+Vì vậy, tôi nghĩ tất cả chúng ta cần phải nhìn thật lâu và thật kỹ vào cuốn lịch đó. Chúng ta cần suy nghĩ về những gì chúng ta đang thực sự trì hoãn, bởi vì mọi người đều đang trì hoãn một điều gì đó trong cuộc sống. Chúng ta cần phải luôn nhận thức về Chú Khỉ Thỏa Mãn Tức Thì. Đó là công việc của tất cả chúng ta. Và bởi vì không có nhiều ô vuông trên đó, đó là một công việc có lẽ nên bắt đầu ngay hôm nay.
 
 Chà, có thể không phải hôm nay, nhưng... (Tiếng cười) bạn biết đấy. Sớm thôi.
 
