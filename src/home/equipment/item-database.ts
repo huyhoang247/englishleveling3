@@ -71,6 +71,7 @@ export const itemBlueprints: ItemBlueprint[] = [
     { baseId: 22000, name: 'Dragon\'s Breath Armor', type: 'armor', baseDescription: 'Bộ giáp được rèn từ vảy rồng, mang trong mình hơi thở của lửa.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/dragon\'s-breath-armor.webp', baseStats: { hp: 3500, atk: 50, def: 200 }, baseMaxLevel: 30 },
     { baseId: 23000, name: 'Revival Cape', type: 'armor', baseDescription: 'Chiếc áo choàng chứa đựng sức mạnh phục sinh, có khả năng bảo vệ người mặc khỏi cái chết.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/revival-cape.webp', baseStats: { hp: 4000, atk: 0, def: 250 }, baseMaxLevel: 30 },
     { baseId: 24000, name: 'Hard Armor', type: 'armor', baseDescription: 'Áo giáp cứng cáp, cung cấp khả năng phòng thủ vượt trội.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/hard-armor.webp', baseStats: { hp: 1500, atk: 10, def: 150 }, baseMaxLevel: 20 },
+    { baseId: 25000, name: 'Warden\'s Mail', type: 'armor', baseDescription: 'Giáp của người cai ngục, nổi tiếng với khả năng chống chịu bền bỉ.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/warden-mail.webp', baseStats: { hp: 2500, atk: 5, def: 220 }, baseMaxLevel: 25 },
 ];
 
 const blueprintByBaseId = new Map<number, ItemBlueprint>(itemBlueprints.map(bp => [bp.baseId, bp]));
