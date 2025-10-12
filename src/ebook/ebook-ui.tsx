@@ -1,12 +1,8 @@
-// --- START OF FILE ebook-ui.tsx (14).txt ---
-
-// --- START OF FILE ebook-ui.tsx (12).txt ---
-
 // --- START OF FILE game.tsx (FIXED & UPDATED) ---
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { EbookProvider, useEbook, Book, Vocabulary, HiddenWordState, ExampleSentence } from './ebook-context.tsx';
-import VirtualKeyboard from '../ui/keyboard.tsx'; 
+import VirtualKeyboard from '../ui/keyboard.tsx';
 
 // --- COMPONENT & MODAL IMPORTS ---
 import FlashcardDetailModal from '../story/flashcard.tsx';
@@ -15,17 +11,13 @@ import BackButton from '../ui/back-button.tsx';
 // PhraseDetailModal has been removed as it's no longer used.
 
 // --- ICONS (Copied from original file for self-containment) ---
-const SunIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>);
-const MoonIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25c0 5.385 4.365 9.75 9.75 9.75 2.138 0 4.14-.622 5.752-1.688z" /></svg>);
-const PlayIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>);
-const PauseIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Zm9 0a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" /></svg>);
+const PlayIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>);
+const PauseIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7"><path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Zm9 0a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" /></svg>);
 const Rewind10Icon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>);
-const MenuIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>);
 const XIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>);
 const StatsIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zM9 9a1 1 0 00-1 1v6a1 1 0 102 0v-6a1 1 0 00-1-1zm4-5a1 1 0 00-1 1v10a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" /></svg>);
 const ChevronLeftIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>);
 const ChevronRightIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>);
-const TranslateIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m4 13-4-4-4 4M19 17v-2a2 2 0 00-2-2H5a2 2 0 00-2 2v2a2 2 0 002 2h10a2 2 0 002-2z" /></svg>);
 const PracticeIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>);
 const SaveIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>);
 
@@ -53,7 +45,7 @@ const VoiceStepper: React.FC<{ currentVoice: string; onNavigate: (direction: 'ne
   );
 };
 
-const BookSidebar: React.FC<{ isOpen: boolean; onClose: () => void; book: Book | undefined; isDarkMode: boolean; toggleDarkMode: () => void; }> = ({ isOpen, onClose, book, isDarkMode, toggleDarkMode }) => {
+const BookSidebar: React.FC<{ isOpen: boolean; onClose: () => void; book: Book | undefined; }> = ({ isOpen, onClose, book }) => {
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
     if (isOpen) document.addEventListener('keydown', handleEsc);
@@ -64,7 +56,7 @@ const BookSidebar: React.FC<{ isOpen: boolean; onClose: () => void; book: Book |
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
   return (
-    <><div className={`fixed inset-0 bg-black/60 z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose} aria-hidden="true" /><div className={`fixed inset-y-0 left-0 w-72 sm:w-80 bg-white dark:bg-gray-800 shadow-xl z-40 transform transition-transform duration-300 flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}><div className="flex items-center justify-between p-4 border-b dark:border-gray-700"><h2 className="text-lg font-semibold dark:text-white truncate">{book?.title || "Menu"}</h2><button onClick={onClose} className="p-1.5 rounded-full dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Đóng menu"><XIcon /></button></div><div className="p-4 space-y-6 overflow-y-auto flex-grow"><div><h3 className="mb-2 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nội dung sách</h3><ul className="space-y-1">{['Chương 1: Giới thiệu', 'Chương 2: Phát triển câu chuyện', 'Chương 3: Cao trào', 'Chương 4: Kết luận', 'Phụ lục'].map(item => (<li key={item}><a href="#" className="block px-3 py-2 rounded-md dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">{item}</a></li>))}</ul></div><hr className="dark:border-gray-700" /><div><h3 className="mb-3 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cài đặt hiển thị</h3><div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"><span className="dark:text-gray-300">Chế độ tối</span><button onClick={toggleDarkMode} className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${isDarkMode ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`} role="switch" aria-checked={isDarkMode}><span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`} /></button></div></div></div><div className="p-4 border-t dark:border-gray-700"><p className="text-xs text-center text-gray-500 dark:text-gray-400">© 2024 Ebook Reader</p></div></div></>
+    <><div className={`fixed inset-0 bg-black/60 z-30 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={onClose} aria-hidden="true" /><div className={`fixed inset-y-0 left-0 w-72 sm:w-80 bg-white shadow-xl z-40 transform transition-transform duration-300 flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}><div className="flex items-center justify-between p-4 border-b border-gray-200"><h2 className="text-lg font-semibold truncate">{book?.title || "Menu"}</h2><button onClick={onClose} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Đóng menu"><XIcon /></button></div><div className="p-4 space-y-6 overflow-y-auto flex-grow"><div><h3 className="mb-2 text-sm font-semibold text-gray-500 uppercase tracking-wider">Nội dung sách</h3><ul className="space-y-1">{['Chương 1: Giới thiệu', 'Chương 2: Phát triển câu chuyện', 'Chương 3: Cao trào', 'Chương 4: Kết luận', 'Phụ lục'].map(item => (<li key={item}><a href="#" className="block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100">{item}</a></li>))}</ul></div><hr className="border-gray-200" /></div><div className="p-4 border-t border-gray-200"><p className="text-xs text-center text-gray-500">© 2024 Ebook Reader</p></div></div></>
   );
 };
 
@@ -82,15 +74,15 @@ const BookStatsModal: React.FC<{ isOpen: boolean; onClose: () => void; stats: an
     }, [stats, vocabMap]);
     useEffect(() => { if(isOpen) setActiveTab('in'); }, [isOpen]);
     if (!isOpen || !stats) return null;
-    const StatCard = ({ label, value }: { label: string, value: any }) => (<div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-center shadow"><p className="text-sm text-gray-600 dark:text-gray-300">{label}</p><p className="text-2xl font-bold dark:text-white">{value.toLocaleString()}</p></div>);
-    const TabButton = ({ isActive, onClick, label, count }: { isActive: boolean, onClick: any, label: string, count: number }) => (<button onClick={onClick} className={`flex-1 text-center px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isActive ? 'bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200/70 dark:hover:bg-gray-600/50'}`} aria-current={isActive ? 'page' : undefined}>{label}<span className={`ml-2 py-0.5 px-2 rounded-full text-xs font-medium ${isActive ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300' : 'bg-gray-200 dark:bg-gray-600'}`}>{count}</span></button>);
-    return (<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}><div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl transform max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}><div className="flex items-center justify-between p-4 border-b dark:border-gray-700"><h2 className="text-lg font-semibold dark:text-white">Thống kê</h2><button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Đóng"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Đóng" className="w-6 h-6" /></button></div><div className="p-6 overflow-y-auto space-y-6"><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><StatCard label="Tổng số từ" value={stats.totalWords} /><StatCard label="Từ vựng duy nhất" value={stats.uniqueWordsCount} /><StatCard label="Có sẵn" value={stats.vocabMatchCount} /><StatCard label="Chưa có" value={stats.vocabMismatchCount} /></div><div><h3 className="text-md font-semibold dark:text-gray-300 mb-3">Tần suất từ vựng</h3><div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1 flex space-x-1 mb-4"><TabButton isActive={activeTab === 'in'} onClick={() => setActiveTab('in')} label="Có sẵn" count={inDictionaryWords.length} /><TabButton isActive={activeTab === 'out'} onClick={() => setActiveTab('out')} label="Chưa có" count={outOfDictionaryWords.length} /></div><div className="p-1 max-h-64 overflow-y-auto min-h-[10rem]"><ul className="space-y-1">{activeTab === 'in' && inDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60"><span className="font-medium text-blue-600 dark:text-blue-400">{word}</span><span className="text-xs bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'out' && outOfDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60"><span className="font-medium dark:text-gray-300">{word}</span><span className="text-xs bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'in' && inDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Không có từ nào có sẵn.</p></div>}{activeTab === 'out' && outOfDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Tất cả từ đã có sẵn.</p></div>}</ul></div></div></div></div></div>);
+    const StatCard = ({ label, value }: { label: string, value: any }) => (<div className="bg-gray-100 p-4 rounded-lg text-center shadow"><p className="text-sm text-gray-600">{label}</p><p className="text-2xl font-bold text-gray-900">{value.toLocaleString()}</p></div>);
+    const TabButton = ({ isActive, onClick, label, count }: { isActive: boolean, onClick: any, label: string, count: number }) => (<button onClick={onClick} className={`flex-1 text-center px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isActive ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:bg-gray-200/70'}`} aria-current={isActive ? 'page' : undefined}>{label}<span className={`ml-2 py-0.5 px-2 rounded-full text-xs font-medium ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-200'}`}>{count}</span></button>);
+    return (<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}><div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}><div className="flex items-center justify-between p-4 border-b border-gray-200"><h2 className="text-lg font-semibold">Thống kê</h2><button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200" aria-label="Đóng"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Đóng" className="w-6 h-6" /></button></div><div className="p-6 overflow-y-auto space-y-6"><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><StatCard label="Tổng số từ" value={stats.totalWords} /><StatCard label="Từ vựng duy nhất" value={stats.uniqueWordsCount} /><StatCard label="Có sẵn" value={stats.vocabMatchCount} /><StatCard label="Chưa có" value={stats.vocabMismatchCount} /></div><div><h3 className="text-md font-semibold text-gray-700 mb-3">Tần suất từ vựng</h3><div className="bg-gray-100 rounded-lg p-1 flex space-x-1 mb-4"><TabButton isActive={activeTab === 'in'} onClick={() => setActiveTab('in')} label="Có sẵn" count={inDictionaryWords.length} /><TabButton isActive={activeTab === 'out'} onClick={() => setActiveTab('out')} label="Chưa có" count={outOfDictionaryWords.length} /></div><div className="p-1 max-h-64 overflow-y-auto min-h-[10rem]"><ul className="space-y-1">{activeTab === 'in' && inDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100"><span className="font-medium text-blue-600">{word}</span><span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'out' && outOfDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100"><span className="font-medium text-gray-700">{word}</span><span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'in' && inDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Không có từ nào có sẵn.</p></div>}{activeTab === 'out' && outOfDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Tất cả từ đã có sẵn.</p></div>}</ul></div></div></div></div></div>);
 };
 
 // --- UPDATED CLOZE TEST MODAL ---
 const ClozeTestSetupModal = () => {
     const {
-        isClozeTestModalOpen, closeClozeTestModal, startClozeTest, 
+        isClozeTestModalOpen, closeClozeTestModal, startClozeTest,
         hiddenWordCount, setHiddenWordCount
     } = useEbook();
 
@@ -98,7 +90,7 @@ const ClozeTestSetupModal = () => {
 
     const min = 5;
     const max = 50;
-    
+
     const bubblePosition = useMemo(() => {
         const percent = (hiddenWordCount - min) / (max - min);
         return `calc(${percent * 100}% - ${percent * 12}px)`;
@@ -112,19 +104,14 @@ const ClozeTestSetupModal = () => {
 
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in-short" onClick={closeClozeTestModal}>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md transform animate-scale-up" onClick={e => e.stopPropagation()}>
-                
-                {/* Header */}
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md transform animate-scale-up" onClick={e => e.stopPropagation()}>
                 <div className="relative pt-8 px-8 text-center">
-                    <button onClick={closeClozeTestModal} className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Đóng">
+                    <button onClick={closeClozeTestModal} className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:bg-gray-100" aria-label="Đóng">
                         <XIcon />
                     </button>
-                    {/* Icon đã được xoá */}
-                    <h3 className="text-2xl font-bold mt-5 mb-2 dark:text-white uppercase tracking-wider">PRACTICE</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Điều chỉnh số lượng từ bị ẩn để bắt đầu thử thách.</p>
+                    <h3 className="text-2xl font-bold mt-5 mb-2 text-gray-900 uppercase tracking-wider">PRACTICE</h3>
+                    <p className="text-sm text-gray-500">Điều chỉnh số lượng từ bị ẩn để bắt đầu thử thách.</p>
                 </div>
-
-                {/* Body - Configuration */}
                 <div className="p-8 space-y-6">
                     <div>
                         <div className="flex justify-center gap-2 mb-6">
@@ -133,21 +120,20 @@ const ClozeTestSetupModal = () => {
                                     key={p}
                                     onClick={() => setHiddenWordCount(p)}
                                     className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                                        hiddenWordCount === p 
-                                        ? 'bg-blue-600 text-white shadow' 
-                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                        hiddenWordCount === p
+                                        ? 'bg-blue-600 text-white shadow'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                     }`}
                                 >
                                     {p}
                                 </button>
                             ))}
                         </div>
-
                         <div className="relative pt-4">
                             <div style={{ left: bubblePosition }} className="absolute -top-3 w-10 text-center">
-                                <div className="relative bg-gray-800 dark:bg-gray-200 text-white dark:text-black rounded-md px-2 py-1 text-xs font-bold">
+                                <div className="relative bg-gray-800 text-white rounded-md px-2 py-1 text-xs font-bold">
                                     {hiddenWordCount}
-                                    <div className="absolute w-2 h-2 bg-gray-800 dark:bg-gray-200 transform rotate-45 -bottom-1 left-1/2 -translate-x-1/2"></div>
+                                    <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 -bottom-1 left-1/2 -translate-x-1/2"></div>
                                 </div>
                             </div>
                             <input
@@ -158,7 +144,7 @@ const ClozeTestSetupModal = () => {
                                 step="5"
                                 value={hiddenWordCount}
                                 onChange={(e) => setHiddenWordCount(Number(e.target.value))}
-                                className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                             />
                             <div className="flex justify-between text-xs text-gray-500 mt-1">
                                 <span>{min}</span>
@@ -167,18 +153,14 @@ const ClozeTestSetupModal = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Footer with Action Button */}
-                <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
-                    <button 
-                        onClick={handleStart} 
-                        className="w-full px-8 py-3 text-base font-bold rounded-lg shadow-lg transition-all text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transform hover:scale-[1.02]"
+                <div className="px-6 py-4 bg-gray-50 rounded-b-xl">
+                    <button
+                        onClick={handleStart}
+                        className="w-full px-8 py-3 text-base font-bold rounded-lg shadow-lg transition-all text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transform hover:scale-[1.02]"
                     >
                         Bắt đầu Luyện tập
                     </button>
                 </div>
-                
-                {/* Animations */}
                 <style jsx>{`
                     @keyframes fade-in-short { from { opacity: 0; } to { opacity: 1; } }
                     @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -195,7 +177,7 @@ const ClozeTestSetupModal = () => {
 const EbookReaderContent: React.FC = () => {
   const {
     // State & Derived State
-    selectedBookId, isDarkMode, booksData, currentBook, isSidebarOpen, audioPlayerRef,
+    selectedBookId, booksData, currentBook, isSidebarOpen, audioPlayerRef,
     isAudioPlaying, audioCurrentTime, audioDuration, playbackSpeed,
     selectedVocabCard, showVocabDetail, isBatchPlaylistModalOpen, bookVocabularyCardIds,
     currentUser, playlists, isStatsModalOpen, bookStats, vocabMap,
@@ -204,7 +186,7 @@ const EbookReaderContent: React.FC = () => {
     exampleSentences,
 
     // Functions
-    handleBackToLibrary, toggleSidebar, setIsDarkMode, handleSelectBook, setIsBatchPlaylistModalOpen,
+    handleBackToLibrary, toggleSidebar, handleSelectBook, setIsBatchPlaylistModalOpen,
     setIsStatsModalOpen, handleWordClick, closeVocabDetail,
     togglePlayPause, handleSeek, togglePlaybackSpeed, handleVoiceChange,
     handleSetSubtitleLanguage,
@@ -257,7 +239,7 @@ const EbookReaderContent: React.FC = () => {
     const parts = line.split(/(\b\w+\b|[.,!?;:()'"\s`‘’“”])/g);
     const renderableParts = parts.map((part, partIndex) => {
       if (!part) return null;
-      if (/^\w+$/.test(part) && vocabMap.has(part.toLowerCase())) return <span key={partIndex} className="font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer" onClick={() => handleWordClick(part)}>{part}</span>;
+      if (/^\w+$/.test(part) && vocabMap.has(part.toLowerCase())) return <span key={partIndex} className="font-semibold text-blue-600 hover:underline cursor-pointer" onClick={() => handleWordClick(part)}>{part}</span>;
       return <span key={partIndex}>{part}</span>;
     }).filter(Boolean) as JSX.Element[];
     return renderableParts;
@@ -267,10 +249,10 @@ const EbookReaderContent: React.FC = () => {
   const HiddenWordInput: React.FC<{ wordState: HiddenWordState; index: number; onClick: () => void; isActive: boolean; }> = ({ wordState, index, onClick, isActive }) => {
       const { originalWord, userInput, status } = wordState;
       if (status === 'correct') {
-          return <span className="font-semibold text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-500/20 px-1 py-0.5 rounded-md transition-all duration-300">{originalWord}</span>;
+          return <span className="font-semibold text-green-700 bg-green-100 px-1 py-0.5 rounded-md transition-all duration-300">{originalWord}</span>;
       }
-      let containerClasses = `inline-block align-baseline min-w-14 mx-1 px-1.5 pb-px cursor-pointer rounded-t-sm bg-gray-100/50 dark:bg-gray-700/40 border-b-2 border-gray-300 dark:border-gray-600 hover:border-blue-500 transition-all duration-200 text-left`;
-      let textClasses = "font-bold text-gray-800 dark:text-gray-200";
+      let containerClasses = `inline-block align-baseline min-w-14 mx-1 px-1.5 pb-px cursor-pointer rounded-t-sm bg-gray-100/50 border-b-2 border-gray-300 hover:border-blue-500 transition-all duration-200 text-left`;
+      let textClasses = "font-bold text-gray-800";
       if (isActive) containerClasses += " border-blue-500 ring-1 ring-blue-300/70";
       if (status === 'incorrect') {
           containerClasses += " animate-shake border-red-500";
@@ -278,17 +260,17 @@ const EbookReaderContent: React.FC = () => {
       }
       return <span className={containerClasses} onClick={onClick}><span className={textClasses}>{userInput || <>&nbsp;</>}</span></span>;
   };
-  
+
   // NEW Component for progress bar in main view
   const ClozeTestProgress = () => {
     const progressPercent = hiddenWords.size > 0 ? (correctlyGuessedCount / hiddenWords.size) * 100 : 0;
     return (
-      <div className="mb-6 p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+      <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
           <div className="flex justify-between items-center text-sm mb-2">
-              <span className="font-medium text-gray-600 dark:text-gray-300">Tiến độ luyện tập</span>
+              <span className="font-medium text-gray-600">Tiến độ luyện tập</span>
               <span className="font-bold">{correctlyGuessedCount} / {hiddenWords.size}</span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2.5">
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
               <div className="bg-green-500 h-2.5 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
           </div>
       </div>
@@ -297,12 +279,12 @@ const EbookReaderContent: React.FC = () => {
 
 
   const renderBookContent = () => {
-    if (isLoadingVocab) return <div className="text-center p-10 dark:text-gray-400 animate-pulse">Đang tải nội dung sách...</div>;
-    if (!currentBook) return <div className="text-center p-10 dark:text-gray-400">Không tìm thấy nội dung sách.</div>;
+    if (isLoadingVocab) return <div className="text-center p-10 text-gray-500 animate-pulse">Đang tải nội dung sách...</div>;
+    if (!currentBook) return <div className="text-center p-10 text-gray-500">Không tìm thấy nội dung sách.</div>;
 
     if (isClozeTestActive) {
         let globalWordCounter = -1;
-        
+
         const renderClozeEnabledLine = (line: string) => {
             const parts = line.split(/(\b[a-zA-Z']+\b)/g);
             return parts.map((part, partIndex) => {
@@ -320,37 +302,37 @@ const EbookReaderContent: React.FC = () => {
 
         if (subtitleLanguage === 'bilingual') {
              return (
-                <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
+                <div className="font-['Inter',_sans_serif] text-gray-800 px-2 sm:px-4 pb-24">
                     {pairedSentences.map((pair, index) => {
                         if (!pair.en && !pair.vi) return <div key={`spacer-${index}`} className="h-4"></div>;
                         const renderedEnContent = renderClozeEnabledLine(pair.en);
                         if (pair.isHeader) {
                             return (
                                 <div key={`pair-${index}`} className="my-6">
-                                    <h3 className="text-xl font-bold dark:text-white text-center">{renderedEnContent}</h3>
-                                    <p className="text-lg text-center text-gray-600 dark:text-gray-400 italic mt-1">{pair.vi}</p>
+                                    <h3 className="text-xl font-bold text-gray-900 text-center">{renderedEnContent}</h3>
+                                    <p className="text-lg text-center text-gray-600 italic mt-1">{pair.vi}</p>
                                 </div>
                             );
                         }
                         return (
                             <div key={`pair-${index}`} className="mb-5">
-                                <p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-800 dark:text-gray-200 text-left">{renderedEnContent}</p>
-                                <p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-600 dark:text-gray-400 italic text-left">{pair.vi}</p>
+                                <p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-800 text-left">{renderedEnContent}</p>
+                                <p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-600 italic text-left">{pair.vi}</p>
                             </div>
                         );
                     })}
                 </div>
             );
         }
-        
+
         // Fallback to English-only cloze test
         const paragraphs = currentBook.content.trim().split(/\n+/);
         return (
-            <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
+            <div className="font-['Inter',_sans_serif] text-gray-800 px-2 sm:px-4 pb-24">
                 {paragraphs.map((paragraph, pIndex) => {
                     if (paragraph.trim() === '') return <div key={`blank-${pIndex}`} className="h-3 sm:h-4"></div>;
                     return (
-                        <p key={`p-${pIndex}`} className="text-base sm:text-lg leading-loose sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">
+                        <p key={`p-${pIndex}`} className="text-base sm:text-lg leading-loose sm:leading-loose text-gray-700 mb-4 text-left">
                            {renderClozeEnabledLine(paragraph)}
                         </p>
                     );
@@ -361,36 +343,36 @@ const EbookReaderContent: React.FC = () => {
 
     if (subtitleLanguage === 'bilingual') {
       return (
-        <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
+        <div className="font-['Inter',_sans_serif] text-gray-800 px-2 sm:px-4 pb-24">
           {pairedSentences.map((pair, index) => {
             if (!pair.en && !pair.vi) return <div key={`spacer-${index}`} className="h-4"></div>;
-            if (pair.isHeader) return <div key={`pair-${index}`} className="my-6"><h3 className="text-xl font-bold dark:text-white text-center">{renderHighlightedText(pair.en)}</h3><p className="text-lg text-center text-gray-600 dark:text-gray-400 italic mt-1">{pair.vi}</p></div>;
-            return <div key={`pair-${index}`} className="mb-5"><p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-800 dark:text-gray-200 text-left">{renderHighlightedText(pair.en)}</p><p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-600 dark:text-gray-400 italic text-left">{pair.vi}</p></div>;
+            if (pair.isHeader) return <div key={`pair-${index}`} className="my-6"><h3 className="text-xl font-bold text-gray-900 text-center">{renderHighlightedText(pair.en)}</h3><p className="text-lg text-center text-gray-600 italic mt-1">{pair.vi}</p></div>;
+            return <div key={`pair-${index}`} className="mb-5"><p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-800 text-left">{renderHighlightedText(pair.en)}</p><p className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-600 italic text-left">{pair.vi}</p></div>;
           })}
         </div>
       );
     }
-    
+
     // Đây là chế độ 'en' (bản gốc)
     const contentLines = displayedContent.trim().split(/\n+/);
     return (
-      <div className="font-['Inter',_sans_serif] dark:text-gray-200 px-2 sm:px-4 pb-24">
+      <div className="font-['Inter',_sans_serif] text-gray-800 px-2 sm:px-4 pb-24">
         {contentLines.map((line, index) => {
           if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
           const isHeader = line.length < 80 && !line.includes('.') && !line.includes('?');
           const renderableParts = renderHighlightedText(line);
-          if (isHeader) return <h3 key={`line-${index}`} className="text-xl font-bold dark:text-white mt-6 mb-4 text-center">{renderableParts}</h3>;
-          return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 dark:text-gray-300 mb-4 text-left">{renderableParts}</p>;
+          if (isHeader) return <h3 key={`line-${index}`} className="text-xl font-bold text-gray-900 mt-6 mb-4 text-center">{renderableParts}</h3>;
+          return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 mb-4 text-left">{renderableParts}</p>;
         })}
       </div>
     );
   };
-  
+
   const activeHiddenWordState = useMemo(() => {
       if (activeHiddenWordIndex === null) return null;
       return hiddenWords.get(activeHiddenWordIndex);
   }, [activeHiddenWordIndex, hiddenWords]);
-  
+
   const renderLibrary = () => {
     // --- MODIFIED: The tags array is now generated dynamically ---
     const tags = ['All', ...Object.keys(groupedBooks)];
@@ -398,16 +380,16 @@ const EbookReaderContent: React.FC = () => {
     return (
       <div className="flex flex-col">
         {/* --- Tag Bar --- */}
-        <div className="sticky top-0 bg-gray-50 dark:bg-gray-850 z-10 border-b border-gray-200 dark:border-gray-700/50">
+        <div className="sticky top-0 bg-gray-50 z-10 border-b border-gray-200">
           <div className="flex items-center space-x-3 overflow-x-auto no-scrollbar p-3 px-4">
             {tags.map(tag => (
-              <button 
+              <button
                 key={tag}
                 onClick={() => setActiveTag(tag)}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors duration-200 
-                  ${activeTag === tag 
-                    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' 
-                    : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors duration-200
+                  ${activeTag === tag
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                   }`
                 }
               >
@@ -429,17 +411,17 @@ const EbookReaderContent: React.FC = () => {
                    {category === 'Technology & Future' ? (
                     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/youtube-logo.png" alt="YouTube" className="h-8" />
                   ) : (
-                    <h2 className="text-xl md:text-2xl font-bold dark:text-white">{category}</h2>
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-900">{category}</h2>
                   )}
                   {/* "See All" button is removed */}
                 </div>
               )}
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
                 {booksInCategory.map(book => (
                   <div key={book.id} className="cursor-pointer group" onClick={() => handleSelectBook(book.id)}>
                     {/* Thumbnail with 16:9 aspect ratio, now relative for positioning the tag */}
-                    <div className="relative aspect-video bg-gray-200 dark:bg-gray-700 rounded-xl overflow-hidden shadow-lg mb-3 group-hover:shadow-xl transition-shadow duration-300">
+                    <div className="relative aspect-video bg-gray-200 rounded-xl overflow-hidden shadow-lg mb-3 group-hover:shadow-xl transition-shadow duration-300">
                       <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       {book.audioUrls && Object.keys(book.audioUrls).length >= 2 && (
                         <div className="absolute top-2 right-2 bg-black/70 px-2 py-1 rounded-md text-white text-xs font-bold backdrop-blur-sm">
@@ -449,11 +431,9 @@ const EbookReaderContent: React.FC = () => {
                     </div>
                     {/* Book Info */}
                     <div className="flex items-start space-x-3">
-                      {/* Optional: Add an author avatar circle here if you have the data */}
-                      {/* <div className="flex-shrink-0 w-9 h-9 bg-gray-300 rounded-full"></div> */}
                       <div>
-                        <h3 className="text-base font-bold dark:text-gray-100 text-gray-900 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 line-clamp-2">{book.title}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{book.author}</p>
+                        <h3 className="text-base font-bold text-gray-900 leading-snug group-hover:text-blue-600 line-clamp-2">{book.title}</h3>
+                        <p className="text-sm text-gray-500 mt-1">{book.author}</p>
                       </div>
                     </div>
                   </div>
@@ -481,21 +461,21 @@ const EbookReaderContent: React.FC = () => {
 
   // --- NEW: Action Toolbar Component ---
   const ActionToolbar = () => (
-    <div className="bg-gray-200 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700">
+    <div className="bg-gray-200 border-b border-gray-300">
         <div className="max-w-3xl mx-auto px-4">
             <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-2">
                 {currentUser && bookVocabularyCardIds.length > 0 && (
-                    <button onClick={() => setIsBatchPlaylistModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm transition-colors">
+                    <button onClick={() => setIsBatchPlaylistModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
                         <SaveIcon />
                         <span>Lưu</span>
                     </button>
                 )}
-                <button onClick={() => setIsStatsModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm transition-colors">
+                <button onClick={() => setIsStatsModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
                     <StatsIcon />
                     <span>Thống kê</span>
                 </button>
                 {currentBook && (
-                    <button onClick={() => setIsClozeTestModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm transition-colors">
+                    <button onClick={() => setIsClozeTestModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
                         <PracticeIcon />
                         <span>Luyện tập</span>
                     </button>
@@ -506,23 +486,13 @@ const EbookReaderContent: React.FC = () => {
   );
 
   return (
-    <div className={`flex flex-col h-screen ${isDarkMode ? 'dark' : ''} bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white`}>
+    <div className={`flex flex-col h-screen bg-gray-100 text-gray-900`}>
       {selectedBookId && (
         <div className="sticky top-0 z-20">
-          <header className="flex items-center justify-between p-3 bg-gray-950 dark:bg-gray-950 shadow-md py-2 sm:py-3">
+          <header className="flex items-center justify-between p-3 bg-gray-950 shadow-md py-2 sm:py-3">
               <BackButton onClick={isClozeTestActive ? stopClozeTest : handleBackToLibrary} />
-              
+
               <div className="flex-grow flex justify-end items-center gap-4">
-                {/* --- NEW: DARK MODE TOGGLE --- */}
-                <button 
-                  onClick={() => setIsDarkMode(!isDarkMode)}
-                  className="p-2 rounded-full text-white/80 hover:bg-white/10 transition-colors"
-                  aria-label="Chuyển chế độ sáng/tối"
-                >
-                  {isDarkMode ? <SunIcon/> : <MoonIcon />}
-                </button>
-                
-                {/* --- EXISTING: LANGUAGE TOGGLE --- */}
                 {isViSubAvailable && (
                   <div className="bg-gray-800 p-1 rounded-full flex items-center text-xs">
                     <button onClick={() => handleSetSubtitleLanguage('en')} className={`px-3 py-1 font-bold text-white rounded-full transition-colors duration-200 ${ subtitleLanguage === 'en' ? 'bg-blue-600' : 'hover:bg-white/10' }`}>
@@ -539,19 +509,19 @@ const EbookReaderContent: React.FC = () => {
         </div>
       )}
 
-      {currentBook && <BookSidebar isOpen={isSidebarOpen} onClose={toggleSidebar} book={currentBook} isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} />}
+      {currentBook && <BookSidebar isOpen={isSidebarOpen} onClose={toggleSidebar} book={currentBook} />}
 
       {!selectedBookId ? (
-        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-850">{renderLibrary()}</main>
+        <main className="flex-grow overflow-y-auto w-full bg-gray-50">{renderLibrary()}</main>
       ) : (
-        <main className="flex-grow overflow-y-auto w-full bg-gray-50 dark:bg-gray-900 py-6 sm:py-8">
-          <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 sm:p-8 md:p-10">
+        <main className="flex-grow overflow-y-auto w-full bg-gray-50 py-6 sm:py-8">
+          <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white rounded-xl shadow-xl p-6 sm:p-8 md:p-10">
             {!isClozeTestActive && currentBook && (
               <div className="mb-8 text-center">
-                  <h1 className="inline-block bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-1.5 text-xl font-semibold text-gray-800 dark:text-gray-200 shadow-sm">
+                  <h1 className="inline-block bg-gray-100 rounded-full px-4 py-1.5 text-xl font-semibold text-gray-800 shadow-sm">
                     {currentBook.title}
                   </h1>
-                  <p className="text-sm text-center text-gray-500 dark:text-gray-400 mt-2">Tác giả: {currentBook.author}</p>
+                  <p className="text-sm text-center text-gray-500 mt-2">Tác giả: {currentBook.author}</p>
               </div>
             )}
             {isClozeTestActive && <ClozeTestProgress />}
@@ -561,36 +531,58 @@ const EbookReaderContent: React.FC = () => {
       )}
 
       <audio ref={audioPlayerRef} />
-      
+
       {selectedBookId && currentBook?.audioUrls && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-md p-3 z-30">
-          <div className="max-w-3xl mx-auto flex flex-col items-center gap-2">
+        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md z-30 border-t border-gray-200 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)]">
+          <div className="max-w-3xl mx-auto px-4 pt-3 pb-4 flex flex-col items-center gap-3">
             {availableVoices.length > 1 && <VoiceStepper currentVoice={selectedVoiceKey || '...'} onNavigate={handleVoiceChange} availableVoiceCount={availableVoices.length} />}
-            <div className="flex items-center w-full space-x-3 sm:space-x-4">
-              <button onClick={handleRewind} className="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700" aria-label="Lùi 10 giây"><Rewind10Icon /></button>
-              <button onClick={togglePlayPause} className="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700" aria-label={isAudioPlaying ? "Tạm dừng" : "Phát"}>{isAudioPlaying ? <PauseIcon /> : <PlayIcon />}</button>
-              <div className="flex-grow flex items-center space-x-2">
-                <span className="text-xs dark:text-gray-400 w-10 text-center">{formatTime(audioCurrentTime)}</span>
-                <input type="range" min="0" max={audioDuration || 0} value={audioCurrentTime} onChange={handleSeek} className="w-full h-2 bg-gray-300 dark:bg-gray-600 rounded-lg cursor-pointer accent-blue-600" aria-label="Tua audio" />
-                <span className="text-xs dark:text-gray-400 w-10 text-center">{formatTime(audioDuration)}</span>
+            <div className="flex items-center w-full gap-4">
+              <button
+                onClick={togglePlayPause}
+                className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                aria-label={isAudioPlaying ? "Tạm dừng" : "Phát"}
+              >
+                {isAudioPlaying ? <PauseIcon /> : <PlayIcon />}
+              </button>
+
+              <div className="flex-grow flex flex-col justify-center">
+                 <input
+                    type="range"
+                    min="0"
+                    max={audioDuration || 0}
+                    value={audioCurrentTime}
+                    onChange={handleSeek}
+                    className="w-full audio-slider"
+                    aria-label="Tua audio"
+                 />
+                 <div className="flex justify-between text-xs font-mono text-gray-500 mt-1.5 px-0.5">
+                    <span>{formatTime(audioCurrentTime)}</span>
+                    <span>{formatTime(audioDuration)}</span>
+                 </div>
               </div>
-              <button onClick={togglePlaybackSpeed} className="px-4 py-2 text-sm font-semibold rounded-full border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700">{playbackSpeed}x</button>
+
+              <div className="flex items-center gap-2">
+                 <button onClick={handleRewind} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors" aria-label="Lùi 10 giây">
+                    <Rewind10Icon />
+                 </button>
+                 <button onClick={togglePlaybackSpeed} className="w-10 h-10 flex items-center justify-center text-sm font-bold rounded-full bg-gray-200 text-blue-600 hover:bg-gray-300 transition-colors">
+                    {playbackSpeed}x
+                 </button>
+              </div>
+
             </div>
           </div>
         </div>
       )}
 
       <ClozeTestSetupModal />
-
       {selectedVocabCard && showVocabDetail && <FlashcardDetailModal selectedCard={selectedVocabCard} showVocabDetail={showVocabDetail} exampleSentencesData={exampleSentences} onClose={closeVocabDetail} currentVisualStyle="default" />}
-      
       {isBatchPlaylistModalOpen && <AddToPlaylistModal isOpen={isBatchPlaylistModalOpen} onClose={() => setIsBatchPlaylistModalOpen(false)} cardIds={bookVocabularyCardIds} currentUser={currentUser} existingPlaylists={playlists} />}
       <BookStatsModal isOpen={isStatsModalOpen} onClose={() => setIsStatsModalOpen(false)} stats={bookStats} bookTitle={currentBook?.title || ''} vocabMap={vocabMap} />
-
       {activeHiddenWordState && (
           <>
             <div className="fixed inset-0 bg-black/20 z-[60]" onClick={dismissKeyboard} aria-hidden="true" />
-            <div className="fixed bottom-0 left-0 right-0 z-[70] bg-gray-200 dark:bg-gray-800 p-2 shadow-2xl rounded-t-xl animate-slide-up">
+            <div className="fixed bottom-0 left-0 right-0 z-[70] bg-gray-200 p-2 shadow-2xl rounded-t-xl animate-slide-up">
                  <VirtualKeyboard
                     userInput={activeHiddenWordState.userInput}
                     setUserInput={handleClozeTestInput}
@@ -608,12 +600,40 @@ const EbookReaderContent: React.FC = () => {
         .animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        /* For line-clamp */
-        .line-clamp-2 {
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
+        .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+
+        /* Custom Audio Player Slider Styles */
+        .audio-slider {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 100%;
+          height: 6px;
+          background: #e5e7eb; /* gray-200 */
+          border-radius: 9999px;
+          outline: none;
+          transition: opacity .2s;
+        }
+
+        .audio-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          background: #2563eb; /* blue-600 */
+          cursor: pointer;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .audio-slider::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          background: #2563eb; /* blue-600 */
+          cursor: pointer;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
       `}</style>
     </div>
@@ -635,5 +655,3 @@ const EbookReader: React.FC<EbookReaderProps> = ({ hideNavBar, showNavBar }) => 
 };
 
 export default EbookReader;
-
-// --- END OF FILE game.tsx (FIXED & UPDATED) ---
