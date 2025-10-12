@@ -70,6 +70,7 @@ export const itemBlueprints: ItemBlueprint[] = [
     { baseId: 21000, name: 'Demon King\'s Longsword', type: 'weapon', baseDescription: 'Thanh trường kiếm của Quỷ Vương, thấm đẫm quyền năng hắc ám.', icon: itemAssets.demonKingsLongsword, baseStats: { hp: 3000, atk: 350, def: 150 }, baseMaxLevel: 25 },
     { baseId: 22000, name: 'Dragon\'s Breath Armor', type: 'armor', baseDescription: 'Bộ giáp được rèn từ vảy rồng, mang trong mình hơi thở của lửa.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/dragon\'s-breath-armor.webp', baseStats: { hp: 3500, atk: 50, def: 200 }, baseMaxLevel: 30 },
     { baseId: 23000, name: 'Revival Cape', type: 'armor', baseDescription: 'Chiếc áo choàng chứa đựng sức mạnh phục sinh, có khả năng bảo vệ người mặc khỏi cái chết.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/revival-cape.webp', baseStats: { hp: 4000, atk: 0, def: 250 }, baseMaxLevel: 30 },
+    { baseId: 24000, name: 'Hard Armor', type: 'armor', baseDescription: 'Áo giáp cứng cáp, cung cấp khả năng phòng thủ vượt trội.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/hard-armor.webp', baseStats: { hp: 1500, atk: 10, def: 150 }, baseMaxLevel: 20 },
 ];
 
 const blueprintByBaseId = new Map<number, ItemBlueprint>(itemBlueprints.map(bp => [bp.baseId, bp]));
@@ -146,7 +147,6 @@ export function generateItemDefinition(blueprint: ItemBlueprint, rank: ItemRank,
 // --- DATABASE TRUNG TÂM VÀ HÀM TRUY CẬP (Không đổi) ---
 
 export const itemDatabase = new Map<number, ItemDefinition>([
-    [2, { id: 2, name: 'Hard Armor', type: 'armor', rarity: 'B', description: 'Áo giáp cứng cáp, cung cấp khả năng phòng thủ vượt trội.', stats: { defense: 25, durability: 120 }, icon: itemAssets.hardArmor, maxLevel: 25 }],
     [26, { id: 26, name: 'Lá cây hiếm', type: 'material', rarity: 'D', description: 'Lá cây dùng để chế thuốc.', icon: '🍃' }],
     [43, { id: 43, name: 'Sắt', type: 'material', rarity: 'E', description: 'Nguyên liệu cơ bản để rèn trang bị.', icon: 'placeholder' }],
     [44, { id: 44, name: 'Gỗ', type: 'material', rarity: 'E', description: 'Nguyên liệu cơ bản để chế tạo vật phẩm.', icon: 'placeholder' }],
