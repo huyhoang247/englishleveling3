@@ -1,7 +1,7 @@
 
 import { Book } from '../types';
 
-export const book2Data: Book = {
+export const book3Data: Book = {
   id: 'book3',
   title: 'Inside the Mind of a Master Procrastinator',
   author: 'Tim Urban',
