@@ -3,8 +3,7 @@ import { Book } from '../types';
 
 export const book3Data: Book = {
   id: 'book3',
-  title: 'Inside the Mind of a Master Procrastinator',
-  author: 'Tim Urban',
+  title: 'How to improve your singing | Think Like A Musician',
   category: 'TED-Ed',
   coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/002.jpg',
   audioUrls: {
