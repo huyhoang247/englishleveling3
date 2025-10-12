@@ -114,7 +114,6 @@ export const itemAssets = {
     leviathanAxe: require("./assets/equipment/leviathan-axe.webp"),
     chaosStaff: require("./assets/equipment/chaos-staff.webp"),
     // Armor
-    hardArmor: require("./assets/equipment/hard-armor.webp"),
     tunic: require("./assets/equipment/tunic.webp"),
     silverscalePlate: require("./assets/equipment/silverscale-plate.webp"),
   
