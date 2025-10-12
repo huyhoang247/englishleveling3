@@ -55,7 +55,7 @@ Nếu bạn quen một người lớn tuổi thuận tay trái, rất có thể 
 Ngay cả từ "phải" cũng có nghĩa là "đúng", hay "tốt", không chỉ trong tiếng Anh, mà còn trong nhiều ngôn ngữ khác.
 Nhưng nếu thuận tay trái là sai, vậy tại sao ngay từ đầu nó lại xuất hiện?
 Ngày nay, 1/10 dân số thế giới thuận tay trái.
-Các chứng tích khảo cổ cho thấy điều này đã có sẵn từ 500.000 năm trước, với khoảng 10% hài cốt để lại cho thấy những khác biệt về độ dài cánh tay và mật độ xương, và các công cụ cổ đại và đồ thủ công thể hiện bằng chứng về việc thuận tay trái.
+Các chứng tích khảo cổ cho thấy điều này đã có sẵn từ 500,000 năm trước, với khoảng 10% hài cốt để lại cho thấy những khác biệt về độ dài cánh tay và mật độ xương, và các công cụ cổ đại và đồ thủ công thể hiện bằng chứng về việc thuận tay trái.
 Và bất kể bạn nghĩ như thế nào, bạn không thể lựa chọn tay thuận.
 Nó có thể được dự đoán trước khi sinh, dựa trên tư thế bào thai trong bụng mẹ.
 Vậy nếu tay thuận là bẩm sinh thì liệu nó có di truyền?
