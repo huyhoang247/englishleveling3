@@ -3,6 +3,7 @@ import { Book } from '../types.ts';
 
 import { book1Data } from './book1.ts';
 import { book2Data } from './book2.ts';
+import { book3Data } from './book3.ts';
 
 
 
@@ -10,5 +11,6 @@ import { book2Data } from './book2.ts';
 export const allBooks: Book[] = [
   book1Data,
   book2Data,
+  book3Data,
   
 ];
