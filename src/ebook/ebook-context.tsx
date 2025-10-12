@@ -10,18 +10,18 @@ import React, {
   SetStateAction,
   useCallback
 } from 'react';
-import { auth, db } from '../firebase.js'; 
+import { auth, db } from '../firebase.js';
 import { User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 
 // --- DATA IMPORTS (UPDATED FOR NEW STRUCTURE) ---
-import { 
-  Flashcard, 
+import {
+  Flashcard,
   VocabularyData as Vocabulary,
-  ExampleSentence, 
-  WORD_TO_CARD_MAP, 
-  exampleData 
-} from '../story/flashcard-data.ts'; 
+  ExampleSentence,
+  WORD_TO_CARD_MAP,
+  exampleData
+} from '../story/flashcard-data.ts';
 
 // (SỬA ĐỔI) Thay thế import cũ bằng import từ cấu trúc thư mục data mới
 import { Book, allBooks } from './ebooks/index.ts'; // <-- THAY ĐỔI QUAN TRỌNG
@@ -62,7 +62,6 @@ interface EbookContextType {
   audioCurrentTime: number;
   audioDuration: number;
   playbackSpeed: number;
-  isDarkMode: boolean;
   isSidebarOpen: boolean;
   currentUser: User | null;
   playlists: Playlist[];
@@ -102,7 +101,6 @@ interface EbookContextType {
   togglePlayPause: () => void;
   handleSeek: (event: React.ChangeEvent<HTMLInputElement>) => void;
   togglePlaybackSpeed: () => void;
-  setIsDarkMode: Dispatch<SetStateAction<boolean>>;
   toggleSidebar: () => void;
   setIsBatchPlaylistModalOpen: Dispatch<SetStateAction<boolean>>;
   setIsStatsModalOpen: Dispatch<SetStateAction<boolean>>;
@@ -117,8 +115,7 @@ interface EbookContextType {
   handleClozeTestInput: (value: string) => void;
   dismissKeyboard: () => void;
   setIsClozeTestModalOpen: Dispatch<SetStateAction<boolean>>;
-  closeClozeTestModal: () => void; 
-
+  closeClozeTestModal: () => void;
 }
 
 // --- CREATE CONTEXT ---
@@ -145,7 +142,6 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -154,7 +150,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const [selectedVoiceKey, setSelectedVoiceKey] = useState<string | null>(null);
   const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'bilingual'>('en');
 
-  const [isClozeTestModalOpen, setIsClozeTestModalOpen] = useState(false); 
+  const [isClozeTestModalOpen, setIsClozeTestModalOpen] = useState(false);
   const [isClozeTestActive, setIsClozeTestActive] = useState(false);
   const [hiddenWordCount, _setHiddenWordCount] = useState(10);
   const [hiddenWords, setHiddenWords] = useState<Map<number, HiddenWordState>>(new Map());
@@ -188,13 +184,13 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   }, []);
 
   const currentBook = useMemo(() => booksData.find(book => book.id === selectedBookId), [booksData, selectedBookId]);
-  
+
   const isViSubAvailable = useMemo(() => !!currentBook?.contentVi, [currentBook]);
-  
+
   const displayedContent = useMemo(() => {
     return currentBook?.content || '';
   }, [currentBook]);
-  
+
   useEffect(() => {
     setSubtitleLanguage('en');
     stopClozeTest();
@@ -231,7 +227,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
       wordFrequencies.set(normalizedWord, (wordFrequencies.get(normalizedWord) || 0) + 1);
       uniqueWords.add(normalizedWord);
     });
-    
+
     const vocabMatchCount = Array.from(uniqueWords).filter(word => vocabMap.has(word)).length;
     const sortedFrequencies = new Map([...wordFrequencies.entries()].sort((a, b) => b[1] - a[1]));
 
@@ -243,19 +239,12 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
       wordFrequencies: sortedFrequencies
     };
   }, [currentBook, vocabMap]);
-  
+
   useEffect(() => {
     if (selectedBookId) hideNavBar();
     else showNavBar();
   }, [selectedBookId, hideNavBar, showNavBar]);
 
-  // --- SỬA LỖI DARK MODE ---
-  // Đoạn code này đảm bảo class 'dark' được áp dụng cho thẻ <html>
-  // khi isDarkMode là true, cho phép Tailwind CSS kích hoạt các style dark:
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDarkMode);
-  }, [isDarkMode]);
-  
   useEffect(() => {
     const audio = audioPlayerRef.current;
     if (currentAudioUrl && audio) {
@@ -285,19 +274,19 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   useEffect(() => {
     const audio = audioPlayerRef.current;
     if (!audio) return;
-    
+
     const timeUpdateHandler = () => setAudioCurrentTime(audio.currentTime);
     const loadedMetadataHandler = () => setAudioDuration(audio.duration);
     const playHandler = () => setIsAudioPlaying(true);
     const pauseHandler = () => setIsAudioPlaying(false);
     const endedHandler = () => { setIsAudioPlaying(false); setAudioCurrentTime(0); };
-    
+
     audio.addEventListener('timeupdate', timeUpdateHandler);
     audio.addEventListener('loadedmetadata', loadedMetadataHandler);
     audio.addEventListener('play', playHandler);
     audio.addEventListener('pause', pauseHandler);
     audio.addEventListener('ended', endedHandler);
-    
+
     return () => {
       audio.removeEventListener('timeupdate', timeUpdateHandler);
       audio.removeEventListener('loadedmetadata', loadedMetadataHandler);
@@ -324,7 +313,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
 
   const startClozeTest = useCallback(() => {
     if (!currentBook?.content) return;
-    
+
     const allWords = currentBook.content.match(/\b[a-zA-Z']+\b/g) || [];
     const validWordIndices = allWords
       .map((word, index) => ({ word, index }))
@@ -354,8 +343,8 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     setHiddenWords(new Map());
     setActiveHiddenWordIndex(null);
   };
-  
-  const closeClozeTestModal = () => { 
+
+  const closeClozeTestModal = () => {
       setIsClozeTestModalOpen(false);
   }
 
@@ -368,14 +357,14 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const dismissKeyboard = () => {
     setActiveHiddenWordIndex(null);
   };
-  
+
   const checkAnswer = (wordIndex: number, finalInput: string) => {
     const wordState = hiddenWords.get(wordIndex);
     if (!wordState) return;
 
     const isCorrect = finalInput.toLowerCase() === wordState.originalWord.toLowerCase();
     const newStatus = isCorrect ? 'correct' : 'incorrect';
-    
+
     const newHiddenWords = new Map(hiddenWords);
     newHiddenWords.set(wordIndex, { ...wordState, status: newStatus });
     setHiddenWords(newHiddenWords);
@@ -398,11 +387,11 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
 
     const currentWordState = hiddenWords.get(activeHiddenWordIndex);
     if (!currentWordState) return;
-    
+
     const newHiddenWords = new Map(hiddenWords);
     newHiddenWords.set(activeHiddenWordIndex, { ...currentWordState, userInput: value });
     setHiddenWords(newHiddenWords);
-    
+
     if (value.length === currentWordState.originalWord.length) {
         checkAnswer(activeHiddenWordIndex, value);
     }
@@ -437,15 +426,15 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const handleSetSubtitleLanguage = (lang: 'en' | 'bilingual') => {
     if (isViSubAvailable) setSubtitleLanguage(lang);
   };
-  
+
   const value: EbookContextType = {
     booksData, selectedBookId, vocabMap, isLoadingVocab, selectedVocabCard, showVocabDetail,
-    isAudioPlaying, audioCurrentTime, audioDuration, playbackSpeed, isDarkMode, isSidebarOpen,
+    isAudioPlaying, audioCurrentTime, audioDuration, playbackSpeed, isSidebarOpen,
     currentUser, playlists, isBatchPlaylistModalOpen, isStatsModalOpen,
     selectedVoiceKey, audioPlayerRef, currentBook, availableVoices, currentAudioUrl,
     bookVocabularyCardIds, bookStats, handleSelectBook, handleBackToLibrary,
     handleWordClick, closeVocabDetail, togglePlayPause, handleSeek,
-    togglePlaybackSpeed, setIsDarkMode, toggleSidebar, setIsBatchPlaylistModalOpen,
+    togglePlaybackSpeed, toggleSidebar, setIsBatchPlaylistModalOpen,
     setIsStatsModalOpen, handleVoiceChange,
     subtitleLanguage, isViSubAvailable, displayedContent, handleSetSubtitleLanguage,
     exampleSentences: exampleData,
