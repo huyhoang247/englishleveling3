@@ -8,7 +8,7 @@ export const book2Data: Book = {
   category: 'TED',
   coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/002.jpg',
   audioUrls: {
-    'Tim Urban': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/audio/origin-voice/002.mp3',
+    'Raw': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/audio/origin-voice/002.mp3',
   
   },
   content: `
