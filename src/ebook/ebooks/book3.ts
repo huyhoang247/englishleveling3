@@ -1,4 +1,3 @@
-
 import { Book } from '../types';
 
 export const book3Data: Book = {
@@ -11,12 +10,10 @@ export const book3Data: Book = {
   
   },
   content: `
-
-
 The Soul of the Voice: From Technique to Truth
 A Life-Changing Sound
 
-I heard a woman singing classical music, and in that moment, everything changed for me. It was that profound. It was such an incredibly impactful happening that I knew, that very day, my life had found its direction. I thought, "Whatever this is, this is what I want to do."
+I heard a woman singing classical music, and in that moment, everything changed for me. It was that profound. It was such an incredibly impactful happening that I knew, that very day, my life had found its direction. I thought, "Whatever this is, this is what I want to do".
 
 Hey you. Yes, you. What's that light inside of you? Is it a dream? A beat? A beautiful sound? A heartbreaking song? Whatever it is, we're here with working musicians to help you grow and share that gift with this wild, wonderful world.
 
@@ -24,7 +21,7 @@ My name is Denyce Graves-Montgomery, and I have spent more than 45 years on the 
 
 1. Finding Your Unique Instrument
 
-Even if you're a natural singer and know how to sing very, very well, some kind of training is necessary. It involves having external ears—a teacher or a coach—who can listen and say, "Your instrument is best suited for this range."
+Even if you're a natural singer and know how to sing very, very well, some kind of training is necessary. It involves having external ears—a teacher or a coach—who can listen and say, "Your instrument is best suited for this range".
 
 To find your specific voice type, a teacher will guide you through different vocal exercises up and down the scale. They'll listen to see what's comfortable, where your voice shines, and where it is at its most beautiful. There are many classifications:
 
@@ -67,24 +64,20 @@ It has to be real. It has to be honest. That is the thing that is transformative
 And that's the thing that changes people's lives.
 
 The truth. The truth.
-
   `,
   contentVi: `
-
-Chắc chắn rồi. Dưới đây là bản dịch Tiếng Việt của nội dung đã được trình bày lại một cách hợp lý và logic.
-
 Linh Hồn Của Giọng Hát: Từ Kỹ Thuật Đến Sự Chân Thật
 Một Âm Thanh Thay Đổi Cuộc Đời
 
-Tôi đã nghe một người phụ nữ hát nhạc cổ điển, và ngay khoảnh khắc đó, mọi thứ trong tôi đã thay đổi. Đó là một trải nghiệm sâu sắc. Một sự kiện có sức ảnh hưởng phi thường đến nỗi ngay ngày hôm đó, tôi biết cuộc đời mình đã tìm thấy phương hướng. Tôi đã nghĩ: "Dù đây là gì đi nữa, đây chính là điều mình muốn làm."
+Tôi đã nghe một người phụ nữ hát nhạc cổ điển, và ngay khoảnh khắc đó, mọi thứ trong tôi đã thay đổi. Đó là một trải nghiệm sâu sắc. Một sự kiện có sức ảnh hưởng phi thường đến nỗi ngay ngày hôm đó, tôi biết cuộc đời mình đã tìm thấy phương hướng. Tôi đã nghĩ: "Dù đây là gì đi nữa, đây chính là điều mình muốn làm".
 
-Còn bạn? Vâng, chính bạn đó. Ánh sáng bên trong bạn là gì? Là một giấc mơ? Một giai điệu? Một thanh âm tuyệt đẹp? Hay một bản tình ca day dứt? Dù đó là gì, chúng tôi ở đây cùng những nhạc sĩ chuyên nghiệp để giúp bạn nuôi dưỡng và chia sẻ món quà đó với thế giới hoang dã và kỳ diệu này.
+Còn bạn. Vâng, chính bạn đó. Ánh sáng bên trong bạn là gì? Là một giấc mơ? Một giai điệu? Một thanh âm tuyệt đẹp? Hay một bản tình ca day dứt? Dù đó là gì, chúng tôi ở đây cùng những nhạc sĩ chuyên nghiệp để giúp bạn nuôi dưỡng và chia sẻ món quà đó với thế giới hoang dã và kỳ diệu này.
 
 Tôi là Denyce Graves-Montgomery, và tôi đã có hơn 45 năm đứng trên sân khấu với vai trò là một ca sĩ opera. Song song với đó, tôi luôn tham gia vào sự nghiệp giáo dục và giảng dạy thanh nhạc.
 
 1. Tìm Kiếm "Nhạc Cụ" Độc Đáo Của Riêng Bạn
 
-Ngay cả khi bạn là một ca sĩ bẩm sinh với khả năng ca hát tuyệt vời, việc rèn luyện bài bản vẫn vô cùng cần thiết. Nó đòi hỏi bạn phải có những "đôi tai bên ngoài" – một người thầy hoặc một huấn luyện viên – có thể lắng nghe và nói rằng: "Nhạc cụ của em phù hợp nhất với quãng giọng này."
+Ngay cả khi bạn là một ca sĩ bẩm sinh với khả năng ca hát tuyệt vời, việc rèn luyện bài bản vẫn vô cùng cần thiết. Nó đòi hỏi bạn phải có những "đôi tai bên ngoài" – một người thầy hoặc một huấn luyện viên – có thể lắng nghe và nói rằng: "Nhạc cụ của em phù hợp nhất với quãng giọng này".
 
 Để tìm ra loại giọng cụ thể của mình, một người thầy sẽ hướng dẫn bạn thực hiện các bài luyện thanh từ thấp đến cao. Họ sẽ lắng nghe để xem đâu là quãng giọng bạn cảm thấy thoải mái, đâu là nơi giọng hát của bạn tỏa sáng và đẹp đẽ nhất. Có rất nhiều phân loại giọng:
 
@@ -127,6 +120,5 @@ Nó phải thật. Nó phải chân thành. Đó chính là điều tạo nên s
 Và đó chính là điều thay đổi cuộc đời của người khác.
 
 Sự thật. Chính là Sự thật.
-
   `,
 };
