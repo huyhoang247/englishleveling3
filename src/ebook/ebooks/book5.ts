@@ -2,12 +2,12 @@ import { Book } from '../types';
 
 export const book5Data: Book = {
   id: 'book5',
-  title: 'Why are some people left-handed?',
-  author: 'Daniel M. Abrams',
-  category: 'TED-Ed',
-  coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/004.jpg',
+  title: "The World's First Nature Superpower",
+  author: 'Ilona Szabó de Carvalho',
+  category: 'TED',
+  coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/005.jpg',
   audioUrls: {
-    'Raw': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/audio/origin-voice/004.mp3',
+    'Raw': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/audio/origin-voice/005.mp3',
   },
   content: `
 A nature's superpower.
