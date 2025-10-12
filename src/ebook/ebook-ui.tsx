@@ -1,3 +1,5 @@
+// --- START OF FILE ebook-ui.tsx (14).txt ---
+
 // --- START OF FILE ebook-ui.tsx (12).txt ---
 
 // --- START OF FILE game.tsx (FIXED & UPDATED) ---
@@ -351,7 +353,7 @@ const EbookReaderContent: React.FC = () => {
         </div>
 
         {/* --- Books Grid --- */}
-        <div className="p-4 md:p-6 lg:p-8">
+        <div className="p-4 md:p-6 lg:p-8 pb-24">
           {Object.entries(groupedBooks)
             .filter(([category]) => activeTag === 'All' || activeTag === category)
             .map(([category, booksInCategory]) => (
