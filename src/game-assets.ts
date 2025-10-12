@@ -117,7 +117,7 @@ export const itemAssets = {
     hardArmor: require("./assets/equipment/hard-armor.webp"),
     tunic: require("./assets/equipment/tunic.webp"),
     silverscalePlate: require("./assets/equipment/silverscale-plate.webp"),
-    dragonsBreathArmor: require("./assets/equipment/dragons-breath-armor.webp"),
+  
     
 };
 
