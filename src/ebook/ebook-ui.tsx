@@ -15,6 +15,8 @@ import BackButton from '../ui/back-button.tsx';
 // PhraseDetailModal has been removed as it's no longer used.
 
 // --- ICONS (Copied from original file for self-containment) ---
+const SunIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>);
+const MoonIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25c0 5.385 4.365 9.75 9.75 9.75 2.138 0 4.14-.622 5.752-1.688z" /></svg>);
 const PlayIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>);
 const PauseIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Zm9 0a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" /></svg>);
 const Rewind10Icon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>);
@@ -96,12 +98,9 @@ const ClozeTestSetupModal = () => {
 
     const min = 5;
     const max = 50;
-
-    // Calculate position for the floating value bubble above the slider
+    
     const bubblePosition = useMemo(() => {
         const percent = (hiddenWordCount - min) / (max - min);
-        // The offset helps center the bubble over the slider's thumb
-        // Adjust the '12px' offset if the thumb size changes
         return `calc(${percent * 100}% - ${percent * 12}px)`;
     }, [hiddenWordCount, min, max]);
 
@@ -115,15 +114,13 @@ const ClozeTestSetupModal = () => {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in-short" onClick={closeClozeTestModal}>
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md transform animate-scale-up" onClick={e => e.stopPropagation()}>
                 
-                {/* Header with Icon */}
+                {/* Header */}
                 <div className="relative pt-8 px-8 text-center">
                     <button onClick={closeClozeTestModal} className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Đóng">
                         <XIcon />
                     </button>
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
-                       <PracticeIcon />
-                    </div>
-                    <h3 className="text-xl font-bold mt-5 mb-2 dark:text-white">Luyện tập điền từ</h3>
+                    {/* Icon đã được xoá */}
+                    <h3 className="text-2xl font-bold mt-5 mb-2 dark:text-white uppercase tracking-wider">PRACTICE</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Điều chỉnh số lượng từ bị ẩn để bắt đầu thử thách.</p>
                 </div>
 
@@ -515,7 +512,17 @@ const EbookReaderContent: React.FC = () => {
           <header className="flex items-center justify-between p-3 bg-gray-950 dark:bg-gray-950 shadow-md py-2 sm:py-3">
               <BackButton onClick={isClozeTestActive ? stopClozeTest : handleBackToLibrary} />
               
-              <div className="flex-grow flex justify-end">
+              <div className="flex-grow flex justify-end items-center gap-4">
+                {/* --- NEW: DARK MODE TOGGLE --- */}
+                <button 
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  className="p-2 rounded-full text-white/80 hover:bg-white/10 transition-colors"
+                  aria-label="Chuyển chế độ sáng/tối"
+                >
+                  {isDarkMode ? <SunIcon/> : <MoonIcon />}
+                </button>
+                
+                {/* --- EXISTING: LANGUAGE TOGGLE --- */}
                 {isViSubAvailable && (
                   <div className="bg-gray-800 p-1 rounded-full flex items-center text-xs">
                     <button onClick={() => handleSetSubtitleLanguage('en')} className={`px-3 py-1 font-bold text-white rounded-full transition-colors duration-200 ${ subtitleLanguage === 'en' ? 'bg-blue-600' : 'hover:bg-white/10' }`}>
