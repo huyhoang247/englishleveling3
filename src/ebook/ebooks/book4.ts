@@ -2,12 +2,12 @@ import { Book } from '../types';
 
 export const book4Data: Book = {
   id: 'book4',
-  title: 'Inside the Mind of a Master Procrastinator',
-  author: 'Tim Urban',
-  category: 'TED',
-  coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/002.jpg',
+  title: 'Why are some people left-handed?',
+  author: 'Daniel M. Abrams',
+  category: 'TED-Ed',
+  coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/004.jpg',
   audioUrls: {
-    'Tim Urban': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/audio/origin-voice/002.mp3',
+    'Raw': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/audio/origin-voice/004.mp3',
   },
   content: `
 
