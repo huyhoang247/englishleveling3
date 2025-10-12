@@ -85,7 +85,7 @@ const BookStatsModal: React.FC<{ isOpen: boolean; onClose: () => void; stats: an
     return (<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}><div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl transform max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}><div className="flex items-center justify-between p-4 border-b dark:border-gray-700"><h2 className="text-lg font-semibold dark:text-white">Thống kê</h2><button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Đóng"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Đóng" className="w-6 h-6" /></button></div><div className="p-6 overflow-y-auto space-y-6"><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><StatCard label="Tổng số từ" value={stats.totalWords} /><StatCard label="Từ vựng duy nhất" value={stats.uniqueWordsCount} /><StatCard label="Có sẵn" value={stats.vocabMatchCount} /><StatCard label="Chưa có" value={stats.vocabMismatchCount} /></div><div><h3 className="text-md font-semibold dark:text-gray-300 mb-3">Tần suất từ vựng</h3><div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1 flex space-x-1 mb-4"><TabButton isActive={activeTab === 'in'} onClick={() => setActiveTab('in')} label="Có sẵn" count={inDictionaryWords.length} /><TabButton isActive={activeTab === 'out'} onClick={() => setActiveTab('out')} label="Chưa có" count={outOfDictionaryWords.length} /></div><div className="p-1 max-h-64 overflow-y-auto min-h-[10rem]"><ul className="space-y-1">{activeTab === 'in' && inDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60"><span className="font-medium text-blue-600 dark:text-blue-400">{word}</span><span className="text-xs bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'out' && outOfDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/60"><span className="font-medium dark:text-gray-300">{word}</span><span className="text-xs bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'in' && inDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Không có từ nào có sẵn.</p></div>}{activeTab === 'out' && outOfDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Tất cả từ đã có sẵn.</p></div>}</ul></div></div></div></div></div>);
 };
 
-// --- SIMPLIFIED CLOZE TEST MODAL (SETUP ONLY) ---
+// --- UPDATED CLOZE TEST MODAL ---
 const ClozeTestSetupModal = () => {
     const {
         isClozeTestModalOpen, closeClozeTestModal, startClozeTest, 
@@ -94,32 +94,100 @@ const ClozeTestSetupModal = () => {
 
     if (!isClozeTestModalOpen) return null;
 
+    const min = 5;
+    const max = 50;
+
+    // Calculate position for the floating value bubble above the slider
+    const bubblePosition = useMemo(() => {
+        const percent = (hiddenWordCount - min) / (max - min);
+        // The offset helps center the bubble over the slider's thumb
+        // Adjust the '12px' offset if the thumb size changes
+        return `calc(${percent * 100}% - ${percent * 12}px)`;
+    }, [hiddenWordCount, min, max]);
+
+    const handleStart = () => {
+        startClozeTest();
+    };
+
+    const presets = [10, 20, 30, 50];
+
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in-short" onClick={closeClozeTestModal}>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg transform animate-scale-up" onClick={e => e.stopPropagation()}>
-                <div className="p-8 flex flex-col items-center justify-center text-center">
-                    <PracticeIcon />
-                    <h3 className="text-2xl font-bold mt-4 mb-2 dark:text-white">Luyện tập điền từ</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md">Chọn số lượng từ bạn muốn điền vào chỗ trống để bắt đầu thử thách.</p>
-                    
-                    <div className="w-full max-w-sm bg-gray-100 dark:bg-gray-700 p-6 rounded-lg">
-                        <label htmlFor="wordCount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Số lượng từ</label>
-                        <div className="flex items-center gap-4">
-                            <span className="text-sm">5</span>
-                            <input id="wordCount" type="range" min="5" max="50" step="5" value={hiddenWordCount} onChange={(e) => setHiddenWordCount(Number(e.target.value))} className="w-full h-2 bg-gray-300 dark:bg-gray-600 rounded-lg cursor-pointer accent-blue-600"/>
-                            <span className="text-sm">50</span>
-                        </div>
-                        <div className="mt-2 text-center text-xl font-bold text-blue-600 dark:text-blue-400">{hiddenWordCount} từ</div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md transform animate-scale-up" onClick={e => e.stopPropagation()}>
+                
+                {/* Header with Icon */}
+                <div className="relative pt-8 px-8 text-center">
+                    <button onClick={closeClozeTestModal} className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Đóng">
+                        <XIcon />
+                    </button>
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
+                       <PracticeIcon />
                     </div>
-
-                    <button onClick={startClozeTest} className="mt-8 px-8 py-3 text-lg font-bold rounded-full shadow-lg transition-all text-white bg-green-600 hover:bg-green-700 transform hover:scale-105">Bắt đầu</button>
+                    <h3 className="text-xl font-bold mt-5 mb-2 dark:text-white">Luyện tập điền từ</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Điều chỉnh số lượng từ bị ẩn để bắt đầu thử thách.</p>
                 </div>
-                 <style jsx>{`
+
+                {/* Body - Configuration */}
+                <div className="p-8 space-y-6">
+                    <div>
+                        <div className="flex justify-center gap-2 mb-6">
+                            {presets.map(p => (
+                                <button
+                                    key={p}
+                                    onClick={() => setHiddenWordCount(p)}
+                                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                                        hiddenWordCount === p 
+                                        ? 'bg-blue-600 text-white shadow' 
+                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                    }`}
+                                >
+                                    {p}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="relative pt-4">
+                            <div style={{ left: bubblePosition }} className="absolute -top-3 w-10 text-center">
+                                <div className="relative bg-gray-800 dark:bg-gray-200 text-white dark:text-black rounded-md px-2 py-1 text-xs font-bold">
+                                    {hiddenWordCount}
+                                    <div className="absolute w-2 h-2 bg-gray-800 dark:bg-gray-200 transform rotate-45 -bottom-1 left-1/2 -translate-x-1/2"></div>
+                                </div>
+                            </div>
+                            <input
+                                id="wordCount"
+                                type="range"
+                                min={min}
+                                max={max}
+                                step="5"
+                                value={hiddenWordCount}
+                                onChange={(e) => setHiddenWordCount(Number(e.target.value))}
+                                className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>{min}</span>
+                                <span>{max}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer with Action Button */}
+                <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
+                    <button 
+                        onClick={handleStart} 
+                        className="w-full px-8 py-3 text-base font-bold rounded-lg shadow-lg transition-all text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 transform hover:scale-[1.02]"
+                    >
+                        Bắt đầu Luyện tập
+                    </button>
+                </div>
+                
+                {/* Animations */}
+                <style jsx>{`
                     @keyframes fade-in-short { from { opacity: 0; } to { opacity: 1; } }
                     @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
                     .animate-fade-in-short { animation: fade-in-short 0.2s ease-out forwards; }
                     .animate-scale-up { animation: scale-up 0.2s ease-out forwards; }
-                 `}</style>
+                `}</style>
             </div>
         </div>
     );
