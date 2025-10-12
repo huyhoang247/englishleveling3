@@ -4,7 +4,7 @@ export const book3Data: Book = {
   id: 'book3',
   title: 'How to improve your singing | Think Like A Musician',
   category: 'TED-Ed',
-  coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/002.jpg',
+  coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/003.jpg',
   audioUrls: {
     'Tim Urban': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/audio/origin-voice/003.mp3',
   
