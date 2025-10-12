@@ -68,6 +68,7 @@ export const itemBlueprints: ItemBlueprint[] = [
     { baseId: 19000, name: 'Chaos Staff', type: 'weapon', baseDescription: 'Cây trượng chứa đựng sức mạnh hỗn mang, không thể kiểm soát và không thể đoán trước.', icon: itemAssets.chaosStaff, baseStats: { hp: 2200, atk: 380, def: 100 }, baseMaxLevel: 25 },
     { baseId: 20000, name: 'Demon King\'s Daggers', type: 'weapon', baseDescription: 'Cặp dao găm của Quỷ Vương, mỗi nhát chém đều mang theo sự hủy diệt.', icon: itemAssets.demonKingsDaggers, baseStats: { hp: 1300, atk: 320, def: 60 }, baseMaxLevel: 25 },
     { baseId: 21000, name: 'Demon King\'s Longsword', type: 'weapon', baseDescription: 'Thanh trường kiếm của Quỷ Vương, thấm đẫm quyền năng hắc ám.', icon: itemAssets.demonKingsLongsword, baseStats: { hp: 3000, atk: 350, def: 150 }, baseMaxLevel: 25 },
+    { baseId: 22000, name: 'Dragon\'s Breath Armor', type: 'armor', baseDescription: 'Bộ giáp được rèn từ vảy rồng, mang trong mình hơi thở của lửa.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/dragon\'s-breath-armor.webp', baseStats: { hp: 3500, atk: 50, def: 200 }, baseMaxLevel: 30 },
 ];
 
 const blueprintByBaseId = new Map<number, ItemBlueprint>(itemBlueprints.map(bp => [bp.baseId, bp]));
