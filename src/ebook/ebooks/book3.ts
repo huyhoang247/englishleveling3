@@ -19,7 +19,7 @@ Hey you. Yes, you. What's that light inside of you? Is it a dream? A beat? A bea
 
 My name is Denyce Graves-Montgomery, and I have spent more than 45 years on the stage as an opera singer. Parallel to that, I have always been involved in education and have also taught voice.
 
-1. Finding Your Unique Instrument
+1: Finding Your Unique Instrument
 
 Even if you're a natural singer and know how to sing very, very well, some kind of training is necessary. It involves having external ears—a teacher or a coach—who can listen and say, "Your instrument is best suited for this range".
 
@@ -35,13 +35,13 @@ Baritones & Basses: The middle and lowest male voices.
 
 There's a lot to learn about what your voice is suited for. A voice also needs time to ripen and grow. I’ve worked with young people who started out as mezzos or altos, only for us to discover that they, in fact, have an incredible upper range and are sopranos.
 
-2. Building Power and Resonance
+2: Building Power and Resonance
 
 To be able to cut across a really, really big orchestra, there has to be a certain amount of heft and steel in the sound to reach the person sitting in the last row of the top balcony.
 
 I am a person who has a big, old honking voice. Why? Because I use my forehead, my cheekbones, my nose—all of these incredible resonating cavities that create great resonance and allow the sound to cut through. When you first start studying, you learn the technical part, but that work continues for the whole of your life.
 
-3. The Core of Vocal Technique
+3: The Core of Vocal Technique
 
 The vocal technique of singing is what we call chiaroscuro—a balance of "chiaro" (clear, bright) and "scuro" (darker, rich) to create a full, rounded sound. To achieve this, you have to learn to use your body as the microphone.
 
@@ -75,7 +75,7 @@ Còn bạn. Vâng, chính bạn đó. Ánh sáng bên trong bạn là gì? Là m
 
 Tôi là Denyce Graves-Montgomery, và tôi đã có hơn 45 năm đứng trên sân khấu với vai trò là một ca sĩ opera. Song song với đó, tôi luôn tham gia vào sự nghiệp giáo dục và giảng dạy thanh nhạc.
 
-1. Tìm Kiếm "Nhạc Cụ" Độc Đáo Của Riêng Bạn
+1: Tìm Kiếm "Nhạc Cụ" Độc Đáo Của Riêng Bạn
 
 Ngay cả khi bạn là một ca sĩ bẩm sinh với khả năng ca hát tuyệt vời, việc rèn luyện bài bản vẫn vô cùng cần thiết. Nó đòi hỏi bạn phải có những "đôi tai bên ngoài" – một người thầy hoặc một huấn luyện viên – có thể lắng nghe và nói rằng: "Nhạc cụ của em phù hợp nhất với quãng giọng này".
 
@@ -91,13 +91,13 @@ Nam trung & Nam trầm (Baritone & Bass): Các loại giọng nam trung và tr�
 
 Có rất nhiều điều cần học hỏi để biết giọng hát của bạn phù hợp với điều gì. Một giọng hát cũng cần thời gian để "chín muồi" và phát triển. Tôi đã làm việc với những người trẻ ban đầu có chất giọng nữ trung hoặc nữ trầm, để rồi chúng tôi phát hiện ra rằng, trên thực tế, họ sở hữu một quãng giọng cao đáng kinh ngạc và là một giọng nữ cao.
 
-2. Kiến Tạo Sức Mạnh và Sự Cộng Hưởng
+2: Kiến Tạo Sức Mạnh và Sự Cộng Hưởng
 
 Để có thể vượt qua một dàn nhạc giao hưởng hùng hậu, âm thanh của bạn phải có một "sức nặng" và "chất thép" nhất định để chạm đến người ngồi ở hàng ghế cuối cùng trên ban công cao nhất.
 
 Tôi là người sở hữu một giọng hát to và vang dội. Tại sao? Bởi vì tôi sử dụng vòm trán, xương gò má, mũi của mình – tất cả những khoang cộng hưởng đáng kinh ngạc này để tạo ra sự cộng hưởng tuyệt vời và giúp âm thanh vang xa. Khi bạn mới bắt đầu học, bạn sẽ học về kỹ thuật, nhưng công việc đó sẽ theo bạn suốt cả cuộc đời.
 
-3. Cốt Lõi Của Kỹ Thuật Thanh Nhạc
+3: Cốt Lõi Của Kỹ Thuật Thanh Nhạc
 
 Kỹ thuật thanh nhạc trong ca hát được chúng tôi gọi là chiaroscuro – sự cân bằng giữa "chiaro" (sáng, trong) và "scuro" (tối, trầm) để tạo ra một âm thanh đầy đặn, tròn trịa. Để đạt được điều này, bạn phải học cách sử dụng cơ thể của bạn như một chiếc micro.
 
