@@ -249,6 +249,9 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     else showNavBar();
   }, [selectedBookId, hideNavBar, showNavBar]);
 
+  // --- SỬA LỖI DARK MODE ---
+  // Đoạn code này đảm bảo class 'dark' được áp dụng cho thẻ <html>
+  // khi isDarkMode là true, cho phép Tailwind CSS kích hoạt các style dark:
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
