@@ -5,6 +5,8 @@ import { book1Data } from './book1.ts';
 import { book2Data } from './book2.ts';
 import { book3Data } from './book3.ts';
 import { book4Data } from './book4.ts';
+import { book5Data } from './book5.ts';
+
 
 
 
@@ -15,5 +17,6 @@ export const allBooks: Book[] = [
   book2Data,
   book3Data,
   book4Data,
+  book5Data,
   
 ];
