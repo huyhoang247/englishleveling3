@@ -48,7 +48,7 @@ const rankModifiers: { [key in ItemRank]: { statMultiplier: number; levelMultipl
 export const itemBlueprints: ItemBlueprint[] = [
     // SỬA LỖI: Đổi HP, ATK, DEF thành hp, atk, def
     { baseId: 1000, name: 'Nomad Sword', type: 'weapon', baseDescription: 'Thanh kiếm của dân du mục, thích hợp cho những chuyến đi dài.', icon: itemAssets.nomadSword, baseStats: { hp: 1000, atk: 100, def: 50 }, baseMaxLevel: 10 },
-    { baseId: 2000, name: 'Tunic', type: 'armor', baseDescription: 'Một chiếc áo tunic đơn giản, cung cấp sự bảo vệ cơ bản.', icon: itemAssets.tunic, baseStats: { def: 8, magicResist: 2 }, baseMaxLevel: 10 },
+    { baseId: 2000, name: 'Tunic', type: 'armor', baseDescription: 'Một chiếc áo tunic đơn giản, cung cấp sự bảo vệ cơ bản.', icon: itemAssets.tunic, baseStats: { hp: 600, atk: 5, def: 80 }, baseMaxLevel: 10 },
     { baseId: 3000, name: 'Warrior\'s Sword', type: 'weapon', baseDescription: 'Thanh kiếm được rèn cho những chiến binh dũng cảm.', icon: itemAssets.warriorsSword, baseStats: { hp: 1800, atk: 180, def: 90 }, baseMaxLevel: 15 },
     { baseId: 4000, name: 'Frostbite Spear', type: 'weapon', baseDescription: 'Ngọn giáo phủ băng.', icon: itemAssets.frostbiteSpear, baseStats: { hp: 1500, atk: 140, def: 120 }, baseMaxLevel: 15 },
     { baseId: 5000, name: 'Giant\'s Hammer', type: 'weapon', baseDescription: 'Cây búa khổng lồ, sức mạnh vô song.', icon: itemAssets.giantsHammer, baseStats: { hp: 2500, atk: 250, def: 100 }, baseMaxLevel: 20 },
