@@ -11,7 +11,7 @@ import BackButton from '../ui/back-button.tsx';
 // PhraseDetailModal has been removed as it's no longer used.
 
 // --- ICONS (Copied from original file for self-containment) ---
-const PlayIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 pl-0.5"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>);
+const PlayIcon = () => (<svg xmlns="http://www.w.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 pl-0.5"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>);
 const PauseIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Zm9 0a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" /></svg>);
 const Rewind10Icon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>);
 const XIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>);
@@ -33,13 +33,13 @@ const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
 };
 
 // --- UI COMPONENTS ---
-const VoiceStepper: React.FC<{ currentVoice: string; onNavigate: (direction: 'next' | 'previous') => void; availableVoiceCount: number; }> = ({ currentVoice, onNavigate, availableVoiceCount }) => {
-  if (availableVoiceCount <= 1) return null;
+// --- UPDATED VoiceStepper COMPONENT ---
+const VoiceStepper: React.FC<{ currentVoice: string; onNavigate: (direction: 'next' | 'previous') => void; }> = ({ currentVoice, onNavigate }) => {
   return (
-    <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
-      <button onClick={() => onNavigate('previous')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200" aria-label="Giọng đọc trước"><ChevronLeftIcon className="w-3 h-3 text-white/80" /></button>
-      <div className="text-center w-24 overflow-hidden"><span key={currentVoice} className="text-xs font-semibold text-white animate-fade-in-short">{currentVoice}</span></div>
-      <button onClick={() => onNavigate('next')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200" aria-label="Giọng đọc tiếp theo"><ChevronRightIcon className="w-3 h-3 text-white/80" /></button>
+    <div className="flex items-center justify-center gap-1">
+      <button onClick={() => onNavigate('previous')} className="flex items-center justify-center w-9 h-9 rounded-full text-gray-600 hover:bg-gray-200 transition-colors" aria-label="Giọng đọc trước"><ChevronLeftIcon className="w-4 h-4" /></button>
+      <div className="text-center w-20 overflow-hidden"><span key={currentVoice} className="text-sm font-semibold text-blue-600 animate-fade-in-short">{currentVoice}</span></div>
+      <button onClick={() => onNavigate('next')} className="flex items-center justify-center w-9 h-9 rounded-full text-gray-600 hover:bg-gray-200 transition-colors" aria-label="Giọng đọc tiếp theo"><ChevronRightIcon className="w-4 h-4" /></button>
       <style jsx>{` @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; } `}</style>
     </div>
   );
@@ -557,14 +557,14 @@ const EbookReaderContent: React.FC = () => {
               <span className="text-xs font-mono text-gray-600 w-12 text-center">{formatTime(audioDuration)}</span>
             </div>
 
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1 flex-shrink-0">
                <button onClick={handleRewind} className="w-9 h-9 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-200 transition-colors" aria-label="Lùi 10 giây">
                   <Rewind10Icon />
                </button>
                <button onClick={togglePlaybackSpeed} className="w-9 h-9 flex items-center justify-center text-sm font-bold rounded-full bg-gray-100 text-blue-600 hover:bg-gray-200 transition-colors">
                   {playbackSpeed}x
                </button>
-               {availableVoices.length > 1 && <VoiceStepper currentVoice={selectedVoiceKey || '...'} onNavigate={handleVoiceChange} availableVoiceCount={availableVoices.length} />}
+               {availableVoices.length > 1 && <VoiceStepper currentVoice={selectedVoiceKey || '...'} onNavigate={handleVoiceChange} />}
             </div>
 
           </div>
