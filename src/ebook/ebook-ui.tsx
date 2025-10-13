@@ -1,3 +1,5 @@
+// --- START OF FILE ebook-ui.tsx (18).txt ---
+
 // --- START OF FILE game.tsx (FIXED & UPDATED) ---
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -11,7 +13,7 @@ import BackButton from '../ui/back-button.tsx';
 // PhraseDetailModal has been removed as it's no longer used.
 
 // --- ICONS (Copied from original file for self-containment) ---
-const PlayIcon = () => (<svg xmlns="http://www.w.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 pl-0.5"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>);
+const PlayIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 pl-0.5"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>);
 const PauseIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Zm9 0a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" /></svg>);
 const Rewind10Icon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>);
 const XIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>);
@@ -33,13 +35,13 @@ const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
 };
 
 // --- UI COMPONENTS ---
-// --- UPDATED VoiceStepper COMPONENT ---
-const VoiceStepper: React.FC<{ currentVoice: string; onNavigate: (direction: 'next' | 'previous') => void; }> = ({ currentVoice, onNavigate }) => {
+const VoiceStepper: React.FC<{ currentVoice: string; onNavigate: (direction: 'next' | 'previous') => void; availableVoiceCount: number; }> = ({ currentVoice, onNavigate, availableVoiceCount }) => {
+  if (availableVoiceCount <= 1) return null;
   return (
-    <div className="flex items-center justify-center gap-1">
-      <button onClick={() => onNavigate('previous')} className="flex items-center justify-center w-9 h-9 rounded-full text-gray-600 hover:bg-gray-200 transition-colors" aria-label="Giọng đọc trước"><ChevronLeftIcon className="w-4 h-4" /></button>
-      <div className="text-center w-20 overflow-hidden"><span key={currentVoice} className="text-sm font-semibold text-blue-600 animate-fade-in-short">{currentVoice}</span></div>
-      <button onClick={() => onNavigate('next')} className="flex items-center justify-center w-9 h-9 rounded-full text-gray-600 hover:bg-gray-200 transition-colors" aria-label="Giọng đọc tiếp theo"><ChevronRightIcon className="w-4 h-4" /></button>
+    <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
+      <button onClick={() => onNavigate('previous')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200" aria-label="Giọng đọc trước"><ChevronLeftIcon className="w-3 h-3 text-white/80" /></button>
+      <div className="text-center w-24 overflow-hidden"><span key={currentVoice} className="text-xs font-semibold text-white animate-fade-in-short">{currentVoice}</span></div>
+      <button onClick={() => onNavigate('next')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200" aria-label="Giọng đọc tiếp theo"><ChevronRightIcon className="w-3 h-3 text-white/80" /></button>
       <style jsx>{` @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; } `}</style>
     </div>
   );
@@ -533,43 +535,56 @@ const EbookReaderContent: React.FC = () => {
       <audio ref={audioPlayerRef} />
 
       {selectedBookId && currentBook?.audioUrls && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md z-30 border-t border-gray-200 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)]">
-          <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-4">
-            <button
-              onClick={togglePlayPause}
-              className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              aria-label={isAudioPlaying ? "Tạm dừng" : "Phát"}
-            >
-              {isAudioPlaying ? <PauseIcon /> : <PlayIcon />}
-            </button>
-
-            <div className="flex-grow flex items-center gap-3">
-              <span className="text-xs font-mono text-gray-600 w-12 text-center">{formatTime(audioCurrentTime)}</span>
-              <input
-                  type="range"
-                  min="0"
-                  max={audioDuration || 0}
-                  value={audioCurrentTime}
-                  onChange={handleSeek}
-                  className="w-full audio-slider"
-                  aria-label="Tua audio"
+        <div className="fixed bottom-0 left-0 right-0 z-30 pointer-events-none">
+          {/* Voice Stepper - positioned above the main bar */}
+          {availableVoices.length > 1 && (
+            <div className="flex justify-center mb-2 px-4 pointer-events-auto">
+              <VoiceStepper
+                currentVoice={selectedVoiceKey || '...'}
+                onNavigate={handleVoiceChange}
+                availableVoiceCount={availableVoices.length}
               />
-              <span className="text-xs font-mono text-gray-600 w-12 text-center">{formatTime(audioDuration)}</span>
             </div>
+          )}
 
-            <div className="flex items-center gap-1 flex-shrink-0">
-               <button onClick={handleRewind} className="w-9 h-9 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-200 transition-colors" aria-label="Lùi 10 giây">
-                  <Rewind10Icon />
-               </button>
-               <button onClick={togglePlaybackSpeed} className="w-9 h-9 flex items-center justify-center text-sm font-bold rounded-full bg-gray-100 text-blue-600 hover:bg-gray-200 transition-colors">
-                  {playbackSpeed}x
-               </button>
-               {availableVoices.length > 1 && <VoiceStepper currentVoice={selectedVoiceKey || '...'} onNavigate={handleVoiceChange} />}
+          {/* Main Audio Player Bar */}
+          <div className="bg-white/80 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)] pointer-events-auto">
+            <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-4">
+              <button
+                onClick={togglePlayPause}
+                className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                aria-label={isAudioPlaying ? "Tạm dừng" : "Phát"}
+              >
+                {isAudioPlaying ? <PauseIcon /> : <PlayIcon />}
+              </button>
+
+              <div className="flex-grow flex items-center gap-3">
+                <span className="text-xs font-mono text-gray-600 w-12 text-center">{formatTime(audioCurrentTime)}</span>
+                <input
+                    type="range"
+                    min="0"
+                    max={audioDuration || 0}
+                    value={audioCurrentTime}
+                    onChange={handleSeek}
+                    className="w-full audio-slider"
+                    aria-label="Tua audio"
+                />
+                <span className="text-xs font-mono text-gray-600 w-12 text-center">{formatTime(audioDuration)}</span>
+              </div>
+
+              <div className="flex items-center gap-2 flex-shrink-0">
+                 <button onClick={handleRewind} className="w-9 h-9 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-200 transition-colors" aria-label="Lùi 10 giây">
+                    <Rewind10Icon />
+                 </button>
+                 <button onClick={togglePlaybackSpeed} className="w-9 h-9 flex items-center justify-center text-sm font-bold rounded-full bg-gray-100 text-blue-600 hover:bg-gray-200 transition-colors">
+                    {playbackSpeed}x
+                 </button>
+              </div>
             </div>
-
           </div>
         </div>
       )}
+
 
       <ClozeTestSetupModal />
       {selectedVocabCard && showVocabDetail && <FlashcardDetailModal selectedCard={selectedVocabCard} showVocabDetail={showVocabDetail} exampleSentencesData={exampleSentences} onClose={closeVocabDetail} currentVisualStyle="default" />}
