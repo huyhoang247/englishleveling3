@@ -2,7 +2,7 @@
 
 // --- START OF FILE game.tsx (FIXED & UPDATED) ---
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { EbookProvider, useEbook, Book, Vocabulary, HiddenWordState, ExampleSentence } from './ebook-context.tsx';
 import VirtualKeyboard from '../ui/keyboard.tsx';
 
@@ -18,10 +18,10 @@ const PauseIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24
 const Rewind10Icon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>);
 const XIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>);
 const StatsIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zM9 9a1 1 0 00-1 1v6a1 1 0 102 0v-6a1 1 0 00-1-1zm4-5a1 1 0 00-1 1v10a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" /></svg>);
-const ChevronLeftIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>);
-const ChevronRightIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>);
 const PracticeIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>);
 const SaveIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>);
+const SpeakerIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" /></svg>);
+const CheckIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>);
 
 
 // --- HELPER FUNCTION ---
@@ -35,17 +35,97 @@ const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
 };
 
 // --- UI COMPONENTS ---
-const VoiceStepper: React.FC<{ currentVoice: string; onNavigate: (direction: 'next' | 'previous') => void; availableVoiceCount: number; }> = ({ currentVoice, onNavigate, availableVoiceCount }) => {
-  if (availableVoiceCount <= 1) return null;
+
+// VoiceStepper has been removed and replaced by VoiceSelectorPopup
+
+const VoiceSelectorPopup: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  availableVoices: { key: string; name: string }[];
+  selectedVoiceKey: string | null;
+  onSelectVoice: (key: string) => void;
+  triggerRef: React.RefObject<HTMLButtonElement>;
+}> = ({ isOpen, onClose, availableVoices, selectedVoiceKey, onSelectVoice, triggerRef }) => {
+  const popupRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    const calculatePosition = () => {
+      if (triggerRef.current) {
+        const rect = triggerRef.current.getBoundingClientRect();
+        setPosition({
+          top: rect.bottom + window.scrollY + 8, // 8px gap
+          left: rect.left + window.scrollX,
+        });
+      }
+    };
+
+    if (isOpen) {
+      calculatePosition();
+      window.addEventListener('resize', calculatePosition);
+      window.addEventListener('scroll', calculatePosition, true);
+    }
+
+    return () => {
+      window.removeEventListener('resize', calculatePosition);
+      window.removeEventListener('scroll', calculatePosition, true);
+    };
+  }, [isOpen, triggerRef]);
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node) && triggerRef.current && !triggerRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onClose, triggerRef]);
+
+  if (!isOpen) return null;
+
   return (
-    <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
-      <button onClick={() => onNavigate('previous')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200" aria-label="Giọng đọc trước"><ChevronLeftIcon className="w-3 h-3 text-white/80" /></button>
-      <div className="text-center w-24 overflow-hidden"><span key={currentVoice} className="text-xs font-semibold text-white animate-fade-in-short">{currentVoice}</span></div>
-      <button onClick={() => onNavigate('next')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200" aria-label="Giọng đọc tiếp theo"><ChevronRightIcon className="w-3 h-3 text-white/80" /></button>
-      <style jsx>{` @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; } `}</style>
+    <div
+      ref={popupRef}
+      style={{ top: `${position.top}px`, left: `${position.left}px` }}
+      className="fixed z-50 w-64 bg-white rounded-xl shadow-lg border border-gray-200 p-2 transform animate-fade-in-up"
+    >
+      <h3 className="text-sm font-semibold text-gray-800 px-3 py-2">Chọn Giọng Đọc</h3>
+      <ul className="max-h-60 overflow-y-auto space-y-1">
+        {availableVoices.map((voice) => (
+          <li key={voice.key}>
+            <button
+              onClick={() => {
+                onSelectVoice(voice.key);
+                onClose();
+              }}
+              className={`w-full text-left flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
+                selectedVoiceKey === voice.key
+                  ? 'bg-blue-100 text-blue-700 font-semibold'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <span>{voice.name}</span>
+              {selectedVoiceKey === voice.key && <CheckIcon />}
+            </button>
+          </li>
+        ))}
+      </ul>
+      <style jsx>{`
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(10px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fade-in-up {
+          animation: fade-in-up 0.15s ease-out forwards;
+        }
+      `}</style>
     </div>
   );
 };
+
 
 const BookSidebar: React.FC<{ isOpen: boolean; onClose: () => void; book: Book | undefined; }> = ({ isOpen, onClose, book }) => {
   useEffect(() => {
@@ -190,7 +270,7 @@ const EbookReaderContent: React.FC = () => {
     // Functions
     handleBackToLibrary, toggleSidebar, handleSelectBook, setIsBatchPlaylistModalOpen,
     setIsStatsModalOpen, handleWordClick, closeVocabDetail,
-    togglePlayPause, handleSeek, togglePlaybackSpeed, handleVoiceChange,
+    togglePlayPause, handleSeek, togglePlaybackSpeed, handleSelectVoice, // <-- UPDATED function name
     handleSetSubtitleLanguage,
 
     // CLOZE TEST VALUES
@@ -200,6 +280,9 @@ const EbookReaderContent: React.FC = () => {
   } = useEbook();
 
   const [activeTag, setActiveTag] = useState('All');
+  // NEW state for voice selector popup
+  const [isVoiceSelectorOpen, setIsVoiceSelectorOpen] = useState(false);
+  const voiceButtonRef = useRef<HTMLButtonElement>(null);
 
   const groupedBooks = useMemo(() => groupBooksByCategory(booksData), [booksData]);
 
@@ -461,7 +544,7 @@ const EbookReaderContent: React.FC = () => {
     }
   };
 
-  // --- NEW: Action Toolbar Component ---
+  // --- UPDATED Action Toolbar Component ---
   const ActionToolbar = () => (
     <div className="bg-gray-200 border-b border-gray-300">
         <div className="max-w-3xl mx-auto px-4">
@@ -481,6 +564,16 @@ const EbookReaderContent: React.FC = () => {
                         <PracticeIcon />
                         <span>Luyện tập</span>
                     </button>
+                )}
+                {availableVoices.length > 1 && (
+                     <button
+                        ref={voiceButtonRef}
+                        onClick={() => setIsVoiceSelectorOpen(prev => !prev)}
+                        className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors"
+                     >
+                        <SpeakerIcon />
+                        <span>Giọng đọc</span>
+                     </button>
                 )}
             </div>
         </div>
@@ -535,56 +628,50 @@ const EbookReaderContent: React.FC = () => {
       <audio ref={audioPlayerRef} />
 
       {selectedBookId && currentBook?.audioUrls && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 pointer-events-none">
-          {/* Voice Stepper - positioned above the main bar */}
-          {availableVoices.length > 1 && (
-            <div className="flex justify-center mb-2 px-4 pointer-events-auto">
-              <VoiceStepper
-                currentVoice={selectedVoiceKey || '...'}
-                onNavigate={handleVoiceChange}
-                availableVoiceCount={availableVoices.length}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md z-30 border-t border-gray-200 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)]">
+          <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-4">
+            <button
+              onClick={togglePlayPause}
+              className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              aria-label={isAudioPlaying ? "Tạm dừng" : "Phát"}
+            >
+              {isAudioPlaying ? <PauseIcon /> : <PlayIcon />}
+            </button>
+
+            <div className="flex-grow flex items-center gap-3">
+              <span className="text-xs font-mono text-gray-600 w-12 text-center">{formatTime(audioCurrentTime)}</span>
+              <input
+                  type="range"
+                  min="0"
+                  max={audioDuration || 0}
+                  value={audioCurrentTime}
+                  onChange={handleSeek}
+                  className="w-full audio-slider"
+                  aria-label="Tua audio"
               />
+              <span className="text-xs font-mono text-gray-600 w-12 text-center">{formatTime(audioDuration)}</span>
             </div>
-          )}
 
-          {/* Main Audio Player Bar */}
-          <div className="bg-white/80 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.05)] pointer-events-auto">
-            <div className="max-w-3xl mx-auto px-4 py-2 flex items-center gap-4">
-              <button
-                onClick={togglePlayPause}
-                className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                aria-label={isAudioPlaying ? "Tạm dừng" : "Phát"}
-              >
-                {isAudioPlaying ? <PauseIcon /> : <PlayIcon />}
-              </button>
-
-              <div className="flex-grow flex items-center gap-3">
-                <span className="text-xs font-mono text-gray-600 w-12 text-center">{formatTime(audioCurrentTime)}</span>
-                <input
-                    type="range"
-                    min="0"
-                    max={audioDuration || 0}
-                    value={audioCurrentTime}
-                    onChange={handleSeek}
-                    className="w-full audio-slider"
-                    aria-label="Tua audio"
-                />
-                <span className="text-xs font-mono text-gray-600 w-12 text-center">{formatTime(audioDuration)}</span>
-              </div>
-
-              <div className="flex items-center gap-2 flex-shrink-0">
-                 <button onClick={handleRewind} className="w-9 h-9 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-200 transition-colors" aria-label="Lùi 10 giây">
-                    <Rewind10Icon />
-                 </button>
-                 <button onClick={togglePlaybackSpeed} className="w-9 h-9 flex items-center justify-center text-sm font-bold rounded-full bg-gray-100 text-blue-600 hover:bg-gray-200 transition-colors">
-                    {playbackSpeed}x
-                 </button>
-              </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+               <button onClick={handleRewind} className="w-9 h-9 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-200 transition-colors" aria-label="Lùi 10 giây">
+                  <Rewind10Icon />
+               </button>
+               <button onClick={togglePlaybackSpeed} className="w-9 h-9 flex items-center justify-center text-sm font-bold rounded-full bg-gray-100 text-blue-600 hover:bg-gray-200 transition-colors">
+                  {playbackSpeed}x
+               </button>
             </div>
           </div>
         </div>
       )}
-
+      
+      <VoiceSelectorPopup
+        isOpen={isVoiceSelectorOpen}
+        onClose={() => setIsVoiceSelectorOpen(false)}
+        availableVoices={availableVoices}
+        selectedVoiceKey={selectedVoiceKey}
+        onSelectVoice={handleSelectVoice}
+        triggerRef={voiceButtonRef}
+      />
 
       <ClozeTestSetupModal />
       {selectedVocabCard && showVocabDetail && <FlashcardDetailModal selectedCard={selectedVocabCard} showVocabDetail={showVocabDetail} exampleSentencesData={exampleSentences} onClose={closeVocabDetail} currentVisualStyle="default" />}
