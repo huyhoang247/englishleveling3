@@ -20,7 +20,7 @@ const PracticeIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h
 const SaveIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>);
 const SpeakerIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" /></svg>);
 const CheckIcon = ({ className = "w-5 h-5" }: { className?: string }) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" /></svg>);
-const SearchIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>);
+// SearchIcon has been removed as it's no longer used.
 
 
 // --- HELPER FUNCTION ---
@@ -68,6 +68,7 @@ const BookStatsModal: React.FC<{ isOpen: boolean; onClose: () => void; stats: an
     return (<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}><div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}><div className="flex items-center justify-between p-4 border-b border-gray-200"><h2 className="text-lg font-semibold">Thống kê</h2><button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200" aria-label="Đóng"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Đóng" className="w-6 h-6" /></button></div><div className="p-6 overflow-y-auto space-y-6"><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><StatCard label="Tổng số từ" value={stats.totalWords} /><StatCard label="Từ vựng duy nhất" value={stats.uniqueWordsCount} /><StatCard label="Có sẵn" value={stats.vocabMatchCount} /><StatCard label="Chưa có" value={stats.vocabMismatchCount} /></div><div><h3 className="text-md font-semibold text-gray-700 mb-3">Tần suất từ vựng</h3><div className="bg-gray-100 rounded-lg p-1 flex space-x-1 mb-4"><TabButton isActive={activeTab === 'in'} onClick={() => setActiveTab('in')} label="Có sẵn" count={inDictionaryWords.length} /><TabButton isActive={activeTab === 'out'} onClick={() => setActiveTab('out')} label="Chưa có" count={outOfDictionaryWords.length} /></div><div className="p-1 max-h-64 overflow-y-auto min-h-[10rem]"><ul className="space-y-1">{activeTab === 'in' && inDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100"><span className="font-medium text-blue-600">{word}</span><span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'out' && outOfDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100"><span className="font-medium text-gray-700">{word}</span><span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'in' && inDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Không có từ nào có sẵn.</p></div>}{activeTab === 'out' && outOfDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Tất cả từ đã có sẵn.</p></div>}</ul></div></div></div></div></div>);
 };
 
+// --- THAY ĐỔI: Toàn bộ component ClozeTestSetupModal đã được thiết kế lại ---
 const ClozeTestSetupModal = () => {
     const {
         isClozeTestModalOpen, closeClozeTestModal, startClozeTest,
@@ -93,14 +94,16 @@ const ClozeTestSetupModal = () => {
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in-short" onClick={closeClozeTestModal}>
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-md transform animate-scale-up" onClick={e => e.stopPropagation()}>
-                <div className="relative pt-8 px-8 text-center">
-                    <button onClick={closeClozeTestModal} className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:bg-gray-100" aria-label="Đóng">
+                {/* --- THAY ĐỔI 1: Header được làm lại --- */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-wider">Practice</h3>
+                    <button onClick={closeClozeTestModal} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100" aria-label="Đóng">
                         <XIcon />
                     </button>
-                    <h3 className="text-2xl font-bold mt-5 mb-2 text-gray-900 uppercase tracking-wider">PRACTICE</h3>
-                    <p className="text-sm text-gray-500">Điều chỉnh số lượng từ bị ẩn để bắt đầu thử thách.</p>
                 </div>
+
                 <div className="p-8 space-y-6">
+                     <p className="text-sm text-center text-gray-500 -mt-4">Điều chỉnh số lượng từ bị ẩn để bắt đầu thử thách.</p>
                     <div>
                         <div className="flex justify-center gap-2 mb-6">
                             {presets.map(p => (
@@ -141,12 +144,13 @@ const ClozeTestSetupModal = () => {
                         </div>
                     </div>
                 </div>
-                <div className="px-6 py-4 bg-gray-50 rounded-b-xl">
+                {/* --- THAY ĐỔI 2: Footer và Button được làm lại --- */}
+                <div className="px-6 py-4 bg-gray-50 rounded-b-xl flex justify-center">
                     <button
                         onClick={handleStart}
-                        className="w-full px-8 py-3 text-base font-bold rounded-lg shadow-lg transition-all text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transform hover:scale-[1.02]"
+                        className="px-8 py-2.5 text-base font-bold rounded-lg shadow-lg transition-all text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transform hover:scale-[1.02]"
                     >
-                        Bắt đầu Luyện tập
+                        Bắt đầu
                     </button>
                 </div>
                 <style jsx>{`
@@ -160,7 +164,7 @@ const ClozeTestSetupModal = () => {
     );
 };
 
-// --- THAY ĐỔI: Toàn bộ component VoiceSelectorPopup đã được thiết kế lại ---
+// --- THAY ĐỔI: VoiceSelectorPopup đã loại bỏ thanh tìm kiếm ---
 const VoiceSelectorPopup: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -168,22 +172,6 @@ const VoiceSelectorPopup: React.FC<{
   currentVoice: string | null;
   onSelect: (voice: string) => void;
 }> = ({ isOpen, onClose, voices, currentVoice, onSelect }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredVoices = useMemo(() => {
-    if (!searchQuery) return voices;
-    return voices.filter(voice =>
-      voice.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [voices, searchQuery]);
-
-  // Reset search khi mở/đóng popup
-  useEffect(() => {
-    if (isOpen) {
-      setSearchQuery('');
-    }
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   return (
@@ -203,45 +191,24 @@ const VoiceSelectorPopup: React.FC<{
           </button>
         </div>
         
-        <div className="flex-shrink-0 p-3 border-b border-gray-200">
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-              <SearchIcon />
-            </span>
-            <input
-              type="text"
-              placeholder="Search voices..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-            />
-          </div>
-        </div>
-
         <div className="flex-grow overflow-y-auto p-2">
-          {filteredVoices.length > 0 ? (
-            <ul className="space-y-1">
-              {filteredVoices.map(voice => (
-                <li key={voice}>
-                  <button
-                    onClick={() => onSelect(voice)}
-                    className={`w-full flex items-center justify-between text-left px-3 py-2.5 rounded-lg text-base transition-colors duration-200 ${
-                      currentVoice === voice
-                        ? 'bg-blue-100 text-blue-700 font-semibold'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span>{voice}</span>
-                    {currentVoice === voice && <CheckIcon className="w-5 h-5 text-blue-600" />}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="flex items-center justify-center h-32 text-center text-gray-500">
-              <p>No voices found for "{searchQuery}"</p>
-            </div>
-          )}
+          <ul className="space-y-1">
+            {voices.map(voice => (
+              <li key={voice}>
+                <button
+                  onClick={() => onSelect(voice)}
+                  className={`w-full flex items-center justify-between text-left px-3 py-2.5 rounded-lg text-base transition-colors duration-200 ${
+                    currentVoice === voice
+                      ? 'bg-blue-100 text-blue-700 font-semibold'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <span>{voice}</span>
+                  {currentVoice === voice && <CheckIcon className="w-5 h-5 text-blue-600" />}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
       <style jsx>{`
@@ -283,7 +250,6 @@ const ActionToolbar = () => {
                         </button>
                     )}
                     {availableVoices.length > 1 && (
-                        // --- THAY ĐỔI: Tên nút được cố định là "Voice" ---
                         <button onClick={() => setIsVoiceSelectorOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
                             <SpeakerIcon />
                             <span>Voice</span>
