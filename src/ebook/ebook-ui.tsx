@@ -2,7 +2,7 @@
 
 // --- START OF FILE game.tsx (FIXED & UPDATED) ---
 
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { EbookProvider, useEbook, Book, Vocabulary, HiddenWordState, ExampleSentence } from './ebook-context.tsx';
 import VirtualKeyboard from '../ui/keyboard.tsx';
 
@@ -18,10 +18,12 @@ const PauseIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24
 const Rewind10Icon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>);
 const XIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>);
 const StatsIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zM9 9a1 1 0 00-1 1v6a1 1 0 102 0v-6a1 1 0 00-1-1zm4-5a1 1 0 00-1 1v10a1 1 0 102 0V5a1 1 0 00-1-1z" clipRule="evenodd" /></svg>);
+const ChevronLeftIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>);
+const ChevronRightIcon = ({ className }: { className: string }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>);
 const PracticeIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg>);
 const SaveIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>);
-const SpeakerIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" /></svg>);
-const CheckIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>);
+const SpeakerWaveIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.414z" clipRule="evenodd" /></svg>);
+const CheckIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-blue-600"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" /></svg>);
 
 
 // --- HELPER FUNCTION ---
@@ -35,97 +37,6 @@ const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
 };
 
 // --- UI COMPONENTS ---
-
-// VoiceStepper has been removed and replaced by VoiceSelectorPopup
-
-const VoiceSelectorPopup: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  availableVoices: { key: string; name: string }[];
-  selectedVoiceKey: string | null;
-  onSelectVoice: (key: string) => void;
-  triggerRef: React.RefObject<HTMLButtonElement>;
-}> = ({ isOpen, onClose, availableVoices, selectedVoiceKey, onSelectVoice, triggerRef }) => {
-  const popupRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-
-  useEffect(() => {
-    const calculatePosition = () => {
-      if (triggerRef.current) {
-        const rect = triggerRef.current.getBoundingClientRect();
-        setPosition({
-          top: rect.bottom + window.scrollY + 8, // 8px gap
-          left: rect.left + window.scrollX,
-        });
-      }
-    };
-
-    if (isOpen) {
-      calculatePosition();
-      window.addEventListener('resize', calculatePosition);
-      window.addEventListener('scroll', calculatePosition, true);
-    }
-
-    return () => {
-      window.removeEventListener('resize', calculatePosition);
-      window.removeEventListener('scroll', calculatePosition, true);
-    };
-  }, [isOpen, triggerRef]);
-  
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node) && triggerRef.current && !triggerRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onClose, triggerRef]);
-
-  if (!isOpen) return null;
-
-  return (
-    <div
-      ref={popupRef}
-      style={{ top: `${position.top}px`, left: `${position.left}px` }}
-      className="fixed z-50 w-64 bg-white rounded-xl shadow-lg border border-gray-200 p-2 transform animate-fade-in-up"
-    >
-      <h3 className="text-sm font-semibold text-gray-800 px-3 py-2">Chọn Giọng Đọc</h3>
-      <ul className="max-h-60 overflow-y-auto space-y-1">
-        {availableVoices.map((voice) => (
-          <li key={voice.key}>
-            <button
-              onClick={() => {
-                onSelectVoice(voice.key);
-                onClose();
-              }}
-              className={`w-full text-left flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
-                selectedVoiceKey === voice.key
-                  ? 'bg-blue-100 text-blue-700 font-semibold'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <span>{voice.name}</span>
-              {selectedVoiceKey === voice.key && <CheckIcon />}
-            </button>
-          </li>
-        ))}
-      </ul>
-      <style jsx>{`
-        @keyframes fade-in-up {
-          from { opacity: 0; transform: translateY(10px) scale(0.98); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .animate-fade-in-up {
-          animation: fade-in-up 0.15s ease-out forwards;
-        }
-      `}</style>
-    </div>
-  );
-};
-
 
 const BookSidebar: React.FC<{ isOpen: boolean; onClose: () => void; book: Book | undefined; }> = ({ isOpen, onClose, book }) => {
   useEffect(() => {
@@ -160,6 +71,61 @@ const BookStatsModal: React.FC<{ isOpen: boolean; onClose: () => void; stats: an
     const TabButton = ({ isActive, onClick, label, count }: { isActive: boolean, onClick: any, label: string, count: number }) => (<button onClick={onClick} className={`flex-1 text-center px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isActive ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:bg-gray-200/70'}`} aria-current={isActive ? 'page' : undefined}>{label}<span className={`ml-2 py-0.5 px-2 rounded-full text-xs font-medium ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-200'}`}>{count}</span></button>);
     return (<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}><div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}><div className="flex items-center justify-between p-4 border-b border-gray-200"><h2 className="text-lg font-semibold">Thống kê</h2><button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200" aria-label="Đóng"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Đóng" className="w-6 h-6" /></button></div><div className="p-6 overflow-y-auto space-y-6"><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><StatCard label="Tổng số từ" value={stats.totalWords} /><StatCard label="Từ vựng duy nhất" value={stats.uniqueWordsCount} /><StatCard label="Có sẵn" value={stats.vocabMatchCount} /><StatCard label="Chưa có" value={stats.vocabMismatchCount} /></div><div><h3 className="text-md font-semibold text-gray-700 mb-3">Tần suất từ vựng</h3><div className="bg-gray-100 rounded-lg p-1 flex space-x-1 mb-4"><TabButton isActive={activeTab === 'in'} onClick={() => setActiveTab('in')} label="Có sẵn" count={inDictionaryWords.length} /><TabButton isActive={activeTab === 'out'} onClick={() => setActiveTab('out')} label="Chưa có" count={outOfDictionaryWords.length} /></div><div className="p-1 max-h-64 overflow-y-auto min-h-[10rem]"><ul className="space-y-1">{activeTab === 'in' && inDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100"><span className="font-medium text-blue-600">{word}</span><span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'out' && outOfDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100"><span className="font-medium text-gray-700">{word}</span><span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'in' && inDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Không có từ nào có sẵn.</p></div>}{activeTab === 'out' && outOfDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Tất cả từ đã có sẵn.</p></div>}</ul></div></div></div></div></div>);
 };
+
+// --- NEW VOICE SELECTION MODAL ---
+const VoiceSelectionModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  availableVoices: { key: string; name: string }[];
+  selectedVoiceKey: string | null;
+  onSelectVoice: (key: string) => void;
+}> = ({ isOpen, onClose, availableVoices, selectedVoiceKey, onSelectVoice }) => {
+  if (!isOpen) return null;
+
+  const handleSelect = (key: string) => {
+    onSelectVoice(key);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in-short" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm transform animate-scale-up" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800">Chọn Giọng Đọc AI</h3>
+          <button onClick={onClose} className="p-1.5 rounded-full text-gray-400 hover:bg-gray-100" aria-label="Đóng">
+            <XIcon />
+          </button>
+        </div>
+        <div className="p-2 max-h-80 overflow-y-auto">
+          <ul className="space-y-1">
+            {availableVoices.map(({ key, name }) => (
+              <li key={key}>
+                <button
+                  onClick={() => handleSelect(key)}
+                  className={`w-full flex items-center justify-between text-left px-4 py-3 rounded-lg transition-colors duration-200 ${
+                    selectedVoiceKey === key
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <span className={`font-medium ${selectedVoiceKey === key ? 'font-bold' : ''}`}>{name}</span>
+                  {selectedVoiceKey === key && <CheckIcon />}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <style jsx>{`
+          @keyframes fade-in-short { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+          .animate-fade-in-short { animation: fade-in-short 0.2s ease-out forwards; }
+          .animate-scale-up { animation: scale-up 0.2s ease-out forwards; }
+      `}</style>
+    </div>
+  );
+};
+
 
 // --- UPDATED CLOZE TEST MODAL ---
 const ClozeTestSetupModal = () => {
@@ -263,14 +229,14 @@ const EbookReaderContent: React.FC = () => {
     isAudioPlaying, audioCurrentTime, audioDuration, playbackSpeed,
     selectedVocabCard, showVocabDetail, isBatchPlaylistModalOpen, bookVocabularyCardIds,
     currentUser, playlists, isStatsModalOpen, bookStats, vocabMap,
-    availableVoices, selectedVoiceKey, isLoadingVocab,
+    availableVoices, selectedVoiceKey, isLoadingVocab, isVoiceSelectionModalOpen,
     subtitleLanguage, isViSubAvailable, displayedContent,
     exampleSentences,
 
     // Functions
     handleBackToLibrary, toggleSidebar, handleSelectBook, setIsBatchPlaylistModalOpen,
-    setIsStatsModalOpen, handleWordClick, closeVocabDetail,
-    togglePlayPause, handleSeek, togglePlaybackSpeed, handleSelectVoice, // <-- UPDATED function name
+    setIsStatsModalOpen, setIsVoiceSelectionModalOpen, handleWordClick, closeVocabDetail,
+    togglePlayPause, handleSeek, togglePlaybackSpeed, handleSelectVoice,
     handleSetSubtitleLanguage,
 
     // CLOZE TEST VALUES
@@ -280,9 +246,6 @@ const EbookReaderContent: React.FC = () => {
   } = useEbook();
 
   const [activeTag, setActiveTag] = useState('All');
-  // NEW state for voice selector popup
-  const [isVoiceSelectorOpen, setIsVoiceSelectorOpen] = useState(false);
-  const voiceButtonRef = useRef<HTMLButtonElement>(null);
 
   const groupedBooks = useMemo(() => groupBooksByCategory(booksData), [booksData]);
 
@@ -544,7 +507,7 @@ const EbookReaderContent: React.FC = () => {
     }
   };
 
-  // --- UPDATED Action Toolbar Component ---
+  // --- UPDATED: Action Toolbar Component ---
   const ActionToolbar = () => (
     <div className="bg-gray-200 border-b border-gray-300">
         <div className="max-w-3xl mx-auto px-4">
@@ -566,14 +529,10 @@ const EbookReaderContent: React.FC = () => {
                     </button>
                 )}
                 {availableVoices.length > 1 && (
-                     <button
-                        ref={voiceButtonRef}
-                        onClick={() => setIsVoiceSelectorOpen(prev => !prev)}
-                        className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors"
-                     >
-                        <SpeakerIcon />
-                        <span>Giọng đọc</span>
-                     </button>
+                    <button onClick={() => setIsVoiceSelectionModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
+                        <SpeakerWaveIcon />
+                        <span>{selectedVoiceKey || 'Giọng đọc'}</span>
+                    </button>
                 )}
             </div>
         </div>
@@ -660,23 +619,22 @@ const EbookReaderContent: React.FC = () => {
                   {playbackSpeed}x
                </button>
             </div>
+
           </div>
         </div>
       )}
-      
-      <VoiceSelectorPopup
-        isOpen={isVoiceSelectorOpen}
-        onClose={() => setIsVoiceSelectorOpen(false)}
-        availableVoices={availableVoices}
-        selectedVoiceKey={selectedVoiceKey}
-        onSelectVoice={handleSelectVoice}
-        triggerRef={voiceButtonRef}
-      />
 
       <ClozeTestSetupModal />
       {selectedVocabCard && showVocabDetail && <FlashcardDetailModal selectedCard={selectedVocabCard} showVocabDetail={showVocabDetail} exampleSentencesData={exampleSentences} onClose={closeVocabDetail} currentVisualStyle="default" />}
       {isBatchPlaylistModalOpen && <AddToPlaylistModal isOpen={isBatchPlaylistModalOpen} onClose={() => setIsBatchPlaylistModalOpen(false)} cardIds={bookVocabularyCardIds} currentUser={currentUser} existingPlaylists={playlists} />}
       <BookStatsModal isOpen={isStatsModalOpen} onClose={() => setIsStatsModalOpen(false)} stats={bookStats} bookTitle={currentBook?.title || ''} vocabMap={vocabMap} />
+      <VoiceSelectionModal
+        isOpen={isVoiceSelectionModalOpen}
+        onClose={() => setIsVoiceSelectionModalOpen(false)}
+        availableVoices={availableVoices}
+        selectedVoiceKey={selectedVoiceKey}
+        onSelectVoice={handleSelectVoice}
+      />
       {activeHiddenWordState && (
           <>
             <div className="fixed inset-0 bg-black/20 z-[60]" onClick={dismissKeyboard} aria-hidden="true" />
