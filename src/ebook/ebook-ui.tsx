@@ -20,6 +20,7 @@ const PracticeIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h
 const SaveIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>);
 const SpeakerIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" /></svg>);
 const CheckIcon = ({ className = "w-5 h-5" }: { className?: string }) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" /></svg>);
+const SearchIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>);
 
 
 // --- HELPER FUNCTION ---
@@ -159,6 +160,7 @@ const ClozeTestSetupModal = () => {
     );
 };
 
+// --- THAY ĐỔI: Toàn bộ component VoiceSelectorPopup đã được thiết kế lại ---
 const VoiceSelectorPopup: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -166,27 +168,64 @@ const VoiceSelectorPopup: React.FC<{
   currentVoice: string | null;
   onSelect: (voice: string) => void;
 }> = ({ isOpen, onClose, voices, currentVoice, onSelect }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredVoices = useMemo(() => {
+    if (!searchQuery) return voices;
+    return voices.filter(voice =>
+      voice.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [voices, searchQuery]);
+
+  // Reset search khi mở/đóng popup
+  useEffect(() => {
+    if (isOpen) {
+      setSearchQuery('');
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <>
+    <div 
+      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in-short" 
+      onClick={onClose} 
+      aria-hidden="true" 
+    >
       <div 
-        className="fixed inset-0 bg-black/50 z-40 animate-fade-in-short" 
-        onClick={onClose} 
-        aria-hidden="true" 
-      />
-      <div className="fixed bottom-0 left-0 right-0 z-50 p-2">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto animate-slide-up-fast">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-center text-gray-800">Chọn Giọng Đọc</h3>
+        className="bg-white rounded-xl shadow-2xl w-full max-w-sm transform animate-scale-up flex flex-col max-h-[80vh]" 
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800">Select a Voice</h3>
+          <button onClick={onClose} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100" aria-label="Close">
+            <XIcon />
+          </button>
+        </div>
+        
+        <div className="flex-shrink-0 p-3 border-b border-gray-200">
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+              <SearchIcon />
+            </span>
+            <input
+              type="text"
+              placeholder="Search voices..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+            />
           </div>
-          <div className="p-2 max-h-64 overflow-y-auto">
+        </div>
+
+        <div className="flex-grow overflow-y-auto p-2">
+          {filteredVoices.length > 0 ? (
             <ul className="space-y-1">
-              {voices.map(voice => (
+              {filteredVoices.map(voice => (
                 <li key={voice}>
                   <button
                     onClick={() => onSelect(voice)}
-                    className={`w-full flex items-center justify-between text-left px-4 py-3 rounded-lg text-base transition-colors duration-200 ${
+                    className={`w-full flex items-center justify-between text-left px-3 py-2.5 rounded-lg text-base transition-colors duration-200 ${
                       currentVoice === voice
                         ? 'bg-blue-100 text-blue-700 font-semibold'
                         : 'text-gray-700 hover:bg-gray-100'
@@ -198,26 +237,29 @@ const VoiceSelectorPopup: React.FC<{
                 </li>
               ))}
             </ul>
-          </div>
+          ) : (
+            <div className="flex items-center justify-center h-32 text-center text-gray-500">
+              <p>No voices found for "{searchQuery}"</p>
+            </div>
+          )}
         </div>
       </div>
       <style jsx>{`
         @keyframes fade-in-short { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slide-up-fast { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .animate-fade-in-short { animation: fade-in-short 0.2s ease-out forwards; }
-        .animate-slide-up-fast { animation: slide-up-fast 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        .animate-scale-up { animation: scale-up 0.2s ease-out forwards; }
       `}</style>
-    </>
+    </div>
   );
 };
 
 
-// <-- THAY ĐỔI: ActionToolbar được chuyển ra ngoài làm component độc lập
 const ActionToolbar = () => {
     const {
         currentUser, bookVocabularyCardIds, setIsBatchPlaylistModalOpen,
         setIsStatsModalOpen, currentBook, setIsClozeTestModalOpen,
-        availableVoices, setIsVoiceSelectorOpen, selectedVoiceKey
+        availableVoices, setIsVoiceSelectorOpen
     } = useEbook();
 
     return (
@@ -241,9 +283,10 @@ const ActionToolbar = () => {
                         </button>
                     )}
                     {availableVoices.length > 1 && (
+                        // --- THAY ĐỔI: Tên nút được cố định là "Voice" ---
                         <button onClick={() => setIsVoiceSelectorOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
                             <SpeakerIcon />
-                            <span>{selectedVoiceKey || 'Giọng đọc'}</span>
+                            <span>Voice</span>
                         </button>
                     )}
                 </div>
@@ -558,7 +601,6 @@ const EbookReaderContent: React.FC = () => {
       {!selectedBookId ? (
         <main className="flex-grow overflow-y-auto w-full bg-gray-50">{renderLibrary()}</main>
       ) : (
-        // <-- THAY ĐỔI TẠI ĐÂY: py-6 sm:py-8 đã được đổi thành pb-6 sm:pb-8 -->
         <main className="flex-grow overflow-y-auto w-full bg-gray-50 pb-6 sm:pb-8">
           <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white rounded-xl shadow-xl p-6 sm:p-8 md:p-10">
             {!isClozeTestActive && currentBook && (
