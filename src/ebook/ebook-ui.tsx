@@ -1,6 +1,6 @@
 // --- START OF FILE ebook-ui.tsx (UPDATED) ---
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useLayoutEffect } from 'react'; // <-- THAY ĐỔI: Thêm useRef và useLayoutEffect
 import { EbookProvider, useEbook, Book, Vocabulary, HiddenWordState, ExampleSentence } from './ebook-context.tsx';
 import VirtualKeyboard from '../ui/keyboard.tsx';
 
@@ -487,36 +487,64 @@ const EbookReaderContent: React.FC = () => {
     }
   };
 
-  const ActionToolbar = () => (
-    <div className="bg-gray-200 border-b border-gray-300">
-        <div className="max-w-3xl mx-auto px-4">
-            <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-2">
-                {currentUser && bookVocabularyCardIds.length > 0 && (
-                    <button onClick={() => setIsBatchPlaylistModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
-                        <SaveIcon />
-                        <span>Lưu</span>
+  // <-- THAY ĐỔI: Component ActionToolbar được cập nhật hoàn toàn
+  const ActionToolbar = () => {
+    const {
+        currentUser, bookVocabularyCardIds, setIsBatchPlaylistModalOpen,
+        setIsStatsModalOpen, currentBook, setIsClozeTestModalOpen,
+        availableVoices, setIsVoiceSelectorOpen, selectedVoiceKey
+    } = useEbook();
+
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const scrollPositionRef = useRef<number>(0);
+
+    const handleScroll = () => {
+        if (scrollContainerRef.current) {
+            scrollPositionRef.current = scrollContainerRef.current.scrollLeft;
+        }
+    };
+
+    useLayoutEffect(() => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollLeft = scrollPositionRef.current;
+        }
+    });
+
+    return (
+        <div className="bg-gray-200 border-b border-gray-300">
+            <div className="max-w-3xl mx-auto px-4">
+                <div
+                    ref={scrollContainerRef}
+                    onScroll={handleScroll}
+                    className="flex items-center gap-3 overflow-x-auto no-scrollbar py-2"
+                >
+                    {currentUser && bookVocabularyCardIds.length > 0 && (
+                        <button onClick={() => setIsBatchPlaylistModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
+                            <SaveIcon />
+                            <span>Lưu</span>
+                        </button>
+                    )}
+                    <button onClick={() => setIsStatsModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
+                        <StatsIcon />
+                        <span>Thống kê</span>
                     </button>
-                )}
-                <button onClick={() => setIsStatsModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
-                    <StatsIcon />
-                    <span>Thống kê</span>
-                </button>
-                {currentBook && (
-                    <button onClick={() => setIsClozeTestModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
-                        <PracticeIcon />
-                        <span>Luyện tập</span>
-                    </button>
-                )}
-                {availableVoices.length > 1 && (
-                    <button onClick={() => setIsVoiceSelectorOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
-                        <SpeakerIcon />
-                        <span>{selectedVoiceKey || 'Giọng đọc'}</span>
-                    </button>
-                )}
+                    {currentBook && (
+                        <button onClick={() => setIsClozeTestModalOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
+                            <PracticeIcon />
+                            <span>Luyện tập</span>
+                        </button>
+                    )}
+                    {availableVoices.length > 1 && (
+                        <button onClick={() => setIsVoiceSelectorOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-white text-gray-800 hover:bg-gray-50 px-3 py-1.5 rounded-md border border-gray-300 shadow-sm transition-colors">
+                            <SpeakerIcon />
+                            <span>{selectedVoiceKey || 'Giọng đọc'}</span>
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className={`flex flex-col h-screen bg-gray-100 text-gray-900`}>
