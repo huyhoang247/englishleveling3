@@ -558,7 +558,8 @@ const EbookReaderContent: React.FC = () => {
       {!selectedBookId ? (
         <main className="flex-grow overflow-y-auto w-full bg-gray-50">{renderLibrary()}</main>
       ) : (
-        <main className="flex-grow overflow-y-auto w-full bg-gray-50 py-6 sm:py-8">
+        // <-- THAY ĐỔI TẠI ĐÂY: py-6 sm:py-8 đã được đổi thành pb-6 sm:pb-8 -->
+        <main className="flex-grow overflow-y-auto w-full bg-gray-50 pb-6 sm:pb-8">
           <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white rounded-xl shadow-xl p-6 sm:p-8 md:p-10">
             {!isClozeTestActive && currentBook && (
               <div className="mb-8 text-center">
