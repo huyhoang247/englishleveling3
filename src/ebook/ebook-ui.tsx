@@ -230,7 +230,7 @@ const ActionToolbar = () => {
         availableVoices, setIsVoiceSelectorOpen
     } = useEbook();
 
-    const buttonClasses = "flex-shrink-0 flex items-center text-sm font-medium bg-gray-100 text-black hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors duration-200";
+    const buttonClasses = "flex-shrink-0 flex items-center text-sm font-medium bg-gray-900 text-white hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors duration-200";
 
     return (
         <div className="bg-gray-200/30 backdrop-blur-sm">
