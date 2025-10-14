@@ -20,8 +20,7 @@ const PracticeIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h
 const SaveIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1H5V4zM5 8h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V9a1 1 0 011-1z" /><path d="M9 12a1 1 0 00-1 1v1a1 1 0 102 0v-1a1 1 0 00-1-1z" /></svg>);
 const SpeakerIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" /></svg>);
 const CheckIcon = ({ className = "w-5 h-5" }: { className?: string }) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" /></svg>);
-const BookIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 mr-2"><path d="M5.5 16.5A2.5 2.5 0 013 14V6a2.5 2.5 0 012.5-2.5h9A2.5 2.5 0 0117 6v8a2.5 2.5 0 01-2.5 2.5h-9zM4.5 6a1.5 1.5 0 011.5-1.5h9A1.5 1.5 0 0116.5 6v8a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 014.5 14V6z" /></svg>);
-const VocabIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 mr-2"><path fillRule="evenodd" d="M5.5 3A2.5 2.5 0 003 5.5v2.879a.5.5 0 00.146.353l6.5 6.5a.5.5 0 00.708 0l3.879-3.879a.5.5 0 000-.708l-6.5-6.5A.5.5 0 007.379 3H5.5zM4 5.5a1.5 1.5 0 011.5-1.5h1.879a1.5 1.5 0 011.06.44l5.25 5.25-2.5 2.5-5.25-5.25a1.5 1.5 0 01-.44-1.06V5.5z" clipRule="evenodd" /><path d="M12.5 10a.5.5 0 01.5-.5h3a.5.5 0 010 1h-3a.5.5 0 01-.5-.5zM12.5 12a.5.5 0 01.5-.5h3a.5.5 0 010 1h-3a.5.5 0 01-.5-.5z" /></svg>);
+// SearchIcon has been removed as it's no longer used.
 
 
 // --- HELPER FUNCTION ---
@@ -67,6 +66,102 @@ const BookStatsModal: React.FC<{ isOpen: boolean; onClose: () => void; stats: an
     const StatCard = ({ label, value }: { label: string, value: any }) => (<div className="bg-gray-100 p-4 rounded-lg text-center shadow"><p className="text-sm text-gray-600">{label}</p><p className="text-2xl font-bold text-gray-900">{value.toLocaleString()}</p></div>);
     const TabButton = ({ isActive, onClick, label, count }: { isActive: boolean, onClick: any, label: string, count: number }) => (<button onClick={onClick} className={`flex-1 text-center px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isActive ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:bg-gray-200/70'}`} aria-current={isActive ? 'page' : undefined}>{label}<span className={`ml-2 py-0.5 px-2 rounded-full text-xs font-medium ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-200'}`}>{count}</span></button>);
     return (<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}><div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}><div className="flex items-center justify-between p-4 border-b border-gray-200"><h2 className="text-lg font-semibold">Thống kê</h2><button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200" aria-label="Đóng"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Đóng" className="w-6 h-6" /></button></div><div className="p-6 overflow-y-auto space-y-6"><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><StatCard label="Tổng số từ" value={stats.totalWords} /><StatCard label="Từ vựng duy nhất" value={stats.uniqueWordsCount} /><StatCard label="Có sẵn" value={stats.vocabMatchCount} /><StatCard label="Chưa có" value={stats.vocabMismatchCount} /></div><div><h3 className="text-md font-semibold text-gray-700 mb-3">Tần suất từ vựng</h3><div className="bg-gray-100 rounded-lg p-1 flex space-x-1 mb-4"><TabButton isActive={activeTab === 'in'} onClick={() => setActiveTab('in')} label="Có sẵn" count={inDictionaryWords.length} /><TabButton isActive={activeTab === 'out'} onClick={() => setActiveTab('out')} label="Chưa có" count={outOfDictionaryWords.length} /></div><div className="p-1 max-h-64 overflow-y-auto min-h-[10rem]"><ul className="space-y-1">{activeTab === 'in' && inDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100"><span className="font-medium text-blue-600">{word}</span><span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'out' && outOfDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100"><span className="font-medium text-gray-700">{word}</span><span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'in' && inDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Không có từ nào có sẵn.</p></div>}{activeTab === 'out' && outOfDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Tất cả từ đã có sẵn.</p></div>}</ul></div></div></div></div></div>);
+};
+
+// --- THAY ĐỔI: Toàn bộ component ClozeTestSetupModal đã được thiết kế lại ---
+const ClozeTestSetupModal = () => {
+    const {
+        isClozeTestModalOpen, closeClozeTestModal, startClozeTest,
+        hiddenWordCount, setHiddenWordCount
+    } = useEbook();
+
+    if (!isClozeTestModalOpen) return null;
+
+    const min = 5;
+    const max = 50;
+
+    const bubblePosition = useMemo(() => {
+        const percent = (hiddenWordCount - min) / (max - min);
+        return `calc(${percent * 100}% - ${percent * 12}px)`;
+    }, [hiddenWordCount, min, max]);
+
+    const handleStart = () => {
+        startClozeTest();
+    };
+
+    const presets = [10, 20, 30, 50];
+
+    return (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in-short" onClick={closeClozeTestModal}>
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md transform animate-scale-up" onClick={e => e.stopPropagation()}>
+                {/* --- THAY ĐỔI 1: Header được làm lại --- */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-wider">Practice</h3>
+                    <button onClick={closeClozeTestModal} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100" aria-label="Đóng">
+                        <XIcon />
+                    </button>
+                </div>
+
+                <div className="p-8 space-y-6">
+                     <p className="text-sm text-center text-gray-500 -mt-4">Điều chỉnh số lượng từ bị ẩn để bắt đầu thử thách.</p>
+                    <div>
+                        <div className="flex justify-center gap-2 mb-6">
+                            {presets.map(p => (
+                                <button
+                                    key={p}
+                                    onClick={() => setHiddenWordCount(p)}
+                                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                                        hiddenWordCount === p
+                                        ? 'bg-blue-600 text-white shadow'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    }`}
+                                >
+                                    {p}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="relative pt-4">
+                            <div style={{ left: bubblePosition }} className="absolute -top-3 w-10 text-center">
+                                <div className="relative bg-gray-800 text-white rounded-md px-2 py-1 text-xs font-bold">
+                                    {hiddenWordCount}
+                                    <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 -bottom-1 left-1/2 -translate-x-1/2"></div>
+                                </div>
+                            </div>
+                            <input
+                                id="wordCount"
+                                type="range"
+                                min={min}
+                                max={max}
+                                step="5"
+                                value={hiddenWordCount}
+                                onChange={(e) => setHiddenWordCount(Number(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>{min}</span>
+                                <span>{max}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {/* --- THAY ĐỔI 2: Footer và Button được làm lại --- */}
+                <div className="px-6 py-4 bg-gray-50 rounded-b-xl flex justify-center">
+                    <button
+                        onClick={handleStart}
+                        className="px-8 py-2.5 text-base font-bold rounded-lg shadow-lg transition-all text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transform hover:scale-[1.02]"
+                    >
+                        Bắt đầu
+                    </button>
+                </div>
+                <style jsx>{`
+                    @keyframes fade-in-short { from { opacity: 0; } to { opacity: 1; } }
+                    @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                    .animate-fade-in-short { animation: fade-in-short 0.2s ease-out forwards; }
+                    .animate-scale-up { animation: scale-up 0.2s ease-out forwards; }
+                `}</style>
+            </div>
+        </div>
+    );
 };
 
 // --- THAY ĐỔI: VoiceSelectorPopup đã loại bỏ thanh tìm kiếm ---
@@ -127,152 +222,48 @@ const VoiceSelectorPopup: React.FC<{
 };
 
 
-// --- NEW COMPONENT: Tab bar for inside the book view ---
-const BookViewTabs = () => {
-    const { activeBookTab, setActiveBookTab, bookVocabularyCardIds, currentUser } = useEbook();
+// --- START OF MODIFICATION: ActionToolbar component redesigned ---
+const ActionToolbar = () => {
+    const {
+        currentUser, bookVocabularyCardIds, setIsBatchPlaylistModalOpen,
+        setIsStatsModalOpen, currentBook, setIsClozeTestModalOpen,
+        availableVoices, setIsVoiceSelectorOpen
+    } = useEbook();
 
-    const tabs = [
-        { key: 'read', label: 'Read', icon: <BookIcon /> },
-        { key: 'vocabulary', label: `Vocabulary (${bookVocabularyCardIds.length})`, icon: <VocabIcon /> },
-        { key: 'practice', label: 'Practice', icon: <PracticeIcon /> }
-    ];
-
-    return (
-        <div className="bg-gray-50 border-b border-gray-200">
-            <div className="flex items-center justify-center space-x-3 overflow-x-auto no-scrollbar p-3 px-4">
-                {tabs.map(tab => (
-                    <button
-                        key={tab.key}
-                        onClick={() => setActiveBookTab(tab.key as any)}
-                        className={`flex items-center flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors duration-200
-                          ${activeBookTab === tab.key
-                            ? 'bg-gray-900 text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`
-                        }
-                    >
-                        {tab.icon}
-                        <span>{tab.label}</span>
-                    </button>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-// --- NEW COMPONENT: View for the Vocabulary Tab ---
-const BookVocabularyList = () => {
-    const { bookVocabularyCardIds, vocabMap, handleWordClick, setIsBatchPlaylistModalOpen } = useEbook();
-
-    const vocabularyList = useMemo(() => {
-        return bookVocabularyCardIds
-            .map(id => Array.from(vocabMap.values()).find(v => v.cardId === id))
-            .filter((v): v is Vocabulary => v !== undefined)
-            .sort((a, b) => a.word.localeCompare(b.word));
-    }, [bookVocabularyCardIds, vocabMap]);
-    
-    if (vocabularyList.length === 0) {
-        return <div className="text-center p-10 text-gray-500">Không có từ vựng nào trong sách này.</div>
-    }
+    const buttonClasses = "flex-shrink-0 flex items-center text-sm font-medium bg-gray-100 text-black hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors duration-200";
 
     return (
-        <div className="p-4">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">Từ vựng trong sách</h2>
-                <button 
-                    onClick={() => setIsBatchPlaylistModalOpen(true)} 
-                    className="flex items-center text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg shadow-sm transition-colors"
-                >
-                    <SaveIcon />
-                    <span>Lưu tất cả</span>
-                </button>
-            </div>
-            <ul className="space-y-2">
-                {vocabularyList.map(vocab => (
-                    <li key={vocab.cardId} >
-                        <button 
-                            onClick={() => handleWordClick(vocab.word)}
-                            className="w-full flex justify-between items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md hover:bg-gray-50 transition-all text-left"
-                        >
-                            <span className="font-semibold text-blue-600 text-lg">{vocab.word}</span>
-                            <span className="text-gray-500">{vocab.meaning}</span>
+        <div className="bg-gray-200/30 backdrop-blur-sm">
+            <div className="max-w-3xl mx-auto px-4">
+                <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-3">
+                    {currentUser && bookVocabularyCardIds.length > 0 && (
+                        <button onClick={() => setIsBatchPlaylistModalOpen(true)} className={buttonClasses}>
+                            <SaveIcon />
+                            <span>Lưu</span>
                         </button>
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
-}
-
-// --- NEW COMPONENT: View for the Practice Tab ---
-const ClozeTestSetupView = () => {
-    const { hiddenWordCount, setHiddenWordCount, startClozeTest } = useEbook();
-    
-    const min = 5;
-    const max = 50;
-    const presets = [10, 20, 30, 50];
-
-    const bubblePosition = useMemo(() => {
-        const percent = (hiddenWordCount - min) / (max - min);
-        return `calc(${percent * 100}% - ${percent * 12}px)`;
-    }, [hiddenWordCount, min, max]);
-    
-    return (
-        <div className="bg-white rounded-xl w-full max-w-md mx-auto p-8 my-8 shadow-lg border border-gray-200">
-            <div className="text-center mb-6">
-                 <h3 className="text-2xl font-bold text-gray-900">Practice Mode</h3>
-                 <p className="text-base text-gray-500 mt-2">Điều chỉnh số lượng từ bị ẩn để bắt đầu thử thách.</p>
-            </div>
-            <div className="space-y-8">
-                 <div className="flex justify-center gap-2">
-                    {presets.map(p => (
-                        <button
-                            key={p}
-                            onClick={() => setHiddenWordCount(p)}
-                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                                hiddenWordCount === p
-                                ? 'bg-blue-600 text-white shadow'
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                        >
-                            {p}
-                        </button>
-                    ))}
-                </div>
-                <div className="relative pt-4">
-                    <div style={{ left: bubblePosition }} className="absolute -top-3 w-10 text-center">
-                        <div className="relative bg-gray-800 text-white rounded-md px-2 py-1 text-xs font-bold">
-                            {hiddenWordCount}
-                            <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 -bottom-1 left-1/2 -translate-x-1/2"></div>
-                        </div>
-                    </div>
-                    <input
-                        id="wordCount"
-                        type="range"
-                        min={min}
-                        max={max}
-                        step="5"
-                        value={hiddenWordCount}
-                        onChange={(e) => setHiddenWordCount(Number(e.target.value))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>{min}</span>
-                        <span>{max}</span>
-                    </div>
-                </div>
-                <div className="pt-4 flex justify-center">
-                     <button
-                        onClick={startClozeTest}
-                        className="px-8 py-2.5 text-base font-bold rounded-lg shadow-lg transition-all text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transform hover:scale-[1.02]"
-                    >
-                        Bắt đầu
+                    )}
+                    <button onClick={() => setIsStatsModalOpen(true)} className={buttonClasses}>
+                        <StatsIcon />
+                        <span>Thống kê</span>
                     </button>
+                    {currentBook && (
+                        <button onClick={() => setIsClozeTestModalOpen(true)} className={buttonClasses}>
+                            <PracticeIcon />
+                            <span>Luyện tập</span>
+                        </button>
+                    )}
+                    {availableVoices.length > 1 && (
+                        <button onClick={() => setIsVoiceSelectorOpen(true)} className={buttonClasses}>
+                            <SpeakerIcon />
+                            <span>Voice</span>
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
     );
-}
+};
+// --- END OF MODIFICATION ---
 
 
 // --- EbookReaderContent Component (The UI) ---
@@ -285,7 +276,7 @@ const EbookReaderContent: React.FC = () => {
     currentUser, playlists, isStatsModalOpen, bookStats, vocabMap,
     availableVoices, selectedVoiceKey, isLoadingVocab,
     subtitleLanguage, isViSubAvailable, displayedContent,
-    exampleSentences, isVoiceSelectorOpen, activeBookTab,
+    exampleSentences, isVoiceSelectorOpen,
 
     // Functions
     handleBackToLibrary, toggleSidebar, handleSelectBook, setIsBatchPlaylistModalOpen,
@@ -294,9 +285,9 @@ const EbookReaderContent: React.FC = () => {
     handleSetSubtitleLanguage, setIsVoiceSelectorOpen,
 
     // CLOZE TEST VALUES
-    isClozeTestActive, stopClozeTest, hiddenWords, correctlyGuessedCount,
+    isClozeTestActive, stopClozeTest, hiddenWords, hiddenWordCount, correctlyGuessedCount,
     activeHiddenWordIndex, handleHiddenWordClick, handleClozeTestInput,
-    dismissKeyboard, 
+    dismissKeyboard, setIsClozeTestModalOpen,
   } = useEbook();
 
   const [activeTag, setActiveTag] = useState('All');
@@ -500,15 +491,6 @@ const EbookReaderContent: React.FC = () => {
             .filter(([category]) => activeTag === 'All' || activeTag === category)
             .map(([category, booksInCategory]) => (
             <section key={category} className="mb-10">
-              {activeTag !== 'All' && (
-                <div className="flex justify-between items-center mb-4">
-                   {category === 'Technology & Future' ? (
-                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/youtube-logo.png" alt="YouTube" className="h-8" />
-                  ) : (
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-900">{category}</h2>
-                  )}
-                </div>
-              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
                 {booksInCategory.map(book => (
@@ -550,46 +532,13 @@ const EbookReaderContent: React.FC = () => {
     }
   };
 
-  const renderContentForTab = () => {
-      // Logic for Cloze Test is independent and overlays the 'read' tab
-      if (isClozeTestActive) {
-          return (
-              <div className="bg-white rounded-xl shadow-xl p-6 sm:p-8 md:p-10">
-                  <ClozeTestProgress />
-                  {renderBookContent()}
-              </div>
-          );
-      }
-      
-      switch (activeBookTab) {
-          case 'vocabulary':
-              return <BookVocabularyList />;
-          case 'practice':
-              return <ClozeTestSetupView />;
-          case 'read':
-          default:
-              return (
-                  <div className="bg-white rounded-xl shadow-xl p-6 sm:p-8 md:p-10">
-                      {currentBook && (
-                          <div className="mb-8 text-center">
-                              <h1 className="inline-block bg-gray-100 rounded-full px-4 py-1.5 text-xl font-semibold text-gray-800 shadow-sm">
-                                  {currentBook.title}
-                              </h1>
-                              <p className="text-sm text-center text-gray-500 mt-2">Tác giả: {currentBook.author}</p>
-                          </div>
-                      )}
-                      {renderBookContent()}
-                  </div>
-              );
-      }
-  };
-
   return (
     <div className={`flex flex-col h-screen bg-gray-100 text-gray-900`}>
       {selectedBookId && (
         <div className="sticky top-0 z-20">
           <header className="flex items-center justify-between p-3 bg-gray-950 shadow-md py-2 sm:py-3">
               <BackButton onClick={isClozeTestActive ? stopClozeTest : handleBackToLibrary} />
+
               <div className="flex-grow flex justify-end items-center gap-4">
                 {isViSubAvailable && (
                   <div className="bg-gray-800 p-1 rounded-full flex items-center text-xs">
@@ -601,14 +550,10 @@ const EbookReaderContent: React.FC = () => {
                     </button>
                   </div>
                 )}
-                 {availableVoices.length > 1 && (
-                      <button onClick={() => setIsVoiceSelectorOpen(true)} className="flex-shrink-0 flex items-center text-sm font-medium bg-gray-800 text-white hover:bg-white/10 px-3 py-1.5 rounded-full transition-colors">
-                          <SpeakerIcon />
-                      </button>
-                  )}
               </div>
           </header>
-          {!isClozeTestActive && <BookViewTabs />}
+          {/* <-- THAY ĐỔI: Gọi component ActionToolbar đã được tách ra */}
+          {!isClozeTestActive && <ActionToolbar />}
         </div>
       )}
 
@@ -618,8 +563,17 @@ const EbookReaderContent: React.FC = () => {
         <main className="flex-grow overflow-y-auto w-full bg-gray-50">{renderLibrary()}</main>
       ) : (
         <main className="flex-grow overflow-y-auto w-full bg-gray-50 pb-6 sm:pb-8">
-          <div className="max-w-2xl lg:max-w-3xl mx-auto">
-             {renderContentForTab()}
+          <div className="max-w-2xl lg:max-w-3xl mx-auto bg-white rounded-xl shadow-xl p-6 sm:p-8 md:p-10">
+            {!isClozeTestActive && currentBook && (
+              <div className="mb-8 text-center">
+                  <h1 className="inline-block bg-gray-100 rounded-full px-4 py-1.5 text-xl font-semibold text-gray-800 shadow-sm">
+                    {currentBook.title}
+                  </h1>
+                  <p className="text-sm text-center text-gray-500 mt-2">Tác giả: {currentBook.author}</p>
+              </div>
+            )}
+            {isClozeTestActive && <ClozeTestProgress />}
+            {renderBookContent()}
           </div>
         </main>
       )}
@@ -664,6 +618,7 @@ const EbookReaderContent: React.FC = () => {
         </div>
       )}
 
+      <ClozeTestSetupModal />
       <VoiceSelectorPopup 
         isOpen={isVoiceSelectorOpen} 
         onClose={() => setIsVoiceSelectorOpen(false)}
