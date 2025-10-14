@@ -69,8 +69,7 @@ interface EbookContextType {
   isStatsModalOpen: boolean;
   selectedVoiceKey: string | null;
   subtitleLanguage: 'en' | 'bilingual';
-  isVoiceSelectorOpen: boolean; 
-  activeBookTab: 'read' | 'vocabulary' | 'practice'; // <-- NEW STATE FOR IN-BOOK TABS
+  isVoiceSelectorOpen: boolean; // <-- NEW STATE
 
   // --- NEW STATES FOR CLOZE TEST ---
   isClozeTestActive: boolean;
@@ -78,6 +77,7 @@ interface EbookContextType {
   hiddenWords: Map<number, HiddenWordState>;
   activeHiddenWordIndex: number | null;
   correctlyGuessedCount: number;
+  isClozeTestModalOpen: boolean;
 
   // --- NEW: Expose example sentences ---
   exampleSentences: ExampleSentence[];
@@ -105,10 +105,9 @@ interface EbookContextType {
   toggleSidebar: () => void;
   setIsBatchPlaylistModalOpen: Dispatch<SetStateAction<boolean>>;
   setIsStatsModalOpen: Dispatch<SetStateAction<boolean>>;
-  handleSelectVoice: (voiceKey: string) => void; 
+  handleSelectVoice: (voiceKey: string) => void; // <-- NEW FUNCTION
   handleSetSubtitleLanguage: (lang: 'en' | 'bilingual') => void;
-  setIsVoiceSelectorOpen: Dispatch<SetStateAction<boolean>>; 
-  setActiveBookTab: Dispatch<SetStateAction<'read' | 'vocabulary' | 'practice'>>; // <-- NEW SETTER
+  setIsVoiceSelectorOpen: Dispatch<SetStateAction<boolean>>; // <-- NEW SETTER
 
   // --- NEW FUNCTIONS FOR CLOZE TEST ---
   setHiddenWordCount: (count: number) => void;
@@ -117,6 +116,8 @@ interface EbookContextType {
   handleHiddenWordClick: (wordIndex: number) => void;
   handleClozeTestInput: (value: string) => void;
   dismissKeyboard: () => void;
+  setIsClozeTestModalOpen: Dispatch<SetStateAction<boolean>>;
+  closeClozeTestModal: () => void;
 }
 
 // --- CREATE CONTEXT ---
@@ -150,9 +151,9 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [selectedVoiceKey, setSelectedVoiceKey] = useState<string | null>(null);
   const [subtitleLanguage, setSubtitleLanguage] = useState<'en' | 'bilingual'>('en');
-  const [isVoiceSelectorOpen, setIsVoiceSelectorOpen] = useState(false); 
-  const [activeBookTab, setActiveBookTab] = useState<'read' | 'vocabulary' | 'practice'>('read'); // <-- NEW STATE
+  const [isVoiceSelectorOpen, setIsVoiceSelectorOpen] = useState(false); // <-- NEW
 
+  const [isClozeTestModalOpen, setIsClozeTestModalOpen] = useState(false);
   const [isClozeTestActive, setIsClozeTestActive] = useState(false);
   const [hiddenWordCount, _setHiddenWordCount] = useState(10);
   const [hiddenWords, setHiddenWords] = useState<Map<number, HiddenWordState>>(new Map());
@@ -196,7 +197,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   useEffect(() => {
     setSubtitleLanguage('en');
     stopClozeTest();
-    setActiveBookTab('read'); // <-- RESET TAB ON BOOK CHANGE
+    setIsClozeTestModalOpen(false);
   }, [selectedBookId]);
 
   const availableVoices = useMemo(() => currentBook?.audioUrls ? Object.keys(currentBook.audioUrls) : [], [currentBook]);
@@ -337,6 +338,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     setHiddenWords(newHiddenWords);
     setIsClozeTestActive(true);
     setActiveHiddenWordIndex(null);
+    setIsClozeTestModalOpen(false);
   }, [currentBook, hiddenWordCount]);
 
   const stopClozeTest = () => {
@@ -344,6 +346,10 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     setHiddenWords(new Map());
     setActiveHiddenWordIndex(null);
   };
+
+  const closeClozeTestModal = () => {
+      setIsClozeTestModalOpen(false);
+  }
 
   const handleHiddenWordClick = (wordIndex: number) => {
     if (hiddenWords.get(wordIndex)?.status !== 'correct') {
@@ -414,6 +420,7 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
   const handleSeek = (event: React.ChangeEvent<HTMLInputElement>) => { if (audioPlayerRef.current) { const newTime = Number(event.target.value); audioPlayerRef.current.currentTime = newTime; setAudioCurrentTime(newTime); } };
   const togglePlaybackSpeed = () => { const speeds = [1.0, 1.25, 1.5]; const currentIndex = speeds.indexOf(playbackSpeed); setPlaybackSpeed(speeds[(currentIndex + 1) % speeds.length]); };
   
+  // <-- NEW FUNCTION TO REPLACE handleVoiceChange -->
   const handleSelectVoice = (voiceKey: string) => {
     setSelectedVoiceKey(voiceKey);
     setIsVoiceSelectorOpen(false); // Automatically close popup on selection
@@ -432,13 +439,13 @@ export const EbookProvider: React.FC<EbookProviderProps> = ({ children, hideNavB
     handleWordClick, closeVocabDetail, togglePlayPause, handleSeek,
     togglePlaybackSpeed, toggleSidebar, setIsBatchPlaylistModalOpen,
     setIsStatsModalOpen, 
-    handleSelectVoice, 
+    handleSelectVoice, // <-- USE NEW FUNCTION
     subtitleLanguage, isViSubAvailable, displayedContent, handleSetSubtitleLanguage,
-    isVoiceSelectorOpen, setIsVoiceSelectorOpen,
-    activeBookTab, setActiveBookTab, // <-- EXPOSE NEW STATE & SETTER
+    isVoiceSelectorOpen, setIsVoiceSelectorOpen, // <-- EXPOSE NEW STATE & SETTER
     exampleSentences: exampleData,
     isClozeTestActive, hiddenWordCount, hiddenWords, activeHiddenWordIndex, correctlyGuessedCount,
     setHiddenWordCount, startClozeTest, stopClozeTest, handleHiddenWordClick, handleClozeTestInput, dismissKeyboard,
+    isClozeTestModalOpen, setIsClozeTestModalOpen, closeClozeTestModal,
   };
 
   return <EbookContext.Provider value={value}>{children}</EbookContext.Provider>;
