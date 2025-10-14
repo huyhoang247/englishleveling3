@@ -226,8 +226,8 @@ const ActionToolbar = () => {
         availableVoices, setIsVoiceSelectorOpen
     } = useEbook();
 
-    // THAY ĐỔI: Nền nút đổi thành gray-200 và hover là gray-300
-    const buttonClass = "flex-shrink-0 flex items-center text-sm font-medium bg-gray-200 text-gray-900 hover:bg-gray-300 px-3.5 py-1.5 rounded-lg transition-colors";
+    // THAY ĐỔI: Nền nút đổi thành gray-100 và hover là gray-200
+    const buttonClass = "flex-shrink-0 flex items-center text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200 px-3.5 py-1.5 rounded-lg transition-colors";
 
     return (
         <div className="bg-white border-b border-gray-200 shadow-sm">
