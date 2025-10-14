@@ -487,15 +487,6 @@ const EbookReaderContent: React.FC = () => {
             .filter(([category]) => activeTag === 'All' || activeTag === category)
             .map(([category, booksInCategory]) => (
             <section key={category} className="mb-10">
-              {activeTag !== 'All' && (
-                <div className="flex justify-between items-center mb-4">
-                   {category === 'Technology & Future' ? (
-                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/youtube-logo.png" alt="YouTube" className="h-8" />
-                  ) : (
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-900">{category}</h2>
-                  )}
-                </div>
-              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
                 {booksInCategory.map(book => (
