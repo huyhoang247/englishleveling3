@@ -222,7 +222,7 @@ const VoiceSelectorPopup: React.FC<{
 };
 
 
-// --- START OF MODIFICATION: ActionToolbar component redesigned ---
+// --- THAY ĐỔI: Thiết kế lại toàn bộ ActionToolbar ---
 const ActionToolbar = () => {
     const {
         currentUser, bookVocabularyCardIds, setIsBatchPlaylistModalOpen,
@@ -230,30 +230,30 @@ const ActionToolbar = () => {
         availableVoices, setIsVoiceSelectorOpen
     } = useEbook();
 
-    const buttonClasses = "flex-shrink-0 flex items-center text-sm font-medium bg-gray-900 text-white hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-colors duration-200";
+    const buttonClass = "flex-shrink-0 flex items-center text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200 px-3.5 py-1.5 rounded-lg transition-colors";
 
     return (
-        <div className="bg-gray-200/30 backdrop-blur-sm">
+        <div className="bg-black/10">
             <div className="max-w-3xl mx-auto px-4">
-                <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-3">
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
                     {currentUser && bookVocabularyCardIds.length > 0 && (
-                        <button onClick={() => setIsBatchPlaylistModalOpen(true)} className={buttonClasses}>
+                        <button onClick={() => setIsBatchPlaylistModalOpen(true)} className={buttonClass}>
                             <SaveIcon />
                             <span>Lưu</span>
                         </button>
                     )}
-                    <button onClick={() => setIsStatsModalOpen(true)} className={buttonClasses}>
+                    <button onClick={() => setIsStatsModalOpen(true)} className={buttonClass}>
                         <StatsIcon />
                         <span>Thống kê</span>
                     </button>
                     {currentBook && (
-                        <button onClick={() => setIsClozeTestModalOpen(true)} className={buttonClasses}>
+                        <button onClick={() => setIsClozeTestModalOpen(true)} className={buttonClass}>
                             <PracticeIcon />
                             <span>Luyện tập</span>
                         </button>
                     )}
                     {availableVoices.length > 1 && (
-                        <button onClick={() => setIsVoiceSelectorOpen(true)} className={buttonClasses}>
+                        <button onClick={() => setIsVoiceSelectorOpen(true)} className={buttonClass}>
                             <SpeakerIcon />
                             <span>Voice</span>
                         </button>
@@ -263,7 +263,6 @@ const ActionToolbar = () => {
         </div>
     );
 };
-// --- END OF MODIFICATION ---
 
 
 // --- EbookReaderContent Component (The UI) ---
