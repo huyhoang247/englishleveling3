@@ -5,9 +5,9 @@ export const book6Data: Book = {
   title: "Love Me Like You Do",
   author: 'Ellie Goulding',
   category: 'Music',
-  coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/005.jpg',
+  coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/006.jpg',
   audioUrls: {
-    'Raw': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/audio/origin-voice/005.mp3',
+    'Raw': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/audio/origin-voice/006.mp3',
   },
   content: `
   
