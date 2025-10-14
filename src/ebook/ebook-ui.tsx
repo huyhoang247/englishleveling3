@@ -222,7 +222,7 @@ const VoiceSelectorPopup: React.FC<{
 };
 
 
-// --- THAY ĐỔI: Thiết kế lại toàn bộ ActionToolbar ---
+// --- THAY ĐỔI: Thiết kế lại ActionToolbar ---
 const ActionToolbar = () => {
     const {
         currentUser, bookVocabularyCardIds, setIsBatchPlaylistModalOpen,
@@ -230,10 +230,12 @@ const ActionToolbar = () => {
         availableVoices, setIsVoiceSelectorOpen
     } = useEbook();
 
+    // Các nút bấm vẫn giữ màu xám nhạt để nổi bật trên nền trắng
     const buttonClass = "flex-shrink-0 flex items-center text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200 px-3.5 py-1.5 rounded-lg transition-colors";
 
     return (
-        <div className="bg-black/10">
+        // Đổi nền thành trắng, thêm border dưới và đổ bóng nhẹ để tạo chiều sâu
+        <div className="bg-white border-b border-gray-200 shadow-sm">
             <div className="max-w-3xl mx-auto px-4">
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
                     {currentUser && bookVocabularyCardIds.length > 0 && (
