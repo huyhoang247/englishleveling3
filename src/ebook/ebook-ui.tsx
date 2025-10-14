@@ -68,7 +68,6 @@ const BookStatsModal: React.FC<{ isOpen: boolean; onClose: () => void; stats: an
     return (<div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}><div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}><div className="flex items-center justify-between p-4 border-b border-gray-200"><h2 className="text-lg font-semibold">Thống kê</h2><button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200" aria-label="Đóng"><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/close.png" alt="Đóng" className="w-6 h-6" /></button></div><div className="p-6 overflow-y-auto space-y-6"><div className="grid grid-cols-2 md:grid-cols-4 gap-4"><StatCard label="Tổng số từ" value={stats.totalWords} /><StatCard label="Từ vựng duy nhất" value={stats.uniqueWordsCount} /><StatCard label="Có sẵn" value={stats.vocabMatchCount} /><StatCard label="Chưa có" value={stats.vocabMismatchCount} /></div><div><h3 className="text-md font-semibold text-gray-700 mb-3">Tần suất từ vựng</h3><div className="bg-gray-100 rounded-lg p-1 flex space-x-1 mb-4"><TabButton isActive={activeTab === 'in'} onClick={() => setActiveTab('in')} label="Có sẵn" count={inDictionaryWords.length} /><TabButton isActive={activeTab === 'out'} onClick={() => setActiveTab('out')} label="Chưa có" count={outOfDictionaryWords.length} /></div><div className="p-1 max-h-64 overflow-y-auto min-h-[10rem]"><ul className="space-y-1">{activeTab === 'in' && inDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100"><span className="font-medium text-blue-600">{word}</span><span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'out' && outOfDictionaryWords.map(([word, count]) => (<li key={word} className="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-100"><span className="font-medium text-gray-700">{word}</span><span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">{count} lần</span></li>))}{activeTab === 'in' && inDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Không có từ nào có sẵn.</p></div>}{activeTab === 'out' && outOfDictionaryWords.length === 0 && <div className="flex items-center justify-center h-full min-h-[8rem]"><p className="text-center text-gray-500">Tất cả từ đã có sẵn.</p></div>}</ul></div></div></div></div></div>);
 };
 
-// --- THAY ĐỔI: Toàn bộ component ClozeTestSetupModal đã được thiết kế lại ---
 const ClozeTestSetupModal = () => {
     const {
         isClozeTestModalOpen, closeClozeTestModal, startClozeTest,
@@ -94,7 +93,6 @@ const ClozeTestSetupModal = () => {
     return (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in-short" onClick={closeClozeTestModal}>
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-md transform animate-scale-up" onClick={e => e.stopPropagation()}>
-                {/* --- THAY ĐỔI 1: Header được làm lại --- */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-wider">Practice</h3>
                     <button onClick={closeClozeTestModal} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100" aria-label="Đóng">
@@ -144,7 +142,6 @@ const ClozeTestSetupModal = () => {
                         </div>
                     </div>
                 </div>
-                {/* --- THAY ĐỔI 2: Footer và Button được làm lại --- */}
                 <div className="px-6 py-4 bg-gray-50 rounded-b-xl flex justify-center">
                     <button
                         onClick={handleStart}
@@ -164,7 +161,6 @@ const ClozeTestSetupModal = () => {
     );
 };
 
-// --- THAY ĐỔI: VoiceSelectorPopup đã loại bỏ thanh tìm kiếm ---
 const VoiceSelectorPopup: React.FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -230,11 +226,10 @@ const ActionToolbar = () => {
         availableVoices, setIsVoiceSelectorOpen
     } = useEbook();
 
-    // Các nút bấm vẫn giữ màu xám nhạt để nổi bật trên nền trắng
-    const buttonClass = "flex-shrink-0 flex items-center text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200 px-3.5 py-1.5 rounded-lg transition-colors";
+    // THAY ĐỔI: Nền nút đổi thành gray-200 và hover là gray-300
+    const buttonClass = "flex-shrink-0 flex items-center text-sm font-medium bg-gray-200 text-gray-900 hover:bg-gray-300 px-3.5 py-1.5 rounded-lg transition-colors";
 
     return (
-        // Đổi nền thành trắng, thêm border dưới và đổ bóng nhẹ để tạo chiều sâu
         <div className="bg-white border-b border-gray-200 shadow-sm">
             <div className="max-w-3xl mx-auto px-4">
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
