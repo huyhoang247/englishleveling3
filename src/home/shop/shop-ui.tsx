@@ -40,7 +40,7 @@ const SHOP_WEAPON_RANKS: ItemRank[] = ['E', 'D', 'B', 'A', 'S', 'SR'];
 const SHOP_WEAPON_PRICES: { [key in ItemRank]?: number } = { 'E': 100, 'D': 500, 'B': 1000, 'A': 2000, 'S': 5000, 'SR': 10000 };
 const gemPackages = [ { id: 'gem_1', gems: 100, price: 20000, label: 'Gói Tiểu' }, { id: 'gem_2', gems: 260, price: 50000, label: 'Gói Nhỏ', bonus: '4% bonus' }, { id: 'gem_3', gems: 525, price: 100000, label: 'Gói Trung', bonus: '5% bonus' }, { id: 'gem_4', gems: 1100, price: 200000, label: 'Gói Đại', bonus: '10% bonus' }, { id: 'gem_5', gems: 2875, price: 500000, label: 'Gói Khổng Lồ', bonus: '15% bonus' }, { id: 'gem_6', gems: 6000, price: 1000000, label: 'Gói Thần Thánh', bonus: '20% bonus' }, ];
 const gemToCoinPackages = [ { id: 'exchange_1', gems: 10, coins: 10000, label: 'Gói Tí Hon' }, { id: 'exchange_2', gems: 50, coins: 50000, label: 'Gói Nhỏ' }, { id: 'exchange_3', gems: 100, coins: 100000, label: 'Gói Vừa' }, { id: 'exchange_4', gems: 200, coins: 200000, label: 'Gói Lớn' }, { id: 'exchange_5', gems: 500, coins: 500000, label: 'Gói Khổng Lồ' }, { id: 'exchange_6', gems: 1000, coins: 1000000, label: 'Gói Hoàng Gia' }, ];
-const BANK_INFO = { ID: '970422', ACCOUNT_NO: '19036924369018', ACCOUNT_NAME: 'LE VAN LONG' };
+const BANK_INFO = { ID: '970422', ACCOUNT_NO: '9205929928230', ACCOUNT_NAME: 'MB Bank' };
 const shuffleArray = (array: any[]) => { let currentIndex = array.length, randomIndex; while (currentIndex !== 0) { randomIndex = Math.floor(Math.random() * currentIndex); currentIndex--; [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]]; } return array; };
 const generateDailyShopWeapons = () => { const allWeapons = Array.from(itemDatabase.values()).filter(item => item.type === 'weapon'); const selectedWeapons = shuffleArray(allWeapons).slice(0, 10); return selectedWeapons.map(weapon => { const randomRank = SHOP_WEAPON_RANKS[Math.floor(Math.random() * SHOP_WEAPON_RANKS.length)]; const price = SHOP_WEAPON_PRICES[randomRank] || 100; const trimmedIcon = weapon.icon ? weapon.icon.trim() : ''; const imageUrl = trimmedIcon.startsWith('http') ? trimmedIcon : `https://placehold.co/600x600/1a1a2e/ffffff?text=${encodeURIComponent(trimmedIcon || '❓')}`; return { id: weapon.id, name: weapon.name, type: 'Vũ khí', rarity: randomRank, price: price, image: imageUrl, description: weapon.description, }; }); };
 const getShopItems = () => { try { const storedData = localStorage.getItem('dailyShopData'); const storedTimestamp = localStorage.getItem('dailyShopTimestamp'); const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime(); if (storedData && storedTimestamp && parseInt(storedTimestamp, 10) === today) { return JSON.parse(storedData); } else { const newItems = generateDailyShopWeapons(); localStorage.setItem('dailyShopData', JSON.stringify(newItems)); localStorage.setItem('dailyShopTimestamp', today.toString()); return newItems; } } catch (error) { console.error("Could not access localStorage. Generating temporary shop data.", error); return generateDailyShopWeapons(); } };
@@ -63,7 +63,7 @@ const PaymentQRModal = ({ pkg, transaction, onClose, onConfirmPayment }: { pkg: 
 
     useEffect(() => {
         if (transaction) {
-            const url = `https://img.vietqr.io/image/${BANK_INFO.ID}-${BANK_INFO.ACCOUNT_NO}-compact2.png?amount=${transaction.amount}&addInfo=${encodeURIComponent(transaction.transactionId)}&accountName=${encodeURIComponent(BANK_INFO.ACCOUNT_NAME)}`;
+            const url = `https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/qr-code.png`;
             setQrCodeUrl(url);
 
             setCanConfirm(false);
@@ -115,6 +115,15 @@ const PaymentQRModal = ({ pkg, transaction, onClose, onConfirmPayment }: { pkg: 
                         <div className="bg-white p-3 rounded-lg shadow-lg w-48 h-48 mx-auto">
                             {qrCodeUrl ? <img src={qrCodeUrl} alt="VietQR Code" className="w-full h-full object-contain" /> : <div className="w-full h-full bg-gray-200 animate-pulse"></div>}
                         </div>
+                        {qrCodeUrl && (
+                            <a
+                                href={qrCodeUrl}
+                                download="payment-qr-code.png"
+                                className="inline-flex items-center justify-center mt-3 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-3 py-1.5 rounded-md transition-colors"
+                            >
+                                Tải xuống mã QR
+                            </a>
+                        )}
                         <div className="mt-4 text-sm text-slate-300 space-y-3">
                             <p>Quét mã QR bằng ứng dụng ngân hàng của bạn để thanh toán.</p>
                             <div className="bg-slate-800/60 p-3 rounded-lg border border-slate-700">
