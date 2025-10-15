@@ -1,9 +1,10 @@
-// --- START OF REFACTORED FILE: audio-quiz-generator.ts ---
+// --- START OF CORRECTED FILE: audio-quiz-generator.ts ---
 
 import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 
 // Định nghĩa các giọng đọc có sẵn ở một nơi để dễ quản lý
-const AVAILABLE_VOICES = {
+// <<< SỬA LỖI TẠI ĐÂY: Thêm "export" >>>
+export const AVAILABLE_VOICES = {
     'Matilda': '', 
     'Arabella': 'voice1/',
     'Hope': 'voice2/', 
@@ -68,14 +69,12 @@ export const generateAudioUrlsForWord = (word: string): { [voiceName: string]: s
     const block = audioBlocks.find(b => index >= b.startIndex && index <= b.endIndex);
 
     if (!block) {
-        // Nếu index của từ nằm ngoài các khoảng đã định nghĩa (ví dụ: trong khoảng trống 2400-3000 ở logic cũ)
+        // Nếu index của từ nằm ngoài các khoảng đã định nghĩa
         console.warn(`No audio mapping found for word "${word}" at index ${index}.`);
         return null;
     }
 
-    // Tính toán số thứ tự file audio dựa trên vị trí của từ trong khối và số bắt đầu của khối đó
-    // Ví dụ: từ ở index 2400 (đầu khối) -> audioNumber = 3001 + (2400 - 2400) = 3001
-    // Ví dụ: từ ở index 2401 -> audioNumber = 3001 + (2401 - 2400) = 3002
+    // Tính toán số thứ tự file audio
     const audioNumber = block.audioStartNumber + (index - block.startIndex);
     
     // Số dưới 1000 sẽ được đệm 3 số. Các số lớn hơn giữ nguyên.
@@ -91,8 +90,6 @@ export const generateAudioUrlsForWord = (word: string): { [voiceName: string]: s
 
 /**
  * TẠO MỚI: Tạo URL audio cho một câu exam dựa trên chỉ số của nó.
- * Hàm này có logic thư mục và đường dẫn riêng biệt cho audio của exam.
- * (Hàm này giữ nguyên vì logic của nó tách biệt)
  * @param sentenceIndex - Chỉ số (index) của câu trong danh sách `exampleData`.
  * @returns Một object chứa URL audio cho giọng đọc exam, hoặc null nếu index không hợp lệ.
  */
@@ -130,8 +127,6 @@ export const generateAudioUrlsForExamSentence = (sentenceIndex: number): { [voic
 
 /**
  * Tạo các câu hỏi trắc nghiệm dạng nghe dựa trên từ vựng đã học của người dùng.
- * (Hàm này không cần thay đổi vì nó chỉ gọi `generateAudioUrlsForWord`)
- *
  * @param userVocabulary - Một mảng các từ mà người dùng đã học.
  * @returns Một mảng tất cả các câu hỏi audio có thể có dựa trên từ vựng của người dùng.
  */
@@ -172,4 +167,4 @@ export const generateAudioQuizQuestions = (userVocabulary: string[]): AudioQuizQ
     return allPossibleQuestions;
 };
 
-// --- END OF REFACTORED FILE ---
+// --- END OF CORRECTED FILE ---
