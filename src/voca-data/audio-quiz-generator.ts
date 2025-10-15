@@ -7,6 +7,7 @@ const AVAILABLE_VOICES = {
     'Matilda': '', 
     'Arabella': 'voice1/',
     'Hope': 'voice2/', 
+    'Jane': 'voice3/',
 };
 
 // Định nghĩa cấu trúc cho một đối tượng câu hỏi audio.
