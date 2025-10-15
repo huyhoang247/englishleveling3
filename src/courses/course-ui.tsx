@@ -5,15 +5,17 @@ import VocabularyGame from './fill-in-the-blank/fill-blank-ui.tsx';
 import VocaMatchGame from './voca-match/voca-match-ui.tsx';
 import AnalysisDashboard from './analysis-dashboard/analysis-ui.tsx';
 import WordChainGame from './word-chain-game/word-chain-ui.tsx';
-import PracticeListLoadingSkeleton from './course-loading.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
-import HomeButton from '../ui/home-button.tsx'; // <<< THAY ĐỔI: IMPORT HOME BUTTON
-import BackButton from '../ui/back-button.tsx'; // <<< THAY ĐỔI: IMPORT BACK BUTTON
+import PracticeListLoadingSkeleton from './course-loading.tsx';
+import HomeButton from '../ui/home-button.tsx';
+import BackButton from '../ui/back-button.tsx';
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
 import { QuizAppProvider, useQuizApp } from './course-context.tsx';
 import { fetchPracticeListProgress, claimQuizReward } from './course-data-service.ts';
 import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts';
 import { User } from 'firebase/auth';
+// <<< THAY ĐỔI: IMPORT AVAILABLE_VOICES >>>
+import { AVAILABLE_VOICES } from '../voca-data/audio-quiz-generator.ts';
 
 // --- Props cho component chính ---
 interface QuizAppHomeProps {
@@ -34,15 +36,12 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   } = useQuizApp();
 
   // --- START: LOGIC ĐIỀU KHIỂN NAVBAR ---
-  // Effect này sẽ chạy khi component được mount (khi tab 'quiz' active)
-  // và sẽ cập nhật lại visibility của navbar mỗi khi view trong quiz thay đổi.
   useEffect(() => {
     if (currentView !== 'main') {
       hideNavBar?.();
     } else {
       showNavBar?.();
     }
-    // Khi component unmount (chuyển tab khác), đảm bảo navbar hiện lại.
     return () => {
       showNavBar?.();
     };
@@ -73,7 +72,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
       
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
-            {/* <<< THAY ĐỔI DUY NHẤT TẠI ĐÂY: overflow-y-auto -> overflow-hidden */}
             <div className="flex-grow overflow-hidden">
                 {ViewComponent}
             </div>
@@ -101,15 +99,21 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               <img src={quizHomeAssets.wordChainGameIcon} alt="Word Chain" className="h-20 w-20 mb-3" />
               <h3 className="text-lg font-bold text-gray-800 group-hover:text-purple-600 transition-colors">Word Chain</h3>
             </button>
+            
+            {/* --- START: NÚT MỚI CHO VOICE SETTINGS --- */}
+            <button
+              onClick={() => setCurrentView('voiceSettings')}
+              className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-teal-400 group"
+            >
+              <VoiceIcon className="h-20 w-20 mb-3 text-teal-500 group-hover:text-teal-600 transition-colors" />
+              <h3 className="text-lg font-bold text-gray-800 group-hover:text-teal-600 transition-colors">Voice</h3>
+            </button>
+            {/* --- END: NÚT MỚI CHO VOICE SETTINGS --- */}
+
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
               <img src={quizHomeAssets.examIcon} alt="Exam" className="h-20 w-20 mb-3" />
               <h3 className="text-lg font-bold text-gray-500">Exam</h3>
-            </div>
-            <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
-              <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
-              <img src={quizHomeAssets.grammarIcon} alt="Grammar" className="h-20 w-20 mb-3" />
-              <h3 className="text-lg font-bold text-gray-500">Grammar</h3>
             </div>
           </div>
         );
@@ -132,6 +136,10 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
         );
       case 'practices':
         return <PracticeList />;
+      // --- START: CASE MỚI CHO VOICE SETTINGS ---
+      case 'voiceSettings':
+        return <VoiceSettings />;
+      // --- END: CASE MỚI CHO VOICE SETTINGS ---
       default:
         return <div>Nội dung không tồn tại</div>;
     }
@@ -156,7 +164,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
 }
 
 // --- START: UNIFIED HEADER COMPONENT ---
-// <<< THAY ĐỔI: HomeIcon và BackIcon đã bị xóa vì chúng ta đang sử dụng các component nút chuyên dụng
 const AnalysisIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg> );
 
 function AppHeader() {
@@ -165,6 +172,8 @@ function AppHeader() {
   const headerTitle = useMemo(() => {
     switch (currentView) {
       case 'quizTypes': return 'Quiz';
+      // <<< THÊM TITLE CHO VIEW MỚI >>>
+      case 'voiceSettings': return 'Voice Settings';
       case 'practices':
         if (selectedType === 'tracNghiem') return 'Multiple choice';
         if (selectedType === 'dienTu') return 'Fill in the blank';
@@ -184,7 +193,7 @@ function AppHeader() {
                  <img src={quizHomeAssets.logoLarge} alt="Quiz App Logo" className="h-10 w-auto" />
               </a>
             ) : (
-              <BackButton onClick={goBack} /> // <<< THAY ĐỔI: SỬ DỤNG BACKBUTTON COMPONENT
+              <BackButton onClick={goBack} />
             )}
           </div>
           <div className="flex-1 flex justify-center px-4">
@@ -194,7 +203,7 @@ function AppHeader() {
               {currentView === 'main' ? (
                 <button onClick={() => setCurrentView('analysis')} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Xem phân tích"><AnalysisIcon /></button>
               ) : (
-                 <HomeButton onClick={goHome} /> // <<< THAY ĐỔI: SỬ DỤNG HOMEBUTTON COMPONENT
+                 <HomeButton onClick={goHome} />
               )}
           </div>
         </div>
@@ -203,7 +212,10 @@ function AppHeader() {
   );
 }
 
-// --- Icons (Static) ---
+// --- Icons (Static & New) ---
+// <<< THÊM ICON MỚI CHO VOICE SETTINGS >>>
+const VoiceIcon = ({ className }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"></path><path d="M8 12h.01"></path><path d="M12 12h.01"></path><path d="M16 12h.01"></path></svg> );
+
 const CompletedIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg> );
 const LockIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" /></svg> );
 const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.001 10a1 1 0 011-1h5a1 1 0 110 2H5a1 1 0 01-1-1zM15 13a1 1 0 011-1h.01a5.002 5.002 0 00-11.588-2.512 1 1 0 11-1.885-.666A7.002 7.002 0 0119 8.899V7a1 1 0 112 0v5a1 1 0 01-1 1h-5a1 1 0 01-1-1z" clipRule="evenodd" /></svg> );
@@ -214,6 +226,80 @@ const CardCapacityIcon = ({ className }: { className: string }) => ( <img src={u
 const CheckIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> );
 
 // --- Child Components & Implementations ---
+
+// --- START: COMPONENT MỚI CHO VOICE SETTINGS ---
+const VoiceSettings = () => {
+    const { voiceSettings, setVoiceSettings } = useQuizApp();
+
+    const voiceInfo = {
+        'Matilda': { description: 'Giọng nữ Mỹ, rõ ràng và tiêu chuẩn.', avatar: 'https://cdn-icons-png.flaticon.com/512/3033/3033143.png' },
+        'Arabella': { description: 'Giọng nữ Anh, thanh lịch và trang trọng.', avatar: 'https://cdn-icons-png.flaticon.com/512/3033/3033142.png' },
+        'Hope': { description: 'Giọng nữ Mỹ, trầm ấm và thân thiện.', avatar: 'https://cdn-icons-png.flaticon.com/512/3033/3033144.png' }
+    };
+    
+    const handleToggle = (voiceName: string) => {
+        const newSettings = { ...voiceSettings, [voiceName]: !voiceSettings[voiceName] };
+        
+        // Logic: Không cho phép tắt tất cả các voice
+        const enabledVoices = Object.values(newSettings).filter(v => v).length;
+        if (enabledVoices === 0) {
+            alert("Bạn phải bật ít nhất một giọng đọc.");
+            return;
+        }
+
+        setVoiceSettings(newSettings);
+    };
+
+    return (
+        <div className="w-full max-w-md mx-auto">
+            <div className="text-center mb-6">
+                <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">
+                    Voice Settings
+                </h2>
+                <p className="mt-2 text-md text-gray-500">Chọn giọng đọc bạn muốn nghe khi luyện tập.</p>
+            </div>
+            <div className="space-y-4">
+                {Object.keys(AVAILABLE_VOICES).map(voiceName => (
+                    <div 
+                        key={voiceName}
+                        className="p-4 bg-white rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between"
+                    >
+                        <div className="flex items-center">
+                            <img src={voiceInfo[voiceName]?.avatar || ''} alt={`${voiceName} avatar`} className="w-12 h-12 rounded-full mr-4 bg-gray-100" />
+                            <div>
+                                <h3 className="font-bold text-gray-800 text-lg">{voiceName}</h3>
+                                <p className="text-sm text-gray-500">{voiceInfo[voiceName]?.description}</p>
+                            </div>
+                        </div>
+                        <label htmlFor={`toggle-${voiceName}`} className="flex items-center cursor-pointer">
+                            <div className="relative">
+                                <input 
+                                    type="checkbox" 
+                                    id={`toggle-${voiceName}`} 
+                                    className="sr-only" 
+                                    checked={voiceSettings[voiceName] || false}
+                                    onChange={() => handleToggle(voiceName)}
+                                />
+                                <div className="block bg-gray-300 w-12 h-7 rounded-full transition"></div>
+                                <div className={`dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition transform ${voiceSettings[voiceName] ? 'translate-x-full bg-teal-500' : ''}`}></div>
+                            </div>
+                        </label>
+                    </div>
+                ))}
+            </div>
+            <style jsx>{`
+                input:checked ~ .dot {
+                    transform: translateX(100%);
+                    background-color: #14B8A6; /* teal-500 */
+                }
+                input:checked ~ .block {
+                    background-color: #A7F3D0; /* green-200 */
+                }
+            `}</style>
+        </div>
+    );
+};
+// --- END: COMPONENT MỚI CHO VOICE SETTINGS ---
 
 const CircularProgress = memo(({ percentage, size, strokeWidth, trackColor }) => {
     const viewBox = `0 0 ${size} ${size}`;
@@ -306,7 +392,7 @@ function PracticeList() {
     },
     vocaMatch: {
         '1': { title: 'Practice 1', desc: ['Match Words'], color: 'green' },
-        '2': { title: 'Practice 2', desc: ['Match Audio'], color: 'cyan' }, // <<< THÊM MỚI
+        '2': { title: 'Practice 2', desc: ['Match Audio'], color: 'cyan' },
     },
     dienTu: {
         '1': { title: 'Practice 1', desc: ['Type Word', 'Picture'], color: 'indigo' },
@@ -316,14 +402,13 @@ function PracticeList() {
         '5': { title: 'Practice 5', desc: ['Gap Fill', 'Hide 4'], color: 'purple' },
         '6': { title: 'Practice 6', desc: ['Gap Fill', 'Hide 5'], color: 'yellow' },
         '7': { title: 'Practice 7', desc: ['Gap Fill', 'Random Hide'], color: 'red' },
-        '8': { title: 'Practice 8', desc: ['Type Word', 'Audio'], color: 'cyan' }, // <<< THÊM PRACTICE 8
+        '8': { title: 'Practice 8', desc: ['Type Word', 'Audio'], color: 'cyan' },
     },
   }), []);
   
   const handleReviewClick = useCallback((practiceNumber) => { setSelectedPracticeForReview(practiceNumber); setView('reviews'); }, []);
   const handleRewardsClick = useCallback((practiceNumber, practiceTitle) => { setSelectedPracticeForRewards({ number: practiceNumber, title: practiceTitle }); setIsRewardsPopupOpen(true); }, []);
 
-  // <<< THAY ĐỔI TẠI ĐÂY
   if (loading) {
     return <PracticeListLoadingSkeleton />;
   }
