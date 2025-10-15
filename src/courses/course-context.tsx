@@ -11,19 +11,21 @@ import {
   fetchOrCreateUser as fetchOrCreateUserService,
   updateUserCoins as updateUserCoinsService,
   fetchGameInitialData as fetchGameInitialDataService,
+  // --- START: DÒNG MỚI ---
   updateAchievementData as updateAchievementDataService,
   fetchAndSyncVocabularyData as fetchAndSyncVocabularyDataService,
   VocabularyItem,
+  // --- END: DÒNG MỚI ---
 } from './course-data-service.ts';
 // NEW: Import data and generators
-// <<< THAY ĐỔI: IMPORT AVAILABLE_VOICES TỪ audio-quiz-generator >>>
-import { AVAILABLE_VOICES, generateAudioUrlsForWord, generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
+import { generateAudioUrlsForWord, generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
 import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
 import { exampleData } from '../voca-data/example-data.ts';
 import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 
 
 // --- Định nghĩa các "hình dạng" (interface) dùng chung ---
+// NEW: Moved Definition interface here
 export interface Definition {
   vietnamese: string;
   english: string;
@@ -38,10 +40,6 @@ interface QuizAppContextType {
   user: User | null;
   userCoins: number;
   masteryCount: number;
-  // --- START: DÒNG MỚI ---
-  voiceSettings: { [key: string]: boolean };
-  setVoiceSettings: (settings: { [key: string]: boolean }) => void;
-  // --- END: DÒNG MỚI ---
   
   goBack: () => void;
   goHome: () => void;
@@ -57,12 +55,14 @@ interface QuizAppContextType {
   updateUserCoins: (amount: number) => Promise<void>;
   fetchOrCreateUser: () => Promise<any>;
   fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>;
+  // --- START: DÒNG MỚI ---
   fetchAndSyncVocabularyData: () => Promise<VocabularyItem[]>;
   updateAchievementData: (updates: {
     coinsToAdd: number;
     cardsToAdd: number;
     newVocabularyData: VocabularyItem[];
   }) => Promise<{ newCoins: number; newMasteryCards: number }>;
+  // --- END: DÒNG MỚI ---
 
   // --- NEW: Vocabulary data and utilities ---
   definitionsMap: { [key: string]: Definition };
@@ -100,40 +100,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   const [userCoins, setUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
   
-  // --- START: STATE MỚI VÀ LOGIC CHO VOICE SETTINGS ---
-  const [voiceSettings, setVoiceSettingsState] = useState<{ [key: string]: boolean }>({});
-
-  // Effect để load voice settings từ localStorage hoặc tạo mặc định
-  useEffect(() => {
-    try {
-      const savedSettings = localStorage.getItem('voiceSettings');
-      if (savedSettings) {
-        setVoiceSettingsState(JSON.parse(savedSettings));
-      } else {
-        // Mặc định bật tất cả các voice có sẵn
-        const defaultSettings = Object.keys(AVAILABLE_VOICES).reduce((acc, voiceName) => {
-          acc[voiceName] = true;
-          return acc;
-        }, {} as { [key: string]: boolean });
-        setVoiceSettingsState(defaultSettings);
-        localStorage.setItem('voiceSettings', JSON.stringify(defaultSettings));
-      }
-    } catch (error) {
-      console.error("Failed to load voice settings from localStorage", error);
-    }
-  }, []);
-
-  // Hàm để cập nhật state và lưu vào localStorage
-  const setVoiceSettings = useCallback((newSettings: { [key: string]: boolean }) => {
-    setVoiceSettingsState(newSettings);
-    try {
-      localStorage.setItem('voiceSettings', JSON.stringify(newSettings));
-    } catch (error) {
-      console.error("Failed to save voice settings to localStorage", error);
-    }
-  }, []);
-  // --- END: STATE MỚI VÀ LOGIC CHO VOICE SETTINGS ---
-
+  // NEW: Process vocabulary definitions once and provide via context
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
     const lines = detailedMeaningsText.trim().split('\n');
@@ -210,8 +177,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     if (['vocabularyGame', 'quiz', 'vocaMatchGame'].includes(currentView)) {
        setCurrentView('practices');
        setSelectedPractice(null);
-    // <<< THAY ĐỔI: Thêm 'voiceSettings' vào logic nút back >>>
-    } else if (['wordChainGame', 'analysis', 'voiceSettings'].includes(currentView)) {
+    } else if (currentView === 'wordChainGame' || currentView === 'analysis') {
        setCurrentView('main');
     } else if (currentView === 'practices') {
       setCurrentView('quizTypes');
@@ -277,6 +243,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     await updateUserCoinsService(user.uid, amount);
   }, [user]);
 
+  // --- START: CÁC HÀM WRAPPER MỚI CHO ACHIEVEMENT ---
   const fetchAndSyncVocabularyData = useCallback(async (): Promise<VocabularyItem[]> => {
     if (!user) {
       console.warn("fetchAndSyncVocabularyData called without a user.");
@@ -296,6 +263,8 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     }
     return updateAchievementDataService(user.uid, updates);
   }, [user]);
+  // --- END: CÁC HÀM WRAPPER MỚI CHO ACHIEVEMENT ---
+
 
   // --- Giá trị được cung cấp bởi Context ---
   const value = {
@@ -318,12 +287,11 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     fetchOrCreateUser,
     updateUserCoins,
     fetchGameInitialData,
+    // --- START: DÒNG MỚI ---
     fetchAndSyncVocabularyData,
     updateAchievementData,
-    // --- START: DÒNG MỚI: Cung cấp state và hàm setter cho các component con ---
-    voiceSettings,
-    setVoiceSettings,
     // --- END: DÒNG MỚI ---
+    // NEW: Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
     exampleData,
