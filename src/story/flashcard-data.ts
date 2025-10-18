@@ -2,7 +2,8 @@
 
 import { 
   defaultImageUrls as initialDefaultImageUrls,
-  photographyImageUrls as initialPhotographyImageUrls // Thêm import mới
+  photographyImageUrls as initialPhotographyImageUrls, // Thêm import mới
+  illustrationImageUrls as initialIllustrationImageUrls // Thêm import illustration
 } from '../voca-data/image-url.ts';
 import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
 import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
@@ -16,6 +17,7 @@ interface StyledImageUrls {
   comic?: string;
   realistic?: string;
   photography?: string; // Thêm style mới
+  illustration?: string; // Thêm style illustration
 }
 interface VocabularyData {
   word: string;
@@ -76,6 +78,10 @@ const photographyImageUrls: string[] = [ // Tạo mảng tương tự cho photog
   ...initialPhotographyImageUrls,
   ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialPhotographyImageUrls.length), 'Photo', '808080')
 ];
+const illustrationImageUrls: string[] = [ // Tạo mảng tương tự cho illustration
+  ...initialIllustrationImageUrls,
+  ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialIllustrationImageUrls.length), 'Illustration', '90EE90')
+];
 const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
 const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
 const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
@@ -102,6 +108,7 @@ export const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
             comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${cardId}`,
             realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${cardId}`,
             photography: photographyImageUrls[i] || `https://placehold.co/1024x1536/808080/FFFFFF?text=Photo+${cardId}`, // Thêm URL photography
+            illustration: illustrationImageUrls[i] || `https://placehold.co/1024x1536/90EE90/FFFFFF?text=Illustration+${cardId}`, // Thêm URL illustration
         };
         const card: Flashcard = { id: cardId, imageUrl: imageUrls, vocabulary: vocab };
         return [cardId, card];
@@ -118,3 +125,4 @@ ALL_CARDS_MAP.forEach(card => {
 
 // --- EXPORT 3: Dữ liệu ví dụ (dùng cho Modal) ---
 export { exampleData };
+// --- END OF FILE: src/flashcard-data.ts ---
