@@ -241,7 +241,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     switch (activeTab) {
       case 'basic':
         // Đây là danh sách các style bạn MUỐN hiển thị.
-        const stylesToShow = ['default', 'photography'];
+        const stylesToShow = ['default', 'photography', 'illustration'];
 
         // Lọc qua tất cả các ảnh có sẵn, nhưng chỉ giữ lại những ảnh có tên style nằm trong danh sách stylesToShow
         const availableImages = Object.entries(selectedCard.imageUrl).filter(
@@ -555,3 +555,4 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 };
 
 export default FlashcardDetailModal;
+// --- END OF FILE: src/flashcard.tsx ---
