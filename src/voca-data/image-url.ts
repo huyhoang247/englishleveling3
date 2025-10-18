@@ -1,4 +1,4 @@
-// --- START OF REFACTORED FILE image-url.ts ---
+// --- START OF FILE: image-url.ts ---
 
 // URL cơ sở cho các ảnh phong cách anime/minh hoạ
 const animeBaseUrl = "https://raw.githubusercontent.com/englishleveling46/Flashcard/main/image-anime/";
@@ -71,4 +71,4 @@ export const illustrationImageUrls: string[] = urlBlocks.flatMap(block =>
 // export const comicImageUrls: string[] = [ ... ];
 // export const realisticImageUrls: string[] = [ ... ];
 
-// --- END OF REFACTORED FILE ---
+// --- END OF FILE: image-url.ts ---
