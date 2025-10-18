@@ -6,6 +6,9 @@ const animeBaseUrl = "https://raw.githubusercontent.com/englishleveling46/Flashc
 // URL cơ sở cho các ảnh phong cách nhiếp ảnh
 const photographyBaseUrl = "https://raw.githubusercontent.com/englishleveling46/Flashcard/main/image-photography/";
 
+// URL cơ sở cho các ảnh phong cách minh hoạ (illustration)
+const illustrationBaseUrl = "https://raw.githubusercontent.com/englishleveling46/Flashcard/main/image-illustration/";
+
 /**
  * Hàm trợ giúp để tạo ra một chuỗi các URL theo một quy tắc nhất định.
  * @param baseUrl - URL cơ sở của kho ảnh (ví dụ: cho anime, photography).
@@ -26,7 +29,7 @@ const generateUrls = (baseUrl: string, folder: string, start: number, end: numbe
 };
 
 // Định nghĩa các khối (blocks) URL cần tạo.
-// Cấu trúc này được dùng chung cho cả anime và photography.
+// Cấu trúc này được dùng chung cho cả anime, photography và illustration.
 const urlBlocks = [
   // Basic Voca
   { folder: 'image', start: 1, end: 1000 },
@@ -56,6 +59,11 @@ export const defaultImageUrls: string[] = urlBlocks.flatMap(block =>
 // Tạo mảng URL cho phong cách nhiếp ảnh
 export const photographyImageUrls: string[] = urlBlocks.flatMap(block =>
   generateUrls(photographyBaseUrl, block.folder, block.start, block.end)
+);
+
+// Tạo mảng URL cho phong cách minh hoạ (illustration)
+export const illustrationImageUrls: string[] = urlBlocks.flatMap(block =>
+  generateUrls(illustrationBaseUrl, block.folder, block.start, block.end)
 );
 
 
