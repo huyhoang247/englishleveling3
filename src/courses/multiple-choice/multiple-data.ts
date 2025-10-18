@@ -2,6 +2,8 @@
 
 import QuizDataPart1 from './multiple-data/multiple-data-p1.ts';
 import QuizDataPart2 from './multiple-data/multiple-data-p2.ts';
+import QuizDataPart3 from './multiple-data/multiple-data-p3.ts';
+
 
 const QuizDataOriginal = [
   
@@ -5015,7 +5017,8 @@ const QuizDataOriginal = [
 const quizData = [
   ...QuizDataOriginal, 
   ...QuizDataPart1,
-  ...QuizDataPart2
+  ...QuizDataPart2,
+  ...QuizDataPart3
 ];
 
 
