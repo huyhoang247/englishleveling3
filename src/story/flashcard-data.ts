@@ -2,22 +2,21 @@
 
 import { 
   defaultImageUrls as initialDefaultImageUrls,
-  photographyImageUrls as initialPhotographyImageUrls, // Thêm import mới
-  illustrationImageUrls as initialIllustrationImageUrls // Thêm import illustration
+  photographyImageUrls as initialPhotographyImageUrls,
+  illustrationImageUrls as initialIllustrationImageUrls
 } from '../voca-data/image-url.ts';
 import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
 import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 import { exampleData } from '../voca-data/example-data.ts';
 
 // --- Interfaces and Data ---
-// Các interface này được dùng chung bởi nhiều component
 interface StyledImageUrls {
   default: string;
   anime?: string;
   comic?: string;
   realistic?: string;
-  photography?: string; // Thêm style mới
-  illustration?: string; // Thêm style illustration
+  photography?: string;
+  illustration?: string;
 }
 interface VocabularyData {
   word: string;
@@ -59,8 +58,8 @@ const parseDetailedMeanings = (text: string): Map<string, string> => {
         const match = line.match(/\(([^)]+)\)/);
         if (match && match[1]) {
             const englishWord = match[1];
-            // THAY ĐỔI 1: Chuyển key thành chữ thường để tra cứu không phân biệt hoa/thường
-            meaningsMap.set(englishWord.toLowerCase(), line.trim());
+            // THAY ĐỔI 1: Chuyển key thành chữ IN HOA để tra cứu không phân biệt hoa/thường
+            meaningsMap.set(englishWord.toUpperCase(), line.trim());
         }
     }
     return meaningsMap;
@@ -75,11 +74,11 @@ const defaultImageUrls: string[] = [
   ...initialDefaultImageUrls,
   ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialDefaultImageUrls.length), 'Default', 'A0A0A0')
 ];
-const photographyImageUrls: string[] = [ // Tạo mảng tương tự cho photography
+const photographyImageUrls: string[] = [
   ...initialPhotographyImageUrls,
   ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialPhotographyImageUrls.length), 'Photo', '808080')
 ];
-const illustrationImageUrls: string[] = [ // Tạo mảng tương tự cho illustration
+const illustrationImageUrls: string[] = [
   ...initialIllustrationImageUrls,
   ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialIllustrationImageUrls.length), 'Illustration', '90EE90')
 ];
@@ -93,8 +92,8 @@ export const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
         const cardId = i + 1;
         const rawWord = defaultVocabulary[i];
         const capitalizedWord = capitalizeFirstLetter(rawWord);
-        // THAY ĐỔI 2: Dùng từ gốc (chữ thường) để tra cứu trong Map đã được chuẩn hóa
-        const detailedMeaning = detailedMeaningsMap.get(rawWord);
+        // THAY ĐỔI 2: Dùng từ đã được chuyển về IN HOA để tra cứu
+        const detailedMeaning = detailedMeaningsMap.get(rawWord.toUpperCase());
         const vocab: VocabularyData = {
             word: capitalizedWord,
             meaning: detailedMeaning || `Meaning of ${capitalizedWord}`,
@@ -109,8 +108,8 @@ export const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
             anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${cardId}`,
             comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${cardId}`,
             realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${cardId}`,
-            photography: photographyImageUrls[i] || `https://placehold.co/1024x1536/808080/FFFFFF?text=Photo+${cardId}`, // Thêm URL photography
-            illustration: illustrationImageUrls[i] || `https://placehold.co/1024x1536/90EE90/FFFFFF?text=Illustration+${cardId}`, // Thêm URL illustration
+            photography: photographyImageUrls[i] || `https://placehold.co/1024x1536/808080/FFFFFF?text=Photo+${cardId}`,
+            illustration: illustrationImageUrls[i] || `https://placehold.co/1024x1536/90EE90/FFFFFF?text=Illustration+${cardId}`,
         };
         const card: Flashcard = { id: cardId, imageUrl: imageUrls, vocabulary: vocab };
         return [cardId, card];
@@ -120,7 +119,7 @@ export const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
 // --- EXPORT 2: Map tra cứu bằng từ (dùng cho Word Chain Game) ---
 export const WORD_TO_CARD_MAP: Map<string, Flashcard> = new Map();
 ALL_CARDS_MAP.forEach(card => {
-    // Key là từ vựng viết thường để dễ dàng tra cứu
+    // Key vẫn là từ vựng viết thường để dễ dàng tra cứu input của người dùng
     WORD_TO_CARD_MAP.set(card.vocabulary.word.toLowerCase(), card);
 });
 
