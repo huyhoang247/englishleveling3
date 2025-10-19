@@ -63,41 +63,34 @@ const DeadliftIcon = () => (
     <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="50" cy="35" r="8" fill="currentColor"/><path d="M 50 43 L 50 60 L 40 75 L 35 73 L 45 58" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 50 43 L 50 60 L 60 75 L 65 73 L 55 58" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 45 80 L 40 90" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 55 80 L 60 90" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><rect x="10" y="88" width="80" height="7" rx="3" fill="currentColor"/><rect x="5" y="80" width="5" height="15" fill="currentColor"/><rect x="90" y="80" width="5" height="15" fill="currentColor"/></svg>
 );
 
-// --- NEW Reusable Component: NumberStepper ---
-const NumberStepper = ({ label, value, onChange, min = 0, max = Infinity, step = 1, unit = '' }) => {
-    const handleDecrement = () => {
-        const newValue = Math.max(min, value - step);
-        onChange(newValue);
-    };
+// --- UPDATED Reusable Component: NumberStepper with Compact variant ---
+const NumberStepper = ({ label, value, onChange, min = 0, max = Infinity, step = 1, unit = '', compact = false }) => {
+    const handleDecrement = () => onChange(Math.max(min, value - step));
+    const handleIncrement = () => onChange(Math.min(max, value + step));
 
-    const handleIncrement = () => {
-        const newValue = Math.min(max, value + step);
-        onChange(newValue);
-    };
-
+    if (compact) {
+        return (
+            <div className="flex items-center gap-1 bg-gray-700 rounded-md p-0.5 border border-gray-600">
+                <button type="button" onClick={handleDecrement} disabled={value <= min} className="w-8 h-8 rounded bg-gray-600 hover:bg-gray-500 text-emerald-400 disabled:opacity-40 flex items-center justify-center">
+                    <MinusIcon className="w-4 h-4" />
+                </button>
+                <span className="w-12 text-center font-semibold text-lg text-white">{value}</span>
+                <button type="button" onClick={handleIncrement} disabled={value >= max} className="w-8 h-8 rounded bg-gray-600 hover:bg-gray-500 text-emerald-400 disabled:opacity-40 flex items-center justify-center">
+                    <PlusIcon className="w-4 h-4" />
+                </button>
+            </div>
+        );
+    }
+    
     return (
         <div className="flex items-center justify-between">
             {label && <span className="font-semibold text-gray-200">{label}</span>}
             <div className="flex items-center gap-2 bg-gray-900/50 rounded-lg p-1 border border-gray-600">
-                <button
-                    type="button"
-                    onClick={handleDecrement}
-                    disabled={value <= min}
-                    className="w-10 h-10 rounded-md bg-gray-700 hover:bg-gray-600 text-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center font-bold text-2xl transition-colors"
-                    aria-label="Decrease value"
-                >
+                <button type="button" onClick={handleDecrement} disabled={value <= min} className="w-10 h-10 rounded-md bg-gray-700 hover:bg-gray-600 text-emerald-400 disabled:opacity-40 flex items-center justify-center">
                     <MinusIcon className="w-5 h-5" />
                 </button>
-                <span className="w-20 text-center font-bold text-xl text-white">
-                    {value}{unit}
-                </span>
-                <button
-                    type="button"
-                    onClick={handleIncrement}
-                    disabled={value >= max}
-                    className="w-10 h-10 rounded-md bg-gray-700 hover:bg-gray-600 text-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center font-bold text-2xl transition-colors"
-                    aria-label="Increase value"
-                >
+                <span className="w-20 text-center font-bold text-xl text-white">{value}{unit}</span>
+                <button type="button" onClick={handleIncrement} disabled={value >= max} className="w-10 h-10 rounded-md bg-gray-700 hover:bg-gray-600 text-emerald-400 disabled:opacity-40 flex items-center justify-center">
                     <PlusIcon className="w-5 h-5" />
                 </button>
             </div>
@@ -116,14 +109,12 @@ const initialExercises = [
 const initialWorkoutHistory = [];
 
 // --- Helper Functions ---
-// UPDATED: calculateVolume now takes weight as an argument
 const calculateVolume = (sets, weight) => sets.reduce((total, set) => total + (set.reps * weight), 0);
 
 // --- Main Application Component ---
 export default function WorkoutApp({ onClose }) {
     const [exercises] = useState(initialExercises);
     const [workoutHistory, setWorkoutHistory] = useState(initialWorkoutHistory);
-    // UPDATED: myWorkoutPlan now includes target weight
     const [myWorkoutPlan, setMyWorkoutPlan] = useState([
         { exerciseId: 2, sets: 4, reps: 8, rest: 90, weight: 60 },
         { exerciseId: 1, sets: 3, reps: 10, rest: 60, weight: 50 },
@@ -205,7 +196,6 @@ export default function WorkoutApp({ onClose }) {
     );
 }
 
-
 // --- Sub-components ---
 const Header = ({ onClose }) => (
     <header className="relative flex items-center justify-center text-center">
@@ -216,11 +206,7 @@ const Header = ({ onClose }) => (
                 <p className="text-gray-400">Xây dựng. Theo dõi. Chinh phục.</p>
             </div>
         </div>
-        <button 
-            onClick={onClose}
-            className="absolute top-1/2 right-0 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors"
-            aria-label="Close Workout Tracker"
-        >
+        <button onClick={onClose} className="absolute top-1/2 right-0 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors" aria-label="Close Workout Tracker">
             <XIcon className="w-6 h-6" />
         </button>
     </header>
@@ -239,11 +225,7 @@ const NavBar = ({ currentView, setCurrentView }) => {
         <nav className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 md:hidden z-50">
             <div className="flex justify-around">
                 {navItems.map(item => (
-                    <button
-                        key={item.id}
-                        onClick={() => setCurrentView(item.id)}
-                        className={`flex flex-col items-center justify-center p-2 w-full text-xs ${currentView === item.id ? 'text-emerald-400' : 'text-gray-400 hover:text-white'}`}
-                    >
+                    <button key={item.id} onClick={() => setCurrentView(item.id)} className={`flex flex-col items-center justify-center p-2 w-full text-xs ${currentView === item.id ? 'text-emerald-400' : 'text-gray-400 hover:text-white'}`}>
                         <item.icon className="w-6 h-6 mb-1" />
                         <span>{item.label}</span>
                     </button>
@@ -253,7 +235,6 @@ const NavBar = ({ currentView, setCurrentView }) => {
     );
 };
 
-// ... SimpleSVGChart and ProgressTracker remain the same ...
 const SimpleSVGChart = ({ data, yKey, strokeColor, title }) => {
     if (data.length < 2) return null;
     const width = 300; const height = 150; const padding = 20;
@@ -297,9 +278,8 @@ const ProgressTracker = ({ history, exercises }) => {
             .sort((a, b) => new Date(a.date) - new Date(b.date))
             .map(workout => ({
                 date: new Date(workout.date).toLocaleDateString('en-CA', {month: 'short', day: 'numeric'}),
-                // UPDATED: Use the new calculateVolume
                 volume: calculateVolume(workout.sets, workout.weight),
-                maxWeight: workout.weight, // weight is now top-level
+                maxWeight: workout.weight,
             }));
     }, [history, selectedExerciseId]);
     const selectedExerciseName = exercises.find(e => e.id === parseInt(selectedExerciseId))?.name || 'Exercise';
@@ -326,7 +306,6 @@ const ProgressTracker = ({ history, exercises }) => {
     );
 };
 
-// ... ImageDetailModal remains the same ...
 const ImageDetailModal = ({ exercise, onClose }) => {
     if (!exercise) return null;
     return (
@@ -343,7 +322,7 @@ const ImageDetailModal = ({ exercise, onClose }) => {
         </div>
     );
 };
-// --- UPDATED: ExerciseSettingsModal now includes weight ---
+
 const ExerciseSettingsModal = ({ exercise, onClose, onSubmit }) => {
     const [sets, setSets] = useState(3);
     const [reps, setReps] = useState(10);
@@ -381,7 +360,6 @@ const ExerciseSettingsModal = ({ exercise, onClose, onSubmit }) => {
     );
 };
 
-// ... LibraryWorkout remains the same ...
 const LibraryWorkout = ({ exercises, myWorkoutIds, onConfigure }) => {
     const [viewingExercise, setViewingExercise] = useState(null);
 
@@ -398,11 +376,7 @@ const LibraryWorkout = ({ exercises, myWorkoutIds, onConfigure }) => {
                             </button>
                             <div className="text-emerald-400 w-16 h-16 mb-2">{ex.icon}</div>
                             <h3 className="font-semibold text-sm h-10 flex items-center justify-center">{ex.name}</h3>
-                            <button 
-                                onClick={() => onConfigure(ex)}
-                                disabled={myWorkoutIds.includes(ex.id)}
-                                className="w-full mt-2 py-1 px-2 text-xs font-bold rounded transition-colors disabled:bg-emerald-700 disabled:text-emerald-300 bg-emerald-500 hover:bg-emerald-600 text-white"
-                            >
+                            <button onClick={() => onConfigure(ex)} disabled={myWorkoutIds.includes(ex.id)} className="w-full mt-2 py-1 px-2 text-xs font-bold rounded transition-colors disabled:bg-emerald-700 disabled:text-emerald-300 bg-emerald-500 hover:bg-emerald-600 text-white">
                                 {myWorkoutIds.includes(ex.id) ? 'Đã thêm' : 'Thêm'}
                             </button>
                         </div>
@@ -414,7 +388,6 @@ const LibraryWorkout = ({ exercises, myWorkoutIds, onConfigure }) => {
     );
 };
 
-// UPDATED: MyWorkout now displays weight
 const MyWorkout = ({ workoutList, onRemove }) => (
      <Card>
         <h2 className="card-title"><UserIcon className="mr-2"/>Các bài tập của tôi</h2>
@@ -440,7 +413,6 @@ const MyWorkout = ({ workoutList, onRemove }) => (
     </Card>
 );
 
-// UPDATED: DailyTracking now displays weight
 const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, workoutHistory }) => {
     const [loggingExercise, setLoggingExercise] = useState(null);
 
@@ -450,7 +422,7 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, worko
             .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
     };
 
-    if (myWorkoutList.length === 0) { /* ... same as before ... */ return <Card><div className="text-center py-10"><h2 className="text-2xl font-bold mb-2">Chào mừng bạn!</h2><p className="text-gray-400 mb-6">Bạn chưa có bài tập nào. Hãy bắt đầu bằng cách thêm một vài bài tập từ thư viện.</p><button onClick={onNavigateToLibrary} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center transition duration-300 mx-auto">Đến thư viện</button></div></Card>; }
+    if (myWorkoutList.length === 0) { return <Card><div className="text-center py-10"><h2 className="text-2xl font-bold mb-2">Chào mừng bạn!</h2><p className="text-gray-400 mb-6">Bạn chưa có bài tập nào. Hãy bắt đầu bằng cách thêm một vài bài tập từ thư viện.</p><button onClick={onNavigateToLibrary} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center transition duration-300 mx-auto">Đến thư viện</button></div></Card>; }
     return (
         <div className="pb-20 md:pb-0">
              <Card>
@@ -503,31 +475,26 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, worko
     );
 };
 
-// --- COMPLETELY REBUILT: LoggingModal ---
+// --- UPDATED: LoggingModal with compact checklist view ---
 const LoggingModal = ({ exercise, onClose, onSubmit }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-
-    // State for the current session's plan (can be edited)
     const [sessionConfig, setSessionConfig] = useState({
         sets: exercise.sets,
         reps: exercise.reps,
         weight: exercise.weight,
     });
-
-    // State for logging the actual performance
     const [loggedSets, setLoggedSets] = useState([]);
 
-    // Reset logged sets whenever the session config changes
     useEffect(() => {
         setLoggedSets(
             Array.from({ length: sessionConfig.sets }, (_, i) => ({
                 id: i,
-                reps: sessionConfig.reps, // Default to target reps
+                reps: sessionConfig.reps,
                 completed: false,
             }))
         );
-    }, [sessionConfig]);
+    }, [sessionConfig.sets, sessionConfig.reps]);
     
     const handleRepsChange = (id, newReps) => {
         setLoggedSets(sets => sets.map(s => s.id === id ? { ...s, reps: newReps } : s));
@@ -537,9 +504,7 @@ const LoggingModal = ({ exercise, onClose, onSubmit }) => {
         setLoggedSets(sets => sets.map(s => s.id === id ? { ...s, completed: !s.completed } : s));
     };
     
-    const handleSaveChanges = () => {
-        setIsEditing(false); // The useEffect will handle updating the loggedSets array
-    };
+    const handleSaveChanges = () => setIsEditing(false);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -558,14 +523,12 @@ const LoggingModal = ({ exercise, onClose, onSubmit }) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
             <div className="bg-gray-800 rounded-xl shadow-lg w-full max-w-md">
-                {/* Header */}
                 <div className="p-4 border-b border-gray-700 flex justify-between items-center">
                      <h2 className="text-xl font-bold text-white">{exercise.name}</h2>
                      <button onClick={onClose} className="text-gray-400 hover:text-white"><XIcon/></button>
                 </div>
 
                 {isEditing ? (
-                    // --- EDITING VIEW ---
                     <div>
                         <div className="p-6 space-y-6">
                             <NumberStepper label="Số set" value={sessionConfig.sets} onChange={(v) => setSessionConfig(c => ({...c, sets: v}))} min={1} />
@@ -577,7 +540,6 @@ const LoggingModal = ({ exercise, onClose, onSubmit }) => {
                         </div>
                     </div>
                 ) : (
-                    // --- LOGGING (CHECKLIST) VIEW ---
                     <form onSubmit={handleSubmit}>
                         <div className="p-6">
                             <div className="flex justify-between items-center bg-gray-900/70 p-3 rounded-lg mb-4">
@@ -600,16 +562,15 @@ const LoggingModal = ({ exercise, onClose, onSubmit }) => {
                             
                             <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                                 {loggedSets.map((set, index) => (
-                                    <div key={set.id} className={`flex items-center gap-4 p-2 rounded-lg transition-all ${set.completed ? 'bg-emerald-900/50' : 'bg-gray-700/50'}`}>
+                                    <div key={set.id} className={`flex items-center gap-2 p-2 rounded-lg transition-all ${set.completed ? 'bg-emerald-900/50' : 'bg-gray-700/50'}`}>
+                                        <div className={`flex-1 flex items-center gap-2 font-bold ${set.completed ? 'text-gray-400 line-through' : 'text-white'}`}>
+                                            Set {index + 1}
+                                            <span className="text-gray-400 font-normal text-sm">(Reps)</span>
+                                        </div>
+                                        <NumberStepper value={set.reps} onChange={(v) => handleRepsChange(set.id, v)} min={0} compact={true} />
                                         <button type="button" onClick={() => handleToggleSetComplete(set.id)} className={`w-10 h-10 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-all ${set.completed ? 'bg-emerald-500 border-emerald-400' : 'border-gray-500'}`}>
                                            {set.completed && <CheckIcon className="w-6 h-6 text-white"/>}
                                         </button>
-                                        <div className={`flex-1 font-bold ${set.completed ? 'text-gray-400 line-through' : 'text-white'}`}>
-                                            Set {index + 1}
-                                        </div>
-                                        <div className="w-32">
-                                          <NumberStepper value={set.reps} onChange={(v) => handleRepsChange(set.id, v)} min={0} />
-                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -624,7 +585,6 @@ const LoggingModal = ({ exercise, onClose, onSubmit }) => {
     );
 };
 
-// UPDATED: WorkoutHistoryView uses new calculateVolume logic
 const WorkoutHistoryView = ({ history, exercises, onDelete }) => {
     const getExercise = (id) => exercises.find(ex => ex.id === id);
     const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
