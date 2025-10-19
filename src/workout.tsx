@@ -12,14 +12,14 @@ const DumbbellIcon = (props) => (
 const PlusIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
 );
+const MinusIcon = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+);
 const Trash2Icon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
 );
 const TrendingUpIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-);
-const TrendingDownIcon = (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
 );
 const HistoryIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
@@ -58,6 +58,48 @@ const DeadliftIcon = () => (
     <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="50" cy="35" r="8" fill="currentColor"/><path d="M 50 43 L 50 60 L 40 75 L 35 73 L 45 58" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 50 43 L 50 60 L 60 75 L 65 73 L 55 58" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 45 80 L 40 90" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 55 80 L 60 90" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><rect x="10" y="88" width="80" height="7" rx="3" fill="currentColor"/><rect x="5" y="80" width="5" height="15" fill="currentColor"/><rect x="90" y="80" width="5" height="15" fill="currentColor"/></svg>
 );
 
+// --- NEW Reusable Component: NumberStepper ---
+const NumberStepper = ({ label, value, onChange, min = 0, max = Infinity, step = 1, unit = '' }) => {
+    const handleDecrement = () => {
+        const newValue = Math.max(min, value - step);
+        onChange(newValue);
+    };
+
+    const handleIncrement = () => {
+        const newValue = Math.min(max, value + step);
+        onChange(newValue);
+    };
+
+    return (
+        <div className="flex items-center justify-between">
+            {label && <span className="font-semibold text-gray-200">{label}</span>}
+            <div className="flex items-center gap-2 bg-gray-900/50 rounded-lg p-1 border border-gray-600">
+                <button
+                    type="button"
+                    onClick={handleDecrement}
+                    disabled={value <= min}
+                    className="w-10 h-10 rounded-md bg-gray-700 hover:bg-gray-600 text-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center font-bold text-2xl transition-colors"
+                    aria-label="Decrease value"
+                >
+                    <MinusIcon className="w-5 h-5" />
+                </button>
+                <span className="w-20 text-center font-bold text-xl text-white">
+                    {value}{unit}
+                </span>
+                <button
+                    type="button"
+                    onClick={handleIncrement}
+                    disabled={value >= max}
+                    className="w-10 h-10 rounded-md bg-gray-700 hover:bg-gray-600 text-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center font-bold text-2xl transition-colors"
+                    aria-label="Increase value"
+                >
+                    <PlusIcon className="w-5 h-5" />
+                </button>
+            </div>
+        </div>
+    );
+};
+
 
 // --- Initial Data ---
 const initialExercises = [
@@ -76,15 +118,13 @@ const calculateVolume = (sets) => sets.reduce((total, set) => total + (set.reps 
 export default function WorkoutApp({ onClose }) {
     const [exercises] = useState(initialExercises);
     const [workoutHistory, setWorkoutHistory] = useState(initialWorkoutHistory);
-    // NEW: myWorkoutPlan stores detailed configuration for each exercise
     const [myWorkoutPlan, setMyWorkoutPlan] = useState([
         { exerciseId: 2, sets: 4, reps: 8, rest: 90 },
         { exerciseId: 1, sets: 3, reps: 10, rest: 60 },
     ]);
     const [currentView, setCurrentView] = useState('dailyTracking');
-    const [configuringExercise, setConfiguringExercise] = useState(null); // State to manage the settings modal
+    const [configuringExercise, setConfiguringExercise] = useState(null);
     
-    // NEW: myWorkoutList now merges plan details with exercise info
     const myWorkoutList = useMemo(() => 
         myWorkoutPlan.map(plan => {
             const exerciseDetails = exercises.find(ex => ex.id === plan.exerciseId);
@@ -93,12 +133,11 @@ export default function WorkoutApp({ onClose }) {
         [myWorkoutPlan, exercises]
     );
 
-    // NEW: This function handles adding a new configured exercise to the plan
     const handleAddExerciseToPlan = (settings) => {
         if (!myWorkoutPlan.some(p => p.exerciseId === settings.exerciseId)) {
             setMyWorkoutPlan(prev => [...prev, settings]);
         }
-        setConfiguringExercise(null); // Close the modal
+        setConfiguringExercise(null);
     };
     
     const handleRemoveFromMyWorkout = (exerciseId) => {
@@ -148,7 +187,6 @@ export default function WorkoutApp({ onClose }) {
                 </main>
                 <NavBar currentView={currentView} setCurrentView={setCurrentView} />
                 
-                {/* NEW: Render the settings modal when an exercise is being configured */}
                 {configuringExercise && (
                     <ExerciseSettingsModal
                         exercise={configuringExercise}
@@ -298,7 +336,7 @@ const ImageDetailModal = ({ exercise, onClose }) => {
     );
 };
 
-// --- NEW: Settings Modal for configuring an exercise ---
+// --- UPDATED: ExerciseSettingsModal now uses NumberStepper ---
 const ExerciseSettingsModal = ({ exercise, onClose, onSubmit }) => {
     const [sets, setSets] = useState(3);
     const [reps, setReps] = useState(10);
@@ -308,9 +346,9 @@ const ExerciseSettingsModal = ({ exercise, onClose, onSubmit }) => {
         e.preventDefault();
         onSubmit({
             exerciseId: exercise.id,
-            sets: Number(sets),
-            reps: Number(reps),
-            rest: Number(rest)
+            sets: sets,
+            reps: reps,
+            rest: rest
         });
     };
 
@@ -325,19 +363,10 @@ const ExerciseSettingsModal = ({ exercise, onClose, onSubmit }) => {
                     <p className="text-gray-400 text-sm mt-1">Thiết lập mục tiêu mặc định cho bài tập này.</p>
                 </div>
                 <form onSubmit={handleSubmit}>
-                    <div className="p-6 space-y-5">
-                        <div className="flex items-center justify-between">
-                            <label htmlFor="sets" className="font-semibold text-gray-200">Số set</label>
-                            <input type="number" id="sets" value={sets} onChange={(e) => setSets(e.target.value)} className="form-input w-24 text-center" min="1"/>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <label htmlFor="reps" className="font-semibold text-gray-200">Số rep mỗi set</label>
-                            <input type="number" id="reps" value={reps} onChange={(e) => setReps(e.target.value)} className="form-input w-24 text-center" min="1"/>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <label htmlFor="rest" className="font-semibold text-gray-200">Nghỉ giữa set (giây)</label>
-                            <input type="number" id="rest" value={rest} onChange={(e) => setRest(e.target.value)} className="form-input w-24 text-center" min="0" step="15"/>
-                        </div>
+                    <div className="p-6 space-y-6">
+                        <NumberStepper label="Số set" value={sets} onChange={setSets} min={1} />
+                        <NumberStepper label="Số rep mỗi set" value={reps} onChange={setReps} min={1} />
+                        <NumberStepper label="Nghỉ giữa set" value={rest} onChange={setRest} min={0} step={15} unit="s" />
                     </div>
                     <div className="bg-gray-700/50 p-4 text-right">
                          <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Thêm vào bài tập của tôi</button>
@@ -406,7 +435,6 @@ const MyWorkout = ({ workoutList, onRemove }) => (
     </Card>
 );
 
-// --- HEAVILY MODIFIED: DailyTracking component ---
 const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, workoutHistory }) => {
     const [loggingExercise, setLoggingExercise] = useState(null);
 
@@ -481,15 +509,14 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, worko
     );
 };
 
-// --- MODIFIED: LoggingModal ---
+// --- UPDATED: LoggingModal now uses NumberStepper ---
 const LoggingModal = ({ exercise, onClose, onSubmit }) => {
-    // Initialize sets based on the plan from the exercise object
     const [sets, setSets] = useState(() => 
-        Array.from({ length: exercise.sets }, () => ({ reps: '', weight: '' }))
+        Array.from({ length: exercise.sets }, () => ({ reps: exercise.reps, weight: 0 }))
     );
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
-    const handleAddSet = () => setSets([...sets, { reps: '', weight: '' }]);
+    const handleAddSet = () => setSets([...sets, { reps: exercise.reps, weight: 0 }]);
     const handleRemoveSet = (index) => sets.length > 1 && setSets(sets.filter((_, i) => i !== index));
     
     const handleSetChange = (index, field, value) => {
@@ -520,14 +547,28 @@ const LoggingModal = ({ exercise, onClose, onSubmit }) => {
                         <input type="date" id="date" value={date} onChange={(e) => setDate(e.target.value)} className="form-input"/>
                     </div>
                      <div>
-                        <h3 className="text-lg font-semibold text-gray-200 mb-2">Các set (Mục tiêu: {exercise.reps} reps)</h3>
-                        <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                        <h3 className="text-lg font-semibold text-gray-200 mb-2">Các set</h3>
+                        <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
                         {sets.map((set, index) => (
-                            <div key={index} className="flex items-center gap-3">
-                                <span className="text-gray-400 font-bold w-6 text-center">{index + 1}</span>
-                                <input type="number" placeholder="Reps" value={set.reps} onChange={(e) => handleSetChange(index, 'reps', e.target.value)} className="form-input w-full" min="0"/>
-                                <input type="number" placeholder="Weight (kg)" value={set.weight} onChange={(e) => handleSetChange(index, 'weight', e.target.value)} className="form-input w-full" min="0" step="0.5"/>
-                                <button type="button" onClick={() => handleRemoveSet(index)} className="p-2 text-red-500 hover:text-red-400 disabled:opacity-50" disabled={sets.length <= 1}><Trash2Icon /></button>
+                            <div key={index} className="flex items-start gap-3 bg-gray-900/50 p-3 rounded-lg border border-gray-700">
+                                <span className="text-emerald-400 font-bold w-6 text-center pt-2">{index + 1}</span>
+                                <div className="flex-1 space-y-3">
+                                   <NumberStepper 
+                                        label="Reps" 
+                                        value={set.reps} 
+                                        onChange={(newReps) => handleSetChange(index, 'reps', newReps)}
+                                        min={0}
+                                   />
+                                   <NumberStepper 
+                                        label="Weight" 
+                                        value={set.weight} 
+                                        onChange={(newWeight) => handleSetChange(index, 'weight', newWeight)}
+                                        min={0}
+                                        step={0.5}
+                                        unit="kg"
+                                   />
+                                </div>
+                                <button type="button" onClick={() => handleRemoveSet(index)} className="p-2 text-red-500 hover:text-red-400 disabled:opacity-50 mt-1" disabled={sets.length <= 1}><Trash2Icon className="w-5 h-5"/></button>
                             </div>
                         ))}
                         </div>
