@@ -59,7 +59,8 @@ const parseDetailedMeanings = (text: string): Map<string, string> => {
         const match = line.match(/\(([^)]+)\)/);
         if (match && match[1]) {
             const englishWord = match[1];
-            meaningsMap.set(englishWord, line.trim());
+            // THAY ĐỔI 1: Chuyển key thành chữ thường để tra cứu không phân biệt hoa/thường
+            meaningsMap.set(englishWord.toLowerCase(), line.trim());
         }
     }
     return meaningsMap;
@@ -92,7 +93,8 @@ export const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
         const cardId = i + 1;
         const rawWord = defaultVocabulary[i];
         const capitalizedWord = capitalizeFirstLetter(rawWord);
-        const detailedMeaning = detailedMeaningsMap.get(capitalizedWord);
+        // THAY ĐỔI 2: Dùng từ gốc (chữ thường) để tra cứu trong Map đã được chuẩn hóa
+        const detailedMeaning = detailedMeaningsMap.get(rawWord);
         const vocab: VocabularyData = {
             word: capitalizedWord,
             meaning: detailedMeaning || `Meaning of ${capitalizedWord}`,
