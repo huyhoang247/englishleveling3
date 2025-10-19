@@ -1,12 +1,11 @@
 // --- START OF FILE workout.tsx ---
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 // --- SVG Icons (No lucide-react) ---
 const ExpandIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V3h4M21 7V3h-4M3 17v4h4M21 17v4h-4"/></svg>
 );
-
 const DumbbellIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.4 14.4 9.6 9.6M18 6l-6 6M6 18l6-6"/><path d="M12 22a7 7 0 0 0 7-7"/><path d="M12 2a7 7 0 0 0-7 7"/></svg>
 );
@@ -18,6 +17,9 @@ const Trash2Icon = (props) => (
 );
 const TrendingUpIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+);
+const TrendingDownIcon = (props) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
 );
 const HistoryIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
@@ -34,6 +36,13 @@ const CheckSquareIcon = (props) => (
 const XIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
 );
+const TargetIcon = (props) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+);
+const ClockIcon = (props) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+);
+
 
 // --- SVG Icons for Exercises ---
 const SquatIcon = () => (
@@ -65,24 +74,35 @@ const calculateVolume = (sets) => sets.reduce((total, set) => total + (set.reps 
 
 // --- Main Application Component ---
 export default function WorkoutApp({ onClose }) {
-    const [exercises, setExercises] = useState(initialExercises);
+    const [exercises] = useState(initialExercises);
     const [workoutHistory, setWorkoutHistory] = useState(initialWorkoutHistory);
-    const [myWorkoutIds, setMyWorkoutIds] = useState([2, 1]);
-    const [currentView, setCurrentView] = useState('dailyTracking'); 
+    // NEW: myWorkoutPlan stores detailed configuration for each exercise
+    const [myWorkoutPlan, setMyWorkoutPlan] = useState([
+        { exerciseId: 2, sets: 4, reps: 8, rest: 90 },
+        { exerciseId: 1, sets: 3, reps: 10, rest: 60 },
+    ]);
+    const [currentView, setCurrentView] = useState('dailyTracking');
+    const [configuringExercise, setConfiguringExercise] = useState(null); // State to manage the settings modal
     
+    // NEW: myWorkoutList now merges plan details with exercise info
     const myWorkoutList = useMemo(() => 
-        exercises.filter(ex => myWorkoutIds.includes(ex.id)),
-        [myWorkoutIds, exercises]
+        myWorkoutPlan.map(plan => {
+            const exerciseDetails = exercises.find(ex => ex.id === plan.exerciseId);
+            return { ...exerciseDetails, ...plan };
+        }),
+        [myWorkoutPlan, exercises]
     );
 
-    const handleAddToMyWorkout = (exerciseId) => {
-        if (!myWorkoutIds.includes(exerciseId)) {
-            setMyWorkoutIds(prev => [...prev, exerciseId]);
+    // NEW: This function handles adding a new configured exercise to the plan
+    const handleAddExerciseToPlan = (settings) => {
+        if (!myWorkoutPlan.some(p => p.exerciseId === settings.exerciseId)) {
+            setMyWorkoutPlan(prev => [...prev, settings]);
         }
+        setConfiguringExercise(null); // Close the modal
     };
     
     const handleRemoveFromMyWorkout = (exerciseId) => {
-        setMyWorkoutIds(prev => prev.filter(id => id !== exerciseId));
+        setMyWorkoutPlan(prev => prev.filter(p => p.exerciseId !== exerciseId));
     };
 
     const handleLogWorkout = (newWorkout) => {
@@ -94,9 +114,14 @@ export default function WorkoutApp({ onClose }) {
     };
 
     const renderView = () => {
+        const myWorkoutIds = myWorkoutPlan.map(p => p.exerciseId);
         switch (currentView) {
             case 'library':
-                return <LibraryWorkout exercises={exercises} myWorkoutIds={myWorkoutIds} onAdd={handleAddToMyWorkout} />;
+                return <LibraryWorkout 
+                            exercises={exercises} 
+                            myWorkoutIds={myWorkoutIds} 
+                            onConfigure={setConfiguringExercise} 
+                       />;
             case 'myWorkout':
                 return <MyWorkout workoutList={myWorkoutList} onRemove={handleRemoveFromMyWorkout} />;
             case 'history':
@@ -105,7 +130,12 @@ export default function WorkoutApp({ onClose }) {
                 return <ProgressTracker history={workoutHistory} exercises={exercises} />;
             case 'dailyTracking':
             default:
-                return <DailyTracking myWorkoutList={myWorkoutList} onLogWorkout={handleLogWorkout} onNavigateToLibrary={() => setCurrentView('library')} />;
+                return <DailyTracking 
+                            myWorkoutList={myWorkoutList} 
+                            onLogWorkout={handleLogWorkout} 
+                            onNavigateToLibrary={() => setCurrentView('library')}
+                            workoutHistory={workoutHistory}
+                       />;
         }
     };
 
@@ -117,6 +147,15 @@ export default function WorkoutApp({ onClose }) {
                     {renderView()}
                 </main>
                 <NavBar currentView={currentView} setCurrentView={setCurrentView} />
+                
+                {/* NEW: Render the settings modal when an exercise is being configured */}
+                {configuringExercise && (
+                    <ExerciseSettingsModal
+                        exercise={configuringExercise}
+                        onClose={() => setConfiguringExercise(null)}
+                        onSubmit={handleAddExerciseToPlan}
+                    />
+                )}
             </div>
         </div>
     );
@@ -170,23 +209,16 @@ const NavBar = ({ currentView, setCurrentView }) => {
     );
 };
 
-// --- Custom SVG Line Chart (recharts replacement) ---
 const SimpleSVGChart = ({ data, yKey, strokeColor, title }) => {
     if (data.length < 2) return null;
-    const width = 300;
-    const height = 150;
-    const padding = 20;
-
+    const width = 300; const height = 150; const padding = 20;
     const yValues = data.map(d => d[yKey]);
-    const minY = Math.min(...yValues);
-    const maxY = Math.max(...yValues);
-
+    const minY = Math.min(...yValues); const maxY = Math.max(...yValues);
     const getCoords = (y, i) => {
         const x = (i / (data.length - 1)) * (width - padding * 2) + padding;
         const yCoord = height - padding - ((y - minY) / (maxY - minY + 1e-9)) * (height - padding * 2);
         return { x, y: yCoord };
     };
-
     const path = data.map((d, i) => {
         const { x, y } = getCoords(d[yKey], i);
         return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
@@ -198,9 +230,7 @@ const SimpleSVGChart = ({ data, yKey, strokeColor, title }) => {
             <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
                 <text x={padding-15} y={padding} dy="0.3em" fill="#9CA3AF" fontSize="10">{maxY.toFixed(0)}</text>
                 <text x={padding-15} y={height - padding} dy="0.3em" fill="#9CA3AF" fontSize="10">{minY.toFixed(0)}</text>
-
                 <path d={path} fill="none" stroke={strokeColor} strokeWidth="2" />
-                
                 {data.map((d, i) => {
                     const {x, y} = getCoords(d[yKey], i);
                     return <circle key={i} cx={x} cy={y} r="3" fill={strokeColor} />
@@ -213,7 +243,6 @@ const SimpleSVGChart = ({ data, yKey, strokeColor, title }) => {
         </div>
     )
 };
-
 
 const ProgressTracker = ({ history, exercises }) => {
     const [selectedExerciseId, setSelectedExerciseId] = useState(exercises[0]?.id || '');
@@ -252,8 +281,6 @@ const ProgressTracker = ({ history, exercises }) => {
     );
 };
 
-
-// --- Other components (largely unchanged) ---
 const ImageDetailModal = ({ exercise, onClose }) => {
     if (!exercise) return null;
     return (
@@ -271,7 +298,58 @@ const ImageDetailModal = ({ exercise, onClose }) => {
     );
 };
 
-const LibraryWorkout = ({ exercises, myWorkoutIds, onAdd }) => {
+// --- NEW: Settings Modal for configuring an exercise ---
+const ExerciseSettingsModal = ({ exercise, onClose, onSubmit }) => {
+    const [sets, setSets] = useState(3);
+    const [reps, setReps] = useState(10);
+    const [rest, setRest] = useState(60); // in seconds
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSubmit({
+            exerciseId: exercise.id,
+            sets: Number(sets),
+            reps: Number(reps),
+            rest: Number(rest)
+        });
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
+            <div className="bg-gray-800 rounded-xl shadow-lg w-full max-w-md">
+                <div className="p-6 border-b border-gray-700">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-white">Cài đặt: {exercise.name}</h2>
+                        <button onClick={onClose} className="text-gray-400 hover:text-white"><XIcon/></button>
+                    </div>
+                    <p className="text-gray-400 text-sm mt-1">Thiết lập mục tiêu mặc định cho bài tập này.</p>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="p-6 space-y-5">
+                        <div className="flex items-center justify-between">
+                            <label htmlFor="sets" className="font-semibold text-gray-200">Số set</label>
+                            <input type="number" id="sets" value={sets} onChange={(e) => setSets(e.target.value)} className="form-input w-24 text-center" min="1"/>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <label htmlFor="reps" className="font-semibold text-gray-200">Số rep mỗi set</label>
+                            <input type="number" id="reps" value={reps} onChange={(e) => setReps(e.target.value)} className="form-input w-24 text-center" min="1"/>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <label htmlFor="rest" className="font-semibold text-gray-200">Nghỉ giữa set (giây)</label>
+                            <input type="number" id="rest" value={rest} onChange={(e) => setRest(e.target.value)} className="form-input w-24 text-center" min="0" step="15"/>
+                        </div>
+                    </div>
+                    <div className="bg-gray-700/50 p-4 text-right">
+                         <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Thêm vào bài tập của tôi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+
+const LibraryWorkout = ({ exercises, myWorkoutIds, onConfigure }) => {
     const [viewingExercise, setViewingExercise] = useState(null);
 
     return (
@@ -282,17 +360,13 @@ const LibraryWorkout = ({ exercises, myWorkoutIds, onAdd }) => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
                     {exercises.map(ex => (
                         <div key={ex.id} className="relative bg-gray-700 rounded-lg p-4 flex flex-col items-center justify-between text-center">
-                            <button
-                                onClick={() => setViewingExercise(ex)}
-                                className="absolute top-1 right-1 p-1 text-gray-400 hover:text-white transition-colors z-10"
-                                aria-label={`View details for ${ex.name}`}
-                            >
+                            <button onClick={() => setViewingExercise(ex)} className="absolute top-1 right-1 p-1 text-gray-400 hover:text-white transition-colors z-10" aria-label={`View details for ${ex.name}`}>
                                 <ExpandIcon className="w-5 h-5" />
                             </button>
                             <div className="text-emerald-400 w-16 h-16 mb-2">{ex.icon}</div>
                             <h3 className="font-semibold text-sm h-10 flex items-center justify-center">{ex.name}</h3>
                             <button 
-                                onClick={() => onAdd(ex.id)}
+                                onClick={() => onConfigure(ex)}
                                 disabled={myWorkoutIds.includes(ex.id)}
                                 className="w-full mt-2 py-1 px-2 text-xs font-bold rounded transition-colors disabled:bg-emerald-700 disabled:text-emerald-300 bg-emerald-500 hover:bg-emerald-600 text-white"
                             >
@@ -310,15 +384,18 @@ const LibraryWorkout = ({ exercises, myWorkoutIds, onAdd }) => {
 const MyWorkout = ({ workoutList, onRemove }) => (
      <Card>
         <h2 className="card-title"><UserIcon className="mr-2"/>Các bài tập của tôi</h2>
-        <p className="text-gray-400 mt-1">Đây là những bài tập bạn đã chọn để theo dõi.</p>
+        <p className="text-gray-400 mt-1">Đây là những bài tập bạn đã chọn để theo dõi và kế hoạch của bạn.</p>
         <div className="space-y-3 mt-6">
             {workoutList.length > 0 ? workoutList.map(ex => (
                 <div key={ex.id} className="bg-gray-700 rounded-lg p-3 flex items-center justify-between">
                     <div className="flex items-center">
                        <div className="text-emerald-400 w-10 h-10 mr-4">{ex.icon}</div>
-                       <span className="font-semibold">{ex.name}</span>
+                       <div>
+                            <span className="font-semibold">{ex.name}</span>
+                            <p className="text-xs text-gray-400">{ex.sets} sets x {ex.reps} reps, nghỉ {ex.rest}s</p>
+                       </div>
                     </div>
-                    <button onClick={() => onRemove(ex.id)} className="p-2 text-gray-500 hover:text-red-500">
+                    <button onClick={() => onRemove(ex.exerciseId)} className="p-2 text-gray-500 hover:text-red-500">
                         <Trash2Icon />
                     </button>
                 </div>
@@ -329,8 +406,16 @@ const MyWorkout = ({ workoutList, onRemove }) => (
     </Card>
 );
 
-const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary }) => {
+// --- HEAVILY MODIFIED: DailyTracking component ---
+const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, workoutHistory }) => {
     const [loggingExercise, setLoggingExercise] = useState(null);
+
+    const findLastWorkout = (exerciseId) => {
+        return workoutHistory
+            .filter(w => w.exerciseId === exerciseId)
+            .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+    };
+
     if (myWorkoutList.length === 0) {
         return (
             <Card>
@@ -348,14 +433,38 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary }) => 
         <div className="pb-20 md:pb-0">
              <Card>
                 <h2 className="card-title"><CheckSquareIcon className="mr-2"/>Theo dõi hàng ngày</h2>
-                <p className="text-gray-400 mt-1">Chọn một bài tập bên dưới để ghi lại buổi tập hôm nay.</p>
+                <p className="text-gray-400 mt-1">Chọn một bài tập để ghi lại buổi tập hôm nay và xem tiến độ.</p>
                 <div className="space-y-3 mt-6">
-                    {myWorkoutList.map(ex => (
-                        <button key={ex.id} onClick={() => setLoggingExercise(ex)} className="w-full bg-gray-700 rounded-lg p-3 flex items-center text-left hover:bg-gray-600 transition-colors">
-                           <div className="text-emerald-400 w-10 h-10 mr-4">{ex.icon}</div>
-                           <span className="font-semibold">{ex.name}</span>
-                        </button>
-                    ))}
+                    {myWorkoutList.map(ex => {
+                        const lastWorkout = findLastWorkout(ex.exerciseId);
+                        const lastVolume = lastWorkout ? calculateVolume(lastWorkout.sets) : 0;
+                        const lastMaxWeight = lastWorkout ? Math.max(...lastWorkout.sets.map(s => s.weight)) : 0;
+
+                        return (
+                            <div key={ex.exerciseId} className="bg-gray-700 rounded-lg p-3 hover:bg-gray-600 transition-colors">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center">
+                                       <div className="text-emerald-400 w-12 h-12 mr-4">{ex.icon}</div>
+                                       <div>
+                                            <p className="font-bold text-lg">{ex.name}</p>
+                                            <div className="flex items-center gap-x-3 text-xs text-gray-300 mt-1">
+                                                <span className="flex items-center"><TargetIcon className="w-3 h-3 mr-1"/>{ex.sets} sets x {ex.reps} reps</span>
+                                                <span className="flex items-center"><ClockIcon className="w-3 h-3 mr-1"/>{ex.rest}s nghỉ</span>
+                                            </div>
+                                       </div>
+                                    </div>
+                                    <button onClick={() => setLoggingExercise(ex)} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg text-sm">Bắt đầu</button>
+                                </div>
+                                {lastWorkout && (
+                                    <div className="mt-3 pt-3 border-t border-gray-600 text-xs text-gray-400 flex justify-around">
+                                        <p><strong className="text-gray-200">Lần trước:</strong> {new Date(lastWorkout.date).toLocaleDateString()}</p>
+                                        <p><strong className="text-gray-200">Tổng KL:</strong> {lastVolume} kg</p>
+                                        <p><strong className="text-gray-200">Tạ nặng nhất:</strong> {lastMaxWeight} kg</p>
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    })}
                 </div>
             </Card>
             {loggingExercise && (
@@ -372,21 +481,30 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary }) => 
     );
 };
 
+// --- MODIFIED: LoggingModal ---
 const LoggingModal = ({ exercise, onClose, onSubmit }) => {
-    const [sets, setSets] = useState([{ reps: '', weight: '' }]);
+    // Initialize sets based on the plan from the exercise object
+    const [sets, setSets] = useState(() => 
+        Array.from({ length: exercise.sets }, () => ({ reps: '', weight: '' }))
+    );
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+
     const handleAddSet = () => setSets([...sets, { reps: '', weight: '' }]);
     const handleRemoveSet = (index) => sets.length > 1 && setSets(sets.filter((_, i) => i !== index));
+    
     const handleSetChange = (index, field, value) => {
         const newSets = [...sets];
         newSets[index][field] = value;
         setSets(newSets);
     };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         const validSets = sets.filter(set => set.reps > 0 && set.weight >= 0)
                                .map(set => ({ reps: Number(set.reps), weight: Number(set.weight) }));
-        if (validSets.length > 0) onSubmit({ exerciseId: exercise.id, date, sets: validSets });
+        if (validSets.length > 0) {
+            onSubmit({ exerciseId: exercise.id, date, sets: validSets });
+        }
     };
 
     return (
@@ -402,18 +520,18 @@ const LoggingModal = ({ exercise, onClose, onSubmit }) => {
                         <input type="date" id="date" value={date} onChange={(e) => setDate(e.target.value)} className="form-input"/>
                     </div>
                      <div>
-                        <h3 className="text-lg font-semibold text-gray-200 mb-2">Các set</h3>
+                        <h3 className="text-lg font-semibold text-gray-200 mb-2">Các set (Mục tiêu: {exercise.reps} reps)</h3>
                         <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
                         {sets.map((set, index) => (
                             <div key={index} className="flex items-center gap-3">
-                                <span className="text-gray-400 font-bold">{index + 1}</span>
+                                <span className="text-gray-400 font-bold w-6 text-center">{index + 1}</span>
                                 <input type="number" placeholder="Reps" value={set.reps} onChange={(e) => handleSetChange(index, 'reps', e.target.value)} className="form-input w-full" min="0"/>
                                 <input type="number" placeholder="Weight (kg)" value={set.weight} onChange={(e) => handleSetChange(index, 'weight', e.target.value)} className="form-input w-full" min="0" step="0.5"/>
                                 <button type="button" onClick={() => handleRemoveSet(index)} className="p-2 text-red-500 hover:text-red-400 disabled:opacity-50" disabled={sets.length <= 1}><Trash2Icon /></button>
                             </div>
                         ))}
                         </div>
-                        <button type="button" onClick={handleAddSet} className="mt-4 text-emerald-400 hover:text-emerald-300 font-semibold text-sm">+ Thêm set</button>
+                        <button type="button" onClick={handleAddSet} className="mt-4 text-emerald-400 hover:text-emerald-300 font-semibold text-sm">+ Thêm set (nếu cần)</button>
                     </div>
                     <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Lưu buổi tập</button>
                 </form>
