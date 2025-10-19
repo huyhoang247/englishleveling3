@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-// ADDED: Import BackButton component
+// ADDED: Import BackButton and CoinDisplay components
 import BackButton from './ui/back-button.tsx'; 
+import CoinDisplay from './ui/display/coin-display.tsx'; // Assuming coin-display.tsx is in the same folder
 
 // --- SVG Icons (No lucide-react) ---
 const ExpandIcon = (props) => (
@@ -151,44 +152,35 @@ export default function WorkoutApp({ onClose }) {
 
     const renderView = () => {
         const myWorkoutIds = myWorkoutPlan.map(p => p.exerciseId);
+        const viewProps = {
+            'library': { exercises, myWorkoutIds, onConfigure: setConfiguringExercise },
+            'myWorkout': { workoutList: myWorkoutList, onRemove: handleRemoveFromMyWorkout },
+            'history': { history: workoutHistory, exercises, onDelete: handleDeleteWorkout },
+            'progress': { history: workoutHistory, exercises },
+            'dailyTracking': { myWorkoutList, onLogWorkout, onNavigateToLibrary: () => setCurrentView('library'), workoutHistory }
+        };
+
         switch (currentView) {
-            case 'library':
-                return <LibraryWorkout 
-                            exercises={exercises} 
-                            myWorkoutIds={myWorkoutIds} 
-                            onConfigure={setConfiguringExercise} 
-                       />;
-            case 'myWorkout':
-                return <MyWorkout workoutList={myWorkoutList} onRemove={handleRemoveFromMyWorkout} />;
-            case 'history':
-                return <WorkoutHistoryView history={workoutHistory} exercises={exercises} onDelete={handleDeleteWorkout} />;
-            case 'progress':
-                return <ProgressTracker history={workoutHistory} exercises={exercises} />;
-            case 'dailyTracking':
-            default:
-                return <DailyTracking 
-                            myWorkoutList={myWorkoutList} 
-                            onLogWorkout={handleLogWorkout} 
-                            onNavigateToLibrary={() => setCurrentView('library')}
-                            workoutHistory={workoutHistory}
-                       />;
+            case 'library': return <LibraryWorkout {...viewProps.library} />;
+            case 'myWorkout': return <MyWorkout {...viewProps.myWorkout} />;
+            case 'history': return <WorkoutHistoryView {...viewProps.history} />;
+            case 'progress': return <ProgressTracker {...viewProps.progress} />;
+            case 'dailyTracking': default: return <DailyTracking {...viewProps.dailyTracking} />;
         }
     };
 
     return (
         <div className="bg-gray-900 text-white font-sans flex flex-col h-full max-w-4xl mx-auto overflow-hidden">
-            {/* Header is a fixed block at the top of the flex container */}
-            <Header onClose={onClose} currentView={currentView} />
+            {/* Header is a fixed block at the top */}
+            <Header onClose={onClose} />
 
             {/* The main content area grows to fill available space and is scrollable */}
             <main className="flex-1 overflow-y-auto p-4 pb-24 md:pb-4">
                 {renderView()}
             </main>
 
-            {/* The NavBar is a fixed block at the bottom, displayed only on mobile */}
-            <div className="flex-shrink-0">
-                <NavBar currentView={currentView} setCurrentView={setCurrentView} />
-            </div>
+            {/* The NavBar is now fixed and floats above the content */}
+            <NavBar currentView={currentView} setCurrentView={setCurrentView} />
             
             {/* Modals are portalled outside the main layout flow */}
             {configuringExercise && (
@@ -200,32 +192,21 @@ export default function WorkoutApp({ onClose }) {
 
 // --- Sub-components ---
 
-// CHANGED: Header component completely redesigned
-const Header = ({ onClose, currentView }) => {
-    const viewTitles = {
-        dailyTracking: 'Theo dõi hàng ngày',
-        library: 'Thư viện bài tập',
-        myWorkout: 'Bài tập của tôi',
-        history: 'Lịch sử tập luyện',
-        progress: 'Theo dõi tiến độ'
-    };
-    
-    const title = viewTitles[currentView] || 'Workout Tracker';
-
+// CHANGED: Header component updated to remove title and add CoinDisplay
+const Header = ({ onClose }) => {
     return (
-        <header className="relative flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
+        <header className="flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
             <div className="flex-shrink-0">
                  {/* Using the imported BackButton component */}
                  <BackButton onClick={onClose} label="Thoát" title="Đóng trình theo dõi" />
             </div>
-            <h1 className="text-xl font-bold text-white absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap">
-                {title}
-            </h1>
-            {/* The right side is intentionally empty for balance */}
+            {/* Title removed, CoinDisplay added */}
+            <CoinDisplay displayedCoins={12345} isStatsFullscreen={false} />
         </header>
     );
 };
 
+// CHANGED: NavBar completely redesigned for a modern, floating "pill" look
 const NavBar = ({ currentView, setCurrentView }) => {
     const navItems = [
         { id: 'dailyTracking', label: 'Hôm nay', icon: CheckSquareIcon },
@@ -236,12 +217,20 @@ const NavBar = ({ currentView, setCurrentView }) => {
     ];
 
     return (
-        <nav className="bg-gray-800 border-t border-gray-700 md:hidden z-50 flex-shrink-0">
-            <div className="flex justify-around">
+        <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm border border-gray-700 rounded-full shadow-lg shadow-black/30 md:hidden z-50">
+            <div className="flex justify-around items-center p-1 space-x-1">
                 {navItems.map(item => (
-                    <button key={item.id} onClick={() => setCurrentView(item.id)} className={`flex flex-col items-center justify-center p-2 w-full text-xs ${currentView === item.id ? 'text-emerald-400' : 'text-gray-400 hover:text-white'}`}>
+                    <button 
+                        key={item.id} 
+                        onClick={() => setCurrentView(item.id)} 
+                        className={`flex flex-col items-center justify-center p-2 rounded-full transition-all duration-300 w-16 h-16
+                            ${currentView === item.id 
+                                ? 'bg-gray-700 text-emerald-400' 
+                                : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`
+                        }
+                    >
                         <item.icon className="w-6 h-6 mb-1" />
-                        <span>{item.label}</span>
+                        <span className="text-xs font-medium">{item.label}</span>
                     </button>
                 ))}
             </div>
@@ -604,7 +593,6 @@ const WorkoutHistoryView = ({ history, exercises, onDelete }) => {
     const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return (
-        
         <Card>
             <h2 className="card-title"><HistoryIcon className="mr-2"/>Lịch sử tập luyện</h2>
             <div className="space-y-4 mt-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -627,7 +615,6 @@ const WorkoutHistoryView = ({ history, exercises, onDelete }) => {
                 )}) : <p className="text-gray-400 text-center py-8">Chưa có lịch sử tập luyện.</p>}
             </div>
         </Card>
-        
     );
 };
 
@@ -642,5 +629,3 @@ if (!document.getElementById('workout-styles')) {
     `;
     document.head.append(style);
 }
-
-// --- END OF FILE workout.tsx ---
