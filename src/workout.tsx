@@ -1,5 +1,3 @@
-// --- START OF FILE workout.tsx ---
-
 import React, { useState, useMemo, useEffect } from 'react';
 // ADDED: Import BackButton component
 import BackButton from './ui/back-button.tsx'; 
@@ -178,24 +176,24 @@ export default function WorkoutApp({ onClose }) {
     };
 
     return (
-        <div className="bg-gray-900 text-white min-h-screen font-sans">
-            <div className="container mx-auto p-4 max-w-4xl">
-                {/* CHANGED: Pass currentView to Header */}
-                <Header onClose={onClose} currentView={currentView} />
-                {/* CHANGED: Adjusted margin top for new header design */}
-                <main className="mt-6">
-                    {renderView()}
-                </main>
+        <div className="bg-gray-900 text-white font-sans flex flex-col h-full max-w-4xl mx-auto overflow-hidden">
+            {/* Header is a fixed block at the top of the flex container */}
+            <Header onClose={onClose} currentView={currentView} />
+
+            {/* The main content area grows to fill available space and is scrollable */}
+            <main className="flex-1 overflow-y-auto p-4 pb-24 md:pb-4">
+                {renderView()}
+            </main>
+
+            {/* The NavBar is a fixed block at the bottom, displayed only on mobile */}
+            <div className="flex-shrink-0">
                 <NavBar currentView={currentView} setCurrentView={setCurrentView} />
-                
-                {configuringExercise && (
-                    <ExerciseSettingsModal
-                        exercise={configuringExercise}
-                        onClose={() => setConfiguringExercise(null)}
-                        onSubmit={handleAddExerciseToPlan}
-                    />
-                )}
             </div>
+            
+            {/* Modals are portalled outside the main layout flow */}
+            {configuringExercise && (
+                <ExerciseSettingsModal exercise={configuringExercise} onClose={() => setConfiguringExercise(null)} onSubmit={handleAddExerciseToPlan} />
+            )}
         </div>
     );
 }
@@ -215,7 +213,7 @@ const Header = ({ onClose, currentView }) => {
     const title = viewTitles[currentView] || 'Workout Tracker';
 
     return (
-        <header className="relative flex items-center justify-between pb-4 border-b border-gray-700">
+        <header className="relative flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
             <div className="flex-shrink-0">
                  {/* Using the imported BackButton component */}
                  <BackButton onClick={onClose} label="Thoát" title="Đóng trình theo dõi" />
@@ -238,7 +236,7 @@ const NavBar = ({ currentView, setCurrentView }) => {
     ];
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 md:hidden z-50">
+        <nav className="bg-gray-800 border-t border-gray-700 md:hidden z-50 flex-shrink-0">
             <div className="flex justify-around">
                 {navItems.map(item => (
                     <button key={item.id} onClick={() => setCurrentView(item.id)} className={`flex flex-col items-center justify-center p-2 w-full text-xs ${currentView === item.id ? 'text-emerald-400' : 'text-gray-400 hover:text-white'}`}>
@@ -440,7 +438,7 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, worko
 
     if (myWorkoutList.length === 0) { return <Card><div className="text-center py-10"><h2 className="text-2xl font-bold mb-2">Chào mừng bạn!</h2><p className="text-gray-400 mb-6">Bạn chưa có bài tập nào. Hãy bắt đầu bằng cách thêm một vài bài tập từ thư viện.</p><button onClick={onNavigateToLibrary} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center transition duration-300 mx-auto">Đến thư viện</button></div></Card>; }
     return (
-        <div className="pb-20 md:pb-0">
+        <>
              <Card>
                 <h2 className="card-title"><CheckSquareIcon className="mr-2"/>Theo dõi hàng ngày</h2>
                 <p className="text-gray-400 mt-1">Chọn một bài tập để ghi lại buổi tập hôm nay và xem tiến độ.</p>
@@ -487,7 +485,7 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, worko
                     }}
                 />
             )}
-        </div>
+        </>
     );
 };
 
@@ -606,7 +604,7 @@ const WorkoutHistoryView = ({ history, exercises, onDelete }) => {
     const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     return (
-        <div className="pb-20 md:pb-0">
+        
         <Card>
             <h2 className="card-title"><HistoryIcon className="mr-2"/>Lịch sử tập luyện</h2>
             <div className="space-y-4 mt-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -629,7 +627,7 @@ const WorkoutHistoryView = ({ history, exercises, onDelete }) => {
                 )}) : <p className="text-gray-400 text-center py-8">Chưa có lịch sử tập luyện.</p>}
             </div>
         </Card>
-        </div>
+        
     );
 };
 
