@@ -206,7 +206,7 @@ const Header = ({ onClose }) => {
     );
 };
 
-// CHANGED: NavBar completely redesigned for a modern, floating "pill" look
+// CHANGED: NavBar completely redesigned for a modern, full-width footer look
 const NavBar = ({ currentView, setCurrentView }) => {
     const navItems = [
         { id: 'dailyTracking', label: 'Hôm nay', icon: CheckSquareIcon },
@@ -217,26 +217,40 @@ const NavBar = ({ currentView, setCurrentView }) => {
     ];
 
     return (
-        <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm border border-gray-700 rounded-full shadow-lg shadow-black/30 md:hidden z-50">
-            <div className="flex justify-around items-center p-1 space-x-1">
+        <nav className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 md:hidden z-50">
+            {/* Use padding-bottom with safe-area-inset-bottom for compatibility with modern phones */}
+            <div className="flex justify-around items-center px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
                 {navItems.map(item => (
-                    <button 
-                        key={item.id} 
-                        onClick={() => setCurrentView(item.id)} 
-                        className={`flex flex-col items-center justify-center p-2 rounded-full transition-all duration-300 w-16 h-16
-                            ${currentView === item.id 
-                                ? 'bg-gray-700 text-emerald-400' 
-                                : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`
-                        }
-                    >
-                        <item.icon className="w-6 h-6 mb-1" />
-                        <span className="text-xs font-medium">{item.label}</span>
-                    </button>
+                    (() => {
+                        const isActive = currentView === item.id;
+                        return (
+                            <button 
+                                key={item.id} 
+                                onClick={() => setCurrentView(item.id)} 
+                                className="group relative flex-1 flex flex-col items-center justify-center text-center h-14 transition-colors duration-300"
+                            >
+                                {/* Active indicator line */}
+                                <div className={`absolute top-0 h-1 w-8 bg-emerald-400 rounded-full transition-all duration-300 ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}></div>
+                                
+                                <item.icon 
+                                    className={`w-6 h-6 mb-0.5 transition-colors duration-300 
+                                        ${isActive ? 'text-emerald-400' : 'text-gray-500 group-hover:text-gray-300'}`
+                                    } 
+                                />
+                                <span className={`text-[10px] font-bold tracking-wide transition-colors duration-300 
+                                    ${isActive ? 'text-emerald-400' : 'text-gray-500 group-hover:text-gray-300'}`
+                                }>
+                                    {item.label}
+                                </span>
+                            </button>
+                        );
+                    })()
                 ))}
             </div>
         </nav>
     );
 };
+
 
 const SimpleSVGChart = ({ data, yKey, strokeColor, title }) => {
     if (data.length < 2) return null;
