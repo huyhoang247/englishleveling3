@@ -3,6 +3,10 @@
 import React, { useState, useMemo } from 'react';
 
 // --- SVG Icons (No lucide-react) ---
+const ExpandIcon = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V3h4M21 7V3h-4M3 17v4h4M21 17v4h-4"/></svg>
+);
+
 const DumbbellIcon = (props) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.4 14.4 9.6 9.6M18 6l-6 6M6 18l6-6"/><path d="M12 22a7 7 0 0 0 7-7"/><path d="M12 2a7 7 0 0 0-7 7"/></svg>
 );
@@ -39,7 +43,7 @@ const BenchPressIcon = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full"><rect x="20" y="70" width="60" height="10" rx="5" fill="currentColor"/><circle cx="50" cy="35" r="10" fill="currentColor"/><path d="M 50 45 L 30 60 L 70 60 Z" fill="currentColor"/><rect x="10" y="28" width="80" height="8" rx="4" fill="currentColor"/><rect x="5" y="24" width="5" height="16" fill="currentColor"/><rect x="90" y="24" width="5" height="16" fill="currentColor"/></svg>
 );
 const WristCurlIcon = () => (
-    <svg viewBox="0 0 100 100" className="w-full h-full"><path d="M 20 50 L 70 50 C 80 50, 80 65, 70 65 L 20 65 Z" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" /><rect x="70" y="40" width="10" height="30" rx="5" fill="currentColor" /><rect x="85" y="46" width="5" height="18" fill="currentColor" /></svg>
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/workout/wrist-curl.png" alt="Wrist Curl" className="w-full h-full object-contain" />
 );
 const DeadliftIcon = () => (
     <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="50" cy="35" r="8" fill="currentColor"/><path d="M 50 43 L 50 60 L 40 75 L 35 73 L 45 58" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 50 43 L 50 60 L 60 75 L 65 73 L 55 58" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 45 80 L 40 90" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 55 80 L 60 90" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><rect x="10" y="88" width="80" height="7" rx="3" fill="currentColor"/><rect x="5" y="80" width="5" height="15" fill="currentColor"/><rect x="90" y="80" width="5" height="15" fill="currentColor"/></svg>
@@ -250,27 +254,58 @@ const ProgressTracker = ({ history, exercises }) => {
 
 
 // --- Other components (largely unchanged) ---
-const LibraryWorkout = ({ exercises, myWorkoutIds, onAdd }) => (
-    <Card>
-        <h2 className="card-title"><BookOpenIcon className="mr-2"/>Thư viện bài tập</h2>
-        <p className="text-gray-400 mt-1">Thêm các bài tập vào danh sách của bạn để bắt đầu theo dõi.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
-            {exercises.map(ex => (
-                <div key={ex.id} className="bg-gray-700 rounded-lg p-4 flex flex-col items-center justify-between text-center">
-                    <div className="text-emerald-400 w-16 h-16 mb-2">{ex.icon}</div>
-                    <h3 className="font-semibold text-sm h-10 flex items-center">{ex.name}</h3>
-                    <button 
-                        onClick={() => onAdd(ex.id)}
-                        disabled={myWorkoutIds.includes(ex.id)}
-                        className="w-full mt-2 py-1 px-2 text-xs font-bold rounded transition-colors disabled:bg-emerald-700 disabled:text-emerald-300 bg-emerald-500 hover:bg-emerald-600 text-white"
-                    >
-                        {myWorkoutIds.includes(ex.id) ? 'Đã thêm' : 'Thêm'}
-                    </button>
+const ImageDetailModal = ({ exercise, onClose }) => {
+    if (!exercise) return null;
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[100] p-4" onClick={onClose}>
+            <div className="relative bg-gray-800 rounded-xl shadow-lg w-full max-w-lg p-4" onClick={(e) => e.stopPropagation()}>
+                <button onClick={onClose} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-white z-10" aria-label="Close image viewer">
+                    <XIcon className="w-8 h-8"/>
+                </button>
+                <h3 className="text-2xl font-bold text-center mb-4 text-white">{exercise.name}</h3>
+                <div className="w-full aspect-square text-white">
+                    {exercise.icon}
                 </div>
-            ))}
+            </div>
         </div>
-    </Card>
-);
+    );
+};
+
+const LibraryWorkout = ({ exercises, myWorkoutIds, onAdd }) => {
+    const [viewingExercise, setViewingExercise] = useState(null);
+
+    return (
+        <>
+            <Card>
+                <h2 className="card-title"><BookOpenIcon className="mr-2"/>Thư viện bài tập</h2>
+                <p className="text-gray-400 mt-1">Thêm các bài tập vào danh sách của bạn để bắt đầu theo dõi.</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
+                    {exercises.map(ex => (
+                        <div key={ex.id} className="relative bg-gray-700 rounded-lg p-4 flex flex-col items-center justify-between text-center">
+                            <button
+                                onClick={() => setViewingExercise(ex)}
+                                className="absolute top-1 right-1 p-1 text-gray-400 hover:text-white transition-colors z-10"
+                                aria-label={`View details for ${ex.name}`}
+                            >
+                                <ExpandIcon className="w-5 h-5" />
+                            </button>
+                            <div className="text-emerald-400 w-16 h-16 mb-2">{ex.icon}</div>
+                            <h3 className="font-semibold text-sm h-10 flex items-center justify-center">{ex.name}</h3>
+                            <button 
+                                onClick={() => onAdd(ex.id)}
+                                disabled={myWorkoutIds.includes(ex.id)}
+                                className="w-full mt-2 py-1 px-2 text-xs font-bold rounded transition-colors disabled:bg-emerald-700 disabled:text-emerald-300 bg-emerald-500 hover:bg-emerald-600 text-white"
+                            >
+                                {myWorkoutIds.includes(ex.id) ? 'Đã thêm' : 'Thêm'}
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </Card>
+            <ImageDetailModal exercise={viewingExercise} onClose={() => setViewingExercise(null)} />
+        </>
+    );
+};
 
 const MyWorkout = ({ workoutList, onRemove }) => (
      <Card>
