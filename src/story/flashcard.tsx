@@ -76,6 +76,24 @@ const animations = `
   .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; }
 `;
 
+// --- START: HÀM HELPER MỚI ---
+// Hàm này tìm từ trong ngoặc đơn và viết hoa chữ cái đầu
+const capitalizeWordInDefinition = (definition: string): string => {
+  if (!definition) return '';
+
+  // Hàm con để viết hoa chữ cái đầu
+  const capitalizeFirst = (str: string) => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
+  // Dùng regex để tìm và thay thế (word) bằng (Word)
+  return definition.replace(/\(([^)]+)\)/, (match, word) => {
+    return `(${capitalizeFirst(word)})`;
+  });
+};
+// --- END: HÀM HELPER MỚI ---
+
 const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   selectedCard,
   showVocabDetail,
@@ -368,8 +386,9 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                     </svg>
                     <span>{selectedCard.vocabulary.word}</span>
                   </div>
+                  {/* --- THAY ĐỔI QUAN TRỌNG --- */}
                   <p className="text-sm italic text-gray-600 dark:text-gray-400 leading-relaxed">
-                    {selectedCard.vocabulary.meaning}
+                    {capitalizeWordInDefinition(selectedCard.vocabulary.meaning)}
                   </p>
                 </div>
 
