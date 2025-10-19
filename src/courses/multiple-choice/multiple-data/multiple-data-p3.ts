@@ -4004,7 +4004,1009 @@ const QuizDataPart3 = [
     "question": "Từ \"Estimated\" trong tiếng Anh có nghĩa là?",
     "options": ["Ước tính", "Bị bắt", "Bán", "Ăn"],
     "correctAnswer": "Ước tính"
+  },
+  {
+    "question": "Từ \"Communicating\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sơn lên tường", "Giao tiếp", "Đóng gói", "Thu hoạch"],
+    "correctAnswer": "Giao tiếp"
+  },
+  {
+    "question": "Từ \"Stakeholders\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Các bên liên quan", "Những cây cổ thụ", "Thiết bị âm thanh", "Công trình thủy lợi"],
+    "correctAnswer": "Các bên liên quan"
+  },
+  {
+    "question": "Từ \"Assist\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Trợ giúp", "Tiêu thụ", "Phá hủy", "Nuôi dưỡng"],
+    "correctAnswer": "Trợ giúp"
+  },
+  {
+    "question": "Từ \"Panels\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hội đồng", "Loài bò lớn", "Giải pháp phần mềm", "Một loại bánh ngọt"],
+    "correctAnswer": "Hội đồng"
+  },
+  {
+    "question": "Từ \"Curiosity\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự tò mò", "Cơn bão nhỏ", "Dụng cụ đo lường", "Bản đồ đường bộ"],
+    "correctAnswer": "Sự tò mò"
+  },
+  {
+    "question": "Từ \"Buddy\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bạn thân", "Loại đá quý", "Hiện tượng thời tiết", "Dụng cụ y tế"],
+    "correctAnswer": "Bạn thân"
+  },
+  {
+    "question": "Từ \"Wages\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tiền lương", "Vé vào cửa", "Thức ăn cho gia súc", "Hàng tồn kho"],
+    "correctAnswer": "Tiền lương"
+  },
+  {
+    "question": "Từ \"Suspect\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nghi ngờ", "Nâng cao trình độ", "Vẽ phác thảo", "Trồng cây"],
+    "correctAnswer": "Nghi ngờ"
+  },
+  {
+    "question": "Từ \"Capitol\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tòa nhà quốc hội", "Cây cầu bắc qua sông", "Khu rừng rậm", "Thư viện thành phố"],
+    "correctAnswer": "Tòa nhà quốc hội"
+  },
+  {
+    "question": "Từ \"Shorter\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ngắn hơn", "Sáng hơn", "Mạnh hơn", "Rộng hơn"],
+    "correctAnswer": "Ngắn hơn"
+  },
+  {
+    "question": "Từ \"Designers\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhà thiết kế", "Nhà văn lịch sử", "Kỹ sư mỏ", "Quản trị viên hệ thống"],
+    "correctAnswer": "Nhà thiết kế"
+  },
+  {
+    "question": "Từ \"Organisms\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sinh vật", "Nhạc cụ dây", "Loại vải dệt", "Bộ phận động cơ"],
+    "correctAnswer": "Sinh vật"
+  },
+  {
+    "question": "Từ \"Competing\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đang cạnh tranh", "Đang nấu nướng", "Đang sửa chữa", "Đang bảo trì"],
+    "correctAnswer": "Đang cạnh tranh"
+  },
+  {
+    "question": "Từ \"Recession\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Suy thoái", "Lễ hội đường phố", "Cuộc diễu hành", "Mùa hoa nở"],
+    "correctAnswer": "Suy thoái"
+  },
+  {
+    "question": "Từ \"Profits\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lợi nhuận", "Chi phí vận chuyển", "Diện tích mặt bằng", "Thời hạn bảo hành"],
+    "correctAnswer": "Lợi nhuận"
+  },
+  {
+    "question": "Từ \"Evolve\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tiến hoá", "Đóng gói sản phẩm", "Làm sạch bề mặt", "Gấp sách lại"],
+    "correctAnswer": "Tiến hoá"
+  },
+  {
+    "question": "Từ \"Shares\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cổ phần", "Chiếc ghế dài", "Đồ trang trí tường", "Khóa học trực tuyến"],
+    "correctAnswer": "Cổ phần"
+  },
+  {
+    "question": "Từ \"Pipeline\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đường ống dẫn", "Sân bay quốc tế", "Nhà hát lớn", "Ngân hàng dữ liệu"],
+    "correctAnswer": "Đường ống dẫn"
+  },
+  {
+    "question": "Từ \"Literacy\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Biết đọc biết viết", "Kỹ năng nấu ăn", "Khả năng bơi lội", "Tốc độ truyền tải dữ liệu"],
+    "correctAnswer": "Biết đọc biết viết"
+  },
+  {
+    "question": "Từ \"Cyber\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Liên quan đến mạng máy tính", "Thuộc về nông nghiệp", "Về kỹ thuật xây dựng", "Loại vải tổng hợp"],
+    "correctAnswer": "Liên quan đến mạng máy tính"
+  },
+  {
+    "question": "Từ \"horses\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Máy bay", "Trái cây", "Sách", "Ngựa"],
+    "correctAnswer": "Ngựa"
+  },
+  {
+    "question": "Từ \"crystal\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cây", "Tinh thể", "Âm nhạc", "Nhà"],
+    "correctAnswer": "Tinh thể"
+  },
+  {
+    "question": "Từ \"criticism\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lời chúc", "Sự khen ngợi", "Sự phê bình", "Thông báo"],
+    "correctAnswer": "Sự phê bình"
+  },
+  {
+    "question": "Từ \"temporary\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Vĩnh viễn", "Liên tục", "Ngay lập tức", "Tạm thời"],
+    "correctAnswer": "Tạm thời"
+  },
+  {
+    "question": "Từ \"variation\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự biến đổi", "Giải thưởng", "Tài liệu", "Chân dung"],
+    "correctAnswer": "Sự biến đổi"
+  },
+  {
+    "question": "Từ \"Corps\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cửa hàng", "Đoàn", "Con đường", "Nhiệm vụ"],
+    "correctAnswer": "Đoàn"
+  },
+  {
+    "question": "Từ \"flu\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bỏng", "Dị ứng", "Cúm", "Chấn thương"],
+    "correctAnswer": "Cúm"
+  },
+  {
+    "question": "Từ \"magnitude\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Màu sắc", "Tốc độ", "Vị trí", "Độ lớn"],
+    "correctAnswer": "Độ lớn"
+  },
+  {
+    "question": "Từ \"breast\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ngực", "Bàn tay", "Bàn chân", "Cột sống"],
+    "correctAnswer": "Ngực"
+  },
+  {
+    "question": "Từ \"relation\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự kiện", "Mối quan hệ", "Lượng hàng", "Món quà"],
+    "correctAnswer": "Mối quan hệ"
+  },
+  {
+    "question": "Từ \"trash\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tiền", "Đèn", "Rác", "Máy móc"],
+    "correctAnswer": "Rác"
+  },
+  {
+    "question": "Từ \"compute\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Vẽ", "Ca hát", "Nấu ăn", "Tính toán"],
+    "correctAnswer": "Tính toán"
+  },
+  {
+    "question": "Từ \"Fox\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cáo", "Voi", "Lạc đà", "Ngỗng"],
+    "correctAnswer": "Cáo"
+  },
+  {
+    "question": "Từ \"migration\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự sinh sản", "Sự di cư", "Sự phân hủy", "Sự chụp ảnh"],
+    "correctAnswer": "Sự di cư"
+  },
+  {
+    "question": "Từ \"presenting\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Xây dựng", "Ngủ", "Trình bày", "Chạy bộ"],
+    "correctAnswer": "Trình bày"
+  },
+  {
+    "question": "Từ \"civilization\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Công cụ", "Lễ hội", "Bản đồ", "Nền văn minh"],
+    "correctAnswer": "Nền văn minh"
+  },
+  {
+    "question": "Từ \"directors\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Các giám đốc", "Hộp đựng", "Bếp trưởng", "Người bán hàng"],
+    "correctAnswer": "Các giám đốc"
+  },
+  {
+    "question": "Từ \"laser\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Dao", "Tia laser", "Giày dép", "Thuyền"],
+    "correctAnswer": "Tia laser"
+  },
+  {
+    "question": "Từ \"enjoying\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phàn nàn", "Quên", "Tận hưởng", "Kết thúc"],
+    "correctAnswer": "Tận hưởng"
+  },
+  {
+    "question": "Từ \"promoting\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phá hủy", "Giấu", "Giảm bớt", "Quảng bá"],
+    "correctAnswer": "Quảng bá"
+  },
+  {
+    "question": "Từ \"template\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bản đồ", "Mẫu", "Nhạc nền", "Thức ăn"],
+    "correctAnswer": "Mẫu"
+  },
+  {
+    "question": "Từ \"burned\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bị cháy", "Lạnh", "Ngọt", "Mềm"],
+    "correctAnswer": "Bị cháy"
+  },
+  {
+    "question": "Từ \"implementing\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thực hiện", "Đốt cháy", "Viết thư", "Ngủ"],
+    "correctAnswer": "Thực hiện"
+  },
+  {
+    "question": "Từ \"abortion\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phá thai", "Kết hôn", "Sinh con", "Chia tay"],
+    "correctAnswer": "Phá thai"
+  },
+  {
+    "question": "Từ \"infected\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bị nhiễm", "Lành lặn", "Sạch sẽ", "Khỏe mạnh"],
+    "correctAnswer": "Bị nhiễm"
+  },
+  {
+    "question": "Từ \"silence\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự im lặng", "Tiếng ồn", "Âm nhạc", "Lời nói"],
+    "correctAnswer": "Sự im lặng"
+  },
+  {
+    "question": "Từ \"drivers\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tài xế", "Bác sĩ", "Kỹ sư", "Giảng viên"],
+    "correctAnswer": "Tài xế"
+  },
+  {
+    "question": "Từ \"reminds\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhắc nhở", "Quên", "Đánh mất", "Làm mới"],
+    "correctAnswer": "Nhắc nhở"
+  },
+  {
+    "question": "Từ \"bomb\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bom", "Bánh", "Bút", "Bóng"],
+    "correctAnswer": "Bom"
+  },
+  {
+    "question": "Từ \"meets\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Gặp", "Đánh", "Ăn", "Ngủ"],
+    "correctAnswer": "Gặp"
+  },
+  {
+    "question": "Từ \"vacuum\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chân không", "Một loại thực phẩm", "Căn hộ", "Khu vườn"],
+    "correctAnswer": "Chân không"
+  },
+  {
+    "question": "Từ \"documentary\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phim tài liệu", "Phim hoạt hình", "Kịch", "Bài hát"],
+    "correctAnswer": "Phim tài liệu"
+  },
+  {
+    "question": "Từ \"smoking\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hút thuốc", "Ăn uống", "Tắm rửa", "Chạy bộ"],
+    "correctAnswer": "Hút thuốc"
+  },
+  {
+    "question": "Từ \"stated\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đã nêu", "Đã quên", "Đã mua", "Đã học"],
+    "correctAnswer": "Đã nêu"
+  },
+  {
+    "question": "Từ \"micro\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhỏ", "Lớn", "Nhờ", "Mạnh"],
+    "correctAnswer": "Nhỏ"
+  },
+  {
+    "question": "Từ \"masks\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Mặt nạ", "Đôi giày", "Bàn", "Quần áo"],
+    "correctAnswer": "Mặt nạ"
+  },
+  {
+    "question": "Từ \"mathematics\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Toán học", "Văn học", "Lịch sử", "Địa lý"],
+    "correctAnswer": "Toán học"
+  },
+  {
+    "question": "Từ \"creators\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Người sáng tạo", "Khách hàng", "Người mua", "Người bị tạo"],
+    "correctAnswer": "Người sáng tạo"
+  },
+  {
+    "question": "Từ \"lists\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Danh sách", "Bản đồ", "Bức tranh", "Bài thơ"],
+    "correctAnswer": "Danh sách"
+  },
+  {
+    "question": "Từ \"Mexican\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Người Mexico", "Người Mỹ", "Người Pháp", "Người Nhật"],
+    "correctAnswer": "Người Mexico"
+  },
+  {
+    "question": "Từ \"Responded\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bắt đầu", "Nhảy", "Trả lời", "Quên đi"],
+    "correctAnswer": "Trả lời"
+  },
+  {
+    "question": "Từ \"Invisible\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Trong suốt", "Vô hình", "Nặng nề", "Ồn ào"],
+    "correctAnswer": "Vô hình"
+  },
+  {
+    "question": "Từ \"Graphic\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đồ họa", "Thơ ca", "Âm nhạc", "Thời tiết"],
+    "correctAnswer": "Đồ họa"
+  },
+  {
+    "question": "Từ \"Presidents\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Những cửa hàng", "Những loài cây", "Các tổng thống", "Các ngôi nhà"],
+    "correctAnswer": "Các tổng thống"
+  },
+  {
+    "question": "Từ \"Quantity\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Màu sắc", "Số lượng", "Chuyển động", "Âm lượng"],
+    "correctAnswer": "Số lượng"
+  },
+  {
+    "question": "Từ \"Coordinate\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nấu ăn", "Phối hợp", "Ngủ", "Vẽ tranh"],
+    "correctAnswer": "Phối hợp"
+  },
+  {
+    "question": "Từ \"Preparation\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Trò chơi", "Sự chuẩn bị", "Hành trình", "Giải thưởng"],
+    "correctAnswer": "Sự chuẩn bị"
+  },
+  {
+    "question": "Từ \"Embedded\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Di chuyển nhanh", "Được gắn", "Rơi ra", "Ăn uống"],
+    "correctAnswer": "Được gắn"
+  },
+  {
+    "question": "Từ \"Jones\" trong tiếng Anh thường được dùng để chỉ:",
+    "options": ["Một loại hoa", "Một động từ chỉ hành động", "Một họ", "Một đơn vị đo lường"],
+    "correctAnswer": "Một họ"
+  },
+  {
+    "question": "Từ \"Inform\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lãng phí", "Thông báo", "Tắm rửa", "Vẽ bản đồ"],
+    "correctAnswer": "Thông báo"
+  },
+  {
+    "question": "Từ \"Commonly\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hiếm khi", "Đặc biệt", "Thông thường", "Ngay lập tức"],
+    "correctAnswer": "Thông thường"
+  },
+  {
+    "question": "Từ \"Alaska\" trong tiếng Anh chỉ:",
+    "options": ["Một loại đồ ăn", "Một nghề nghiệp", "Một tiểu bang của Hoa Kỳ", "Một hiện tượng thời tiết"],
+    "correctAnswer": "Một tiểu bang của Hoa Kỳ"
+  },
+  {
+    "question": "Từ \"O'clock\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đồng hồ bị hỏng", "Giờ", "Phút", "Lịch âm"],
+    "correctAnswer": "Giờ"
+  },
+  {
+    "question": "Từ \"Corporation\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Một loại cây", "Một món ăn", "Tập đoàn", "Một công viên"],
+    "correctAnswer": "Tập đoàn"
+  },
+  {
+    "question": "Từ \"Ensuring\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Quên mất", "Đảm bảo", "Chơi đùa", "Vẽ tranh"],
+    "correctAnswer": "Đảm bảo"
+  },
+  {
+    "question": "Từ \"Horizon\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bề mặt tường", "Chân trời", "Một dụng cụ bếp", "Khoảnh khắc"],
+    "correctAnswer": "Chân trời"
+  },
+  {
+    "question": "Từ \"Celebration\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự im lặng", "Một bữa ăn nhẹ", "Lễ kỷ niệm", "Một căn phòng"],
+    "correctAnswer": "Lễ kỷ niệm"
+  },
+  {
+    "question": "Từ \"Retail\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Vận chuyển hàng hóa", "Bán lẻ", "Sản xuất hàng loạt", "Lưu trữ dữ liệu"],
+    "correctAnswer": "Bán lẻ"
+  },
+  {
+    "question": "Từ \"Mainstream\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Rìa ngoài", "Riêng tư", "Đại chúng", "Hiếm gặp"],
+    "correctAnswer": "Đại chúng"
+  },
+  {
+    "question": "Từ \"Clouds\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sấm sét", "Tuyết", "Mây", "Cát"],
+    "correctAnswer": "Mây"
+  },
+  {
+    "question": "Từ \"Agricultural\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thuộc y học", "Thuộc công nghiệp", "Thuộc nông nghiệp", "Thuộc quân đội"],
+    "correctAnswer": "Thuộc nông nghiệp"
+  },
+  {
+    "question": "Từ \"Apologize\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cảm ơn", "Xin lỗi", "Chúc mừng", "Khen ngợi"],
+    "correctAnswer": "Xin lỗi"
+  },
+  {
+    "question": "Từ \"Tracks\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Dấu vết", "Báo cáo tài chính", "Hợp đồng", "Công thức"],
+    "correctAnswer": "Dấu vết"
+  },
+  {
+    "question": "Từ \"Confirmed\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bị hủy", "Đang chờ", "Đã được xác nhận", "Bị lãng quên"],
+    "correctAnswer": "Đã được xác nhận"
+  },
+  {
+    "question": "Từ \"Veteran\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhà văn", "Người mới", "Nhân viên tạm thời", "Cựu chiến binh"],
+    "correctAnswer": "Cựu chiến binh"
+  },
+  {
+    "question": "Từ \"Campaigns\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Kế toán", "Chiến dịch", "Buổi hòa nhạc", "Lễ hội"],
+    "correctAnswer": "Chiến dịch"
+  },
+  {
+    "question": "Từ \"Abroad\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ở nhà", "Trong nước", "Tại văn phòng", "Ở nước ngoài"],
+    "correctAnswer": "Ở nước ngoài"
+  },
+  {
+    "question": "Từ \"Publish\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tiêu thụ", "Xuất bản", "Phá hủy", "Giữ bí mật"],
+    "correctAnswer": "Xuất bản"
+  },
+  {
+    "question": "Từ \"Demands\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lời chúc", "Giảm giá", "Những yêu cầu", "Thông báo tin tức"],
+    "correctAnswer": "Những yêu cầu"
+  },
+  {
+    "question": "Từ \"Diagram\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Văn bản dài", "Sơ đồ", "Bài thơ", "Nhạc nền"],
+    "correctAnswer": "Sơ đồ"
+  },
+  {
+    "question": "Từ \"Atom\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Công cụ cơ khí", "Nguyên liệu sản xuất", "Nguyên tử", "Loại vải"],
+    "correctAnswer": "Nguyên tử"
+  },
+  {
+    "question": "Từ \"Fraction\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tổng hợp", "Phép nhân", "Phân số", "Số nguyên"],
+    "correctAnswer": "Phân số"
+  },
+  {
+    "question": "Từ \"Neighbor\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đồng nghiệp", "Người lạ", "Người thân", "Hàng xóm"],
+    "correctAnswer": "Hàng xóm"
+  },
+  {
+    "question": "Từ \"Claimed\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Từ chối", "Đặt hàng", "Khẳng định", "Trả lại"],
+    "correctAnswer": "Khẳng định"
+  },
+  {
+    "question": "Từ \"Influenced\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Độc lập", "Thống trị", "Bỏ qua", "Bị ảnh hưởng"],
+    "correctAnswer": "Bị ảnh hưởng"
+  },
+  {
+    "question": "Từ \"Pose\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Giải quyết", "Phá hủy", "Xây dựng", "Tạo tư thế"],
+    "correctAnswer": "Tạo tư thế"
+  },
+  {
+    "question": "Từ \"Substantial\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhỏ bé", "Tạm thời", "Không quan trọng", "Đáng kể"],
+    "correctAnswer": "Đáng kể"
+  },
+  {
+    "question": "Từ \"Beneficial\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Vô ích", "Có hại", "Đắt tiền", "Có lợi"],
+    "correctAnswer": "Có lợi"
+  },
+  {
+    "question": "Từ \"Legitimate\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Giả mạo", "Đáng ngờ", "Bất hợp pháp", "Hợp pháp"],
+    "correctAnswer": "Hợp pháp"
+  },
+  {
+    "question": "Từ \"Scratch\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Dán keo", "Đánh bóng", "Sơn mới", "Làm xước"],
+    "correctAnswer": "Làm xước"
+  },
+  {
+    "question": "Từ \"Generous\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Im lặng", "Lạnh", "Hào phóng", "Nhỏ bé"],
+    "correctAnswer": "Hào phóng"
+  },
+  {
+    "question": "Từ \"Thread\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sợi chỉ", "Chiếc ghế", "Cái đèn", "Bài hát"],
+    "correctAnswer": "Sợi chỉ"
+  },
+  {
+    "question": "Từ \"Bold\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Mỏng", "Táo bạo", "Ướt", "Nhạt"],
+    "correctAnswer": "Táo bạo"
+  },
+  {
+    "question": "Từ \"Transparent\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Trong suốt", "Nặng", "Ồn ào", "Tối"],
+    "correctAnswer": "Trong suốt"
+  },
+  {
+    "question": "Từ \"Reminded\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đã được nhắc", "Đã ngủ", "Đã ăn", "Đã chạy"],
+    "correctAnswer": "Đã được nhắc"
+  },
+  {
+    "question": "Từ \"Realistic\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Huyền bí", "Thực tế", "Nhanh", "Xa lạ"],
+    "correctAnswer": "Thực tế"
+  },
+  {
+    "question": "Từ \"Louis\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Một tên riêng", "Một loại cây", "Một dụng cụ gia đình", "Một đơn vị đo lường"],
+    "correctAnswer": "Một tên riêng"
+  },
+  {
+    "question": "Từ \"Riding\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cưỡi", "Nấu ăn", "Đọc sách", "Ngủ"],
+    "correctAnswer": "Cưỡi"
+  },
+  {
+    "question": "Từ \"Pollution\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ô nhiễm", "Âm nhạc", "Sự sạch sẽ", "Sự tốt lành"],
+    "correctAnswer": "Ô nhiễm"
+  },
+  {
+    "question": "Từ \"Magical\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ma thuật", "Khoa học", "Buồn bã", "Thực tế"],
+    "correctAnswer": "Ma thuật"
+  },
+  {
+    "question": "Từ \"Rush\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Vội vã", "Thư giãn", "Ăn uống", "Màu sắc"],
+    "correctAnswer": "Vội vã"
+  },
+  {
+    "question": "Từ \"Molecular\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phân tử", "Cây cối", "Thành phố", "Đồ dùng"],
+    "correctAnswer": "Phân tử"
+  },
+  {
+    "question": "Từ \"Reader\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Người đọc", "Người bán hàng", "Người lái xe", "Người làm vườn"],
+    "correctAnswer": "Người đọc"
+  },
+  {
+    "question": "Từ \"Enhance\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phá hủy", "Cải thiện", "Đứng yên", "Chặn lại"],
+    "correctAnswer": "Cải thiện"
+  },
+  {
+    "question": "Từ \"Explaining\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Giải thích", "Ngủ", "Ăn uống", "Cười"],
+    "correctAnswer": "Giải thích"
+  },
+  {
+    "question": "Từ \"Flood\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lũ lụt", "Lửa", "Gió", "Trăng"],
+    "correctAnswer": "Lũ lụt"
+  },
+  {
+    "question": "Từ \"Gate\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cổng", "Ly uống nước", "Bút", "Gối"],
+    "correctAnswer": "Cổng"
+  },
+  {
+    "question": "Từ \"Checked\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đã kiểm tra", "Đang bay", "Đang nhảy", "Đang nấu"],
+    "correctAnswer": "Đã kiểm tra"
+  },
+  {
+    "question": "Từ \"Oldest\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lớn tuổi nhất", "Trẻ nhất", "Mới nhất", "Nhỏ bé"],
+    "correctAnswer": "Lớn tuổi nhất"
+  },
+  {
+    "question": "Từ \"Beef\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thịt bò", "Giấy", "Đường", "Gỗ"],
+    "correctAnswer": "Thịt bò"
+  },
+  {
+    "question": "Từ \"flash\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chớp sáng", "Âm thanh", "Mùi", "Mưa"],
+    "correctAnswer": "Chớp sáng"
+  },
+  {
+    "question": "Từ \"nutrition\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Máy móc", "Dinh dưỡng", "Nghệ thuật", "Hành vi"],
+    "correctAnswer": "Dinh dưỡng"
+  },
+  {
+    "question": "Từ \"measurement\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lời mời", "Hình vẽ", "Phép đo", "Thời gian biểu"],
+    "correctAnswer": "Phép đo"
+  },
+  {
+    "question": "Từ \"diagnosed\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đã du lịch", "Đã ký hợp đồng", "Đã trả tiền", "Đã được chẩn đoán"],
+    "correctAnswer": "Đã được chẩn đoán"
+  },
+  {
+    "question": "Từ \"journalism\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nghề báo", "Khoa học máy tính", "Kiến trúc", "Thể thao"],
+    "correctAnswer": "Nghề báo"
+  },
+  {
+    "question": "Từ \"boards\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Căn hộ", "Tấm ván", "Loài thực vật", "Hệ điều hành"],
+    "correctAnswer": "Tấm ván"
+  },
+  {
+    "question": "Từ \"monster\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thiết bị y tế", "Bài hát", "Quái vật", "Công ty"],
+    "correctAnswer": "Quái vật"
+  },
+  {
+    "question": "Từ \"floating\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Cố định", "Bụi bặm", "Nóng lên", "Nổi"],
+    "correctAnswer": "Nổi"
+  },
+  {
+    "question": "Từ \"societies\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Các xã hội", "Phương pháp khoa học", "Thức ăn nhẹ", "Vật liệu xây dựng"],
+    "correctAnswer": "Các xã hội"
+  },
+  {
+    "question": "Từ \"observations\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Kế hoạch hành động", "Những quan sát", "Bản đồ", "Hóa đơn"],
+    "correctAnswer": "Những quan sát"
+  },
+  {
+    "question": "Từ \"attract\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đẩy ra xa", "Bán hàng", "Thu hút", "Phá hủy"],
+    "correctAnswer": "Thu hút"
+  },
+  {
+    "question": "Từ \"rarely\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Luôn luôn", "Sớm nhất", "Gần đây", "Hiếm khi"],
+    "correctAnswer": "Hiếm khi"
+  },
+  {
+    "question": "Từ \"cuz\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bởi vì", "Một loại thực phẩm", "Tên một công ty", "Một con số"],
+    "correctAnswer": "Bởi vì"
+  },
+  {
+    "question": "Từ \"bend\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhảy múa", "Uốn cong", "Nấu ăn", "Lái xe"],
+    "correctAnswer": "Uốn cong"
+  },
+  {
+    "question": "Từ \"fees\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Món quà", "Công cụ", "Lệ phí", "Địa chỉ"],
+    "correctAnswer": "Lệ phí"
+  },
+  {
+    "question": "Từ \"interacting\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Viết nhật ký", "Lắng nghe một chiều", "Di chuyển nhanh", "Tương tác"],
+    "correctAnswer": "Tương tác"
+  },
+  {
+    "question": "Từ \"sixth\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thứ sáu", "Ngày trong tuần không rõ", "Một loại đồ uống", "Một đơn vị tiền tệ"],
+    "correctAnswer": "Thứ sáu"
+  },
+  {
+    "question": "Từ \"Hong\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Một hành động", "Tên riêng", "Một màu sắc chung chung", "Một phép đo"],
+    "correctAnswer": "Tên riêng"
+  },
+  {
+    "question": "Từ \"balanced\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nhanh chóng", "Đơn giản", "Cân bằng", "Thô ráp"],
+    "correctAnswer": "Cân bằng"
+  },
+  {
+    "question": "Từ \"forgotten\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Được nhớ kỹ", "Đang chờ", "Đã hoàn thành", "Bị lãng quên"],
+    "correctAnswer": "Bị lãng quên"
+  },
+  {
+    "question": "Từ \"Install\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ăn uống", "Cài đặt", "Bay", "Hát"],
+    "correctAnswer": "Cài đặt"
+  },
+  {
+    "question": "Từ \"Susan\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Một loài cây", "Tên người", "Một thành phố", "Một dụng cụ"],
+    "correctAnswer": "Tên người"
+  },
+  {
+    "question": "Từ \"Issued\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đã phát hành", "Đang nhảy", "Màu sắc", "Nơi ở"],
+    "correctAnswer": "Đã phát hành"
+  },
+  {
+    "question": "Từ \"Stored\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bị mất", "Được lưu trữ", "Đang chạy", "Đẹp"],
+    "correctAnswer": "Được lưu trữ"
+  },
+  {
+    "question": "Từ \"Warming\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Làm lạnh", "Sự ấm lên", "Tiếng ồn", "Ánh sáng"],
+    "correctAnswer": "Sự ấm lên"
+  },
+  {
+    "question": "Từ \"Uniform\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đồng phục", "Ngọn núi", "Con vật", "Âm nhạc"],
+    "correctAnswer": "Đồng phục"
+  },
+  {
+    "question": "Từ \"Ass\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chiếc ô", "Con lừa", "Hành động", "Đồ ăn"],
+    "correctAnswer": "Con lừa"
+  },
+  {
+    "question": "Từ \"Belt\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thắt lưng", "Tường", "Kính", "Máy tính"],
+    "correctAnswer": "Thắt lưng"
+  },
+  {
+    "question": "Từ \"Dozen\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Một chục (10)", "Một tá (12)", "Một trăm (100)", "Một nửa"],
+    "correctAnswer": "Một tá (12)"
+  },
+  {
+    "question": "Từ \"Ted\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tên người", "Một loại trái cây", "Một loài chim", "Một nghề nghiệp"],
+    "correctAnswer": "Tên người"
+  },
+  {
+    "question": "Từ \"Chip\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chiếc ghế", "Mảnh nhỏ", "Tòa nhà", "Cảm xúc"],
+    "correctAnswer": "Mảnh nhỏ"
+  },
+  {
+    "question": "Từ \"Angel\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thiên thần", "Cây cối", "Công cụ", "Hiện tượng thời tiết"],
+    "correctAnswer": "Thiên thần"
+  },
+  {
+    "question": "Từ \"Armed\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Có vũ trang", "Không có gì", "Đang ngủ", "Ngọt"],
+    "correctAnswer": "Có vũ trang"
+  },
+  {
+    "question": "Từ \"Spain\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Một đồ vật", "Tên người", "Tây Ban Nha", "Một hành động"],
+    "correctAnswer": "Tây Ban Nha"
+  },
+  {
+    "question": "Từ \"Designs\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thiết kế", "Ăn tối", "Di chuyển nhanh", "Nghe nhạc"],
+    "correctAnswer": "Thiết kế"
+  },
+  {
+    "question": "Từ \"Strengthen\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Làm yếu đi", "Củng cố", "Bán", "Chụp ảnh"],
+    "correctAnswer": "Củng cố"
+  },
+  {
+    "question": "Từ \"Loose\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chặt", "Lỏng", "Lạnh", "Nhỏ bé"],
+    "correctAnswer": "Lỏng"
+  },
+  {
+    "question": "Từ \"Advocacy\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự ủng hộ", "Đồ uống", "Một loại vải", "Nơi trú ẩn"],
+    "correctAnswer": "Sự ủng hộ"
+  },
+  {
+    "question": "Từ \"Jumping\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chạy", "Nhảy", "Ngồi", "Đọc"],
+    "correctAnswer": "Nhảy"
+  },
+  {
+    "question": "Từ \"Setup\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự thiết lập", "Màu sắc", "Một loại trái cây", "Ngủ"],
+    "correctAnswer": "Sự thiết lập"
+  },
+  {
+    "question": "Từ \"frustrated\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ngạc nhiên", "Đói", "Bực bội", "Thành công"],
+    "correctAnswer": "Bực bội"
+  },
+  {
+    "question": "Từ \"grain\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Kim loại", "Động vật", "Ngũ cốc", "Nhiệt độ"],
+    "correctAnswer": "Ngũ cốc"
+  },
+  {
+    "question": "Từ \"bonus\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hình phạt", "Tiền thưởng", "Món chính", "Vé vào cửa"],
+    "correctAnswer": "Tiền thưởng"
+  },
+  {
+    "question": "Từ \"tears\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lá rơi", "Nước mắt", "Đường mòn", "Tiếng cười"],
+    "correctAnswer": "Nước mắt"
+  },
+  {
+    "question": "Từ \"plain\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Một loại trái cây", "Sang trọng", "Đơn giản", "Công ty"],
+    "correctAnswer": "Đơn giản"
+  },
+  {
+    "question": "Từ \"recover\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Mất", "Hồi phục", "Cho vay", "Phá hủy"],
+    "correctAnswer": "Hồi phục"
+  },
+  {
+    "question": "Từ \"Amy\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Món ăn", "Tính từ", "Tên riêng", "Loại đá"],
+    "correctAnswer": "Tên riêng"
+  },
+  {
+    "question": "Từ \"hybrid\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nguyên chất", "Riêng biệt hoàn toàn", "Kết hợp", "Một loại cảm xúc"],
+    "correctAnswer": "Kết hợp"
+  },
+  {
+    "question": "Từ \"secondly\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đầu tiên", "Thứ hai", "Cuối cùng", "Vì vậy"],
+    "correctAnswer": "Thứ hai"
+  },
+  {
+    "question": "Từ \"comedy\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bi kịch", "Hài kịch", "Khoa học", "Tự truyện"],
+    "correctAnswer": "Hài kịch"
+  },
+  {
+    "question": "Từ \"composition\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bài luận", "Bài tập thể dục", "Công việc nội trợ", "Điểm yếu"],
+    "correctAnswer": "Bài luận"
+  },
+  {
+    "question": "Từ \"followers\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Người lãnh đạo", "Người theo dõi", "Người sáng tạo", "Người ngủ"],
+    "correctAnswer": "Người theo dõi"
+  },
+  {
+    "question": "Từ \"appeal\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sức hấp dẫn", "Sự ghét bỏ", "Phát hiện khoa học", "Một đơn vị đo lường"],
+    "correctAnswer": "Sức hấp dẫn"
+  },
+  {
+    "question": "Từ \"stocks\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Vật nuôi", "Cổ phiếu", "Thức ăn nhanh", "Hộp thư"],
+    "correctAnswer": "Cổ phiếu"
+  },
+  {
+    "question": "Từ \"grandmother\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Mẹ", "Chị", "Bà", "Người hàng xóm"],
+    "correctAnswer": "Bà"
+  },
+  {
+    "question": "Từ \"odds\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chẵn", "Khả năng", "Chiều", "Hòa bình"],
+    "correctAnswer": "Khả năng"
+  },
+  {
+    "question": "Từ \"politically\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Về mặt y tế", "Về mặt nghệ thuật", "Về mặt chính trị", "Về mặt ẩm thực"],
+    "correctAnswer": "Về mặt chính trị"
+  },
+  {
+    "question": "Từ \"valid\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Hợp lệ", "Màu đỏ", "Nhỏ bé", "Đẹp"],
+    "correctAnswer": "Hợp lệ"
+  },
+  {
+    "question": "Từ \"yoga\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Môn hát", "Yoga", "Một loại xe", "Công thức nấu ăn"],
+    "correctAnswer": "Yoga"
+  },
+  {
+    "question": "Từ \"consent\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Bắt buộc", "Đồng ý", "Sự lạm dụng", "Sự trừng phạt"],
+    "correctAnswer": "Đồng ý"
+  },
+  {
+    "question": "Từ \"kidding\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Khóc", "Đùa", "Chạy", "Ăn"],
+    "correctAnswer": "Đùa"
+  },
+  {
+    "question": "Từ \"Diego\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Một màu sắc", "Tên riêng", "Một loại trái cây", "Một dụng cụ nhà bếp"],
+    "correctAnswer": "Tên riêng"
+  },
+  {
+    "question": "Từ \"columbia\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tên riêng", "Một loại vải", "Một hành động", "Một nghề nghiệp"],
+    "correctAnswer": "Tên riêng"
+  },
+  {
+    "question": "Từ \"deficit\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sự thiếu hụt", "Một công cụ âm nhạc", "Một kiểu trang phục", "Một loại cây"],
+    "correctAnswer": "Sự thiếu hụt"
+  },
+  {
+    "question": "Từ \"cure\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chữa khỏi", "Xây dựng", "Nhảy múa", "Bán hàng"],
+    "correctAnswer": "Chữa khỏi"
+  },
+  {
+    "question": "Từ \"harvest\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Lái xe", "Thu hoạch", "Viết lách", "Ngủ nghỉ"],
+    "correctAnswer": "Thu hoạch"
+  },
+  {
+    "question": "Từ \"fraud\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Gian lận", "Tặng quà", "Hát hò", "Dọn dẹp"],
+    "correctAnswer": "Gian lận"
+  },
+  {
+    "question": "Từ \"congressional\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Thuộc quốc hội", "Thuộc nông nghiệp", "Thuộc y tế", "Thuộc thể thao"],
+    "correctAnswer": "Thuộc quốc hội"
+  },
+  {
+    "question": "Từ \"corruption\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tham nhũng", "Sạch sẽ", "Hòa bình", "Sáng sủa"],
+    "correctAnswer": "Tham nhũng"
+  },
+  {
+    "question": "Từ \"explains\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Phá hủy", "Giải thích", "Im lặng", "Quên"],
+    "correctAnswer": "Giải thích"
+  },
+  {
+    "question": "Từ \"hunting\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Săn bắn", "Trồng trọt", "Bơi lội", "Đọc sách"],
+    "correctAnswer": "Săn bắn"
+  },
+  {
+    "question": "Từ \"frozen\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Nóng", "Bị đóng băng", "Mềm", "Sống"],
+    "correctAnswer": "Bị đóng băng"
+  },
+  {
+    "question": "Từ \"collapse\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Sụp đổ", "Mở rộng", "Tăng trưởng", "Bắt đầu"],
+    "correctAnswer": "Sụp đổ"
+  },
+  {
+    "question": "Từ \"subtle\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tế nhị", "Thô lỗ", "To lớn", "Ồn ào"],
+    "correctAnswer": "Tế nhị"
+  },
+  {
+    "question": "Từ \"gained\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Đạt được", "Mất đi", "Đứng yên", "Đọc sách"],
+    "correctAnswer": "Đạt được"
+  },
+  {
+    "question": "Từ \"ill\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Ốm", "Khỏe mạnh", "Đẹp", "Cũ"],
+    "correctAnswer": "Ốm"
+  },
+  {
+    "question": "Từ \"capitalism\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Chủ nghĩa tư bản", "Chế độ ăn kiêng", "Một ngôn ngữ", "Một loại bệnh"],
+    "correctAnswer": "Chủ nghĩa tư bản"
+  },
+  {
+    "question": "Từ \"terrific\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Tuyệt vời", "Bình thường", "Xấu", "Chậm"],
+    "correctAnswer": "Tuyệt vời"
+  },
+  {
+    "question": "Từ \"persons\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Những người", "Đồ vật", "Loài cây", "Một địa điểm"],
+    "correctAnswer": "Những người"
+  },
+  {
+    "question": "Từ \"worthy\" trong tiếng Anh có nghĩa là gì?",
+    "options": ["Xứng đáng", "Vô dụng", "Rẻ tiền", "Lạnh lùng"],
+    "correctAnswer": "Xứng đáng"
   }
+
+
  
 
 
