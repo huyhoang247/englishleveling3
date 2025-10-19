@@ -157,7 +157,7 @@ export default function WorkoutApp({ onClose }) {
             'myWorkout': { workoutList: myWorkoutList, onRemove: handleRemoveFromMyWorkout },
             'history': { history: workoutHistory, exercises, onDelete: handleDeleteWorkout },
             'progress': { history: workoutHistory, exercises },
-            'dailyTracking': { myWorkoutList, onLogWorkout, onNavigateToLibrary: () => setCurrentView('library'), workoutHistory }
+            'dailyTracking': { myWorkoutList, onLogWorkout: handleLogWorkout, onNavigateToLibrary: () => setCurrentView('library'), workoutHistory }
         };
 
         switch (currentView) {
