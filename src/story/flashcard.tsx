@@ -28,13 +28,12 @@ const SoundWaveIcon = ({ className }: { className: string }) => ( <svg xmlns="ht
 const CheckIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg> );
 
 
-// --- START: POPUP CHỌN GIỌNG ĐỌC ---
+// --- START: POPUP CHỌN GIỌNG ĐỌC (REWORKED FOR CENTERING) ---
 interface VoiceSelectionPopupProps {
   availableVoices: string[];
   currentVoice: string;
   onSelectVoice: (voice: string) => void;
   onClose: () => void;
-  triggerRef: React.RefObject<HTMLButtonElement>;
 }
 
 const VoiceSelectionPopup: React.FC<VoiceSelectionPopupProps> = ({
@@ -42,46 +41,33 @@ const VoiceSelectionPopup: React.FC<VoiceSelectionPopupProps> = ({
   currentVoice,
   onSelectVoice,
   onClose,
-  triggerRef,
 }) => {
   const popupRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ top: 0, left: 0, opacity: 0 });
 
+  // Effect to handle closing the popup with the Escape key for better accessibility
   useEffect(() => {
-    if (triggerRef.current && popupRef.current) {
-      const triggerRect = triggerRef.current.getBoundingClientRect();
-      const popupRect = popupRef.current.getBoundingClientRect();
-      
-      let top = triggerRect.top - popupRect.height - 12; // 12px gap
-      let left = triggerRect.left + (triggerRect.width / 2) - (popupRect.width / 2);
-
-      if (top < 10) top = triggerRect.bottom + 12;
-      if (left < 10) left = 10;
-      if (left + popupRect.width > window.innerWidth - 10) left = window.innerWidth - popupRect.width - 10;
-
-      setPosition({ top, left, opacity: 1 });
-    }
-    
-    const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) onClose();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [triggerRef, onClose]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
 
   return (
-    <>
-      <div className="fixed inset-0 z-[98]" onClick={onClose} />
+    <div
+      className="fixed inset-0 z-[98] flex items-center justify-center bg-black/50 animate-popup-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
       <div
         ref={popupRef}
-        className="fixed z-[99] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-64 transition-all duration-200 ease-out"
-        style={{
-          top: `${position.top}px`,
-          left: `${position.left}px`,
-          opacity: position.opacity,
-          transformOrigin: 'bottom center',
-          transform: position.opacity ? 'scale(1)' : 'scale(0.95)',
-        }}
+        className="z-[99] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-64 animate-popup-content"
+        onClick={(e) => e.stopPropagation()} // Prevent clicks inside the popup from closing it
       >
         <div className="p-3 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-sm font-semibold text-center text-gray-700 dark:text-gray-200">Chọn Giọng Đọc</h3>
@@ -93,8 +79,8 @@ const VoiceSelectionPopup: React.FC<VoiceSelectionPopupProps> = ({
                 <button
                   onClick={() => onSelectVoice(voice)}
                   className={`w-full flex items-center justify-between text-left px-3 py-2.5 rounded-lg transition-colors duration-150 ${
-                    currentVoice === voice 
-                      ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300' 
+                    currentVoice === voice
+                      ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300'
                       : 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/60'
                   }`}
                 >
@@ -109,13 +95,13 @@ const VoiceSelectionPopup: React.FC<VoiceSelectionPopupProps> = ({
           </ul>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 // --- END: POPUP CHỌN GIỌNG ĐỌC ---
 
 
-// --- MODIFIED: VoiceStepper component to accept ref and onClick ---
+// --- MODIFIED: VoiceStepper component simplified (no forwardRef needed) ---
 type VoiceStepperProps = {
   currentVoice: string;
   onNavigate: (direction: 'next' | 'previous') => void;
@@ -123,8 +109,7 @@ type VoiceStepperProps = {
   onClick?: () => void;
 };
 
-const VoiceStepper = React.forwardRef<HTMLButtonElement, VoiceStepperProps>(
-  ({ currentVoice, onNavigate, availableVoiceCount, onClick }, ref) => {
+const VoiceStepper: React.FC<VoiceStepperProps> = ({ currentVoice, onNavigate, availableVoiceCount, onClick }) => {
     if (availableVoiceCount <= 1) {
       return null;
     }
@@ -140,7 +125,6 @@ const VoiceStepper = React.forwardRef<HTMLButtonElement, VoiceStepperProps>(
         </button>
 
         <button
-          ref={ref}
           onClick={onClick}
           className="text-center w-20 overflow-hidden px-1 h-7 flex items-center justify-center rounded-md hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors duration-200"
           aria-label="Chọn giọng đọc"
@@ -162,20 +146,25 @@ const VoiceStepper = React.forwardRef<HTMLButtonElement, VoiceStepperProps>(
         </button>
       </div>
     );
-  }
-);
+};
 // --- END: CÁC COMPONENT & ICON ---
 
 
-// Animation styles - Clean and minimal
+// Animation styles - Added popup animations
 const animations = `
   @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
   @keyframes modalBackdropIn { 0% { opacity: 0; } 100% { opacity: 0.4; } }
   @keyframes slideUp { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
   @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
   
+  /* --- NEW ANIMATIONS FOR POPUP --- */
+  @keyframes popup-overlay-in { 0% { opacity: 0; } 100% { opacity: 1; } }
+  @keyframes popup-content-in { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+  
   .content-transition { animation: slideUp 0.3s ease-out; }
   .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; }
+  .animate-popup-overlay { animation: popup-overlay-in 0.2s ease-out forwards; }
+  .animate-popup-content { animation: popup-content-in 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
 `;
 
 // --- START: HÀM HELPER MỚI ---
@@ -219,9 +208,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     isPlaying: false,
   });
 
-  // --- NEW: State and Ref for Voice Selection Popup ---
+  // --- REMOVED: voiceStepperRef is no longer needed ---
   const [isVoicePopupOpen, setIsVoicePopupOpen] = useState(false);
-  const voiceStepperRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (showVocabDetail && selectedCard) {
@@ -416,9 +404,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                        >
                          { isPlaying ? <PauseIcon className="w-4 h-4" /> : <VolumeUpIcon className="w-4 h-4" /> }
                        </button>
-                       {/* --- MODIFIED: Added ref and onClick for popup --- */}
+                       {/* --- MODIFIED: Removed ref for popup --- */}
                        <VoiceStepper
-                          ref={voiceStepperRef}
                           onClick={() => setIsVoicePopupOpen(true)}
                           currentVoice={selectedVoice}
                           onNavigate={handleChangeVoiceDirection}
@@ -482,9 +469,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                           <h5 className="text-sm font-semibold text-gray-600 dark:text-gray-400">Phát âm</h5>
                        </div>
                        <div className="flex items-center gap-2">
-                          {/* --- MODIFIED: Added ref and onClick for popup --- */}
+                          {/* --- MODIFIED: Removed ref for popup --- */}
                           <VoiceStepper
-                             ref={voiceStepperRef}
                              onClick={() => setIsVoicePopupOpen(true)}
                              currentVoice={selectedVoice}
                              onNavigate={handleChangeVoiceDirection}
@@ -553,14 +539,13 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           {renderModalContent()}
       </div>
 
-      {/* --- NEW: RENDER VOICE SELECTION POPUP --- */}
+      {/* --- MODIFIED: RENDER CENTERED VOICE SELECTION POPUP --- */}
       {isVoicePopupOpen && audioUrls && (
         <VoiceSelectionPopup
           availableVoices={Object.keys(audioUrls)}
           currentVoice={selectedVoice}
           onSelectVoice={handleSelectVoice}
           onClose={() => setIsVoicePopupOpen(false)}
-          triggerRef={voiceStepperRef}
         />
       )}
     </>
