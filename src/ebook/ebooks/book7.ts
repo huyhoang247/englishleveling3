@@ -1,4 +1,3 @@
---- START OF FILE book7.tfffdds.txt ---
 
 import { Book } from '../types';
 
