@@ -41,10 +41,10 @@ While this inflammatory response may feel unpleasant, it effectively purges Salm
 But there are times when a Salmonella infection may require more treatment.
 It can lead to severe dehydration, particularly in children and older patients.
 And in some unusual cases, Salmonella can continue to spread through the body, hiding inside immune cells, invading other organs and tissues, and even poisoning the blood.
-These cases occur if a person is infected by a rare but powerful type of Salmonella called S. typhi.
-Unlike other strains, S. typhi doesn’t infect chickens— It spreads from person to person, mainly via poor sanitation and untreated drinking water.
-Although it’s uncommon in many parts of the world, typhoid fever, the disease that S. typhi causes, still kills over 100,000 people yearly.
-Thankfully, there are vaccines to prevent infection by S. typhi.
+These cases occur if a person is infected by a rare but powerful type of Salmonella called Styphi.
+Unlike other strains, Styphi doesn’t infect chickens— It spreads from person to person, mainly via poor sanitation and untreated drinking water.
+Although it’s uncommon in many parts of the world, typhoid fever, the disease that Styphi causes, still kills over 100,000 people yearly.
+Thankfully, there are vaccines to prevent infection by Styphi.
 To avoid milder variants, there are steps that everyone can take, like washing your hands, avoiding unpasteurized milk, and cooking meat and eggs thoroughly.
 Cookie dough should be off limits: raw eggs and flour both carry a Salmonella risk.
 And there are ways to stop Salmonella at its source.
@@ -54,7 +54,8 @@ In Europe, many countries have successfully reduced Salmonella by requiring test
 But there's still work to be done if we want to stop the spread of this incredibly crafty pathogen.
   `,
   contentVi: `
-
+Translator: Nguyen Dang Khoi
+Reviewer: Nhat Minh Nguyen Ha
 Ở một trang trại nào đó tại Iowa vào năm 2010, một con gà mái đẻ trứng.
 Chỉ trong vài tuần ngắn ngủi, quả trứng này sẽ trở thành tâm điểm của một đợt bùng phát nhiễm khuẩn lớn: hàng nghìn người ngã bệnh, hàng triệu quả trứng bị thu hồi, và một loạt ông lớn trong ngành công nghiệp trứng cuối cùng vướng vòng lao lý, tất cả chỉ vì một loại vi khuẩn nhỏ bé nhưng đầy quyền lực.
 Mỗi năm, Salmonella lây nhiễm cho hàng triệu người trên khắp thế giới, gây sốt, đau quặn bụng và tiêu chảy.
@@ -85,10 +86,10 @@ Dù phản ứng viêm này gây khó chịu, nhưng nó giúp quét sạch Salm
 Tuy nhiên, đôi khi nhiễm Salmonella lại cần điều trị nhiều hơn.
 Nó có thể gây mất nước nghiêm trọng, nhất là ở trẻ nhỏ và người già.
 Trong vài trường hợp hiếm, Salmonella có thể lan khắp cơ thể, ẩn trong tế bào miễn dịch, xâm nhập cơ quan và mô khác, thậm chí còn gây nhiễm độc máu.
-Những ca này xảy ra khi người bệnh nhiễm phải một chủng hiếm nhưng mạnh, gọi là S. typhi.
-Không giống các chủng khác, S. typhi không lây qua gà — mà lây từ người sang người, chủ yếu do vệ sinh kém và nguồn nước uống không được xử lý.
-Dù hiếm gặp ở nhiều nơi, nhưng bệnh thương hàn do S. typhi vẫn cướp đi sinh mạng hơn 100.000 người mỗi năm.
-May mắn là đã có vắc xin ngăn ngừa S. typhi.
+Những ca này xảy ra khi người bệnh nhiễm phải một chủng hiếm nhưng mạnh, gọi là Styphi.
+Không giống các chủng khác, Styphi không lây qua gà — mà lây từ người sang người, chủ yếu do vệ sinh kém và nguồn nước uống không được xử lý.
+Dù hiếm gặp ở nhiều nơi, nhưng bệnh thương hàn do Styphi vẫn cướp đi sinh mạng hơn 100.000 người mỗi năm.
+May mắn là đã có vắc xin ngăn ngừa Styphi.
 Để tránh các biến thể nhẹ hơn, ai cũng có thể chủ động phòng tránh, như rửa tay sạch, tránh sữa chưa tiệt trùng, và nấu chín kỹ thịt cùng trứng.
 Bột bánh quy sống nên tránh xa: cả trứng sống và bột mì đều tiềm ẩn nguy cơ Salmonella.
 Vẫn có cách chặn Salmonella ngay từ gốc rễ.
