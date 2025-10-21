@@ -54,8 +54,7 @@ In Europe, many countries have successfully reduced Salmonella by requiring test
 But there's still work to be done if we want to stop the spread of this incredibly crafty pathogen.
   `,
   contentVi: `
-Translator: Nguyen Dang Khoi
-Reviewer: Nhat Minh Nguyen Ha
+
 Ở một trang trại nào đó tại Iowa vào năm 2010, một con gà mái đẻ trứng.
 Chỉ trong vài tuần ngắn ngủi, quả trứng này sẽ trở thành tâm điểm của một đợt bùng phát nhiễm khuẩn lớn: hàng nghìn người ngã bệnh, hàng triệu quả trứng bị thu hồi, và một loạt ông lớn trong ngành công nghiệp trứng cuối cùng vướng vòng lao lý, tất cả chỉ vì một loại vi khuẩn nhỏ bé nhưng đầy quyền lực.
 Mỗi năm, Salmonella lây nhiễm cho hàng triệu người trên khắp thế giới, gây sốt, đau quặn bụng và tiêu chảy.
