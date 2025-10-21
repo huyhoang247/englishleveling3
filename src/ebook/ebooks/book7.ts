@@ -4,10 +4,10 @@ export const book7Data: Book = {
   id: 'book7',
   title: "Is it really that bad to eat cookie dough?",
   author: 'Emma Bryce',
-  category: 'Ted-Ed',
-  coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/006.jpg',
+  category: 'TED-Ed',
+  coverImageUrl: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/audio-ted/image/007.jpg',
   audioUrls: {
-    'Raw': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/audio/origin-voice/006.mp3',
+    'Raw': 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/audio-ted/audio/origin-voice/007.mp3',
   },
   content: `
   
