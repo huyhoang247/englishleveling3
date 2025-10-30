@@ -9,6 +9,9 @@ const photographyBaseUrl = "https://raw.githubusercontent.com/englishleveling46/
 // URL cơ sở cho các ảnh phong cách minh hoạ (illustration)
 const illustrationBaseUrl = "https://raw.githubusercontent.com/englishleveling46/Flashcard/main/image-illustration/";
 
+// ADDED: URL cơ sở cho các ảnh phong cách hiện thực (realistic)
+const realisticBaseUrl = "https://raw.githubusercontent.com/englishleveling46/Flashcard/main/image-realistic/";
+
 /**
  * Hàm trợ giúp để tạo ra một chuỗi các URL theo một quy tắc nhất định.
  * @param baseUrl - URL cơ sở của kho ảnh (ví dụ: cho anime, photography).
@@ -66,9 +69,10 @@ export const illustrationImageUrls: string[] = urlBlocks.flatMap(block =>
   generateUrls(illustrationBaseUrl, block.folder, block.start, block.end)
 );
 
+// ADDED: Tạo mảng URL cho phong cách hiện thực (realistic)
+export const realisticImageUrls: string[] = urlBlocks.flatMap(block =>
+  generateUrls(realisticBaseUrl, block.folder, block.start, block.end)
+);
 
-// Bạn có thể thêm các mảng URL ảnh cho các phong cách khác tại đây nếu muốn
-// export const comicImageUrls: string[] = [ ... ];
-// export const realisticImageUrls: string[] = [ ... ];
 
 // --- END OF FILE: image-url.ts ---
