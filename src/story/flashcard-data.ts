@@ -3,7 +3,8 @@
 import { 
   defaultImageUrls as initialDefaultImageUrls,
   photographyImageUrls as initialPhotographyImageUrls,
-  illustrationImageUrls as initialIllustrationImageUrls
+  illustrationImageUrls as initialIllustrationImageUrls,
+  realisticImageUrls as initialRealisticImageUrls // ADDED
 } from '../voca-data/image-url.ts';
 import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
 import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
@@ -82,9 +83,15 @@ const illustrationImageUrls: string[] = [
   ...initialIllustrationImageUrls,
   ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialIllustrationImageUrls.length), 'Illustration', '90EE90')
 ];
+
+// ADDED: Realistic Image URLs setup
+const realisticImageUrls: string[] = [
+  ...initialRealisticImageUrls,
+  ...generatePlaceholderUrls(Math.max(0, numberOfSampleFlashcards - initialRealisticImageUrls.length), 'Realistic', 'A0A0A0')
+];
+
 const animeImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Anime', 'FF99CC');
 const comicImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Comic', '66B2FF');
-const realisticImageUrls: string[] = generatePlaceholderUrls(numberOfSampleFlashcards, 'Realistic', 'A0A0A0');
 
 // --- EXPORT 1: Map tra cứu bằng ID (dùng cho Gallery) ---
 export const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
@@ -107,7 +114,7 @@ export const ALL_CARDS_MAP: Map<number, Flashcard> = new Map(
             default: defaultImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Default+${cardId}`,
             anime: animeImageUrls[i] || `https://placehold.co/1024x1536/FF99CC/FFFFFF?text=Anime+${cardId}`,
             comic: comicImageUrls[i] || `https://placehold.co/1024x1536/66B2FF/FFFFFF?text=Comic+${cardId}`,
-            realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${cardId}`,
+            realistic: realisticImageUrls[i] || `https://placehold.co/1024x1536/A0A0A0/FFFFFF?text=Realistic+${cardId}`, // Included realistic
             photography: photographyImageUrls[i] || `https://placehold.co/1024x1536/808080/FFFFFF?text=Photo+${cardId}`,
             illustration: illustrationImageUrls[i] || `https://placehold.co/1024x1536/90EE90/FFFFFF?text=Illustration+${cardId}`,
         };
