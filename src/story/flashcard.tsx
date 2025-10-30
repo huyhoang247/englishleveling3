@@ -291,13 +291,14 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     if (!audio) return;
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => handlePause();
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
-    audio.addEventListener('ended', handlePause);
+    audio.addEventListener('ended', handleEnded);
     return () => {
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('ended', handlePause);
+      audio.removeEventListener('ended', handleEnded);
     };
   }, []);
 
@@ -353,7 +354,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
     switch (activeTab) {
       case 'basic':
-        const stylesToShow = ['default', 'photography', 'illustration'];
+        // ADDED 'realistic'
+        const stylesToShow = ['default', 'photography', 'illustration', 'realistic'];
         const availableImages = Object.entries(selectedCard.imageUrl).filter(
             ([styleKey, url]) => stylesToShow.includes(styleKey) && url && typeof url === 'string'
         );
