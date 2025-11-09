@@ -10,12 +10,12 @@ const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="
 const ChevronRightIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg> );
 const FunnelIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg> );
 const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> );
+// --- CHANGE START: Removed unused UniqueIcon ---
+// --- CHANGE END ---
 
 const ITEMS_PER_PAGE = 50;
 const PHRASES_PER_PAGE = 20;
 
-// --- OPTIMIZATION: Debounce Hook ---
-// Trì hoãn việc cập nhật giá trị để giảm số lần tính toán lại khi người dùng gõ phím
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
     useEffect(() => {
@@ -29,13 +29,8 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-// --- OPTIMIZATION: Pre-calculation of phrase groups ---
-// --- CHANGE START: Modify to generate phrases of lengths 2 to 6 ---
-// Tính toán 1 lần duy nhất, tạo ra các nhóm cụm từ với độ dài từ 2 đến 6 từ.
 const generateAllPhraseGroups = () => {
-  // Key là độ dài cụm từ (2, 3, ...), value là Map của các cụm từ và vị trí của chúng.
   const allPhraseGroups = new Map<number, Map<string, number[]>>();
-
   for (let phraseLength = 2; phraseLength <= 6; phraseLength++) {
     const phraseMap = new Map<string, number[]>();
     exampleData.forEach((sentence, index) => {
@@ -50,10 +45,9 @@ const generateAllPhraseGroups = () => {
         }
       }
     });
-
     const filteredPhraseMap = new Map<string, number[]>();
     for (const [phrase, indices] of phraseMap.entries()) {
-      if (indices.length > 1) { // Chỉ giữ lại các cụm từ xuất hiện nhiều hơn 1 lần
+      if (indices.length > 1) {
         filteredPhraseMap.set(phrase, indices);
       }
     }
@@ -62,56 +56,42 @@ const generateAllPhraseGroups = () => {
   return allPhraseGroups;
 };
 const allPhraseGroups = generateAllPhraseGroups();
-// --- CHANGE END ---
 
 
-// --- Filter Popup Component ---
+// --- Filter Popup Component (No changes here) ---
 interface FilterPopupProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectFilter: (phrase: string) => void;
   onClearFilter: () => void;
 }
-
 const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilter, onClearFilter }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'alpha' | 'freq'>('freq');
   const [currentPage, setCurrentPage] = useState(1);
-  // --- CHANGE START: Add state for phrase length selection ---
   const [phraseLength, setPhraseLength] = useState(2);
-  // --- CHANGE END ---
-  
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
   const sortedAndFilteredPhrases = useMemo(() => {
-    // --- CHANGE START: Get phrases based on selected length ---
     const currentPhraseMap = allPhraseGroups.get(phraseLength) || new Map();
     let phrases = Array.from(currentPhraseMap.entries()).map(([phrase, indices]) => ({
       phrase,
       count: indices.length,
     }));
-    // --- CHANGE END ---
-
     if (debouncedSearchTerm) {
       phrases = phrases.filter(p => p.phrase.includes(debouncedSearchTerm.toLowerCase()));
     }
-
     if (sortBy === 'alpha') {
       phrases.sort((a, b) => a.phrase.localeCompare(b.phrase));
-    } else { // 'freq'
+    } else { 
       phrases.sort((a, b) => b.count - a.count || a.phrase.localeCompare(b.phrase));
     }
     return phrases;
-    // --- CHANGE START: Add phraseLength to dependency array ---
   }, [debouncedSearchTerm, sortBy, phraseLength]);
-  // --- CHANGE END ---
   
   useEffect(() => {
     setCurrentPage(1);
-    // --- CHANGE START: Reset page when phraseLength changes ---
   }, [debouncedSearchTerm, sortBy, phraseLength]);
-  // --- CHANGE END ---
-
+  
   const totalPages = Math.ceil(sortedAndFilteredPhrases.length / PHRASES_PER_PAGE);
   const paginatedPhrases = useMemo(() => {
     const startIndex = (currentPage - 1) * PHRASES_PER_PAGE;
@@ -143,7 +123,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-slate-900 border border-slate-600 rounded-md px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          {/* --- CHANGE START: Add Phrase Length Selector UI --- */}
           <div>
             <label className="text-sm font-medium text-slate-400 mb-2 block">Phrase Length (words)</label>
             <div className="grid grid-cols-5 gap-2">
@@ -158,7 +137,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
               ))}
             </div>
           </div>
-          {/* --- CHANGE END --- */}
           <div className="flex justify-between items-center">
              <div className="flex gap-2 text-sm">
                 <button onClick={() => setSortBy('freq')} className={`px-3 py-1 rounded-md ${sortBy === 'freq' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}>Most Common</button>
@@ -186,30 +164,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
         </div>
         {totalPages > 1 && (
             <footer className="flex-shrink-0 border-t border-slate-700 p-3 flex justify-between items-center">
-                <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    <ChevronLeftIcon className="w-5 h-5" />
-                </button>
-                <div className="text-sm font-medium text-slate-400">
-                    Page <span className="font-bold text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-200">{totalPages}</span>
-                </div>
-                <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    <ChevronRightIcon className="w-5 h-5" />
-                </button>
+                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeftIcon className="w-5 h-5" /></button>
+                <div className="text-sm font-medium text-slate-400">Page <span className="font-bold text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-200">{totalPages}</span></div>
+                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronRightIcon className="w-5 h-5" /></button>
             </footer>
         )}
       </div>
     </div>
   );
 };
-// OPTIMIZATION: Bọc component trong React.memo để tránh re-render không cần thiết
 const MemoizedFilterPopup = React.memo(FilterPopup);
 
 
@@ -217,7 +180,6 @@ const MemoizedFilterPopup = React.memo(FilterPopup);
 interface PhraseViewerProps {
   onGoBack: () => void;
 }
-
 const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -225,39 +187,53 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   const listRef = useRef<HTMLDivElement>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  // --- CHANGE START: Removed showUniqueOnly state ---
+  // --- CHANGE END ---
 
-  // OPTIMIZATION: Thêm `originalIndex` vào dữ liệu một lần duy nhất. Đây là cải tiến hiệu năng lớn nhất.
   const indexedExampleData = useMemo(() => 
     exampleData.map((sentence, index) => ({ ...sentence, originalIndex: index })),
-    [] // Chỉ chạy 1 lần duy nhất
+    []
   );
 
-  // Dữ liệu hiển thị dựa trên filter, giờ đã hiệu quả hơn
+  // --- CHANGE START: Uniqueness filter is now applied unconditionally ---
   const filteredData = useMemo(() => {
+    // 1. Apply phrase filter first (if any)
+    let phraseFilteredData;
     if (!activeFilter) {
-      return indexedExampleData;
-    }
-    // --- CHANGE START: Search for the active filter across all phrase lengths ---
-    let indices: number[] | undefined;
-    for (const phraseMap of allPhraseGroups.values()) {
-      if (phraseMap.has(activeFilter)) {
-        indices = phraseMap.get(activeFilter);
-        break; // Found it, no need to search further
+      phraseFilteredData = indexedExampleData;
+    } else {
+      let indices: number[] | undefined;
+      for (const phraseMap of allPhraseGroups.values()) {
+        if (phraseMap.has(activeFilter)) {
+          indices = phraseMap.get(activeFilter);
+          break;
+        }
       }
+      phraseFilteredData = indices ? indices.map(i => indexedExampleData[i]) : [];
     }
-    return indices ? indices.map(i => indexedExampleData[i]) : [];
-    // --- CHANGE END ---
-  }, [activeFilter, indexedExampleData]);
+
+    // 2. ALWAYS apply uniqueness filter on the result
+    const seen = new Set<string>();
+    return phraseFilteredData.filter(item => {
+      // Normalize the English sentence for better duplicate detection
+      const normalizedEnglish = item.english.trim().toLowerCase();
+      if (seen.has(normalizedEnglish)) {
+        return false;
+      } else {
+        seen.add(normalizedEnglish);
+        return true;
+      }
+    });
+  }, [activeFilter, indexedExampleData]); // Dependency array updated
+  // --- CHANGE END ---
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
-  // OPTIMIZATION: Lấy các câu cho trang hiện tại chỉ bằng `.slice`, không cần `findIndex` tốn kém
   const currentSentences = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [currentPage, filteredData]);
   
-  // Bọc các handler trong useCallback để `MemoizedFilterPopup` không bị render lại
   const handleSelectFilter = useCallback((phrase: string) => {
     setActiveFilter(phrase);
     setCurrentPage(1);
@@ -269,6 +245,9 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
     setCurrentPage(1);
     setIsFilterOpen(false);
   }, []);
+  
+  // --- CHANGE START: Removed handleToggleUniqueFilter handler ---
+  // --- CHANGE END ---
   
   const handleToggleAudio = useCallback((sentenceIndex: number) => {
     const audio = audioRef.current;
@@ -295,11 +274,9 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
     const handlePlay = () => setAudioState(prev => ({ ...prev, isPlaying: true }));
     const handlePause = () => setAudioState(prev => ({ ...prev, isPlaying: false }));
     const handleEnded = () => setAudioState({ index: null, isPlaying: false });
-
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('ended', handleEnded);
-
     return () => {
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
@@ -344,11 +321,17 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
                    </span>
                 )}
               </div>
+              {/* --- CHANGE START: Removed uniqueness filter button --- */}
               <div className="w-24 flex justify-end">
-                <button onClick={() => setIsFilterOpen(true)} className={`p-2 rounded-full transition-colors ${activeFilter ? 'bg-blue-600 text-white hover:bg-blue-500' : 'text-slate-400 hover:bg-slate-700 hover:text-white'}`}>
+                <button 
+                  onClick={() => setIsFilterOpen(true)} 
+                  className={`p-2 rounded-full transition-colors ${activeFilter ? 'bg-blue-600 text-white hover:bg-blue-500' : 'text-slate-400 hover:bg-slate-700 hover:text-white'}`}
+                  title="Filter by phrase"
+                >
                     <FunnelIcon className="w-5 h-5" />
                 </button>
               </div>
+              {/* --- CHANGE END --- */}
             </div>
           </div>
         </header>
@@ -374,7 +357,7 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
              {filteredData.length === 0 && (
                 <div className="text-center text-slate-400 p-8 bg-slate-900/50 rounded-lg">
                     <h3 className="text-lg font-semibold">No results found</h3>
-                    <p className="mt-1 text-sm">Try clearing the filter or choosing a different phrase.</p>
+                    <p className="mt-1 text-sm">Try clearing the filters or choosing a different phrase.</p>
                 </div>
              )}
           </div>
