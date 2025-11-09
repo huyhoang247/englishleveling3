@@ -1,4 +1,4 @@
-// --- START OF FILE course-context.tsx ---
+// --- START OF FILE: course-context.tsx ---
 
 import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode, useMemo } from 'react';
 import { auth } from '../firebase.js';
@@ -177,7 +177,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     if (['vocabularyGame', 'quiz', 'vocaMatchGame'].includes(currentView)) {
        setCurrentView('practices');
        setSelectedPractice(null);
-    } else if (currentView === 'wordChainGame' || currentView === 'analysis') {
+    } else if (currentView === 'wordChainGame' || currentView === 'analysis' || currentView === 'phraseView') {
        setCurrentView('main');
     } else if (currentView === 'practices') {
       setCurrentView('quizTypes');
@@ -302,3 +302,4 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
 
   return <QuizAppContext.Provider value={value}>{children}</QuizAppContext.Provider>;
 };
+// --- END OF FILE: course-context.tsx ---
