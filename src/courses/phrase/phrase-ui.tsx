@@ -30,28 +30,39 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 // --- OPTIMIZATION: Pre-calculation of phrase groups ---
-// Tính toán 1 lần duy nhất khi module được load, tránh block UI khi component render
-const generatePhraseGroups = () => {
-  const phraseMap = new Map<string, number[]>();
-  exampleData.forEach((sentence, index) => {
-    const words = sentence.english.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
-    for (let i = 0; i < words.length - 1; i++) {
-      const phrase = `${words[i]} ${words[i+1]}`;
-      if (!phraseMap.has(phrase)) {
-        phraseMap.set(phrase, []);
+// --- CHANGE START: Modify to generate phrases of lengths 2 to 6 ---
+// Tính toán 1 lần duy nhất, tạo ra các nhóm cụm từ với độ dài từ 2 đến 6 từ.
+const generateAllPhraseGroups = () => {
+  // Key là độ dài cụm từ (2, 3, ...), value là Map của các cụm từ và vị trí của chúng.
+  const allPhraseGroups = new Map<number, Map<string, number[]>>();
+
+  for (let phraseLength = 2; phraseLength <= 6; phraseLength++) {
+    const phraseMap = new Map<string, number[]>();
+    exampleData.forEach((sentence, index) => {
+      const words = sentence.english.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
+      if (words.length >= phraseLength) {
+        for (let i = 0; i <= words.length - phraseLength; i++) {
+          const phrase = words.slice(i, i + phraseLength).join(' ');
+          if (!phraseMap.has(phrase)) {
+            phraseMap.set(phrase, []);
+          }
+          phraseMap.get(phrase)!.push(index);
+        }
       }
-      phraseMap.get(phrase)!.push(index);
+    });
+
+    const filteredPhraseMap = new Map<string, number[]>();
+    for (const [phrase, indices] of phraseMap.entries()) {
+      if (indices.length > 1) { // Chỉ giữ lại các cụm từ xuất hiện nhiều hơn 1 lần
+        filteredPhraseMap.set(phrase, indices);
+      }
     }
-  });
-  const filteredPhraseMap = new Map<string, number[]>();
-  for (const [phrase, indices] of phraseMap.entries()) {
-    if (indices.length > 1) {
-      filteredPhraseMap.set(phrase, indices);
-    }
+    allPhraseGroups.set(phraseLength, filteredPhraseMap);
   }
-  return filteredPhraseMap;
+  return allPhraseGroups;
 };
-const phraseGroups = generatePhraseGroups();
+const allPhraseGroups = generateAllPhraseGroups();
+// --- CHANGE END ---
 
 
 // --- Filter Popup Component ---
@@ -66,14 +77,20 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'alpha' | 'freq'>('freq');
   const [currentPage, setCurrentPage] = useState(1);
+  // --- CHANGE START: Add state for phrase length selection ---
+  const [phraseLength, setPhraseLength] = useState(2);
+  // --- CHANGE END ---
   
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const sortedAndFilteredPhrases = useMemo(() => {
-    let phrases = Array.from(phraseGroups.entries()).map(([phrase, indices]) => ({
+    // --- CHANGE START: Get phrases based on selected length ---
+    const currentPhraseMap = allPhraseGroups.get(phraseLength) || new Map();
+    let phrases = Array.from(currentPhraseMap.entries()).map(([phrase, indices]) => ({
       phrase,
       count: indices.length,
     }));
+    // --- CHANGE END ---
 
     if (debouncedSearchTerm) {
       phrases = phrases.filter(p => p.phrase.includes(debouncedSearchTerm.toLowerCase()));
@@ -85,11 +102,15 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
       phrases.sort((a, b) => b.count - a.count || a.phrase.localeCompare(b.phrase));
     }
     return phrases;
-  }, [debouncedSearchTerm, sortBy]);
+    // --- CHANGE START: Add phraseLength to dependency array ---
+  }, [debouncedSearchTerm, sortBy, phraseLength]);
+  // --- CHANGE END ---
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm, sortBy]);
+    // --- CHANGE START: Reset page when phraseLength changes ---
+  }, [debouncedSearchTerm, sortBy, phraseLength]);
+  // --- CHANGE END ---
 
   const totalPages = Math.ceil(sortedAndFilteredPhrases.length / PHRASES_PER_PAGE);
   const paginatedPhrases = useMemo(() => {
@@ -114,7 +135,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
             <XMarkIcon className="w-6 h-6" />
           </button>
         </header>
-        <div className="p-4 flex-shrink-0 space-y-3">
+        <div className="p-4 flex-shrink-0 space-y-4">
           <input
             type="text"
             placeholder="Search for a phrase..."
@@ -122,6 +143,22 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-slate-900 border border-slate-600 rounded-md px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          {/* --- CHANGE START: Add Phrase Length Selector UI --- */}
+          <div>
+            <label className="text-sm font-medium text-slate-400 mb-2 block">Phrase Length (words)</label>
+            <div className="grid grid-cols-5 gap-2">
+              {[2, 3, 4, 5, 6].map(len => (
+                <button 
+                  key={len} 
+                  onClick={() => setPhraseLength(len)} 
+                  className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors ${phraseLength === len ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
+                >
+                  {len}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* --- CHANGE END --- */}
           <div className="flex justify-between items-center">
              <div className="flex gap-2 text-sm">
                 <button onClick={() => setSortBy('freq')} className={`px-3 py-1 rounded-md ${sortBy === 'freq' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}>Most Common</button>
@@ -142,6 +179,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
             )) : (
               <div className="text-center text-slate-400 py-8">
                 <p>No matching phrases found.</p>
+                <p className="text-xs mt-1">Try changing phrase length or search term.</p>
               </div>
             )}
           </ul>
@@ -199,8 +237,16 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
     if (!activeFilter) {
       return indexedExampleData;
     }
-    const indices = phraseGroups.get(activeFilter);
+    // --- CHANGE START: Search for the active filter across all phrase lengths ---
+    let indices: number[] | undefined;
+    for (const phraseMap of allPhraseGroups.values()) {
+      if (phraseMap.has(activeFilter)) {
+        indices = phraseMap.get(activeFilter);
+        break; // Found it, no need to search further
+      }
+    }
     return indices ? indices.map(i => indexedExampleData[i]) : [];
+    // --- CHANGE END ---
   }, [activeFilter, indexedExampleData]);
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
