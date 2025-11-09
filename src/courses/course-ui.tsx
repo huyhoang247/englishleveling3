@@ -7,7 +7,7 @@ import VocabularyGame from './fill-in-the-blank/fill-blank-ui.tsx';
 import VocaMatchGame from './voca-match/voca-match-ui.tsx';
 import AnalysisDashboard from './analysis-dashboard/analysis-ui.tsx';
 import WordChainGame from './word-chain-game/word-chain-ui.tsx';
-import PhraseViewer from './phrase-viewer.tsx';
+import PhraseViewer from './phrase/phrase-ui.tsx';
 import PracticeListLoadingSkeleton from './course-loading.tsx';
 import HomeButton from '../ui/home-button.tsx';
 import BackButton from '../ui/back-button.tsx';
