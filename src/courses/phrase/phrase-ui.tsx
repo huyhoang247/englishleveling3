@@ -1,9 +1,9 @@
 // --- START OF FILE: phrase-viewer.tsx ---
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import BackButton from '../ui/back-button.tsx';
-import { exampleData } from '../voca-data/example-data.ts';
-import { generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
+import BackButton from '../../ui/back-button.tsx';
+import { exampleData } from '../../voca-data/example-data.ts';
+import { generateAudioUrlsForExamSentence } from '../../voca-data/audio-quiz-generator.ts';
 
 // --- Icons used in this component ---
 const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg> );
