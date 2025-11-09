@@ -7,7 +7,7 @@ import VocabularyGame from './fill-in-the-blank/fill-blank-ui.tsx';
 import VocaMatchGame from './voca-match/voca-match-ui.tsx';
 import AnalysisDashboard from './analysis-dashboard/analysis-ui.tsx';
 import WordChainGame from './word-chain-game/word-chain-ui.tsx';
-import PhraseViewer from './phrase/phrase-ui.tsx'; // <<< DÒNG MỚI: IMPORT PHRASEVIEWER
+import PhraseViewer from './phrase-viewer.tsx';
 import PracticeListLoadingSkeleton from './course-loading.tsx';
 import HomeButton from '../ui/home-button.tsx';
 import BackButton from '../ui/back-button.tsx';
@@ -72,7 +72,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
           case 'analysis':
               ViewComponent = <AnalysisDashboard onGoBack={goHome} />;
               break;
-          case 'phraseView': // <<< DÒNG MỚI: CASE CHO PHRASEVIEW
+          case 'phraseView':
               ViewComponent = <PhraseViewer onGoBack={goBack} />;
               break;
       }
@@ -113,6 +113,13 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/equipment-icon.webp" alt="Phrases" className="h-20 w-20 mb-3" />
               <h3 className="text-lg font-bold text-gray-800 group-hover:text-green-600 transition-colors">Phrase</h3>
             </button>
+            {/* --- START: ĐÃ KHÔI PHỤC NÚT EXAM --- */}
+            <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
+              <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
+              <img src={quizHomeAssets.examIcon} alt="Exam" className="h-20 w-20 mb-3" />
+              <h3 className="text-lg font-bold text-gray-500">Exam</h3>
+            </div>
+            {/* --- END: ĐÃ KHÔI PHỤC NÚT EXAM --- */}
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
               <img src={quizHomeAssets.grammarIcon} alt="Grammar" className="h-20 w-20 mb-3" />
