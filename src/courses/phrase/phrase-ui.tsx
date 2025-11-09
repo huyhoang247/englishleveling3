@@ -5,13 +5,11 @@ import { generateAudioUrlsForExamSentence } from '../../voca-data/audio-quiz-gen
 
 // --- Icons used in this component ---
 const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg> );
-const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
+const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
 const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 const ChevronRightIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg> );
 const FunnelIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg> );
 const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> );
-// --- CHANGE START: Removed unused UniqueIcon ---
-// --- CHANGE END ---
 
 const ITEMS_PER_PAGE = 50;
 const PHRASES_PER_PAGE = 20;
@@ -29,36 +27,55 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-const generateAllPhraseGroups = () => {
-  const allPhraseGroups = new Map<number, Map<string, number[]>>();
+// --- CHANGE START: Major update to pre-calculation logic ---
+// Now generates counts based on unique sentences.
+interface PhraseData {
+  indices: number[];
+  uniqueCount: number;
+}
+const generateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
+  const allPhraseGroups = new Map<number, Map<string, PhraseData>>();
+
   for (let phraseLength = 2; phraseLength <= 6; phraseLength++) {
-    const phraseMap = new Map<string, number[]>();
+    // Temporary map to gather all data before finalizing
+    const tempPhraseMap = new Map<string, { indices: number[], uniqueSentences: Set<string> }>();
+
     exampleData.forEach((sentence, index) => {
       const words = sentence.english.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
       if (words.length >= phraseLength) {
         for (let i = 0; i <= words.length - phraseLength; i++) {
           const phrase = words.slice(i, i + phraseLength).join(' ');
-          if (!phraseMap.has(phrase)) {
-            phraseMap.set(phrase, []);
+          
+          if (!tempPhraseMap.has(phrase)) {
+            tempPhraseMap.set(phrase, { indices: [], uniqueSentences: new Set() });
           }
-          phraseMap.get(phrase)!.push(index);
+          const entry = tempPhraseMap.get(phrase)!;
+          entry.indices.push(index);
+          entry.uniqueSentences.add(sentence.english.trim().toLowerCase());
         }
       }
     });
-    const filteredPhraseMap = new Map<string, number[]>();
-    for (const [phrase, indices] of phraseMap.entries()) {
-      if (indices.length > 1) {
-        filteredPhraseMap.set(phrase, indices);
+    
+    // Finalize the map for this phrase length
+    const finalPhraseMap = new Map<string, PhraseData>();
+    for (const [phrase, data] of tempPhraseMap.entries()) {
+      // Keep the filter for phrases that appear more than once (total occurrences)
+      if (data.indices.length > 1) {
+        finalPhraseMap.set(phrase, {
+          indices: data.indices,
+          uniqueCount: data.uniqueSentences.size,
+        });
       }
     }
-    allPhraseGroups.set(phraseLength, filteredPhraseMap);
+    allPhraseGroups.set(phraseLength, finalPhraseMap);
   }
   return allPhraseGroups;
 };
 const allPhraseGroups = generateAllPhraseGroups();
+// --- CHANGE END ---
 
 
-// --- Filter Popup Component (No changes here) ---
+// --- Filter Popup Component ---
 interface FilterPopupProps {
   isOpen: boolean;
   onClose: () => void;
@@ -71,12 +88,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
   const [currentPage, setCurrentPage] = useState(1);
   const [phraseLength, setPhraseLength] = useState(2);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const sortedAndFilteredPhrases = useMemo(() => {
     const currentPhraseMap = allPhraseGroups.get(phraseLength) || new Map();
-    let phrases = Array.from(currentPhraseMap.entries()).map(([phrase, indices]) => ({
+    // --- CHANGE START: Adapt to the new data structure from pre-calculation ---
+    let phrases = Array.from(currentPhraseMap.entries()).map(([phrase, data]) => ({
       phrase,
-      count: indices.length,
+      count: data.uniqueCount, // Use the pre-calculated unique count
     }));
+    // --- CHANGE END ---
+
     if (debouncedSearchTerm) {
       phrases = phrases.filter(p => p.phrase.includes(debouncedSearchTerm.toLowerCase()));
     }
@@ -187,35 +208,32 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   const listRef = useRef<HTMLDivElement>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  // --- CHANGE START: Removed showUniqueOnly state ---
-  // --- CHANGE END ---
 
   const indexedExampleData = useMemo(() => 
     exampleData.map((sentence, index) => ({ ...sentence, originalIndex: index })),
     []
   );
 
-  // --- CHANGE START: Uniqueness filter is now applied unconditionally ---
   const filteredData = useMemo(() => {
-    // 1. Apply phrase filter first (if any)
     let phraseFilteredData;
     if (!activeFilter) {
       phraseFilteredData = indexedExampleData;
     } else {
       let indices: number[] | undefined;
+      // --- CHANGE START: Adapt to new data structure when filtering ---
       for (const phraseMap of allPhraseGroups.values()) {
         if (phraseMap.has(activeFilter)) {
-          indices = phraseMap.get(activeFilter);
-          break;
+          // The data object now contains both indices and uniqueCount. We need indices.
+          indices = phraseMap.get(activeFilter)?.indices;
+          break; 
         }
       }
+      // --- CHANGE END ---
       phraseFilteredData = indices ? indices.map(i => indexedExampleData[i]) : [];
     }
-
-    // 2. ALWAYS apply uniqueness filter on the result
+    
     const seen = new Set<string>();
     return phraseFilteredData.filter(item => {
-      // Normalize the English sentence for better duplicate detection
       const normalizedEnglish = item.english.trim().toLowerCase();
       if (seen.has(normalizedEnglish)) {
         return false;
@@ -224,8 +242,7 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
         return true;
       }
     });
-  }, [activeFilter, indexedExampleData]); // Dependency array updated
-  // --- CHANGE END ---
+  }, [activeFilter, indexedExampleData]);
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
@@ -245,9 +262,6 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
     setCurrentPage(1);
     setIsFilterOpen(false);
   }, []);
-  
-  // --- CHANGE START: Removed handleToggleUniqueFilter handler ---
-  // --- CHANGE END ---
   
   const handleToggleAudio = useCallback((sentenceIndex: number) => {
     const audio = audioRef.current;
@@ -321,7 +335,6 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
                    </span>
                 )}
               </div>
-              {/* --- CHANGE START: Removed uniqueness filter button --- */}
               <div className="w-24 flex justify-end">
                 <button 
                   onClick={() => setIsFilterOpen(true)} 
@@ -331,7 +344,6 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
                     <FunnelIcon className="w-5 h-5" />
                 </button>
               </div>
-              {/* --- CHANGE END --- */}
             </div>
           </div>
         </header>
