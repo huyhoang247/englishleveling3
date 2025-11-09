@@ -1,3 +1,5 @@
+// --- START OF FILE: course-ui.tsx ---
+
 // quiz-app-home.tsx
 import React, { useMemo, memo, useCallback, useState, useEffect } from 'react';
 import QuizApp from './multiple-choice/multiple-ui.tsx';
@@ -5,9 +7,10 @@ import VocabularyGame from './fill-in-the-blank/fill-blank-ui.tsx';
 import VocaMatchGame from './voca-match/voca-match-ui.tsx';
 import AnalysisDashboard from './analysis-dashboard/analysis-ui.tsx';
 import WordChainGame from './word-chain-game/word-chain-ui.tsx';
-import PracticeListLoadingSkeleton from './course-loading.tsx'; // <<< DÒNG MỚI: IMPORT SKELETON
-import HomeButton from '../ui/home-button.tsx'; // <<< THAY ĐỔI: IMPORT HOME BUTTON
-import BackButton from '../ui/back-button.tsx'; // <<< THAY ĐỔI: IMPORT BACK BUTTON
+import PhraseViewer from './phrase/phrase-ui.tsx'; // <<< DÒNG MỚI: IMPORT PHRASEVIEWER
+import PracticeListLoadingSkeleton from './course-loading.tsx';
+import HomeButton from '../ui/home-button.tsx';
+import BackButton from '../ui/back-button.tsx';
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
 import { QuizAppProvider, useQuizApp } from './course-context.tsx';
@@ -50,7 +53,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   // --- END: LOGIC ĐIỀU KHIỂN NAVBAR ---
 
   // Logic render các màn hình fullscreen
-  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame'].includes(currentView)) {
+  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame', 'phraseView'].includes(currentView)) {
       let ViewComponent = null;
 
       switch(currentView) {
@@ -69,11 +72,13 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
           case 'analysis':
               ViewComponent = <AnalysisDashboard onGoBack={goHome} />;
               break;
+          case 'phraseView': // <<< DÒNG MỚI: CASE CHO PHRASEVIEW
+              ViewComponent = <PhraseViewer onGoBack={goBack} />;
+              break;
       }
       
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
-            {/* <<< THAY ĐỔI DUY NHẤT TẠI ĐÂY: overflow-y-auto -> overflow-hidden */}
             <div className="flex-grow overflow-hidden">
                 {ViewComponent}
             </div>
@@ -101,11 +106,13 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               <img src={quizHomeAssets.wordChainGameIcon} alt="Word Chain" className="h-20 w-20 mb-3" />
               <h3 className="text-lg font-bold text-gray-800 group-hover:text-purple-600 transition-colors">Word Chain</h3>
             </button>
-            <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
-              <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
-              <img src={quizHomeAssets.examIcon} alt="Exam" className="h-20 w-20 mb-3" />
-              <h3 className="text-lg font-bold text-gray-500">Exam</h3>
-            </div>
+            <button
+              onClick={() => setCurrentView('phraseView')}
+              className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-green-400 group"
+            >
+              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/equipment-icon.webp" alt="Phrases" className="h-20 w-20 mb-3" />
+              <h3 className="text-lg font-bold text-gray-800 group-hover:text-green-600 transition-colors">Phrase</h3>
+            </button>
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
               <img src={quizHomeAssets.grammarIcon} alt="Grammar" className="h-20 w-20 mb-3" />
@@ -156,7 +163,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
 }
 
 // --- START: UNIFIED HEADER COMPONENT ---
-// <<< THAY ĐỔI: HomeIcon và BackIcon đã bị xóa vì chúng ta đang sử dụng các component nút chuyên dụng
 const AnalysisIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg> );
 
 function AppHeader() {
@@ -184,7 +190,7 @@ function AppHeader() {
                  <img src={quizHomeAssets.logoLarge} alt="Quiz App Logo" className="h-10 w-auto" />
               </a>
             ) : (
-              <BackButton onClick={goBack} /> // <<< THAY ĐỔI: SỬ DỤNG BACKBUTTON COMPONENT
+              <BackButton onClick={goBack} />
             )}
           </div>
           <div className="flex-1 flex justify-center px-4">
@@ -194,7 +200,7 @@ function AppHeader() {
               {currentView === 'main' ? (
                 <button onClick={() => setCurrentView('analysis')} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Xem phân tích"><AnalysisIcon /></button>
               ) : (
-                 <HomeButton onClick={goHome} /> // <<< THAY ĐỔI: SỬ DỤNG HOMEBUTTON COMPONENT
+                 <HomeButton onClick={goHome} />
               )}
           </div>
         </div>
@@ -306,7 +312,7 @@ function PracticeList() {
     },
     vocaMatch: {
         '1': { title: 'Practice 1', desc: ['Match Words'], color: 'green' },
-        '2': { title: 'Practice 2', desc: ['Match Audio'], color: 'cyan' }, // <<< THÊM MỚI
+        '2': { title: 'Practice 2', desc: ['Match Audio'], color: 'cyan' },
     },
     dienTu: {
         '1': { title: 'Practice 1', desc: ['Type Word', 'Picture'], color: 'indigo' },
@@ -316,14 +322,13 @@ function PracticeList() {
         '5': { title: 'Practice 5', desc: ['Gap Fill', 'Hide 4'], color: 'purple' },
         '6': { title: 'Practice 6', desc: ['Gap Fill', 'Hide 5'], color: 'yellow' },
         '7': { title: 'Practice 7', desc: ['Gap Fill', 'Random Hide'], color: 'red' },
-        '8': { title: 'Practice 8', desc: ['Type Word', 'Audio'], color: 'cyan' }, // <<< THÊM PRACTICE 8
+        '8': { title: 'Practice 8', desc: ['Type Word', 'Audio'], color: 'cyan' },
     },
   }), []);
   
   const handleReviewClick = useCallback((practiceNumber) => { setSelectedPracticeForReview(practiceNumber); setView('reviews'); }, []);
   const handleRewardsClick = useCallback((practiceNumber, practiceTitle) => { setSelectedPracticeForRewards({ number: practiceNumber, title: practiceTitle }); setIsRewardsPopupOpen(true); }, []);
 
-  // <<< THAY ĐỔI TẠI ĐÂY
   if (loading) {
     return <PracticeListLoadingSkeleton />;
   }
@@ -470,3 +475,4 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         </div>
     );
 };
+// --- END OF FILE: course-ui.tsx ---
