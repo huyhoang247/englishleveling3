@@ -14,18 +14,27 @@ const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http:/
 const ITEMS_PER_PAGE = 50;
 const PHRASES_PER_PAGE = 20;
 
-// --- Helper function to process and group sentences by 2-word phrases ---
-// This function itself is fine, the problem is *how* we call it.
+// --- OPTIMIZATION: Debounce Hook ---
+// Trì hoãn việc cập nhật giá trị để giảm số lần tính toán lại khi người dùng gõ phím
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+    return debouncedValue;
+}
+
+// --- OPTIMIZATION: Pre-calculation of phrase groups ---
+// Tính toán 1 lần duy nhất khi module được load, tránh block UI khi component render
 const generatePhraseGroups = () => {
   const phraseMap = new Map<string, number[]>();
-
   exampleData.forEach((sentence, index) => {
-    const words = sentence.english
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .split(/\s+/)
-      .filter(Boolean);
-
+    const words = sentence.english.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
     for (let i = 0; i < words.length - 1; i++) {
       const phrase = `${words[i]} ${words[i+1]}`;
       if (!phraseMap.has(phrase)) {
@@ -34,59 +43,65 @@ const generatePhraseGroups = () => {
       phraseMap.get(phrase)!.push(index);
     }
   });
-
   const filteredPhraseMap = new Map<string, number[]>();
   for (const [phrase, indices] of phraseMap.entries()) {
     if (indices.length > 1) {
       filteredPhraseMap.set(phrase, indices);
     }
   }
-
   return filteredPhraseMap;
 };
+const phraseGroups = generatePhraseGroups();
 
-// --- Filter Popup Component (unchanged) ---
-// ... (FilterPopup component remains the same)
+
+// --- Filter Popup Component ---
 interface FilterPopupProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectFilter: (phrase: string) => void;
   onClearFilter: () => void;
-  phraseGroups: Map<string, number[]> | null; // <-- CHANGED: Can be null while loading
 }
 
-const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilter, onClearFilter, phraseGroups }) => {
+const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilter, onClearFilter }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'alpha' | 'freq'>('freq');
   const [currentPage, setCurrentPage] = useState(1);
   
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const sortedAndFilteredPhrases = useMemo(() => {
-    if (!phraseGroups) return []; // <-- CHANGED: Handle null case
     let phrases = Array.from(phraseGroups.entries()).map(([phrase, indices]) => ({
       phrase,
       count: indices.length,
     }));
-    // ... rest of the function is the same
-    if (searchTerm) {
-      phrases = phrases.filter(p => p.phrase.includes(searchTerm.toLowerCase()));
+
+    if (debouncedSearchTerm) {
+      phrases = phrases.filter(p => p.phrase.includes(debouncedSearchTerm.toLowerCase()));
     }
+
     if (sortBy === 'alpha') {
       phrases.sort((a, b) => a.phrase.localeCompare(b.phrase));
-    } else { 
+    } else { // 'freq'
       phrases.sort((a, b) => b.count - a.count || a.phrase.localeCompare(b.phrase));
     }
     return phrases;
-  }, [phraseGroups, searchTerm, sortBy]);
+  }, [debouncedSearchTerm, sortBy]);
   
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, sortBy]);
-  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, sortBy]);
+
   const totalPages = Math.ceil(sortedAndFilteredPhrases.length / PHRASES_PER_PAGE);
   const paginatedPhrases = useMemo(() => {
     const startIndex = (currentPage - 1) * PHRASES_PER_PAGE;
     return sortedAndFilteredPhrases.slice(startIndex, startIndex + PHRASES_PER_PAGE);
   }, [currentPage, sortedAndFilteredPhrases]);
 
-  const handlePageChange = (newPage: number) => { if (newPage >= 1 && newPage <= totalPages) { setCurrentPage(newPage); } };
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -95,43 +110,69 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
       <div className="bg-slate-800 rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl border border-slate-700" onClick={e => e.stopPropagation()}>
         <header className="p-4 border-b border-slate-700 flex justify-between items-center flex-shrink-0">
           <h2 className="text-lg font-bold text-white">Filter by Phrase</h2>
-          <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"><XMarkIcon className="w-6 h-6" /></button>
+          <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors">
+            <XMarkIcon className="w-6 h-6" />
+          </button>
         </header>
-        { !phraseGroups ? ( // <-- CHANGED: Show loading state
-          <div className="flex-grow flex items-center justify-center text-slate-400">
-              <p>Processing data...</p>
+        <div className="p-4 flex-shrink-0 space-y-3">
+          <input
+            type="text"
+            placeholder="Search for a phrase..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-slate-900 border border-slate-600 rounded-md px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <div className="flex justify-between items-center">
+             <div className="flex gap-2 text-sm">
+                <button onClick={() => setSortBy('freq')} className={`px-3 py-1 rounded-md ${sortBy === 'freq' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}>Most Common</button>
+                <button onClick={() => setSortBy('alpha')} className={`px-3 py-1 rounded-md ${sortBy === 'alpha' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}>A-Z</button>
+             </div>
+             <button onClick={onClearFilter} className="px-3 py-1 text-sm text-blue-400 hover:bg-slate-700 rounded-md">Clear Filter</button>
           </div>
-        ) : (
-          <>
-            <div className="p-4 flex-shrink-0 space-y-3">
-              <input type="text" placeholder="Search for a phrase..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-slate-900 border border-slate-600 rounded-md px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <div className="flex justify-between items-center">
-                 <div className="flex gap-2 text-sm">
-                    <button onClick={() => setSortBy('freq')} className={`px-3 py-1 rounded-md ${sortBy === 'freq' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}>Most Common</button>
-                    <button onClick={() => setSortBy('alpha')} className={`px-3 py-1 rounded-md ${sortBy === 'alpha' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}>A-Z</button>
-                 </div>
-                 <button onClick={onClearFilter} className="px-3 py-1 text-sm text-blue-400 hover:bg-slate-700 rounded-md">Clear Filter</button>
+        </div>
+        <div className="overflow-y-auto px-4 pb-4 flex-grow">
+          <ul className="space-y-2">
+            {paginatedPhrases.length > 0 ? paginatedPhrases.map(({ phrase, count }) => (
+              <li key={phrase}>
+                <button onClick={() => onSelectFilter(phrase)} className="w-full text-left p-3 rounded-lg bg-slate-900 hover:bg-slate-700/50 border border-slate-700 transition-colors flex justify-between items-center">
+                  <span className="font-medium text-slate-200">"{phrase}"</span>
+                  <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-1 rounded-full">{count}</span>
+                </button>
+              </li>
+            )) : (
+              <div className="text-center text-slate-400 py-8">
+                <p>No matching phrases found.</p>
               </div>
-            </div>
-            <div className="overflow-y-auto px-4 pb-4 flex-grow">
-              <ul className="space-y-2">
-                {paginatedPhrases.length > 0 ? paginatedPhrases.map(({ phrase, count }) => (
-                  <li key={phrase}>
-                    <button onClick={() => onSelectFilter(phrase)} className="w-full text-left p-3 rounded-lg bg-slate-900 hover:bg-slate-700/50 border border-slate-700 transition-colors flex justify-between items-center">
-                      <span className="font-medium text-slate-200">"{phrase}"</span>
-                      <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-1 rounded-full">{count}</span>
-                    </button>
-                  </li>
-                )) : (<div className="text-center text-slate-400 py-8"><p>No matching phrases found.</p></div>)}
-              </ul>
-            </div>
-            {totalPages > 1 && (<footer className="flex-shrink-0 border-t border-slate-700 p-3 flex justify-between items-center"><button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeftIcon className="w-5 h-5" /></button><div className="text-sm font-medium text-slate-400">Page <span className="font-bold text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-200">{totalPages}</span></div><button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronRightIcon className="w-5 h-5" /></button></footer>)}
-          </>
+            )}
+          </ul>
+        </div>
+        {totalPages > 1 && (
+            <footer className="flex-shrink-0 border-t border-slate-700 p-3 flex justify-between items-center">
+                <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <ChevronLeftIcon className="w-5 h-5" />
+                </button>
+                <div className="text-sm font-medium text-slate-400">
+                    Page <span className="font-bold text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-200">{totalPages}</span>
+                </div>
+                <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <ChevronRightIcon className="w-5 h-5" />
+                </button>
+            </footer>
         )}
       </div>
     </div>
   );
 };
+// OPTIMIZATION: Bọc component trong React.memo để tránh re-render không cần thiết
+const MemoizedFilterPopup = React.memo(FilterPopup);
 
 
 // --- Main Viewer Component ---
@@ -144,69 +185,49 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [audioState, setAudioState] = useState<{ index: number | null; isPlaying: boolean }>({ index: null, isPlaying: false });
   const listRef = useRef<HTMLDivElement>(null);
-  
-  // --- Filter State ---
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  // --- OPTIMIZATION START ---
-  // Store phrase groups in state, initialize as null.
-  const [phraseGroups, setPhraseGroups] = useState<Map<string, number[]> | null>(null);
-  const [isProcessingPhrases, setIsProcessingPhrases] = useState(true);
+  // OPTIMIZATION: Thêm `originalIndex` vào dữ liệu một lần duy nhất. Đây là cải tiến hiệu năng lớn nhất.
+  const indexedExampleData = useMemo(() => 
+    exampleData.map((sentence, index) => ({ ...sentence, originalIndex: index })),
+    [] // Chỉ chạy 1 lần duy nhất
+  );
 
-  // Calculate the phrase groups asynchronously after the component has mounted.
-  useEffect(() => {
-    // Use a timeout to ensure the UI renders before this heavy task begins.
-    const timer = setTimeout(() => {
-        const groups = generatePhraseGroups();
-        setPhraseGroups(groups);
-        setIsProcessingPhrases(false);
-    }, 100); // A small delay is enough
-
-    return () => clearTimeout(timer); // Cleanup timeout on unmount
-  }, []); // Empty dependency array means this runs only once on mount.
-  // --- OPTIMIZATION END ---
-
-
-  // Determine the list of sentences to display based on the active filter
+  // Dữ liệu hiển thị dựa trên filter, giờ đã hiệu quả hơn
   const filteredData = useMemo(() => {
-    if (!activeFilter || !phraseGroups) { // Check if phraseGroups is ready
-      return exampleData;
+    if (!activeFilter) {
+      return indexedExampleData;
     }
     const indices = phraseGroups.get(activeFilter);
-    return indices ? indices.map(i => exampleData[i]) : [];
-  }, [activeFilter, phraseGroups]);
-
+    return indices ? indices.map(i => indexedExampleData[i]) : [];
+  }, [activeFilter, indexedExampleData]);
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
+  // OPTIMIZATION: Lấy các câu cho trang hiện tại chỉ bằng `.slice`, không cần `findIndex` tốn kém
   const currentSentences = useMemo(() => {
-    const dataWithOriginalIndex = filteredData.map((sentence) => {
-        const originalIndex = exampleData.findIndex(s => s.english === sentence.english && s.vietnamese === sentence.vietnamese);
-        return { ...sentence, originalIndex };
-    });
-
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return dataWithOriginalIndex.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    return filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [currentPage, filteredData]);
   
-  // --- Handlers (unchanged) ---
-  const handleSelectFilter = (phrase: string) => {
+  // Bọc các handler trong useCallback để `MemoizedFilterPopup` không bị render lại
+  const handleSelectFilter = useCallback((phrase: string) => {
     setActiveFilter(phrase);
     setCurrentPage(1);
     setIsFilterOpen(false);
-  };
+  }, []);
 
-  const handleClearFilter = () => {
+  const handleClearFilter = useCallback(() => {
     setActiveFilter(null);
     setCurrentPage(1);
     setIsFilterOpen(false);
-  };
+  }, []);
   
   const handleToggleAudio = useCallback((sentenceIndex: number) => {
-    // ...
     const audio = audioRef.current;
     if (!audio) return;
+    
     if (audioState.index === sentenceIndex && audioState.isPlaying) {
         audio.pause();
     } else {
@@ -228,9 +249,11 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
     const handlePlay = () => setAudioState(prev => ({ ...prev, isPlaying: true }));
     const handlePause = () => setAudioState(prev => ({ ...prev, isPlaying: false }));
     const handleEnded = () => setAudioState({ index: null, isPlaying: false });
+
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('ended', handleEnded);
+
     return () => {
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
@@ -252,12 +275,11 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
 
   return (
     <>
-      <FilterPopup 
+      <MemoizedFilterPopup 
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
         onSelectFilter={handleSelectFilter}
         onClearFilter={handleClearFilter}
-        phraseGroups={phraseGroups} // Pass the state down
       />
       <div className="h-full w-full bg-slate-900 flex flex-col text-white">
         <audio ref={audioRef} preload="auto" className="hidden" />
@@ -270,23 +292,20 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
                 {activeFilter && (
                    <span className="flex items-center gap-2 bg-blue-900/50 text-blue-300 text-xs font-medium px-2 py-1 rounded-full border border-blue-800">
                      {activeFilter}
-                     <button onClick={handleClearFilter} className="text-blue-400 hover:text-white"><XMarkIcon className="w-3 h-3" /></button>
+                     <button onClick={handleClearFilter} className="text-blue-400 hover:text-white">
+                       <XMarkIcon className="w-3 h-3" />
+                     </button>
                    </span>
                 )}
               </div>
               <div className="w-24 flex justify-end">
-                <button 
-                    onClick={() => setIsFilterOpen(true)} 
-                    disabled={isProcessingPhrases} // <-- CHANGED: Disable button while processing
-                    className={`p-2 rounded-full transition-colors ${activeFilter ? 'bg-blue-600 text-white hover:bg-blue-500' : 'text-slate-400 hover:bg-slate-700 hover:text-white'} disabled:opacity-50 disabled:cursor-wait`}
-                >
+                <button onClick={() => setIsFilterOpen(true)} className={`p-2 rounded-full transition-colors ${activeFilter ? 'bg-blue-600 text-white hover:bg-blue-500' : 'text-slate-400 hover:bg-slate-700 hover:text-white'}`}>
                     <FunnelIcon className="w-5 h-5" />
                 </button>
               </div>
             </div>
           </div>
         </header>
-        {/* The rest of the component remains the same */}
         <main ref={listRef} className="flex-grow overflow-y-auto bg-black p-4 sm:p-6">
           <div className="max-w-4xl mx-auto space-y-4">
             {currentSentences.map((sentence) => {
@@ -294,7 +313,11 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
               const isThisPlaying = isCurrentAudio && audioState.isPlaying;
               return (
                 <div key={sentence.originalIndex} className="relative bg-gray-900/70 p-4 rounded-xl border border-gray-800">
-                  <button onClick={() => handleToggleAudio(sentence.originalIndex)} className={`absolute top-3 right-3 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${isThisPlaying ? 'bg-blue-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`} aria-label={isThisPlaying ? 'Dừng phát' : 'Phát âm'}>
+                  <button 
+                    onClick={() => handleToggleAudio(sentence.originalIndex)} 
+                    className={`absolute top-3 right-3 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${isThisPlaying ? 'bg-blue-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`} 
+                    aria-label={isThisPlaying ? 'Dừng phát' : 'Phát âm'}
+                  >
                     {isThisPlaying ? <PauseIcon className="w-4 h-4" /> : <VolumeUpIcon className="w-4 h-4" />}
                   </button>
                   <p className="text-gray-200 text-base leading-relaxed font-medium pr-10">{sentence.english}</p>
@@ -302,14 +325,35 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
                 </div>
               );
             })}
-             {filteredData.length === 0 && (<div className="text-center text-slate-400 p-8 bg-slate-900/50 rounded-lg"><h3 className="text-lg font-semibold">No results found</h3><p className="mt-1 text-sm">Try clearing the filter or choosing a different phrase.</p></div>)}
+             {filteredData.length === 0 && (
+                <div className="text-center text-slate-400 p-8 bg-slate-900/50 rounded-lg">
+                    <h3 className="text-lg font-semibold">No results found</h3>
+                    <p className="mt-1 text-sm">Try clearing the filter or choosing a different phrase.</p>
+                </div>
+             )}
           </div>
         </main>
         <footer className="sticky bottom-0 z-10 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 flex-shrink-0">
           <div className="max-w-4xl mx-auto p-3 flex justify-between items-center">
-            <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><ChevronLeftIcon className="w-4 h-4" /><span>Previous</span></button>
-            <div className="text-sm font-medium text-slate-400">Page <span className="font-bold text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-200">{totalPages || 1}</span></div>
-            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages || totalPages === 0} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"><span>Next</span><ChevronRightIcon className="w-4 h-4" /></button>
+            <button 
+              onClick={() => handlePageChange(currentPage - 1)} 
+              disabled={currentPage === 1} 
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeftIcon className="w-4 h-4" />
+              <span>Previous</span>
+            </button>
+            <div className="text-sm font-medium text-slate-400">
+              Page <span className="font-bold text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-200">{totalPages || 1}</span>
+            </div>
+            <button 
+              onClick={() => handlePageChange(currentPage + 1)} 
+              disabled={currentPage === totalPages || totalPages === 0} 
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <span>Next</span>
+              <ChevronRightIcon className="w-4 h-4" />
+            </button>
           </div>
         </footer>
       </div>
