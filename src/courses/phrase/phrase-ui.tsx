@@ -12,6 +12,7 @@ const FunnelIcon = ({ className }: { className: string }) => ( <svg xmlns="http:
 const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> );
 
 const ITEMS_PER_PAGE = 50;
+const PHRASES_PER_PAGE = 20; // <-- ĐÃ CẬP NHẬT: Số cụm từ mỗi trang trong popup filter
 
 // --- Helper function to process and group sentences by 2-word phrases ---
 const generatePhraseGroups = () => {
@@ -20,9 +21,9 @@ const generatePhraseGroups = () => {
   exampleData.forEach((sentence, index) => {
     const words = sentence.english
       .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '') // Remove punctuation
-      .split(/\s+/) // Split by whitespace
-      .filter(Boolean); // Remove empty strings
+      .replace(/[^a-z0-9\s]/g, '')
+      .split(/\s+/)
+      .filter(Boolean);
 
     for (let i = 0; i < words.length - 1; i++) {
       const phrase = `${words[i]} ${words[i+1]}`;
@@ -33,7 +34,6 @@ const generatePhraseGroups = () => {
     }
   });
 
-  // Filter out phrases that only appear once
   const filteredPhraseMap = new Map<string, number[]>();
   for (const [phrase, indices] of phraseMap.entries()) {
     if (indices.length > 1) {
@@ -56,6 +56,7 @@ interface FilterPopupProps {
 const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilter, onClearFilter, phraseGroups }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'alpha' | 'freq'>('freq');
+  const [currentPage, setCurrentPage] = useState(1);
   
   const sortedAndFilteredPhrases = useMemo(() => {
     let phrases = Array.from(phraseGroups.entries()).map(([phrase, indices]) => ({
@@ -74,12 +75,30 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
     }
     return phrases;
   }, [phraseGroups, searchTerm, sortBy]);
+  
+  // Reset page to 1 when search or sort changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy]);
+
+  // Pagination logic for the popup
+  const totalPages = Math.ceil(sortedAndFilteredPhrases.length / PHRASES_PER_PAGE);
+  const paginatedPhrases = useMemo(() => {
+    const startIndex = (currentPage - 1) * PHRASES_PER_PAGE;
+    return sortedAndFilteredPhrases.slice(startIndex, startIndex + PHRASES_PER_PAGE);
+  }, [currentPage, sortedAndFilteredPhrases]);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-slate-800 rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl border border-slate-700" onClick={e => e.stopPropagation()}>
+      <div className="bg-slate-800 rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl border border-slate-700" onClick={e => e.stopPropagation()}>
         <header className="p-4 border-b border-slate-700 flex justify-between items-center flex-shrink-0">
           <h2 className="text-lg font-bold text-white">Filter by Phrase</h2>
           <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors">
@@ -104,16 +123,41 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
         </div>
         <div className="overflow-y-auto px-4 pb-4 flex-grow">
           <ul className="space-y-2">
-            {sortedAndFilteredPhrases.map(({ phrase, count }) => (
+            {paginatedPhrases.length > 0 ? paginatedPhrases.map(({ phrase, count }) => (
               <li key={phrase}>
                 <button onClick={() => onSelectFilter(phrase)} className="w-full text-left p-3 rounded-lg bg-slate-900 hover:bg-slate-700/50 border border-slate-700 transition-colors flex justify-between items-center">
                   <span className="font-medium text-slate-200">"{phrase}"</span>
                   <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-1 rounded-full">{count}</span>
                 </button>
               </li>
-            ))}
+            )) : (
+              <div className="text-center text-slate-400 py-8">
+                <p>No matching phrases found.</p>
+              </div>
+            )}
           </ul>
         </div>
+        {totalPages > 1 && (
+            <footer className="flex-shrink-0 border-t border-slate-700 p-3 flex justify-between items-center">
+                <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <ChevronLeftIcon className="w-5 h-5" />
+                </button>
+                <div className="text-sm font-medium text-slate-400">
+                    Page <span className="font-bold text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-200">{totalPages}</span>
+                </div>
+                <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <ChevronRightIcon className="w-5 h-5" />
+                </button>
+            </footer>
+        )}
       </div>
     </div>
   );
@@ -155,7 +199,7 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
 
   const currentSentences = useMemo(() => {
     // We need to map back to original index for audio playback and keys
-    const dataWithOriginalIndex = filteredData.map((sentence, index) => {
+    const dataWithOriginalIndex = filteredData.map((sentence) => {
         const originalIndex = exampleData.findIndex(s => s.english === sentence.english && s.vietnamese === sentence.vietnamese);
         return { ...sentence, originalIndex };
     });
