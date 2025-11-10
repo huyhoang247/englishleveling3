@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import BackButton from '../../ui/back-button.tsx';
 import { exampleData } from '../../voca-data/example-data.ts';
 import { generateAudioUrlsForExamSentence } from '../../voca-data/audio-quiz-generator.ts';
+import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts'; // --- NEW: Import vocabulary list ---
 
 // --- Icons used in this component ---
 const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg> );
@@ -10,6 +11,9 @@ const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="
 const ChevronRightIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg> );
 const FunnelIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg> );
 const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> );
+// --- NEW: Icon for Vocabulary Check button ---
+const CheckBadgeIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> );
+
 
 const ITEMS_PER_PAGE = 50;
 const PHRASES_PER_PAGE = 20;
@@ -34,9 +38,7 @@ interface PhraseData {
 const generateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
   const allPhraseGroups = new Map<number, Map<string, PhraseData>>();
 
-  // --- CHANGE START: Start loop from 1 to include single words ---
   for (let phraseLength = 1; phraseLength <= 6; phraseLength++) {
-  // --- CHANGE END ---
     const tempPhraseMap = new Map<string, { indices: number[], uniqueSentences: Set<string> }>();
 
     exampleData.forEach((sentence, index) => {
@@ -140,7 +142,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
           />
           <div>
             <label className="text-sm font-medium text-slate-400 mb-2 block">Phrase Length (words)</label>
-            {/* --- CHANGE START: Update grid to 6 columns and add length 1 --- */}
             <div className="grid grid-cols-6 gap-2">
               {[1, 2, 3, 4, 5, 6].map(len => (
                 <button 
@@ -152,7 +153,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
                 </button>
               ))}
             </div>
-            {/* --- CHANGE END --- */}
           </div>
           <div className="flex justify-between items-center">
              <div className="flex gap-2 text-sm">
@@ -192,6 +192,139 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
 };
 const MemoizedFilterPopup = React.memo(FilterPopup);
 
+// --- NEW: Vocabulary Check Popup Component ---
+interface VocabularyCheckPopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onClose }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState<'matched' | 'unmatched'>('matched');
+  const [currentPage, setCurrentPage] = useState(1);
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  const wordCheckResults = useMemo(() => {
+    const exampleWords = new Set<string>();
+    exampleData.forEach(sentence => {
+      sentence.english.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean).forEach(word => {
+        exampleWords.add(word);
+      });
+    });
+
+    const uniqueVocabulary = [...new Set(defaultVocabulary.map(v => v.toLowerCase().trim()))];
+    const matchedWords: string[] = [];
+    const unmatchedWords: string[] = [];
+
+    uniqueVocabulary.forEach(word => {
+      if (exampleWords.has(word)) {
+        matchedWords.push(word);
+      } else {
+        unmatchedWords.push(word);
+      }
+    });
+
+    return { 
+      matchedWords: matchedWords.sort(), 
+      unmatchedWords: unmatchedWords.sort(),
+      total: uniqueVocabulary.length,
+    };
+  }, []);
+
+  const filteredWords = useMemo(() => {
+    const source = activeTab === 'matched' ? wordCheckResults.matchedWords : wordCheckResults.unmatchedWords;
+    if (!debouncedSearchTerm) {
+      return source;
+    }
+    return source.filter(word => word.includes(debouncedSearchTerm.toLowerCase()));
+  }, [activeTab, debouncedSearchTerm, wordCheckResults]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, activeTab]);
+
+  const totalPages = Math.ceil(filteredWords.length / ITEMS_PER_PAGE);
+  const paginatedWords = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredWords.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [currentPage, filteredWords]);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-slate-800 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl border border-slate-700" onClick={e => e.stopPropagation()}>
+        <header className="p-4 border-b border-slate-700 flex justify-between items-center flex-shrink-0">
+          <h2 className="text-lg font-bold text-white">Vocabulary Check</h2>
+          <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors">
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+        </header>
+        <div className="p-4 flex-shrink-0 space-y-4">
+            <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <div className="text-xs text-slate-400">TOTAL</div>
+                    <div className="text-2xl font-bold text-white">{wordCheckResults.total}</div>
+                </div>
+                <div>
+                    <div className="text-xs text-green-400">MATCHED</div>
+                    <div className="text-2xl font-bold text-green-400">{wordCheckResults.matchedWords.length}</div>
+                </div>
+                <div>
+                    <div className="text-xs text-amber-400">UNMATCHED</div>
+                    <div className="text-2xl font-bold text-amber-400">{wordCheckResults.unmatchedWords.length}</div>
+                </div>
+            </div>
+             <input
+                type="text"
+                placeholder="Search for a word..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-600 rounded-md px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <div className="border-b border-slate-700">
+                <nav className="-mb-px flex gap-4" aria-label="Tabs">
+                    <button onClick={() => setActiveTab('matched')} className={`shrink-0 border-b-2 px-1 pb-2 text-sm font-medium ${activeTab === 'matched' ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300'}`}>
+                        Matched <span className="ml-1 rounded-full bg-slate-700 px-2 py-0.5 text-xs font-semibold">{wordCheckResults.matchedWords.length}</span>
+                    </button>
+                    <button onClick={() => setActiveTab('unmatched')} className={`shrink-0 border-b-2 px-1 pb-2 text-sm font-medium ${activeTab === 'unmatched' ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300'}`}>
+                        Not Matched <span className="ml-1 rounded-full bg-slate-700 px-2 py-0.5 text-xs font-semibold">{wordCheckResults.unmatchedWords.length}</span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+        <div className="overflow-y-auto px-4 pb-4 flex-grow">
+          {paginatedWords.length > 0 ? (
+            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {paginatedWords.map((word) => (
+                <li key={word} className="p-2 bg-slate-900 rounded-md text-slate-300 text-sm text-center font-mono border border-slate-700/50">
+                  {word}
+                </li>
+              ))}
+            </ul>
+          ) : (
+             <div className="text-center text-slate-400 py-8">
+                <p>No matching words found.</p>
+             </div>
+          )}
+        </div>
+        {totalPages > 1 && (
+            <footer className="flex-shrink-0 border-t border-slate-700 p-3 flex justify-between items-center">
+                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeftIcon className="w-5 h-5" /></button>
+                <div className="text-sm font-medium text-slate-400">Page <span className="font-bold text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-200">{totalPages}</span></div>
+                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronRightIcon className="w-5 h-5" /></button>
+            </footer>
+        )}
+      </div>
+    </div>
+  );
+};
+
 
 // --- Main Viewer Component ---
 interface PhraseViewerProps {
@@ -203,6 +336,7 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   const [audioState, setAudioState] = useState<{ index: number | null; isPlaying: boolean }>({ index: null, isPlaying: false });
   const listRef = useRef<HTMLDivElement>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isVocaCheckOpen, setIsVocaCheckOpen] = useState(false); // --- NEW: State for Voca Check popup
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const indexedExampleData = useMemo(() => 
@@ -311,6 +445,11 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
         onSelectFilter={handleSelectFilter}
         onClearFilter={handleClearFilter}
       />
+      {/* --- NEW: Render Voca Check Popup --- */}
+      <VocabularyCheckPopup
+        isOpen={isVocaCheckOpen}
+        onClose={() => setIsVocaCheckOpen(false)}
+      />
       <div className="h-full w-full bg-slate-900 flex flex-col text-white">
         <audio ref={audioRef} preload="auto" className="hidden" />
         {/* --- START: HEADER --- */}
@@ -321,7 +460,15 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
               <div className="flex-1 flex justify-center items-center">
                 <h1 className="text-lg font-bold text-slate-200 truncate">Example Phrases</h1>
               </div>
-              <div className="w-24 flex justify-end">
+              {/* --- NEW: Container for header buttons --- */}
+              <div className="w-24 flex justify-end items-center gap-2">
+                 <button 
+                  onClick={() => setIsVocaCheckOpen(true)} 
+                  className="p-2 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
+                  title="Check Vocabulary"
+                >
+                    <CheckBadgeIcon className="w-6 h-6" />
+                </button>
                 <button 
                   onClick={() => setIsFilterOpen(true)} 
                   className={`p-2 rounded-full transition-colors ${activeFilter ? 'bg-blue-600 text-white hover:bg-blue-500' : 'text-slate-400 hover:bg-slate-700 hover:text-white'}`}
