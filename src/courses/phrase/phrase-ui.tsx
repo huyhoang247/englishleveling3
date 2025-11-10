@@ -320,20 +320,13 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
       />
       <div className="h-full w-full bg-slate-900 flex flex-col text-white">
         <audio ref={audioRef} preload="auto" className="hidden" />
+        {/* --- START: HEADER --- */}
         <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md flex-shrink-0">
           <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-14 items-center">
               <div className="w-24 flex"><BackButton onClick={onGoBack} /></div>
-              <div className="flex-1 flex justify-center items-center gap-2 px-2">
+              <div className="flex-1 flex justify-center items-center">
                 <h1 className="text-lg font-bold text-slate-200 truncate">Example Phrases</h1>
-                {activeFilter && (
-                   <span className="flex items-center gap-2 bg-blue-900/50 text-blue-300 text-xs font-medium px-2 py-1 rounded-full border border-blue-800">
-                     {activeFilter}
-                     <button onClick={handleClearFilter} className="text-blue-400 hover:text-white">
-                       <XMarkIcon className="w-3 h-3" />
-                     </button>
-                   </span>
-                )}
               </div>
               <div className="w-24 flex justify-end">
                 <button 
@@ -347,6 +340,29 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
             </div>
           </div>
         </header>
+        {/* --- END: HEADER --- */}
+
+        {/* --- START: NEW FILTER TAB BAR --- */}
+        {activeFilter && (
+          <div className="flex-shrink-0 bg-slate-800/50 border-b border-slate-700">
+            <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between h-12">
+                 <div className="flex items-center gap-3">
+                   <span className="text-sm font-semibold text-slate-400">Đang lọc theo:</span>
+                   <span className="flex items-center gap-2 bg-blue-900/50 text-blue-300 text-sm font-medium px-3 py-1.5 rounded-full border border-blue-800">
+                     "{activeFilter}"
+                   </span>
+                 </div>
+                 <button onClick={handleClearFilter} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-700">
+                   <XMarkIcon className="w-4 h-4" />
+                   <span>Xóa bộ lọc</span>
+                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* --- END: NEW FILTER TAB BAR --- */}
+
         <main ref={listRef} className="flex-grow overflow-y-auto bg-black p-4 sm:p-6">
           <div className="max-w-4xl mx-auto space-y-4">
             {currentSentences.map((sentence) => {
