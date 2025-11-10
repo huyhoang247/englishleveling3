@@ -7,7 +7,7 @@ import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts'; // --- I
 // --- Icons used in this component ---
 const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg> );
 const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
-const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
+const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 const ChevronRightIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg> );
 const FunnelIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg> );
 const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> );
@@ -288,6 +288,8 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
             <XMarkIcon className="w-6 h-6" />
           </button>
         </header>
+
+        {/* --- Top Controls Section --- */}
         <div className="p-4 flex-shrink-0 space-y-4">
             <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
@@ -310,7 +312,11 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-600 rounded-md px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <div className="flex justify-between items-end border-b border-slate-700">
+        </div>
+
+        {/* --- CHANGE START: Restructured Tab and Sort controls --- */}
+        <div className="px-4 pb-4 flex-shrink-0">
+            <div className="border-b border-slate-700">
                 <nav className="-mb-px flex gap-4" aria-label="Tabs">
                     <button onClick={() => setActiveTab('matched')} className={`shrink-0 border-b-2 px-1 pb-2 text-sm font-medium ${activeTab === 'matched' ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300'}`}>
                         Matched
@@ -319,14 +325,16 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
                         Not Matched
                     </button>
                 </nav>
-                {activeTab === 'matched' && (
-                    <div className="flex gap-2 text-sm pb-1">
-                        <button onClick={() => setSortBy('freq')} className={`px-3 py-1 rounded-md ${sortBy === 'freq' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}>Most Common</button>
-                        <button onClick={() => setSortBy('alpha')} className={`px-3 py-1 rounded-md ${sortBy === 'alpha' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}>A-Z</button>
-                    </div>
-                )}
             </div>
+            {activeTab === 'matched' && (
+                <div className="flex justify-end gap-2 text-sm pt-3">
+                    <button onClick={() => setSortBy('freq')} className={`px-3 py-1 rounded-md transition-colors ${sortBy === 'freq' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>Most Common</button>
+                    <button onClick={() => setSortBy('alpha')} className={`px-3 py-1 rounded-md transition-colors ${sortBy === 'alpha' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>A-Z</button>
+                </div>
+            )}
         </div>
+        {/* --- CHANGE END --- */}
+
         <div className="overflow-y-auto px-4 pb-4 flex-grow">
           {paginatedItems.length > 0 ? (
             activeTab === 'matched' ? (
