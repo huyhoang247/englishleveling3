@@ -1,23 +1,34 @@
+// --- START OF FILE phrase-ui.tsx (6).txt ---
+
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import BackButton from '../../ui/back-button.tsx';
 import { exampleData } from '../../voca-data/example-data.ts';
 import { generateAudioUrlsForExamSentence } from '../../voca-data/audio-quiz-generator.ts';
-import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts'; // --- Import vocabulary list ---
+import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
+
+// --- START: Imports for Flashcard functionality ---
+import FlashcardDetailModal from '../../story/flashcard.tsx';
+import { WORD_TO_CARD_MAP, Flashcard as FlashcardData, exampleData as allExampleSentences } from '../../story/flashcard-data.ts';
+// --- END: Imports for Flashcard functionality ---
+
 
 // --- Icons used in this component ---
 const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg> );
-const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
+const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
 const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 const ChevronRightIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg> );
 const FunnelIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg> );
 const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> );
 const CheckBadgeIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> );
+// --- NEW ICON for Flashcard Toggle ---
+const SparklesIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.553L16.5 21.75l-.398-1.197a3.375 3.375 0 00-2.455-2.455L12.75 18l1.197-.398a3.375 3.375 0 002.455-2.455l.398-1.197.398 1.197a3.375 3.375 0 002.455 2.455l1.197.398-1.197.398a3.375 3.375 0 00-2.455 2.455z" /></svg>);
 
 
 const ITEMS_PER_PAGE = 50;
 const PHRASES_PER_PAGE = 20;
 
 function useDebounce<T>(value: T, delay: number): T {
+    // ... (no changes in this function)
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -35,6 +46,7 @@ interface PhraseData {
   uniqueCount: number;
 }
 const generateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
+  // ... (no changes in this function)
   const allPhraseGroups = new Map<number, Map<string, PhraseData>>();
 
   for (let phraseLength = 1; phraseLength <= 6; phraseLength++) {
@@ -74,12 +86,14 @@ const allPhraseGroups = generateAllPhraseGroups();
 
 // --- Filter Popup Component ---
 interface FilterPopupProps {
+  // ... (no changes in this component)
   isOpen: boolean;
   onClose: () => void;
   onSelectFilter: (phrase: string) => void;
   onClearFilter: () => void;
 }
 const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilter, onClearFilter }) => {
+  // ... (no changes in this component)
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'alpha' | 'freq'>('freq');
   const [currentPage, setCurrentPage] = useState(1);
@@ -193,10 +207,12 @@ const MemoizedFilterPopup = React.memo(FilterPopup);
 
 // --- Vocabulary Check Popup Component ---
 interface VocabularyCheckPopupProps {
+  // ... (no changes in this component)
   isOpen: boolean;
   onClose: () => void;
 }
 const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onClose }) => {
+  // ... (no changes in this component)
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'matched' | 'unmatched'>('matched');
   const [currentPage, setCurrentPage] = useState(1);
@@ -289,7 +305,6 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
           </button>
         </header>
 
-        {/* --- Top Controls Section --- */}
         <div className="p-4 flex-shrink-0 space-y-4">
             <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
@@ -314,7 +329,6 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
             />
         </div>
 
-        {/* --- CHANGE START: Restructured Tab and Sort controls --- */}
         <div className="px-4 pb-4 flex-shrink-0">
             <div className="border-b border-slate-700">
                 <nav className="-mb-px flex gap-4" aria-label="Tabs">
@@ -333,7 +347,6 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
                 </div>
             )}
         </div>
-        {/* --- CHANGE END --- */}
 
         <div className="overflow-y-auto px-4 pb-4 flex-grow">
           {paginatedItems.length > 0 ? (
@@ -387,12 +400,21 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   const [isVocaCheckOpen, setIsVocaCheckOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
+  // --- START: State for Flashcard functionality ---
+  const [showFlashcardWords, setShowFlashcardWords] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<FlashcardData | null>(null);
+
+  // Memoize the set of flashcard words for efficient lookup
+  const flashcardVocabularySet = useMemo(() => new Set(Array.from(WORD_TO_CARD_MAP.keys())), []);
+  // --- END: State for Flashcard functionality ---
+
   const indexedExampleData = useMemo(() => 
     exampleData.map((sentence, index) => ({ ...sentence, originalIndex: index })),
     []
   );
 
   const filteredData = useMemo(() => {
+    // ... (no changes in this block)
     let phraseFilteredData;
     if (!activeFilter) {
       phraseFilteredData = indexedExampleData;
@@ -437,8 +459,44 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
     setCurrentPage(1);
     setIsFilterOpen(false);
   }, []);
+
+  // --- START: Handler for clicking a highlighted flashcard word ---
+  const handleWordClick = useCallback((word: string) => {
+    const card = WORD_TO_CARD_MAP.get(word.toLowerCase());
+    if (card) {
+      setSelectedCard(card);
+    }
+  }, []);
+
+  // Function to render sentence with highlighted flashcard words
+  const renderSentenceWithFlashcards = useCallback((sentence: string) => {
+    if (!showFlashcardWords) {
+      return sentence;
+    }
+
+    // Split sentence by spaces and punctuation, keeping the delimiters
+    const parts = sentence.split(/(\s+|[.,?!])/g);
+
+    return parts.map((part, index) => {
+      const lowerPart = part.toLowerCase();
+      if (flashcardVocabularySet.has(lowerPart)) {
+        return (
+          <button
+            key={index}
+            onClick={() => handleWordClick(part)}
+            className="font-bold text-blue-400 hover:text-blue-300 hover:underline transition-colors duration-150"
+          >
+            {part}
+          </button>
+        );
+      }
+      return <React.Fragment key={index}>{part}</React.Fragment>;
+    });
+  }, [showFlashcardWords, flashcardVocabularySet, handleWordClick]);
+  // --- END: Handlers for flashcard functionality ---
   
   const handleToggleAudio = useCallback((sentenceIndex: number) => {
+    // ... (no changes in this function)
     const audio = audioRef.current;
     if (!audio) return;
     
@@ -497,23 +555,41 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
         isOpen={isVocaCheckOpen}
         onClose={() => setIsVocaCheckOpen(false)}
       />
+      {/* --- RENDER FLASHCARD MODAL --- */}
+      <FlashcardDetailModal
+        selectedCard={selectedCard}
+        showVocabDetail={!!selectedCard}
+        exampleSentencesData={allExampleSentences}
+        onClose={() => setSelectedCard(null)}
+        currentVisualStyle="default"
+        zIndex={110} // Higher z-index to appear above other popups
+      />
+
       <div className="h-full w-full bg-slate-900 flex flex-col text-white">
         <audio ref={audioRef} preload="auto" className="hidden" />
-        {/* --- START: HEADER --- */}
+        {/* --- START: HEADER (MODIFIED) --- */}
         <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md flex-shrink-0">
           <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-14 items-center">
               <div className="w-24 flex"><BackButton onClick={onGoBack} /></div>
               <div className="flex-1 flex justify-center items-center">
-                <h1 className="text-lg font-bold text-slate-200 truncate">Example Phrases</h1>
+                {/* --- REMOVED h1 TITLE --- */}
               </div>
-              <div className="w-24 flex justify-end items-center gap-2">
+              <div className="w-24 flex justify-end items-center gap-1">
                  <button 
                   onClick={() => setIsVocaCheckOpen(true)} 
                   className="p-2 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
                   title="Check Vocabulary"
                 >
                     <CheckBadgeIcon className="w-6 h-6" />
+                </button>
+                {/* --- NEW FLASHCARD TOGGLE BUTTON --- */}
+                <button
+                  onClick={() => setShowFlashcardWords(prev => !prev)}
+                  className={`p-2 rounded-full transition-colors ${showFlashcardWords ? 'bg-blue-600 text-white hover:bg-blue-500' : 'text-slate-400 hover:bg-slate-700 hover:text-white'}`}
+                  title="Highlight Flashcard Words"
+                >
+                    <SparklesIcon className="w-5 h-5" />
                 </button>
                 <button 
                   onClick={() => setIsFilterOpen(true)} 
@@ -526,7 +602,7 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
             </div>
           </div>
         </header>
-        {/* --- END: HEADER --- */}
+        {/* --- END: HEADER (MODIFIED) --- */}
 
         {/* --- START: NEW FILTER TAB BAR --- */}
         {activeFilter && (
@@ -563,7 +639,10 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
                   >
                     {isThisPlaying ? <PauseIcon className="w-4 h-4" /> : <VolumeUpIcon className="w-4 h-4" />}
                   </button>
-                  <p className="text-gray-200 text-base leading-relaxed font-medium pr-10">{sentence.english}</p>
+                  {/* --- MODIFIED: Use render function for sentence --- */}
+                  <p className="text-gray-200 text-base leading-relaxed font-medium pr-10">
+                    {renderSentenceWithFlashcards(sentence.english)}
+                  </p>
                   <p className="mt-2 text-gray-400 text-sm italic">{sentence.vietnamese}</p>
                 </div>
               );
@@ -577,6 +656,7 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
           </div>
         </main>
         <footer className="sticky bottom-0 z-10 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 flex-shrink-0">
+            {/* ... (no changes in footer) ... */}
           <div className="max-w-4xl mx-auto p-3 flex justify-between items-center">
             <button 
               onClick={() => handlePageChange(currentPage - 1)} 
