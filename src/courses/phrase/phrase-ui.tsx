@@ -27,8 +27,6 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-// --- CHANGE START: Major update to pre-calculation logic ---
-// Now generates counts based on unique sentences.
 interface PhraseData {
   indices: number[];
   uniqueCount: number;
@@ -36,8 +34,9 @@ interface PhraseData {
 const generateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
   const allPhraseGroups = new Map<number, Map<string, PhraseData>>();
 
-  for (let phraseLength = 2; phraseLength <= 6; phraseLength++) {
-    // Temporary map to gather all data before finalizing
+  // --- CHANGE START: Start loop from 1 to include single words ---
+  for (let phraseLength = 1; phraseLength <= 6; phraseLength++) {
+  // --- CHANGE END ---
     const tempPhraseMap = new Map<string, { indices: number[], uniqueSentences: Set<string> }>();
 
     exampleData.forEach((sentence, index) => {
@@ -56,10 +55,8 @@ const generateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
       }
     });
     
-    // Finalize the map for this phrase length
     const finalPhraseMap = new Map<string, PhraseData>();
     for (const [phrase, data] of tempPhraseMap.entries()) {
-      // Keep the filter for phrases that appear more than once (total occurrences)
       if (data.indices.length > 1) {
         finalPhraseMap.set(phrase, {
           indices: data.indices,
@@ -72,7 +69,6 @@ const generateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
   return allPhraseGroups;
 };
 const allPhraseGroups = generateAllPhraseGroups();
-// --- CHANGE END ---
 
 
 // --- Filter Popup Component ---
@@ -91,12 +87,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
 
   const sortedAndFilteredPhrases = useMemo(() => {
     const currentPhraseMap = allPhraseGroups.get(phraseLength) || new Map();
-    // --- CHANGE START: Adapt to the new data structure from pre-calculation ---
     let phrases = Array.from(currentPhraseMap.entries()).map(([phrase, data]) => ({
       phrase,
-      count: data.uniqueCount, // Use the pre-calculated unique count
+      count: data.uniqueCount,
     }));
-    // --- CHANGE END ---
 
     if (debouncedSearchTerm) {
       phrases = phrases.filter(p => p.phrase.includes(debouncedSearchTerm.toLowerCase()));
@@ -146,8 +140,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
           />
           <div>
             <label className="text-sm font-medium text-slate-400 mb-2 block">Phrase Length (words)</label>
-            <div className="grid grid-cols-5 gap-2">
-              {[2, 3, 4, 5, 6].map(len => (
+            {/* --- CHANGE START: Update grid to 6 columns and add length 1 --- */}
+            <div className="grid grid-cols-6 gap-2">
+              {[1, 2, 3, 4, 5, 6].map(len => (
                 <button 
                   key={len} 
                   onClick={() => setPhraseLength(len)} 
@@ -157,6 +152,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
                 </button>
               ))}
             </div>
+            {/* --- CHANGE END --- */}
           </div>
           <div className="flex justify-between items-center">
              <div className="flex gap-2 text-sm">
@@ -220,15 +216,12 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
       phraseFilteredData = indexedExampleData;
     } else {
       let indices: number[] | undefined;
-      // --- CHANGE START: Adapt to new data structure when filtering ---
       for (const phraseMap of allPhraseGroups.values()) {
         if (phraseMap.has(activeFilter)) {
-          // The data object now contains both indices and uniqueCount. We need indices.
           indices = phraseMap.get(activeFilter)?.indices;
           break; 
         }
       }
-      // --- CHANGE END ---
       phraseFilteredData = indices ? indices.map(i => indexedExampleData[i]) : [];
     }
     
