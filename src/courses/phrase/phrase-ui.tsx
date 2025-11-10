@@ -2,16 +2,15 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import BackButton from '../../ui/back-button.tsx';
 import { exampleData } from '../../voca-data/example-data.ts';
 import { generateAudioUrlsForExamSentence } from '../../voca-data/audio-quiz-generator.ts';
-import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts'; // --- NEW: Import vocabulary list ---
+import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts'; // --- Import vocabulary list ---
 
 // --- Icons used in this component ---
 const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg> );
 const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
-const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
+const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
 const ChevronRightIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg> );
 const FunnelIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg> );
 const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> );
-// --- NEW: Icon for Vocabulary Check button ---
 const CheckBadgeIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> );
 
 
@@ -192,7 +191,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
 };
 const MemoizedFilterPopup = React.memo(FilterPopup);
 
-// --- NEW: Vocabulary Check Popup Component ---
+// --- Vocabulary Check Popup Component ---
 interface VocabularyCheckPopupProps {
   isOpen: boolean;
   onClose: () => void;
@@ -201,52 +200,76 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'matched' | 'unmatched'>('matched');
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<'freq' | 'alpha'>('freq');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const wordCheckResults = useMemo(() => {
-    const exampleWords = new Set<string>();
+    const wordSentenceMap = new Map<string, Set<string>>();
     exampleData.forEach(sentence => {
-      sentence.english.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean).forEach(word => {
-        exampleWords.add(word);
+      const uniqueWordsInSentence = new Set(
+        sentence.english.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter(Boolean)
+      );
+      uniqueWordsInSentence.forEach(word => {
+        if (!wordSentenceMap.has(word)) {
+          wordSentenceMap.set(word, new Set());
+        }
+        wordSentenceMap.get(word)!.add(sentence.english.trim().toLowerCase());
       });
     });
 
     const uniqueVocabulary = [...new Set(defaultVocabulary.map(v => v.toLowerCase().trim()))];
-    const matchedWords: string[] = [];
+    const matchedWords: { word: string; count: number }[] = [];
     const unmatchedWords: string[] = [];
 
     uniqueVocabulary.forEach(word => {
-      if (exampleWords.has(word)) {
-        matchedWords.push(word);
+      if (wordSentenceMap.has(word)) {
+        matchedWords.push({
+          word,
+          count: wordSentenceMap.get(word)!.size,
+        });
       } else {
         unmatchedWords.push(word);
       }
     });
 
     return { 
-      matchedWords: matchedWords.sort(), 
+      matchedWords, 
       unmatchedWords: unmatchedWords.sort(),
       total: uniqueVocabulary.length,
     };
   }, []);
 
-  const filteredWords = useMemo(() => {
-    const source = activeTab === 'matched' ? wordCheckResults.matchedWords : wordCheckResults.unmatchedWords;
-    if (!debouncedSearchTerm) {
-      return source;
+  const sortedAndFilteredItems = useMemo(() => {
+    if (activeTab === 'matched') {
+      let items = [...wordCheckResults.matchedWords];
+      if (sortBy === 'alpha') {
+        items.sort((a, b) => a.word.localeCompare(b.word));
+      } else { 
+        items.sort((a, b) => b.count - a.count || a.word.localeCompare(b.word));
+      }
+      if (debouncedSearchTerm) {
+        return items.filter(item => item.word.includes(debouncedSearchTerm.toLowerCase()));
+      }
+      return items;
+    } else {
+      const items = wordCheckResults.unmatchedWords;
+      if (debouncedSearchTerm) {
+        return items.filter(word => word.includes(debouncedSearchTerm.toLowerCase()));
+      }
+      return items;
     }
-    return source.filter(word => word.includes(debouncedSearchTerm.toLowerCase()));
-  }, [activeTab, debouncedSearchTerm, wordCheckResults]);
+  }, [activeTab, debouncedSearchTerm, wordCheckResults, sortBy]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm, activeTab]);
+  }, [debouncedSearchTerm, activeTab, sortBy]);
 
-  const totalPages = Math.ceil(filteredWords.length / ITEMS_PER_PAGE);
-  const paginatedWords = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredWords.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [currentPage, filteredWords]);
+  const itemsPerPage = activeTab === 'matched' ? PHRASES_PER_PAGE : ITEMS_PER_PAGE;
+  const totalPages = Math.ceil(sortedAndFilteredItems.length / itemsPerPage);
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return sortedAndFilteredItems.slice(startIndex, startIndex + itemsPerPage);
+  }, [currentPage, sortedAndFilteredItems, itemsPerPage]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -287,26 +310,43 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-600 rounded-md px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <div className="border-b border-slate-700">
+            <div className="flex justify-between items-end border-b border-slate-700">
                 <nav className="-mb-px flex gap-4" aria-label="Tabs">
                     <button onClick={() => setActiveTab('matched')} className={`shrink-0 border-b-2 px-1 pb-2 text-sm font-medium ${activeTab === 'matched' ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300'}`}>
-                        Matched <span className="ml-1 rounded-full bg-slate-700 px-2 py-0.5 text-xs font-semibold">{wordCheckResults.matchedWords.length}</span>
+                        Matched
                     </button>
                     <button onClick={() => setActiveTab('unmatched')} className={`shrink-0 border-b-2 px-1 pb-2 text-sm font-medium ${activeTab === 'unmatched' ? 'border-blue-500 text-blue-500' : 'border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300'}`}>
-                        Not Matched <span className="ml-1 rounded-full bg-slate-700 px-2 py-0.5 text-xs font-semibold">{wordCheckResults.unmatchedWords.length}</span>
+                        Not Matched
                     </button>
                 </nav>
+                {activeTab === 'matched' && (
+                    <div className="flex gap-2 text-sm pb-1">
+                        <button onClick={() => setSortBy('freq')} className={`px-3 py-1 rounded-md ${sortBy === 'freq' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}>Most Common</button>
+                        <button onClick={() => setSortBy('alpha')} className={`px-3 py-1 rounded-md ${sortBy === 'alpha' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}>A-Z</button>
+                    </div>
+                )}
             </div>
         </div>
         <div className="overflow-y-auto px-4 pb-4 flex-grow">
-          {paginatedWords.length > 0 ? (
-            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {paginatedWords.map((word) => (
-                <li key={word} className="p-2 bg-slate-900 rounded-md text-slate-300 text-sm text-center font-mono border border-slate-700/50">
-                  {word}
-                </li>
-              ))}
-            </ul>
+          {paginatedItems.length > 0 ? (
+            activeTab === 'matched' ? (
+              <ul className="space-y-2">
+                {(paginatedItems as { word: string; count: number }[]).map(({ word, count }) => (
+                  <li key={word} className="w-full text-left p-3 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
+                    <span className="font-medium text-slate-200">{word}</span>
+                    <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-1 rounded-full">{count}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {(paginatedItems as string[]).map((word) => (
+                  <li key={word} className="p-2 bg-slate-900 rounded-md text-slate-300 text-sm text-center font-mono border border-slate-700/50 truncate">
+                    {word}
+                  </li>
+                ))}
+              </ul>
+            )
           ) : (
              <div className="text-center text-slate-400 py-8">
                 <p>No matching words found.</p>
@@ -336,7 +376,7 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   const [audioState, setAudioState] = useState<{ index: number | null; isPlaying: boolean }>({ index: null, isPlaying: false });
   const listRef = useRef<HTMLDivElement>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isVocaCheckOpen, setIsVocaCheckOpen] = useState(false); // --- NEW: State for Voca Check popup
+  const [isVocaCheckOpen, setIsVocaCheckOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const indexedExampleData = useMemo(() => 
@@ -445,7 +485,6 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
         onSelectFilter={handleSelectFilter}
         onClearFilter={handleClearFilter}
       />
-      {/* --- NEW: Render Voca Check Popup --- */}
       <VocabularyCheckPopup
         isOpen={isVocaCheckOpen}
         onClose={() => setIsVocaCheckOpen(false)}
@@ -460,7 +499,6 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
               <div className="flex-1 flex justify-center items-center">
                 <h1 className="text-lg font-bold text-slate-200 truncate">Example Phrases</h1>
               </div>
-              {/* --- NEW: Container for header buttons --- */}
               <div className="w-24 flex justify-end items-center gap-2">
                  <button 
                   onClick={() => setIsVocaCheckOpen(true)} 
