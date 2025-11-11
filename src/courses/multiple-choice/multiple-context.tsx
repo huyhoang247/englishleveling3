@@ -64,18 +64,18 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user, 
     selectedPractice,
     userCoins,
-    masteryCount,
+    masteryCount: globalMasteryCount,
     getOpenedVocab, 
     getCompletedWords, 
     recordGameSuccess,
     updateUserCoins,
     fetchOrCreateUser,
+    // NEW: Get data and utilities from the main context
     definitionsMap,
     exampleData,
     defaultVocabulary,
     generateAudioQuizQuestions,
-    generateAudioUrlsForExamSentence,
-    addExpToWords,
+    generateAudioUrlsForExamSentence
   } = useQuizApp();
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -85,6 +85,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [answered, setAnswered] = useState(false);
   const [coins, setCoins] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [masteryCount, setMasteryCount] = useState(0);
   const [streakAnimation, setStreakAnimation] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const TOTAL_TIME = 30;
@@ -105,6 +106,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sync local UI state with the global state from context
   useEffect(() => { setCoins(userCoins); }, [userCoins]);
+  useEffect(() => { setMasteryCount(globalMasteryCount); }, [globalMasteryCount]);
 
   const handleVoiceChange = (voice: string) => {
     setSelectedVoice(voice);
@@ -133,6 +135,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     return null;
   }, [currentQuestion, playableQuestions, selectedVoice]);
+
+  // REMOVED: definitionsMap is now provided by useQuizApp()
 
   useEffect(() => {
     const loadQuizData = async () => {
@@ -271,39 +275,20 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const currentQuizItem = playableQuestions[currentQuestion];
     const isCorrect = selectedAnswer === currentQuizItem.correctAnswer;
     if (isCorrect) {
-      setShowConfetti(true); 
-      setScore(prev => prev + 1); 
-      const newStreak = streak + 1; 
-      setStreak(newStreak); 
-      const coinsToAdd = masteryCount * newStreak;
-      
-      if (coinsToAdd > 0) { 
-        setCoins(prevCoins => prevCoins + coinsToAdd); 
-      }
-      if (newStreak >= 1) { 
-        setStreakAnimation(true); 
-        setTimeout(() => setStreakAnimation(false), 1500); 
-      }
-
+      setShowConfetti(true); setScore(prev => prev + 1); const newStreak = streak + 1; setStreak(newStreak); const coinsToAdd = masteryCount * newStreak;
+      if (coinsToAdd > 0) { setCoins(prevCoins => prevCoins + coinsToAdd); }
+      if (newStreak >= 1) { setStreakAnimation(true); setTimeout(() => setStreakAnimation(false), 1500); }
       if (user && currentQuestionWord) {
         try {
           const gameModeId = `quiz-${selectedPractice}`;
-          // 1. Ghi nhận kết quả vào database
           await recordGameSuccess(gameModeId, currentQuestionWord, false, coinsToAdd);
-
-          // 2. Cập nhật UI EXP tức thì!
-          addExpToWords([{ word: currentQuestionWord, expToAdd: 100 }]);
-
         } catch (error) {
           console.error("Lỗi khi ghi lại kết quả game Quiz:", error);
           if (coinsToAdd > 0) setCoins(prevCoins => prevCoins - coinsToAdd);
         }
       }
       setTimeout(() => { setShowConfetti(false); setShowNextButton(true); }, 4000);
-    } else { 
-      setStreak(0); 
-      setShowNextButton(true); 
-    }
+    } else { setStreak(0); setShowNextButton(true); }
   };
 
   const handleHintClick = async () => {
@@ -330,25 +315,15 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleNextQuestion = () => {
     const nextQuestion = currentQuestion + 1;
     if (nextQuestion < playableQuestions.length) {
-      setCurrentQuestion(nextQuestion); 
-      setSelectedOption(null); 
-      setAnswered(false); 
-      setShowNextButton(false); 
-      setHintUsed(false); 
-      setHiddenOptions([]);
+      setCurrentQuestion(nextQuestion); setSelectedOption(null); setAnswered(false); setShowNextButton(false); setHintUsed(false); setHiddenOptions([]);
       setSelectedVoice('Matilda');
-    } else { 
-      setShowScore(true); 
-    }
+    } else { setShowScore(true); }
   };
 
   const handleDetailClick = () => {
     if (currentQuestionWord) {
       const definition = definitionsMap[currentQuestionWord.toLowerCase()];
-      if (definition) { 
-        setDetailData(definition); 
-        setShowDetailPopup(true); 
-      }
+      if (definition) { setDetailData(definition); setShowDetailPopup(true); }
     }
   };
 
