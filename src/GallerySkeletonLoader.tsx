@@ -1,6 +1,6 @@
 // --- START OF FILE GallerySkeletonLoader.tsx ---
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface GallerySkeletonLoaderProps {
   layoutMode: 'single' | 'double';
@@ -20,6 +20,17 @@ const SkeletonCard: React.FC = () => (
 const GallerySkeletonLoader: React.FC<GallerySkeletonLoaderProps> = ({ layoutMode }) => {
   // Hiển thị 8 thẻ skeleton để lấp đầy màn hình ban đầu
   const skeletonCount = 8;
+
+  // Thêm useEffect để ngăn cuộn trang khi skeleton đang hiển thị
+  useEffect(() => {
+    // Khi component được mount, thêm class 'overflow-hidden' vào body để vô hiệu hóa scroll
+    document.body.classList.add('overflow-hidden');
+
+    // Trả về một cleanup function để gỡ bỏ class khi component unmount
+    return () => {
+      document.body.classList.remove('overflow-hidden');
+    };
+  }, []); // Mảng rỗng đảm bảo effect này chỉ chạy một lần khi mount và cleanup khi unmount
 
   return (
     <div className="w-full max-w-6xl mx-auto animate-fadeIn">
