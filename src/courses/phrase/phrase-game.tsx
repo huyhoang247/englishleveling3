@@ -88,13 +88,11 @@ export const GameSetupPopup: React.FC<GameSetupPopupProps> = ({ isOpen, onClose,
 
 // --- Main Game Mode Component (Updated) ---
 
-// Define the state for each answer blank
 type AnswerState = {
   value: string;
   status: 'pending' | 'correct' | 'incorrect';
 };
 
-// Define the state for the currently active input field
 interface ActiveInput {
   sentenceIndex: number;
   blankIndex: number;
@@ -107,21 +105,18 @@ interface GameModeProps {
   onExit: () => void;
 }
 export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExit }) => {
-    // State to store the user's answers with their status
     const [userAnswers, setUserAnswers] = useState<Record<number, Record<number, AnswerState>>>({});
-    // State to track the currently focused input field for the virtual keyboard
     const [activeInput, setActiveInput] = useState<ActiveInput | null>(null);
     
     const vocabularySetForGame = useMemo(() => new Set(defaultVocabulary.map(v => v.toLowerCase().trim())), []);
 
-    // Process sentences to identify which words to turn into blanks
     const processedSentences = useMemo(() => {
         return sentences.map(original => {
             const parts = original.english.split(/(\s+|[.,?!;:"'])/g);
             const wordIndices: number[] = [];
 
             parts.forEach((part, index) => {
-                if (/[a-zA-Z']/.test(part) && part.length > 0) { // Check if the part is a word
+                if (/[a-zA-Z']/.test(part) && part.length > 0) {
                     wordIndices.push(index);
                 }
             });
@@ -135,7 +130,6 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                 indicesToHide = new Set(shuffledIndices.slice(0, Math.min(difficulty, wordIndices.length)));
             }
             
-            // Ensure at least one word is hidden if possible
             if (indicesToHide.size === 0 && wordIndices.length > 0) {
                 indicesToHide.add(wordIndices[Math.floor(Math.random() * wordIndices.length)]);
             }
@@ -151,7 +145,6 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
         });
     }, [sentences, difficulty, vocabularySetForGame]);
 
-    // Calculate score and total blanks dynamically
     const { totalBlanks, correctAnswers } = useMemo(() => {
         let blanks = 0;
         let correct = 0;
@@ -170,25 +163,25 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
         return { totalBlanks: blanks, correctAnswers: correct };
     }, [processedSentences, userAnswers]);
 
-    // Handle focusing on an input field
     const handleFocus = useCallback((sentenceIndex: number, blankIndex: number, correctAnswer: string) => {
-        // Do not focus if the answer is already correct
         if (userAnswers[sentenceIndex]?.[blankIndex]?.status === 'correct') {
             return;
         }
         setActiveInput({ sentenceIndex, blankIndex, correctAnswer });
     }, [userAnswers]);
 
-    // Handle input from the virtual keyboard
     const handleKeyboardInput = useCallback((newValue: string) => {
         if (!activeInput) return;
 
         const { sentenceIndex, blankIndex, correctAnswer } = activeInput;
         let newStatus: AnswerState['status'] = 'pending';
 
-        // Automatically check the answer when its length matches the correct word's length
         if (newValue.length === correctAnswer.length) {
             newStatus = newValue.trim().toLowerCase() === correctAnswer.trim().toLowerCase() ? 'correct' : 'incorrect';
+            // If correct, automatically close the keyboard
+            if (newStatus === 'correct') {
+                setActiveInput(null);
+            }
         }
 
         setUserAnswers(prev => ({
@@ -198,21 +191,23 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                 [blankIndex]: { value: newValue, status: newStatus },
             },
         }));
-
-        // If the answer is correct, you could optionally move focus to the next blank or close the keyboard.
-        // For simplicity, we'll let the user click the next blank.
     }, [activeInput]);
     
-    const handleMainClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        // Hide keyboard if clicking outside of an input or the keyboard itself
-        if (!(e.target as HTMLElement).closest('input') && !(e.target as HTMLElement).closest('.virtual-keyboard-container')) {
-             setActiveInput(null);
-        }
-    }
-
     return (
-        <div className="h-full w-full bg-black flex flex-col text-white" onClick={handleMainClick}>
-            <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md flex-shrink-0">
+        // The main container is now a portal for z-index stacking context
+        <div className="h-full w-full bg-black flex flex-col text-white">
+            {/* --- NEW: Overlay --- */}
+            {/* This div acts as a semi-transparent background when the keyboard is active. */}
+            {/* Clicking it will close the keyboard. */}
+            <div
+              onClick={() => setActiveInput(null)}
+              className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 ease-in-out
+                ${activeInput ? 'opacity-100' : 'opacity-0 pointer-events-none'}`
+              }
+            />
+
+            {/* Header: z-index adjusted to be below the overlay and keyboard */}
+            <header className="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-sm shadow-md flex-shrink-0">
                 <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-14 items-center justify-between">
                         <button onClick={onExit} className="px-4 py-2 text-sm font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors">
@@ -226,7 +221,7 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
             </header>
 
             <main className="flex-grow overflow-y-auto p-4 sm:p-6" >
-                <div className="max-w-4xl mx-auto space-y-6 pb-4"> {/* Added padding-bottom */}
+                <div className="max-w-4xl mx-auto space-y-6 pb-4">
                     {processedSentences.map((sentence, sIdx) => {
                         let blankCounter = 0;
                         return (
@@ -236,24 +231,25 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                                         if (typeof part === 'string') {
                                             return <span key={pIdx}>{part}</span>;
                                         } else if (part.answer) {
-                                            const currentBlankIndex = blankCounter;
-                                            blankCounter++;
+                                            const currentBlankIndex = blankCounter++;
                                             const answerState = userAnswers[sIdx]?.[currentBlankIndex] || { value: '', status: 'pending' };
 
                                             let borderColor = 'border-slate-600';
                                             if (answerState.status === 'correct') borderColor = 'border-green-500';
                                             if (answerState.status === 'incorrect') borderColor = 'border-red-500';
-                                            if (activeInput?.sentenceIndex === sIdx && activeInput?.blankIndex === currentBlankIndex) {
-                                                borderColor = 'border-blue-500';
-                                            }
-
+                                            
+                                            // The active input will be highlighted by the keyboard's presence, not just border color
+                                            
                                             return (
                                                 <span key={pIdx} className="inline-block relative mx-1 my-1 align-baseline">
                                                     <input
                                                         type="text"
                                                         value={answerState.value}
-                                                        onFocus={() => handleFocus(sIdx, currentBlankIndex, part.answer)}
-                                                        readOnly // Prevent native mobile keyboard
+                                                        onClick={(e) => {
+                                                            e.stopPropagation(); // Prevent main container click
+                                                            handleFocus(sIdx, currentBlankIndex, part.answer);
+                                                        }}
+                                                        readOnly
                                                         disabled={answerState.status === 'correct'}
                                                         className={`bg-slate-800 text-center text-white px-1 py-0.5 rounded-md border-2 ${borderColor} outline-none transition-all duration-200 disabled:opacity-70 disabled:cursor-default`}
                                                         style={{ width: `${Math.max(part.answer.length, 5)}ch` }}
@@ -275,7 +271,12 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                 </div>
             </main>
 
-            <footer className="sticky bottom-0 z-20 bg-slate-900 border-t border-slate-700/50 flex-shrink-0 virtual-keyboard-container">
+            {/* Footer with Keyboard: Adjusted z-index and added transition */}
+            <footer
+              className={`sticky bottom-0 z-50 bg-slate-900 border-t border-slate-700/50 flex-shrink-0 transition-transform duration-300 ease-in-out
+                ${activeInput ? 'translate-y-0' : 'translate-y-full'}`
+              }
+            >
                 {activeInput && (
                     <VirtualKeyboard
                         userInput={userAnswers[activeInput.sentenceIndex]?.[activeInput.blankIndex]?.value || ''}
