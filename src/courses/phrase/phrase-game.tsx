@@ -2,6 +2,8 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
+// --- 1. IMPORT THE VIRTUAL KEYBOARD ---
+import VirtualKeyboard from '../../ui/keyboard.tsx'; // Assuming keyboard.tsx is in the same directory
 
 // --- Icons used in this component ---
 const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> );
@@ -13,7 +15,7 @@ export interface GameSentenceData {
   originalIndex: number;
 }
 
-// --- Game Setup Popup Component ---
+// --- Game Setup Popup Component (Unchanged) ---
 interface GameSetupPopupProps {
   isOpen: boolean;
   onClose: () => void;
@@ -40,7 +42,7 @@ export const GameSetupPopup: React.FC<GameSetupPopupProps> = ({ isOpen, onClose,
       { label: '3 Words', value: 3 as const },
       { label: '4 Words', value: 4 as const },
       { label: '5 Words', value: 5 as const },
-      { label: 'All', value: 'all' as const }, // CHANGED: "All Vocabulary" to "All"
+      { label: 'All', value: 'all' as const },
   ];
 
   return (
@@ -53,7 +55,6 @@ export const GameSetupPopup: React.FC<GameSetupPopupProps> = ({ isOpen, onClose,
           </button>
         </header>
         <div className="p-6 space-y-6 text-slate-300">
-           {/* CHANGED: Shortened text */}
            <p>A random set of <span className="font-bold text-white">10 example sentences</span> will be selected.</p>
            <div>
               <label className="text-sm font-medium text-slate-400 mb-2 block">Choose difficulty (words to hide):</label>
@@ -85,15 +86,24 @@ export const GameSetupPopup: React.FC<GameSetupPopupProps> = ({ isOpen, onClose,
   );
 };
 
-// --- Main Game Mode Component ---
+
+// --- Main Game Mode Component (MODIFIED) ---
 interface GameModeProps {
   sentences: GameSentenceData[];
   difficulty: number | 'all';
   onExit: () => void;
 }
+
+type ActiveInput = {
+  sentenceIndex: number;
+  blankIndex: number;
+} | null;
+
 export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExit }) => {
     const [userAnswers, setUserAnswers] = useState<Record<number, Record<number, string>>>({});
     const [isChecking, setIsChecking] = useState(false);
+    // --- 2. STATE TO TRACK THE ACTIVE INPUT FOR THE VIRTUAL KEYBOARD ---
+    const [activeInput, setActiveInput] = useState<ActiveInput>(null);
     
     const vocabularySetForGame = useMemo(() => new Set(defaultVocabulary.map(v => v.toLowerCase().trim())), []);
 
@@ -103,7 +113,7 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
             const wordIndices: number[] = [];
 
             parts.forEach((part, index) => {
-                if (/[a-zA-Z]/.test(part)) { // Check if the part is a word
+                if (/[a-zA-Z]/.test(part)) {
                     wordIndices.push(index);
                 }
             });
@@ -139,12 +149,38 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
             [sentenceIndex]: { ...prev[sentenceIndex], [blankIndex]: value }
         }));
     }, [isChecking]);
-
-    const handleCheckAnswers = useCallback(() => setIsChecking(true), []);
+    
+    // --- Handlers for Game Logic ---
+    const handleCheckAnswers = useCallback(() => {
+        setIsChecking(true);
+        setActiveInput(null); // Close keyboard when checking answers
+    }, []);
+    
     const handleTryAgain = useCallback(() => {
         setIsChecking(false);
         setUserAnswers({});
     }, []);
+
+    // --- 3. DATA FOR THE CURRENTLY ACTIVE KEYBOARD ---
+    const activeInputData = useMemo(() => {
+        if (!activeInput) return null;
+
+        const { sentenceIndex, blankIndex } = activeInput;
+        const sentence = processedSentences[sentenceIndex];
+        if (!sentence) return null;
+
+        // Find the Nth blank in the sentence
+        const blanks = sentence.parts.filter(p => typeof p === 'object' && p.answer);
+        const targetPart = blanks[blankIndex] as { answer: string } | undefined;
+
+        if (!targetPart) return null;
+
+        return {
+            userInput: userAnswers[sentenceIndex]?.[blankIndex] || '',
+            wordLength: targetPart.answer.length,
+            setUserInput: (value: string) => handleInputChange(sentenceIndex, blankIndex, value),
+        };
+    }, [activeInput, processedSentences, userAnswers, handleInputChange]);
 
     let totalBlanks = 0;
     let correctAnswers = 0;
@@ -170,17 +206,23 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
         <div className="h-full w-full bg-black flex flex-col text-white">
             <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md flex-shrink-0">
                 <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-                    {/* CHANGED: Removed title, moved button to the left */}
-                    <div className="flex h-14 items-center justify-start">
+                    {/* --- HEADER MODIFIED: "Check Answers" button moved here --- */}
+                    <div className="flex h-14 items-center justify-between">
                         <button onClick={onExit} className="px-4 py-2 text-sm font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors">
                             Exit Game
                         </button>
+                        {!isChecking && (
+                            <button onClick={handleCheckAnswers} className="px-4 py-2 text-sm font-bold rounded-lg bg-green-600 hover:bg-green-500 transition-colors">
+                                Check Answers
+                            </button>
+                        )}
                     </div>
                 </div>
             </header>
 
-            <main className="flex-grow overflow-y-auto p-4 sm:p-6">
-                <div className="max-w-4xl mx-auto space-y-6">
+            <main className="flex-grow overflow-y-auto p-4 sm:p-6" onClick={() => setActiveInput(null)}>
+                {/* --- Add padding to the bottom to make space for the keyboard --- */}
+                <div className="max-w-4xl mx-auto space-y-6 pb-64"> 
                     {processedSentences.map((sentence, sIdx) => {
                         let blankCounter = 0;
                         return (
@@ -194,8 +236,10 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                                             blankCounter++;
                                             const userAnswer = userAnswers[sIdx]?.[currentBlankIndex] || '';
                                             const isCorrect = isChecking && userAnswer.trim().toLowerCase() === part.answer.trim().toLowerCase();
+                                            const isActive = activeInput?.sentenceIndex === sIdx && activeInput?.blankIndex === currentBlankIndex;
 
-                                            let borderColor = 'border-slate-600 focus-within:border-blue-500';
+                                            let borderColor = 'border-slate-600';
+                                            if (isActive) borderColor = 'border-blue-500';
                                             if (isChecking) borderColor = isCorrect ? 'border-green-500' : 'border-red-500';
 
                                             return (
@@ -203,9 +247,14 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                                                     <input
                                                         type="text"
                                                         value={userAnswer}
-                                                        onChange={(e) => handleInputChange(sIdx, currentBlankIndex, e.target.value)}
+                                                        // --- INPUT MODIFIED ---
+                                                        onFocus={(e) => {
+                                                            e.stopPropagation();
+                                                            setActiveInput({ sentenceIndex: sIdx, blankIndex: currentBlankIndex });
+                                                        }}
+                                                        readOnly // Prevents native keyboard
                                                         disabled={isChecking}
-                                                        className={`bg-slate-800 text-center text-white px-1 py-0.5 rounded-md border-2 ${borderColor} outline-none transition-colors`}
+                                                        className={`bg-slate-800 text-center text-white px-1 py-0.5 rounded-md border-2 ${borderColor} outline-none transition-all duration-200 cursor-pointer`}
                                                         style={{ width: `${Math.max(part.answer.length, 5)}ch` }}
                                                         autoCapitalize="none" autoComplete="off" spellCheck="false"
                                                     />
@@ -225,9 +274,10 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                 </div>
             </main>
 
-            <footer className="sticky bottom-0 z-10 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 flex-shrink-0">
+            {/* --- FOOTER MODIFIED: Only shows results, no border --- */}
+            <footer className="sticky bottom-0 z-10 bg-slate-900/95 backdrop-blur-sm flex-shrink-0">
                 <div className="max-w-4xl mx-auto p-3 flex justify-center items-center gap-4 h-20">
-                    {isChecking ? (
+                    {isChecking && (
                         <div className='text-center'>
                             <div className="text-lg font-bold">
                                 Score: <span className="text-green-400">{correctAnswers}</span> / <span className="text-white">{totalBlanks}</span>
@@ -236,13 +286,24 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                                 Try Again
                             </button>
                         </div>
-                    ) : (
-                        <button onClick={handleCheckAnswers} className="px-8 py-3 text-lg font-bold rounded-lg bg-green-600 hover:bg-green-500 transition-colors">
-                            Check Answers
-                        </button>
                     )}
                 </div>
             </footer>
+            
+            {/* --- 4. RENDER THE VIRTUAL KEYBOARD CONDITIONALLY --- */}
+            <div 
+              className={`fixed bottom-0 left-0 right-0 z-50 bg-slate-800/90 backdrop-blur-md shadow-t-2xl transition-transform duration-300 ease-in-out ${activeInputData ? 'translate-y-0' : 'translate-y-full'}`}
+              onClick={(e) => e.stopPropagation()} // Prevent clicks inside keyboard from closing it
+            >
+                {activeInputData && (
+                    <VirtualKeyboard
+                        userInput={activeInputData.userInput}
+                        setUserInput={activeInputData.setUserInput}
+                        wordLength={activeInputData.wordLength}
+                        disabled={isChecking}
+                    />
+                )}
+            </div>
         </div>
     );
 };
