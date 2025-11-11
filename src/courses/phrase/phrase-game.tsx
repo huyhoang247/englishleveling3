@@ -1,3 +1,5 @@
+// --- START OF FILE phrase-game.tsx (5).txt ---
+
 // --- START OF FILE phrase-game.tsx ---
 
 import React, { useState, useMemo, useCallback } from 'react';
@@ -116,6 +118,9 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
     const animatedCoins = useAnimateValue(userCoins);
     const [userAnswers, setUserAnswers] = useState<Record<number, Record<number, AnswerState>>>({});
     const [activeInput, setActiveInput] = useState<ActiveInput | null>(null);
+    // --- START: DÒNG MỚI ---
+    const [shakingInput, setShakingInput] = useState<{ sentenceIndex: number; blankIndex: number } | null>(null);
+    // --- END: DÒNG MỚI ---
     
     const vocabularySetForGame = useMemo(() => new Set(defaultVocabulary.map(v => v.toLowerCase().trim())), []);
 
@@ -154,26 +159,6 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
         });
     }, [sentences, difficulty, vocabularySetForGame]);
 
-    // --- START: ĐOẠN CODE BỊ XÓA ---
-    // const { totalBlanks, correctAnswers } = useMemo(() => {
-    //     let blanks = 0;
-    //     let correct = 0;
-    //     processedSentences.forEach((sentence, sIdx) => {
-    //         let blankCounter = 0;
-    //         sentence.parts.forEach(part => {
-    //             if (typeof part === 'object' && part.answer) {
-    //                 blanks++;
-    //                 if (userAnswers[sIdx]?.[blankCounter]?.status === 'correct') {
-    //                     correct++;
-    //                 }
-    //                 blankCounter++;
-    //             }
-    //         });
-    //     });
-    //     return { totalBlanks: blanks, correctAnswers: correct };
-    // }, [processedSentences, userAnswers]);
-    // --- END: ĐOẠN CODE BỊ XÓA ---
-
     const handleFocus = useCallback((sentenceIndex: number, blankIndex: number, correctAnswer: string) => {
         if (userAnswers[sentenceIndex]?.[blankIndex]?.status === 'correct') {
             return;
@@ -181,20 +166,27 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
         setActiveInput({ sentenceIndex, blankIndex, correctAnswer });
     }, [userAnswers]);
 
+    // --- START: ĐOẠN CODE THAY ĐỔI ---
     const handleKeyboardInput = useCallback((newValue: string) => {
         if (!activeInput) return;
 
         const { sentenceIndex, blankIndex, correctAnswer } = activeInput;
         let newStatus: AnswerState['status'] = 'pending';
+        let finalValue = newValue;
 
         if (newValue.length === correctAnswer.length) {
             const isCorrect = newValue.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
-            newStatus = isCorrect ? 'correct' : 'incorrect';
+            
             if (isCorrect) {
-                // --- START: DÒNG MỚI ---
+                newStatus = 'correct';
                 updateUserCoins(50); // Thưởng 50 vàng cho câu trả lời đúng
-                // --- END: DÒNG MỚI ---
                 setActiveInput(null);
+            } else {
+                // Logic khi trả lời sai: rung, và xóa nội dung
+                newStatus = 'incorrect';
+                finalValue = ''; // Xóa nội dung trong ô
+                setShakingInput({ sentenceIndex, blankIndex }); // Kích hoạt hiệu ứng rung
+                setTimeout(() => setShakingInput(null), 500); // Tắt hiệu ứng sau 0.5s
             }
         }
 
@@ -202,15 +194,28 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
             ...prev,
             [sentenceIndex]: {
                 ...prev[sentenceIndex],
-                [blankIndex]: { value: newValue, status: newStatus },
+                [blankIndex]: { value: finalValue, status: newStatus },
             },
         }));
-    // --- START: DÒNG THAY ĐỔI ---
     }, [activeInput, updateUserCoins]);
-    // --- END: DÒNG THAY ĐỔI ---
+    // --- END: ĐOẠN CODE THAY ĐỔI ---
     
     return (
-        <div className="h-full w-full bg-black flex flex-col text-white">
+        // --- START: ĐOẠN CODE THAY ĐỔI ---
+        <>
+            <style>{`
+                @keyframes shake {
+                  10%, 90% { transform: translate3d(-1px, 0, 0); }
+                  20%, 80% { transform: translate3d(2px, 0, 0); }
+                  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+                  40%, 60% { transform: translate3d(4px, 0, 0); }
+                }
+                .shake-animation {
+                  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+                }
+            `}</style>
+            <div className="h-full w-full bg-black flex flex-col text-white">
+        {/* --- END: ĐOẠN CODE THAY ĐỔI --- */}
             {/* --- Overlay (MODIFIED) --- */}
             {/* Removed 'backdrop-blur-sm' and changed bg-opacity to 50% for a lighter effect */}
             <div
@@ -226,9 +231,7 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                         <button onClick={onExit} className="px-4 py-2 text-sm font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors">
                             Exit Game
                         </button>
-                        {/* --- START: ĐOẠN CODE THAY ĐỔI --- */}
                         <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
-                        {/* --- END: ĐOẠN CODE THAY ĐỔI --- */}
                     </div>
                 </div>
             </header>
@@ -251,7 +254,9 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                                             if (answerState.status === 'correct') borderColor = 'border-green-500';
                                             if (answerState.status === 'incorrect') borderColor = 'border-red-500';
                                             
-                                            // --- START: REDESIGNED INPUT BOX ---
+                                            // --- START: ĐOẠN CODE THAY ĐỔI ---
+                                            const isShaking = shakingInput?.sentenceIndex === sIdx && shakingInput?.blankIndex === currentBlankIndex;
+
                                             return (
                                                 <span key={pIdx} className="inline-block relative mx-1 my-1 align-baseline">
                                                     <button
@@ -260,7 +265,7 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                                                             handleFocus(sIdx, currentBlankIndex, part.answer);
                                                         }}
                                                         disabled={answerState.status === 'correct'}
-                                                        className={`relative min-w-[4ch] bg-slate-800 text-white rounded-md border-2 ${borderColor} outline-none transition-all duration-200 disabled:opacity-70 disabled:cursor-default`}
+                                                        className={`relative min-w-[4ch] bg-slate-800 text-white rounded-md border-2 ${borderColor} outline-none transition-all duration-200 disabled:opacity-70 disabled:cursor-default ${isShaking ? 'shake-animation' : ''}`}
                                                     >
                                                         {/* Sizer: Invisible text that defines the button's width. Added px-2 for padding. */}
                                                         <span className="block opacity-0 font-medium whitespace-nowrap px-2 py-0.5">
@@ -272,13 +277,9 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                                                             {answerState.value}
                                                         </span>
                                                     </button>
-
-                                                    {answerState.status === 'incorrect' && (
-                                                        <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs text-green-400 font-mono bg-slate-900 px-1 rounded">{part.answer}</span>
-                                                    )}
                                                 </span>
                                             );
-                                            // --- END: REDESIGNED INPUT BOX ---
+                                            // --- END: ĐOẠN CODE THAY ĐỔI ---
                                         }
                                         return null;
                                     })}
@@ -305,5 +306,6 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                 )}
             </footer>
         </div>
+        </> // --- DÒNG MỚI ---
     );
 };
