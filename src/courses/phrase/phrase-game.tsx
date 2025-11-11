@@ -40,7 +40,7 @@ export const GameSetupPopup: React.FC<GameSetupPopupProps> = ({ isOpen, onClose,
       { label: '3 Words', value: 3 as const },
       { label: '4 Words', value: 4 as const },
       { label: '5 Words', value: 5 as const },
-      { label: 'All Vocabulary', value: 'all' as const },
+      { label: 'All', value: 'all' as const }, // CHANGED: "All Vocabulary" to "All"
   ];
 
   return (
@@ -53,7 +53,8 @@ export const GameSetupPopup: React.FC<GameSetupPopupProps> = ({ isOpen, onClose,
           </button>
         </header>
         <div className="p-6 space-y-6 text-slate-300">
-           <p>A random set of <span className="font-bold text-white">10 example sentences</span> will be selected from the current list ({sentenceCount} available).</p>
+           {/* CHANGED: Shortened text */}
+           <p>A random set of <span className="font-bold text-white">10 example sentences</span> will be selected.</p>
            <div>
               <label className="text-sm font-medium text-slate-400 mb-2 block">Choose difficulty (words to hide):</label>
               <div className="grid grid-cols-3 gap-2">
@@ -169,8 +170,8 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
         <div className="h-full w-full bg-black flex flex-col text-white">
             <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md flex-shrink-0">
                 <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-14 items-center justify-between">
-                        <h1 className="text-xl font-bold text-white">Fill in the Blanks</h1>
+                    {/* CHANGED: Removed title, moved button to the left */}
+                    <div className="flex h-14 items-center justify-start">
                         <button onClick={onExit} className="px-4 py-2 text-sm font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors">
                             Exit Game
                         </button>
