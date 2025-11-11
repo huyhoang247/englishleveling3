@@ -234,26 +234,34 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                                             if (answerState.status === 'correct') borderColor = 'border-green-500';
                                             if (answerState.status === 'incorrect') borderColor = 'border-red-500';
                                             
+                                            // --- START: REDESIGNED INPUT BOX ---
                                             return (
                                                 <span key={pIdx} className="inline-block relative mx-1 my-1 align-baseline">
-                                                    <input
-                                                        type="text"
-                                                        value={answerState.value}
+                                                    <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleFocus(sIdx, currentBlankIndex, part.answer);
                                                         }}
-                                                        readOnly
                                                         disabled={answerState.status === 'correct'}
-                                                        className={`bg-slate-800 text-center text-white px-1 py-0.5 rounded-md border-2 ${borderColor} outline-none transition-all duration-200 disabled:opacity-70 disabled:cursor-default`}
-                                                        style={{ width: `${Math.max(part.answer.length, 5)}ch` }}
-                                                        autoCapitalize="none" autoComplete="off" spellCheck="false"
-                                                    />
+                                                        className={`relative min-w-[4ch] bg-slate-800 text-white rounded-md border-2 ${borderColor} outline-none transition-all duration-200 disabled:opacity-70 disabled:cursor-default`}
+                                                    >
+                                                        {/* Sizer: Invisible text that defines the button's width. Added px-2 for padding. */}
+                                                        <span className="block opacity-0 font-medium whitespace-nowrap px-2 py-0.5">
+                                                            {part.answer}
+                                                        </span>
+                                                        
+                                                        {/* Display: The user's actual input, absolutely positioned to overlay the sizer. */}
+                                                        <span className="absolute inset-0 flex items-center justify-center font-medium whitespace-nowrap">
+                                                            {answerState.value}
+                                                        </span>
+                                                    </button>
+
                                                     {answerState.status === 'incorrect' && (
                                                         <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs text-green-400 font-mono bg-slate-900 px-1 rounded">{part.answer}</span>
                                                     )}
                                                 </span>
                                             );
+                                            // --- END: REDESIGNED INPUT BOX ---
                                         }
                                         return null;
                                     })}
@@ -282,6 +290,3 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
         </div>
     );
 };
-
-
-// --- END OF FILE phrase-game.tsx ---
