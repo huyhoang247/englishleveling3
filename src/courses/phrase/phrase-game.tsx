@@ -198,13 +198,13 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                                             if (isChecking) borderColor = isCorrect ? 'border-green-500' : 'border-red-500';
 
                                             return (
-                                                <span key={pIdx} className="inline-block relative mx-1 align-bottom">
+                                                <span key={pIdx} className="inline-block relative mx-1 align-baseline">
                                                     <input
                                                         type="text"
                                                         value={userAnswer}
                                                         onChange={(e) => handleInputChange(sIdx, currentBlankIndex, e.target.value)}
                                                         disabled={isChecking}
-                                                        className={`bg-slate-800 text-center text-white p-1 rounded-md border-2 w-32 ${borderColor} outline-none transition-colors`}
+                                                        className={`bg-slate-800 text-center text-white px-1 py-0.5 rounded-md border-2 ${borderColor} outline-none transition-colors`}
                                                         style={{ width: `${Math.max(part.answer.length, 5)}ch` }}
                                                         autoCapitalize="none" autoComplete="off" spellCheck="false"
                                                     />
