@@ -4,6 +4,10 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
 // Import a VirtualKeyboard component from the keyboard.tsx file
 import VirtualKeyboard from '../../ui/keyboard.tsx';
+// --- START: DÒNG MỚI ---
+import { useQuizApp } from '../course-context.tsx';
+import CoinDisplay from '../../ui/display/coin-display.tsx';
+// --- END: DÒNG MỚI ---
 
 // --- Icons used in this component ---
 const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> );
@@ -105,6 +109,9 @@ interface GameModeProps {
   onExit: () => void;
 }
 export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExit }) => {
+    // --- START: DÒNG MỚI ---
+    const { userCoins, updateUserCoins } = useQuizApp();
+    // --- END: DÒNG MỚI ---
     const [userAnswers, setUserAnswers] = useState<Record<number, Record<number, AnswerState>>>({});
     const [activeInput, setActiveInput] = useState<ActiveInput | null>(null);
     
@@ -145,23 +152,25 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
         });
     }, [sentences, difficulty, vocabularySetForGame]);
 
-    const { totalBlanks, correctAnswers } = useMemo(() => {
-        let blanks = 0;
-        let correct = 0;
-        processedSentences.forEach((sentence, sIdx) => {
-            let blankCounter = 0;
-            sentence.parts.forEach(part => {
-                if (typeof part === 'object' && part.answer) {
-                    blanks++;
-                    if (userAnswers[sIdx]?.[blankCounter]?.status === 'correct') {
-                        correct++;
-                    }
-                    blankCounter++;
-                }
-            });
-        });
-        return { totalBlanks: blanks, correctAnswers: correct };
-    }, [processedSentences, userAnswers]);
+    // --- START: ĐOẠN CODE BỊ XÓA ---
+    // const { totalBlanks, correctAnswers } = useMemo(() => {
+    //     let blanks = 0;
+    //     let correct = 0;
+    //     processedSentences.forEach((sentence, sIdx) => {
+    //         let blankCounter = 0;
+    //         sentence.parts.forEach(part => {
+    //             if (typeof part === 'object' && part.answer) {
+    //                 blanks++;
+    //                 if (userAnswers[sIdx]?.[blankCounter]?.status === 'correct') {
+    //                     correct++;
+    //                 }
+    //                 blankCounter++;
+    //             }
+    //         });
+    //     });
+    //     return { totalBlanks: blanks, correctAnswers: correct };
+    // }, [processedSentences, userAnswers]);
+    // --- END: ĐOẠN CODE BỊ XÓA ---
 
     const handleFocus = useCallback((sentenceIndex: number, blankIndex: number, correctAnswer: string) => {
         if (userAnswers[sentenceIndex]?.[blankIndex]?.status === 'correct') {
@@ -177,8 +186,12 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
         let newStatus: AnswerState['status'] = 'pending';
 
         if (newValue.length === correctAnswer.length) {
-            newStatus = newValue.trim().toLowerCase() === correctAnswer.trim().toLowerCase() ? 'correct' : 'incorrect';
-            if (newStatus === 'correct') {
+            const isCorrect = newValue.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+            newStatus = isCorrect ? 'correct' : 'incorrect';
+            if (isCorrect) {
+                // --- START: DÒNG MỚI ---
+                updateUserCoins(50); // Thưởng 50 vàng cho câu trả lời đúng
+                // --- END: DÒNG MỚI ---
                 setActiveInput(null);
             }
         }
@@ -190,7 +203,9 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                 [blankIndex]: { value: newValue, status: newStatus },
             },
         }));
-    }, [activeInput]);
+    // --- START: DÒNG THAY ĐỔI ---
+    }, [activeInput, updateUserCoins]);
+    // --- END: DÒNG THAY ĐỔI ---
     
     return (
         <div className="h-full w-full bg-black flex flex-col text-white">
@@ -209,9 +224,9 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                         <button onClick={onExit} className="px-4 py-2 text-sm font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors">
                             Exit Game
                         </button>
-                        <div className="text-lg font-bold">
-                            Score: <span className="text-green-400">{correctAnswers}</span> / <span className="text-white">{totalBlanks}</span>
-                        </div>
+                        {/* --- START: ĐOẠN CODE THAY ĐỔI --- */}
+                        <CoinDisplay displayedCoins={userCoins} isStatsFullscreen={false} />
+                        {/* --- END: ĐOẠN CODE THAY ĐỔI --- */}
                     </div>
                 </div>
             </header>
