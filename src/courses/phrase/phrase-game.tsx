@@ -178,7 +178,6 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
 
         if (newValue.length === correctAnswer.length) {
             newStatus = newValue.trim().toLowerCase() === correctAnswer.trim().toLowerCase() ? 'correct' : 'incorrect';
-            // If correct, automatically close the keyboard
             if (newStatus === 'correct') {
                 setActiveInput(null);
             }
@@ -194,19 +193,16 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
     }, [activeInput]);
     
     return (
-        // The main container is now a portal for z-index stacking context
         <div className="h-full w-full bg-black flex flex-col text-white">
-            {/* --- NEW: Overlay --- */}
-            {/* This div acts as a semi-transparent background when the keyboard is active. */}
-            {/* Clicking it will close the keyboard. */}
+            {/* --- Overlay (MODIFIED) --- */}
+            {/* Removed 'backdrop-blur-sm' and changed bg-opacity to 50% for a lighter effect */}
             <div
               onClick={() => setActiveInput(null)}
-              className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 ease-in-out
+              className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ease-in-out
                 ${activeInput ? 'opacity-100' : 'opacity-0 pointer-events-none'}`
               }
             />
 
-            {/* Header: z-index adjusted to be below the overlay and keyboard */}
             <header className="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-sm shadow-md flex-shrink-0">
                 <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-14 items-center justify-between">
@@ -238,15 +234,13 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                                             if (answerState.status === 'correct') borderColor = 'border-green-500';
                                             if (answerState.status === 'incorrect') borderColor = 'border-red-500';
                                             
-                                            // The active input will be highlighted by the keyboard's presence, not just border color
-                                            
                                             return (
                                                 <span key={pIdx} className="inline-block relative mx-1 my-1 align-baseline">
                                                     <input
                                                         type="text"
                                                         value={answerState.value}
                                                         onClick={(e) => {
-                                                            e.stopPropagation(); // Prevent main container click
+                                                            e.stopPropagation();
                                                             handleFocus(sIdx, currentBlankIndex, part.answer);
                                                         }}
                                                         readOnly
@@ -271,7 +265,6 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                 </div>
             </main>
 
-            {/* Footer with Keyboard: Adjusted z-index and added transition */}
             <footer
               className={`sticky bottom-0 z-50 bg-slate-900 border-t border-slate-700/50 flex-shrink-0 transition-transform duration-300 ease-in-out
                 ${activeInput ? 'translate-y-0' : 'translate-y-full'}`
