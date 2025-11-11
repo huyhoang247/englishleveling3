@@ -7,6 +7,7 @@ import VirtualKeyboard from '../../ui/keyboard.tsx';
 // --- START: DÒNG MỚI ---
 import { useQuizApp } from '../course-context.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 // --- END: DÒNG MỚI ---
 
 // --- Icons used in this component ---
@@ -112,6 +113,7 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
     // --- START: DÒNG MỚI ---
     const { userCoins, updateUserCoins } = useQuizApp();
     // --- END: DÒNG MỚI ---
+    const animatedCoins = useAnimateValue(userCoins);
     const [userAnswers, setUserAnswers] = useState<Record<number, Record<number, AnswerState>>>({});
     const [activeInput, setActiveInput] = useState<ActiveInput | null>(null);
     
@@ -225,7 +227,7 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                             Exit Game
                         </button>
                         {/* --- START: ĐOẠN CODE THAY ĐỔI --- */}
-                        <CoinDisplay displayedCoins={userCoins} isStatsFullscreen={false} />
+                        <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
                         {/* --- END: ĐOẠN CODE THAY ĐỔI --- */}
                     </div>
                 </div>
