@@ -198,7 +198,7 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                                             if (isChecking) borderColor = isCorrect ? 'border-green-500' : 'border-red-500';
 
                                             return (
-                                                <span key={pIdx} className="inline-block relative mx-1 align-baseline">
+                                                <span key={pIdx} className="inline-block relative mx-1 my-1 align-baseline">
                                                     <input
                                                         type="text"
                                                         value={userAnswer}
