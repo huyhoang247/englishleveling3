@@ -15,7 +15,7 @@ import {
   fetchAndSyncVocabularyData as fetchAndSyncVocabularyDataService,
   VocabularyItem,
 } from './course-data-service.ts';
-// NEW: Import data and generators
+// Import data and generators
 import { generateAudioUrlsForWord, generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
 import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
 import { exampleData } from '../voca-data/example-data.ts';
@@ -53,19 +53,21 @@ interface QuizAppContextType {
   fetchOrCreateUser: () => Promise<any>;
   fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>;
   
-  // MODIFIED: Chỉ còn hàm update, dữ liệu sẽ được lấy từ state
   updateAchievementData: (updates: {
     coinsToAdd: number;
     cardsToAdd: number;
     newVocabularyData: VocabularyItem[];
   }) => Promise<{ newCoins: number; newMasteryCards: number }>;
   
-  // NEW: Cung cấp dữ liệu từ vựng và trạng thái loading trực tiếp từ Context
+  // --- Dữ liệu và trạng thái từ vựng được cache ---
   vocabularyData: VocabularyItem[] | null; // null: chưa tải, []: đã tải nhưng rỗng
   isVocabularyLoading: boolean;
 
-  // --- NEW: Vocabulary data and utilities ---
-  definitionsMap: { [key:string]: Definition };
+  // --- Hàm cập nhật state tức thì ---
+  addExpToWords: (wordExpPairs: { word: string; expToAdd: number }[]) => void;
+
+  // --- Vocabulary data and utilities ---
+  definitionsMap: { [key: string]: Definition };
   generateAudioUrlsForWord: (word: string) => { [key: string]: string } | null;
   exampleData: any[];
   defaultVocabulary: string[];
@@ -100,12 +102,11 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   const [userCoins, setUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
   
-  // NEW: State để cache dữ liệu từ vựng và trạng thái loading
+  // State để cache dữ liệu từ vựng và trạng thái loading
   const [vocabularyData, setVocabularyData] = useState<VocabularyItem[] | null>(null);
   const [isVocabularyLoading, setIsVocabularyLoading] = useState<boolean>(true);
 
   const definitionsMap = useMemo(() => {
-    // ... (không thay đổi)
     const definitions: { [key: string]: Definition } = {};
     const lines = detailedMeaningsText.trim().split('\n');
     lines.forEach(line => {
@@ -123,12 +124,13 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     return definitions;
   }, []);
 
+
   // Effect lắng nghe thay đổi trạng thái đăng nhập
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (!currentUser) {
-        // NEW: Reset cache khi người dùng đăng xuất
+        // Reset cache khi người dùng đăng xuất
         setVocabularyData(null);
       }
     });
@@ -154,7 +156,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     }
   }, [user]);
 
-  // NEW: Effect để tự động tải và cache dữ liệu từ vựng KHI CÓ USER
+  // Effect để tự động tải và cache dữ liệu từ vựng KHI CÓ USER
   useEffect(() => {
     // Chỉ fetch khi có user và dữ liệu chưa được tải (còn là null)
     if (user && vocabularyData === null) {
@@ -179,7 +181,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
 
   // --- Các hàm xử lý (Handlers) ---
   const handleQuizSelect = useCallback((quiz) => {
-    // ... (không thay đổi)
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
     setSelectedType(null);
@@ -187,14 +188,12 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   }, []);
 
   const handleTypeSelect = useCallback((type: string) => {
-    // ... (không thay đổi)
     setSelectedType(type);
     setCurrentView('practices');
     setSelectedPractice(null);
   }, []);
 
   const handlePracticeSelect = useCallback((practice: number) => {
-    // ... (không thay đổi)
     setSelectedPractice(practice);
     if (selectedType === 'tracNghiem') {
       setCurrentView('quiz');
@@ -207,7 +206,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
 
   // --- Các hàm điều hướng (Navigation) ---
   const goBack = useCallback(() => {
-    // ... (không thay đổi)
     if (['vocabularyGame', 'quiz', 'vocaMatchGame'].includes(currentView)) {
        setCurrentView('practices');
        setSelectedPractice(null);
@@ -222,7 +220,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   }, [currentView]);
 
   const goHome = useCallback(() => {
-    // ... (không thay đổi)
     setCurrentView('main');
     setSelectedQuiz(null);
     setSelectedType(null);
@@ -231,7 +228,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
 
   // --- Data service wrapper functions ---
   const getOpenedVocab = useCallback(async (): Promise<string[]> => {
-    // ... (không thay đổi)
     if (!user) {
       console.warn("getOpenedVocab called without a user.");
       return [];
@@ -240,7 +236,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   }, [user]);
 
   const getCompletedWords = useCallback(async (gameModeId: string): Promise<Set<string>> => {
-    // ... (không thay đổi)
     if (!user) {
         console.warn("getCompletedWords called without a user.");
         return new Set();
@@ -249,7 +244,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   }, [user]);
 
   const recordGameSuccess = useCallback(async (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number): Promise<void> => {
-    // ... (không thay đổi)
     if (!user) {
         console.warn("recordGameSuccess called without a user.");
         return;
@@ -258,7 +252,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   }, [user]);
   
   const fetchGameInitialData = useCallback(async (gameModeId: string, isMultiWordGame: boolean): Promise<any> => {
-    // ... (không thay đổi)
     if (!user) {
       console.warn("fetchGameInitialData called without a user.");
       throw new Error("Người dùng chưa đăng nhập");
@@ -267,7 +260,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   }, [user]);
 
   const fetchOrCreateUser = useCallback(async (): Promise<any> => {
-    // ... (không thay đổi)
     if (!user) {
       console.warn("fetchOrCreateUser called without a user.");
       return null;
@@ -276,18 +268,13 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   }, [user]);
 
   const updateUserCoins = useCallback(async (amount: number): Promise<void> => {
-    // ... (không thay đổi)
     if (!user) {
         console.warn("updateUserCoins called without a user.");
         return;
     }
     await updateUserCoinsService(user.uid, amount);
   }, [user]);
-  
-  // REMOVED: Hàm fetchAndSyncVocabularyData đã được thay thế bằng state
-  // const fetchAndSyncVocabularyData = ...
 
-  // MODIFIED: Hàm updateAchievementData giờ đây sẽ cập nhật cả state local
   const updateAchievementData = useCallback(async (updates: {
     coinsToAdd: number;
     cardsToAdd: number;
@@ -299,17 +286,39 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     }
     const result = await updateAchievementDataService(user.uid, updates);
     
-    // NEW: Cập nhật state local ngay lập tức để UI phản ánh thay đổi
-    // mà không cần chờ listener hoặc tải lại trang.
+    // Cập nhật state local ngay lập tức để UI phản ánh thay đổi
     setVocabularyData(updates.newVocabularyData);
     
-    // Cập nhật coins và mastery count để UI đồng bộ ngay
+    // Cập nhật coins và mastery count để UI đồng bộ ngay (mặc dù listener cũng làm việc này)
     setUserCoins(prevCoins => prevCoins + updates.coinsToAdd);
     setMasteryCount(prevCount => prevCount + updates.cardsToAdd);
     
     return result;
   }, [user]);
 
+  // --- HÀM MỚI: Cập nhật EXP cho từ vựng trong state để UI phản hồi tức thì ---
+  const addExpToWords = useCallback((wordExpPairs: { word: string; expToAdd: number }[]) => {
+    // Chỉ cập nhật nếu vocabularyData đã được tải và có nội dung
+    if (!vocabularyData) return;
+
+    // Tạo một map để truy cập nhanh các từ cần cập nhật
+    const updatesMap = new Map(wordExpPairs.map(p => [p.word.toLowerCase(), p.expToAdd]));
+
+    const newVocabularyData = vocabularyData.map(item => {
+      const wordInLowerCase = item.word.toLowerCase();
+      if (updatesMap.has(wordInLowerCase)) {
+        const expToAdd = updatesMap.get(wordInLowerCase) || 0;
+        return {
+          ...item,
+          exp: item.exp + expToAdd,
+        };
+      }
+      return item;
+    });
+
+    // Cập nhật state để UI re-render ngay lập tức
+    setVocabularyData(newVocabularyData);
+  }, [vocabularyData]); 
 
   // --- Giá trị được cung cấp bởi Context ---
   const value = {
@@ -334,11 +343,14 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     fetchGameInitialData,
     updateAchievementData,
     
-    // NEW: Cung cấp state và trạng thái loading
+    // Dữ liệu và trạng thái được cache
     vocabularyData,
     isVocabularyLoading,
 
-    // NEW: Provide data and utilities
+    // Hàm cập nhật state tức thì
+    addExpToWords,
+
+    // Dữ liệu và các hàm tiện ích khác
     definitionsMap,
     generateAudioUrlsForWord,
     exampleData,
