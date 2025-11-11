@@ -7,20 +7,20 @@ import React, {
   useCallback,
   ReactNode,
   useMemo,
-  useEffect
+  useEffect // useEffect không còn cần thiết cho việc fetch, nhưng giữ lại để tham khảo
 } from 'react';
-import { useQuizApp } from '../../courses/course-context.tsx'; // <<< THAY ĐỔI: Import context chính
-import { VocabularyItem } from '../../courses/course-data-service.ts'; // <<< Vẫn giữ import type từ service
+import { useQuizApp } from '../../courses/course-context.tsx'; // Import context chính
+import { VocabularyItem } from '../../courses/course-data-service.ts'; // Vẫn giữ import type
 
 // Định nghĩa shape của Context
 interface AchievementsContextState {
-  // --- Dữ liệu (Lấy từ course-context) ---
-  vocabulary: VocabularyItem[];
+  // --- Dữ liệu (Lấy trực tiếp từ course-context) ---
+  vocabulary: VocabularyItem[]; // Luôn là một mảng, không bao giờ là null
   coins: number;
   masteryCards: number;
   // --- Trạng thái ---
-  isInitialLoading: boolean; // Quản lý loading nội bộ
-  isUpdating: boolean;     // True khi đang thực hiện hành động (nhận thưởng)
+  isInitialLoading: boolean; // Trạng thái loading, lấy từ course-context
+  isUpdating: boolean;       // Trạng thái khi đang thực hiện hành động (nhận thưởng)
   // --- Hành động ---
   claimAchievement: (id: number) => Promise<void>;
   claimAllAchievements: () => Promise<void>;
@@ -35,48 +35,35 @@ interface AchievementsProviderProps {
 }
 
 export const AchievementsProvider = ({ children }: AchievementsProviderProps) => {
-  // <<< THAY ĐỔI: Lấy dữ liệu và các hàm cập nhật từ useQuizApp thay vì useGame
+  // <<< THAY ĐỔI LỚN: Lấy trực tiếp dữ liệu đã được cache và trạng thái loading từ useQuizApp
   const {
-    userCoins: coins, // Đổi tên để khớp với state hiện tại
-    masteryCount: masteryCards, // Đổi tên để khớp
     user,
-    fetchAndSyncVocabularyData,
+    userCoins: coins,
+    masteryCount: masteryCards,
+    vocabularyData, // Lấy dữ liệu từ vựng đã được cache
+    isVocabularyLoading, // Lấy trạng thái loading từ context cha
     updateAchievementData,
   } = useQuizApp();
-  
-  // Quản lý state của vocabulary và loading tại đây
-  const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  // <<< BỎ: Không cần state local cho vocabulary và loading nữa.
+  // const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
+  // const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  // <<< GIỮ LẠI: State `isUpdating` là state nội bộ của context này, quản lý riêng hành động claim.
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Effect để tải dữ liệu vocabulary khi user thay đổi
-  useEffect(() => {
-    // <<< THAY ĐỔI: Dùng user từ context, không cần auth.currentUser
-    if (!user) {
-      setVocabulary([]);
-      setIsInitialLoading(false);
-      return;
-    }
-    
-    setIsInitialLoading(true);
-    // <<< THAY ĐỔI: Gọi hàm từ context, không cần truyền uid
-    fetchAndSyncVocabularyData()
-      .then(vocabData => {
-        setVocabulary(vocabData);
-      })
-      .catch(error => {
-        console.error("Failed to fetch vocabulary in AchievementsProvider:", error);
-      })
-      .finally(() => {
-        setIsInitialLoading(false);
-      });
-  }, [user, fetchAndSyncVocabularyData]); // <<< THAY ĐỔI: Cập nhật dependency
+  // <<< BỎ: Toàn bộ Effect để fetch dữ liệu đã được loại bỏ.
+  // `course-context` đã làm việc này một lần duy nhất cho toàn bộ ứng dụng.
+
+  // Chuẩn bị dữ liệu vocabulary, đảm bảo luôn là một mảng để tránh lỗi.
+  const vocabulary = useMemo(() => vocabularyData || [], [vocabularyData]);
 
 
   // Hàm nhận một phần thưởng
   const claimAchievement = useCallback(async (id: number) => {
-    if (isUpdating || !user) return; // <<< THAY ĐỔI: Dùng user từ context
+    if (isUpdating || !user) return;
 
+    // <<< THAY ĐỔI: Sử dụng `vocabulary` được lấy từ context cha
     const itemToClaim = vocabulary.find(item => item.id === id);
     if (!itemToClaim || itemToClaim.exp < itemToClaim.maxExp) return;
 
@@ -93,27 +80,28 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
     });
 
     try {
-      // <<< THAY ĐỔI: Gọi hàm từ context
       await updateAchievementData({
         coinsToAdd: goldReward,
         cardsToAdd: masteryCardReward,
         newVocabularyData: updatedList,
       });
 
-      // <<< THAY ĐỔI: Cập nhật state nội bộ. Không cần gọi handleAchievementsDataUpdate
-      // State toàn cục (coins, masteryCards) sẽ tự cập nhật nhờ listener trong course-context.
-      setVocabulary(updatedList);
+      // <<< BỎ: Không cần gọi `setVocabulary` ở đây nữa.
+      // `updateAchievementData` trong `course-context` đã tự cập nhật state toàn cục.
+      // Component này sẽ tự re-render khi `vocabularyData` từ `useQuizApp` thay đổi.
 
     } catch (error) {
       console.error("Failed to claim single achievement:", error);
     } finally {
       setIsUpdating(false);
     }
-  }, [vocabulary, user, isUpdating, updateAchievementData]); // <<< THAY ĐỔI: Cập nhật dependency
+  }, [vocabulary, user, isUpdating, updateAchievementData]); // Cập nhật dependency
 
   // Hàm nhận tất cả phần thưởng
   const claimAllAchievements = useCallback(async () => {
-    if (isUpdating || !user) return; // <<< THAY ĐỔI: Dùng user từ context
+    if (isUpdating || !user) return;
+    
+    // <<< THAY ĐỔI: Sử dụng `vocabulary` được lấy từ context cha
     const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
     if (claimableItems.length === 0) return;
 
@@ -133,24 +121,23 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
     });
 
     try {
-      // <<< THAY ĐỔI: Gọi hàm từ context
       await updateAchievementData({
         coinsToAdd: totalGoldReward,
         cardsToAdd: totalMasteryCardReward,
         newVocabularyData: updatedList,
       });
       
-      // <<< THAY ĐỔI: Cập nhật state nội bộ. Không cần gọi handleAchievementsDataUpdate
-      setVocabulary(updatedList);
+      // <<< BỎ: Không cần gọi `setVocabulary` ở đây nữa.
 
     } catch (error) {
       console.error("Failed to claim all achievements:", error);
     } finally {
       setIsUpdating(false);
     }
-  }, [vocabulary, user, isUpdating, updateAchievementData]); // <<< THAY ĐỔI: Cập nhật dependency
+  }, [vocabulary, user, isUpdating, updateAchievementData]); // Cập nhật dependency
 
   const totalClaimableRewards = useMemo(() => {
+    // <<< THAY ĐỔI: Sử dụng `vocabulary` được lấy từ context cha
     const claimableItems = vocabulary.filter(item => item.exp >= item.maxExp);
     const gold = claimableItems.reduce((sum, item) => sum + (item.level * 100), 0);
     const masteryCards = claimableItems.length;
@@ -158,16 +145,16 @@ export const AchievementsProvider = ({ children }: AchievementsProviderProps) =>
   }, [vocabulary]);
 
   const value = useMemo(() => ({
-    vocabulary,
+    vocabulary, // Cung cấp mảng vocabulary đã được xử lý
     coins,
     masteryCards,
-    isInitialLoading, // Dùng trạng thái loading nội bộ
+    isInitialLoading: isVocabularyLoading, // <<< THAY ĐỔI: Lấy trạng thái loading từ context cha
     isUpdating,
     claimAchievement,
     claimAllAchievements,
     totalClaimableRewards,
   }), [
-    vocabulary, coins, masteryCards, isInitialLoading, isUpdating,
+    vocabulary, coins, masteryCards, isVocabularyLoading, isUpdating,
     claimAchievement, claimAllAchievements, totalClaimableRewards
   ]);
 
