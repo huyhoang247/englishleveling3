@@ -2,8 +2,8 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
-// --- 1. IMPORT THE VIRTUAL KEYBOARD ---
-import VirtualKeyboard from '../../ui/keyboard.tsx'; // Assuming keyboard.tsx is in the same directory
+// Import a VirtualKeyboard component from the keyboard.tsx file
+import VirtualKeyboard from '../../ui/keyboard.tsx';
 
 // --- Icons used in this component ---
 const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> );
@@ -86,34 +86,42 @@ export const GameSetupPopup: React.FC<GameSetupPopupProps> = ({ isOpen, onClose,
   );
 };
 
+// --- Main Game Mode Component (Updated) ---
 
-// --- Main Game Mode Component (MODIFIED) ---
+// Define the state for each answer blank
+type AnswerState = {
+  value: string;
+  status: 'pending' | 'correct' | 'incorrect';
+};
+
+// Define the state for the currently active input field
+interface ActiveInput {
+  sentenceIndex: number;
+  blankIndex: number;
+  correctAnswer: string;
+}
+
 interface GameModeProps {
   sentences: GameSentenceData[];
   difficulty: number | 'all';
   onExit: () => void;
 }
-
-type ActiveInput = {
-  sentenceIndex: number;
-  blankIndex: number;
-} | null;
-
 export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExit }) => {
-    const [userAnswers, setUserAnswers] = useState<Record<number, Record<number, string>>>({});
-    const [isChecking, setIsChecking] = useState(false);
-    // --- 2. STATE TO TRACK THE ACTIVE INPUT FOR THE VIRTUAL KEYBOARD ---
-    const [activeInput, setActiveInput] = useState<ActiveInput>(null);
+    // State to store the user's answers with their status
+    const [userAnswers, setUserAnswers] = useState<Record<number, Record<number, AnswerState>>>({});
+    // State to track the currently focused input field for the virtual keyboard
+    const [activeInput, setActiveInput] = useState<ActiveInput | null>(null);
     
     const vocabularySetForGame = useMemo(() => new Set(defaultVocabulary.map(v => v.toLowerCase().trim())), []);
 
+    // Process sentences to identify which words to turn into blanks
     const processedSentences = useMemo(() => {
         return sentences.map(original => {
             const parts = original.english.split(/(\s+|[.,?!;:"'])/g);
             const wordIndices: number[] = [];
 
             parts.forEach((part, index) => {
-                if (/[a-zA-Z]/.test(part)) {
+                if (/[a-zA-Z']/.test(part) && part.length > 0) { // Check if the part is a word
                     wordIndices.push(index);
                 }
             });
@@ -126,7 +134,8 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                 const shuffledIndices = [...wordIndices].sort(() => 0.5 - Math.random());
                 indicesToHide = new Set(shuffledIndices.slice(0, Math.min(difficulty, wordIndices.length)));
             }
-
+            
+            // Ensure at least one word is hidden if possible
             if (indicesToHide.size === 0 && wordIndices.length > 0) {
                 indicesToHide.add(wordIndices[Math.floor(Math.random() * wordIndices.length)]);
             }
@@ -142,87 +151,82 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
         });
     }, [sentences, difficulty, vocabularySetForGame]);
 
-    const handleInputChange = useCallback((sentenceIndex: number, blankIndex: number, value: string) => {
-        if (isChecking) return;
-        setUserAnswers(prev => ({
-            ...prev,
-            [sentenceIndex]: { ...prev[sentenceIndex], [blankIndex]: value }
-        }));
-    }, [isChecking]);
-    
-    // --- Handlers for Game Logic ---
-    const handleCheckAnswers = useCallback(() => {
-        setIsChecking(true);
-        setActiveInput(null); // Close keyboard when checking answers
-    }, []);
-    
-    const handleTryAgain = useCallback(() => {
-        setIsChecking(false);
-        setUserAnswers({});
-    }, []);
-
-    // --- 3. DATA FOR THE CURRENTLY ACTIVE KEYBOARD ---
-    const activeInputData = useMemo(() => {
-        if (!activeInput) return null;
-
-        const { sentenceIndex, blankIndex } = activeInput;
-        const sentence = processedSentences[sentenceIndex];
-        if (!sentence) return null;
-
-        // Find the Nth blank in the sentence
-        const blanks = sentence.parts.filter(p => typeof p === 'object' && p.answer);
-        const targetPart = blanks[blankIndex] as { answer: string } | undefined;
-
-        if (!targetPart) return null;
-
-        return {
-            userInput: userAnswers[sentenceIndex]?.[blankIndex] || '',
-            wordLength: targetPart.answer.length,
-            setUserInput: (value: string) => handleInputChange(sentenceIndex, blankIndex, value),
-        };
-    }, [activeInput, processedSentences, userAnswers, handleInputChange]);
-
-    let totalBlanks = 0;
-    let correctAnswers = 0;
-
-    if (isChecking) {
+    // Calculate score and total blanks dynamically
+    const { totalBlanks, correctAnswers } = useMemo(() => {
+        let blanks = 0;
+        let correct = 0;
         processedSentences.forEach((sentence, sIdx) => {
             let blankCounter = 0;
             sentence.parts.forEach(part => {
                 if (typeof part === 'object' && part.answer) {
-                    totalBlanks++;
-                    const userAnswer = userAnswers[sIdx]?.[blankCounter]?.trim().toLowerCase();
-                    const correctAnswer = part.answer.trim().toLowerCase();
-                    if (userAnswer === correctAnswer) {
-                        correctAnswers++;
+                    blanks++;
+                    if (userAnswers[sIdx]?.[blankCounter]?.status === 'correct') {
+                        correct++;
                     }
                     blankCounter++;
                 }
             });
         });
+        return { totalBlanks: blanks, correctAnswers: correct };
+    }, [processedSentences, userAnswers]);
+
+    // Handle focusing on an input field
+    const handleFocus = useCallback((sentenceIndex: number, blankIndex: number, correctAnswer: string) => {
+        // Do not focus if the answer is already correct
+        if (userAnswers[sentenceIndex]?.[blankIndex]?.status === 'correct') {
+            return;
+        }
+        setActiveInput({ sentenceIndex, blankIndex, correctAnswer });
+    }, [userAnswers]);
+
+    // Handle input from the virtual keyboard
+    const handleKeyboardInput = useCallback((newValue: string) => {
+        if (!activeInput) return;
+
+        const { sentenceIndex, blankIndex, correctAnswer } = activeInput;
+        let newStatus: AnswerState['status'] = 'pending';
+
+        // Automatically check the answer when its length matches the correct word's length
+        if (newValue.length === correctAnswer.length) {
+            newStatus = newValue.trim().toLowerCase() === correctAnswer.trim().toLowerCase() ? 'correct' : 'incorrect';
+        }
+
+        setUserAnswers(prev => ({
+            ...prev,
+            [sentenceIndex]: {
+                ...prev[sentenceIndex],
+                [blankIndex]: { value: newValue, status: newStatus },
+            },
+        }));
+
+        // If the answer is correct, you could optionally move focus to the next blank or close the keyboard.
+        // For simplicity, we'll let the user click the next blank.
+    }, [activeInput]);
+    
+    const handleMainClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        // Hide keyboard if clicking outside of an input or the keyboard itself
+        if (!(e.target as HTMLElement).closest('input') && !(e.target as HTMLElement).closest('.virtual-keyboard-container')) {
+             setActiveInput(null);
+        }
     }
 
     return (
-        <div className="h-full w-full bg-black flex flex-col text-white">
+        <div className="h-full w-full bg-black flex flex-col text-white" onClick={handleMainClick}>
             <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md flex-shrink-0">
                 <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-                    {/* --- HEADER MODIFIED: "Check Answers" button moved here --- */}
                     <div className="flex h-14 items-center justify-between">
                         <button onClick={onExit} className="px-4 py-2 text-sm font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors">
                             Exit Game
                         </button>
-                        {!isChecking && (
-                            <button onClick={handleCheckAnswers} className="px-4 py-2 text-sm font-bold rounded-lg bg-green-600 hover:bg-green-500 transition-colors">
-                                Check Answers
-                            </button>
-                        )}
+                        <div className="text-lg font-bold">
+                            Score: <span className="text-green-400">{correctAnswers}</span> / <span className="text-white">{totalBlanks}</span>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <main className="flex-grow overflow-y-auto p-4 sm:p-6" onClick={() => setActiveInput(null)}>
-                {/* --- Add padding to the bottom to make space for the keyboard --- */}
-                <div className="max-w-4xl mx-auto space-y-6 pb-64"> 
+            <main className="flex-grow overflow-y-auto p-4 sm:p-6" >
+                <div className="max-w-4xl mx-auto space-y-6 pb-4"> {/* Added padding-bottom */}
                     {processedSentences.map((sentence, sIdx) => {
                         let blankCounter = 0;
                         return (
@@ -234,31 +238,28 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                                         } else if (part.answer) {
                                             const currentBlankIndex = blankCounter;
                                             blankCounter++;
-                                            const userAnswer = userAnswers[sIdx]?.[currentBlankIndex] || '';
-                                            const isCorrect = isChecking && userAnswer.trim().toLowerCase() === part.answer.trim().toLowerCase();
-                                            const isActive = activeInput?.sentenceIndex === sIdx && activeInput?.blankIndex === currentBlankIndex;
+                                            const answerState = userAnswers[sIdx]?.[currentBlankIndex] || { value: '', status: 'pending' };
 
                                             let borderColor = 'border-slate-600';
-                                            if (isActive) borderColor = 'border-blue-500';
-                                            if (isChecking) borderColor = isCorrect ? 'border-green-500' : 'border-red-500';
+                                            if (answerState.status === 'correct') borderColor = 'border-green-500';
+                                            if (answerState.status === 'incorrect') borderColor = 'border-red-500';
+                                            if (activeInput?.sentenceIndex === sIdx && activeInput?.blankIndex === currentBlankIndex) {
+                                                borderColor = 'border-blue-500';
+                                            }
 
                                             return (
                                                 <span key={pIdx} className="inline-block relative mx-1 my-1 align-baseline">
                                                     <input
                                                         type="text"
-                                                        value={userAnswer}
-                                                        // --- INPUT MODIFIED ---
-                                                        onFocus={(e) => {
-                                                            e.stopPropagation();
-                                                            setActiveInput({ sentenceIndex: sIdx, blankIndex: currentBlankIndex });
-                                                        }}
-                                                        readOnly // Prevents native keyboard
-                                                        disabled={isChecking}
-                                                        className={`bg-slate-800 text-center text-white px-1 py-0.5 rounded-md border-2 ${borderColor} outline-none transition-all duration-200 cursor-pointer`}
+                                                        value={answerState.value}
+                                                        onFocus={() => handleFocus(sIdx, currentBlankIndex, part.answer)}
+                                                        readOnly // Prevent native mobile keyboard
+                                                        disabled={answerState.status === 'correct'}
+                                                        className={`bg-slate-800 text-center text-white px-1 py-0.5 rounded-md border-2 ${borderColor} outline-none transition-all duration-200 disabled:opacity-70 disabled:cursor-default`}
                                                         style={{ width: `${Math.max(part.answer.length, 5)}ch` }}
                                                         autoCapitalize="none" autoComplete="off" spellCheck="false"
                                                     />
-                                                    {isChecking && !isCorrect && (
+                                                    {answerState.status === 'incorrect' && (
                                                         <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs text-green-400 font-mono bg-slate-900 px-1 rounded">{part.answer}</span>
                                                     )}
                                                 </span>
@@ -274,38 +275,19 @@ export const GameMode: React.FC<GameModeProps> = ({ sentences, difficulty, onExi
                 </div>
             </main>
 
-            {/* --- FOOTER MODIFIED: Only shows results, no border --- */}
-            <footer className="sticky bottom-0 z-10 bg-slate-900/95 backdrop-blur-sm flex-shrink-0">
-                <div className="max-w-4xl mx-auto p-3 flex justify-center items-center gap-4 h-20">
-                    {isChecking && (
-                        <div className='text-center'>
-                            <div className="text-lg font-bold">
-                                Score: <span className="text-green-400">{correctAnswers}</span> / <span className="text-white">{totalBlanks}</span>
-                            </div>
-                            <button onClick={handleTryAgain} className="mt-1 px-5 py-1 text-sm font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 transition-colors">
-                                Try Again
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </footer>
-            
-            {/* --- 4. RENDER THE VIRTUAL KEYBOARD CONDITIONALLY --- */}
-            <div 
-              className={`fixed bottom-0 left-0 right-0 z-50 bg-slate-800/90 backdrop-blur-md shadow-t-2xl transition-transform duration-300 ease-in-out ${activeInputData ? 'translate-y-0' : 'translate-y-full'}`}
-              onClick={(e) => e.stopPropagation()} // Prevent clicks inside keyboard from closing it
-            >
-                {activeInputData && (
+            <footer className="sticky bottom-0 z-20 bg-slate-900 border-t border-slate-700/50 flex-shrink-0 virtual-keyboard-container">
+                {activeInput && (
                     <VirtualKeyboard
-                        userInput={activeInputData.userInput}
-                        setUserInput={activeInputData.setUserInput}
-                        wordLength={activeInputData.wordLength}
-                        disabled={isChecking}
+                        userInput={userAnswers[activeInput.sentenceIndex]?.[activeInput.blankIndex]?.value || ''}
+                        setUserInput={handleKeyboardInput}
+                        wordLength={activeInput.correctAnswer.length}
+                        disabled={userAnswers[activeInput.sentenceIndex]?.[activeInput.blankIndex]?.status === 'correct'}
                     />
                 )}
-            </div>
+            </footer>
         </div>
     );
 };
+
 
 // --- END OF FILE phrase-game.tsx ---
