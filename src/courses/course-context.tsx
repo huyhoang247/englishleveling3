@@ -11,11 +11,13 @@ import {
   fetchOrCreateUser as fetchOrCreateUserService,
   updateUserCoins as updateUserCoinsService,
   fetchGameInitialData as fetchGameInitialDataService,
+  // --- START: DÒNG MỚI ---
   updateAchievementData as updateAchievementDataService,
   fetchAndSyncVocabularyData as fetchAndSyncVocabularyDataService,
   VocabularyItem,
+  // --- END: DÒNG MỚI ---
 } from './course-data-service.ts';
-// Import data and generators
+// NEW: Import data and generators
 import { generateAudioUrlsForWord, generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
 import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
 import { exampleData } from '../voca-data/example-data.ts';
@@ -23,6 +25,7 @@ import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 
 
 // --- Định nghĩa các "hình dạng" (interface) dùng chung ---
+// NEW: Moved Definition interface here
 export interface Definition {
   vietnamese: string;
   english: string;
@@ -52,21 +55,16 @@ interface QuizAppContextType {
   updateUserCoins: (amount: number) => Promise<void>;
   fetchOrCreateUser: () => Promise<any>;
   fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>;
-  
+  // --- START: DÒNG MỚI ---
+  fetchAndSyncVocabularyData: () => Promise<VocabularyItem[]>;
   updateAchievementData: (updates: {
     coinsToAdd: number;
     cardsToAdd: number;
     newVocabularyData: VocabularyItem[];
   }) => Promise<{ newCoins: number; newMasteryCards: number }>;
-  
-  // --- Dữ liệu và trạng thái từ vựng được cache ---
-  vocabularyData: VocabularyItem[] | null; // null: chưa tải, []: đã tải nhưng rỗng
-  isVocabularyLoading: boolean;
+  // --- END: DÒNG MỚI ---
 
-  // --- Hàm cập nhật state tức thì ---
-  addExpToWords: (wordExpPairs: { word: string; expToAdd: number }[]) => void;
-
-  // --- Vocabulary data and utilities ---
+  // --- NEW: Vocabulary data and utilities ---
   definitionsMap: { [key: string]: Definition };
   generateAudioUrlsForWord: (word: string) => { [key: string]: string } | null;
   exampleData: any[];
@@ -102,10 +100,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   const [userCoins, setUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
   
-  // State để cache dữ liệu từ vựng và trạng thái loading
-  const [vocabularyData, setVocabularyData] = useState<VocabularyItem[] | null>(null);
-  const [isVocabularyLoading, setIsVocabularyLoading] = useState<boolean>(true);
-
+  // NEW: Process vocabulary definitions once and provide via context
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
     const lines = detailedMeaningsText.trim().split('\n');
@@ -129,10 +124,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (!currentUser) {
-        // Reset cache khi người dùng đăng xuất
-        setVocabularyData(null);
-      }
     });
     return () => unsubscribe();
   }, []);
@@ -155,29 +146,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
       setMasteryCount(0);
     }
   }, [user]);
-
-  // Effect để tự động tải và cache dữ liệu từ vựng KHI CÓ USER
-  useEffect(() => {
-    // Chỉ fetch khi có user và dữ liệu chưa được tải (còn là null)
-    if (user && vocabularyData === null) {
-      setIsVocabularyLoading(true);
-      fetchAndSyncVocabularyDataService(user.uid)
-        .then(data => {
-          setVocabularyData(data);
-        })
-        .catch(error => {
-          console.error("Failed to fetch vocabulary data:", error);
-          setVocabularyData([]); // Gán mảng rỗng nếu lỗi để không fetch lại
-        })
-        .finally(() => {
-          setIsVocabularyLoading(false);
-        });
-    } else if (!user) {
-        // Nếu không có user (đăng xuất), đảm bảo loading là false
-        setIsVocabularyLoading(false);
-    }
-  }, [user, vocabularyData]);
-
 
   // --- Các hàm xử lý (Handlers) ---
   const handleQuizSelect = useCallback((quiz) => {
@@ -275,6 +243,15 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     await updateUserCoinsService(user.uid, amount);
   }, [user]);
 
+  // --- START: CÁC HÀM WRAPPER MỚI CHO ACHIEVEMENT ---
+  const fetchAndSyncVocabularyData = useCallback(async (): Promise<VocabularyItem[]> => {
+    if (!user) {
+      console.warn("fetchAndSyncVocabularyData called without a user.");
+      return [];
+    }
+    return fetchAndSyncVocabularyDataService(user.uid);
+  }, [user]);
+
   const updateAchievementData = useCallback(async (updates: {
     coinsToAdd: number;
     cardsToAdd: number;
@@ -284,41 +261,10 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
       console.warn("updateAchievementData called without a user.");
       throw new Error("Người dùng chưa đăng nhập để cập nhật thành tích.");
     }
-    const result = await updateAchievementDataService(user.uid, updates);
-    
-    // Cập nhật state local ngay lập tức để UI phản ánh thay đổi
-    setVocabularyData(updates.newVocabularyData);
-    
-    // Cập nhật coins và mastery count để UI đồng bộ ngay (mặc dù listener cũng làm việc này)
-    setUserCoins(prevCoins => prevCoins + updates.coinsToAdd);
-    setMasteryCount(prevCount => prevCount + updates.cardsToAdd);
-    
-    return result;
+    return updateAchievementDataService(user.uid, updates);
   }, [user]);
+  // --- END: CÁC HÀM WRAPPER MỚI CHO ACHIEVEMENT ---
 
-  // --- HÀM MỚI: Cập nhật EXP cho từ vựng trong state để UI phản hồi tức thì ---
-  const addExpToWords = useCallback((wordExpPairs: { word: string; expToAdd: number }[]) => {
-    // Chỉ cập nhật nếu vocabularyData đã được tải và có nội dung
-    if (!vocabularyData) return;
-
-    // Tạo một map để truy cập nhanh các từ cần cập nhật
-    const updatesMap = new Map(wordExpPairs.map(p => [p.word.toLowerCase(), p.expToAdd]));
-
-    const newVocabularyData = vocabularyData.map(item => {
-      const wordInLowerCase = item.word.toLowerCase();
-      if (updatesMap.has(wordInLowerCase)) {
-        const expToAdd = updatesMap.get(wordInLowerCase) || 0;
-        return {
-          ...item,
-          exp: item.exp + expToAdd,
-        };
-      }
-      return item;
-    });
-
-    // Cập nhật state để UI re-render ngay lập tức
-    setVocabularyData(newVocabularyData);
-  }, [vocabularyData]); 
 
   // --- Giá trị được cung cấp bởi Context ---
   const value = {
@@ -341,16 +287,11 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     fetchOrCreateUser,
     updateUserCoins,
     fetchGameInitialData,
+    // --- START: DÒNG MỚI ---
+    fetchAndSyncVocabularyData,
     updateAchievementData,
-    
-    // Dữ liệu và trạng thái được cache
-    vocabularyData,
-    isVocabularyLoading,
-
-    // Hàm cập nhật state tức thì
-    addExpToWords,
-
-    // Dữ liệu và các hàm tiện ích khác
+    // --- END: DÒNG MỚI ---
+    // NEW: Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
     exampleData,
