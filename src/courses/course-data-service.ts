@@ -13,10 +13,6 @@ import quizData from './multiple-choice/multiple-data.ts';
 import { exampleData } from '../voca-data/example-data.ts';
 import { allWordPairs } from './voca-match/voca-match-data.ts';
 
-// Interface cho Item thành tích đã được chuyển sang local-vocab-db.ts
-// nhưng chúng ta vẫn dùng nó ở đây nên có thể giữ lại hoặc import.
-// export interface VocabularyItem { ... } // Đã được import từ local-vocab-db
-
 /**
  * Lấy dữ liệu người dùng. Nếu người dùng chưa tồn tại trong Firestore, tạo mới với giá trị mặc định.
  * @param userId - ID của người dùng.
@@ -556,4 +552,16 @@ export const recordGameSuccess = async (
   
   // 3. Trả về không có phần thưởng level-up, vì nó sẽ được claim sau
   return { coinsToAdd: 0, cardsToAdd: 0 };
+};
+
+/**
+ * [ĐỌC TỪ LOCAL] Lấy tất cả dữ liệu tiến trình game từ Local DB.
+ * @returns {Promise<{completedWordsData: ICompletedWord[], completedMultiWordData: ICompletedMultiWord[]}>}
+ */
+export const fetchAllLocalProgress = async () => {
+  const [completedWordsData, completedMultiWordData] = await Promise.all([
+    localDB.getCompletedWords(),
+    localDB.getCompletedMultiWords()
+  ]);
+  return { completedWordsData, completedMultiWordData };
 };
