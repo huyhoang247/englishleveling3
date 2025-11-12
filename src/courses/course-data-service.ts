@@ -3,23 +3,16 @@
 import { db } from '../firebase';
 import { 
   doc, getDoc, setDoc, updateDoc, increment, collection, 
-  getDocs, writeBatch, Unsubscribe, onSnapshot, runTransaction
+  getDocs, writeBatch, arrayUnion, onSnapshot, Unsubscribe, runTransaction 
 } from 'firebase/firestore';
-import { localDB } from '../local-data/local-vocab-db.ts'; 
 
-// Import dữ liệu local khác
+// <<< THAY ĐỔI: Import localDB để đọc dữ liệu từ IndexedDB >>>
+import { localDB, IOpenedVocab } from '../local-data/local-vocab-db.ts'; // <= CHỈNH LẠI ĐƯỜNG DẪN NẾU CẦN
+
+// Import các dữ liệu local cần thiết cho hàm mới
 import quizData from './multiple-choice/multiple-data.ts'; 
 import { exampleData } from '../voca-data/example-data.ts';
 import { allWordPairs } from './voca-match/voca-match-data.ts';
-
-// Interface cho Item thành tích
-export interface VocabularyItem { 
-  id: number; 
-  word: string; 
-  exp: number; 
-  level: number; 
-  maxExp: number; 
-}
 
 /**
  * Lấy dữ liệu người dùng. Nếu người dùng chưa tồn tại trong Firestore, tạo mới với giá trị mặc định.
@@ -93,17 +86,30 @@ export const updateUserMastery = async (userId: string, amount: number): Promise
 };
 
 /**
- * Lấy danh sách từ vựng đã mở của người dùng từ IndexedDB.
- * @param userId - ID của người dùng (giữ lại để nhất quán API, nhưng không dùng đến).
+ * <<< THAY ĐỔI: Lấy danh sách từ vựng đã mở của người dùng từ Local DB (IndexedDB). >>>
+ * Nhanh hơn và giảm tải cho Firestore.
+ * @param userId - ID người dùng, không dùng để query nhưng để đảm bảo logic chỉ chạy khi đã đăng nhập.
  * @returns {Promise<string[]>} Mảng các từ vựng đã mở.
  */
 export const getOpenedVocab = async (userId: string): Promise<string[]> => {
-    const openedVocabData = await localDB.getAllOpenedVocab();
-    return openedVocabData.map(item => item.word).filter(Boolean);
+    // --- DÒNG CŨ ---
+    // const vocabSnapshot = await getDocs(collection(db, 'users', userId, 'openedVocab'));
+    // return vocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
+    
+    // +++ DÒNG MỚI +++
+    if (!userId) return [];
+    try {
+      const openedVocab = await localDB.getAllOpenedVocab();
+      return openedVocab.map(item => item.word);
+    } catch (error) {
+      console.error("Failed to get opened vocab from Local DB:", error);
+      return [];
+    }
 };
 
 /**
  * Lấy danh sách các từ đã hoàn thành trong một game mode cụ thể.
+ * (Hàm này không thay đổi vì 'completedWords' vẫn cần lưu trên Firestore để đồng bộ)
  * @param userId - ID của người dùng.
  * @param gameModeId - ID của chế độ chơi (ví dụ: 'quiz-1').
  * @returns {Promise<Set<string>>} Một Set chứa các từ đã hoàn thành (viết thường).
@@ -120,19 +126,23 @@ export const getCompletedWordsForGameMode = async (userId: string, gameModeId: s
 };
 
 /**
- * Interface cho dữ liệu khởi tạo game.
+ * <<< THAY ĐỔI: Interface cho dữ liệu khởi tạo game. ID của vocab là number. >>>
  */
 interface GameInitialData {
   coins: number;
   masteryCards: number;
-  openedVocabWords: { id: string, word: string }[];
+  // --- DÒNG CŨ ---
+  // openedVocabWords: { id: string, word: string }[];
+  // +++ DÒNG MỚI +++
+  openedVocabWords: { id: number, word: string }[];
   completedWords: Set<string>;
 }
 
 /**
+ * <<< THAY ĐỔI: Lấy dữ liệu từ vựng đã mở từ Local DB thay vì Firestore. >>>
  * Lấy tất cả dữ liệu cần thiết để bắt đầu một màn chơi.
  * @param userId ID người dùng.
- * @param gameModeId ID của chế độ chơi.
+ * @param gameModeId ID của chế độ chơi (ví dụ: 'fill-word-1').
  * @param isMultiWordGame Cờ xác định đây là game điền 1 từ hay nhiều từ.
  * @returns {Promise<GameInitialData>} Dữ liệu khởi tạo game.
  */
@@ -142,16 +152,30 @@ export const fetchGameInitialData = async (userId: string, gameModeId: string, i
   const userDocRef = doc(db, 'users', userId);
   const completedCollectionName = isMultiWordGame ? 'completedMultiWord' : 'completedWords';
   const completedWordsRef = collection(db, 'users', userId, completedCollectionName);
-
-  const [userDocSnap, localOpenedVocab, completedWordsSnap] = await Promise.all([
+  
+  // <<< THAY ĐỔI: Thay thế query Firestore `openedVocabRef` bằng query Local DB >>>
+  // --- DÒNG CŨ ---
+  // const openedVocabRef = collection(db, 'users', userId, 'openedVocab');
+  // const [userDocSnap, openedVocabSnap, completedWordsSnap] = await Promise.all([
+  //   getDoc(userDocRef),
+  //   getDocs(openedVocabRef),
+  //   getDocs(completedWordsRef)
+  // ]);
+  // +++ DÒNG MỚI +++
+  const [userDocSnap, openedVocabData, completedWordsSnap] = await Promise.all([
     getDoc(userDocRef),
-    localDB.getAllOpenedVocab(),
+    localDB.getAllOpenedVocab(), // Lấy từ Local DB
     getDocs(completedWordsRef)
   ]);
 
   const userData = userDocSnap.exists() ? userDocSnap.data() : { coins: 0, masteryCards: 0 };
-  const openedVocabWords = localOpenedVocab.map(item => ({ id: item.word.toLowerCase(), word: item.word })).filter(item => item.word);
   
+  // <<< THAY ĐỔI: Dữ liệu vocab bây giờ có dạng IOpenedVocab[] >>>
+  // --- DÒNG CŨ ---
+  // const openedVocabWords = openedVocabSnap.docs.map(d => ({ id: d.id, word: d.data().word })).filter(item => item.word);
+  // +++ DÒNG MỚI +++
+  const openedVocabWords = openedVocabData.map(v => ({ id: v.id, word: v.word }));
+
   const completedWords = new Set<string>();
   completedWordsSnap.forEach(docSnap => {
     const data = docSnap.data();
@@ -170,6 +194,60 @@ export const fetchGameInitialData = async (userId: string, gameModeId: string, i
 };
 
 /**
+ * Ghi lại kết quả khi người dùng trả lời đúng một từ/câu.
+ * (Hàm này không thay đổi)
+ * @param userId ID người dùng.
+ * @param gameModeId ID của chế độ chơi.
+ * @param completedWord Từ hoặc cụm từ đã hoàn thành.
+ * @param isMultiWordGame Cờ xác định game điền 1 từ hay nhiều từ.
+ * @param coinReward Số coin thưởng.
+ */
+export const recordGameSuccess = async (
+  userId: string,
+  gameModeId: string,
+  completedWord: string,
+  isMultiWordGame: boolean,
+  coinReward: number
+): Promise<void> => {
+  if (!userId || !completedWord) return;
+
+  const batch = writeBatch(db);
+  const userDocRef = doc(db, 'users', userId);
+
+  if (isMultiWordGame) {
+    const multiWordId = completedWord.toLowerCase();
+    const completedMultiWordRef = doc(db, 'users', userId, 'completedMultiWord', multiWordId);
+    batch.set(completedMultiWordRef, {
+      completedIn: { [gameModeId]: true },
+      lastCompletedAt: new Date()
+    }, { merge: true });
+
+    const individualWords = completedWord.split(' ');
+    individualWords.forEach(word => {
+      const individualWordRef = doc(db, 'users', userId, 'completedWords', word.toLowerCase());
+      batch.set(individualWordRef, { 
+        lastCompletedAt: new Date(), 
+        gameModes: { [gameModeId]: { correctCount: increment(1) } } 
+      }, { merge: true });
+    });
+
+  } else {
+    const wordId = completedWord.toLowerCase();
+    const completedWordRef = doc(db, 'users', userId, 'completedWords', wordId);
+    batch.set(completedWordRef, { 
+      lastCompletedAt: new Date(), 
+      gameModes: { [gameModeId]: { correctCount: increment(1) } } 
+    }, { merge: true });
+  }
+
+  if (coinReward > 0) {
+    batch.update(userDocRef, { coins: increment(coinReward) });
+  }
+
+  await batch.commit();
+};
+
+/**
  * Interface cho dữ liệu cốt lõi của người dùng được lắng nghe.
  */
 export interface UserCoreData {
@@ -179,9 +257,10 @@ export interface UserCoreData {
 
 /**
  * Lắng nghe các thay đổi trên document của người dùng trong thời gian thực.
+ * (Hàm này không thay đổi)
  * @param userId - ID của người dùng.
  * @param callback - Hàm sẽ được gọi với dữ liệu người dùng mỗi khi có thay đổi.
- * @returns {Unsubscribe} Một hàm để hủy lắng nghe.
+ * @returns {Unsubscribe} Một hàm để hủy lắng nghe, cho phép component dọn dẹp.
  */
 export const listenToUserData = (userId: string, callback: (data: UserCoreData | null) => void): Unsubscribe => {
   if (!userId) {
@@ -218,9 +297,11 @@ export interface PracticeProgressPayload {
 }
 
 /**
- * Lấy và tính toán dữ liệu tiến trình cho danh sách bài luyện tập.
+ * <<< THAY ĐỔI: Lấy dữ liệu từ vựng đã mở từ Local DB thay vì Firestore. >>>
+ * Lấy và tính toán dữ liệu tiến trình cho danh sách bài luyện tập (Quiz và Fill Word).
+ * Tái cấu trúc từ hàm calculateProgress trong component PracticeList.
  * @param userId ID người dùng.
- * @param selectedType Loại hình luyện tập.
+ * @param selectedType Loại hình luyện tập ('tracNghiem', 'dienTu', hoặc 'vocaMatch').
  * @returns {Promise<PracticeProgressPayload>} Dữ liệu tiến trình và các phần thưởng đã nhận.
  */
 export const fetchPracticeListProgress = async (
@@ -230,17 +311,32 @@ export const fetchPracticeListProgress = async (
   if (!userId || !selectedType) {
     throw new Error("User ID and selected type are required.");
   }
-
+  
+  // <<< THAY ĐỔI: Thay thế query Firestore `openedVocab` bằng query Local DB >>>
+  // --- DÒNG CŨ ---
+  // const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
+  //   getDoc(doc(db, 'users', userId)),
+  //   getDocs(collection(db, 'users', userId, 'openedVocab')),
+  //   getDocs(collection(db, 'users', userId, 'completedWords')),
+  //   getDocs(collection(db, 'users', userId, 'completedMultiWord'))
+  // ]);
+  // +++ DÒNG MỚI +++
   const [userDocSnap, openedVocabData, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
     getDoc(doc(db, 'users', userId)),
-    localDB.getAllOpenedVocab(),
+    localDB.getAllOpenedVocab(), // Lấy từ Local DB
     getDocs(collection(db, 'users', userId, 'completedWords')),
     getDocs(collection(db, 'users', userId, 'completedMultiWord'))
   ]);
 
+
   const userData = userDocSnap.exists() ? userDocSnap.data() : {};
   const claimedRewards = userData.claimedQuizRewards || {};
-  const userVocabSet = new Set(openedVocabData.map(item => item.word?.toLowerCase()).filter(Boolean));
+  
+  // <<< THAY ĐỔI: Tạo Set từ dữ liệu của Local DB >>>
+  // --- DÒNG CŨ ---
+  // const userVocabSet = new Set(openedVocabSnapshot.docs.map(doc => doc.data().word?.toLowerCase()).filter(Boolean));
+  // +++ DÒNG MỚI +++
+  const userVocabSet = new Set(openedVocabData.map(item => item.word.toLowerCase()));
   
   const completedWordsByGameMode: { [mode: string]: Set<string> } = {};
   completedWordsSnapshot.forEach(doc => {
@@ -366,10 +462,12 @@ export const fetchPracticeListProgress = async (
 
 /**
  * Ghi nhận việc người dùng nhận thưởng từ một cột mốc trong quiz.
+ * Tái cấu trúc từ hàm handleClaim trong component RewardsPopup.
+ * (Hàm này không thay đổi)
  * @param userId - ID của người dùng.
- * @param rewardId - ID của phần thưởng.
+ * @param rewardId - ID của phần thưởng (ví dụ: 'tracNghiem-1-100').
  * @param coinAmount - Số coin thưởng.
- * @param masteryCardAmount - Số thẻ mastery thưởng.
+ * @param masteryCardAmount - Số thẻ mastery thưởng (đã sửa từ cardCapacity).
  * @returns {Promise<void>}
  */
 export const claimQuizReward = async (
@@ -394,163 +492,109 @@ export const claimQuizReward = async (
 };
 
 // =====================================================================
-// --- LOGIC THÀNH TÍCH (ACHIEVEMENT) - HOÀN TOÀN LOCAL ---
+// --- START: Functions moved from achievement-service.ts ---
+// (Các hàm này không cần thay đổi vì chúng đọc từ 'completedWords', không phải 'openedVocab')
 // =====================================================================
 
-const EXP_PER_SUCCESS = 100; // Điểm kinh nghiệm cho mỗi lần trả lời đúng
+// Định nghĩa kiểu dữ liệu cho một item từ vựng trong thành tích.
+export interface VocabularyItem { 
+  id: number; 
+  word: string; 
+  exp: number; 
+  level: number; 
+  maxExp: number; 
+}
 
 /**
- * [ĐỌC TỪ CACHE] Lấy dữ liệu thành tích từ Local DB.
- * Nếu cache rỗng, nó sẽ cố gắng xây dựng lại từ Firestore một lần duy nhất.
- * @param userId - Cần thiết cho lần xây dựng cache đầu tiên.
- * @returns {Promise<VocabularyItem[]>} Dữ liệu thành tích từ cache.
+ * Lấy dữ liệu từ sub-collection 'completedWords' và đồng bộ hóa nó với dữ liệu thành tích
+ * trong 'gamedata/achievements' để tính toán EXP và Level cho mỗi từ.
+ * @param userId - ID của người dùng.
+ * @returns {Promise<VocabularyItem[]>} Một mảng dữ liệu thành tích từ vựng đã được đồng bộ.
  */
 export const fetchAndSyncVocabularyData = async (userId: string): Promise<VocabularyItem[]> => {
-  if (!userId) return [];
-  console.log("Fetching vocabulary achievements from local DB cache.");
-  let localAchievements = await localDB.getVocabAchievements();
-
-  // Nếu local DB trống (lần đầu tiên chơi hoặc sau khi xóa cache), xây dựng lại từ server.
-  if (localAchievements.length === 0) {
-    console.log("Local achievement cache is empty. Rebuilding from Firestore...");
-    const completedWordsSnap = await getDocs(collection(db, 'users', userId, 'completedWords'));
-    if (completedWordsSnap.empty) {
-      console.log("No completed words found on Firestore. Nothing to rebuild.");
-      return []; // Không có gì để xây dựng
-    }
-
-    const rebuildPromises = completedWordsSnap.docs.map(async (wordDoc) => {
-        const word = wordDoc.id;
-        const gameModes = wordDoc.data().gameModes || {};
-        let totalCorrectCount = 0;
-        Object.values(gameModes).forEach((mode: any) => {
-            totalCorrectCount += mode.correctCount || 0;
-        });
-        
-        const totalExp = totalCorrectCount * EXP_PER_SUCCESS;
-        let level = 1;
-        let expRemaining = totalExp;
-        let expForNextLevel = 100;
-
-        while (expRemaining >= expForNextLevel) {
-            expRemaining -= expForNextLevel;
-            level++;
-            expForNextLevel = level * 100;
-        }
-
-        return { id: 0, word, exp: expRemaining, level, maxExp: expForNextLevel };
+  if (!userId) throw new Error("User ID is required.");
+  try {
+    const completedWordsCol = collection(db, 'users', userId, 'completedWords');
+    const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
+    const [completedWordsSnap, achievementDocSnap] = await Promise.all([
+      getDocs(completedWordsCol),
+      getDoc(achievementDocRef),
+    ]);
+    const wordToExpMap = new Map<string, number>();
+    completedWordsSnap.forEach(wordDoc => {
+      const word = wordDoc.id;
+      const gameModes = wordDoc.data().gameModes || {};
+      let totalCorrectCount = 0;
+      Object.values(gameModes).forEach((mode: any) => {
+        totalCorrectCount += mode.correctCount || 0;
+      });
+      wordToExpMap.set(word, totalCorrectCount * 100);
     });
-
-    localAchievements = await Promise.all(rebuildPromises);
-    
-    // Gán lại ID tuần tự và lưu vào localDB
-    localAchievements.forEach((item, index) => item.id = index + 1);
-    await localDB.saveVocabAchievements(localAchievements);
-    console.log("Local achievement cache has been rebuilt and saved.");
-  }
-  
-  return localAchievements;
-};
-
-/**
- * [HÀM NỘI BỘ] Cập nhật tiến trình thành tích cho một từ CỤ THỂ ngay trên Local DB.
- * @param word - Từ vừa trả lời đúng (viết thường).
- * @returns {Promise<{coinsToAdd: number, cardsToAdd: number}>} Phần thưởng nhận được nếu có level up.
- */
-const updateLocalAchievementForWord = async (word: string): Promise<{ coinsToAdd: number; cardsToAdd: number }> => {
-    const rewards = { coinsToAdd: 0, cardsToAdd: 0 };
-    const lowerCaseWord = word.toLowerCase();
-
-    let currentItem = await localDB.vocabAchievements.get(lowerCaseWord);
-
-    if (!currentItem) {
-        const allItems = await localDB.getVocabAchievements();
-        currentItem = {
-            id: allItems.length + 1,
-            word: lowerCaseWord,
-            level: 1,
-            exp: 0,
-            maxExp: 100
-        };
-    }
-
-    currentItem.exp += EXP_PER_SUCCESS;
-
-    while (currentItem.exp >= currentItem.maxExp) {
-        currentItem.exp -= currentItem.maxExp;
-        currentItem.level++;
-        currentItem.maxExp = currentItem.level * 100;
-
-        // Logic tính thưởng khi lên cấp
-        rewards.coinsToAdd += 50; 
-        if (currentItem.level % 5 === 0) {
-            rewards.cardsToAdd += 1;
+    const existingAchievements: VocabularyItem[] = achievementDocSnap.exists()
+      ? achievementDocSnap.data().vocabulary || [] : [];
+    const finalVocabularyData: VocabularyItem[] = [];
+    const processedWords = new Set<string>();
+    let idCounter = (existingAchievements.length > 0 ? Math.max(...existingAchievements.map(i => i.id)) : 0) + 1;
+    wordToExpMap.forEach((totalExp, word) => {
+      const existingItem = existingAchievements.find(item => item.word === word);
+      if (existingItem) {
+        let expSpentToReachCurrentLevel = 0;
+        for (let i = 1; i < existingItem.level; i++) {
+          expSpentToReachCurrentLevel += i * 100;
         }
-        console.log(`LEVEL UP! Word: "${currentItem.word}", New Level: ${currentItem.level}. Rewards: ${rewards.coinsToAdd} coins, ${rewards.cardsToAdd} cards.`);
-    }
-
-    await localDB.vocabAchievements.put(currentItem);
-    return rewards;
+        const currentProgressExp = totalExp - expSpentToReachCurrentLevel;
+        finalVocabularyData.push({ ...existingItem, exp: currentProgressExp, maxExp: existingItem.level * 100 });
+      } else {
+        finalVocabularyData.push({ id: idCounter++, word: word, exp: totalExp, level: 1, maxExp: 100 });
+      }
+      processedWords.add(word);
+    });
+    existingAchievements.forEach(item => {
+      if (!processedWords.has(item.word)) {
+        finalVocabularyData.push(item);
+      }
+    });
+    return finalVocabularyData;
+  } catch (error) {
+    console.error("Error fetching and syncing vocabulary achievements data in service:", error);
+    throw error;
+  }
 };
-
 
 /**
- * Ghi lại kết quả khi người dùng trả lời đúng VÀ cập nhật thành tích local.
- * @param userId ID người dùng.
- * @param gameModeId ID của chế độ chơi.
- * @param completedWord Từ hoặc cụm từ đã hoàn thành.
- * @param isMultiWordGame Cờ xác định game điền 1 từ hay nhiều từ.
- * @param coinReward Số coin thưởng mặc định của game.
- * @returns {Promise<{coinsToAdd: number, cardsToAdd: number}>} Phần thưởng TỔNG CỘNG từ việc lên cấp (nếu có).
+ * Cập nhật dữ liệu thành tích của người dùng trong một transaction.
+ * Bao gồm cộng vàng, thẻ master và lưu lại danh sách từ vựng mới.
+ * @param userId - ID của người dùng.
+ * @param updates - Dữ liệu cần cập nhật.
+ * @returns {Promise<{ newCoins: number; newMasteryCards: number }>} Số dư vàng và thẻ master mới.
  */
-export const recordGameSuccess = async (
+export const updateAchievementData = async (
   userId: string,
-  gameModeId: string,
-  completedWord: string,
-  isMultiWordGame: boolean,
-  coinReward: number
-): Promise<{ coinsToAdd: number; cardsToAdd: number }> => {
-  if (!userId || !completedWord) return { coinsToAdd: 0, cardsToAdd: 0 };
-
-  const batch = writeBatch(db);
+  updates: { coinsToAdd: number; cardsToAdd: number; newVocabularyData: VocabularyItem[]; }
+): Promise<{ newCoins: number; newMasteryCards: number }> => {
+  if (!userId) throw new Error("User ID is required for updating achievements.");
   const userDocRef = doc(db, 'users', userId);
-  let totalLevelUpRewards = { coinsToAdd: 0, cardsToAdd: 0 };
-
-  // 1. Ghi nhận `completedWords` lên Firestore (giữ vai trò log sự kiện)
-  if (isMultiWordGame) {
-    const multiWordId = completedWord.toLowerCase();
-    const completedMultiWordRef = doc(db, 'users', userId, 'completedMultiWord', multiWordId);
-    batch.set(completedMultiWordRef, { completedIn: { [gameModeId]: true }, lastCompletedAt: new Date() }, { merge: true });
-    
-    const individualWords = completedWord.split(' ');
-    for (const word of individualWords) {
-      const individualWordRef = doc(db, 'users', userId, 'completedWords', word.toLowerCase());
-      batch.set(individualWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
-      // 2. Cập nhật thành tích local cho từng từ và cộng dồn phần thưởng
-      const rewards = await updateLocalAchievementForWord(word);
-      totalLevelUpRewards.coinsToAdd += rewards.coinsToAdd;
-      totalLevelUpRewards.cardsToAdd += rewards.cardsToAdd;
-    }
-  } else {
-    const wordId = completedWord.toLowerCase();
-    const completedWordRef = doc(db, 'users', userId, 'completedWords', wordId);
-    batch.set(completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
-     // 2. Cập nhật thành tích local và lấy phần thưởng
-    totalLevelUpRewards = await updateLocalAchievementForWord(completedWord);
+  const achievementDocRef = doc(db, 'users', userId, 'gamedata', 'achievements');
+  const { coinsToAdd, cardsToAdd, newVocabularyData } = updates;
+  try {
+    const { newCoins, newMasteryCards } = await runTransaction(db, async (transaction) => {
+      const userDoc = await transaction.get(userDocRef);
+      if (!userDoc.exists()) throw new Error("User document does not exist!");
+      const currentCoins = userDoc.data().coins || 0;
+      const currentCards = userDoc.data().masteryCards || 0;
+      const finalCoins = currentCoins + coinsToAdd;
+      const finalCards = currentCards + cardsToAdd;
+      transaction.update(userDocRef, { coins: finalCoins, masteryCards: finalCards });
+      transaction.set(achievementDocRef, { vocabulary: newVocabularyData, lastUpdated: new Date() });
+      return { newCoins: finalCoins, newMasteryCards: finalCards };
+    });
+    console.log(`Achievements updated for user ${userId}.`);
+    return { newCoins, newMasteryCards };
+  } catch (error) {
+    console.error(`Failed to run transaction to update achievements for user ${userId}:`, error);
+    throw error;
   }
-
-  // 3. Cập nhật tiền tệ trên Firestore (gộp thưởng game và thưởng lên cấp)
-  const totalCoinsToAdd = coinReward + totalLevelUpRewards.coinsToAdd;
-  if (totalCoinsToAdd > 0) {
-    batch.update(userDocRef, { coins: increment(totalCoinsToAdd) });
-  }
-  if (totalLevelUpRewards.cardsToAdd > 0) {
-      batch.update(userDocRef, { masteryCards: increment(totalLevelUpRewards.cardsToAdd) });
-  }
-
-  // 4. Commit batch lên Firestore
-  await batch.commit();
-
-  // 5. Trả về phần thưởng từ việc lên cấp để UI có thể hiển thị thông báo
-  return totalLevelUpRewards;
 };
+// =====================================================================
+// --- END: Functions moved from achievement-service.ts ---
+// =====================================================================
