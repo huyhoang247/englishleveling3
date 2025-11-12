@@ -8,7 +8,6 @@ import React, {
   useCallback,
   ReactNode,
 } from 'react';
-// Import a new type if needed
 import { useQuizApp, Definition } from '../course-context.tsx'; 
 import { allWordPairs, shuffleArray } from './voca-match-data.ts';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
@@ -72,16 +71,18 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   onGoBack,
   selectedPractice,
 }) => {
-  // Get new data/functions from the main context
   const { 
     user, 
     userCoins, 
     masteryCount: masteryCountFromCourse, 
     getOpenedVocab, 
-    getCompletedWords, 
+    // --- START THAY ĐỔI ---
+    // Thay thế getCompletedWords bằng hàm mới đọc từ local
+    fetchAllLocalProgress, 
+    // --- END THAY ĐỔI ---
     recordGameSuccess,
-    definitionsMap,          // NEW
-    generateAudioUrlsForWord // NEW
+    definitionsMap,
+    generateAudioUrlsForWord
   } = useQuizApp();
 
   const [loading, setLoading] = useState(true);
@@ -112,7 +113,6 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   const isAudioMatch = useMemo(() => selectedPractice % 100 === 2, [selectedPractice]);
   const gameModeId = useMemo(() => `match-${selectedPractice % 100}`, [selectedPractice]);
 
-  // Sync local state with global context state
   useEffect(() => {
     setSessionCoins(userCoins);
   }, [userCoins]);
@@ -121,29 +121,35 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     setMasteryCount(masteryCountFromCourse);
   }, [masteryCountFromCourse]);
 
-  // REMOVED: The definitionsMap is now provided by useQuizApp, so this is no longer needed.
-  /*
-  const definitionsMap = useMemo(() => { ... });
-  */
-
   useEffect(() => {
     const fetchData = async () => {
       if (user) {
         setLoading(true);
         try {
-          const [vocabList, completedSet] = await Promise.all([
+          // --- START THAY ĐỔI LỚN ---
+          const [vocabList, localProgress] = await Promise.all([
             getOpenedVocab(),
-            getCompletedWords(gameModeId)
+            fetchAllLocalProgress() // Gọi hàm mới
           ]);
+          
+          // Xử lý dữ liệu local để tạo completedSet
+          const completedSet = new Set<string>();
+          // VocaMatch là game từ đơn, nên ta chỉ cần `completedWordsData`
+          localProgress.completedWordsData.forEach((item: any) => {
+              if (item.gameModes?.[gameModeId]) {
+                  completedSet.add(item.word.toLowerCase());
+              }
+          });
+          // --- END THAY ĐỔI LỚN ---
           
           const userVocabSet = new Set(vocabList.map(v => v.toLowerCase()));
           const allEligiblePairs = allWordPairs.filter(pair => userVocabSet.has(pair.english.toLowerCase()));
           const remainingPairs = allEligiblePairs.filter(pair => !completedSet.has(pair.english.toLowerCase()));
+          
           setPlayablePairs(shuffleArray(remainingPairs));
           setTotalEligiblePairs(allEligiblePairs);
 
           if (isAudioMatch && remainingPairs.length > 0) {
-            // Use generateAudioUrlsForWord from context
             const firstWordUrls = generateAudioUrlsForWord(remainingPairs[0].english);
             if (firstWordUrls) {
               setAvailableVoices(Object.keys(firstWordUrls));
@@ -160,7 +166,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       }
     };
     fetchData();
-  }, [user, gameModeId, isAudioMatch, getOpenedVocab, getCompletedWords, generateAudioUrlsForWord]); // Added generateAudioUrlsForWord dependency
+  }, [user, gameModeId, isAudioMatch, getOpenedVocab, fetchAllLocalProgress, generateAudioUrlsForWord]); // Cập nhật dependency array
 
   const setupNewRound = useCallback(() => {
     const roundStart = currentRound * GAME_SIZE;
@@ -179,7 +185,6 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     if (isAudioMatch) {
       const leftColumnData = englishWords.map(word => ({
         word: word,
-        // Use generateAudioUrlsForWord from context
         audioUrls: generateAudioUrlsForWord(word)
       }));
       setLeftColumn(leftColumnData);
@@ -197,7 +202,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     setSelectedLeft(null);
     setIncorrectPair(null);
     setLastCorrectDefinition(null);
-  }, [currentRound, playablePairs, loading, isAudioMatch, generateAudioUrlsForWord]); // Added generateAudioUrlsForWord dependency
+  }, [currentRound, playablePairs, loading, isAudioMatch, generateAudioUrlsForWord]);
 
   useEffect(() => {
     if (!loading) {
@@ -226,7 +231,6 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       setCorrectPairs(prev => [...prev, selectedLeft]);
       setSelectedLeft(null);
       setScore(prev => prev + 1);
-      // Use definitionsMap from context
       setLastCorrectDefinition(definitionsMap[selectedLeft.toLowerCase()] || null);
 
       const newStreak = streak + 1;
@@ -267,6 +271,8 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     setScore(0);
     setStreak(0);
     setShowEndScreen(false);
+    // Cần phải shuffle lại playablePairs để khi chơi lại sẽ là một thứ tự mới
+    setPlayablePairs(shuffleArray(playablePairs));
   };
   
   const totalPairsInSession = totalEligiblePairs.length;
