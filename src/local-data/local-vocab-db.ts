@@ -1,110 +1,74 @@
-// --- START OF FILE: local-vocab-db.ts ---
+// src/lib/local-vocab-db.ts
 
 import Dexie, { Table } from 'dexie';
 
-// Interface cho dữ liệu từ vựng đã MỞ KHÓA
+// Định nghĩa interface cho dữ liệu từ vựng sẽ lưu
 export interface IOpenedVocab {
-  id: number;       // ID của từ (1-based), primary key
+  id: number; // ID của từ (1-based), sẽ là primary key
   word: string;
   collectedAt: Date;
   chestType: string;
 }
 
-// --- START: DÒNG MỚI ---
-// Interface cho dữ liệu THÀNH TÍCH từ vựng
-export interface IVocabAchievement {
-  id: number;       // ID từ API (có thể không tuần tự)
-  word: string;     // Dùng 'word' làm primary key vì nó là duy nhất
-  exp: number;
-  level: number;
-  maxExp: number;
-}
-// --- END: DÒNG MỚI ---
-
 class LocalVocabDatabase extends Dexie {
+  // 'openedVocab' là tên của "bảng" (object store) trong IndexedDB
   openedVocab!: Table<IOpenedVocab>; 
-  // --- START: DÒNG MỚI ---
-  vocabAchievements!: Table<IVocabAchievement>;
-  // --- END: DÒNG MỚI ---
 
   constructor() {
+    // 'VocabularyChestDB' là tên của database
     super('VocabularyChestDB');
-    // --- START: THAY ĐỔI ---
-    // Tăng phiên bản DB để áp dụng schema mới
-    this.version(2).stores({
-      openedVocab: 'id, word, collectedAt',
-      // Định nghĩa bảng mới: 'word' là primary key, 'level' là index để sau này có thể query
-      vocabAchievements: 'word, level' 
+    this.version(1).stores({
+      // Định nghĩa schema: 'id' là primary key
+      openedVocab: 'id, word, collectedAt' // <<< THAY ĐỔI: Thêm collectedAt vào index để có thể sort hiệu quả hơn sau này
     });
-    // --- END: THAY ĐỔI ---
   }
 
-  // === Các hàm cho 'openedVocab' (Giữ nguyên) ===
-
+  /**
+   * Lấy tất cả các ID của từ vựng đã mở.
+   * Rất hiệu quả vì chỉ lấy primary key.
+   * @returns {Promise<Set<number>>} Một Set chứa các ID (1-based).
+   */
   async getAllOpenedIds(): Promise<Set<number>> {
     const ids = await this.openedVocab.toCollection().primaryKeys();
+    // Dexie trả về mảng các key, chúng ta chuyển nó thành Set để tra cứu nhanh hơn
     return new Set(ids as number[]);
   }
   
+  // <<< THAY ĐỔI: THÊM HÀM MỚI ĐỂ LẤY TOÀN BỘ DỮ LIỆU >>>
+  /**
+   * Lấy tất cả các object từ vựng đã mở.
+   * @returns {Promise<IOpenedVocab[]>} Một mảng chứa các object IOpenedVocab.
+   */
   async getAllOpenedVocab(): Promise<IOpenedVocab[]> {
     return this.openedVocab.toArray();
   }
 
+
+  /**
+   * Thêm nhiều từ vựng mới vào database.
+   * @param {IOpenedVocab[]} newWords - Mảng các object từ vựng mới.
+   */
   async addBulkWords(newWords: IOpenedVocab[]): Promise<void> {
     if (newWords.length === 0) return;
     try {
+      // bulkAdd là phương thức hiệu quả để thêm nhiều bản ghi cùng lúc
       await this.openedVocab.bulkAdd(newWords);
     } catch (error) {
       console.error("Failed to bulk add words to Dexie:", error);
+      // Bạn có thể xử lý lỗi ở đây, ví dụ như thử thêm từng cái một
     }
   }
 
-  // --- START: CÁC HÀM MỚI CHO 'vocabAchievements' ---
-
   /**
-   * Lấy tất cả dữ liệu thành tích từ vựng từ cache.
-   * @returns {Promise<IVocabAchievement[]>}
-   */
-  async getVocabAchievements(): Promise<IVocabAchievement[]> {
-    return this.vocabAchievements.toArray();
-  }
-
-  /**
-   * Lưu (ghi đè) toàn bộ dữ liệu thành tích vào cache.
-   * Dùng bulkPut để thêm mới hoặc cập nhật hiệu quả.
-   * @param {IVocabAchievement[]} achievements - Mảng dữ liệu thành tích mới.
-   */
-  async saveVocabAchievements(achievements: IVocabAchievement[]): Promise<void> {
-    if (achievements.length === 0) {
-        // Nếu mảng rỗng, có thể ta muốn xóa sạch cache
-        await this.vocabAchievements.clear();
-        return;
-    }
-    try {
-      // Xóa dữ liệu cũ và thêm dữ liệu mới để đảm bảo cache luôn là bản mới nhất
-      await this.vocabAchievements.clear();
-      await this.vocabAchievements.bulkAdd(achievements);
-    } catch (error) {
-      console.error("Failed to save vocab achievements to Dexie:", error);
-    }
-  }
-  // --- END: CÁC HÀM MỚI CHO 'vocabAchievements' ---
-
-
-  /**
-   * Xóa toàn bộ dữ liệu trong CẢ HAI bảng khi người dùng đăng xuất.
+   * Xóa toàn bộ dữ liệu trong bảng.
+   * Rất hữu ích khi người dùng đăng xuất.
    */
   async clearAllData(): Promise<void> {
-    // --- START: THAY ĐỔI ---
-    // Xóa cả hai bảng
-    await Promise.all([
-        this.openedVocab.clear(),
-        this.vocabAchievements.clear()
-    ]);
-    // --- END: THAY ĐỔI ---
+    await this.openedVocab.clear();
   }
 }
 
+// Xuất ra một instance duy nhất (singleton) để dùng trong toàn bộ ứng dụng
 export const localDB = new LocalVocabDatabase();
 
 // **QUAN TRỌNG**: Bạn nên gọi `localDB.clearAllData()`
