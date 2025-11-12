@@ -125,7 +125,8 @@ export const getCompletedWordsForGameMode = async (userId: string, gameModeId: s
 interface GameInitialData {
   coins: number;
   masteryCards: number;
-  openedVocabWords: { id: string, word: string }[];
+  // <<< THAY ĐỔI: Đổi tên và cấu trúc để rõ ràng hơn, chứa cả ID số
+  openedVocabItems: { id: number, word: string }[]; 
   completedWords: Set<string>;
 }
 
@@ -150,7 +151,12 @@ export const fetchGameInitialData = async (userId: string, gameModeId: string, i
   ]);
 
   const userData = userDocSnap.exists() ? userDocSnap.data() : { coins: 0, masteryCards: 0 };
-  const openedVocabWords = localOpenedVocab.map(item => ({ id: item.word.toLowerCase(), word: item.word })).filter(item => item.word);
+  
+  // <<< THAY ĐỔI QUAN TRỌNG: Gửi về ID số (item.id) và từ (item.word)
+  // id này sẽ được dùng cho imageIndex trong Practice 1
+  const openedVocabItems = localOpenedVocab
+    .map(item => ({ id: item.id, word: item.word }))
+    .filter(item => item.word && typeof item.id === 'number');
   
   const completedWords = new Set<string>();
   completedWordsSnap.forEach(docSnap => {
@@ -164,7 +170,7 @@ export const fetchGameInitialData = async (userId: string, gameModeId: string, i
   return {
     coins: userData.coins || 0,
     masteryCards: userData.masteryCards || 0,
-    openedVocabWords,
+    openedVocabItems, // <<< THAY ĐỔI: Trả về dữ liệu đã được sửa
     completedWords
   };
 };
