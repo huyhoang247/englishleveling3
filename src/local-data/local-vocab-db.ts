@@ -19,7 +19,7 @@ class LocalVocabDatabase extends Dexie {
     super('VocabularyChestDB');
     this.version(1).stores({
       // Định nghĩa schema: 'id' là primary key
-      openedVocab: 'id, word' 
+      openedVocab: 'id, word, collectedAt' // <<< THAY ĐỔI: Thêm collectedAt vào index để có thể sort hiệu quả hơn sau này
     });
   }
 
@@ -33,6 +33,16 @@ class LocalVocabDatabase extends Dexie {
     // Dexie trả về mảng các key, chúng ta chuyển nó thành Set để tra cứu nhanh hơn
     return new Set(ids as number[]);
   }
+  
+  // <<< THAY ĐỔI: THÊM HÀM MỚI ĐỂ LẤY TOÀN BỘ DỮ LIỆU >>>
+  /**
+   * Lấy tất cả các object từ vựng đã mở.
+   * @returns {Promise<IOpenedVocab[]>} Một mảng chứa các object IOpenedVocab.
+   */
+  async getAllOpenedVocab(): Promise<IOpenedVocab[]> {
+    return this.openedVocab.toArray();
+  }
+
 
   /**
    * Thêm nhiều từ vựng mới vào database.
