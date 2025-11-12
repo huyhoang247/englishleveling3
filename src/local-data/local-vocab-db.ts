@@ -10,7 +10,6 @@ export interface IOpenedVocab {
   chestType: string;
 }
 
-// --- START: DÒNG MỚI ---
 // Interface cho dữ liệu THÀNH TÍCH từ vựng
 export interface IVocabAchievement {
   id: number;       // ID từ API (có thể không tuần tự)
@@ -19,37 +18,69 @@ export interface IVocabAchievement {
   level: number;
   maxExp: number;
 }
-// --- END: DÒNG MỚI ---
+
+// Interface cho dữ liệu từ đơn đã hoàn thành
+export interface ICompletedWord {
+  word: string; // Primary key, lowercase
+  lastCompletedAt: Date;
+  gameModes: {
+    [gameModeId: string]: {
+      correctCount: number;
+    };
+  };
+}
+
+// Interface cho dữ liệu cụm từ đã hoàn thành
+export interface ICompletedMultiWord {
+  phrase: string; // Primary key, lowercase
+  lastCompletedAt: Date;
+  completedIn: {
+    [gameModeId: string]: boolean;
+  };
+}
+
 
 class LocalVocabDatabase extends Dexie {
   openedVocab!: Table<IOpenedVocab>; 
-  // --- START: DÒNG MỚI ---
   vocabAchievements!: Table<IVocabAchievement>;
-  // --- END: DÒNG MỚI ---
+  completedWords!: Table<ICompletedWord>;
+  completedMultiWord!: Table<ICompletedMultiWord>;
 
   constructor() {
     super('VocabularyChestDB');
-    // --- START: THAY ĐỔI ---
-    // Tăng phiên bản DB để áp dụng schema mới
-    this.version(2).stores({
+    // **QUAN TRỌNG**: Tăng phiên bản DB lên 3 để áp dụng schema mới
+    this.version(3).stores({
       openedVocab: 'id, word, collectedAt',
-      // Định nghĩa bảng mới: 'word' là primary key, 'level' là index để sau này có thể query
-      vocabAchievements: 'word, level' 
+      vocabAchievements: 'word, level',
+      // Định nghĩa 2 bảng mới, với 'word' và 'phrase' làm primary key
+      completedWords: 'word',
+      completedMultiWord: 'phrase'
     });
-    // --- END: THAY ĐỔI ---
   }
 
-  // === Các hàm cho 'openedVocab' (Giữ nguyên) ===
+  // === Các hàm cho 'openedVocab' ===
 
+  /**
+   * Lấy ID của tất cả các từ vựng đã mở khóa.
+   * @returns {Promise<Set<number>>}
+   */
   async getAllOpenedIds(): Promise<Set<number>> {
     const ids = await this.openedVocab.toCollection().primaryKeys();
     return new Set(ids as number[]);
   }
   
+  /**
+   * Lấy danh sách đầy đủ của tất cả từ vựng đã mở khóa.
+   * @returns {Promise<IOpenedVocab[]>}
+   */
   async getAllOpenedVocab(): Promise<IOpenedVocab[]> {
     return this.openedVocab.toArray();
   }
 
+  /**
+   * Thêm một loạt từ vựng mới vào DB.
+   * @param {IOpenedVocab[]} newWords - Mảng các từ mới.
+   */
   async addBulkWords(newWords: IOpenedVocab[]): Promise<void> {
     if (newWords.length === 0) return;
     try {
@@ -59,7 +90,7 @@ class LocalVocabDatabase extends Dexie {
     }
   }
 
-  // --- START: CÁC HÀM MỚI CHO 'vocabAchievements' ---
+  // === Các hàm cho 'vocabAchievements' ===
 
   /**
    * Lấy tất cả dữ liệu thành tích từ vựng từ cache.
@@ -88,20 +119,38 @@ class LocalVocabDatabase extends Dexie {
       console.error("Failed to save vocab achievements to Dexie:", error);
     }
   }
-  // --- END: CÁC HÀM MỚI CHO 'vocabAchievements' ---
 
+  // === Các hàm mới cho tiến trình game ===
 
   /**
-   * Xóa toàn bộ dữ liệu trong CẢ HAI bảng khi người dùng đăng xuất.
+   * Lấy tất cả các từ đơn đã hoàn thành.
+   * @returns {Promise<ICompletedWord[]>}
+   */
+  async getCompletedWords(): Promise<ICompletedWord[]> {
+    return this.completedWords.toArray();
+  }
+
+  /**
+   * Lấy tất cả các cụm từ đã hoàn thành.
+   * @returns {Promise<ICompletedMultiWord[]>}
+   */
+  async getCompletedMultiWords(): Promise<ICompletedMultiWord[]> {
+    return this.completedMultiWord.toArray();
+  }
+
+  // === Quản lý chung ===
+
+  /**
+   * Xóa toàn bộ dữ liệu trong TẤT CẢ các bảng khi người dùng đăng xuất.
    */
   async clearAllData(): Promise<void> {
-    // --- START: THAY ĐỔI ---
-    // Xóa cả hai bảng
+    // Xóa tất cả các bảng
     await Promise.all([
         this.openedVocab.clear(),
-        this.vocabAchievements.clear()
+        this.vocabAchievements.clear(),
+        this.completedWords.clear(),
+        this.completedMultiWord.clear()
     ]);
-    // --- END: THAY ĐỔI ---
   }
 }
 
