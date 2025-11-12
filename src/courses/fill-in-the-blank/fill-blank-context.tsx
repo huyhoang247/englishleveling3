@@ -261,18 +261,14 @@ export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, se
             setLoading(true); setError(null);
             const gameModeId = `fill-word-${selectedPractice}`;
             const initialData = await fetchGameInitialData(gameModeId, isMultiWordGame);
-            // <<< THAY ĐỔI: Destructure đúng tên mới là 'openedVocabItems'
             const { coins: fetchedCoins, masteryCards: fetchedMasteryCount, openedVocabItems, completedWords: fetchedCompletedWords } = initialData;
             
             let gameVocabulary: VocabularyItem[] = [];
 
-            // --- START: LOGIC TẠO CÂU HỎI ĐÃ ĐƯỢC SỬA LẠI HOÀN TOÀN ---
             const practiceType = selectedPractice % 100;
 
             if (practiceType === 1) {
-                // SỬA LỖI 1: Dùng đúng 'openedVocabItems'
                 openedVocabItems.forEach((vocabItem) => {
-                    // vocabItem.id giờ là một con số, !isNaN sẽ đúng
                     if (vocabItem.word && !isNaN(vocabItem.id)) { 
                         gameVocabulary.push({ 
                             word: vocabItem.word, 
@@ -295,10 +291,7 @@ export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, se
                     }
                 });
             } else if (practiceType === 2) {
-                // SỬA LỖI 2: Logic cho Practice 2
-                // Lặp qua từ vựng của người dùng, không phải toàn bộ exampleData
                 openedVocabItems.forEach(vocabItem => {
-                    // Với mỗi từ, tìm câu ví dụ đầu tiên chứa nó
                     const sentence = exampleData.find(s => 
                         new RegExp(`\\b${vocabItem.word}\\b`, 'i').test(s.english)
                     );
@@ -317,13 +310,12 @@ export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, se
                     }
                 });
             } else if (practiceType >= 3 && practiceType <= 7) {
-                // SỬA LỖI 2 (Nâng cao): Logic cho các practice nhiều từ
                 const userVocabWords = openedVocabItems.map(v => v.word);
                 const minWords = (practiceType === 7) ? 1 : practiceType -1;
-                const usedSentences = new Set<string>(); // Dùng Set để tránh tạo câu hỏi trùng lặp từ một câu
+                const usedSentences = new Set<string>();
 
                 exampleData.forEach(sentence => {
-                    if (usedSentences.has(sentence.english)) return; // Bỏ qua nếu câu đã được dùng
+                    if (usedSentences.has(sentence.english)) return;
 
                     const wordsInSentence = userVocabWords.filter(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(sentence.english));
                     
@@ -343,12 +335,11 @@ export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, se
                                 vietnameseHint: sentence.vietnamese, 
                                 hint: `Điền ${correctlyOrderedWords.length} từ còn thiếu. Gợi ý: ${sentence.vietnamese}` 
                             });
-                            usedSentences.add(sentence.english); // Đánh dấu câu này đã được sử dụng
+                            usedSentences.add(sentence.english);
                         }
                     }
                 });
             }
-            // --- END: LOGIC TẠO CÂU HỎI ĐÃ ĐƯỢC SỬA LẠI HOÀN TOÀN ---
 
             setVocabularyList(gameVocabulary);
             setCoins(fetchedCoins);
@@ -416,7 +407,7 @@ export const FillWordProvider: React.FC<FillWordProviderProps> = ({ children, se
   return (
     <FillWordContext.Provider value={value}>
       {children}
-    </FillWord-Context.Provider>
+    </FillWordContext.Provider>
   );
 };
 
