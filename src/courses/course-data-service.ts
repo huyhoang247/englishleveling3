@@ -1,5 +1,3 @@
---- START OF FILE course-data-service (1)hhh.ts.txt ---
-// --- START OF FILE: course-data-service.ts ---
 
 import { db } from '../firebase';
 import { 
