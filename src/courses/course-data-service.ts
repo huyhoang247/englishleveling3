@@ -1,3 +1,4 @@
+--- START OF FILE course-data-service (1)hhh.ts.txt ---
 // --- START OF FILE: course-data-service.ts ---
 
 import { db } from '../firebase';
@@ -459,14 +460,11 @@ export const fetchAndSyncVocabularyData = async (userId: string): Promise<Vocabu
 };
 
 /**
- * [HÀM NỘI BỘ] Cập nhật tiến trình thành tích cho một từ CỤ THỂ ngay trên Local DB.
+ * [HÀM NỘI BỘ] Chỉ cộng EXP cho một từ trên Local DB. Không xử lý level up.
  * @param word - Từ vừa trả lời đúng (viết thường).
- * @returns {Promise<{coinsToAdd: number, cardsToAdd: number}>} Phần thưởng nhận được nếu có level up.
  */
-const updateLocalAchievementForWord = async (word: string): Promise<{ coinsToAdd: number; cardsToAdd: number }> => {
-    const rewards = { coinsToAdd: 0, cardsToAdd: 0 };
+const addExpToLocalAchievementForWord = async (word: string): Promise<void> => {
     const lowerCaseWord = word.toLowerCase();
-
     let currentItem = await localDB.vocabAchievements.get(lowerCaseWord);
 
     if (!currentItem) {
@@ -481,33 +479,50 @@ const updateLocalAchievementForWord = async (word: string): Promise<{ coinsToAdd
     }
 
     currentItem.exp += EXP_PER_SUCCESS;
-
-    while (currentItem.exp >= currentItem.maxExp) {
-        currentItem.exp -= currentItem.maxExp;
-        currentItem.level++;
-        currentItem.maxExp = currentItem.level * 100;
-
-        // Logic tính thưởng khi lên cấp
-        rewards.coinsToAdd += 50; 
-        if (currentItem.level % 5 === 0) {
-            rewards.cardsToAdd += 1;
-        }
-        console.log(`LEVEL UP! Word: "${currentItem.word}", New Level: ${currentItem.level}. Rewards: ${rewards.coinsToAdd} coins, ${rewards.cardsToAdd} cards.`);
-    }
-
     await localDB.vocabAchievements.put(currentItem);
-    return rewards;
+};
+
+/**
+ * Cập nhật dữ liệu thành tích khi người dùng "claim" phần thưởng.
+ * Cập nhật coin/thẻ trên Firestore và ghi đè dữ liệu thành tích trên Local DB.
+ * @param userId - ID của người dùng.
+ * @param updates - Dữ liệu cần cập nhật.
+ */
+export const updateAchievementData = async (
+  userId: string,
+  updates: { coinsToAdd: number; cardsToAdd: number; newVocabularyData: VocabularyItem[] }
+): Promise<void> => {
+  if (!userId) throw new Error("User ID is required for updating achievements.");
+  
+  const { coinsToAdd, cardsToAdd, newVocabularyData } = updates;
+
+  // 1. Cập nhật coin và thẻ trên Firestore
+  if (coinsToAdd > 0 || cardsToAdd > 0) {
+    const userDocRef = doc(db, 'users', userId);
+    const payload: { [key: string]: any } = {};
+    if (coinsToAdd > 0) payload.coins = increment(coinsToAdd);
+    if (cardsToAdd > 0) payload.masteryCards = increment(cardsToAdd);
+    await updateDoc(userDocRef, payload).catch(err => {
+        console.error(`Failed to update user currency for ${userId}:`, err);
+        throw err;
+    });
+  }
+
+  // 2. Lưu lại toàn bộ danh sách từ vựng mới vào Local DB
+  await localDB.saveVocabAchievements(newVocabularyData);
+  console.log(`Local achievements updated and saved for user ${userId}.`);
 };
 
 
 /**
- * Ghi lại kết quả khi người dùng trả lời đúng VÀ cập nhật thành tích local.
+ * Ghi lại kết quả khi người dùng trả lời đúng VÀ chỉ cập nhật EXP local.
+ * Việc lên cấp và nhận thưởng sẽ được xử lý riêng khi người dùng claim.
  * @param userId ID người dùng.
  * @param gameModeId ID của chế độ chơi.
  * @param completedWord Từ hoặc cụm từ đã hoàn thành.
  * @param isMultiWordGame Cờ xác định game điền 1 từ hay nhiều từ.
  * @param coinReward Số coin thưởng mặc định của game.
- * @returns {Promise<{coinsToAdd: number, cardsToAdd: number}>} Phần thưởng TỔNG CỘNG từ việc lên cấp (nếu có).
+ * @returns {Promise<{coinsToAdd: number, cardsToAdd: number}>} Luôn trả về 0 vì không có thưởng level up ở đây.
  */
 export const recordGameSuccess = async (
   userId: string,
@@ -520,9 +535,8 @@ export const recordGameSuccess = async (
 
   const batch = writeBatch(db);
   const userDocRef = doc(db, 'users', userId);
-  let totalLevelUpRewards = { coinsToAdd: 0, cardsToAdd: 0 };
 
-  // 1. Ghi nhận `completedWords` lên Firestore (giữ vai trò log sự kiện)
+  // 1. Ghi nhận `completedWords` lên Firestore và cập nhật EXP local
   if (isMultiWordGame) {
     const multiWordId = completedWord.toLowerCase();
     const completedMultiWordRef = doc(db, 'users', userId, 'completedMultiWord', multiWordId);
@@ -532,31 +546,25 @@ export const recordGameSuccess = async (
     for (const word of individualWords) {
       const individualWordRef = doc(db, 'users', userId, 'completedWords', word.toLowerCase());
       batch.set(individualWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
-      // 2. Cập nhật thành tích local cho từng từ và cộng dồn phần thưởng
-      const rewards = await updateLocalAchievementForWord(word);
-      totalLevelUpRewards.coinsToAdd += rewards.coinsToAdd;
-      totalLevelUpRewards.cardsToAdd += rewards.cardsToAdd;
+      // Cập nhật EXP local cho từng từ
+      await addExpToLocalAchievementForWord(word);
     }
   } else {
     const wordId = completedWord.toLowerCase();
     const completedWordRef = doc(db, 'users', userId, 'completedWords', wordId);
     batch.set(completedWordRef, { lastCompletedAt: new Date(), gameModes: { [gameModeId]: { correctCount: increment(1) } } }, { merge: true });
-     // 2. Cập nhật thành tích local và lấy phần thưởng
-    totalLevelUpRewards = await updateLocalAchievementForWord(completedWord);
+     // Cập nhật EXP local
+    await addExpToLocalAchievementForWord(completedWord);
   }
 
-  // 3. Cập nhật tiền tệ trên Firestore (gộp thưởng game và thưởng lên cấp)
-  const totalCoinsToAdd = coinReward + totalLevelUpRewards.coinsToAdd;
-  if (totalCoinsToAdd > 0) {
-    batch.update(userDocRef, { coins: increment(totalCoinsToAdd) });
+  // 2. Cập nhật tiền tệ trên Firestore (chỉ thưởng game cơ bản)
+  if (coinReward > 0) {
+    batch.update(userDocRef, { coins: increment(coinReward) });
   }
-  if (totalLevelUpRewards.cardsToAdd > 0) {
-      batch.update(userDocRef, { masteryCards: increment(totalLevelUpRewards.cardsToAdd) });
-  }
-
-  // 4. Commit batch lên Firestore
+  
+  // 3. Commit batch lên Firestore
   await batch.commit();
 
-  // 5. Trả về phần thưởng từ việc lên cấp để UI có thể hiển thị thông báo
-  return totalLevelUpRewards;
+  // 4. Trả về không có phần thưởng level-up, vì nó sẽ được claim sau
+  return { coinsToAdd: 0, cardsToAdd: 0 };
 };
