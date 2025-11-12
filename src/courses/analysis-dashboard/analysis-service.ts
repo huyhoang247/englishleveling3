@@ -12,7 +12,7 @@ import {
 import { fetchOrCreateUser } from '../course-data-service.ts'; 
 // --- START THAY ĐỔI ---
 // Import localDB và các interface cần thiết
-import { localDB, ICompletedWord, ICompletedMultiWord } from '../local-data/local-vocab-db.ts';
+import { localDB, ICompletedWord, ICompletedMultiWord } from '../../local-data/local-vocab-db.ts';
 // --- END THAY ĐỔI ---
 
 // --- TYPE DEFINITIONS ---
