@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { AchievementsProvider, useAchievements } from './achievement-context.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import type { VocabularyItem } from './achievement-service.ts'; // Đổi đường dẫn nếu cần
+import type { VocabularyItem } from '../../courses/course-data-service.ts'; // SỬA ĐỔI: Import từ nguồn chính xác
 import AchievementsLoadingSkeleton from './achievement-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import HomeButton from '../../ui/home-button.tsx';
