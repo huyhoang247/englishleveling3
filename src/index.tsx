@@ -1,8 +1,8 @@
-// --- START OF FILE src/index.tsx (UPDATED) ---
+// --- START OF FILE src/index.tsx ---
 
 import React, { useState, useEffect, useRef } from 'react';
 import { GameProvider } from './GameContext.tsx';
-import { QuizAppProvider } from './courses/course-context.tsx';
+import { QuizAppProvider } from './courses/course-context.tsx'; // <<< THÊM DÒNG NÀY
 import { createRoot } from 'react-dom/client';
 import Home from './background-game.tsx';
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
@@ -16,7 +16,6 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { allImageUrls } from './game-assets.ts';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx';
-import NetworkStatusNotifier from './NetworkStatusNotifier.tsx'; // <<< THÊM DÒNG NÀY
 
 // Định nghĩa các loại tab
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
@@ -25,7 +24,6 @@ type LoadingStep = 'authenticating' | 'downloading' | 'launching' | 'ready';
 
 // ==================================================================
 // HÀM HELPER (Không thay đổi)
-// ... (giữ nguyên tất cả các hàm helper)
 // ==================================================================
 function preloadImage(src: string): Promise<void> {
   return new Promise((resolve) => {
@@ -69,7 +67,6 @@ const appVersion = "1.0.1";
 
 // ==================================================================
 // CÁC HÀM HELPER ĐỂ QUẢN LÝ CACHE (Không thay đổi)
-// ... (giữ nguyên các hàm quản lý cache)
 // ==================================================================
 const ASSET_CACHE_PREFIX = 'english-leveling-assets';
 const ASSET_CACHE_NAME = `${ASSET_CACHE_PREFIX}-v${appVersion}`;
@@ -116,7 +113,6 @@ async function cleanupOldCaches() {
 
 // ==================================================================
 // COMPONENT LAYOUT CHUNG CHO MÀN HÌNH LOADING (Không thay đổi)
-// ... (giữ nguyên component LoadingScreenLayout)
 // ==================================================================
 interface LoadingScreenLayoutProps {
   logoFloating: boolean;
@@ -146,11 +142,6 @@ const App: React.FC = () => {
   const [authLoadProgress, setAuthLoadProgress] = useState(0);
   const [ellipsis, setEllipsis] = useState('.');
   const [loadingText, setLoadingText] = useState('Authenticating');
-  
-  // --- THÊM STATE ĐỂ QUẢN LÝ KẾT NỐI MẠNG ---
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [wasOffline, setWasOffline] = useState(!navigator.onLine);
-  // --- KẾT THÚC THÊM STATE ---
 
   const isInitialAuthCheck = useRef(true);
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
@@ -164,24 +155,6 @@ const App: React.FC = () => {
     setAppHeight();
     return () => window.removeEventListener('resize', setAppHeight);
   }, []);
-
-  // --- THÊM EFFECT ĐỂ LẮNG NGHE SỰ KIỆN MẠNG ---
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => {
-      setIsOnline(false);
-      setWasOffline(true); // Ghi nhận rằng ứng dụng đã từng bị mất mạng
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-  // --- KẾT THÚC THÊM EFFECT ---
 
   useEffect(() => {
     if (loadingStep === 'authenticating') {
@@ -224,6 +197,7 @@ const App: React.FC = () => {
     return () => unsub();
   }, []);
 
+  // --- THAY ĐỔI LỚN: Logic tải và cache tài nguyên, tự động chuyển tiếp ---
   useEffect(() => {
     if (loadingStep !== 'downloading' || !currentUser) return;
     let isCancelled = false;
@@ -249,7 +223,10 @@ const App: React.FC = () => {
         }
       }
 
+      // 3. Sau khi hoàn tất, tự động chuyển sang bước launching
       if (!isCancelled) {
+        // Tự động vào game sau khi tải xong, không cần hỏi
+        // Thử vào chế độ toàn màn hình nếu đã lưu trước đó
         const savedMode = localStorage.getItem('displayMode');
         if (savedMode === 'fullscreen') {
             await enterFullScreen();
@@ -262,11 +239,12 @@ const App: React.FC = () => {
     return () => { isCancelled = true; };
   }, [loadingStep, currentUser]);
   
+  // Tự động chuyển từ launching sang ready sau một khoảng thời gian
   useEffect(() => {
     if (loadingStep === 'launching') {
       const stepTimer = setTimeout(() => {
           setLoadingStep('ready');
-      }, 2000); 
+      }, 2000); // Thời gian cho hiệu ứng chuyển cảnh
       return () => { clearTimeout(stepTimer); };
     }
   }, [loadingStep]);
@@ -276,52 +254,38 @@ const App: React.FC = () => {
   const hideNavBar = () => setIsNavBarVisible(false);
   const showNavBar = () => setIsNavBarVisible(true);
 
+  // Màn hình loading (authenticating và downloading)
   if (loadingStep === 'authenticating' || loadingStep === 'downloading') {
     const isAuthenticating = loadingStep === 'authenticating';
     const progress = isAuthenticating ? authLoadProgress : loadingProgress;
     const text = isAuthenticating ? 'Authenticating' : loadingText;
-    // --- THÊM HIỂN THỊ NOTIFIER NGAY CẢ KHI ĐANG LOADING ---
     return (
-      <div className="relative w-screen h-screen">
-        <NetworkStatusNotifier isOnline={isOnline} wasOffline={wasOffline} />
-        <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
-          {/* ... (nội dung của loading screen giữ nguyên) ... */}
-          <div className="w-full flex flex-col items-center px-4">
-            <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">{text}<span className="inline-block w-3 text-left">{ellipsis}</span></p>
-            <div className="w-80 lg:w-96 relative">
-              <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
-                <div
-                  className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
-                  style={{ width: `${progress}%`, boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` }}>
-                  {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
-                </div>
+      <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
+        <div className="w-full flex flex-col items-center px-4">
+          <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">{text}<span className="inline-block w-3 text-left">{ellipsis}</span></p>
+          <div className="w-80 lg:w-96 relative">
+            <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
+              <div
+                className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
+                style={{ width: `${progress}%`, boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` }}>
+                {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
               </div>
-              <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>{Math.round(progress)}%</div>
             </div>
+            <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>{Math.round(progress)}%</div>
           </div>
-        </LoadingScreenLayout>
-      </div>
+        </div>
+      </LoadingScreenLayout>
     );
-     // --- KẾT THÚC THÊM HIỂN THỊ ---
   }
 
   // Màn hình đăng nhập nếu chưa có user
-  if (!currentUser) { 
-    // --- THÊM HIỂN THỊ NOTIFIER CHO MÀN HÌNH AUTH ---
-    return (
-        <div className="relative w-screen h-screen">
-            <NetworkStatusNotifier isOnline={isOnline} wasOffline={wasOffline} />
-            <AuthComponent appVersion={appVersion} />
-        </div>
-    );
-    // --- KẾT THÚC THÊM HIỂN THỊ ---
-  }
+  if (!currentUser) { return <AuthComponent appVersion={appVersion} />; }
   
+  // --- CHANGE START ---
+  // Khi loadingStep đã là 'ready' hoặc 'launching', hiển thị giao diện game
+  // Bọc toàn bộ ứng dụng trong GameProvider để context có sẵn ở mọi nơi.
   return (
     <div className="relative w-screen" style={{ height: 'var(--app-height, 100vh)' }}>
-      {/* ĐẶT NOTIFIER Ở ĐÂY ĐỂ NÓ NẰM TRÊN TẤT CẢ */}
-      <NetworkStatusNotifier isOnline={isOnline} wasOffline={wasOffline} />
-      
       <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
         <QuizAppProvider>
           <div className="app-container" style={{ height: '100%' }}>
@@ -333,11 +297,13 @@ const App: React.FC = () => {
             {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
           </div>
           
+          {/* Hiệu ứng mờ dần khi game bắt đầu */}
           <GameSkeletonLoader show={loadingStep === 'launching'} />
         </QuizAppProvider>
       </GameProvider>
     </div>
   );
+  // --- CHANGE END ---
 };
 
 const container = document.getElementById('root');
