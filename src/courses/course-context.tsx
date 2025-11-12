@@ -1,4 +1,3 @@
-// --- START OF FILE: course-context.tsx ---
 
 import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode, useMemo } from 'react';
 import { auth } from '../firebase.js';
@@ -11,7 +10,7 @@ import {
   fetchOrCreateUser as fetchOrCreateUserService,
   updateUserCoins as updateUserCoinsService,
   fetchGameInitialData as fetchGameInitialDataService,
-  // Xóa import 'updateAchievementData' vì nó không còn tồn tại trong service.
+  updateAchievementData as updateAchievementDataService, // Thêm import mới
   fetchAndSyncVocabularyData as fetchAndSyncVocabularyDataService,
   VocabularyItem,
 } from './course-data-service.ts';
@@ -53,6 +52,8 @@ interface QuizAppContextType {
   updateUserCoins: (amount: number) => Promise<void>;
   fetchOrCreateUser: () => Promise<any>;
   fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>;
+  // Thêm hàm để xử lý nhận thưởng thành tích
+  updateAchievementData: (updates: { coinsToAdd: number; cardsToAdd: number; newVocabularyData: VocabularyItem[] }) => Promise<void>;
 
   // Hàm này giờ đọc từ local DB và cần userId để tái tạo cache lần đầu.
   fetchAndSyncVocabularyData: () => Promise<VocabularyItem[]>;
@@ -237,6 +238,16 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     await updateUserCoinsService(user.uid, amount);
   }, [user]);
 
+  // Wrapper cho hàm nhận thưởng thành tích thủ công
+  const updateAchievementData = useCallback(async (updates: { coinsToAdd: number; cardsToAdd: number; newVocabularyData: VocabularyItem[] }): Promise<void> => {
+    if (!user) {
+        console.warn("updateAchievementData called without a user.");
+        return;
+    }
+    await updateAchievementDataService(user.uid, updates);
+  }, [user]);
+
+
   // Hàm wrapper cho việc lấy dữ liệu thành tích từ localDB
   const fetchAndSyncVocabularyData = useCallback(async (): Promise<VocabularyItem[]> => {
     if (!user) {
@@ -268,6 +279,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     fetchOrCreateUser,
     updateUserCoins,
     fetchGameInitialData,
+    updateAchievementData,
     fetchAndSyncVocabularyData,
     // NEW: Provide data and utilities
     definitionsMap,
