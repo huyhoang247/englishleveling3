@@ -11,11 +11,13 @@ import {
   fetchOrCreateUser as fetchOrCreateUserService,
   updateUserCoins as updateUserCoinsService,
   fetchGameInitialData as fetchGameInitialDataService,
-  // Xóa import 'updateAchievementData' vì nó không còn tồn tại trong service.
+  // --- START: DÒNG MỚI ---
+  updateAchievementData as updateAchievementDataService,
   fetchAndSyncVocabularyData as fetchAndSyncVocabularyDataService,
   VocabularyItem,
+  // --- END: DÒNG MỚI ---
 } from './course-data-service.ts';
-// Import data và generators
+// NEW: Import data and generators
 import { generateAudioUrlsForWord, generateAudioQuizQuestions, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
 import detailedMeaningsText from '../voca-data/vocabulary-definitions.ts';
 import { exampleData } from '../voca-data/example-data.ts';
@@ -23,6 +25,7 @@ import { defaultVocabulary } from '../voca-data/list-vocabulary.ts';
 
 
 // --- Định nghĩa các "hình dạng" (interface) dùng chung ---
+// NEW: Moved Definition interface here
 export interface Definition {
   vietnamese: string;
   english: string;
@@ -48,16 +51,20 @@ interface QuizAppContextType {
   // --- Data service functions ---
   getOpenedVocab: () => Promise<string[]>;
   getCompletedWords: (gameModeId: string) => Promise<Set<string>>;
-  // Cập nhật chữ ký của recordGameSuccess để trả về phần thưởng và nhận isMultiWordGame
-  recordGameSuccess: (gameModeId: string, word: string, isMultiWordGame: boolean, coinsToAdd: number) => Promise<{ coinsToAdd: number; cardsToAdd: number }>;
+  recordGameSuccess: (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number) => Promise<void>;
   updateUserCoins: (amount: number) => Promise<void>;
   fetchOrCreateUser: () => Promise<any>;
   fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>;
-
-  // Hàm này giờ đọc từ local DB và cần userId để tái tạo cache lần đầu.
+  // --- START: DÒNG MỚI ---
   fetchAndSyncVocabularyData: () => Promise<VocabularyItem[]>;
+  updateAchievementData: (updates: {
+    coinsToAdd: number;
+    cardsToAdd: number;
+    newVocabularyData: VocabularyItem[];
+  }) => Promise<{ newCoins: number; newMasteryCards: number }>;
+  // --- END: DÒNG MỚI ---
 
-  // --- Vocabulary data and utilities ---
+  // --- NEW: Vocabulary data and utilities ---
   definitionsMap: { [key: string]: Definition };
   generateAudioUrlsForWord: (word: string) => { [key: string]: string } | null;
   exampleData: any[];
@@ -204,13 +211,12 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     return getCompletedWordsService(user.uid, gameModeId);
   }, [user]);
 
-  const recordGameSuccess = useCallback(async (gameModeId: string, word: string, isMultiWordGame: boolean, coinsToAdd: number): Promise<{ coinsToAdd: number; cardsToAdd: number }> => {
+  const recordGameSuccess = useCallback(async (gameModeId: string, word: string, isMastered: boolean, coinsToAdd: number): Promise<void> => {
     if (!user) {
         console.warn("recordGameSuccess called without a user.");
-        return { coinsToAdd: 0, cardsToAdd: 0 };
+        return;
     }
-    // Gọi service và trả về kết quả (phần thưởng level up)
-    return await recordGameSuccessService(user.uid, gameModeId, word, isMultiWordGame, coinsToAdd);
+    await recordGameSuccessService(user.uid, gameModeId, word, isMastered, coinsToAdd);
   }, [user]);
   
   const fetchGameInitialData = useCallback(async (gameModeId: string, isMultiWordGame: boolean): Promise<any> => {
@@ -237,18 +243,31 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     await updateUserCoinsService(user.uid, amount);
   }, [user]);
 
-  // Hàm wrapper cho việc lấy dữ liệu thành tích từ localDB
+  // --- START: CÁC HÀM WRAPPER MỚI CHO ACHIEVEMENT ---
   const fetchAndSyncVocabularyData = useCallback(async (): Promise<VocabularyItem[]> => {
     if (!user) {
       console.warn("fetchAndSyncVocabularyData called without a user.");
       return [];
     }
-    // Cần userId để thực hiện việc xây dựng lại cache lần đầu nếu cần
     return fetchAndSyncVocabularyDataService(user.uid);
   }, [user]);
 
+  const updateAchievementData = useCallback(async (updates: {
+    coinsToAdd: number;
+    cardsToAdd: number;
+    newVocabularyData: VocabularyItem[];
+  }): Promise<{ newCoins: number; newMasteryCards: number }> => {
+    if (!user) {
+      console.warn("updateAchievementData called without a user.");
+      throw new Error("Người dùng chưa đăng nhập để cập nhật thành tích.");
+    }
+    return updateAchievementDataService(user.uid, updates);
+  }, [user]);
+  // --- END: CÁC HÀM WRAPPER MỚI CHO ACHIEVEMENT ---
+
+
   // --- Giá trị được cung cấp bởi Context ---
-  const value: QuizAppContextType = {
+  const value = {
     currentView,
     selectedQuiz,
     selectedType,
@@ -268,7 +287,10 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     fetchOrCreateUser,
     updateUserCoins,
     fetchGameInitialData,
+    // --- START: DÒNG MỚI ---
     fetchAndSyncVocabularyData,
+    updateAchievementData,
+    // --- END: DÒNG MỚI ---
     // NEW: Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
@@ -280,3 +302,4 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
 
   return <QuizAppContext.Provider value={value}>{children}</QuizAppContext.Provider>;
 };
+// --- END OF FILE: course-context.tsx ---
