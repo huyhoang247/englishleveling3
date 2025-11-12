@@ -78,10 +78,7 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
 
     // --- DATA FETCHING EFFECT ---
     useEffect(() => {
-        const MIN_LOADING_TIME_MS = 700;
-        const startTime = Date.now();
-
-        // <<< THAY ĐỔI: Hàm này bây giờ fetch dữ liệu từ IndexedDB thay vì Firestore
+        // <<< THAY ĐỔI: Đã loại bỏ MIN_LOADING_TIME_MS và startTime để bỏ delay
         const fetchVocabSpecificData = async () => {
             // Không cần currentUserId để đọc localDB, nhưng giữ lại để logic không chạy khi chưa đăng nhập
             if (!currentUserId) { 
@@ -120,10 +117,8 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
             } catch (error) {
                 console.error("Error fetching vocab-specific data from Local DB:", error);
             } finally {
-                const elapsedTime = Date.now() - startTime;
-                const remainingTime = MIN_LOADING_TIME_MS - elapsedTime;
-                const delay = Math.max(0, remainingTime);
-                setTimeout(() => setIsLoading(false), delay);
+                // <<< THAY ĐỔI: Tắt loading ngay lập tức khi hoàn tất
+                setIsLoading(false);
             }
         };
         fetchVocabSpecificData();
