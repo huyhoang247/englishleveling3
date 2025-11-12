@@ -39,6 +39,7 @@ interface QuizContextType {
   currentQuestionWord: string | null;
   currentAudioUrl: string | null;
   selectedVoice: string;
+  showConfetti: boolean;
   
   // Actions / Handlers
   handleAnswer: (selectedAnswer: string) => void;
@@ -66,11 +67,10 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userCoins,
     masteryCount: globalMasteryCount,
     getOpenedVocab, 
-    getCompletedWords, 
+    fetchAllLocalProgress, // Sử dụng hàm mới
     recordGameSuccess,
     updateUserCoins,
     fetchOrCreateUser,
-    // NEW: Get data and utilities from the main context
     definitionsMap,
     exampleData,
     defaultVocabulary,
@@ -136,19 +136,29 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   }, [currentQuestion, playableQuestions, selectedVoice]);
 
-  // REMOVED: definitionsMap is now provided by useQuizApp()
-
   useEffect(() => {
     const loadQuizData = async () => {
       if (user && selectedPractice !== null) {
         setLoading(true);
         try {
-          await fetchOrCreateUser(); // Ensure user doc exists
+          await fetchOrCreateUser();
           const gameModeId = `quiz-${selectedPractice}`;
-          const [vocabList, completedSet] = await Promise.all([
+
+          // Gọi hàm mới để lấy dữ liệu từ Local DB
+          const [vocabList, localProgress] = await Promise.all([
             getOpenedVocab(),
-            getCompletedWords(gameModeId)
+            fetchAllLocalProgress()
           ]);
+          
+          // Xử lý dữ liệu local để tạo completedSet
+          const completedSet = new Set<string>();
+          // Quiz chỉ xử lý từ đơn, nên ta chỉ cần `completedWordsData`
+          localProgress.completedWordsData.forEach((item: any) => {
+              if (item.gameModes?.[gameModeId]) {
+                  completedSet.add(item.word.toLowerCase());
+              }
+          });
+          
           setUserVocabulary(vocabList);
           
           const practiceBaseId = selectedPractice % 100;
@@ -225,7 +235,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     loadQuizData();
-  }, [user, selectedPractice, fetchOrCreateUser, getOpenedVocab, getCompletedWords, exampleData, defaultVocabulary, generateAudioQuizQuestions, generateAudioUrlsForExamSentence]);
+  }, [user, selectedPractice, fetchOrCreateUser, getOpenedVocab, fetchAllLocalProgress, exampleData, defaultVocabulary, generateAudioQuizQuestions, generateAudioUrlsForExamSentence]);
 
   const resetQuiz = useCallback(() => {
     const completedWordsForSession = new Set(
@@ -329,7 +339,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const onCloseDetailPopup = () => setShowDetailPopup(false);
 
-  const value = {
+  const value: QuizContextType = {
     loading, showScore, currentQuestion, score, coins, streak, masteryCount, streakAnimation,
     timeLeft, playableQuestions, filteredQuizData, shuffledOptions, selectedOption,
     answered, showNextButton, hintUsed, hiddenOptions, currentQuestionWord,
@@ -348,11 +358,11 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useQuiz = (): QuizContextType & { showConfetti: boolean } => {
+export const useQuiz = (): QuizContextType => {
   const context = useContext(QuizContext);
   if (context === undefined) {
     throw new Error('useQuiz must be used within a QuizProvider');
   }
-  return context as QuizContextType & { showConfetti: boolean };
+  return context;
 };
 // --- END OF FILE: multiple-context.tsx ---
