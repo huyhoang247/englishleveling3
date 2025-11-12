@@ -5,10 +5,15 @@ import {
   doc, getDoc, setDoc, updateDoc, increment, collection, 
   getDocs, writeBatch, arrayUnion, onSnapshot, Unsubscribe, runTransaction 
 } from 'firebase/firestore';
-// Import các dữ liệu local cần thiết cho hàm mới
+// Import các dữ liệu local cần thiết
 import quizData from './multiple-choice/multiple-data.ts'; 
 import { exampleData } from '../voca-data/example-data.ts';
 import { allWordPairs } from './voca-match/voca-match-data.ts';
+// --- START: THAY ĐỔI ---
+// Import localDB service để đọc dữ liệu từ vựng đã mở từ IndexedDB
+import { localDB } from '../local-data/local-vocab-db.ts'; 
+// --- END: THAY ĐỔI ---
+
 
 /**
  * Lấy dữ liệu người dùng. Nếu người dùng chưa tồn tại trong Firestore, tạo mới với giá trị mặc định.
@@ -82,14 +87,18 @@ export const updateUserMastery = async (userId: string, amount: number): Promise
 };
 
 /**
- * Lấy danh sách từ vựng đã mở của người dùng.
- * @param userId - ID của người dùng.
+ * --- START: THAY ĐỔI LỚN ---
+ * Lấy danh sách từ vựng đã mở của người dùng từ IndexedDB.
+ * @param userId - ID của người dùng (giữ lại để nhất quán API, nhưng không dùng đến).
  * @returns {Promise<string[]>} Mảng các từ vựng đã mở.
  */
 export const getOpenedVocab = async (userId: string): Promise<string[]> => {
-    const vocabSnapshot = await getDocs(collection(db, 'users', userId, 'openedVocab'));
-    return vocabSnapshot.docs.map(doc => doc.data().word).filter(Boolean);
+    // Dữ liệu từ vựng đã mở giờ được đọc từ local DB thay vì Firestore
+    const openedVocabData = await localDB.getAllOpenedVocab();
+    // Trả về một mảng chỉ chứa các từ (string)
+    return openedVocabData.map(item => item.word).filter(Boolean);
 };
+// --- END: THAY ĐỔI LỚN ---
 
 /**
  * Lấy danh sách các từ đã hoàn thành trong một game mode cụ thể.
@@ -119,7 +128,9 @@ interface GameInitialData {
 }
 
 /**
+ * --- START: THAY ĐỔI ---
  * Lấy tất cả dữ liệu cần thiết để bắt đầu một màn chơi.
+ * Dữ liệu "openedVocab" giờ được lấy từ IndexedDB.
  * @param userId ID người dùng.
  * @param gameModeId ID của chế độ chơi (ví dụ: 'fill-word-1').
  * @param isMultiWordGame Cờ xác định đây là game điền 1 từ hay nhiều từ.
@@ -129,19 +140,26 @@ export const fetchGameInitialData = async (userId: string, gameModeId: string, i
   if (!userId) throw new Error("User ID is required.");
 
   const userDocRef = doc(db, 'users', userId);
-  const openedVocabRef = collection(db, 'users', userId, 'openedVocab');
+  // Xóa tham chiếu đến subcollection 'openedVocab' trên Firestore
+  // const openedVocabRef = collection(db, 'users', userId, 'openedVocab'); 
   const completedCollectionName = isMultiWordGame ? 'completedMultiWord' : 'completedWords';
   const completedWordsRef = collection(db, 'users', userId, completedCollectionName);
 
-  const [userDocSnap, openedVocabSnap, completedWordsSnap] = await Promise.all([
+  // Thay thế lời gọi Firestore 'getDocs(openedVocabRef)' bằng lời gọi localDB
+  const [userDocSnap, localOpenedVocab, completedWordsSnap] = await Promise.all([
     getDoc(userDocRef),
-    getDocs(openedVocabRef),
+    localDB.getAllOpenedVocab(), // Lấy dữ liệu từ IndexedDB
     getDocs(completedWordsRef)
   ]);
 
   const userData = userDocSnap.exists() ? userDocSnap.data() : { coins: 0, masteryCards: 0 };
 
-  const openedVocabWords = openedVocabSnap.docs.map(d => ({ id: d.id, word: d.data().word })).filter(item => item.word);
+  // Chuyển đổi dữ liệu từ localDB sang định dạng yêu cầu
+  const openedVocabWords = localOpenedVocab.map(item => ({ 
+      // Dùng word làm id để nhất quán với các phần khác có thể dùng
+      id: item.word.toLowerCase(), 
+      word: item.word 
+  })).filter(item => item.word);
   
   const completedWords = new Set<string>();
   completedWordsSnap.forEach(docSnap => {
@@ -159,6 +177,7 @@ export const fetchGameInitialData = async (userId: string, gameModeId: string, i
     completedWords
   };
 };
+// --- END: THAY ĐỔI ---
 
 /**
  * Ghi lại kết quả khi người dùng trả lời đúng một từ/câu.
@@ -266,8 +285,9 @@ export interface PracticeProgressPayload {
 }
 
 /**
+ * --- START: THAY ĐỔI ---
  * Lấy và tính toán dữ liệu tiến trình cho danh sách bài luyện tập (Quiz và Fill Word).
- * Tái cấu trúc từ hàm calculateProgress trong component PracticeList.
+ * Dữ liệu "openedVocab" giờ được lấy từ IndexedDB.
  * @param userId ID người dùng.
  * @param selectedType Loại hình luyện tập ('tracNghiem', 'dienTu', hoặc 'vocaMatch').
  * @returns {Promise<PracticeProgressPayload>} Dữ liệu tiến trình và các phần thưởng đã nhận.
@@ -280,16 +300,19 @@ export const fetchPracticeListProgress = async (
     throw new Error("User ID and selected type are required.");
   }
 
-  const [userDocSnap, openedVocabSnapshot, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
+  // Thay thế lời gọi Firestore bằng lời gọi localDB
+  const [userDocSnap, openedVocabData, completedWordsSnapshot, completedMultiWordSnapshot] = await Promise.all([
     getDoc(doc(db, 'users', userId)),
-    getDocs(collection(db, 'users', userId, 'openedVocab')),
+    localDB.getAllOpenedVocab(), // Lấy từ vựng đã mở từ IndexedDB
     getDocs(collection(db, 'users', userId, 'completedWords')),
     getDocs(collection(db, 'users', userId, 'completedMultiWord'))
   ]);
 
   const userData = userDocSnap.exists() ? userDocSnap.data() : {};
   const claimedRewards = userData.claimedQuizRewards || {};
-  const userVocabSet = new Set(openedVocabSnapshot.docs.map(doc => doc.data().word?.toLowerCase()).filter(Boolean));
+  
+  // Tạo Set từ dữ liệu của localDB
+  const userVocabSet = new Set(openedVocabData.map(item => item.word?.toLowerCase()).filter(Boolean));
   
   const completedWordsByGameMode: { [mode: string]: Set<string> } = {};
   completedWordsSnapshot.forEach(doc => {
@@ -412,6 +435,7 @@ export const fetchPracticeListProgress = async (
     claimedRewards: claimedRewards
   };
 };
+// --- END: THAY ĐỔI ---
 
 /**
  * Ghi nhận việc người dùng nhận thưởng từ một cột mốc trong quiz.
