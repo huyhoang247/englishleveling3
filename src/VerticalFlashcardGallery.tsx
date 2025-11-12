@@ -4,13 +4,16 @@ import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
 import { auth, db } from './firebase.js';
-import { doc, updateDoc, onSnapshot, collection, query, orderBy } from 'firebase/firestore';
+// <<< THAY ĐỔI 1: XÓA CÁC IMPORT KHÔNG CẦN THIẾT TỪ FIRESTORE (collection, query, orderBy) >>>
+import { doc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
 
+// <<< THAY ĐỔI 2: IMPORT localDB SERVICE ĐỂ ĐỌC DỮ LIỆU TỪ INDEXEDDB >>>
+import { localDB } from './local-data/local-vocab-db.ts'; // <= CHÚ Ý: CHỈNH LẠI ĐƯỢNG DẪN NÀY NẾU CẦN
+
 import { ALL_CARDS_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
 import { quizHomeAssets } from './game-assets.ts';
-// --- THAY ĐỔI 1: IMPORT SKELETON LOADER ---
 import GallerySkeletonLoader from './GallerySkeletonLoader.tsx';
 
 
@@ -46,7 +49,6 @@ const animations = `
 // --- START: ICONS SAO CHÉP TỪ course-ui.tsx ---
 const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLineCap="round" strokeLineJoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> );
 const BackIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLineCap="round" strokeLineJoin="round" d="M15 19l-7-7 7-7" /></svg> );
-// --- THAY ĐỔI: SỬ DỤNG ICON TỪ URL ---
 const SettingsIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/settings.webp" alt="Settings Icon" className={className} /> );
 const MenuIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLineCap="round" strokeLineJoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>);
 // --- END: ICONS ---
@@ -130,11 +132,9 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
         </button>
       </div>
       <div className="w-full">
-        {/* --- THAY ĐỔI 1: XÓA ĐIỀU KIỆN 'isPhotography' KHỎI CONTAINER --- */}
         <div className={`relative w-full ${visualStyle === 'realistic' ? 'p-2 bg-amber-50/70 dark:bg-gray-800' : ''}`}>
           {visualStyle === 'anime' && <div className="absolute inset-0 bg-pink-300/20 dark:bg-purple-400/10 pointer-events-none"></div>}
           {visualStyle === 'comic' && <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" style={comicDotPattern}></div>}
-          {/* --- THAY ĐỔI 2: XÓA ĐIỀU KIỆN 'isPhotography' KHỎI SHADOW --- */}
           {visualStyle === 'realistic' && <div className="absolute inset-2 shadow-inner rounded-md pointer-events-none"></div>}
           
           <img
@@ -203,8 +203,9 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
     setLoading(true);
     let unsubscribePlaylists: () => void;
-    let unsubscribeOpenedCards: () => void;
+    // <<< THAY ĐỔI 3: XÓA BIẾN unsubscribeOpenedCards KHÔNG CẦN THIẾT >>>
 
+    // Logic lấy playlists từ Firestore không thay đổi, vẫn giữ nguyên
     const userDocRef = doc(db, 'users', currentUser.uid);
     unsubscribePlaylists = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
@@ -217,28 +218,32 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       console.error("Error fetching user playlists:", error);
     });
 
-    const openedVocabColRef = collection(db, 'users', currentUser.uid, 'openedVocab');
-    const q = query(openedVocabColRef, orderBy('collectedAt', 'desc'));
-
-    unsubscribeOpenedCards = onSnapshot(q, (querySnapshot) => {
-      const ids: number[] = [];
-      querySnapshot.forEach(doc => {
-        const id = Number(doc.id);
-        if (!isNaN(id)) {
-          ids.push(id);
+    // <<< THAY ĐỔI 4: THAY THẾ TOÀN BỘ LOGIC LẤY DỮ LIỆU TỪ SUBCOLLECTION BẰNG LOCAL DB >>>
+    const fetchOpenedCardsFromLocalDB = async () => {
+        try {
+            // Lấy toàn bộ object từ IndexedDB
+            const openedItems = await localDB.getAllOpenedVocab();
+            
+            // Sắp xếp chúng theo ngày nhận giảm dần (mới nhất trước)
+            const sortedItems = openedItems.sort((a, b) => b.collectedAt.getTime() - a.collectedAt.getTime());
+            
+            // Chỉ lấy ra ID và cập nhật state
+            const ids = sortedItems.map(item => item.id);
+            setOpenedImageIds(ids);
+        } catch (error) {
+            console.error("Error fetching opened cards from Local DB:", error);
+            setOpenedImageIds([]); // Reset nếu có lỗi
+        } finally {
+            // Đánh dấu là đã tải xong, bất kể thành công hay thất bại
+            setLoading(false);
         }
-      });
-      setOpenedImageIds(ids);
-      setLoading(false); 
-    }, (error) => {
-      console.error("Error fetching ordered cards from subcollection:", error);
-      setOpenedImageIds([]); 
-      setLoading(false);
-    });
+    };
+    
+    fetchOpenedCardsFromLocalDB();
     
     return () => {
       if (unsubscribePlaylists) unsubscribePlaylists();
-      if (unsubscribeOpenedCards) unsubscribeOpenedCards();
+      // <<< THAY ĐỔI 5: XÓA CLEANUP CỦA openedCards >>>
     };
   }, [currentUser]);
 
@@ -444,13 +449,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     }
   }, [playlistToDelete, currentUser, playlists, selectedPlaylistId]);
 
-  // --- THAY ĐỔI 2: XÓA ĐOẠN IF(LOADING) Ở ĐÂY ---
-  /*
-    if (loading) {
-        return <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-white">Đang tải bộ sưu tập...</div>;
-    }
-  */
-
   return (
     <SidebarLayout
       setToggleSidebar={setToggleSidebar}
@@ -476,7 +474,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
           setShowSettings={setShowSettings}
         />
 
-        {/* --- THAY ĐỔI 3: THÊM LOGIC HIỂN THỊ SKELETON HOẶC NỘI DUNG CHÍNH --- */}
         <main ref={mainContainerRef}>
           {loading ? (
             <GallerySkeletonLoader layoutMode={layoutMode} />
