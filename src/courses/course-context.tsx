@@ -1,3 +1,4 @@
+// --- START OF FILE: course-context.tsx ---
 
 import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode, useMemo } from 'react';
 import { auth } from '../firebase.js';
@@ -10,8 +11,9 @@ import {
   fetchOrCreateUser as fetchOrCreateUserService,
   updateUserCoins as updateUserCoinsService,
   fetchGameInitialData as fetchGameInitialDataService,
-  updateAchievementData as updateAchievementDataService, // Thêm import mới
+  updateAchievementData as updateAchievementDataService,
   fetchAndSyncVocabularyData as fetchAndSyncVocabularyDataService,
+  fetchAllLocalProgress as fetchAllLocalProgressService, // Thêm import mới
   VocabularyItem,
 } from './course-data-service.ts';
 // Import data và generators
@@ -47,16 +49,14 @@ interface QuizAppContextType {
   // --- Data service functions ---
   getOpenedVocab: () => Promise<string[]>;
   getCompletedWords: (gameModeId: string) => Promise<Set<string>>;
-  // Cập nhật chữ ký của recordGameSuccess để trả về phần thưởng và nhận isMultiWordGame
   recordGameSuccess: (gameModeId: string, word: string, isMultiWordGame: boolean, coinsToAdd: number) => Promise<{ coinsToAdd: number; cardsToAdd: number }>;
   updateUserCoins: (amount: number) => Promise<void>;
   fetchOrCreateUser: () => Promise<any>;
   fetchGameInitialData: (gameModeId: string, isMultiWordGame: boolean) => Promise<any>;
-  // Thêm hàm để xử lý nhận thưởng thành tích
   updateAchievementData: (updates: { coinsToAdd: number; cardsToAdd: number; newVocabularyData: VocabularyItem[] }) => Promise<void>;
-
-  // Hàm này giờ đọc từ local DB và cần userId để tái tạo cache lần đầu.
   fetchAndSyncVocabularyData: () => Promise<VocabularyItem[]>;
+  // Thêm hàm mới để lấy tiến trình từ local DB
+  fetchAllLocalProgress: () => Promise<{ completedWordsData: any[]; completedMultiWordData: any[] }>;
 
   // --- Vocabulary data and utilities ---
   definitionsMap: { [key: string]: Definition };
@@ -94,7 +94,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   const [userCoins, setUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
   
-  // NEW: Process vocabulary definitions once and provide via context
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
     const lines = detailedMeaningsText.trim().split('\n');
@@ -142,7 +141,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   }, [user]);
 
   // --- Các hàm xử lý (Handlers) ---
-  const handleQuizSelect = useCallback((quiz) => {
+  const handleQuizSelect = useCallback((quiz: any) => {
     setSelectedQuiz(quiz);
     setCurrentView('quizTypes');
     setSelectedType(null);
@@ -210,7 +209,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
         console.warn("recordGameSuccess called without a user.");
         return { coinsToAdd: 0, cardsToAdd: 0 };
     }
-    // Gọi service và trả về kết quả (phần thưởng level up)
     return await recordGameSuccessService(user.uid, gameModeId, word, isMultiWordGame, coinsToAdd);
   }, [user]);
   
@@ -238,7 +236,6 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     await updateUserCoinsService(user.uid, amount);
   }, [user]);
 
-  // Wrapper cho hàm nhận thưởng thành tích thủ công
   const updateAchievementData = useCallback(async (updates: { coinsToAdd: number; cardsToAdd: number; newVocabularyData: VocabularyItem[] }): Promise<void> => {
     if (!user) {
         console.warn("updateAchievementData called without a user.");
@@ -247,15 +244,21 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     await updateAchievementDataService(user.uid, updates);
   }, [user]);
 
-
-  // Hàm wrapper cho việc lấy dữ liệu thành tích từ localDB
   const fetchAndSyncVocabularyData = useCallback(async (): Promise<VocabularyItem[]> => {
     if (!user) {
       console.warn("fetchAndSyncVocabularyData called without a user.");
       return [];
     }
-    // Cần userId để thực hiện việc xây dựng lại cache lần đầu nếu cần
     return fetchAndSyncVocabularyDataService(user.uid);
+  }, [user]);
+
+  // Wrapper cho hàm mới
+  const fetchAllLocalProgress = useCallback(async (): Promise<any> => {
+    if (!user) {
+        console.warn("fetchAllLocalProgress called without a user.");
+        return { completedWordsData: [], completedMultiWordData: [] };
+    }
+    return fetchAllLocalProgressService();
   }, [user]);
 
   // --- Giá trị được cung cấp bởi Context ---
@@ -281,7 +284,8 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     fetchGameInitialData,
     updateAchievementData,
     fetchAndSyncVocabularyData,
-    // NEW: Provide data and utilities
+    fetchAllLocalProgress, // Thêm hàm vào context value
+    // Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
     exampleData,
