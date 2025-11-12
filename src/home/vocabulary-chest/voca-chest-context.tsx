@@ -16,7 +16,7 @@ import { useGame } from '../../GameContext.tsx';
 import { processVocabularyChestOpening } from './voca-chest-service.ts';
 import { CHEST_DEFINITIONS } from './voca-chest-ui.tsx';
 // <<< THAY ĐỔI: Import localDB service để đọc dữ liệu từ IndexedDB
-import { localDB } from '../../lib/local-vocab-db.ts'; // <= CHÚ Ý: CHỈNH LẠI ĐƯỜNG DẪN NÀY NẾU CẦN
+import { localDB } from '../../local-data/local-vocab-db.ts'; // <= CHÚ Ý: CHỈNH LẠI ĐƯỜNG DẪN NÀY NẾU CẦN
 
 // --- TYPE DEFINITIONS ---
 type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced' | 'master';
