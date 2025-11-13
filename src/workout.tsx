@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 // Import service DB local và các interfaces
-import { localWorkoutDB, IWorkoutPlanItem, IWorkoutHistoryEntry } from './local-data/local-workout-db.ts'; 
+import { localWorkoutDB, IWorkoutPlanItem, IWorkoutHistoryEntry, ICompletedSet } from './local-data/local-workout-db.ts'; 
 
 // Import các component UI
 import BackButton from './ui/back-button.tsx'; 
@@ -43,14 +43,11 @@ const XIcon = (props) => (
 const TargetIcon = (props) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
 );
-const ClockIcon = (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-);
-const PencilIcon = (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-);
 const CheckIcon = (props) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+);
+const PlayIcon = (props) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
 );
 
 // --- SVG Icons for Exercises ---
@@ -99,7 +96,8 @@ const initialExercises = [
     { id: 3, name: 'Deadlift', category: 'Back', icon: <DeadliftIcon /> },
     { id: 4, name: 'Wrist Curl', category: 'Arms', icon: <WristCurlIcon /> },
 ];
-const calculateVolume = (sets, weight) => sets.reduce((total, set) => total + (set.reps * weight), 0);
+// Sửa hàm tính volume để phù hợp với interface mới
+const calculateVolume = (sets: ICompletedSet[], weight: number) => sets.reduce((total, set) => total + (set.reps * weight), 0);
 
 // --- Main Application Component ---
 export default function WorkoutApp({ onClose }) {
@@ -360,11 +358,10 @@ const ImageDetailModal = ({ exercise, onClose }) => {
 const ExerciseSettingsModal = ({ exercise, onClose, onSubmit }) => {
     const [sets, setSets] = useState(3);
     const [reps, setReps] = useState(10);
-    const [rest, setRest] = useState(60);
     const [weight, setWeight] = useState(20);
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit({ exerciseId: exercise.id, sets, reps, rest, weight });
+        onSubmit({ exerciseId: exercise.id, sets, reps, weight }); // Bỏ 'rest'
     };
 
     return (
@@ -377,9 +374,8 @@ const ExerciseSettingsModal = ({ exercise, onClose, onSubmit }) => {
                 <form onSubmit={handleSubmit}>
                     <div className="p-6 space-y-6">
                         <NumberStepper label="Số set" value={sets} onChange={setSets} min={1} />
-                        <NumberStepper label="Số rep mỗi set" value={reps} onChange={setReps} min={1} step={10}/>
+                        <NumberStepper label="Số rep mỗi set" value={reps} onChange={setReps} min={1} step={5}/>
                         <NumberStepper label="Mức tạ mục tiêu" value={weight} onChange={setWeight} min={0} step={2.5} unit="kg" />
-                        <NumberStepper label="Nghỉ giữa set" value={rest} onChange={setRest} min={0} step={15} unit="s" />
                     </div>
                     <div className="bg-gray-700/50 p-4 text-right">
                          <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Thêm vào bài tập của tôi</button>
@@ -428,7 +424,7 @@ const MyWorkout = ({ workoutList, onRemove }) => (
                        <div className="text-emerald-400 w-10 h-10 mr-4">{ex.icon}</div>
                        <div>
                             <span className="font-semibold">{ex.name}</span>
-                            <p className="text-xs text-gray-400">{ex.sets} sets x {ex.reps} reps @ {ex.weight}kg, nghỉ {ex.rest}s</p>
+                            <p className="text-xs text-gray-400">{ex.sets} sets x {ex.reps} reps @ {ex.weight}kg</p>
                        </div>
                     </div>
                     <button onClick={() => onRemove(ex.exerciseId)} className="p-2 text-gray-500 hover:text-red-500">
@@ -480,6 +476,15 @@ const DailyTracking = ({ myWorkoutList, onSaveLog, onNavigateToLibrary, workoutH
                         const lastVolume = lastWorkout ? calculateVolume(lastWorkout.sets, lastWorkout.weight) : 0;
                         const lastWeight = lastWorkout ? lastWorkout.weight : 0;
                         const todaysWorkout = findTodaysWorkout(ex.exerciseId);
+                        
+                        let sessionStatus: 'start' | 'continue' | 'completed' = 'start';
+                        if (todaysWorkout) {
+                            if (todaysWorkout.sets.length >= ex.sets) {
+                                sessionStatus = 'completed';
+                            } else {
+                                sessionStatus = 'continue';
+                            }
+                        }
 
                         return (
                             <div key={ex.exerciseId} className="bg-gray-700 rounded-lg p-6 relative hover:bg-gray-600 transition-colors">
@@ -497,13 +502,20 @@ const DailyTracking = ({ myWorkoutList, onSaveLog, onNavigateToLibrary, workoutH
                                             <p className="font-bold text-lg">{ex.name}</p>
                                             <div className="flex flex-col items-start gap-y-1 text-xs text-gray-300 mt-1">
                                                 <span className="flex items-center"><TargetIcon className="w-3 h-3 mr-1.5"/>{ex.sets}x{ex.reps} @ {ex.weight}kg</span>
-                                                <span className="flex items-center"><ClockIcon className="w-3 h-3 mr-1.5"/>{ex.rest}s nghỉ</span>
                                             </div>
                                        </div>
                                     </div>
-                                    <button onClick={() => setLoggingExercise({ ...ex, todaysWorkout })} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg text-sm ml-2 flex-shrink-0">
-                                        Bắt đầu
-                                    </button>
+                                    
+                                    {sessionStatus === 'completed' ? (
+                                        <div className="bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg text-sm ml-2 flex items-center">
+                                            <CheckIcon className="w-4 h-4 mr-2"/>
+                                            Hoàn thành
+                                        </div>
+                                    ) : (
+                                        <button onClick={() => setLoggingExercise({ ...ex, todaysWorkout })} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg text-sm ml-2 flex-shrink-0">
+                                            {sessionStatus === 'continue' ? 'Tiếp tục' : 'Bắt đầu'}
+                                        </button>
+                                    )}
                                 </div>
                                 {lastWorkout && (
                                     <div className="mt-4 pt-3 border-t border-gray-600 text-xs text-gray-400 flex flex-wrap justify-around gap-x-4 gap-y-1">
@@ -522,7 +534,14 @@ const DailyTracking = ({ myWorkoutList, onSaveLog, onNavigateToLibrary, workoutH
                 <LoggingModal 
                     exercise={loggingExercise} 
                     existingLog={loggingExercise.todaysWorkout} 
-                    onClose={() => setLoggingExercise(null)} 
+                    onClose={() => {
+                        setLoggingExercise(null);
+                        // Tải lại để cập nhật trạng thái "Tiếp tục/Hoàn thành"
+                        const updatedLog = findTodaysWorkout(loggingExercise.exerciseId);
+                        if (updatedLog) {
+                           handleSaveWorkoutLog(updatedLog); // Kích hoạt re-render
+                        }
+                    }} 
                     onSave={onSaveLog} 
                 />
             )}
@@ -530,66 +549,216 @@ const DailyTracking = ({ myWorkoutList, onSaveLog, onNavigateToLibrary, workoutH
     );
 };
 
+const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const secs = (seconds % 60).toString().padStart(2, '0');
+    return `${mins}:${secs}`;
+};
+
+const REST_TIME_SECONDS = 90; // Thời gian nghỉ mặc định
+
 const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
-    const [isEditing, setIsEditing] = useState(false);
+    const [sessionState, setSessionState] = useState<'setup' | 'training' | 'resting' | 'finished'>('setup');
+    
+    // Config cho buổi tập
     const [sessionConfig, setSessionConfig] = useState({
         sets: existingLog?.sets?.length || exercise.sets,
-        reps: exercise.reps,
+        reps: exercise.reps, // Reps mục tiêu, có thể chỉnh trong lúc tập
         weight: existingLog?.weight || exercise.weight,
     });
-    const [loggedSets, setLoggedSets] = useState([]);
-    const [historyEntryId, setHistoryEntryId] = useState<number | undefined>(existingLog?.id);
+    
+    // Dữ liệu thực tế
+    const [loggedSets, setLoggedSets] = useState<ICompletedSet[]>(existingLog?.sets || []);
+    const [currentSetReps, setCurrentSetReps] = useState(exercise.reps);
+    
+    const [timer, setTimer] = useState(0);
+    const [restTimer, setRestTimer] = useState(REST_TIME_SECONDS);
+    const intervalRef = useRef<number | null>(null);
+
+    const currentSetIndex = loggedSets.length;
+    const isLastSet = currentSetIndex === sessionConfig.sets - 1;
 
     useEffect(() => {
-        const initialSets = Array.from({ length: sessionConfig.sets }, (_, i) => {
-            const existingSet = existingLog?.sets[i];
-            return {
-                id: i,
-                reps: existingSet?.reps || sessionConfig.reps,
-                completed: !!existingSet,
-            };
-        });
-        setLoggedSets(initialSets);
-    }, [sessionConfig.sets, sessionConfig.reps, existingLog]);
+        return () => { // Cleanup khi component unmount
+            if (intervalRef.current) clearInterval(intervalRef.current);
+        };
+    }, []);
 
-    const handleRepsChange = (id, newReps) => {
-        const newLoggedSets = loggedSets.map(s => s.id === id ? { ...s, reps: newReps } : s);
-        setLoggedSets(newLoggedSets);
-        if (newLoggedSets.find(s => s.id === id)?.completed) {
-            handleAutoSave(newLoggedSets);
-        }
+    const startTimer = () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        setTimer(0);
+        intervalRef.current = window.setInterval(() => {
+            setTimer(prev => prev + 1);
+        }, 1000);
     };
 
-    const handleToggleSetComplete = (id) => {
-        const newLoggedSets = loggedSets.map(s => s.id === id ? { ...s, completed: !s.completed } : s);
-        setLoggedSets(newLoggedSets);
-        handleAutoSave(newLoggedSets);
-    };
-
-    const handleAutoSave = async (currentSets) => {
-        const validSets = currentSets.filter(set => set.completed).map(set => ({ reps: Number(set.reps) }));
-
-        if (validSets.length > 0) {
-            const logData: IWorkoutHistoryEntry = {
-                id: historyEntryId,
-                exerciseId: exercise.id, 
-                date: new Date().toISOString().split('T')[0],
-                weight: sessionConfig.weight, 
-                sets: validSets 
-            };
-            try {
-                const savedId = await onSave(logData);
-                if (savedId) {
-                    setHistoryEntryId(savedId);
+    const startRestTimer = () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        setRestTimer(REST_TIME_SECONDS);
+        intervalRef.current = window.setInterval(() => {
+            setRestTimer(prev => {
+                if (prev <= 1) {
+                    if (intervalRef.current) clearInterval(intervalRef.current);
+                    return 0;
                 }
-            } catch (error) {
-                console.error("Auto-save failed:", error);
-            }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+    
+    const stopTimers = () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+
+    const handleStartWorkout = () => {
+        // Nếu tiếp tục, đi thẳng vào set tiếp theo
+        if (loggedSets.length > 0 && loggedSets.length < sessionConfig.sets) {
+             setSessionState('resting');
+             startRestTimer();
+        } else {
+             setSessionState('training');
+             startTimer();
         }
     };
 
-    const handleConfigChange = (field, value) => {
-        setSessionConfig(c => ({...c, [field]: value}));
+    const handleCompleteSet = async () => {
+        stopTimers();
+        const newSet: ICompletedSet = {
+            reps: currentSetReps,
+            duration: timer,
+            rest: 0, // Sẽ được cập nhật khi set tiếp theo bắt đầu
+        };
+        const updatedLoggedSets = [...loggedSets, newSet];
+        setLoggedSets(updatedLoggedSets);
+        
+        await autoSave(updatedLoggedSets);
+
+        if (isLastSet) {
+            setSessionState('finished');
+        } else {
+            setSessionState('resting');
+            startRestTimer();
+        }
+    };
+    
+    const handleNextSet = async () => {
+        stopTimers();
+        const restDuration = REST_TIME_SECONDS - restTimer;
+
+        // Cập nhật thời gian nghỉ cho set trước đó
+        const updatedLoggedSets = [...loggedSets];
+        if (updatedLoggedSets.length > 0) {
+            updatedLoggedSets[updatedLoggedSets.length - 1].rest = restDuration;
+        }
+        setLoggedSets(updatedLoggedSets);
+
+        await autoSave(updatedLoggedSets);
+        
+        // Reset reps cho set mới và bắt đầu
+        setCurrentSetReps(sessionConfig.reps);
+        setSessionState('training');
+        startTimer();
+    };
+
+    const autoSave = async (currentSets: ICompletedSet[]) => {
+        const logData: IWorkoutHistoryEntry = {
+            id: existingLog?.id,
+            exerciseId: exercise.id,
+            date: new Date().toISOString().split('T')[0],
+            weight: sessionConfig.weight,
+            sets: currentSets
+        };
+        try {
+            await onSave(logData);
+        } catch (error) {
+            console.error("Auto-save failed:", error);
+        }
+    };
+    
+    const renderContent = () => {
+        if (sessionState === 'training' || sessionState === 'resting' || sessionState === 'finished') {
+            const isResting = sessionState === 'resting';
+            return (
+                 <div className="p-6 flex flex-col items-center">
+                    <div className="w-full text-center mb-4">
+                        <p className="text-lg text-gray-400">Set {currentSetIndex + 1} / {sessionConfig.sets}</p>
+                        <p className="font-bold text-2xl text-white">{sessionConfig.weight} kg</p>
+                    </div>
+
+                    {sessionState === 'finished' ? (
+                        <div className="text-center py-10">
+                            <CheckIcon className="w-20 h-20 text-emerald-400 mx-auto" />
+                            <h3 className="text-3xl font-bold mt-4">Hoàn thành!</h3>
+                            <p className="text-gray-300 mt-2">Buổi tập đã được lưu.</p>
+                        </div>
+                    ) : (
+                        <div className="relative w-48 h-48 flex items-center justify-center my-4">
+                            {isResting && (
+                               <svg className="absolute w-full h-full" viewBox="0 0 100 100">
+                                  <circle className="text-gray-700" strokeWidth="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
+                                  <circle className="text-emerald-400" strokeWidth="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50"
+                                     strokeDasharray={2 * Math.PI * 45}
+                                     strokeDashoffset={2 * Math.PI * 45 * (1 - restTimer / REST_TIME_SECONDS)}
+                                     style={{ transition: 'stroke-dashoffset 1s linear' }}
+                                     transform="rotate(-90 50 50)"
+                                  />
+                               </svg>
+                            )}
+                            <div className="text-center">
+                                <p className="text-sm font-bold uppercase tracking-wider text-gray-400">
+                                    {isResting ? 'NGHỈ' : 'TẬP'}
+                                </p>
+                                <p className="text-6xl font-mono font-bold text-white">
+                                    {isResting ? formatTime(restTimer) : formatTime(timer)}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {!isResting && sessionState !== 'finished' && (
+                        <div className="w-full my-4">
+                            <NumberStepper label="Reps đã thực hiện" value={currentSetReps} onChange={setCurrentSetReps} min={0} />
+                        </div>
+                    )}
+
+                    <div className="w-full mt-6">
+                        {sessionState === 'training' && (
+                           <button onClick={handleCompleteSet} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-4 rounded-lg transition-colors text-lg">
+                               {isLastSet ? 'Hoàn thành Buổi tập' : 'Hoàn thành Set'}
+                           </button>
+                        )}
+                        {sessionState === 'resting' && (
+                           <button onClick={handleNextSet} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-lg transition-colors text-lg">
+                               Bắt đầu Set tiếp theo
+                           </button>
+                        )}
+                         {sessionState === 'finished' && (
+                           <button onClick={onClose} className="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                               Đóng
+                           </button>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // Default: 'setup' state
+        return (
+            <div>
+                <div className="p-6 space-y-6">
+                    <p className="text-gray-400 text-sm">Chỉnh sửa thông số cho buổi tập hôm nay trước khi bắt đầu.</p>
+                    <NumberStepper label="Số set" value={sessionConfig.sets} onChange={(v) => setSessionConfig(c => ({...c, sets:v}))} min={1} />
+                    <NumberStepper label="Số rep mục tiêu" value={sessionConfig.reps} onChange={(v) => setSessionConfig(c => ({...c, reps:v}))} min={1} />
+                    <NumberStepper label="Mức tạ" value={sessionConfig.weight} onChange={(v) => setSessionConfig(c => ({...c, weight:v}))} min={0} step={2.5} unit="kg" />
+                </div>
+                <div className="p-4 bg-gray-700/50">
+                    <button onClick={handleStartWorkout} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center text-lg">
+                        <PlayIcon className="w-5 h-5 mr-2" />
+                        {loggedSets.length > 0 ? 'Tiếp tục Luyện tập' : 'Bắt đầu Luyện tập'}
+                    </button>
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -599,42 +768,12 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
                      <h2 className="text-xl font-bold text-white">{exercise.name}</h2>
                      <button onClick={onClose} className="text-gray-400 hover:text-white"><XIcon/></button>
                 </div>
-                {isEditing ? (
-                    <div>
-                        <div className="p-6 space-y-6">
-                            <NumberStepper label="Số set" value={sessionConfig.sets} onChange={(v) => handleConfigChange('sets', v)} min={1} />
-                            <NumberStepper label="Số rep mục tiêu" value={sessionConfig.reps} onChange={(v) => handleConfigChange('reps', v)} min={1} />
-                            <NumberStepper label="Mức tạ" value={sessionConfig.weight} onChange={(v) => handleConfigChange('weight', v)} min={0} step={2.5} unit="kg" />
-                        </div>
-                        <div className="p-4 bg-gray-700/50">
-                            <button onClick={() => setIsEditing(false)} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Lưu thay đổi</button>
-                        </div>
-                    </div>
-                ) : (
-                    <div>
-                        <div className="p-6">
-                            <div className="flex justify-between items-center bg-gray-900/70 p-3 rounded-lg mb-4">
-                                <div className="text-center"> <div className="text-xs text-gray-400">SETS</div> <div className="text-2xl font-bold">{sessionConfig.sets}</div> </div>
-                                <div className="text-center"> <div className="text-xs text-gray-400">REPS</div> <div className="text-2xl font-bold">{sessionConfig.reps}</div> </div>
-                                <div className="text-center"> <div className="text-xs text-gray-400">WEIGHT</div> <div className="text-2xl font-bold">{sessionConfig.weight}<span className="text-base">kg</span></div> </div>
-                                <button type="button" onClick={() => setIsEditing(true)} className="p-2 text-gray-400 hover:text-white"> <PencilIcon className="w-5 h-5" /> </button>
-                            </div>
-                            <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                                {loggedSets.map((set, index) => (
-                                    <div key={set.id} className={`flex items-center gap-2 p-2 rounded-lg transition-all ${set.completed ? 'bg-emerald-900/50' : 'bg-gray-700/50'}`}>
-                                        <div className={`flex-1 flex items-center gap-2 font-bold ${set.completed ? 'text-gray-400 line-through' : 'text-white'}`}> Set {index + 1} <span className="text-gray-400 font-normal text-sm">(Reps)</span> </div>
-                                        <NumberStepper value={set.reps} onChange={(v) => handleRepsChange(set.id, v)} min={0} compact={true} />
-                                        <button type="button" onClick={() => handleToggleSetComplete(set.id)} className={`w-10 h-10 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-all ${set.completed ? 'bg-emerald-500 border-emerald-400' : 'border-gray-500'}`}> {set.completed && <CheckIcon className="w-6 h-6 text-white"/>} </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
+                {renderContent()}
             </div>
         </div>
     );
 };
+
 
 const WorkoutHistoryView = ({ history, exercises, onDelete }) => {
     const getExercise = (id) => exercises.find(ex => ex.id === id);
