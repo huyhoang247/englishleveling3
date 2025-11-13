@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-// <<< MỚI: Import service DB local và các interfaces
-import { localWorkoutDB, IWorkoutPlanItem, IWorkoutHistoryEntry } from './local-data/local-workout-db.ts'; 
+// Import service DB local và các interfaces
+import { localWorkoutDB, IWorkoutPlanItem, IWorkoutHistoryEntry } from './local-workout-db.ts'; 
 
-// ADDED: Import BackButton and CoinDisplay components
+// Import các component UI
 import BackButton from './ui/back-button.tsx'; 
 import CoinDisplay from './ui/display/coin-display.tsx';
 
@@ -54,24 +54,15 @@ const CheckIcon = (props) => (
 );
 
 // --- SVG Icons for Exercises ---
-const SquatIcon = () => (
-  <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="50" cy="20" r="10" fill="currentColor"/><rect x="45" y="30" width="10" height="30" rx="5" fill="currentColor"/><path d="M 40 55 L 30 90 L 40 90 L 45 65 Z" fill="currentColor"/><path d="M 60 55 L 70 90 L 60 90 L 55 65 Z" fill="currentColor"/><rect x="20" y="45" width="60" height="8" rx="4" fill="currentColor"/></svg>
-);
-const BenchPressIcon = () => (
-  <svg viewBox="0 0 100 100" className="w-full h-full"><rect x="20" y="70" width="60" height="10" rx="5" fill="currentColor"/><circle cx="50" cy="35" r="10" fill="currentColor"/><path d="M 50 45 L 30 60 L 70 60 Z" fill="currentColor"/><rect x="10" y="28" width="80" height="8" rx="4" fill="currentColor"/><rect x="5" y="24" width="5" height="16" fill="currentColor"/><rect x="90" y="24" width="5" height="16" fill="currentColor"/></svg>
-);
-const WristCurlIcon = () => (
-    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/workout/wrist-curl.png" alt="Wrist Curl" className="w-full h-full object-contain" />
-);
-const DeadliftIcon = () => (
-    <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="50" cy="35" r="8" fill="currentColor"/><path d="M 50 43 L 50 60 L 40 75 L 35 73 L 45 58" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 50 43 L 50 60 L 60 75 L 65 73 L 55 58" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 45 80 L 40 90" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 55 80 L 60 90" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><rect x="10" y="88" width="80" height="7" rx="3" fill="currentColor"/><rect x="5" y="80" width="5" height="15" fill="currentColor"/><rect x="90" y="80" width="5" height="15" fill="currentColor"/></svg>
-);
+const SquatIcon = () => ( <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="50" cy="20" r="10" fill="currentColor"/><rect x="45" y="30" width="10" height="30" rx="5" fill="currentColor"/><path d="M 40 55 L 30 90 L 40 90 L 45 65 Z" fill="currentColor"/><path d="M 60 55 L 70 90 L 60 90 L 55 65 Z" fill="currentColor"/><rect x="20" y="45" width="60" height="8" rx="4" fill="currentColor"/></svg> );
+const BenchPressIcon = () => ( <svg viewBox="0 0 100 100" className="w-full h-full"><rect x="20" y="70" width="60" height="10" rx="5" fill="currentColor"/><circle cx="50" cy="35" r="10" fill="currentColor"/><path d="M 50 45 L 30 60 L 70 60 Z" fill="currentColor"/><rect x="10" y="28" width="80" height="8" rx="4" fill="currentColor"/><rect x="5" y="24" width="5" height="16" fill="currentColor"/><rect x="90" y="24" width="5" height="16" fill="currentColor"/></svg> );
+const WristCurlIcon = () => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/workout/wrist-curl.png" alt="Wrist Curl" className="w-full h-full object-contain" /> );
+const DeadliftIcon = () => ( <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="50" cy="35" r="8" fill="currentColor"/><path d="M 50 43 L 50 60 L 40 75 L 35 73 L 45 58" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 50 43 L 50 60 L 60 75 L 65 73 L 55 58" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 45 80 L 40 90" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><path d="M 55 80 L 60 90" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round"/><rect x="10" y="88" width="80" height="7" rx="3" fill="currentColor"/><rect x="5" y="80" width="5" height="15" fill="currentColor"/><rect x="90" y="80" width="5" height="15" fill="currentColor"/></svg> );
 
-// --- UPDATED Reusable Component: NumberStepper with Compact variant ---
+// --- Reusable Component: NumberStepper ---
 const NumberStepper = ({ label, value, onChange, min = 0, max = Infinity, step = 1, unit = '', compact = false }) => {
     const handleDecrement = () => onChange(Math.max(min, value - step));
     const handleIncrement = () => onChange(Math.min(max, value + step));
-
     if (compact) {
         return (
             <div className="flex items-center gap-1 bg-gray-700 rounded-md p-0.5 border border-gray-600">
@@ -85,7 +76,6 @@ const NumberStepper = ({ label, value, onChange, min = 0, max = Infinity, step =
             </div>
         );
     }
-    
     return (
         <div className="flex items-center justify-between">
             {label && <span className="font-semibold text-gray-200">{label}</span>}
@@ -102,15 +92,13 @@ const NumberStepper = ({ label, value, onChange, min = 0, max = Infinity, step =
     );
 };
 
-// --- Initial Data ---
+// --- Initial Data & Helper Functions ---
 const initialExercises = [
     { id: 1, name: 'Bench Press', category: 'Chest', icon: <BenchPressIcon /> },
     { id: 2, name: 'Squat', category: 'Legs', icon: <SquatIcon /> },
     { id: 3, name: 'Deadlift', category: 'Back', icon: <DeadliftIcon /> },
     { id: 4, name: 'Wrist Curl', category: 'Arms', icon: <WristCurlIcon /> },
 ];
-
-// --- Helper Functions ---
 const calculateVolume = (sets, weight) => sets.reduce((total, set) => total + (set.reps * weight), 0);
 
 // --- Main Application Component ---
@@ -162,12 +150,22 @@ export default function WorkoutApp({ onClose }) {
         setMyWorkoutPlan(newPlan);
         await localWorkoutDB.saveWorkoutPlan(newPlan);
     };
+    
+    const handleSaveWorkoutLog = async (logData: IWorkoutHistoryEntry): Promise<number> => {
+        const savedId = await localWorkoutDB.saveWorkoutHistoryEntry(logData);
+        const newLogData = { ...logData, id: savedId };
 
-    const handleLogWorkout = async (newWorkout: Omit<IWorkoutHistoryEntry, 'id'>) => {
-        const newId = await localWorkoutDB.addWorkoutHistoryEntry(newWorkout as IWorkoutHistoryEntry);
-        if (newId) {
-            setWorkoutHistory(prev => [...prev, { ...newWorkout, id: newId }]);
-        }
+        setWorkoutHistory(prev => {
+            const existingIndex = prev.findIndex(item => item.id === savedId);
+            if (existingIndex > -1) {
+                const updatedHistory = [...prev];
+                updatedHistory[existingIndex] = newLogData;
+                return updatedHistory;
+            } else {
+                return [...prev, newLogData];
+            }
+        });
+        return savedId;
     };
     
     const handleDeleteWorkout = async (id: number) => {
@@ -182,8 +180,7 @@ export default function WorkoutApp({ onClose }) {
             'myWorkout': { workoutList: myWorkoutList, onRemove: handleRemoveFromMyWorkout },
             'history': { history: workoutHistory, exercises, onDelete: handleDeleteWorkout },
             'progress': { history: workoutHistory, exercises },
-            // <<< THAY ĐỔI: Thêm prop `onRemove` cho DailyTracking
-            'dailyTracking': { myWorkoutList, onLogWorkout: handleLogWorkout, onNavigateToLibrary: () => setCurrentView('library'), workoutHistory, onRemove: handleRemoveFromMyWorkout }
+            'dailyTracking': { myWorkoutList, onSaveLog: handleSaveWorkoutLog, onNavigateToLibrary: () => setCurrentView('library'), workoutHistory, onRemove: handleRemoveFromMyWorkout }
         };
 
         switch (currentView) {
@@ -245,30 +242,28 @@ const NavBar = ({ currentView, setCurrentView }) => {
     return (
         <nav className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 md:hidden z-50">
             <div className="flex justify-around items-center px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-                {navItems.map(item => (
-                    (() => {
-                        const isActive = currentView === item.id;
-                        return (
-                            <button 
-                                key={item.id} 
-                                onClick={() => setCurrentView(item.id)} 
-                                className="group relative flex-1 flex flex-col items-center justify-center text-center h-14 transition-colors duration-300"
-                            >
-                                <div className={`absolute top-0 h-1 w-8 bg-emerald-400 rounded-full transition-all duration-300 ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}></div>
-                                <item.icon 
-                                    className={`w-6 h-6 mb-0.5 transition-colors duration-300 
-                                        ${isActive ? 'text-emerald-400' : 'text-gray-500 group-hover:text-gray-300'}`
-                                    } 
-                                />
-                                <span className={`text-[10px] font-bold tracking-wide transition-colors duration-300 
+                {navItems.map(item => {
+                    const isActive = currentView === item.id;
+                    return (
+                        <button 
+                            key={item.id} 
+                            onClick={() => setCurrentView(item.id)} 
+                            className="group relative flex-1 flex flex-col items-center justify-center text-center h-14 transition-colors duration-300"
+                        >
+                            <div className={`absolute top-0 h-1 w-8 bg-emerald-400 rounded-full transition-all duration-300 ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}></div>
+                            <item.icon 
+                                className={`w-6 h-6 mb-0.5 transition-colors duration-300 
                                     ${isActive ? 'text-emerald-400' : 'text-gray-500 group-hover:text-gray-300'}`
-                                }>
-                                    {item.label}
-                                </span>
-                            </button>
-                        );
-                    })()
-                ))}
+                                } 
+                            />
+                            <span className={`text-[10px] font-bold tracking-wide transition-colors duration-300 
+                                ${isActive ? 'text-emerald-400' : 'text-gray-500 group-hover:text-gray-300'}`
+                            }>
+                                {item.label}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
         </nav>
     );
@@ -288,7 +283,6 @@ const SimpleSVGChart = ({ data, yKey, strokeColor, title }) => {
         const { x, y } = getCoords(d[yKey], i);
         return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
     }).join(' ');
-
     return (
         <div className="mt-4">
             <h4 className="text-center font-semibold text-gray-300 mb-2">{title}</h4>
@@ -368,7 +362,6 @@ const ExerciseSettingsModal = ({ exercise, onClose, onSubmit }) => {
     const [reps, setReps] = useState(10);
     const [rest, setRest] = useState(60);
     const [weight, setWeight] = useState(20);
-
     const handleSubmit = (e) => {
         e.preventDefault();
         onSubmit({ exerciseId: exercise.id, sets, reps, rest, weight });
@@ -377,17 +370,14 @@ const ExerciseSettingsModal = ({ exercise, onClose, onSubmit }) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
             <div className="bg-gray-800 rounded-xl shadow-lg w-full max-w-md">
-                <div className="p-6 border-b border-gray-700">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-white">Cài đặt: {exercise.name}</h2>
-                        <button onClick={onClose} className="text-gray-400 hover:text-white"><XIcon/></button>
-                    </div>
-                    <p className="text-gray-400 text-sm mt-1">Thiết lập mục tiêu mặc định cho bài tập này.</p>
+                <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-white">Cài đặt: {exercise.name}</h2>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white"><XIcon/></button>
                 </div>
                 <form onSubmit={handleSubmit}>
                     <div className="p-6 space-y-6">
                         <NumberStepper label="Số set" value={sets} onChange={setSets} min={1} />
-                        <NumberStepper label="Số rep mỗi set" value={reps} onChange={setReps} min={1} />
+                        <NumberStepper label="Số rep mỗi set" value={reps} onChange={setReps} min={1} step={10}/>
                         <NumberStepper label="Mức tạ mục tiêu" value={weight} onChange={setWeight} min={0} step={2.5} unit="kg" />
                         <NumberStepper label="Nghỉ giữa set" value={rest} onChange={setRest} min={0} step={15} unit="s" />
                     </div>
@@ -402,7 +392,6 @@ const ExerciseSettingsModal = ({ exercise, onClose, onSubmit }) => {
 
 const LibraryWorkout = ({ exercises, myWorkoutIds, onConfigure }) => {
     const [viewingExercise, setViewingExercise] = useState(null);
-
     return (
         <>
             <Card>
@@ -453,23 +442,21 @@ const MyWorkout = ({ workoutList, onRemove }) => (
     </Card>
 );
 
-
-// <<< ======================================================= >>>
-// <<< ============ START OF MODIFIED COMPONENT ============ >>>
-// <<< ======================================================= >>>
-
-const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, workoutHistory, onRemove }) => {
+const DailyTracking = ({ myWorkoutList, onSaveLog, onNavigateToLibrary, workoutHistory, onRemove }) => {
     const [loggingExercise, setLoggingExercise] = useState(null);
-    const [viewingExercise, setViewingExercise] = useState(null); // State for image zoom modal
+    const [viewingExercise, setViewingExercise] = useState(null);
 
     const findLastWorkout = (exerciseId) => {
-        return workoutHistory
-            .filter(w => w.exerciseId === exerciseId)
-            .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+        return workoutHistory.filter(w => w.exerciseId === exerciseId).sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+    };
+    
+    const findTodaysWorkout = (exerciseId) => {
+        const todayStr = new Date().toISOString().split('T')[0];
+        return workoutHistory.find(w => w.exerciseId === exerciseId && w.date === todayStr);
     };
 
     if (myWorkoutList.length === 0) { 
-        return (
+        return ( 
             <Card>
                 <div className="text-center py-10">
                     <h2 className="text-2xl font-bold mb-2">Chào mừng bạn!</h2>
@@ -478,13 +465,13 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, worko
                         Đến thư viện
                     </button>
                 </div>
-            </Card>
-        );
+            </Card> 
+        ); 
     }
     
     return (
         <>
-             <Card>
+            <Card>
                 <h2 className="card-title"><CheckSquareIcon className="mr-2"/>Theo dõi hàng ngày</h2>
                 <p className="text-gray-400 mt-1">Chọn một bài tập để ghi lại buổi tập hôm nay và xem tiến độ.</p>
                 <div className="space-y-4 mt-6">
@@ -492,22 +479,14 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, worko
                         const lastWorkout = findLastWorkout(ex.exerciseId);
                         const lastVolume = lastWorkout ? calculateVolume(lastWorkout.sets, lastWorkout.weight) : 0;
                         const lastWeight = lastWorkout ? lastWorkout.weight : 0;
+                        const todaysWorkout = findTodaysWorkout(ex.exerciseId);
 
                         return (
-                            <div key={ex.exerciseId} className="bg-gray-700 rounded-lg p-4 relative hover:bg-gray-600 transition-colors">
-                                {/* --- NEW: Absolute positioned buttons --- */}
-                                <button 
-                                    onClick={() => setViewingExercise(ex)} 
-                                    className="absolute top-2 left-2 p-1 text-gray-400 hover:text-white transition-colors z-10"
-                                    aria-label={`Xem chi tiết ${ex.name}`}
-                                >
+                            <div key={ex.exerciseId} className="bg-gray-700 rounded-lg p-6 relative hover:bg-gray-600 transition-colors">
+                                <button onClick={() => setViewingExercise(ex)} className="absolute top-2 left-2 p-1 text-gray-400 hover:text-white transition-colors z-10" aria-label={`Xem chi tiết ${ex.name}`}>
                                     <ExpandIcon className="w-5 h-5" />
                                 </button>
-                                <button 
-                                    onClick={() => onRemove(ex.exerciseId)}
-                                    className="absolute top-2 right-2 p-1 text-gray-500 hover:text-red-500 transition-colors z-10"
-                                    aria-label={`Xóa ${ex.name} khỏi kế hoạch`}
-                                >
+                                <button onClick={() => onRemove(ex.exerciseId)} className="absolute top-2 right-2 p-1 text-gray-500 hover:text-red-500 transition-colors z-10" aria-label={`Xóa ${ex.name} khỏi kế hoạch`}>
                                     <Trash2Icon className="w-5 h-5" />
                                 </button>
                                 
@@ -516,14 +495,13 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, worko
                                        <div className="text-emerald-400 w-12 h-12 mr-4 flex-shrink-0">{ex.icon}</div>
                                        <div>
                                             <p className="font-bold text-lg">{ex.name}</p>
-                                            {/* --- CHANGED: Stats are now in a flex-col container --- */}
                                             <div className="flex flex-col items-start gap-y-1 text-xs text-gray-300 mt-1">
                                                 <span className="flex items-center"><TargetIcon className="w-3 h-3 mr-1.5"/>{ex.sets}x{ex.reps} @ {ex.weight}kg</span>
                                                 <span className="flex items-center"><ClockIcon className="w-3 h-3 mr-1.5"/>{ex.rest}s nghỉ</span>
                                             </div>
                                        </div>
                                     </div>
-                                    <button onClick={() => setLoggingExercise(ex)} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg text-sm ml-2 flex-shrink-0">
+                                    <button onClick={() => setLoggingExercise({ ...ex, todaysWorkout })} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg text-sm ml-2 flex-shrink-0">
                                         Bắt đầu
                                     </button>
                                 </div>
@@ -535,74 +513,83 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, worko
                                     </div>
                                 )}
                             </div>
-                        )
+                        );
                     })}
                 </div>
             </Card>
-            {/* --- NEW: Render Image Zoom Modal --- */}
             <ImageDetailModal exercise={viewingExercise} onClose={() => setViewingExercise(null)} />
-
             {loggingExercise && (
                 <LoggingModal 
                     exercise={loggingExercise} 
-                    onClose={() => setLoggingExercise(null)}
-                    onSubmit={(workoutData) => {
-                        onLogWorkout(workoutData);
-                        setLoggingExercise(null);
-                    }}
+                    existingLog={loggingExercise.todaysWorkout} 
+                    onClose={() => setLoggingExercise(null)} 
+                    onSave={onSaveLog} 
                 />
             )}
         </>
     );
 };
 
-// <<< ======================================================= >>>
-// <<< ============= END OF MODIFIED COMPONENT ============= >>>
-// <<< ======================================================= >>>
-
-
-const LoggingModal = ({ exercise, onClose, onSubmit }) => {
+const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [sessionConfig, setSessionConfig] = useState({
-        sets: exercise.sets,
+        sets: existingLog?.sets?.length || exercise.sets,
         reps: exercise.reps,
-        weight: exercise.weight,
+        weight: existingLog?.weight || exercise.weight,
     });
     const [loggedSets, setLoggedSets] = useState([]);
+    const [historyEntryId, setHistoryEntryId] = useState<number | undefined>(existingLog?.id);
 
     useEffect(() => {
-        setLoggedSets(
-            Array.from({ length: sessionConfig.sets }, (_, i) => ({
+        const initialSets = Array.from({ length: sessionConfig.sets }, (_, i) => {
+            const existingSet = existingLog?.sets[i];
+            return {
                 id: i,
-                reps: sessionConfig.reps,
-                completed: false,
-            }))
-        );
-    }, [sessionConfig.sets, sessionConfig.reps]);
-    
+                reps: existingSet?.reps || sessionConfig.reps,
+                completed: !!existingSet,
+            };
+        });
+        setLoggedSets(initialSets);
+    }, [sessionConfig.sets, sessionConfig.reps, existingLog]);
+
     const handleRepsChange = (id, newReps) => {
-        setLoggedSets(sets => sets.map(s => s.id === id ? { ...s, reps: newReps } : s));
+        const newLoggedSets = loggedSets.map(s => s.id === id ? { ...s, reps: newReps } : s);
+        setLoggedSets(newLoggedSets);
+        if (newLoggedSets.find(s => s.id === id)?.completed) {
+            handleAutoSave(newLoggedSets);
+        }
     };
 
     const handleToggleSetComplete = (id) => {
-        setLoggedSets(sets => sets.map(s => s.id === id ? { ...s, completed: !s.completed } : s));
+        const newLoggedSets = loggedSets.map(s => s.id === id ? { ...s, completed: !s.completed } : s);
+        setLoggedSets(newLoggedSets);
+        handleAutoSave(newLoggedSets);
     };
-    
-    const handleSaveChanges = () => setIsEditing(false);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const validSets = loggedSets.filter(set => set.completed)
-                                    .map(set => ({ reps: Number(set.reps) }));
+    const handleAutoSave = async (currentSets) => {
+        const validSets = currentSets.filter(set => set.completed).map(set => ({ reps: Number(set.reps) }));
+
         if (validSets.length > 0) {
-            onSubmit({ 
+            const logData: IWorkoutHistoryEntry = {
+                id: historyEntryId,
                 exerciseId: exercise.id, 
-                date, 
+                date: new Date().toISOString().split('T')[0],
                 weight: sessionConfig.weight, 
                 sets: validSets 
-            });
+            };
+            try {
+                const savedId = await onSave(logData);
+                if (savedId) {
+                    setHistoryEntryId(savedId);
+                }
+            } catch (error) {
+                console.error("Auto-save failed:", error);
+            }
         }
+    };
+
+    const handleConfigChange = (field, value) => {
+        setSessionConfig(c => ({...c, [field]: value}));
     };
 
     return (
@@ -612,58 +599,37 @@ const LoggingModal = ({ exercise, onClose, onSubmit }) => {
                      <h2 className="text-xl font-bold text-white">{exercise.name}</h2>
                      <button onClick={onClose} className="text-gray-400 hover:text-white"><XIcon/></button>
                 </div>
-
                 {isEditing ? (
                     <div>
                         <div className="p-6 space-y-6">
-                            <NumberStepper label="Số set" value={sessionConfig.sets} onChange={(v) => setSessionConfig(c => ({...c, sets: v}))} min={1} />
-                            <NumberStepper label="Số rep mục tiêu" value={sessionConfig.reps} onChange={(v) => setSessionConfig(c => ({...c, reps: v}))} min={1} />
-                            <NumberStepper label="Mức tạ" value={sessionConfig.weight} onChange={(v) => setSessionConfig(c => ({...c, weight: v}))} min={0} step={2.5} unit="kg" />
+                            <NumberStepper label="Số set" value={sessionConfig.sets} onChange={(v) => handleConfigChange('sets', v)} min={1} />
+                            <NumberStepper label="Số rep mục tiêu" value={sessionConfig.reps} onChange={(v) => handleConfigChange('reps', v)} min={1} />
+                            <NumberStepper label="Mức tạ" value={sessionConfig.weight} onChange={(v) => handleConfigChange('weight', v)} min={0} step={2.5} unit="kg" />
                         </div>
                         <div className="p-4 bg-gray-700/50">
-                            <button onClick={handleSaveChanges} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Lưu thay đổi</button>
+                            <button onClick={() => setIsEditing(false)} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Lưu thay đổi</button>
                         </div>
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmit}>
+                    <div>
                         <div className="p-6">
                             <div className="flex justify-between items-center bg-gray-900/70 p-3 rounded-lg mb-4">
-                                <div className="text-center">
-                                    <div className="text-xs text-gray-400">SETS</div>
-                                    <div className="text-2xl font-bold">{sessionConfig.sets}</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-xs text-gray-400">REPS</div>
-                                    <div className="text-2xl font-bold">{sessionConfig.reps}</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-xs text-gray-400">WEIGHT</div>
-                                    <div className="text-2xl font-bold">{sessionConfig.weight}<span className="text-base">kg</span></div>
-                                </div>
-                                <button type="button" onClick={() => setIsEditing(true)} className="p-2 text-gray-400 hover:text-white">
-                                    <PencilIcon className="w-5 h-5" />
-                                </button>
+                                <div className="text-center"> <div className="text-xs text-gray-400">SETS</div> <div className="text-2xl font-bold">{sessionConfig.sets}</div> </div>
+                                <div className="text-center"> <div className="text-xs text-gray-400">REPS</div> <div className="text-2xl font-bold">{sessionConfig.reps}</div> </div>
+                                <div className="text-center"> <div className="text-xs text-gray-400">WEIGHT</div> <div className="text-2xl font-bold">{sessionConfig.weight}<span className="text-base">kg</span></div> </div>
+                                <button type="button" onClick={() => setIsEditing(true)} className="p-2 text-gray-400 hover:text-white"> <PencilIcon className="w-5 h-5" /> </button>
                             </div>
-                            
                             <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                                 {loggedSets.map((set, index) => (
                                     <div key={set.id} className={`flex items-center gap-2 p-2 rounded-lg transition-all ${set.completed ? 'bg-emerald-900/50' : 'bg-gray-700/50'}`}>
-                                        <div className={`flex-1 flex items-center gap-2 font-bold ${set.completed ? 'text-gray-400 line-through' : 'text-white'}`}>
-                                            Set {index + 1}
-                                            <span className="text-gray-400 font-normal text-sm">(Reps)</span>
-                                        </div>
+                                        <div className={`flex-1 flex items-center gap-2 font-bold ${set.completed ? 'text-gray-400 line-through' : 'text-white'}`}> Set {index + 1} <span className="text-gray-400 font-normal text-sm">(Reps)</span> </div>
                                         <NumberStepper value={set.reps} onChange={(v) => handleRepsChange(set.id, v)} min={0} compact={true} />
-                                        <button type="button" onClick={() => handleToggleSetComplete(set.id)} className={`w-10 h-10 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-all ${set.completed ? 'bg-emerald-500 border-emerald-400' : 'border-gray-500'}`}>
-                                           {set.completed && <CheckIcon className="w-6 h-6 text-white"/>}
-                                        </button>
+                                        <button type="button" onClick={() => handleToggleSetComplete(set.id)} className={`w-10 h-10 flex-shrink-0 rounded-full border-2 flex items-center justify-center transition-all ${set.completed ? 'bg-emerald-500 border-emerald-400' : 'border-gray-500'}`}> {set.completed && <CheckIcon className="w-6 h-6 text-white"/>} </button>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                        <div className="p-4 bg-gray-700/50">
-                             <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Hoàn thành & Lưu buổi tập</button>
-                        </div>
-                    </form>
+                    </div>
                 )}
             </div>
         </div>
@@ -673,7 +639,6 @@ const LoggingModal = ({ exercise, onClose, onSubmit }) => {
 const WorkoutHistoryView = ({ history, exercises, onDelete }) => {
     const getExercise = (id) => exercises.find(ex => ex.id === id);
     const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
-
     return (
         <Card>
             <h2 className="card-title"><HistoryIcon className="mr-2"/>Lịch sử tập luyện</h2>
@@ -681,20 +646,21 @@ const WorkoutHistoryView = ({ history, exercises, onDelete }) => {
                 {sortedHistory.length > 0 ? sortedHistory.map(workout => {
                     const exercise = getExercise(workout.exerciseId);
                     return (
-                    <div key={workout.id} className="bg-gray-800 p-4 rounded-lg">
-                        <div className="flex justify-between items-start">
-                           <div className="flex items-center">
-                            {exercise && <div className="text-emerald-400 w-12 h-12 mr-4">{exercise.icon}</div>}
-                            <div>
-                                <p className="font-bold text-white text-lg">{exercise?.name || 'Unknown'} @ {workout.weight}kg</p>
-                                <p className="text-sm text-gray-400">{new Date(workout.date).toLocaleDateString()}</p>
-                                <p className="text-sm text-emerald-400 font-semibold mt-1">Tổng khối lượng: {calculateVolume(workout.sets, workout.weight)} kg</p>
+                        <div key={workout.id} className="bg-gray-800 p-4 rounded-lg">
+                            <div className="flex justify-between items-start">
+                               <div className="flex items-center">
+                                {exercise && <div className="text-emerald-400 w-12 h-12 mr-4">{exercise.icon}</div>}
+                                <div>
+                                    <p className="font-bold text-white text-lg">{exercise?.name || 'Unknown'} @ {workout.weight}kg</p>
+                                    <p className="text-sm text-gray-400">{new Date(workout.date).toLocaleDateString()}</p>
+                                    <p className="text-sm text-emerald-400 font-semibold mt-1">Tổng khối lượng: {calculateVolume(workout.sets, workout.weight)} kg</p>
+                                </div>
+                               </div>
+                               <button onClick={() => onDelete(workout.id)} className="p-1 text-gray-500 hover:text-red-500"><Trash2Icon /></button>
                             </div>
-                           </div>
-                           <button onClick={() => onDelete(workout.id)} className="p-1 text-gray-500 hover:text-red-500"><Trash2Icon /></button>
                         </div>
-                    </div>
-                )}) : <p className="text-gray-400 text-center py-8">Chưa có lịch sử tập luyện.</p>}
+                    );
+                }) : <p className="text-gray-400 text-center py-8">Chưa có lịch sử tập luyện.</p>}
             </div>
         </Card>
     );
