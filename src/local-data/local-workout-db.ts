@@ -8,8 +8,15 @@ export interface IWorkoutPlanItem {
   exerciseId: number; // ID của bài tập, dùng làm primary key
   sets: number;       // Số set mục tiêu
   reps: number;       // Số rep mục tiêu mỗi set
-  rest: number;       // Thời gian nghỉ (giây)
+  // rest đã được loại bỏ vì sẽ được quản lý tự động trong giao diện luyện tập
   weight: number;     // Mức tạ mục tiêu (kg)
+}
+
+// Interface cho một set đã hoàn thành trong lịch sử tập luyện
+export interface ICompletedSet {
+  reps: number;      // Số rep thực tế đã thực hiện
+  duration: number;  // Thời gian thực hiện set (giây)
+  rest: number;      // Thời gian nghỉ sau set này (giây)
 }
 
 // Interface cho một mục trong lịch sử tập luyện
@@ -19,9 +26,7 @@ export interface IWorkoutHistoryEntry {
   exerciseId: number; // ID của bài tập đã thực hiện
   date: string;       // Ngày thực hiện (định dạng 'YYYY-MM-DD')
   weight: number;     // Mức tạ đã sử dụng trong buổi tập (kg)
-  sets: {            // Mảng các set đã hoàn thành
-    reps: number;
-  }[];
+  sets: ICompletedSet[]; // Mảng các set đã hoàn thành với dữ liệu chi tiết
 }
 
 class LocalWorkoutDatabase extends Dexie {
@@ -35,6 +40,8 @@ class LocalWorkoutDatabase extends Dexie {
     this.version(1).stores({
       // Định nghĩa schema cho phiên bản 1 của database
       // 'exerciseId' là primary key cho bảng workoutPlan
+      // Schema vẫn giữ nguyên vì 'sets' là một object, không phải là một index.
+      // Dexie cho phép thay đổi cấu trúc của các object không được index mà không cần migration.
       workoutPlan: 'exerciseId', 
       // '++id' nghĩa là 'id' là primary key tự động tăng
       // 'exerciseId' và 'date' là các index để tăng tốc độ truy vấn
