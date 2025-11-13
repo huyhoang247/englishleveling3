@@ -3,6 +3,7 @@
 import Dexie, { Table } from 'dexie';
 
 // Interface cho một mục trong kế hoạch tập luyện của người dùng
+// Đây là nơi lưu các thiết lập mặc định cho mỗi bài tập người dùng đã chọn.
 export interface IWorkoutPlanItem {
   exerciseId: number; // ID của bài tập, dùng làm primary key
   sets: number;       // Số set mục tiêu
@@ -12,31 +13,36 @@ export interface IWorkoutPlanItem {
 }
 
 // Interface cho một mục trong lịch sử tập luyện
+// Đây là bản ghi của một buổi tập đã thực sự diễn ra.
 export interface IWorkoutHistoryEntry {
-  id?: number;         // Primary key, tự động tăng
+  id?: number;         // Primary key, tự động tăng (optional vì Dexie sẽ tạo khi add)
   exerciseId: number; // ID của bài tập đã thực hiện
-  date: string;       // Ngày thực hiện (ví dụ: '2023-10-27')
-  weight: number;     // Mức tạ đã sử dụng (kg)
+  date: string;       // Ngày thực hiện (định dạng 'YYYY-MM-DD')
+  weight: number;     // Mức tạ đã sử dụng trong buổi tập (kg)
   sets: {            // Mảng các set đã hoàn thành
     reps: number;
   }[];
 }
 
 class LocalWorkoutDatabase extends Dexie {
-  // Định nghĩa các bảng (collections)
+  // Định nghĩa các bảng (collections) trong database
+  // TypeScript sẽ biết kiểu dữ liệu và kiểu primary key của mỗi bảng
   workoutPlan!: Table<IWorkoutPlanItem, number>;      // Key là number (exerciseId)
   workoutHistory!: Table<IWorkoutHistoryEntry, number>; // Key là number (id)
 
   constructor() {
-    super('WorkoutDB'); // Tên của database
+    super('WorkoutDB'); // Tên của database trong IndexedDB
     this.version(1).stores({
-      // Schema cho phiên bản 1
-      workoutPlan: 'exerciseId', // 'exerciseId' là primary key
-      workoutHistory: '++id, exerciseId, date' // 'id' là primary key tự tăng, 'exerciseId' và 'date' là các index để truy vấn nhanh
+      // Định nghĩa schema cho phiên bản 1 của database
+      // 'exerciseId' là primary key cho bảng workoutPlan
+      workoutPlan: 'exerciseId', 
+      // '++id' nghĩa là 'id' là primary key tự động tăng
+      // 'exerciseId' và 'date' là các index để tăng tốc độ truy vấn
+      workoutHistory: '++id, exerciseId, date' 
     });
   }
 
-  // === Các hàm cho 'workoutPlan' ===
+  // === CÁC HÀM CHO 'workoutPlan' ===
 
   /**
    * Lấy toàn bộ kế hoạch tập luyện của người dùng.
@@ -48,16 +54,16 @@ class LocalWorkoutDatabase extends Dexie {
 
   /**
    * Lưu (ghi đè) toàn bộ kế hoạch tập luyện của người dùng.
-   * Hàm này sẽ xóa kế hoạch cũ và lưu kế hoạch mới.
+   * Hàm này sẽ xóa kế hoạch cũ và lưu kế hoạch mới để đảm bảo tính nhất quán.
    * @param {IWorkoutPlanItem[]} planItems - Mảng các bài tập mới cho kế hoạch.
    */
   async saveWorkoutPlan(planItems: IWorkoutPlanItem[]): Promise<void> {
     try {
-      // Dùng transaction để đảm bảo cả hai hành động thành công hoặc không gì cả
+      // Dùng transaction để đảm bảo cả hai hành động (xóa và thêm) đều thành công hoặc không gì cả.
       await this.transaction('rw', this.workoutPlan, async () => {
-        await this.workoutPlan.clear();
+        await this.workoutPlan.clear(); // Xóa tất cả dữ liệu cũ
         if (planItems.length > 0) {
-          await this.workoutPlan.bulkAdd(planItems);
+          await this.workoutPlan.bulkAdd(planItems); // Thêm hàng loạt dữ liệu mới
         }
       });
     } catch (error) {
@@ -65,29 +71,32 @@ class LocalWorkoutDatabase extends Dexie {
     }
   }
 
-  // === Các hàm cho 'workoutHistory' ===
+  // === CÁC HÀM CHO 'workoutHistory' ===
 
   /**
    * Lấy toàn bộ lịch sử tập luyện.
-   * @returns {Promise<IWorkoutHistoryEntry[]>}
+   * @returns {Promise<IWorkoutHistoryEntry[]>} Mảng các buổi tập đã được ghi lại.
    */
   async getWorkoutHistory(): Promise<IWorkoutHistoryEntry[]> {
     return this.workoutHistory.toArray();
   }
 
   /**
-   * Thêm một buổi tập mới vào lịch sử.
-   * @param {IWorkoutHistoryEntry} newEntry - Dữ liệu buổi tập mới.
-   * @returns {Promise<number | undefined>} ID của bản ghi mới được tạo.
+   * Thêm hoặc Cập nhật một buổi tập trong lịch sử.
+   * Dexie's put() sẽ tự động:
+   * - THÊM MỚI nếu 'id' của entry không tồn tại trong bảng.
+   * - CẬP NHẬT nếu 'id' của entry đã có.
+   * Đây là hàm hoàn hảo cho tính năng auto-save.
+   * @param {IWorkoutHistoryEntry} entry - Dữ liệu buổi tập.
+   * @returns {Promise<number>} ID của bản ghi đã được lưu (mới hoặc cũ).
    */
-  async addWorkoutHistoryEntry(newEntry: IWorkoutHistoryEntry): Promise<number | undefined> {
+  async saveWorkoutHistoryEntry(entry: IWorkoutHistoryEntry): Promise<number> {
     try {
-      // Dexie sẽ tự động gán 'id' nếu nó là '++id'
-      const id = await this.workoutHistory.add(newEntry);
+      const id = await this.workoutHistory.put(entry);
       return id;
     } catch (error) {
-      console.error("Failed to add workout history entry to Dexie:", error);
-      return undefined;
+      console.error("Failed to save/update workout history entry in Dexie:", error);
+      throw error; // Ném lỗi ra ngoài để component có thể xử lý nếu cần
     }
   }
 
@@ -103,11 +112,11 @@ class LocalWorkoutDatabase extends Dexie {
     }
   }
 
-  // === Quản lý chung ===
+  // === QUẢN LÝ CHUNG ===
 
   /**
    * Xóa toàn bộ dữ liệu trong TẤT CẢ các bảng của DB này.
-   * Hữu ích khi người dùng đăng xuất.
+   * Rất quan trọng và cần được gọi khi người dùng đăng xuất.
    */
   async clearAllData(): Promise<void> {
     await Promise.all([
@@ -117,7 +126,7 @@ class LocalWorkoutDatabase extends Dexie {
   }
 }
 
-// Xuất một instance duy nhất của database để sử dụng trong toàn bộ ứng dụng
+// Xuất một instance duy nhất (singleton) của database để sử dụng trong toàn bộ ứng dụng
 export const localWorkoutDB = new LocalWorkoutDatabase();
 
 // **QUAN TRỌNG**: Tương tự như localDB cho từ vựng, bạn nên gọi `localWorkoutDB.clearAllData()`
