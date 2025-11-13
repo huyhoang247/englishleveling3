@@ -116,14 +116,12 @@ const calculateVolume = (sets, weight) => sets.reduce((total, set) => total + (s
 // --- Main Application Component ---
 export default function WorkoutApp({ onClose }) {
     const [exercises] = useState(initialExercises);
-    // <<< THAY ĐỔI: State khởi tạo là mảng rỗng, sẽ được load từ IndexedDB
     const [workoutHistory, setWorkoutHistory] = useState<IWorkoutHistoryEntry[]>([]);
     const [myWorkoutPlan, setMyWorkoutPlan] = useState<IWorkoutPlanItem[]>([]);
     const [currentView, setCurrentView] = useState('dailyTracking');
     const [configuringExercise, setConfiguringExercise] = useState(null);
-    const [isLoading, setIsLoading] = useState(true); // <<< MỚI: State cho trạng thái loading
+    const [isLoading, setIsLoading] = useState(true);
 
-    // <<< MỚI: Tải dữ liệu từ IndexedDB khi component mount
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -150,24 +148,21 @@ export default function WorkoutApp({ onClose }) {
         [myWorkoutPlan, exercises]
     );
 
-    // <<< THAY ĐỔI: Hàm cập nhật cả state và IndexedDB
     const handleAddExerciseToPlan = async (settings: IWorkoutPlanItem) => {
         if (!myWorkoutPlan.some(p => p.exerciseId === settings.exerciseId)) {
             const newPlan = [...myWorkoutPlan, settings];
             setMyWorkoutPlan(newPlan);
-            await localWorkoutDB.saveWorkoutPlan(newPlan); // Lưu vào DB
+            await localWorkoutDB.saveWorkoutPlan(newPlan);
         }
         setConfiguringExercise(null);
     };
     
-    // <<< THAY ĐỔI: Hàm cập nhật cả state và IndexedDB
     const handleRemoveFromMyWorkout = async (exerciseId: number) => {
         const newPlan = myWorkoutPlan.filter(p => p.exerciseId !== exerciseId);
         setMyWorkoutPlan(newPlan);
-        await localWorkoutDB.saveWorkoutPlan(newPlan); // Lưu vào DB
+        await localWorkoutDB.saveWorkoutPlan(newPlan);
     };
 
-    // <<< THAY ĐỔI: Hàm cập nhật cả state và IndexedDB
     const handleLogWorkout = async (newWorkout: Omit<IWorkoutHistoryEntry, 'id'>) => {
         const newId = await localWorkoutDB.addWorkoutHistoryEntry(newWorkout as IWorkoutHistoryEntry);
         if (newId) {
@@ -175,7 +170,6 @@ export default function WorkoutApp({ onClose }) {
         }
     };
     
-    // <<< THAY ĐỔI: Hàm cập nhật cả state và IndexedDB
     const handleDeleteWorkout = async (id: number) => {
         await localWorkoutDB.deleteWorkoutHistoryEntry(id);
         setWorkoutHistory(prev => prev.filter(workout => workout.id !== id));
@@ -188,7 +182,8 @@ export default function WorkoutApp({ onClose }) {
             'myWorkout': { workoutList: myWorkoutList, onRemove: handleRemoveFromMyWorkout },
             'history': { history: workoutHistory, exercises, onDelete: handleDeleteWorkout },
             'progress': { history: workoutHistory, exercises },
-            'dailyTracking': { myWorkoutList, onLogWorkout: handleLogWorkout, onNavigateToLibrary: () => setCurrentView('library'), workoutHistory }
+            // <<< THAY ĐỔI: Thêm prop `onRemove` cho DailyTracking
+            'dailyTracking': { myWorkoutList, onLogWorkout: handleLogWorkout, onNavigateToLibrary: () => setCurrentView('library'), workoutHistory, onRemove: handleRemoveFromMyWorkout }
         };
 
         switch (currentView) {
@@ -200,7 +195,6 @@ export default function WorkoutApp({ onClose }) {
         }
     };
 
-    // <<< MỚI: Hiển thị màn hình loading khi đang tải dữ liệu
     if (isLoading) {
         return (
             <div className="bg-gray-900 text-white flex items-center justify-center h-full">
@@ -214,18 +208,11 @@ export default function WorkoutApp({ onClose }) {
 
     return (
         <div className="bg-gray-900 text-white font-sans flex flex-col h-full max-w-4xl mx-auto overflow-hidden">
-            {/* Header is a fixed block at the top */}
             <Header onClose={onClose} />
-
-            {/* The main content area grows to fill available space and is scrollable */}
             <main className="flex-1 overflow-y-auto p-4 pb-24 md:pb-4">
                 {renderView()}
             </main>
-
-            {/* The NavBar is now fixed and floats above the content */}
             <NavBar currentView={currentView} setCurrentView={setCurrentView} />
-            
-            {/* Modals are portalled outside the main layout flow */}
             {configuringExercise && (
                 <ExerciseSettingsModal exercise={configuringExercise} onClose={() => setConfiguringExercise(null)} onSubmit={handleAddExerciseToPlan} />
             )}
@@ -235,21 +222,17 @@ export default function WorkoutApp({ onClose }) {
 
 // --- Sub-components ---
 
-// CHANGED: Header component updated to remove title and add CoinDisplay
 const Header = ({ onClose }) => {
     return (
         <header className="flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
             <div className="flex-shrink-0">
-                 {/* Using the imported BackButton component */}
                  <BackButton onClick={onClose} label="Thoát" title="Đóng trình theo dõi" />
             </div>
-            {/* Title removed, CoinDisplay added */}
             <CoinDisplay displayedCoins={12345} isStatsFullscreen={false} />
         </header>
     );
 };
 
-// CHANGED: NavBar completely redesigned for a modern, full-width footer look
 const NavBar = ({ currentView, setCurrentView }) => {
     const navItems = [
         { id: 'dailyTracking', label: 'Hôm nay', icon: CheckSquareIcon },
@@ -261,7 +244,6 @@ const NavBar = ({ currentView, setCurrentView }) => {
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 md:hidden z-50">
-            {/* Use padding-bottom with safe-area-inset-bottom for compatibility with modern phones */}
             <div className="flex justify-around items-center px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
                 {navItems.map(item => (
                     (() => {
@@ -272,9 +254,7 @@ const NavBar = ({ currentView, setCurrentView }) => {
                                 onClick={() => setCurrentView(item.id)} 
                                 className="group relative flex-1 flex flex-col items-center justify-center text-center h-14 transition-colors duration-300"
                             >
-                                {/* Active indicator line */}
                                 <div className={`absolute top-0 h-1 w-8 bg-emerald-400 rounded-full transition-all duration-300 ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}></div>
-                                
                                 <item.icon 
                                     className={`w-6 h-6 mb-0.5 transition-colors duration-300 
                                         ${isActive ? 'text-emerald-400' : 'text-gray-500 group-hover:text-gray-300'}`
@@ -293,7 +273,6 @@ const NavBar = ({ currentView, setCurrentView }) => {
         </nav>
     );
 };
-
 
 const SimpleSVGChart = ({ data, yKey, strokeColor, title }) => {
     if (data.length < 2) return null;
@@ -474,8 +453,14 @@ const MyWorkout = ({ workoutList, onRemove }) => (
     </Card>
 );
 
-const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, workoutHistory }) => {
+
+// <<< ======================================================= >>>
+// <<< ============ START OF MODIFIED COMPONENT ============ >>>
+// <<< ======================================================= >>>
+
+const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, workoutHistory, onRemove }) => {
     const [loggingExercise, setLoggingExercise] = useState(null);
+    const [viewingExercise, setViewingExercise] = useState(null); // State for image zoom modal
 
     const findLastWorkout = (exerciseId) => {
         return workoutHistory
@@ -483,35 +468,67 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, worko
             .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
     };
 
-    if (myWorkoutList.length === 0) { return <Card><div className="text-center py-10"><h2 className="text-2xl font-bold mb-2">Chào mừng bạn!</h2><p className="text-gray-400 mb-6">Bạn chưa có bài tập nào. Hãy bắt đầu bằng cách thêm một vài bài tập từ thư viện.</p><button onClick={onNavigateToLibrary} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center transition duration-300 mx-auto">Đến thư viện</button></div></Card>; }
+    if (myWorkoutList.length === 0) { 
+        return (
+            <Card>
+                <div className="text-center py-10">
+                    <h2 className="text-2xl font-bold mb-2">Chào mừng bạn!</h2>
+                    <p className="text-gray-400 mb-6">Bạn chưa có bài tập nào. Hãy bắt đầu bằng cách thêm một vài bài tập từ thư viện.</p>
+                    <button onClick={onNavigateToLibrary} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center transition duration-300 mx-auto">
+                        Đến thư viện
+                    </button>
+                </div>
+            </Card>
+        );
+    }
+    
     return (
         <>
              <Card>
                 <h2 className="card-title"><CheckSquareIcon className="mr-2"/>Theo dõi hàng ngày</h2>
                 <p className="text-gray-400 mt-1">Chọn một bài tập để ghi lại buổi tập hôm nay và xem tiến độ.</p>
-                <div className="space-y-3 mt-6">
+                <div className="space-y-4 mt-6">
                     {myWorkoutList.map(ex => {
                         const lastWorkout = findLastWorkout(ex.exerciseId);
                         const lastVolume = lastWorkout ? calculateVolume(lastWorkout.sets, lastWorkout.weight) : 0;
                         const lastWeight = lastWorkout ? lastWorkout.weight : 0;
 
                         return (
-                            <div key={ex.exerciseId} className="bg-gray-700 rounded-lg p-3 hover:bg-gray-600 transition-colors">
+                            <div key={ex.exerciseId} className="bg-gray-700 rounded-lg p-4 relative hover:bg-gray-600 transition-colors">
+                                {/* --- NEW: Absolute positioned buttons --- */}
+                                <button 
+                                    onClick={() => setViewingExercise(ex)} 
+                                    className="absolute top-2 left-2 p-1 text-gray-400 hover:text-white transition-colors z-10"
+                                    aria-label={`Xem chi tiết ${ex.name}`}
+                                >
+                                    <ExpandIcon className="w-5 h-5" />
+                                </button>
+                                <button 
+                                    onClick={() => onRemove(ex.exerciseId)}
+                                    className="absolute top-2 right-2 p-1 text-gray-500 hover:text-red-500 transition-colors z-10"
+                                    aria-label={`Xóa ${ex.name} khỏi kế hoạch`}
+                                >
+                                    <Trash2Icon className="w-5 h-5" />
+                                </button>
+                                
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
-                                       <div className="text-emerald-400 w-12 h-12 mr-4">{ex.icon}</div>
+                                       <div className="text-emerald-400 w-12 h-12 mr-4 flex-shrink-0">{ex.icon}</div>
                                        <div>
                                             <p className="font-bold text-lg">{ex.name}</p>
-                                            <div className="flex items-center gap-x-3 text-xs text-gray-300 mt-1">
-                                                <span className="flex items-center"><TargetIcon className="w-3 h-3 mr-1"/>{ex.sets}x{ex.reps} @ {ex.weight}kg</span>
-                                                <span className="flex items-center"><ClockIcon className="w-3 h-3 mr-1"/>{ex.rest}s nghỉ</span>
+                                            {/* --- CHANGED: Stats are now in a flex-col container --- */}
+                                            <div className="flex flex-col items-start gap-y-1 text-xs text-gray-300 mt-1">
+                                                <span className="flex items-center"><TargetIcon className="w-3 h-3 mr-1.5"/>{ex.sets}x{ex.reps} @ {ex.weight}kg</span>
+                                                <span className="flex items-center"><ClockIcon className="w-3 h-3 mr-1.5"/>{ex.rest}s nghỉ</span>
                                             </div>
                                        </div>
                                     </div>
-                                    <button onClick={() => setLoggingExercise(ex)} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg text-sm">Bắt đầu</button>
+                                    <button onClick={() => setLoggingExercise(ex)} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg text-sm ml-2 flex-shrink-0">
+                                        Bắt đầu
+                                    </button>
                                 </div>
                                 {lastWorkout && (
-                                    <div className="mt-3 pt-3 border-t border-gray-600 text-xs text-gray-400 flex justify-around">
+                                    <div className="mt-4 pt-3 border-t border-gray-600 text-xs text-gray-400 flex flex-wrap justify-around gap-x-4 gap-y-1">
                                         <p><strong className="text-gray-200">Lần trước:</strong> {new Date(lastWorkout.date).toLocaleDateString()}</p>
                                         <p><strong className="text-gray-200">Tổng KL:</strong> {lastVolume} kg</p>
                                         <p><strong className="text-gray-200">Mức tạ:</strong> {lastWeight} kg</p>
@@ -522,6 +539,9 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, worko
                     })}
                 </div>
             </Card>
+            {/* --- NEW: Render Image Zoom Modal --- */}
+            <ImageDetailModal exercise={viewingExercise} onClose={() => setViewingExercise(null)} />
+
             {loggingExercise && (
                 <LoggingModal 
                     exercise={loggingExercise} 
@@ -536,7 +556,11 @@ const DailyTracking = ({ myWorkoutList, onLogWorkout, onNavigateToLibrary, worko
     );
 };
 
-// --- UPDATED: LoggingModal with compact checklist view ---
+// <<< ======================================================= >>>
+// <<< ============= END OF MODIFIED COMPONENT ============= >>>
+// <<< ======================================================= >>>
+
+
 const LoggingModal = ({ exercise, onClose, onSubmit }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
