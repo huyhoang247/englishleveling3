@@ -1,7 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
+// <<< MỚI: Import service DB local và các interfaces
+import { localWorkoutDB, IWorkoutPlanItem, IWorkoutHistoryEntry } from './local-workout-db.ts'; 
+
 // ADDED: Import BackButton and CoinDisplay components
 import BackButton from './ui/back-button.tsx'; 
-import CoinDisplay from './ui/display/coin-display.tsx'; // Assuming coin-display.tsx is in the same folder
+import CoinDisplay from './ui/display/coin-display.tsx';
 
 // --- SVG Icons (No lucide-react) ---
 const ExpandIcon = (props) => (
@@ -107,21 +110,37 @@ const initialExercises = [
     { id: 4, name: 'Wrist Curl', category: 'Arms', icon: <WristCurlIcon /> },
 ];
 
-const initialWorkoutHistory = [];
-
 // --- Helper Functions ---
 const calculateVolume = (sets, weight) => sets.reduce((total, set) => total + (set.reps * weight), 0);
 
 // --- Main Application Component ---
 export default function WorkoutApp({ onClose }) {
     const [exercises] = useState(initialExercises);
-    const [workoutHistory, setWorkoutHistory] = useState(initialWorkoutHistory);
-    const [myWorkoutPlan, setMyWorkoutPlan] = useState([
-        { exerciseId: 2, sets: 4, reps: 8, rest: 90, weight: 60 },
-        { exerciseId: 1, sets: 3, reps: 10, rest: 60, weight: 50 },
-    ]);
+    // <<< THAY ĐỔI: State khởi tạo là mảng rỗng, sẽ được load từ IndexedDB
+    const [workoutHistory, setWorkoutHistory] = useState<IWorkoutHistoryEntry[]>([]);
+    const [myWorkoutPlan, setMyWorkoutPlan] = useState<IWorkoutPlanItem[]>([]);
     const [currentView, setCurrentView] = useState('dailyTracking');
     const [configuringExercise, setConfiguringExercise] = useState(null);
+    const [isLoading, setIsLoading] = useState(true); // <<< MỚI: State cho trạng thái loading
+
+    // <<< MỚI: Tải dữ liệu từ IndexedDB khi component mount
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const [plan, history] = await Promise.all([
+                    localWorkoutDB.getWorkoutPlan(),
+                    localWorkoutDB.getWorkoutHistory()
+                ]);
+                setMyWorkoutPlan(plan);
+                setWorkoutHistory(history);
+            } catch (error) {
+                console.error("Failed to load workout data from DB:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadData();
+    }, []);
     
     const myWorkoutList = useMemo(() => 
         myWorkoutPlan.map(plan => {
@@ -131,22 +150,34 @@ export default function WorkoutApp({ onClose }) {
         [myWorkoutPlan, exercises]
     );
 
-    const handleAddExerciseToPlan = (settings) => {
+    // <<< THAY ĐỔI: Hàm cập nhật cả state và IndexedDB
+    const handleAddExerciseToPlan = async (settings: IWorkoutPlanItem) => {
         if (!myWorkoutPlan.some(p => p.exerciseId === settings.exerciseId)) {
-            setMyWorkoutPlan(prev => [...prev, settings]);
+            const newPlan = [...myWorkoutPlan, settings];
+            setMyWorkoutPlan(newPlan);
+            await localWorkoutDB.saveWorkoutPlan(newPlan); // Lưu vào DB
         }
         setConfiguringExercise(null);
     };
     
-    const handleRemoveFromMyWorkout = (exerciseId) => {
-        setMyWorkoutPlan(prev => prev.filter(p => p.exerciseId !== exerciseId));
+    // <<< THAY ĐỔI: Hàm cập nhật cả state và IndexedDB
+    const handleRemoveFromMyWorkout = async (exerciseId: number) => {
+        const newPlan = myWorkoutPlan.filter(p => p.exerciseId !== exerciseId);
+        setMyWorkoutPlan(newPlan);
+        await localWorkoutDB.saveWorkoutPlan(newPlan); // Lưu vào DB
     };
 
-    const handleLogWorkout = (newWorkout) => {
-        setWorkoutHistory(prev => [...prev, { ...newWorkout, id: Date.now() }]);
+    // <<< THAY ĐỔI: Hàm cập nhật cả state và IndexedDB
+    const handleLogWorkout = async (newWorkout: Omit<IWorkoutHistoryEntry, 'id'>) => {
+        const newId = await localWorkoutDB.addWorkoutHistoryEntry(newWorkout as IWorkoutHistoryEntry);
+        if (newId) {
+            setWorkoutHistory(prev => [...prev, { ...newWorkout, id: newId }]);
+        }
     };
     
-    const handleDeleteWorkout = (id) => {
+    // <<< THAY ĐỔI: Hàm cập nhật cả state và IndexedDB
+    const handleDeleteWorkout = async (id: number) => {
+        await localWorkoutDB.deleteWorkoutHistoryEntry(id);
         setWorkoutHistory(prev => prev.filter(workout => workout.id !== id));
     };
 
@@ -168,6 +199,18 @@ export default function WorkoutApp({ onClose }) {
             case 'dailyTracking': default: return <DailyTracking {...viewProps.dailyTracking} />;
         }
     };
+
+    // <<< MỚI: Hiển thị màn hình loading khi đang tải dữ liệu
+    if (isLoading) {
+        return (
+            <div className="bg-gray-900 text-white flex items-center justify-center h-full">
+                <div className="text-center">
+                    <DumbbellIcon className="w-12 h-12 text-emerald-400 animate-bounce mx-auto" />
+                    <p className="mt-4 text-lg font-semibold">Đang tải dữ liệu tập luyện...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-gray-900 text-white font-sans flex flex-col h-full max-w-4xl mx-auto overflow-hidden">
@@ -286,6 +329,7 @@ const SimpleSVGChart = ({ data, yKey, strokeColor, title }) => {
         </div>
     )
 };
+
 const ProgressTracker = ({ history, exercises }) => {
     const [selectedExerciseId, setSelectedExerciseId] = useState(exercises[0]?.id || '');
     const progressData = useMemo(() => {
