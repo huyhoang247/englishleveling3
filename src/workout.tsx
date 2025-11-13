@@ -96,7 +96,6 @@ const initialExercises = [
     { id: 3, name: 'Deadlift', category: 'Back', icon: <DeadliftIcon /> },
     { id: 4, name: 'Wrist Curl', category: 'Arms', icon: <WristCurlIcon /> },
 ];
-// Sửa hàm tính volume để phù hợp với interface mới
 const calculateVolume = (sets: ICompletedSet[], weight: number) => sets.reduce((total, set) => total + (set.reps * weight), 0);
 
 // --- Main Application Component ---
@@ -361,7 +360,7 @@ const ExerciseSettingsModal = ({ exercise, onClose, onSubmit }) => {
     const [weight, setWeight] = useState(20);
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSubmit({ exerciseId: exercise.id, sets, reps, weight }); // Bỏ 'rest'
+        onSubmit({ exerciseId: exercise.id, sets, reps, weight });
     };
 
     return (
@@ -536,10 +535,9 @@ const DailyTracking = ({ myWorkoutList, onSaveLog, onNavigateToLibrary, workoutH
                     existingLog={loggingExercise.todaysWorkout} 
                     onClose={() => {
                         setLoggingExercise(null);
-                        // Tải lại để cập nhật trạng thái "Tiếp tục/Hoàn thành"
                         const updatedLog = findTodaysWorkout(loggingExercise.exerciseId);
                         if (updatedLog) {
-                           handleSaveWorkoutLog(updatedLog); // Kích hoạt re-render
+                           handleSaveWorkoutLog(updatedLog);
                         }
                     }} 
                     onSave={onSaveLog} 
@@ -555,54 +553,44 @@ const formatTime = (seconds) => {
     return `${mins}:${secs}`;
 };
 
-const REST_TIME_SECONDS = 90; // Thời gian nghỉ mặc định
+const REST_TIME_SECONDS = 90; // Thời gian nghỉ mục tiêu
 
 const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
     const [sessionState, setSessionState] = useState<'setup' | 'training' | 'resting' | 'finished'>('setup');
-    
-    // Config cho buổi tập
     const [sessionConfig, setSessionConfig] = useState({
         sets: existingLog?.sets?.length || exercise.sets,
-        reps: exercise.reps, // Reps mục tiêu, có thể chỉnh trong lúc tập
+        reps: exercise.reps,
         weight: existingLog?.weight || exercise.weight,
     });
-    
-    // Dữ liệu thực tế
     const [loggedSets, setLoggedSets] = useState<ICompletedSet[]>(existingLog?.sets || []);
     const [currentSetReps, setCurrentSetReps] = useState(exercise.reps);
     
-    const [timer, setTimer] = useState(0);
-    const [restTimer, setRestTimer] = useState(REST_TIME_SECONDS);
+    const [trainingTimer, setTrainingTimer] = useState(0);
+    const [elapsedRestTime, setElapsedRestTime] = useState(0);
     const intervalRef = useRef<number | null>(null);
 
     const currentSetIndex = loggedSets.length;
     const isLastSet = currentSetIndex === sessionConfig.sets - 1;
 
     useEffect(() => {
-        return () => { // Cleanup khi component unmount
+        return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, []);
 
-    const startTimer = () => {
+    const startTrainingTimer = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
-        setTimer(0);
+        setTrainingTimer(0);
         intervalRef.current = window.setInterval(() => {
-            setTimer(prev => prev + 1);
+            setTrainingTimer(prev => prev + 1);
         }, 1000);
     };
 
     const startRestTimer = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
-        setRestTimer(REST_TIME_SECONDS);
+        setElapsedRestTime(0);
         intervalRef.current = window.setInterval(() => {
-            setRestTimer(prev => {
-                if (prev <= 1) {
-                    if (intervalRef.current) clearInterval(intervalRef.current);
-                    return 0;
-                }
-                return prev - 1;
-            });
+            setElapsedRestTime(prev => prev + 1);
         }, 1000);
     };
     
@@ -611,13 +599,12 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
     };
 
     const handleStartWorkout = () => {
-        // Nếu tiếp tục, đi thẳng vào set tiếp theo
         if (loggedSets.length > 0 && loggedSets.length < sessionConfig.sets) {
              setSessionState('resting');
              startRestTimer();
         } else {
              setSessionState('training');
-             startTimer();
+             startTrainingTimer();
         }
     };
 
@@ -625,8 +612,8 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
         stopTimers();
         const newSet: ICompletedSet = {
             reps: currentSetReps,
-            duration: timer,
-            rest: 0, // Sẽ được cập nhật khi set tiếp theo bắt đầu
+            duration: trainingTimer,
+            rest: 0,
         };
         const updatedLoggedSets = [...loggedSets, newSet];
         setLoggedSets(updatedLoggedSets);
@@ -643,9 +630,8 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
     
     const handleNextSet = async () => {
         stopTimers();
-        const restDuration = REST_TIME_SECONDS - restTimer;
+        const restDuration = elapsedRestTime;
 
-        // Cập nhật thời gian nghỉ cho set trước đó
         const updatedLoggedSets = [...loggedSets];
         if (updatedLoggedSets.length > 0) {
             updatedLoggedSets[updatedLoggedSets.length - 1].rest = restDuration;
@@ -654,10 +640,9 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
 
         await autoSave(updatedLoggedSets);
         
-        // Reset reps cho set mới và bắt đầu
         setCurrentSetReps(sessionConfig.reps);
         setSessionState('training');
-        startTimer();
+        startTrainingTimer();
     };
 
     const autoSave = async (currentSets: ICompletedSet[]) => {
@@ -678,6 +663,8 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
     const renderContent = () => {
         if (sessionState === 'training' || sessionState === 'resting' || sessionState === 'finished') {
             const isResting = sessionState === 'resting';
+            const restProgress = Math.min(1, elapsedRestTime / REST_TIME_SECONDS);
+
             return (
                  <div className="p-6 flex flex-col items-center">
                     <div className="w-full text-center mb-4">
@@ -693,24 +680,29 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
                         </div>
                     ) : (
                         <div className="relative w-48 h-48 flex items-center justify-center my-4">
-                            {isResting && (
-                               <svg className="absolute w-full h-full" viewBox="0 0 100 100">
-                                  <circle className="text-gray-700" strokeWidth="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
-                                  <circle className="text-emerald-400" strokeWidth="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50"
-                                     strokeDasharray={2 * Math.PI * 45}
-                                     strokeDashoffset={2 * Math.PI * 45 * (1 - restTimer / REST_TIME_SECONDS)}
-                                     style={{ transition: 'stroke-dashoffset 1s linear' }}
-                                     transform="rotate(-90 50 50)"
-                                  />
-                               </svg>
-                            )}
+                            <svg className="absolute w-full h-full" viewBox="0 0 100 100">
+                                <circle className="text-gray-700" strokeWidth="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
+                                {isResting && (
+                                    <circle className="text-emerald-400" strokeWidth="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50"
+                                        strokeDasharray={2 * Math.PI * 45}
+                                        strokeDashoffset={2 * Math.PI * 45 * (1 - restProgress)}
+                                        style={{ transition: 'stroke-dashoffset 0.5s linear' }}
+                                        transform="rotate(-90 50 50)"
+                                    />
+                                )}
+                            </svg>
                             <div className="text-center">
                                 <p className="text-sm font-bold uppercase tracking-wider text-gray-400">
                                     {isResting ? 'NGHỈ' : 'TẬP'}
                                 </p>
-                                <p className="text-6xl font-mono font-bold text-white">
-                                    {isResting ? formatTime(restTimer) : formatTime(timer)}
+                                <p className="text-5xl font-mono font-bold text-white">
+                                    {isResting ? formatTime(elapsedRestTime) : formatTime(trainingTimer)}
                                 </p>
+                                {isResting && (
+                                    <p className="text-base text-gray-400 mt-1">
+                                        Mục tiêu: {formatTime(REST_TIME_SECONDS)}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     )}
@@ -742,7 +734,6 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
             );
         }
 
-        // Default: 'setup' state
         return (
             <div>
                 <div className="p-6 space-y-6">
