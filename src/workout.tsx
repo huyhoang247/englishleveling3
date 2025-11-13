@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 // <<< MỚI: Import service DB local và các interfaces
-import { localWorkoutDB, IWorkoutPlanItem, IWorkoutHistoryEntry } from './local-workout-db.ts'; 
+import { localWorkoutDB, IWorkoutPlanItem, IWorkoutHistoryEntry } from './local-data/local-workout-db.ts'; 
 
 // ADDED: Import BackButton and CoinDisplay components
 import BackButton from './ui/back-button.tsx'; 
