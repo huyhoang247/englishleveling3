@@ -170,7 +170,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     if (['vocabularyGame', 'quiz', 'vocaMatchGame'].includes(currentView)) {
        setCurrentView('practices');
        setSelectedPractice(null);
-    } else if (currentView === 'wordChainGame' || currentView === 'analysis' || currentView === 'phraseView') {
+    } else if (currentView === 'wordChainGame' || currentView === 'analysis' || currentView === 'exampleView') {
        setCurrentView('main');
     } else if (currentView === 'practices') {
       setCurrentView('quizTypes');
