@@ -53,7 +53,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   // --- END: LOGIC ĐIỀU KHIỂN NAVBAR ---
 
   // Logic render các màn hình fullscreen
-  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame', 'phraseView'].includes(currentView)) {
+  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame', 'exampleView'].includes(currentView)) {
       let ViewComponent = null;
 
       switch(currentView) {
@@ -72,7 +72,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
           case 'analysis':
               ViewComponent = <AnalysisDashboard onGoBack={goHome} />;
               break;
-          case 'phraseView':
+          case 'exampleView':
               ViewComponent = <PhraseViewer onGoBack={goBack} />;
               break;
       }
@@ -107,11 +107,11 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               <h3 className="text-lg font-bold text-gray-800 group-hover:text-purple-600 transition-colors">Word Chain</h3>
             </button>
             <button
-              onClick={() => setCurrentView('phraseView')}
+              onClick={() => setCurrentView('exampleView')}
               className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-green-400 group"
             >
-              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/equipment-icon.webp" alt="Phrases" className="h-20 w-20 mb-3" />
-              <h3 className="text-lg font-bold text-gray-800 group-hover:text-green-600 transition-colors">Phrase</h3>
+              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/example-icon.webp" alt="Examples" className="h-20 w-20 mb-3" />
+              <h3 className="text-lg font-bold text-gray-800 group-hover:text-green-600 transition-colors">Example</h3>
             </button>
             {/* --- START: ĐÃ KHÔI PHỤC NÚT EXAM --- */}
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
@@ -482,4 +482,3 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         </div>
     );
 };
-// --- END OF FILE: course-ui.tsx ---
