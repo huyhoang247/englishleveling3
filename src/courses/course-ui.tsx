@@ -170,8 +170,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
 }
 
 // --- START: UNIFIED HEADER COMPONENT ---
-const AnalysisIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg> );
-
 function AppHeader() {
   const { currentView, selectedType, goBack, goHome, setCurrentView } = useQuizApp();
   
@@ -205,7 +203,9 @@ function AppHeader() {
           </div>
           <div className="w-24 flex items-center justify-end gap-4">
               {currentView === 'main' ? (
-                <button onClick={() => setCurrentView('analysis')} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Xem phân tích"><AnalysisIcon /></button>
+                <button onClick={() => setCurrentView('analysis')} className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors" aria-label="Xem phân tích">
+                  <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/report.webp" alt="Analysis Report" className="h-6 w-6" />
+                </button>
               ) : (
                  <HomeButton onClick={goHome} />
               )}
