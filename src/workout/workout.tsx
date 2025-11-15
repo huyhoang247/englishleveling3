@@ -5,8 +5,8 @@ import { localWorkoutDB, IWorkoutPlanItem, IWorkoutHistoryEntry, ICompletedSet }
 import { initialExercises } from './workout-exercises.tsx';
 
 // Import các component UI
-import BackButton from './ui/back-button.tsx'; 
-import CoinDisplay from './ui/display/coin-display.tsx';
+import BackButton from '../ui/back-button.tsx'; 
+import CoinDisplay from '../ui/display/coin-display.tsx';
 
 // --- SVG Icons (No lucide-react) ---
 const ExpandIcon = (props) => (
