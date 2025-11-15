@@ -8,7 +8,7 @@ import {
 } from './profileService.ts'; // Import only mutation services
 import { auth } from '../firebase'; // Import auth to get current user info
 import { useGame } from '../GameContext.tsx'; // Import the useGame hook
-import WorkoutApp from '../workout.tsx'; // Import the Workout App component
+import WorkoutApp from '../workout/workout.tsx'; // Import the Workout App component
 
 // Định nghĩa các loại chế độ hiển thị
 type DisplayMode = 'fullscreen' | 'normal';
