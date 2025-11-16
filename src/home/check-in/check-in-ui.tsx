@@ -1,4 +1,4 @@
-// Filename: check-in-ui.tsx
+// Filename: check-in-ui.tsx (ĐÃ SỬA LỖI)
 
 import React from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx'; 
@@ -27,13 +27,11 @@ const DailyCheckInView = () => {
     <div className="bg-black/90 shadow-2xl overflow-hidden relative flex flex-col h-screen">
       {/* ================= SỬA LỖI TẠI ĐÂY ================= */}
       {/* 
-        - Bỏ chiều cao cố định `h-[53px]`.
-        - Thêm `pt-8` (hoặc một giá trị phù hợp) để đẩy nội dung header xuống dưới thanh trạng thái.
-        - Thêm `pb-2` để tạo khoảng đệm dưới cho nội dung header.
-        - Giữ `px-4` để nội dung không dính vào cạnh trái/phải.
+        - Thẻ header này bị thiếu padding ngang (px-4), khiến các nút bấm bị dính vào cạnh màn hình.
+        - Giữ lại `pt-8 pb-2` để tương thích với "tai thỏ" trên di động.
       */}
-      {/* DÒNG DƯỚI ĐÂY ĐÃ ĐƯỢC THAY ĐỔI: ĐÃ XÓA `px-4` */}
-      <header className="flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900/70 backdrop-blur-sm border-b border-white/10 z-20 pt-8 pb-2">
+      {/* DÒNG DƯỚI ĐÂY ĐÃ ĐƯỢC THAY ĐỔI: Thêm `px-4` */}
+      <header className="flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900/70 backdrop-blur-sm border-b border-white/10 z-20 pt-8 pb-2 px-4">
         <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
           <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
