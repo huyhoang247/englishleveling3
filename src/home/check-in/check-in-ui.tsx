@@ -32,7 +32,8 @@ const DailyCheckInView = () => {
         - Thêm `pb-2` để tạo khoảng đệm dưới cho nội dung header.
         - Giữ `px-4` để nội dung không dính vào cạnh trái/phải.
       */}
-      <header className="flex-shrink-0 w-full box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 z-20 pt-8 pb-2">
+      {/* DÒNG DƯỚI ĐÂY ĐÃ ĐƯỢC THAY ĐỔI: ĐÃ XÓA `px-4` */}
+      <header className="flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900/70 backdrop-blur-sm border-b border-white/10 z-20 pt-8 pb-2">
         <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
           <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
