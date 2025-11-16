@@ -24,13 +24,15 @@ const DailyCheckInView = () => {
   const animatedCoins = useAnimateValue(coins, 500);
 
   return (
-    // ================= SỬA LỖI GIAO DIỆN TẠI ĐÂY =================
-    // Quay lại sử dụng div gốc chiếm toàn bộ màn hình (h-screen) và không có padding.
     <div className="bg-black/90 shadow-2xl overflow-hidden relative flex flex-col h-screen">
-      {/* --- HEADER SẼ NẰM SÁT CẠNH TRÊN VÀ HAI BÊN --- */}
-      {/* Bỏ rounded-t-xl */}
-      <header className="flex-shrink-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 z-20">
-        {/* Padding px-4 này chỉ áp dụng cho nội dung bên trong header (nút Home và Coin) để chúng không bị dính vào cạnh */}
+      {/* ================= SỬA LỖI TẠI ĐÂY ================= */}
+      {/* 
+        - Bỏ chiều cao cố định `h-[53px]`.
+        - Thêm `pt-8` (hoặc một giá trị phù hợp) để đẩy nội dung header xuống dưới thanh trạng thái.
+        - Thêm `pb-2` để tạo khoảng đệm dưới cho nội dung header.
+        - Giữ `px-4` để nội dung không dính vào cạnh trái/phải.
+      */}
+      <header className="flex-shrink-0 w-full box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 z-20 pt-8 pb-2">
         <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
           <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
@@ -38,7 +40,6 @@ const DailyCheckInView = () => {
       </header>
       
       {/* --- CONTAINER NỘI DUNG CUỘN --- */}
-      {/* Bỏ rounded-b-xl */}
       <div className="flex-1 overflow-y-auto hide-scrollbar">
         {/* Thêm padding px-4 và pt-4 VÀO ĐÂY để nội dung bên trong không bị dính vào cạnh */}
         <div className="px-4 pt-4">
