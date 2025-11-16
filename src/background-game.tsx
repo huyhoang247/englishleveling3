@@ -263,7 +263,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         </div>
         
         {isCheckInOpen && (
-            <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center">
+            <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm">
                 <ErrorBoundary>
                     <DailyCheckIn onClose={toggleCheckIn} />
                 </ErrorBoundary>
