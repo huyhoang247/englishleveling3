@@ -72,7 +72,10 @@ interface CheckInProviderProps {
 }
 
 export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => {
-  const { loginStreak, lastCheckIn, isSyncingData, setIsSyncingData, playerStats } = useGame();
+  // ========================= SỬA LỖI TẠI ĐÂY =========================
+  // Lấy 'coins' trực tiếp, không qua 'playerStats' vì nó không tồn tại trong context
+  const { loginStreak, lastCheckIn, isSyncingData, setIsSyncingData, coins } = useGame();
+  // ====================================================================
 
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [animatingReward, setAnimatingReward] = useState<any>(null);
@@ -235,7 +238,9 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     showRewardAnimation, 
     animatingReward, 
     particles,
-    coins: playerStats.coins,
+    // ========================= SỬA LỖI TẠI ĐÂY =========================
+    coins, // Sử dụng biến 'coins' đã lấy trực tiếp
+    // ====================================================================
     countdown,
     nextStreakGoal, // Thêm vào context value
     claimReward, 
@@ -249,7 +254,9 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     showRewardAnimation, 
     animatingReward, 
     particles,
-    playerStats.coins,
+    // ========================= SỬA LỖI TẠI ĐÂY =========================
+    coins, // Cập nhật dependency
+    // ====================================================================
     countdown,
     nextStreakGoal, // Thêm vào dependencies
     claimReward, 
