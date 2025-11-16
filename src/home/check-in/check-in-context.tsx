@@ -55,6 +55,7 @@ interface CheckInContextType {
   showRewardAnimation: boolean;
   animatingReward: any;
   particles: Particle[];
+  coins: number;
   countdown: string; 
   nextStreakGoal: StreakMilestone | null; // Thêm mốc streak tiếp theo
   claimReward: (day: number) => Promise<void>;
@@ -71,7 +72,7 @@ interface CheckInProviderProps {
 }
 
 export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => {
-  const { loginStreak, lastCheckIn, isSyncingData, setIsSyncingData } = useGame();
+  const { loginStreak, lastCheckIn, isSyncingData, setIsSyncingData, playerStats } = useGame();
 
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [animatingReward, setAnimatingReward] = useState<any>(null);
@@ -234,6 +235,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     showRewardAnimation, 
     animatingReward, 
     particles,
+    coins: playerStats.coins,
     countdown,
     nextStreakGoal, // Thêm vào context value
     claimReward, 
@@ -247,6 +249,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     showRewardAnimation, 
     animatingReward, 
     particles,
+    playerStats.coins,
     countdown,
     nextStreakGoal, // Thêm vào dependencies
     claimReward, 
@@ -263,4 +266,4 @@ export const useCheckIn = (): CheckInContextType => {
     throw new Error('useCheckIn phải được sử dụng trong CheckInProvider');
   }
   return context;
-}; 
+};
