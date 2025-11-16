@@ -27,11 +27,11 @@ const DailyCheckInView = () => {
     <div className="bg-black/90 shadow-2xl overflow-hidden relative flex flex-col h-screen">
       {/* ================= SỬA LỖI TẠI ĐÂY ================= */}
       {/* 
-        - Thẻ header này bị thiếu padding ngang (px-4), khiến các nút bấm bị dính vào cạnh màn hình.
-        - Giữ lại `pt-8 pb-2` để tương thích với "tai thỏ" trên di động.
+        - Padding top (`pt-8`) được giảm xuống `pt-2` để bằng với padding bottom (`pb-2`).
+        - Lưu ý: Giao diện có thể bị che bởi "tai thỏ" trên một số điện thoại.
       */}
-      {/* DÒNG DƯỚI ĐÂY ĐÃ ĐƯỢC THAY ĐỔI: Thêm `px-4` */}
-      <header className="flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900/70 backdrop-blur-sm border-b border-white/10 z-20 pt-8 pb-2 px-4">
+      {/* DÒNG DƯỚI ĐÂY ĐÃ ĐƯỢC THAY ĐỔI: `pt-8` thành `pt-2` */}
+      <header className="flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900/70 backdrop-blur-sm border-b border-white/10 z-20 pt-2 pb-2 px-4">
         <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
           <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
