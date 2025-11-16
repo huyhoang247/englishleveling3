@@ -1,17 +1,10 @@
 // Filename: check-in-ui.tsx
 
 import React from 'react';
-import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx';
-// --- BƯỚC 1: IMPORT CÁC THÀNH PHẦN CẦN THIẾT TỪ UI KIT VÀ CONTEXT ---
-import { useGame } from '../../GameContext.tsx';
-import { useAnimateValue } from '../../ui/useAnimateValue.ts';
+import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import CardCapacityDisplay from '../../ui/display/card-capacity-display.tsx';
-import GemDisplay from '../../ui/display/gem-display.tsx';
-
-// --- COMPONENT ICON NHỎ (sao chép từ voca-chest-ui để đảm bảo tính nhất quán) ---
-const HomeIcon = ({ className = '' }: { className?: string }) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /></svg>);
-
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
+import HomeButton from '../../ui/home-button.tsx'; 
 
 // --- PROPS CHO COMPONENT CHÍNH ---
 interface DailyCheckInProps {
@@ -19,57 +12,39 @@ interface DailyCheckInProps {
 }
 
 // --- COMPONENT GIAO DIỆN (VIEW) ---
-// Component này chỉ nhận dữ liệu từ context và hiển thị, không chứa logic phức tạp.
+// Component này không có logic, chỉ nhận dữ liệu từ context và hiển thị.
 const DailyCheckInView = () => {
   const {
-    loginStreak, isSyncingData, canClaimToday, claimableDay,
+    loginStreak, isSyncingData, canClaimToday, claimableDay, coins,
     isClaiming, showRewardAnimation, animatingReward, particles, countdown,
-    nextStreakGoal,
+    nextStreakGoal, // Lấy mốc streak tiếp theo từ context
     claimReward, handleClose,
   } = useCheckIn();
-  
-  // Lấy dữ liệu tài nguyên người chơi từ GameContext để hiển thị trên header
-  const { playerStats } = useGame();
-  const animatedCoins = useAnimateValue(playerStats.coins, 500);
-  const animatedGems = useAnimateValue(playerStats.gems, 500);
+
+  const animatedCoins = useAnimateValue(coins, 500);
 
   return (
-    // BƯỚC 2: TÁI CẤU TRÚC LAYOUT TỔNG THỂ
-    // Sử dụng flex-col trên một div toàn màn hình để chứa header cố định và nội dung có thể cuộn.
     <div className="bg-black/90 shadow-2xl overflow-hidden relative flex flex-col h-screen">
-      
-      {/* BƯỚC 3: THÊM HEADER MỚI GIỐNG HỆT BÊN VOCA-CHEST */}
-      <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0 z-[1100]">
-        {/* Nút Home bên trái */}
-        <button 
-          onClick={handleClose} 
-          // Ẩn nút Home một cách mượt mà khi popup phần thưởng hiện ra
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 transition-all duration-300 ${showRewardAnimation ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-          title="Quay lại Trang Chính"
-        >
-            <HomeIcon className="w-5 h-5" />
-            <span className="text-sm font-semibold hidden sm:inline">Trang Chính</span>
-        </button>
-        {/* Nhóm hiển thị tài nguyên bên phải */}
+      {/* --- BƯỚC 1: TẠO HEADER MỚI GIỐNG VỚI VOCA-CHEST --- */}
+      <header className="flex-shrink-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 z-20">
+        <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
-            <CardCapacityDisplay current={playerStats.totalVocab} max={playerStats.capacity} />
-            <GemDisplay displayedGems={animatedGems} />
-            <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
+          <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />
         </div>
       </header>
-
-      {/* BƯỚC 4: GÓI TOÀN BỘ NỘI DUNG CŨ VÀO THẺ <main> CÓ THỂ CUỘN */}
-      {/* class "flex-1" làm nó chiếm hết không gian còn lại, "overflow-y-auto" cho phép cuộn */}
-      <main className="flex-1 overflow-y-auto px-4 pt-6 pb-4 hide-scrollbar">
-        
-        {/* Khối thông tin Streak (trước đây là header) */}
-        <div className="flex justify-center mb-6">
+      
+      {/* --- BƯỚC 2: ĐƯA TOÀN BỘ NỘI DUNG CŨ VÀO MỘT CONTAINER CÓ THỂ CUỘN --- */}
+      <div className="flex-1 overflow-y-auto px-4 pt-4 hide-scrollbar">
+        <div className="flex justify-center mt-2 mb-6">
+          {/* --- THAY ĐỔI 1.1: Loại bỏ backdrop-blur, thay bằng nền mờ đục hơn để dễ đọc --- */}
           <div className="bg-slate-900/80 rounded-xl px-4 py-4 w-full max-w-sm flex items-center gap-4 border border-slate-700 shadow-lg relative">
             <div className="flex-shrink-0">
               <div className="relative w-16 h-16">
                 <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 opacity-20 blur-md"></div>
                 <div className="w-16 h-16 relative overflow-hidden rounded-full border-2 border-slate-700">
                   <div className="absolute inset-0 bg-slate-900"></div>
+                  
+                  {/* --- THAY ĐỔI 2: Tối ưu hóa animation water fill bằng transform thay vì height --- */}
                   <div 
                     className="water-fill absolute bottom-0 left-0 w-full h-full bg-gradient-to-b from-cyan-400 to-blue-600 opacity-80" 
                     style={{ 
@@ -80,6 +55,7 @@ const DailyCheckInView = () => {
                     <div className="water-wave1"></div>
                     <div className="water-wave2"></div>
                   </div>
+                  
                   <div className="absolute inset-0 flex items-center justify-center z-10">
                     <span className="text-2xl font-bold text-white drop-shadow-lg">{loginStreak}</span>
                   </div>
@@ -97,20 +73,26 @@ const DailyCheckInView = () => {
                     </span>
                 </div>
             </div>
+            {/* HomeButton đã được chuyển lên header mới */}
           </div>
         </div>
-        
-        {/* Thanh tiến trình các ngày trong tuần */}
         <div className="mb-6">
           <div className="flex justify-between">
             {dailyRewards.map(reward => {
+              // ======================= SỬA LỖI TẠI ĐÂY (LẦN 1) =======================
               let isClaimed;
               if (canClaimToday) {
+                  // Nếu HÔM NAY CÓ THỂ điểm danh, thì một ngày được coi là "đã nhận"
+                  // chỉ khi nó nằm TRƯỚC ngày có thể nhận của hôm nay.
                   isClaimed = reward.day < claimableDay;
               } else {
+                  // Nếu HÔM NAY KHÔNG THỂ điểm danh (vì đã làm rồi), thì dùng logic cũ dựa trên streak.
+                  // Vì lúc này loginStreak đã được cập nhật chính xác cho ngày hôm nay.
                   const completedDaysInCycle = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0;
                   isClaimed = reward.day <= completedDaysInCycle;
               }
+              // =======================================================================
+              
               const isClaimable = canClaimToday && reward.day === claimableDay;
               let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 relative";
               if (isClaimed) dayClasses += " bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md";
@@ -120,8 +102,17 @@ const DailyCheckInView = () => {
                 <div key={reward.day} className="relative group">
                   <div className={dayClasses}>
                     <span className="font-bold z-10">{reward.day}</span>
-                    {isClaimable && (<><div className="absolute inset-0 rounded-full animate-ping opacity-30 bg-indigo-400"></div><div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-400 to-indigo-500 opacity-30 blur-sm"></div></>)}
-                    {isClaimed && (<div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900 flex items-center justify-center shadow-lg z-20"><svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg></div>)}
+                    {isClaimable && (
+                      <>
+                        <div className="absolute inset-0 rounded-full animate-ping opacity-30 bg-indigo-400"></div>
+                        <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-400 to-indigo-500 opacity-30 blur-sm"></div>
+                      </>
+                    )}
+                    {isClaimed && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900 flex items-center justify-center shadow-lg z-20">
+                        <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
+                      </div>
+                    )}
                   </div>
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30">
                     <div className="bg-slate-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">{reward.name}</div>
@@ -132,21 +123,27 @@ const DailyCheckInView = () => {
             })}
           </div>
         </div>
-        
-        {/* Danh sách chi tiết các phần thưởng */}
+      
+        {/* --- PHẦN DANH SÁCH PHẦN THƯỞNG (ĐÃ NẰM TRONG CONTAINER CUỘN) --- */}
         <div className="pb-6">
           <div className="grid grid-cols-1 gap-4">
-            {/* Phần thưởng mốc Streak */}
             {nextStreakGoal && (
                 <div className="group relative rounded-xl overflow-hidden bg-slate-800 border border-slate-700 shadow-lg p-4">
                     <div className="flex items-center gap-4">
                         <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900 shadow-lg p-1">
-                            <div className="w-full h-full rounded-lg flex items-center justify-center bg-slate-800/80"><div className="w-10 h-10">{nextStreakGoal.icon}</div></div>
+                            <div className="w-full h-full rounded-lg flex items-center justify-center bg-slate-800/80">
+                                <div className="w-10 h-10">{nextStreakGoal.icon}</div>
+                            </div>
                         </div>
                         <div className="flex-1">
                             <div className="mb-2 flex items-center gap-3">
                                 <div className="w-full h-3.5 bg-slate-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
-                                    <div className="relative h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" style={{ width: `${(loginStreak / nextStreakGoal.streakGoal) * 100}%` }}><div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-full"></div></div>
+                                    <div 
+                                        className="relative h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" 
+                                        style={{ width: `${(loginStreak / nextStreakGoal.streakGoal) * 100}%` }}
+                                    >
+                                        <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-full"></div>
+                                    </div>
                                 </div>
                                 <div className="bg-slate-900/50 border border-slate-700 rounded-md px-2 py-0.5 flex items-baseline">
                                     <span className="text-base font-bold text-white">{loginStreak}</span>
@@ -159,11 +156,21 @@ const DailyCheckInView = () => {
                 </div>
             )}
 
-            {/* Phần thưởng hàng ngày */}
             {dailyRewards.map(reward => {
+              // ======================= SỬA LỖI TẠI ĐÂY (LẦN 2) =======================
               let isClaimed;
-              if (canClaimToday) { isClaimed = reward.day < claimableDay; } 
-              else { const completedDaysInCycle = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0; isClaimed = reward.day <= completedDaysInCycle; }
+              if (canClaimToday) {
+                  // Nếu HÔM NAY CÓ THỂ điểm danh, thì một ngày được coi là "đã nhận"
+                  // chỉ khi nó nằm TRƯỚC ngày có thể nhận của hôm nay.
+                  isClaimed = reward.day < claimableDay;
+              } else {
+                  // Nếu HÔM NAY KHÔNG THỂ điểm danh (vì đã làm rồi), thì dùng logic cũ dựa trên streak.
+                  // Vì lúc này loginStreak đã được cập nhật chính xác cho ngày hôm nay.
+                  const completedDaysInCycle = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0;
+                  isClaimed = reward.day <= completedDaysInCycle;
+              }
+              // =======================================================================
+
               const isClaimable = canClaimToday && reward.day === claimableDay;
               
               return (
@@ -172,30 +179,56 @@ const DailyCheckInView = () => {
                 <div className={`relative flex items-center gap-4 p-4 rounded-xl ${ isClaimable ? 'bg-gradient-to-r from-slate-800 to-slate-800/95 border border-purple-500/50' : 'bg-slate-800'}`}>
                   <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg font-medium text-slate-300">Day {reward.day}</div>
                   <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
-                    <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}><div className="w-10 h-10">{reward.icon}</div></div>
+                    <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
+                      <div className="w-10 h-10">{reward.icon}</div>
+                    </div>
                   </div>
                   <div className="flex-1">
                     <h3 className="font-bold text-white">{reward.name}</h3>
                     <p className="text-slate-300 text-sm">x{reward.amount}</p>
                   </div>
-                  <button onClick={() => claimReward(reward.day)} disabled={!isClaimable || isClaiming || isSyncingData} className={`min-w-[90px] h-10 flex items-center justify-center py-2 px-3 rounded-lg font-semibold text-sm transition-all ${ isClaimed ? 'bg-green-600 text-white' : isClaimable ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white hover:shadow-indigo-400/20 hover:shadow-lg' : 'bg-slate-700 text-slate-400'}`}>
-                    { isClaimed ? 'Đã Nhận' : isClaiming && isClaimable ? (<svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>) : 'Claim' }
+                  <button 
+                    onClick={() => claimReward(reward.day)} 
+                    disabled={!isClaimable || isClaiming || isSyncingData} 
+                    className={`min-w-[90px] h-10 flex items-center justify-center py-2 px-3 rounded-lg font-semibold text-sm transition-all ${ 
+                      isClaimed ? 'bg-green-600 text-white' : 
+                      isClaimable ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white hover:shadow-indigo-400/20 hover:shadow-lg' : 
+                      'bg-slate-700 text-slate-400'
+                    }`}
+                  >
+                    { isClaimed ? 'Đã Nhận' : 
+                      isClaiming && isClaimable ? (
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : 'Claim' 
+                    }
                   </button>
-                  {isClaimed && (<div className="absolute inset-0 bg-slate-900/70 flex items-center justify-center"><div className="bg-green-600 rounded-full p-2 transform rotate-12"><svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg></div></div>)}
+                  {isClaimed && (
+                    /* --- THAY ĐỔI 1.2: Loại bỏ backdrop-blur trên lớp phủ đã nhận thưởng --- */
+                    <div className="absolute inset-0 bg-slate-900/70 flex items-center justify-center">
+                      <div className="bg-green-600 rounded-full p-2 transform rotate-12">
+                        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )})}
           </div>
         </div>
-      </main>
+      </div>
 
-      {/* Modal hiển thị khi nhận thưởng thành công */}
       {showRewardAnimation && animatingReward && (
+        /* --- THAY ĐỔI 1.3: Loại bỏ backdrop-blur trên modal nhận thưởng --- */
         <div className="fixed inset-0 bg-slate-900/90 flex items-center justify-center z-50">
           <div className="relative max-w-xs w-full bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-6 shadow-2xl animate-float">
             <div className="absolute -top-20 left-1/2 transform -translate-x-1/2">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 p-1 shadow-lg shadow-indigo-500/50">
-                <div className="w-full h-full rounded-full bg-slate-900/60 flex items-center justify-center"><div className="w-12 h-12 animate-pulse">{animatingReward.daily?.icon}</div></div>
+                <div className="w-full h-full rounded-full bg-slate-900/60 flex items-center justify-center">
+                  <div className="w-12 h-12 animate-pulse">{animatingReward.daily?.icon}</div>
+                </div>
               </div>
             </div>
             <div className="mt-14 text-center">
@@ -218,7 +251,7 @@ const DailyCheckInView = () => {
         </div>
       )}
 
-      {/* CSS nội tuyến cho các animation */}
+      {/* --- CSS --- */}
       <style jsx>{`
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
