@@ -97,7 +97,8 @@ const DailyCheckInView = () => {
                 return (
                   <div key={reward.day} className="relative group">
                     <div className={dayClasses}>
-                      <span className="font-bold z-10">{reward.day}</span>
+                      {/* === THAY ĐỔI 1: Áp dụng font-lilita cho số ngày trong vòng tròn === */}
+                      <span className="font-lilita z-10">{reward.day}</span>
                       {isClaimable && (
                         <>
                           <div className="absolute inset-0 rounded-full animate-ping opacity-30 bg-indigo-400"></div>
@@ -165,7 +166,8 @@ const DailyCheckInView = () => {
                 <div key={reward.day} className={`group relative rounded-xl overflow-hidden transition-all duration-300 ${isClaimed ? 'opacity-60' : 'hover:transform hover:scale-[1.02]'}`}>
                   {isClaimable && (<div className="absolute inset-0 rounded-xl animate-pulse-slow" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.6), transparent)`, backgroundSize: '200% 200%'}}></div>)}
                   <div className={`relative flex items-center gap-4 p-4 rounded-xl ${ isClaimable ? 'bg-gradient-to-r from-slate-800 to-slate-800/95 border border-purple-500/50' : 'bg-slate-800'}`}>
-                    <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg font-medium text-slate-300">Day {reward.day}</div>
+                    {/* === THAY ĐỔI 2: Áp dụng font-lilita và uppercase cho nhãn "Day X" === */}
+                    <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg uppercase font-lilita text-slate-300">Day {reward.day}</div>
                     <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
                       <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
                         <div className="w-10 h-10">{reward.icon}</div>
