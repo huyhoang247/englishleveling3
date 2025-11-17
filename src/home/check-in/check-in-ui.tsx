@@ -41,8 +41,8 @@ const DailyCheckInView = () => {
       {/* --- CONTAINER NỘI DUNG CUỘN --- */}
       <div className="flex-1 overflow-y-auto hide-scrollbar">
         {/* ================= SỬA LỖI TẠI ĐÂY ================= */}
-        {/* Thêm padding bottom (pb-24) để nội dung cuối cùng không bị thanh điều hướng che mất */}
-        <div className="px-4 pt-4 pb-24">
+        {/* Giảm padding bottom từ pb-24 xuống pb-16 để bớt khoảng trống */}
+        <div className="px-4 pt-4 pb-16">
           <div className="flex justify-center mt-2 mb-6">
             <div className="bg-slate-900/80 rounded-xl px-4 py-4 w-full max-w-sm flex items-center gap-4 border border-slate-700 shadow-lg relative">
               <div className="flex-shrink-0">
