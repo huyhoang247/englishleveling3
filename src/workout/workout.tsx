@@ -1,4 +1,4 @@
-import React, from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 // Import service DB local và các interfaces
 import { localWorkoutDB, IWorkoutPlanItem, IWorkoutHistoryEntry, ICompletedSet } from '../local-data/local-workout-db.ts'; 
 // Import danh sách bài tập
@@ -392,7 +392,7 @@ const ProgressDashboard = ({ history, exercises }) => {
         const exerciseFrequency = history.reduce((acc, workout) => {
             acc[workout.exerciseId] = (acc[workout.exerciseId] || 0) + 1;
             return acc;
-        }, {});
+        }, {} as Record<number, number>);
 
         const favoriteExerciseId = Object.keys(exerciseFrequency).length > 0
             ? Object.keys(exerciseFrequency).reduce((a, b) => exerciseFrequency[a] > exerciseFrequency[b] ? a : b)
