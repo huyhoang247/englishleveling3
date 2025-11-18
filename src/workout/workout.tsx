@@ -4,6 +4,9 @@ import { localWorkoutDB, IWorkoutPlanItem, IWorkoutHistoryEntry, ICompletedSet }
 // Import danh sách bài tập
 import { initialExercises } from './workout-exercises.tsx';
 
+// --- NEW: Import Recharts ---
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
 // Import các component UI
 import BackButton from '../ui/back-button.tsx'; 
 import CoinDisplay from '../ui/display/coin-display.tsx';
@@ -49,7 +52,7 @@ const CheckIcon = (props) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
 );
 const PlayIcon = (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
 );
 
 // --- Reusable Component: NumberStepper ---
@@ -256,39 +259,34 @@ const NavBar = ({ currentView, setCurrentView }) => {
     );
 };
 
-const SimpleSVGChart = ({ data, yKey, strokeColor, title }) => {
-    if (data.length < 2) return null;
-    const width = 300; const height = 150; const padding = 20;
-    const yValues = data.map(d => d[yKey]);
-    const minY = Math.min(...yValues); const maxY = Math.max(...yValues);
-    const getCoords = (y, i) => {
-        const x = (i / (data.length - 1)) * (width - padding * 2) + padding;
-        const yCoord = height - padding - ((y - minY) / (maxY - minY + 1e-9)) * (height - padding * 2);
-        return { x, y: yCoord };
-    };
-    const path = data.map((d, i) => {
-        const { x, y } = getCoords(d[yKey], i);
-        return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-    }).join(' ');
-    return (
-        <div className="mt-4">
-            <h4 className="text-center font-semibold text-gray-300 mb-2">{title}</h4>
-            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
-                <text x={padding-15} y={padding} dy="0.3em" fill="#9CA3AF" fontSize="10">{maxY.toFixed(0)}</text>
-                <text x={padding-15} y={height - padding} dy="0.3em" fill="#9CA3AF" fontSize="10">{minY.toFixed(0)}</text>
-                <path d={path} fill="none" stroke={strokeColor} strokeWidth="2" />
-                {data.map((d, i) => {
-                    const {x, y} = getCoords(d[yKey], i);
-                    return <circle key={i} cx={x} cy={y} r="3" fill={strokeColor} />
-                })}
-            </svg>
-            <div className="flex justify-between text-xs text-gray-400 mt-1 px-4">
-                <span>{data[0]?.date}</span>
-                <span>{data[data.length - 1]?.date}</span>
-            </div>
+// --- REPLACED: SimpleSVGChart is removed, replaced by ProgressChart using Recharts ---
+const ProgressChart = ({ data, title, charts }) => (
+    <div className="mt-4">
+        <h4 className="text-center font-semibold text-gray-300 mb-2">{title}</h4>
+        <div style={{ width: '100%', height: 250 }}>
+            <ResponsiveContainer>
+                <LineChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#4A5568" />
+                    <XAxis dataKey="date" stroke="#A0AEC0" fontSize={12} />
+                    <YAxis stroke="#A0AEC0" fontSize={12} />
+                    <Tooltip
+                        contentStyle={{
+                            backgroundColor: 'rgba(31, 41, 55, 0.8)', // bg-gray-800 with opacity
+                            borderColor: '#4A5568', // border-gray-600
+                            color: '#FFFFFF'
+                        }}
+                        labelStyle={{ color: '#A0AEC0' }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '14px' }} />
+                    {charts.map(chart => (
+                         <Line key={chart.key} type="monotone" dataKey={chart.key} name={chart.name} stroke={chart.color} strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
+                    ))}
+                </LineChart>
+            </ResponsiveContainer>
         </div>
-    )
-};
+    </div>
+);
+
 
 const ProgressTracker = ({ history, exercises }) => {
     const [selectedExerciseId, setSelectedExerciseId] = useState(exercises[0]?.id || '');
@@ -296,9 +294,9 @@ const ProgressTracker = ({ history, exercises }) => {
         if (!selectedExerciseId) return [];
         return history
             .filter(workout => workout.exerciseId === parseInt(selectedExerciseId))
-            .sort((a, b) => new Date(a.date) - new Date(b.date))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
             .map(workout => ({
-                date: new Date(workout.date).toLocaleDateString('en-CA', {month: 'short', day: 'numeric'}),
+                date: new Date(workout.date).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' }),
                 volume: calculateVolume(workout.sets, workout.weight),
                 maxWeight: workout.weight,
             }));
@@ -317,8 +315,16 @@ const ProgressTracker = ({ history, exercises }) => {
             {progressData.length > 1 ? (
               <div className="mt-6">
                   <h3 className="text-lg font-semibold text-center mb-2 text-emerald-400">{selectedExerciseName} - Tiến độ</h3>
-                  <SimpleSVGChart data={progressData} yKey="volume" strokeColor="#34D399" title="Tổng khối lượng (kg)" />
-                  <SimpleSVGChart data={progressData} yKey="maxWeight" strokeColor="#818CF8" title="Mức tạ (kg)" />
+                  <ProgressChart 
+                    data={progressData}
+                    title="Tổng khối lượng (kg)"
+                    charts={[{ key: 'volume', name: 'Volume', color: '#34D399' }]}
+                  />
+                  <ProgressChart 
+                    data={progressData}
+                    title="Mức tạ (kg)"
+                    charts={[{ key: 'maxWeight', name: 'Weight', color: '#818CF8' }]}
+                  />
               </div>
             ) : (
               <p className="text-gray-400 text-center py-8 mt-4">Cần ít nhất 2 bản ghi để hiển thị biểu đồ tiến độ cho bài tập này.</p>
@@ -432,7 +438,7 @@ const DailyTracking = ({ myWorkoutList, onSaveLog, onNavigateToLibrary, workoutH
     const [viewingExercise, setViewingExercise] = useState(null);
 
     const findLastWorkout = (exerciseId) => {
-        return workoutHistory.filter(w => w.exerciseId === exerciseId).sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+        return workoutHistory.filter(w => w.exerciseId === exerciseId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
     };
     
     const findTodaysWorkout = (exerciseId) => {
@@ -523,13 +529,7 @@ const DailyTracking = ({ myWorkoutList, onSaveLog, onNavigateToLibrary, workoutH
                 <LoggingModal 
                     exercise={loggingExercise} 
                     existingLog={loggingExercise.todaysWorkout} 
-                    onClose={() => {
-                        setLoggingExercise(null);
-                        const updatedLog = findTodaysWorkout(loggingExercise.exerciseId);
-                        if (updatedLog) {
-                           handleSaveWorkoutLog(updatedLog);
-                        }
-                    }} 
+                    onClose={() => setLoggingExercise(null)} 
                     onSave={onSaveLog} 
                 />
             )}
@@ -545,6 +545,34 @@ const formatTime = (seconds) => {
 
 const REST_TIME_SECONDS = 90; // Thời gian nghỉ mục tiêu
 
+// --- NEW: Post-Workout Summary component ---
+const WorkoutSummary = ({ summary }) => (
+    <div className="text-center p-6">
+        <CheckIcon className="w-16 h-16 text-emerald-400 mx-auto" />
+        <h3 className="text-2xl font-bold mt-4">Tổng kết buổi tập</h3>
+        <p className="text-gray-400 mb-6">Làm tốt lắm!</p>
+        <div className="grid grid-cols-2 gap-4 text-left bg-gray-700/50 p-4 rounded-lg">
+            <div className="font-semibold text-gray-300">Tổng Khối Lượng:</div>
+            <div className="font-bold text-white text-right">{summary.totalVolume.toLocaleString()} kg</div>
+            
+            <div className="font-semibold text-gray-300">Tổng Số Reps:</div>
+            <div className="font-bold text-white text-right">{summary.totalReps}</div>
+            
+            <div className="font-semibold text-gray-300">Số Sets:</div>
+            <div className="font-bold text-white text-right">{summary.totalSets}</div>
+            
+            <div className="font-semibold text-gray-300">Thời Gian Tập:</div>
+            <div className="font-bold text-white text-right">{formatTime(summary.totalDuration)}</div>
+
+            <div className="font-semibold text-gray-300">Thời Gian Nghỉ:</div>
+            <div className="font-bold text-white text-right">{formatTime(summary.totalRest)}</div>
+            
+            <div className="font-semibold text-gray-300">Tổng Thời Gian:</div>
+            <div className="font-bold text-white text-right">{formatTime(summary.totalDuration + summary.totalRest)}</div>
+        </div>
+    </div>
+);
+
 const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
     const [sessionState, setSessionState] = useState<'setup' | 'training' | 'resting' | 'finished'>('setup');
     const [sessionConfig, setSessionConfig] = useState({
@@ -557,6 +585,7 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
     
     const [trainingTimer, setTrainingTimer] = useState(0);
     const [elapsedRestTime, setElapsedRestTime] = useState(0);
+    const [workoutSummary, setWorkoutSummary] = useState(null); // State for summary
     const intervalRef = useRef<number | null>(null);
 
     const currentSetIndex = loggedSets.length;
@@ -571,17 +600,13 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
     const startTrainingTimer = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
         setTrainingTimer(0);
-        intervalRef.current = window.setInterval(() => {
-            setTrainingTimer(prev => prev + 1);
-        }, 1000);
+        intervalRef.current = window.setInterval(() => setTrainingTimer(prev => prev + 1), 1000);
     };
 
     const startRestTimer = () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
         setElapsedRestTime(0);
-        intervalRef.current = window.setInterval(() => {
-            setElapsedRestTime(prev => prev + 1);
-        }, 1000);
+        intervalRef.current = window.setInterval(() => setElapsedRestTime(prev => prev + 1), 1000);
     };
     
     const stopTimers = () => {
@@ -600,17 +625,23 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
 
     const handleCompleteSet = async () => {
         stopTimers();
-        const newSet: ICompletedSet = {
-            reps: currentSetReps,
-            duration: trainingTimer,
-            rest: 0,
-        };
+        const newSet: ICompletedSet = { reps: currentSetReps, duration: trainingTimer, rest: 0 };
         const updatedLoggedSets = [...loggedSets, newSet];
         setLoggedSets(updatedLoggedSets);
         
         await autoSave(updatedLoggedSets);
 
         if (isLastSet) {
+            // --- NEW: Calculate summary on finish ---
+            const finalSets = updatedLoggedSets;
+            const summary = {
+                totalVolume: calculateVolume(finalSets, sessionConfig.weight),
+                totalReps: finalSets.reduce((sum, set) => sum + set.reps, 0),
+                totalSets: finalSets.length,
+                totalDuration: finalSets.reduce((sum, set) => sum + set.duration, 0),
+                totalRest: finalSets.reduce((sum, set) => sum + set.rest, 0),
+            };
+            setWorkoutSummary(summary);
             setSessionState('finished');
         } else {
             setSessionState('resting');
@@ -621,7 +652,6 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
     const handleNextSet = async () => {
         stopTimers();
         const restDuration = elapsedRestTime;
-
         const updatedLoggedSets = [...loggedSets];
         if (updatedLoggedSets.length > 0) {
             updatedLoggedSets[updatedLoggedSets.length - 1].rest = restDuration;
@@ -651,7 +681,20 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
     };
     
     const renderContent = () => {
-        if (sessionState === 'training' || sessionState === 'resting' || sessionState === 'finished') {
+        if (sessionState === 'finished') {
+            return (
+                <div>
+                    {workoutSummary && <WorkoutSummary summary={workoutSummary} />}
+                    <div className="p-4 bg-gray-700/50">
+                        <button onClick={onClose} className="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                            Đóng
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        if (sessionState === 'training' || sessionState === 'resting') {
             const isResting = sessionState === 'resting';
             const restProgress = Math.min(1, elapsedRestTime / REST_TIME_SECONDS);
 
@@ -662,42 +705,34 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
                         <p className="font-bold text-2xl text-white">{sessionConfig.weight} kg</p>
                     </div>
 
-                    {sessionState === 'finished' ? (
-                        <div className="text-center py-10">
-                            <CheckIcon className="w-20 h-20 text-emerald-400 mx-auto" />
-                            <h3 className="text-3xl font-bold mt-4">Hoàn thành!</h3>
-                            <p className="text-gray-300 mt-2">Buổi tập đã được lưu.</p>
-                        </div>
-                    ) : (
-                        <div className="relative w-48 h-48 flex items-center justify-center my-4">
-                            <svg className="absolute w-full h-full" viewBox="0 0 100 100">
-                                <circle className="text-gray-700" strokeWidth="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
-                                {isResting && (
-                                    <circle className="text-emerald-400" strokeWidth="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50"
-                                        strokeDasharray={2 * Math.PI * 45}
-                                        strokeDashoffset={2 * Math.PI * 45 * (1 - restProgress)}
-                                        style={{ transition: 'stroke-dashoffset 0.5s linear' }}
-                                        transform="rotate(-90 50 50)"
-                                    />
-                                )}
-                            </svg>
-                            <div className="text-center">
-                                <p className="text-sm font-bold uppercase tracking-wider text-gray-400">
-                                    {isResting ? 'NGHỈ' : 'TẬP'}
+                    <div className="relative w-48 h-48 flex items-center justify-center my-4">
+                        <svg className="absolute w-full h-full" viewBox="0 0 100 100">
+                            <circle className="text-gray-700" strokeWidth="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
+                            {isResting && (
+                                <circle className="text-emerald-400" strokeWidth="8" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50"
+                                    strokeDasharray={2 * Math.PI * 45}
+                                    strokeDashoffset={2 * Math.PI * 45 * (1 - restProgress)}
+                                    style={{ transition: 'stroke-dashoffset 0.5s linear' }}
+                                    transform="rotate(-90 50 50)"
+                                />
+                            )}
+                        </svg>
+                        <div className="text-center">
+                            <p className="text-sm font-bold uppercase tracking-wider text-gray-400">
+                                {isResting ? 'NGHỈ' : 'TẬP'}
+                            </p>
+                            <p className="text-5xl font-mono font-bold text-white">
+                                {isResting ? formatTime(elapsedRestTime) : formatTime(trainingTimer)}
+                            </p>
+                            {isResting && (
+                                <p className="text-base text-gray-400 mt-1">
+                                    Mục tiêu: {formatTime(REST_TIME_SECONDS)}
                                 </p>
-                                <p className="text-5xl font-mono font-bold text-white">
-                                    {isResting ? formatTime(elapsedRestTime) : formatTime(trainingTimer)}
-                                </p>
-                                {isResting && (
-                                    <p className="text-base text-gray-400 mt-1">
-                                        Mục tiêu: {formatTime(REST_TIME_SECONDS)}
-                                    </p>
-                                )}
-                            </div>
+                            )}
                         </div>
-                    )}
+                    </div>
                     
-                    {!isResting && sessionState !== 'finished' && (
+                    {!isResting && (
                         <div className="w-full my-4">
                             <NumberStepper label="Reps đã thực hiện" value={currentSetReps} onChange={setCurrentSetReps} min={0} />
                         </div>
@@ -714,16 +749,12 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
                                Bắt đầu Set tiếp theo
                            </button>
                         )}
-                         {sessionState === 'finished' && (
-                           <button onClick={onClose} className="w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                               Đóng
-                           </button>
-                        )}
                     </div>
                 </div>
             );
         }
 
+        // Setup State
         return (
             <div>
                 <div className="p-6 space-y-6">
@@ -758,7 +789,7 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
 
 const WorkoutHistoryView = ({ history, exercises, onDelete }) => {
     const getExercise = (id) => exercises.find(ex => ex.id === id);
-    const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedHistory = [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return (
         <Card>
             <h2 className="card-title"><HistoryIcon className="mr-2"/>Lịch sử tập luyện</h2>
@@ -772,8 +803,8 @@ const WorkoutHistoryView = ({ history, exercises, onDelete }) => {
                                 {exercise && <div className="text-emerald-400 w-12 h-12 mr-4">{exercise.icon}</div>}
                                 <div>
                                     <p className="font-bold text-white text-lg">{exercise?.name || 'Unknown'} @ {workout.weight}kg</p>
-                                    <p className="text-sm text-gray-400">{new Date(workout.date).toLocaleDateString()}</p>
-                                    <p className="text-sm text-emerald-400 font-semibold mt-1">Tổng khối lượng: {calculateVolume(workout.sets, workout.weight)} kg</p>
+                                    <p className="text-sm text-gray-400">{new Date(workout.date).toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                    <p className="text-sm text-emerald-400 font-semibold mt-1">Tổng khối lượng: {calculateVolume(workout.sets, workout.weight).toLocaleString()} kg</p>
                                 </div>
                                </div>
                                <button onClick={() => onDelete(workout.id)} className="p-1 text-gray-500 hover:text-red-500"><Trash2Icon /></button>
