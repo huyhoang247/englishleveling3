@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, from 'react';
 // Import service DB local và các interfaces
 import { localWorkoutDB, IWorkoutPlanItem, IWorkoutHistoryEntry, ICompletedSet } from '../local-data/local-workout-db.ts'; 
 // Import danh sách bài tập
@@ -54,6 +54,11 @@ const CheckIcon = (props) => (
 const PlayIcon = (props) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
 );
+// --- NEW ICONS ---
+const CalendarIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M-4.5 12h22.5" /></svg>;
+const WeightIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 4.5m1-4.5l1 4.5m0 0l.245 1.103a.75.75 0 001.408.026l.245-1.103m0 0l1.453-6.536l.043-.195a.75.75 0 011.213-.495l1.028.935m-3.905-2.152l-3.32.247" /></svg>;
+const FlameIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.362-6.867 8.268 8.268 0 013 2.48Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18Z" /></svg>;
+
 
 // --- Reusable Component: NumberStepper ---
 const NumberStepper = ({ label, value, onChange, min = 0, max = Infinity, step = 1, unit = '', compact = false }) => {
@@ -90,6 +95,7 @@ const NumberStepper = ({ label, value, onChange, min = 0, max = Infinity, step =
 
 // --- Helper Functions ---
 const calculateVolume = (sets: ICompletedSet[], weight: number) => sets.reduce((total, set) => total + (set.reps * weight), 0);
+const formatDate = (date: Date): string => date.toISOString().split('T')[0];
 
 // --- Main Application Component ---
 export default function WorkoutApp({ onClose }) {
@@ -177,7 +183,7 @@ export default function WorkoutApp({ onClose }) {
             case 'library': return <LibraryWorkout {...viewProps.library} />;
             case 'myWorkout': return <MyWorkout {...viewProps.myWorkout} />;
             case 'history': return <WorkoutHistoryView {...viewProps.history} />;
-            case 'progress': return <ProgressTracker {...viewProps.progress} />;
+            case 'progress': return <ProgressDashboard {...viewProps.progress} />;
             case 'dailyTracking': default: return <DailyTracking {...viewProps.dailyTracking} />;
         }
     };
@@ -196,7 +202,7 @@ export default function WorkoutApp({ onClose }) {
     return (
         <div className="bg-gray-900 text-white font-sans flex flex-col h-full max-w-4xl mx-auto overflow-hidden">
             <Header onClose={onClose} />
-            <main className="flex-1 overflow-y-auto p-4 pb-24 md:pb-4">
+            <main className="flex-1 overflow-y-auto p-4 pb-24 md:pb-4 space-y-6">
                 {renderView()}
             </main>
             <NavBar currentView={currentView} setCurrentView={setCurrentView} />
@@ -223,10 +229,10 @@ const Header = ({ onClose }) => {
 const NavBar = ({ currentView, setCurrentView }) => {
     const navItems = [
         { id: 'dailyTracking', label: 'Hôm nay', icon: CheckSquareIcon },
-        { id: 'library', label: 'Thư viện', icon: BookOpenIcon },
-        { id: 'myWorkout', label: 'Bài tập', icon: UserIcon },
-        { id: 'history', label: 'Lịch sử', icon: HistoryIcon },
         { id: 'progress', label: 'Tiến độ', icon: TrendingUpIcon },
+        { id: 'history', label: 'Lịch sử', icon: HistoryIcon },
+        { id: 'myWorkout', label: 'Bài tập', icon: UserIcon },
+        { id: 'library', label: 'Thư viện', icon: BookOpenIcon },
     ];
 
     return (
@@ -259,28 +265,106 @@ const NavBar = ({ currentView, setCurrentView }) => {
     );
 };
 
-// --- REPLACED: SimpleSVGChart is removed, replaced by ProgressChart using Recharts ---
-const ProgressChart = ({ data, title, charts }) => (
-    <div className="mt-4">
-        <h4 className="text-center font-semibold text-gray-300 mb-2">{title}</h4>
-        <div style={{ width: '100%', height: 250 }}>
+
+// --- NEW COMPONENT: StatCard ---
+const StatCard = ({ icon, label, value, unit, color }) => (
+    <div className="bg-gray-800 p-4 rounded-xl flex items-start gap-4">
+        <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${color}`}>
+            {icon}
+        </div>
+        <div>
+            <p className="text-sm text-gray-400">{label}</p>
+            <p className="text-2xl font-bold text-white">
+                {value} <span className="text-lg font-medium text-gray-300">{unit}</span>
+            </p>
+        </div>
+    </div>
+);
+
+// --- NEW COMPONENT: ActivityCalendar (Inspired by analysis-ui.tsx) ---
+const ActivityCalendar = ({ history }) => {
+    const activityData = useMemo(() => new Set(history.map(h => h.date)), [history]);
+
+    const calendarDays = useMemo(() => {
+        const days = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        let startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 34); // ~5 weeks
+        
+        const dayOfWeek = startDate.getDay();
+        const offset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        startDate.setDate(startDate.getDate() - offset);
+        
+        for (let i = 0; i < 35; i++) {
+            const date = new Date(startDate);
+            date.setDate(date.getDate() + i);
+            const dateString = formatDate(date);
+            const hasActivity = activityData.has(dateString);
+            const isToday = formatDate(today) === dateString;
+            
+            days.push({
+                date,
+                dateString,
+                dayOfMonth: date.getDate(),
+                hasActivity,
+                isToday,
+                isFuture: date > today
+            });
+        }
+        return days;
+    }, [activityData]);
+
+    const weekDayHeaders = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+    return (
+        <div className="bg-gray-800 p-4 sm:p-5 rounded-xl">
+            <h3 className="card-title mb-4"><CalendarIcon className="w-6 h-6 mr-2 text-emerald-400"/>Lịch hoạt động</h3>
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
+                {weekDayHeaders.map(day => <div key={day} className="text-xs font-semibold text-gray-400 mb-1">{day}</div>)}
+                {calendarDays.map((day, index) => {
+                    let dayClass = "w-full aspect-square rounded-md flex items-center justify-center text-xs font-medium transition-colors duration-200 ";
+                    if (day.isFuture) {
+                        dayClass += "bg-gray-700/50 text-gray-600";
+                    } else if (day.hasActivity) {
+                        dayClass += "bg-emerald-500 text-white";
+                    } else {
+                        dayClass += "bg-gray-700 text-gray-400";
+                    }
+                    if (day.isToday) {
+                        dayClass += " ring-2 ring-offset-2 ring-offset-gray-800 ring-emerald-400";
+                    }
+                    return (
+                        <div key={index} title={day.date.toLocaleDateString('vi-VN')} className={dayClass}>
+                            {day.dayOfMonth}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
+
+// --- NEW COMPONENT: ProgressChart using Recharts ---
+const ProgressChart = ({ data, title }) => (
+    <div className="mt-4 bg-gray-800 p-4 rounded-xl">
+        <h4 className="text-center font-semibold text-gray-200 mb-4">{title}</h4>
+        <div className="w-full h-64">
             <ResponsiveContainer>
                 <LineChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#4A5568" />
-                    <XAxis dataKey="date" stroke="#A0AEC0" fontSize={12} />
-                    <YAxis stroke="#A0AEC0" fontSize={12} />
+                    <XAxis dataKey="date" stroke="#A0AEC0" fontSize={12} tickFormatter={(tick) => new Date(tick).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' })}/>
+                    <YAxis yAxisId="left" stroke="#34D399" fontSize={12} />
+                    <YAxis yAxisId="right" orientation="right" stroke="#818CF8" fontSize={12} />
                     <Tooltip
-                        contentStyle={{
-                            backgroundColor: 'rgba(31, 41, 55, 0.8)', // bg-gray-800 with opacity
-                            borderColor: '#4A5568', // border-gray-600
-                            color: '#FFFFFF'
-                        }}
-                        labelStyle={{ color: '#A0AEC0' }}
+                        contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: '#4A5568' }}
+                        labelFormatter={(label) => new Date(label).toLocaleDateString('vi-VN')}
                     />
-                    <Legend wrapperStyle={{ fontSize: '14px' }} />
-                    {charts.map(chart => (
-                         <Line key={chart.key} type="monotone" dataKey={chart.key} name={chart.name} stroke={chart.color} strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
-                    ))}
+                    <Legend wrapperStyle={{ fontSize: '14px', paddingTop: '10px' }} />
+                    <Line yAxisId="left" type="monotone" dataKey="volume" name="Tổng KL (kg)" stroke="#34D399" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
+                    <Line yAxisId="right" type="monotone" dataKey="weight" name="Mức Tạ (kg)" stroke="#818CF8" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
                 </LineChart>
             </ResponsiveContainer>
         </div>
@@ -288,50 +372,97 @@ const ProgressChart = ({ data, title, charts }) => (
 );
 
 
-const ProgressTracker = ({ history, exercises }) => {
-    const [selectedExerciseId, setSelectedExerciseId] = useState(exercises[0]?.id || '');
-    const progressData = useMemo(() => {
+// --- REVAMPED: ProgressDashboard (formerly ProgressTracker) ---
+const ProgressDashboard = ({ history, exercises }) => {
+    const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
+
+    const dashboardStats = useMemo(() => {
+        const today = new Date();
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(startOfWeek.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+        startOfWeek.setHours(0,0,0,0);
+
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        const workoutsThisWeek = history.filter(h => new Date(h.date) >= startOfWeek);
+        const workoutsThisMonth = history.filter(h => new Date(h.date) >= startOfMonth);
+
+        const totalVolumeThisMonth = workoutsThisMonth.reduce((sum, workout) => sum + calculateVolume(workout.sets, workout.weight), 0);
+        
+        const exerciseFrequency = history.reduce((acc, workout) => {
+            acc[workout.exerciseId] = (acc[workout.exerciseId] || 0) + 1;
+            return acc;
+        }, {});
+
+        const favoriteExerciseId = Object.keys(exerciseFrequency).length > 0
+            ? Object.keys(exerciseFrequency).reduce((a, b) => exerciseFrequency[a] > exerciseFrequency[b] ? a : b)
+            : null;
+
+        const favoriteExercise = favoriteExerciseId ? exercises.find(e => e.id === parseInt(favoriteExerciseId)) : null;
+
+        return {
+            totalVolumeThisMonth,
+            workoutsThisWeekCount: new Set(workoutsThisWeek.map(w => w.date)).size,
+            favoriteExercise,
+        };
+    }, [history, exercises]);
+
+    const workoutableExercises = useMemo(() => {
+        const exercisedIds = new Set(history.map(h => h.exerciseId));
+        return exercises.filter(e => exercisedIds.has(e.id));
+    }, [history, exercises]);
+
+    const chartData = useMemo(() => {
         if (!selectedExerciseId) return [];
         return history
-            .filter(workout => workout.exerciseId === parseInt(selectedExerciseId))
+            .filter(workout => workout.exerciseId === selectedExerciseId)
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
             .map(workout => ({
-                date: new Date(workout.date).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' }),
+                date: workout.date,
                 volume: calculateVolume(workout.sets, workout.weight),
-                maxWeight: workout.weight,
+                weight: workout.weight,
             }));
     }, [history, selectedExerciseId]);
-    const selectedExerciseName = exercises.find(e => e.id === parseInt(selectedExerciseId))?.name || 'Exercise';
+
+    const selectedExercise = exercises.find(e => e.id === selectedExerciseId);
 
     return (
-        <Card>
-            <h2 className="card-title"><TrendingUpIcon className="mr-2"/>Theo dõi tiến độ</h2>
-            <div className="mt-4">
-                <label htmlFor="progress-exercise" className="block text-sm font-medium text-gray-300 mb-1">Chọn bài tập</label>
-                <select id="progress-exercise" value={selectedExerciseId} onChange={(e) => setSelectedExerciseId(e.target.value)} className="form-input">
-                    {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
-                </select>
+        <div className="space-y-6">
+            <h2 className="card-title"><TrendingUpIcon className="mr-2"/>Bảng điều khiển Tiến độ</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <StatCard icon={<WeightIcon className="w-6 h-6"/>} label="KL tháng này" value={dashboardStats.totalVolumeThisMonth.toLocaleString()} unit="kg" color="bg-indigo-500" />
+                <StatCard icon={<DumbbellIcon className="w-6 h-6"/>} label="Buổi tập/tuần" value={dashboardStats.workoutsThisWeekCount} unit="" color="bg-emerald-500" />
+                <StatCard icon={<FlameIcon className="w-6 h-6"/>} label="Yêu thích" value={dashboardStats.favoriteExercise?.name || 'N/A'} unit="" color="bg-rose-500" />
             </div>
-            {progressData.length > 1 ? (
-              <div className="mt-6">
-                  <h3 className="text-lg font-semibold text-center mb-2 text-emerald-400">{selectedExerciseName} - Tiến độ</h3>
-                  <ProgressChart 
-                    data={progressData}
-                    title="Tổng khối lượng (kg)"
-                    charts={[{ key: 'volume', name: 'Volume', color: '#34D399' }]}
-                  />
-                  <ProgressChart 
-                    data={progressData}
-                    title="Mức tạ (kg)"
-                    charts={[{ key: 'maxWeight', name: 'Weight', color: '#818CF8' }]}
-                  />
-              </div>
-            ) : (
-              <p className="text-gray-400 text-center py-8 mt-4">Cần ít nhất 2 bản ghi để hiển thị biểu đồ tiến độ cho bài tập này.</p>
-            )}
-        </Card>
+
+            <ActivityCalendar history={history} />
+            
+            <div className="bg-gray-800 p-4 sm:p-5 rounded-xl">
+                 <h3 className="card-title mb-4">Tiến độ theo bài tập</h3>
+                 <p className="text-sm text-gray-400 mb-4">Chọn một bài tập bên dưới để xem biểu đồ chi tiết.</p>
+                 <div className="flex flex-wrap gap-2">
+                     {workoutableExercises.map(ex => (
+                         <button 
+                            key={ex.id}
+                            onClick={() => setSelectedExerciseId(ex.id)}
+                            className={`px-3 py-1.5 text-sm font-semibold rounded-full transition-colors ${selectedExerciseId === ex.id ? 'bg-emerald-500 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}
+                         >
+                            {ex.name}
+                         </button>
+                     ))}
+                 </div>
+
+                 {selectedExerciseId && (
+                    chartData.length > 1 
+                    ? <ProgressChart data={chartData} title={`Tiến độ ${selectedExercise?.name}`} />
+                    : <p className="text-gray-400 text-center py-8 mt-4">Cần ít nhất 2 bản ghi để hiển thị biểu đồ cho bài tập này.</p>
+                 )}
+            </div>
+        </div>
     );
 };
+
 
 const ImageDetailModal = ({ exercise, onClose }) => {
     if (!exercise) return null;
@@ -442,7 +573,7 @@ const DailyTracking = ({ myWorkoutList, onSaveLog, onNavigateToLibrary, workoutH
     };
     
     const findTodaysWorkout = (exerciseId) => {
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = formatDate(new Date());
         return workoutHistory.find(w => w.exerciseId === exerciseId && w.date === todayStr);
     };
 
@@ -669,7 +800,7 @@ const LoggingModal = ({ exercise, existingLog, onClose, onSave }) => {
         const logData: IWorkoutHistoryEntry = {
             id: existingLog?.id,
             exerciseId: exercise.id,
-            date: new Date().toISOString().split('T')[0],
+            date: formatDate(new Date()),
             weight: sessionConfig.weight,
             sets: currentSets
         };
@@ -800,7 +931,7 @@ const WorkoutHistoryView = ({ history, exercises, onDelete }) => {
                         <div key={workout.id} className="bg-gray-800 p-4 rounded-lg">
                             <div className="flex justify-between items-start">
                                <div className="flex items-center">
-                                {exercise && <div className="text-emerald-400 w-12 h-12 mr-4">{exercise.icon}</div>}
+                                {exercise && <div className="text-emerald-400 w-12 h-12 mr-4 flex-shrink-0">{exercise.icon}</div>}
                                 <div>
                                     <p className="font-bold text-white text-lg">{exercise?.name || 'Unknown'} @ {workout.weight}kg</p>
                                     <p className="text-sm text-gray-400">{new Date(workout.date).toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
