@@ -8,18 +8,6 @@ export interface ExampleSentence {
 // Dữ liệu thô chứa các câu ví dụ và bản dịch
 const exampleSentencesText = `
 
-The new offices have modern designs and plenty of natural light. (Các văn phòng mới có thiết kế hiện đại và nhiều ánh sáng tự nhiên.)
-The children love to play on the soft grass. (Bọn trẻ thích chơi đùa trên bãi cỏ mềm mại.)
-My dad mows the grass every Saturday. (Bố tôi cắt cỏ vào mỗi thứ Bảy.)
-After the rain, the grass looks much greener. (Sau cơn mưa, cỏ trông xanh hơn nhiều.)
-The store is having a big sale this weekend. (Cửa hàng đang có một đợt giảm giá lớn vào cuối tuần này.)
-This product is currently on sale. (Sản phẩm này hiện đang được giảm giá.)
-The real estate agent closed a difficult sale. (Nhân viên môi giới bất động sản đã hoàn thành một giao dịch bán hàng khó khăn.)
-The loud music was starting to hurt my ears. (Tiếng nhạc lớn bắt đầu làm tôi đau tai.)
-Tell me your story, I'm all ears. (Hãy kể câu chuyện của bạn đi, tôi đang chăm chú lắng nghe đây.)
-My dog's ears perked up when he heard the treat bag. (Tai của chú chó của tôi vểnh lên khi nghe thấy tiếng túi đồ ăn vặt.)
-It's not my fault that we are late. (Không phải lỗi của tôi mà chúng ta bị trễ.)
-He has many faults, but dishonesty isn't one of them. (Anh ấy có nhiều khuyết điểm, nhưng thiếu trung thực không phải là một trong số đó.)
 The earthquake occurred along a major fault line. (Trận động đất xảy ra dọc theo một đường đứt gãy lớn.)
 She received many beautiful gifts for her birthday. (Cô ấy đã nhận được rất nhiều món quà xinh đẹp trong ngày sinh nhật của mình.)
 We exchanged gifts during the Christmas party. (Chúng tôi đã trao đổi quà cho nhau trong bữa tiệc Giáng sinh.)
