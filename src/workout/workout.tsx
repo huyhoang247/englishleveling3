@@ -54,11 +54,20 @@ const CheckIcon = (props) => (
 const PlayIcon = (props) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
 );
-// --- NEW ICONS ---
+// --- ICONS for Stats ---
 const CalendarIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M-4.5 12h22.5" /></svg>;
-const WeightIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 4.5m1-4.5l1 4.5m0 0l.245 1.103a.75.75 0 001.408.026l.245-1.103m0 0l1.453-6.536l.043-.195a.75.75 0 011.213-.495l1.028.935m-3.905-2.152l-3.32.247" /></svg>;
+const RepeatIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.18-3.182m-3.182-4.319a8.25 8.25 0 00-11.664 0l-3.18 3.182" /></svg>;
 const FlameIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.362-6.867 8.268 8.268 0 013 2.48Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18Z" /></svg>;
 
+
+// --- Helper Functions ---
+const calculateVolume = (sets: ICompletedSet[], weight: number) => sets.reduce((total, set) => total + (set.reps * weight), 0);
+const formatDate = (date: Date): string => date.toISOString().split('T')[0];
+const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const secs = (seconds % 60).toString().padStart(2, '0');
+    return `${mins}:${secs}`;
+};
 
 // --- Reusable Component: NumberStepper ---
 const NumberStepper = ({ label, value, onChange, min = 0, max = Infinity, step = 1, unit = '', compact = false }) => {
@@ -92,10 +101,6 @@ const NumberStepper = ({ label, value, onChange, min = 0, max = Infinity, step =
         </div>
     );
 };
-
-// --- Helper Functions ---
-const calculateVolume = (sets: ICompletedSet[], weight: number) => sets.reduce((total, set) => total + (set.reps * weight), 0);
-const formatDate = (date: Date): string => date.toISOString().split('T')[0];
 
 // --- Main Application Component ---
 export default function WorkoutApp({ onClose }) {
@@ -175,7 +180,7 @@ export default function WorkoutApp({ onClose }) {
             'library': { exercises, myWorkoutIds, onConfigure: setConfiguringExercise },
             'myWorkout': { workoutList: myWorkoutList, onRemove: handleRemoveFromMyWorkout },
             'history': { history: workoutHistory, exercises, onDelete: handleDeleteWorkout },
-            'progress': { history: workoutHistory, exercises },
+            'progress': { history: workoutHistory },
             'dailyTracking': { myWorkoutList, onSaveLog: handleSaveWorkoutLog, onNavigateToLibrary: () => setCurrentView('library'), workoutHistory, onRemove: handleRemoveFromMyWorkout }
         };
 
@@ -183,7 +188,7 @@ export default function WorkoutApp({ onClose }) {
             case 'library': return <LibraryWorkout {...viewProps.library} />;
             case 'myWorkout': return <MyWorkout {...viewProps.myWorkout} />;
             case 'history': return <WorkoutHistoryView {...viewProps.history} />;
-            case 'progress': return <ProgressDashboard {...viewProps.progress} />;
+            case 'progress': return <ProgressDashboard {...viewProps.progress} exercises={exercises} />;
             case 'dailyTracking': default: return <DailyTracking {...viewProps.dailyTracking} />;
         }
     };
@@ -347,8 +352,8 @@ const ActivityCalendar = ({ history }) => {
 };
 
 
-// --- NEW COMPONENT: ProgressChart using Recharts ---
-const ProgressChart = ({ data, title }) => (
+// --- UPDATED: ProgressChart now more generic ---
+const ProgressChart = ({ data, title, charts, yAxisFormatter = (value) => value }) => (
     <div className="mt-4 bg-gray-800 p-4 rounded-xl">
         <h4 className="text-center font-semibold text-gray-200 mb-4">{title}</h4>
         <div className="w-full h-64">
@@ -356,15 +361,17 @@ const ProgressChart = ({ data, title }) => (
                 <LineChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#4A5568" />
                     <XAxis dataKey="date" stroke="#A0AEC0" fontSize={12} tickFormatter={(tick) => new Date(tick).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' })}/>
-                    <YAxis yAxisId="left" stroke="#34D399" fontSize={12} />
-                    <YAxis yAxisId="right" orientation="right" stroke="#818CF8" fontSize={12} />
+                    <YAxis yAxisId="left" stroke="#A0AEC0" fontSize={12} tickFormatter={yAxisFormatter} />
+                    {charts.some(c => c.yAxisId === 'right') && <YAxis yAxisId="right" orientation="right" stroke="#A0AEC0" fontSize={12} />}
                     <Tooltip
                         contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: '#4A5568' }}
                         labelFormatter={(label) => new Date(label).toLocaleDateString('vi-VN')}
+                        formatter={(value, name, props) => props.payload.yAxisId === 'left' && yAxisFormatter ? [yAxisFormatter(value), name] : [value, name] }
                     />
                     <Legend wrapperStyle={{ fontSize: '14px', paddingTop: '10px' }} />
-                    <Line yAxisId="left" type="monotone" dataKey="volume" name="Tổng KL (kg)" stroke="#34D399" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
-                    <Line yAxisId="right" type="monotone" dataKey="weight" name="Mức Tạ (kg)" stroke="#818CF8" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
+                    {charts.map(chart => (
+                        <Line key={chart.key} yAxisId={chart.yAxisId} type="monotone" dataKey={chart.key} name={chart.name} stroke={chart.color} strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
+                    ))}
                 </LineChart>
             </ResponsiveContainer>
         </div>
@@ -372,7 +379,7 @@ const ProgressChart = ({ data, title }) => (
 );
 
 
-// --- REVAMPED: ProgressDashboard (formerly ProgressTracker) ---
+// --- REVAMPED: ProgressDashboard with new stats ---
 const ProgressDashboard = ({ history, exercises }) => {
     const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
 
@@ -387,25 +394,37 @@ const ProgressDashboard = ({ history, exercises }) => {
         const workoutsThisWeek = history.filter(h => new Date(h.date) >= startOfWeek);
         const workoutsThisMonth = history.filter(h => new Date(h.date) >= startOfMonth);
 
-        const totalVolumeThisMonth = workoutsThisMonth.reduce((sum, workout) => sum + calculateVolume(workout.sets, workout.weight), 0);
+        const totalRepsThisMonth = workoutsThisMonth.reduce((sum, workout) => sum + workout.sets.reduce((repSum, set) => repSum + set.reps, 0), 0);
         
-        const exerciseFrequency = history.reduce((acc, workout) => {
-            acc[workout.exerciseId] = (acc[workout.exerciseId] || 0) + 1;
-            return acc;
-        }, {} as Record<number, number>);
+        // Calculate workout streak
+        const uniqueDates = [...new Set(history.map(h => h.date))].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+        let currentStreak = 0;
+        if (uniqueDates.length > 0) {
+            const todayDate = new Date(); todayDate.setHours(0,0,0,0);
+            const mostRecentDate = new Date(uniqueDates[0]); mostRecentDate.setHours(0,0,0,0);
 
-        const favoriteExerciseId = Object.keys(exerciseFrequency).length > 0
-            ? Object.keys(exerciseFrequency).reduce((a, b) => exerciseFrequency[a] > exerciseFrequency[b] ? a : b)
-            : null;
-
-        const favoriteExercise = favoriteExerciseId ? exercises.find(e => e.id === parseInt(favoriteExerciseId)) : null;
+            // Streak is valid if last workout was today or yesterday
+            if (todayDate.getTime() - mostRecentDate.getTime() <= 24 * 60 * 60 * 1000) {
+                currentStreak = 1;
+                for (let i = 0; i < uniqueDates.length - 1; i++) {
+                    const current = new Date(uniqueDates[i]);
+                    const previous = new Date(uniqueDates[i+1]);
+                    const diffDays = (current.getTime() - previous.getTime()) / (1000 * 3600 * 24);
+                    if (diffDays === 1) {
+                        currentStreak++;
+                    } else {
+                        break; // Streak is broken
+                    }
+                }
+            }
+        }
 
         return {
-            totalVolumeThisMonth,
+            totalRepsThisMonth,
             workoutsThisWeekCount: new Set(workoutsThisWeek.map(w => w.date)).size,
-            favoriteExercise,
+            currentStreak
         };
-    }, [history, exercises]);
+    }, [history]);
 
     const workoutableExercises = useMemo(() => {
         const exercisedIds = new Set(history.map(h => h.exerciseId));
@@ -419,8 +438,9 @@ const ProgressDashboard = ({ history, exercises }) => {
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
             .map(workout => ({
                 date: workout.date,
-                volume: calculateVolume(workout.sets, workout.weight),
-                weight: workout.weight,
+                totalReps: workout.sets.reduce((sum, set) => sum + set.reps, 0),
+                totalSets: workout.sets.length,
+                totalTime: workout.sets.reduce((sum, set) => sum + (set.duration || 0) + (set.rest || 0), 0)
             }));
     }, [history, selectedExerciseId]);
 
@@ -431,9 +451,9 @@ const ProgressDashboard = ({ history, exercises }) => {
             <h2 className="card-title"><TrendingUpIcon className="mr-2"/>Bảng điều khiển Tiến độ</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatCard icon={<WeightIcon className="w-6 h-6"/>} label="KL tháng này" value={dashboardStats.totalVolumeThisMonth.toLocaleString()} unit="kg" color="bg-indigo-500" />
+                <StatCard icon={<RepeatIcon className="w-6 h-6"/>} label="Reps tháng này" value={dashboardStats.totalRepsThisMonth.toLocaleString()} unit="reps" color="bg-indigo-500" />
                 <StatCard icon={<DumbbellIcon className="w-6 h-6"/>} label="Buổi tập/tuần" value={dashboardStats.workoutsThisWeekCount} unit="" color="bg-emerald-500" />
-                <StatCard icon={<FlameIcon className="w-6 h-6"/>} label="Yêu thích" value={dashboardStats.favoriteExercise?.name || 'N/A'} unit="" color="bg-rose-500" />
+                <StatCard icon={<FlameIcon className="w-6 h-6"/>} label="Chuỗi luyện tập" value={dashboardStats.currentStreak} unit="ngày" color="bg-rose-500" />
             </div>
 
             <ActivityCalendar history={history} />
@@ -455,7 +475,26 @@ const ProgressDashboard = ({ history, exercises }) => {
 
                  {selectedExerciseId && (
                     chartData.length > 1 
-                    ? <ProgressChart data={chartData} title={`Tiến độ ${selectedExercise?.name}`} />
+                    ? (
+                        <>
+                            <ProgressChart 
+                                data={chartData} 
+                                title={`Hiệu suất: ${selectedExercise?.name}`}
+                                charts={[
+                                    { key: 'totalReps', name: 'Tổng Reps', color: '#34D399', yAxisId: 'left' },
+                                    { key: 'totalSets', name: 'Tổng Sets', color: '#818CF8', yAxisId: 'right' }
+                                ]}
+                            />
+                            <ProgressChart 
+                                data={chartData} 
+                                title={`Thời gian: ${selectedExercise?.name}`}
+                                charts={[
+                                    { key: 'totalTime', name: 'Tổng Thời Gian', color: '#F472B6', yAxisId: 'left' }
+                                ]}
+                                yAxisFormatter={(seconds) => formatTime(seconds)}
+                            />
+                        </>
+                    )
                     : <p className="text-gray-400 text-center py-8 mt-4">Cần ít nhất 2 bản ghi để hiển thị biểu đồ cho bài tập này.</p>
                  )}
             </div>
@@ -463,7 +502,7 @@ const ProgressDashboard = ({ history, exercises }) => {
     );
 };
 
-
+// ... (Rest of the components: ImageDetailModal, ExerciseSettingsModal, etc. remain unchanged) ...
 const ImageDetailModal = ({ exercise, onClose }) => {
     if (!exercise) return null;
     return (
@@ -666,12 +705,6 @@ const DailyTracking = ({ myWorkoutList, onSaveLog, onNavigateToLibrary, workoutH
             )}
         </>
     );
-};
-
-const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const secs = (seconds % 60).toString().padStart(2, '0');
-    return `${mins}:${secs}`;
 };
 
 const REST_TIME_SECONDS = 90; // Thời gian nghỉ mục tiêu
