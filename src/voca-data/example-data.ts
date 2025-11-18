@@ -8,20 +8,6 @@ export interface ExampleSentence {
 // Dữ liệu thô chứa các câu ví dụ và bản dịch
 const exampleSentencesText = `
 
-The earthquake occurred along a major fault line. (Trận động đất xảy ra dọc theo một đường đứt gãy lớn.)
-She received many beautiful gifts for her birthday. (Cô ấy đã nhận được rất nhiều món quà xinh đẹp trong ngày sinh nhật của mình.)
-We exchanged gifts during the Christmas party. (Chúng tôi đã trao đổi quà cho nhau trong bữa tiệc Giáng sinh.)
-He is gifted in many areas, particularly in music and art. (Anh ấy có năng khiếu ở nhiều lĩnh vực, đặc biệt là âm nhạc và nghệ thuật.)
-The United States imposed new sanctions on the country due to its nuclear program. (Hoa Kỳ đã áp đặt các biện pháp trừng phạt mới đối với quốc gia đó do chương trình hạt nhân của họ.)
-The economic sanctions have had a severe impact on ordinary citizens. (Các biện pháp trừng phạt kinh tế đã có tác động nghiêm trọng đến những người dân thường.)
-Several nations are calling for the lifting of sanctions to allow for humanitarian aid. (Một số quốc gia đang kêu gọi dỡ bỏ các biện pháp trừng phạt để cho phép viện trợ nhân đạo.)
-She is pregnant with her second child. (Cô ấy đang mang thai đứa con thứ hai.)
-My wife told me she was pregnant last night. (Vợ tôi đã báo tin cô ấy có thai vào tối qua.)
-It is important for pregnant women to eat a healthy diet. (Phụ nữ mang thai cần có một chế độ ăn uống lành mạnh.)
-What's the monthly rent for this apartment? (Tiền thuê căn hộ này mỗi tháng là bao nhiêu?)
-How much is the rent for this apartment? (Tiền thuê căn hộ này là bao nhiêu?)
-We decided to rent a car for our road trip. (Chúng tôi quyết định thuê ô tô cho chuyến đi phượt.)
-Rất tiếc, bạn đã cung cấp một ký tự đơn lẻ `(` thay vì một cặp câu. Vui lòng cung cấp một cặp câu Anh-Việt hoàn chỉnh để tôi có thể cải thiện.
 His contributions to the project were invaluable. (Những đóng góp của anh ấy cho dự án là vô giá.)
 We would like to thank everyone for their generous contributions to the charity. (Chúng tôi xin cảm ơn mọi người vì những đóng góp hào phóng cho quỹ từ thiện.)
 Albert Einstein's contributions to science changed the world. (Những đóng góp của Albert Einstein cho khoa học đã thay đổi thế giới.)
