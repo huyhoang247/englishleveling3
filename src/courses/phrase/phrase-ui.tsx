@@ -1,4 +1,4 @@
-// --- START OF FILE phrase-ui.tsx (REFACTORED) ---
+// --- START OF FILE phrase-ui.tsx (REFACTORED - WITH COPY BUTTON) ---
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import BackButton from '../../ui/back-button.tsx';
@@ -25,12 +25,12 @@ const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http:/
 const CheckBadgeIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> );
 const SparklesIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.553L16.5 21.75l-.398-1.197a3.375 3.375 0 00-2.455-2.455L12.75 18l1.197-.398a3.375 3.375 0 002.455-2.455l.398-1.197.398 1.197a3.375 3.375 0 002.455 2.455l1.197.398-1.197.398a3.375 3.375 0 00-2.455 2.455z" /></svg>);
 const GameControllerIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM16.5 12a.75.75 0 0 0-.75-.75h-3.75a.75.75 0 0 0 0 1.5h3.75a.75.75 0 0 0 .75-.75Zm-6 0a.75.75 0 0 0-.75-.75H6a.75.75 0 0 0 0 1.5h3.75a.75.75 0 0 0 .75-.75Z" clipRule="evenodd" /></svg>);
+const ClipboardIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" /></svg> );
 
 const ITEMS_PER_PAGE = 50;
 const PHRASES_PER_PAGE = 20;
 
 function useDebounce<T>(value: T, delay: number): T {
-    // ... (no changes)
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -48,7 +48,6 @@ interface PhraseData {
   uniqueCount: number;
 }
 const generateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
-  // ... (no changes)
   const allPhraseGroups = new Map<number, Map<string, PhraseData>>();
 
   for (let phraseLength = 1; phraseLength <= 6; phraseLength++) {
@@ -87,7 +86,6 @@ const allPhraseGroups = generateAllPhraseGroups();
 
 
 // --- Filter Popup Component ---
-// ... (Component unchanged)
 interface FilterPopupProps {
   isOpen: boolean;
   onClose: () => void;
@@ -95,7 +93,6 @@ interface FilterPopupProps {
   onClearFilter: () => void;
 }
 const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilter, onClearFilter }) => {
-  // ... (implementation is the same, no changes needed)
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'alpha' | 'freq'>('freq');
   const [currentPage, setCurrentPage] = useState(1);
@@ -208,17 +205,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
 const MemoizedFilterPopup = React.memo(FilterPopup);
 
 // --- Vocabulary Check Popup Component ---
-// ... (Component unchanged)
 interface VocabularyCheckPopupProps {
   isOpen: boolean;
   onClose: () => void;
 }
 const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onClose }) => {
-  // ... (implementation is the same, no changes needed)
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'matched' | 'unmatched'>('matched');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<'freq' | 'alpha'>('freq');
+  const [isCopied, setIsCopied] = useState(false); // New state for copy feedback
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const wordCheckResults = useMemo(() => {
@@ -295,6 +291,20 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
     }
   };
 
+  const handleCopyUnmatched = () => {
+    if (wordCheckResults.unmatchedWords.length === 0) return;
+    
+    // Join all unmatched words with a newline character
+    const textToCopy = wordCheckResults.unmatchedWords.join('\n');
+    
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+    });
+  };
+
   if (!isOpen) return null;
   
   return (
@@ -342,10 +352,26 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
                     </button>
                 </nav>
             </div>
-            {activeTab === 'matched' && (
+            {activeTab === 'matched' ? (
                 <div className="flex justify-end gap-2 text-sm pt-3">
                     <button onClick={() => setSortBy('freq')} className={`px-3 py-1 rounded-md transition-colors ${sortBy === 'freq' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>Most Common</button>
                     <button onClick={() => setSortBy('alpha')} className={`px-3 py-1 rounded-md transition-colors ${sortBy === 'alpha' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>A-Z</button>
+                </div>
+            ) : (
+                <div className="flex justify-end gap-2 text-sm pt-3">
+                    <button 
+                        onClick={handleCopyUnmatched} 
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-colors ${isCopied ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white'}`}
+                    >
+                        {isCopied ? (
+                            <span className="font-medium">Copied!</span>
+                        ) : (
+                            <>
+                                <ClipboardIcon className="w-4 h-4" />
+                                <span>Copy All</span>
+                            </>
+                        )}
+                    </button>
                 </div>
             )}
         </div>
@@ -417,7 +443,6 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   );
 
   const filteredData = useMemo(() => {
-    // ... (no changes)
     let phraseFilteredData;
     if (!activeFilter) {
       phraseFilteredData = indexedExampleData;
@@ -452,21 +477,18 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   }, [currentPage, filteredData]);
   
   const handleSelectFilter = useCallback((phrase: string) => {
-    // ... (no changes)
     setActiveFilter(phrase);
     setCurrentPage(1);
     setIsFilterOpen(false);
   }, []);
 
   const handleClearFilter = useCallback(() => {
-    // ... (no changes)
     setActiveFilter(null);
     setCurrentPage(1);
     setIsFilterOpen(false);
   }, []);
 
   const handleWordClick = useCallback((word: string) => {
-    // ... (no changes)
     const card = WORD_TO_CARD_MAP.get(word.toLowerCase());
     if (card) {
       setSelectedCard(card);
@@ -474,7 +496,6 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   }, []);
 
   const renderSentenceWithFlashcards = useCallback((sentence: string) => {
-    // ... (no changes)
     if (!showFlashcardWords) {
       return sentence;
     }
@@ -499,7 +520,6 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   }, [showFlashcardWords, flashcardVocabularySet, handleWordClick]);
   
   const handleToggleAudio = useCallback((sentenceIndex: number) => {
-    // ... (no changes)
     const audio = audioRef.current;
     if (!audio) return;
     
@@ -519,7 +539,6 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   }, [audioState.index, audioState.isPlaying]);
 
   useEffect(() => {
-    // ... (no changes)
     const audio = audioRef.current;
     if (!audio) return;
     const handlePlay = () => setAudioState(prev => ({ ...prev, isPlaying: true }));
@@ -536,7 +555,6 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   }, []);
 
   const handlePageChange = (newPage: number) => {
-    // ... (no changes)
     if (newPage < 1 || newPage > totalPages) return;
     setCurrentPage(newPage);
     if (audioRef.current) {
@@ -717,4 +735,4 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
 
 export default PhraseViewer;
 
-// --- END OF FILE phrase-ui.tsx (REFACTORED) ---
+// --- END OF FILE phrase-ui.tsx (REFACTORED - WITH COPY BUTTON) ---
