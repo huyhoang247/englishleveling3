@@ -1,6 +1,4 @@
-// --- START OF FILE ebook-ui.tsx (UPDATED) ---
-
-import React, { useMemo, useState, useEffect } from 'react'; // <-- THAY ĐỔI: Không cần useRef, useLayoutEffect nữa
+import React, { useMemo, useState, useEffect } from 'react';
 import { EbookProvider, useEbook, Book, Vocabulary, HiddenWordState, ExampleSentence } from './ebook-context.tsx';
 import VirtualKeyboard from '../ui/keyboard.tsx';
 
@@ -8,20 +6,14 @@ import VirtualKeyboard from '../ui/keyboard.tsx';
 import FlashcardDetailModal from '../story/flashcard.tsx';
 import AddToPlaylistModal from '../AddToPlaylistModal.tsx';
 import BackButton from '../ui/back-button.tsx';
-// PhraseDetailModal has been removed as it's no longer used.
 
-// --- ICONS (Copied from original file for self-containment) ---
+// --- ICONS ---
 const PlayIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 pl-0.5"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>);
 const PauseIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M6.75 5.25a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Zm9 0a.75.75 0 0 1 .75.75V18a.75.75 0 0 1-1.5 0V6a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" /></svg>);
 const Rewind10Icon = () => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>);
 const XIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>);
-// StatsIcon has been removed
-// PracticeIcon has been removed
-// SaveIcon has been removed
 const SpeakerIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" /></svg>);
 const CheckIcon = ({ className = "w-5 h-5" }: { className?: string }) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" /></svg>);
-// SearchIcon has been removed as it's no longer used.
-
 
 // --- HELPER FUNCTION ---
 const groupBooksByCategory = (books: Book[]): Record<string, Book[]> => {
@@ -218,7 +210,7 @@ const VoiceSelectorPopup: React.FC<{
 };
 
 
-// --- THAY ĐỔI: Thiết kế lại ActionToolbar ---
+// --- ActionToolbar ---
 const ActionToolbar = () => {
     const {
         currentUser, bookVocabularyCardIds, setIsBatchPlaylistModalOpen,
@@ -226,7 +218,6 @@ const ActionToolbar = () => {
         availableVoices, setIsVoiceSelectorOpen
     } = useEbook();
 
-    // THAY ĐỔI: Nền nút đổi thành gray-100 và hover là gray-200
     const buttonClass = "flex-shrink-0 flex items-center text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200 px-3.5 py-1.5 rounded-lg transition-colors";
 
     return (
@@ -303,7 +294,17 @@ const EbookReaderContent: React.FC = () => {
     for (let i = 0; i < minParagraphs; i++) {
       const enPara = enParagraphs[i].trim();
       const viPara = viParagraphs[i].trim();
-      const isHeader = enPara.length < 80 && !enPara.includes('.') && !enPara.includes('?');
+      
+      // (SỬA ĐỔI) Logic xác định header chặt chẽ hơn
+      const isHeader = 
+        enPara.length < 80 && 
+        !enPara.includes('.') && 
+        !enPara.includes('?') &&
+        !enPara.includes('!') &&
+        !enPara.includes(',') &&
+        !enPara.trim().startsWith('(') &&
+        !enPara.trim().endsWith('--');
+
       if (isHeader) {
         pairedContent.push({ en: enPara, vi: viPara, isHeader: true });
       } else {
@@ -444,7 +445,17 @@ const EbookReaderContent: React.FC = () => {
       <div className="font-['Inter',_sans_serif] text-gray-800 px-2 sm:px-4 pb-24">
         {contentLines.map((line, index) => {
           if (line.trim() === '') return <div key={`blank-${index}`} className="h-3 sm:h-4"></div>;
-          const isHeader = line.length < 80 && !line.includes('.') && !line.includes('?');
+          
+          // (SỬA ĐỔI) Logic xác định header chặt chẽ hơn cho chế độ đọc thường
+          const isHeader = 
+            line.length < 80 && 
+            !line.includes('.') && 
+            !line.includes('?') &&
+            !line.includes('!') &&
+            !line.includes(',') &&
+            !line.trim().startsWith('(') &&
+            !line.trim().endsWith('--');
+
           const renderableParts = renderHighlightedText(line);
           if (isHeader) return <h3 key={`line-${index}`} className="text-xl font-bold text-gray-900 mt-6 mb-4 text-center">{renderableParts}</h3>;
           return <p key={`line-${index}`} className="text-base sm:text-lg leading-relaxed sm:leading-loose text-gray-700 mb-4 text-left">{renderableParts}</p>;
@@ -548,7 +559,6 @@ const EbookReaderContent: React.FC = () => {
                 )}
               </div>
           </header>
-          {/* <-- THAY ĐỔI: Gọi component ActionToolbar đã được tách ra */}
           {!isClozeTestActive && <ActionToolbar />}
         </div>
       )}
