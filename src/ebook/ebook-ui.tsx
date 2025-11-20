@@ -71,82 +71,135 @@ const ClozeTestSetupModal = () => {
     const min = 5;
     const max = 50;
 
-    const bubblePosition = useMemo(() => {
-        const percent = (hiddenWordCount - min) / (max - min);
-        return `calc(${percent * 100}% - ${percent * 12}px)`;
-    }, [hiddenWordCount, min, max]);
-
-    const handleStart = () => {
-        startClozeTest();
+    // Logic xác định độ khó và Icon tương ứng
+    const getDifficultyLevel = (count: number) => {
+        if (count <= 15) return { label: 'Khởi động', color: 'text-green-500', bg: 'bg-green-50', border: 'border-green-200' };
+        if (count <= 35) return { label: 'Thử thách', color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' };
+        return { label: 'Chuyên gia', color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200' };
     };
 
-    const presets = [10, 20, 30, 50];
+    const level = getDifficultyLevel(hiddenWordCount);
+
+    const presets = [
+        { value: 10, label: 'Dễ' },
+        { value: 25, label: 'Vừa' },
+        { value: 40, label: 'Khó' },
+        { value: 50, label: 'Max' }
+    ];
 
     return (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in-short" onClick={closeClozeTestModal}>
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md transform animate-scale-up" onClick={e => e.stopPropagation()}>
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-wider">Practice</h3>
-                    <button onClick={closeClozeTestModal} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100" aria-label="Đóng">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in-short" onClick={closeClozeTestModal}>
+            <div 
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform animate-scale-up border border-gray-100" 
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Header Area */}
+                <div className="relative bg-gradient-to-r from-blue-600 to-violet-600 p-6 text-center">
+                    <button 
+                        onClick={closeClozeTestModal} 
+                        className="absolute top-4 right-4 p-1.5 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+                    >
                         <XIcon />
                     </button>
+                    <div className="mx-auto w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-white">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                        </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-white tracking-wide">Luyện Tập Điền Từ</h3>
+                    <p className="text-blue-100 text-sm mt-1">Cải thiện khả năng nhớ từ vựng qua ngữ cảnh</p>
                 </div>
 
-                <div className="p-8 space-y-6">
-                     <p className="text-sm text-center text-gray-500 -mt-4">Điều chỉnh số lượng từ bị ẩn để bắt đầu thử thách.</p>
-                    <div>
-                        <div className="flex justify-center gap-2 mb-6">
-                            {presets.map(p => (
-                                <button
-                                    key={p}
-                                    onClick={() => setHiddenWordCount(p)}
-                                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                                        hiddenWordCount === p
-                                        ? 'bg-blue-600 text-white shadow'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                    }`}
-                                >
-                                    {p}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="relative pt-4">
-                            <div style={{ left: bubblePosition }} className="absolute -top-3 w-10 text-center">
-                                <div className="relative bg-gray-800 text-white rounded-md px-2 py-1 text-xs font-bold">
-                                    {hiddenWordCount}
-                                    <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 -bottom-1 left-1/2 -translate-x-1/2"></div>
-                                </div>
-                            </div>
+                {/* Body Content */}
+                <div className="p-8 space-y-8">
+                    
+                    {/* Big Number Display */}
+                    <div className="flex flex-col items-center">
+                         <div className={`flex flex-col items-center justify-center w-32 h-32 rounded-full border-4 ${level.border} ${level.bg} transition-all duration-300`}>
+                            <span className={`text-4xl font-extrabold ${level.color}`}>{hiddenWordCount}</span>
+                            <span className={`text-xs font-semibold uppercase tracking-wider mt-1 ${level.color}`}>Từ vựng</span>
+                         </div>
+                         <div className={`mt-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${level.border} ${level.color} ${level.bg}`}>
+                            Cấp độ: {level.label}
+                         </div>
+                    </div>
+
+                    {/* Slider Control */}
+                    <div className="space-y-6">
+                        <div className="relative w-full h-6 flex items-center">
                             <input
-                                id="wordCount"
                                 type="range"
                                 min={min}
                                 max={max}
-                                step="5"
+                                step="1"
                                 value={hiddenWordCount}
                                 onChange={(e) => setHiddenWordCount(Number(e.target.value))}
-                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                className="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 z-20"
                             />
-                            <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                <span>{min}</span>
-                                <span>{max}</span>
+                            <div className="absolute w-full flex justify-between px-1 z-10 pointer-events-none">
+                                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
                             </div>
                         </div>
+
+                        {/* Presets */}
+                        <div className="grid grid-cols-4 gap-2">
+                            {presets.map((p) => (
+                                <button
+                                    key={p.value}
+                                    onClick={() => setHiddenWordCount(p.value)}
+                                    className={`py-2 px-1 rounded-lg text-sm font-medium border transition-all duration-200 ${
+                                        hiddenWordCount === p.value
+                                        ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm scale-105'
+                                        : 'border-gray-200 text-gray-600 hover:border-blue-300 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    {p.value}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
-                <div className="px-6 py-4 bg-gray-50 rounded-b-xl flex justify-center">
+
+                    {/* Action Button */}
                     <button
-                        onClick={handleStart}
-                        className="px-8 py-2.5 text-base font-bold rounded-lg shadow-lg transition-all text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transform hover:scale-[1.02]"
+                        onClick={startClozeTest}
+                        className="w-full py-3.5 rounded-xl text-white font-bold text-lg shadow-lg bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 transform transition-all duration-200 hover:-translate-y-0.5 active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300/50"
                     >
-                        Bắt đầu
+                        Bắt đầu thử thách
                     </button>
                 </div>
+                
                 <style jsx>{`
                     @keyframes fade-in-short { from { opacity: 0; } to { opacity: 1; } }
                     @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
                     .animate-fade-in-short { animation: fade-in-short 0.2s ease-out forwards; }
                     .animate-scale-up { animation: scale-up 0.2s ease-out forwards; }
+                    /* Custom Range Thumb Styles */
+                    input[type=range]::-webkit-slider-thumb {
+                        -webkit-appearance: none;
+                        height: 24px;
+                        width: 24px;
+                        border-radius: 50%;
+                        background: #ffffff;
+                        border: 2px solid #2563eb;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                        margin-top: -8px; /* Adjust for vertical alignment */
+                    }
+                    input[type=range]::-moz-range-thumb {
+                        height: 24px;
+                        width: 24px;
+                        border-radius: 50%;
+                        background: #ffffff;
+                        border: 2px solid #2563eb;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                    }
+                    input[type=range]::-webkit-slider-runnable-track {
+                        height: 8px;
+                        border-radius: 4px;
+                    }
                 `}</style>
             </div>
         </div>
