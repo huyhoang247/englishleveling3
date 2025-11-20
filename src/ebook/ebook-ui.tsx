@@ -88,7 +88,8 @@ const ClozeTestSetupModal = () => {
     ];
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in-short" onClick={closeClozeTestModal}>
+        // Đã xóa backdrop-blur-sm ở dòng dưới đây để tăng hiệu năng
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in-short" onClick={closeClozeTestModal}>
             <div 
                 className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform animate-scale-up border border-gray-100" 
                 onClick={e => e.stopPropagation()}
