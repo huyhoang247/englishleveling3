@@ -56,10 +56,16 @@ const parseDetailedMeanings = (text: string): Map<string, string> => {
     const meaningsMap = new Map<string, string>();
     const lines = text.trim().split('\n');
     for (const line of lines) {
-        const match = line.match(/\(([^)]+)\)/);
+        // CẬP NHẬT: Format mới là "Source (Nguồn) là..."
+        // Regex này lấy phần chữ ở đầu dòng cho đến khi gặp dấu mở ngoặc đầu tiên '('
+        const match = line.match(/^([^(]+)\s*\(/);
+        
         if (match && match[1]) {
-            const englishWord = match[1];
-            // THAY ĐỔI 1: Chuyển key thành chữ IN HOA để tra cứu không phân biệt hoa/thường
+            // match[1] sẽ lấy được "Source " (có thể có khoảng trắng)
+            // .trim() để xóa khoảng trắng thừa -> "Source"
+            const englishWord = match[1].trim();
+            
+            // Key vẫn là chữ IN HOA để tra cứu
             meaningsMap.set(englishWord.toUpperCase(), line.trim());
         }
     }
