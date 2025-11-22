@@ -6,18 +6,26 @@ export interface WordPair {
 }
 
 // This function parses the text and returns an array of word pairs.
-// We use a regular expression to find the pattern: Vietnamese (English) là ...
+// OLD Pattern: Vietnamese (English) là ...
+// NEW Pattern: English (Vietnamese) là ...
 const parseDefinitions = (): WordPair[] => {
   const pairs: WordPair[] = [];
   const lines = detailedMeaningsText.trim().split('\n');
-  const regex = /^(.+?)\s+\((.+?)\)\s+là\s+/;
+  
+  // Regex giải thích:
+  // ^(.+?)  : Group 1 - Lấy cụm từ đầu dòng (Bây giờ là Tiếng Anh)
+  // \s*\(   : Khoảng trắng và dấu mở ngoặc
+  // (.+?)   : Group 2 - Lấy cụm từ trong ngoặc (Bây giờ là Tiếng Việt)
+  // \)      : Dấu đóng ngoặc
+  // \s+là\s+: Từ khóa nối
+  const regex = /^(.+?)\s*\((.+?)\)\s+là\s+/;
 
   lines.forEach(line => {
     const match = line.match(regex);
     if (match && match[1] && match[2]) {
       pairs.push({
-        vietnamese: match[1].trim(),
-        english: match[2].trim(),
+        english: match[1].trim(),    // Group 1 là English
+        vietnamese: match[2].trim(), // Group 2 là Vietnamese
       });
     }
   });
