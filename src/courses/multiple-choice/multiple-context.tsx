@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuizApp } from '../course-context.tsx';
-import quizData from './multiple-data.ts';
+// Đã xóa import quizData vì không còn sử dụng dữ liệu tĩnh
 
 // --- CÁC HÀM TIỆN ÍCH VÀ INTERFACE ---
 const shuffleArray = (array: any[]) => {
@@ -12,6 +12,11 @@ const shuffleArray = (array: any[]) => {
     [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
   }
   return shuffledArray;
+};
+
+// Hàm đếm số từ trong chuỗi tiếng Việt
+const countWords = (str: string): number => {
+  return str.trim().split(/\s+/).length;
 };
 
 interface Definition { vietnamese: string; english: string; explanation: string; }
@@ -166,6 +171,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
           let remainingQuestions: any[] = [];
     
           if (practiceBaseId === 2 || practiceBaseId === 3) {
+              // ... (Logic cũ cho practice 2, 3 giữ nguyên)
               allPossibleQuestions = vocabList.flatMap(word => {
                   const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
                   const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
@@ -185,9 +191,11 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
               });
               remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
           } else if (practiceBaseId === 4) {
+             // ... (Logic cũ cho practice 4 giữ nguyên)
               allPossibleQuestions = generateAudioQuizQuestions(vocabList);
               remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
           } else if (practiceBaseId === 5) {
+             // ... (Logic cũ cho practice 5 giữ nguyên)
               allPossibleQuestions = vocabList.flatMap(word => {
                   const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
                   const matchingSentences = exampleData.filter(ex => wordRegex.test(ex.english));
@@ -211,14 +219,68 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   return [];
               });
               remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
-          } else { // practiceBaseId === 1
-              allPossibleQuestions = quizData.filter(question =>
-                  vocabList.some(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(question.question))
-              );
-              remainingQuestions = allPossibleQuestions.filter(q => {
-                  const matchedWord = vocabList.find(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(q.question));
-                  return !(matchedWord && completedSet.has(matchedWord.toLowerCase()));
-              });
+          } else { 
+              // --- PRACTICE 1 (MẶC ĐỊNH): HỎI NGHĨA TỪ ---
+              // Logic mới: Sử dụng definitionsMap thay vì quizData tĩnh
+              
+              // 1. Lấy tất cả định nghĩa để làm nguồn tạo đáp án sai
+              const allDefinitions = Object.values(definitionsMap);
+
+              allPossibleQuestions = vocabList.map(word => {
+                  const definition = definitionsMap[word.toLowerCase()];
+                  if (!definition) return null;
+
+                  const correctEnglish = definition.english;
+                  const correctVietnamese = definition.vietnamese;
+                  const correctWordCount = countWords(correctVietnamese);
+
+                  // 2. Tìm các đáp án sai có cùng số lượng từ
+                  // Lọc ra những từ: không phải từ đúng VÀ có số từ tiếng Việt bằng nhau
+                  let potentialWrongDefinitions = allDefinitions.filter(d => 
+                    d.english.toLowerCase() !== correctEnglish.toLowerCase() && 
+                    countWords(d.vietnamese) === correctWordCount
+                  );
+
+                  // Nếu không tìm đủ 3 từ có cùng độ dài, nới lỏng điều kiện (lấy ngẫu nhiên các từ khác)
+                  if (potentialWrongDefinitions.length < 3) {
+                    potentialWrongDefinitions = allDefinitions.filter(d => 
+                        d.english.toLowerCase() !== correctEnglish.toLowerCase()
+                    );
+                  }
+
+                  // 3. Chọn ngẫu nhiên 3 đáp án sai
+                  const wrongOptions: string[] = [];
+                  const usedIndices = new Set<number>();
+                  
+                  // Shuffle tạm thời danh sách tiềm năng để lấy ngẫu nhiên
+                  const shuffledPotential = shuffleArray([...potentialWrongDefinitions]);
+                  
+                  for (const item of shuffledPotential) {
+                      if (wrongOptions.length >= 3) break;
+                      // Đảm bảo không trùng nghĩa tiếng Việt (trường hợp hiếm 2 từ Anh khác nhau nhưng cùng nghĩa Việt)
+                      if (!wrongOptions.includes(item.vietnamese) && item.vietnamese !== correctVietnamese) {
+                          wrongOptions.push(item.vietnamese);
+                      }
+                  }
+
+                  // Fallback nếu vẫn chưa đủ (rất hiếm khi xảy ra nếu data đủ lớn)
+                  while (wrongOptions.length < 3) {
+                      const randomDef = allDefinitions[Math.floor(Math.random() * allDefinitions.length)];
+                      if (randomDef.vietnamese !== correctVietnamese && !wrongOptions.includes(randomDef.vietnamese)) {
+                          wrongOptions.push(randomDef.vietnamese);
+                      }
+                  }
+
+                  // 4. Tạo đối tượng câu hỏi
+                  return {
+                      question: `Từ "${correctEnglish}" trong Tiếng Anh có nghĩa là gì?`,
+                      options: [correctVietnamese, ...wrongOptions], // Sẽ được shuffle sau ở useEffect
+                      correctAnswer: correctVietnamese,
+                      word: correctEnglish
+                  };
+              }).filter(Boolean); // Loại bỏ các giá trị null
+
+              remainingQuestions = allPossibleQuestions.filter(q => !completedSet.has(q.word.toLowerCase()));
           }
     
           setFilteredQuizData(allPossibleQuestions);
@@ -235,12 +297,20 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     loadQuizData();
-  }, [user, selectedPractice, fetchOrCreateUser, getOpenedVocab, fetchAllLocalProgress, exampleData, defaultVocabulary, generateAudioQuizQuestions, generateAudioUrlsForExamSentence]);
+  }, [user, selectedPractice, fetchOrCreateUser, getOpenedVocab, fetchAllLocalProgress, exampleData, defaultVocabulary, generateAudioQuizQuestions, generateAudioUrlsForExamSentence, definitionsMap]);
 
   const resetQuiz = useCallback(() => {
+    // Cần cập nhật logic reset để tương thích với cấu trúc câu hỏi mới
+    // completedWordsForSession dựa trên `q.word` (đã có trong object mới) hoặc regex match (cho logic cũ/đặc biệt)
     const completedWordsForSession = new Set(
-      playableQuestions.slice(0, currentQuestion).map(q => q.word || userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question))).filter(Boolean).map(word => word.toLowerCase())
+      playableQuestions.slice(0, currentQuestion).map(q => {
+          if (q.word) return q.word;
+          // Fallback cho các loại câu hỏi cũ nếu không có property word trực tiếp
+          const found = userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question));
+          return found;
+      }).filter(Boolean).map(word => word.toLowerCase())
     );
+
     const newRemainingQuestions = filteredQuizData.filter(q => {
         const word = q.word || userVocabulary.find(v => new RegExp(`\\b${v}\\b`, 'i').test(q.question));
         return word && !completedWordsForSession.has(word.toLowerCase());
@@ -259,10 +329,12 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (playableQuestions.length > 0 && currentQuestion < playableQuestions.length) {
       const currentQuizItem = playableQuestions[currentQuestion];
-      const isSpecialType = [2, 3, 4, 5].includes(selectedPractice % 100);
-      if (isSpecialType) {
+      // Logic xác định từ hiện tại
+      // Nếu object có sẵn property 'word' (Logic mới + audio quiz), dùng luôn
+      if (currentQuizItem.word) {
         setCurrentQuestionWord(currentQuizItem.word);
       } else {
+        // Fallback regex cho các dạng cũ nếu cần
         const matchedWord = userVocabulary.find(vocabWord => new RegExp(`\\b${vocabWord}\\b`, 'i').test(currentQuizItem.question));
         setCurrentQuestionWord(matchedWord || null);
       }
