@@ -1,6 +1,4 @@
 const detailedMeaningsText = `
-
-
 Source (Nguồn) là điểm xuất phát, nơi mà một cái gì đó bắt đầu, được lấy hoặc có nguồn gốc từ đó. Nó có thể là một người, một địa điểm, một tài liệu hoặc một sự kiện.
 Insurance (Bảo Hiểm) là một hợp đồng hoặc chính sách mà theo đó một cá nhân hoặc tổ chức trả một khoản phí định kỳ (phí bảo hiểm) cho một công ty bảo hiểm, để đổi lấy sự bảo vệ tài chính hoặc bồi thường trong trường hợp xảy ra các rủi ro được quy định.
 Argument (Tranh luận) là một cuộc trao đổi ý kiến, thường là gay gắt, giữa hai hoặc nhiều người có quan điểm khác nhau; hoặc là một tập hợp các lý lẽ được đưa ra để chứng minh hay bác bỏ một điều gì đó.
