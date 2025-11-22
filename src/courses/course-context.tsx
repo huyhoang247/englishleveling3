@@ -99,9 +99,19 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     const lines = detailedMeaningsText.trim().split('\n');
     lines.forEach(line => {
       if (line.trim() === '') return;
-      const match = line.match(/^(.+?)\s+\((.+?)\)\s+là\s+(.*)/);
+      
+      // CẬP NHẬT LOGIC PARSE:
+      // Format cũ: Vietnamese (English) là Explanation
+      // Format mới: English (Vietnamese) là Explanation
+      // Regex này tìm: [Cụm từ đầu] [khoảng trắng] ([Cụm từ trong ngoặc]) [khoảng trắng] là [phần giải thích]
+      const match = line.match(/^(.+?)\s*\((.+?)\)\s+là\s+(.*)/);
+      
       if (match) {
-        const [, vietnameseWord, englishWord, explanation] = match;
+        // match[1]: English (Source)
+        // match[2]: Vietnamese (Nguồn)
+        // match[3]: Explanation (...là điểm xuất phát...)
+        const [, englishWord, vietnameseWord, explanation] = match;
+        
         definitions[englishWord.trim().toLowerCase()] = {
           vietnamese: vietnameseWord.trim(),
           english: englishWord.trim(),
