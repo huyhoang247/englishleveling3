@@ -44,7 +44,6 @@ const VoiceSelectionPopup: React.FC<VoiceSelectionPopupProps> = ({
 }) => {
   const popupRef = useRef<HTMLDivElement>(null);
 
-  // Effect to handle closing the popup with the Escape key for better accessibility
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -67,7 +66,7 @@ const VoiceSelectionPopup: React.FC<VoiceSelectionPopupProps> = ({
       <div
         ref={popupRef}
         className="z-[99] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-64 animate-popup-content"
-        onClick={(e) => e.stopPropagation()} // Prevent clicks inside the popup from closing it
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="p-3 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-sm font-semibold text-center text-gray-700 dark:text-gray-200">Chọn Giọng Đọc</h3>
@@ -101,7 +100,7 @@ const VoiceSelectionPopup: React.FC<VoiceSelectionPopupProps> = ({
 // --- END: POPUP CHỌN GIỌNG ĐỌC ---
 
 
-// --- MODIFIED: VoiceStepper component simplified (no forwardRef needed) ---
+// --- MODIFIED: VoiceStepper component simplified ---
 type VoiceStepperProps = {
   currentVoice: string;
   onNavigate: (direction: 'next' | 'previous') => void;
@@ -150,14 +149,13 @@ const VoiceStepper: React.FC<VoiceStepperProps> = ({ currentVoice, onNavigate, a
 // --- END: CÁC COMPONENT & ICON ---
 
 
-// Animation styles - Added popup animations
+// Animation styles
 const animations = `
   @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
   @keyframes modalBackdropIn { 0% { opacity: 0; } 100% { opacity: 0.4; } }
   @keyframes slideUp { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
   @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
   
-  /* --- NEW ANIMATIONS FOR POPUP --- */
   @keyframes popup-overlay-in { 0% { opacity: 0; } 100% { opacity: 1; } }
   @keyframes popup-content-in { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
   
@@ -168,17 +166,12 @@ const animations = `
 `;
 
 // --- START: HÀM HELPER MỚI ---
-// Hàm này tìm từ trong ngoặc đơn và viết hoa chữ cái đầu
 const capitalizeWordInDefinition = (definition: string): string => {
   if (!definition) return '';
-
-  // Hàm con để viết hoa chữ cái đầu
   const capitalizeFirst = (str: string) => {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   };
-
-  // Dùng regex để tìm và thay thế (word) bằng (Word)
   return definition.replace(/\(([^)]+)\)/, (match, word) => {
     return `(${capitalizeFirst(word)})`;
   });
@@ -208,13 +201,18 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     isPlaying: false,
   });
 
-  // --- REMOVED: voiceStepperRef is no longer needed ---
+  // PAGINATION STATE
+  const [examPage, setExamPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+  const examTabContentRef = useRef<HTMLDivElement>(null); // Ref to scroll back to top
+
   const [isVoicePopupOpen, setIsVoicePopupOpen] = useState(false);
 
   useEffect(() => {
     if (showVocabDetail && selectedCard) {
       setActiveTab('basic');
-      setIsVoicePopupOpen(false); // Close popup when modal opens
+      setIsVoicePopupOpen(false);
+      setExamPage(1); // Reset pagination
       
       const urls = generateAudioUrlsForWord(selectedCard.vocabulary.word);
       setAudioUrls(urls);
@@ -256,7 +254,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     setSelectedVoice(availableVoices[nextIndex]);
   }, [audioUrls, selectedVoice]);
   
-  // --- NEW: Handler for selecting a voice from the popup ---
   const handleSelectVoice = useCallback((voice: string) => {
     setSelectedVoice(voice);
     setIsVoicePopupOpen(false);
@@ -334,11 +331,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   const renderModalContent = () => {
     const wordToFind = selectedCard.vocabulary.word;
 
-    const filteredSentencesWithIndex = exampleSentencesData
-        .map((sentence, index) => ({ ...sentence, originalIndex: index }))
-        .filter(sentence => new RegExp(`\\b${wordToFind}\\b`, 'i').test(sentence.english));
-
-
     const highlightWord = (sentence: string, word: string) => {
         const parts = sentence.split(new RegExp(`(${word})`, 'gi'));
         return (
@@ -354,7 +346,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
     switch (activeTab) {
       case 'basic':
-        // ADDED 'realistic'
         const stylesToShow = ['default', 'photography', 'illustration', 'realistic'];
         const availableImages = Object.entries(selectedCard.imageUrl).filter(
             ([styleKey, url]) => stylesToShow.includes(styleKey) && url && typeof url === 'string'
@@ -384,66 +375,126 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           </div>
         );
       case 'example':
+        const filteredSentencesWithIndex = exampleSentencesData
+            .map((sentence, index) => ({ ...sentence, originalIndex: index }))
+            .filter(sentence => new RegExp(`\\b${wordToFind}\\b`, 'i').test(sentence.english));
+        
+        // --- PAGINATION LOGIC ---
+        const totalPages = Math.ceil(filteredSentencesWithIndex.length / ITEMS_PER_PAGE);
+        const startIndex = (examPage - 1) * ITEMS_PER_PAGE;
+        const currentSentences = filteredSentencesWithIndex.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+        const handlePageChange = (newPage: number) => {
+            if (newPage >= 1 && newPage <= totalPages) {
+                setExamPage(newPage);
+                // Scroll to top
+                if (examTabContentRef.current) {
+                    examTabContentRef.current.scrollTop = 0;
+                }
+            }
+        };
+
         return (
-          <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-center justify-between gap-4 mb-8">
-                <div className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 dark:text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="font-sans text-base font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                    {wordToFind}
-                  </span>
+          <div ref={examTabContentRef} className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition scroll-smooth">
+            <div className="max-w-4xl mx-auto min-h-[50vh] flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-4 mb-8">
+                  <div className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500 dark:text-blue-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-sans text-base font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                      {wordToFind}
+                    </span>
+                  </div>
+
+                  {audioUrls && (
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={togglePlay}
+                          className={`flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 ${isPlaying ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'}`}
+                          aria-label={isPlaying ? 'Dừng phát từ' : 'Phát âm từ'}
+                        >
+                          { isPlaying ? <PauseIcon className="w-4 h-4" /> : <VolumeUpIcon className="w-4 h-4" /> }
+                        </button>
+                        <VoiceStepper
+                            onClick={() => setIsVoicePopupOpen(true)}
+                            currentVoice={selectedVoice}
+                            onNavigate={handleChangeVoiceDirection}
+                            availableVoiceCount={Object.keys(audioUrls).length}
+                        />
+                    </div>
+                  )}
                 </div>
 
-                {audioUrls && (
-                   <div className="flex items-center gap-2 flex-shrink-0">
-                       <button
-                         onClick={togglePlay}
-                         className={`flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 ${isPlaying ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'}`}
-                         aria-label={isPlaying ? 'Dừng phát từ' : 'Phát âm từ'}
-                       >
-                         { isPlaying ? <PauseIcon className="w-4 h-4" /> : <VolumeUpIcon className="w-4 h-4" /> }
-                       </button>
-                       {/* --- MODIFIED: Removed ref for popup --- */}
-                       <VoiceStepper
-                          onClick={() => setIsVoicePopupOpen(true)}
-                          currentVoice={selectedVoice}
-                          onNavigate={handleChangeVoiceDirection}
-                          availableVoiceCount={Object.keys(audioUrls).length}
-                       />
-                   </div>
+                {filteredSentencesWithIndex.length > 0 ? (
+                  <div className="space-y-4">
+                    {currentSentences.map((sentence, index) => {
+                      const isCurrentAudio = examAudioState.index === sentence.originalIndex;
+                      const isThisPlaying = isCurrentAudio && examAudioState.isPlaying;
+                      return (
+                          <div key={index} className="relative bg-gray-50 dark:bg-gray-900/70 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
+                            <button
+                              onClick={() => handleToggleExampleAudio(sentence.originalIndex)}
+                              className={`absolute top-3 right-3 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${isThisPlaying ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700'}`}
+                              aria-label={isThisPlaying ? 'Dừng phát câu' : 'Phát âm câu'}
+                            >
+                              { isThisPlaying ? <PauseIcon className="w-4 h-4" /> : <VolumeUpIcon className="w-4 h-4" /> }
+                            </button>
+                            <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed font-medium pr-10">{highlightWord(sentence.english, wordToFind)}</p>
+                            <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm italic">{sentence.vietnamese}</p>
+                          </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 px-6 bg-gray-50 dark:bg-gray-900 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
+                    <h4 className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">Không tìm thấy ví dụ</h4>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Chưa có câu ví dụ nào cho từ này trong danh sách.</p>
+                  </div>
                 )}
               </div>
 
-              {filteredSentencesWithIndex.length > 0 ? (
-                <div className="space-y-4">
-                  {filteredSentencesWithIndex.map((sentence, index) => {
-                    const isCurrentAudio = examAudioState.index === sentence.originalIndex;
-                    const isThisPlaying = isCurrentAudio && examAudioState.isPlaying;
-                    return (
-                        <div key={index} className="relative bg-gray-50 dark:bg-gray-900/70 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                          <button
-                            onClick={() => handleToggleExampleAudio(sentence.originalIndex)}
-                            className={`absolute top-3 right-3 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${isThisPlaying ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-700'}`}
-                            aria-label={isThisPlaying ? 'Dừng phát câu' : 'Phát âm câu'}
-                          >
-                            { isThisPlaying ? <PauseIcon className="w-4 h-4" /> : <VolumeUpIcon className="w-4 h-4" /> }
-                          </button>
-                          <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed font-medium pr-10">{highlightWord(sentence.english, wordToFind)}</p>
-                          <p className="mt-2 text-gray-500 dark:text-gray-400 text-sm italic">{sentence.vietnamese}</p>
+              {/* --- PAGINATION UI --- */}
+              {totalPages > 1 && (
+                  <div className="flex items-center justify-center mt-10 pb-2">
+                    <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-900 px-4 py-2 rounded-full shadow-sm border border-gray-100 dark:border-gray-800">
+                        <button
+                            onClick={() => handlePageChange(examPage - 1)}
+                            disabled={examPage === 1}
+                            className={`p-2 rounded-full transition-all duration-200 ${
+                                examPage === 1 
+                                ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' 
+                                : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:shadow-md hover:text-blue-500 dark:hover:text-blue-400'
+                            }`}
+                            aria-label="Trang trước"
+                        >
+                            <ChevronLeftIcon className="w-5 h-5" />
+                        </button>
+                        
+                        <div className="flex items-center gap-1">
+                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 min-w-[1rem] text-center">{examPage}</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500">/</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500">{totalPages}</span>
                         </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-12 px-6 bg-gray-50 dark:bg-gray-900 rounded-xl">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg>
-                  <h4 className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-300">Không tìm thấy ví dụ</h4>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Chưa có câu ví dụ nào cho từ này trong danh sách.</p>
-                </div>
+
+                        <button
+                            onClick={() => handlePageChange(examPage + 1)}
+                            disabled={examPage === totalPages}
+                            className={`p-2 rounded-full transition-all duration-200 ${
+                                examPage === totalPages 
+                                ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed' 
+                                : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:shadow-md hover:text-blue-500 dark:hover:text-blue-400'
+                            }`}
+                            aria-label="Trang sau"
+                        >
+                             <ChevronRightIcon className="w-5 h-5" />
+                        </button>
+                    </div>
+                  </div>
               )}
+              {/* --- END PAGINATION UI --- */}
             </div>
           </div>
         );
@@ -471,7 +522,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                           <h5 className="text-sm font-semibold text-gray-600 dark:text-gray-400">Phát âm</h5>
                        </div>
                        <div className="flex items-center gap-2">
-                          {/* --- MODIFIED: Removed ref for popup --- */}
                           <VoiceStepper
                              onClick={() => setIsVoicePopupOpen(true)}
                              currentVoice={selectedVoice}
@@ -541,7 +591,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           {renderModalContent()}
       </div>
 
-      {/* --- MODIFIED: RENDER CENTERED VOICE SELECTION POPUP --- */}
       {isVoicePopupOpen && audioUrls && (
         <VoiceSelectionPopup
           availableVoices={Object.keys(audioUrls)}
