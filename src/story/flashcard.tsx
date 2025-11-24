@@ -55,13 +55,7 @@ const CheckIcon = ({ className }: { className: string }) => (
     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
   </svg>
 );
-
-// Icon cho phần Loại từ (Part of Speech)
-const TagIcon = ({ className }: { className: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-  </svg>
-);
+// (Đã xóa TagIcon vì không còn dùng trong thiết kế mới)
 // --- END: ICONS ---
 
 
@@ -550,18 +544,18 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   <p className="text-sm italic text-gray-600 dark:text-gray-400 leading-relaxed">{capitalizeWordInDefinition(selectedCard.vocabulary.meaning)}</p>
                 </div>
 
-                {/* 2. Ô LOẠI TỪ (PART OF SPEECH) - MỚI THÊM */}
+                {/* 2. Ô LOẠI TỪ (REDESIGNED) - Tag Tinh Tế */}
                 {partOfSpeech && (
-                  <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-800 md:col-span-2">
-                    <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Loại từ</h5>
-                    <div className="flex items-center gap-2">
-                         <div className="p-1.5 bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400 rounded-lg">
-                             <TagIcon className="w-5 h-5" />
-                         </div>
-                         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-                             {partOfSpeech}
-                         </span>
-                    </div>
+                  <div className="md:col-span-2 flex items-start">
+                     <span className="
+                       inline-flex items-center px-3.5 py-1 rounded-full 
+                       text-xs font-bold uppercase tracking-widest
+                       bg-slate-100 text-slate-600 border border-slate-200
+                       dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-700/50
+                       shadow-sm
+                     ">
+                       {partOfSpeech}
+                     </span>
                   </div>
                 )}
 
@@ -587,7 +581,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                    </div>
                 )}
 
-                {/* 4. CÁC THÔNG TIN KHÁC (Độ phổ biến, cụm từ, đồng nghĩa, trái nghĩa) */}
+                {/* 4. CÁC THÔNG TIN KHÁC */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Mức độ phổ biến</h5>
                   <div className="flex items-center gap-4">
