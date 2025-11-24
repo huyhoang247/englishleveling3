@@ -55,7 +55,6 @@ const CheckIcon = ({ className }: { className: string }) => (
     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
   </svg>
 );
-// (Đã xóa TagIcon vì không còn dùng trong thiết kế mới)
 // --- END: ICONS ---
 
 
@@ -216,23 +215,23 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'example' | 'vocabulary'>('basic');
   
-  // Audio state for Vocabulary tab
+  // Audio state
   const [audioUrls, setAudioUrls] = useState<{ [key: string]: string } | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<string>('Matilda');
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   
-  // Audio state for Example tab sentences
+  // Exam Audio state
   const examAudioRef = useRef<HTMLAudioElement>(null);
   const [examAudioState, setExamAudioState] = useState<{ index: number | null; isPlaying: boolean }>({
     index: null,
     isPlaying: false,
   });
 
-  // PAGINATION STATE
+  // Pagination state
   const [examPage, setExamPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
-  const examTabContentRef = useRef<HTMLDivElement>(null); // Ref to scroll back to top
+  const examTabContentRef = useRef<HTMLDivElement>(null);
 
   const [isVoicePopupOpen, setIsVoicePopupOpen] = useState(false);
 
@@ -240,7 +239,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
     if (showVocabDetail && selectedCard) {
       setActiveTab('basic');
       setIsVoicePopupOpen(false);
-      setExamPage(1); // Reset pagination
+      setExamPage(1);
       
       const urls = generateAudioUrlsForWord(selectedCard.vocabulary.word);
       setAudioUrls(urls);
@@ -407,7 +406,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             .map((sentence, index) => ({ ...sentence, originalIndex: index }))
             .filter(sentence => new RegExp(`\\b${wordToFind}\\b`, 'i').test(sentence.english));
         
-        // --- PAGINATION LOGIC ---
         const totalPages = Math.ceil(filteredSentencesWithIndex.length / ITEMS_PER_PAGE);
         const startIndex = (examPage - 1) * ITEMS_PER_PAGE;
         const currentSentences = filteredSentencesWithIndex.slice(startIndex, startIndex + ITEMS_PER_PAGE);
@@ -415,7 +413,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
         const handlePageChange = (newPage: number) => {
             if (newPage >= 1 && newPage <= totalPages) {
                 setExamPage(newPage);
-                // Scroll to top
                 if (examTabContentRef.current) {
                     examTabContentRef.current.scrollTop = 0;
                 }
@@ -522,13 +519,26 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                     </div>
                   </div>
               )}
-              {/* --- END PAGINATION UI --- */}
             </div>
           </div>
         );
       case 'vocabulary':
         // LOGIC LẤY LOẠI TỪ: Tra cứu từ bảng dữ liệu (chuyển về IN HOA để khớp key)
         const partOfSpeech = partOfSpeechData[wordToFind.toUpperCase()];
+
+        // MAPPING THÔNG TIN CHI TIẾT
+        const posMapping: Record<string, { en: string; abbr: string }> = {
+            "Danh Từ": { en: "Noun", abbr: "n" },
+            "Tính Từ": { en: "Adjective", abbr: "adj" },
+            "Động Từ": { en: "Verb", abbr: "v" },
+            "Trạng Từ": { en: "Adverb", abbr: "adv" },
+            "Đại Từ": { en: "Pronoun", abbr: "pron" },
+            "Giới Từ": { en: "Preposition", abbr: "prep" },
+            "Liên Từ": { en: "Conjunction", abbr: "conj" },
+            "Thán Từ": { en: "Interjection", abbr: "interj" }
+        };
+
+        const posDetail = partOfSpeech ? posMapping[partOfSpeech] : null;
 
         return (
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
@@ -544,18 +554,29 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   <p className="text-sm italic text-gray-600 dark:text-gray-400 leading-relaxed">{capitalizeWordInDefinition(selectedCard.vocabulary.meaning)}</p>
                 </div>
 
-                {/* 2. Ô LOẠI TỪ (REDESIGNED) - Tag Tinh Tế */}
+                {/* 2. Ô LOẠI TỪ (PART OF SPEECH) - PHIÊN BẢN 3 VIÊN THUỐC */}
                 {partOfSpeech && (
-                  <div className="md:col-span-2 flex items-start">
-                     <span className="
-                       inline-flex items-center px-3.5 py-1 rounded-full 
-                       text-xs font-bold uppercase tracking-widest
-                       bg-slate-100 text-slate-600 border border-slate-200
-                       dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-700/50
-                       shadow-sm
-                     ">
-                       {partOfSpeech}
-                     </span>
+                  <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-800 md:col-span-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Viên 1: Tiếng Việt (Primary) */}
+                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-white text-gray-800 border border-gray-200 shadow-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700">
+                             {partOfSpeech}
+                        </span>
+
+                        {posDetail && (
+                            <>
+                                {/* Viên 2: Tiếng Anh (Secondary) */}
+                                <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800/50">
+                                    {posDetail.en}
+                                </span>
+
+                                {/* Viên 3: Viết tắt (Technical) */}
+                                <span className="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold bg-gray-200 text-gray-600 border border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
+                                    {posDetail.abbr}
+                                </span>
+                            </>
+                        )}
+                    </div>
                   </div>
                 )}
 
