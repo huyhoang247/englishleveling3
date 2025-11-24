@@ -4,8 +4,9 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import BackButton from '../ui/back-button.tsx';
 import { ExampleSentence, Flashcard as CoreFlashcard } from './flashcard-data.ts';
 import { generateAudioUrlsForWord, generateAudioUrlsForExamSentence } from '../voca-data/audio-quiz-generator.ts';
+import { partOfSpeechData } from '../voca-data/loai-tu.ts'; // IMPORT DỮ LIỆU LOẠI TỪ
 
-// Đổi tên interface để tránh xung đột với tên component, mặc dù vẫn dùng chung cấu trúc từ file data
+// Đổi tên interface để tránh xung đột với tên component
 interface FlashcardData extends CoreFlashcard {}
 
 // Define the props for the FlashcardDetailModal component
@@ -18,17 +19,53 @@ interface FlashcardDetailModalProps {
   zIndex?: number;
 }
 
-// --- START: CÁC COMPONENT & ICON LẤY TỪ MULTIPLE-UI.TSX ---
-const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg> );
-const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
-const ChevronLeftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> );
-const ChevronRightIcon = ({ className }: { className:string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg> );
-// --- NEW ICONS ---
-const SoundWaveIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 11h2v2H3v-2zm4 2h2v-6H7v6zm4-9h2V5h-2v9zm4 3h2V8h-2v6zm4-4h2V7h-2v4z"></path></svg> );
-const CheckIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg> );
+// --- START: ICONS ---
+const PauseIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path>
+  </svg>
+);
+
+const VolumeUpIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path>
+  </svg>
+);
+
+const ChevronLeftIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+  </svg>
+);
+
+const ChevronRightIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+  </svg>
+);
+
+const SoundWaveIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M3 11h2v2H3v-2zm4 2h2v-6H7v6zm4-9h2V5h-2v9zm4 3h2V8h-2v6zm4-4h2V7h-2v4z"></path>
+  </svg>
+);
+
+const CheckIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+  </svg>
+);
+
+// Icon cho phần Loại từ (Part of Speech)
+const TagIcon = ({ className }: { className: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+  </svg>
+);
+// --- END: ICONS ---
 
 
-// --- START: POPUP CHỌN GIỌNG ĐỌC (REWORKED FOR CENTERING) ---
+// --- START: POPUP CHỌN GIỌNG ĐỌC ---
 interface VoiceSelectionPopupProps {
   availableVoices: string[];
   currentVoice: string;
@@ -100,7 +137,7 @@ const VoiceSelectionPopup: React.FC<VoiceSelectionPopupProps> = ({
 // --- END: POPUP CHỌN GIỌNG ĐỌC ---
 
 
-// --- MODIFIED: VoiceStepper component simplified ---
+// --- VoiceStepper component ---
 type VoiceStepperProps = {
   currentVoice: string;
   onNavigate: (direction: 'next' | 'previous') => void;
@@ -146,8 +183,6 @@ const VoiceStepper: React.FC<VoiceStepperProps> = ({ currentVoice, onNavigate, a
       </div>
     );
 };
-// --- END: CÁC COMPONENT & ICON ---
-
 
 // Animation styles
 const animations = `
@@ -165,7 +200,7 @@ const animations = `
   .animate-popup-content { animation: popup-content-in 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
 `;
 
-// --- START: HÀM HELPER MỚI ---
+// --- HELPER FUNCTIONS ---
 const capitalizeWordInDefinition = (definition: string): string => {
   if (!definition) return '';
   const capitalizeFirst = (str: string) => {
@@ -176,7 +211,6 @@ const capitalizeWordInDefinition = (definition: string): string => {
     return `(${capitalizeFirst(word)})`;
   });
 };
-// --- END: HÀM HELPER MỚI ---
 
 const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
   selectedCard,
@@ -499,11 +533,15 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           </div>
         );
       case 'vocabulary':
+        // LOGIC LẤY LOẠI TỪ: Tra cứu từ bảng dữ liệu (chuyển về IN HOA để khớp key)
+        const partOfSpeech = partOfSpeechData[wordToFind.toUpperCase()];
+
         return (
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
             <div className="max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
+                {/* 1. Ô ĐỊNH NGHĨA */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-5 rounded-xl md:col-span-2">
                   <div className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full mb-4 dark:bg-blue-900/50 dark:text-blue-200">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5a.997.997 0 01.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>
@@ -512,6 +550,22 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   <p className="text-sm italic text-gray-600 dark:text-gray-400 leading-relaxed">{capitalizeWordInDefinition(selectedCard.vocabulary.meaning)}</p>
                 </div>
 
+                {/* 2. Ô LOẠI TỪ (PART OF SPEECH) - MỚI THÊM */}
+                {partOfSpeech && (
+                  <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-800 md:col-span-2">
+                    <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Loại từ</h5>
+                    <div className="flex items-center gap-2">
+                         <div className="p-1.5 bg-cyan-100 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400 rounded-lg">
+                             <TagIcon className="w-5 h-5" />
+                         </div>
+                         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
+                             {partOfSpeech}
+                         </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Ô PHÁT ÂM */}
                 {audioUrls && (
                   <div className="bg-gray-50 dark:bg-black p-4 rounded-xl border border-gray-200 dark:border-gray-800 md:col-span-2">
                      <div className="flex justify-between items-center">
@@ -533,6 +587,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                    </div>
                 )}
 
+                {/* 4. CÁC THÔNG TIN KHÁC (Độ phổ biến, cụm từ, đồng nghĩa, trái nghĩa) */}
                 <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <h5 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Mức độ phổ biến</h5>
                   <div className="flex items-center gap-4">
