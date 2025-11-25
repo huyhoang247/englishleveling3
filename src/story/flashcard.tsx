@@ -582,7 +582,7 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
 
                 {/* 3. Ô PHÁT ÂM */}
                 {audioUrls && (
-                  <div className="bg-gray-50 dark:bg-black p-4 rounded-xl border border-gray-200 dark:border-gray-800 md:col-span-2">
+                  <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl md:col-span-2">
                      <div className="flex justify-between items-center">
                        <div className="flex items-center gap-3">
                           <button onClick={togglePlay} className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 ${isPlaying ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'}`} aria-label={isPlaying ? 'Dừng phát' : 'Phát âm'}>
