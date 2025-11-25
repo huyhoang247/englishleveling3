@@ -187,21 +187,10 @@ const animations = `
   @keyframes popup-overlay-in { 0% { opacity: 0; } 100% { opacity: 1; } }
   @keyframes popup-content-in { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
   
-  @keyframes sound-wave {
-    0% { transform: scaleY(0.3); }
-    50% { transform: scaleY(1); }
-    100% { transform: scaleY(0.3); }
-  }
-
   .content-transition { animation: slideUp 0.3s ease-out; }
   .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; }
   .animate-popup-overlay { animation: popup-overlay-in 0.2s ease-out forwards; }
   .animate-popup-content { animation: popup-content-in 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
-  
-  .music-bar {
-    animation: sound-wave 0.8s ease-in-out infinite;
-    transform-origin: bottom;
-  }
 `;
 
 // --- HELPER FUNCTIONS ---
@@ -591,60 +580,17 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   </div>
                 )}
 
-                {/* 3. Ô PHÁT ÂM (ĐÃ THIẾT KẾ LẠI) */}
+                {/* 3. Ô PHÁT ÂM */}
                 {audioUrls && (
-                  <div className={`
-                    relative overflow-hidden rounded-2xl transition-all duration-500 ease-in-out md:col-span-2 border
-                    ${isPlaying 
-                      ? 'bg-blue-50/80 border-blue-200 dark:bg-blue-900/10 dark:border-blue-800 shadow-md shadow-blue-500/10' 
-                      : 'bg-gray-50 border-gray-100 dark:bg-gray-900 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
-                    }
-                  `}>
-                     <div className="p-4 md:p-5 flex items-center gap-5">
-                       {/* Nút Play Lớn */}
-                       <button 
-                          onClick={togglePlay} 
-                          className={`
-                            flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg group
-                            ${isPlaying 
-                              ? 'bg-white text-blue-600 dark:bg-gray-800 dark:text-blue-400 scale-105' 
-                              : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:shadow-blue-500/30 hover:scale-105'
-                            }
-                          `}
-                          aria-label={isPlaying ? 'Dừng phát' : 'Phát âm'}
-                       >
-                          {isPlaying ? (
-                            <PauseIcon className="w-6 h-6 fill-current" />
-                          ) : (
-                            <VolumeUpIcon className="w-6 h-6 fill-current ml-0.5" />
-                          )}
-                       </button>
-
-                       {/* Khu vực Thông tin & Animation giữa */}
-                       <div className="flex-grow flex flex-col justify-center min-h-[3rem]">
-                          {isPlaying ? (
-                            /* Giao diện khi đang phát: Sóng âm */
-                            <div className="flex flex-col items-start animate-fade-in-short">
-                               <span className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-1.5 uppercase tracking-wider">Đang phát</span>
-                               <div className="flex items-end gap-1 h-6">
-                                  <div className="w-1.5 bg-blue-500 rounded-full music-bar h-full" style={{ animationDelay: '0.0s' }}></div>
-                                  <div className="w-1.5 bg-blue-400 rounded-full music-bar h-3/4" style={{ animationDelay: '0.2s' }}></div>
-                                  <div className="w-1.5 bg-blue-600 rounded-full music-bar h-full" style={{ animationDelay: '0.4s' }}></div>
-                                  <div className="w-1.5 bg-blue-400 rounded-full music-bar h-2/3" style={{ animationDelay: '0.1s' }}></div>
-                                  <div className="w-1.5 bg-blue-500 rounded-full music-bar h-full" style={{ animationDelay: '0.3s' }}></div>
-                               </div>
-                            </div>
-                          ) : (
-                            /* Giao diện tĩnh: Text hướng dẫn */
-                            <div className="flex flex-col items-start animate-fade-in-short">
-                               <h5 className="text-base font-bold text-gray-700 dark:text-gray-200">Nghe phát âm</h5>
-                               <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Chọn giọng đọc & bấm play</p>
-                            </div>
-                          )}
+                  <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl md:col-span-2">
+                     <div className="flex justify-between items-center">
+                       <div className="flex items-center gap-3">
+                          <button onClick={togglePlay} className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 ${isPlaying ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700'}`} aria-label={isPlaying ? 'Dừng phát' : 'Phát âm'}>
+                            { isPlaying ? <PauseIcon className="w-5 h-5" /> : <VolumeUpIcon className="w-5 h-5" /> }
+                          </button>
+                          <h5 className="text-sm font-semibold text-gray-600 dark:text-gray-400">Phát âm</h5>
                        </div>
-
-                       {/* Voice Stepper bên phải */}
-                       <div className="flex-shrink-0 z-10">
+                       <div className="flex items-center gap-2">
                           <VoiceStepper
                              onClick={() => setIsVoicePopupOpen(true)}
                              currentVoice={selectedVoice}
@@ -653,11 +599,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                           />
                        </div>
                      </div>
-                     
-                     {/* Background Decoration */}
-                     {isPlaying && (
-                       <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-blue-400/20 blur-3xl rounded-full pointer-events-none"></div>
-                     )}
                    </div>
                 )}
 
