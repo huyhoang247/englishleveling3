@@ -4,7 +4,7 @@
 const rawData = `
 Source - Danh Từ
 Insurance - Danh Từ
-College - Danh Từ 
+College - Danh Từ / Động Từ
 Argument - Danh Từ / Tính Từ
 Influence - Danh Từ / Động Từ
 Release - Danh Từ / Động Từ
