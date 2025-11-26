@@ -552,14 +552,14 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   <p className="text-sm italic text-gray-600 dark:text-gray-400 leading-relaxed">{capitalizeWordInDefinition(selectedCard.vocabulary.meaning)}</p>
                 </div>
 
-                {/* 2. Ô LOẠI TỪ (PART OF SPEECH) - NO BORDER / NO DIVIDER */}
+                {/* 2. Ô LOẠI TỪ (PART OF SPEECH) - NO BORDER / NO DIVIDER / TIGHT SPACING */}
                 {partOfSpeechList && partOfSpeechList.length > 0 && (
                   <div className="bg-gray-50 dark:bg-gray-900 rounded-xl md:col-span-2 overflow-hidden">
-                    <div className="flex flex-col">
+                    <div className="flex flex-col py-2">
                         {partOfSpeechList.map((posItem, index) => {
                             const posDetail = posMapping[posItem];
                             return (
-                                <div key={index} className="p-4 flex flex-wrap items-center gap-3">
+                                <div key={index} className="px-4 py-1 flex flex-wrap items-center gap-3">
                                     {/* Viên 1: Tiếng Việt (Primary) */}
                                     <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-white text-gray-800 border border-gray-200 shadow-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700">
                                          {posItem}
