@@ -523,8 +523,8 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
           </div>
         );
       case 'vocabulary':
-        // LOGIC LẤY LOẠI TỪ: Tra cứu từ bảng dữ liệu (chuyển về IN HOA để khớp key)
-        const partOfSpeech = partOfSpeechData[wordToFind.toUpperCase()];
+        // LOGIC LẤY LOẠI TỪ: Tra cứu từ bảng dữ liệu (Bây giờ nó là một mảng string[])
+        const partOfSpeechList = partOfSpeechData[wordToFind.toUpperCase()];
 
         // MAPPING THÔNG TIN CHI TIẾT
         const posMapping: Record<string, { en: string; abbr: string }> = {
@@ -537,8 +537,6 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
             "Liên Từ": { en: "Conjunction", abbr: "conj" },
             "Thán Từ": { en: "Interjection", abbr: "interj" }
         };
-
-        const posDetail = partOfSpeech ? posMapping[partOfSpeech] : null;
 
         return (
           <div className="flex-grow overflow-y-auto bg-white dark:bg-black p-6 md:p-8 content-transition">
@@ -554,28 +552,35 @@ const FlashcardDetailModal: React.FC<FlashcardDetailModalProps> = ({
                   <p className="text-sm italic text-gray-600 dark:text-gray-400 leading-relaxed">{capitalizeWordInDefinition(selectedCard.vocabulary.meaning)}</p>
                 </div>
 
-                {/* 2. Ô LOẠI TỪ (PART OF SPEECH) - PHIÊN BẢN 3 VIÊN THUỐC */}
-                {partOfSpeech && (
-                  <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-100 dark:border-gray-800 md:col-span-2">
-                    <div className="flex flex-wrap items-center gap-3">
-                        {/* Viên 1: Tiếng Việt (Primary) */}
-                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-white text-gray-800 border border-gray-200 shadow-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700">
-                             {partOfSpeech}
-                        </span>
+                {/* 2. Ô LOẠI TỪ (PART OF SPEECH) - Updated Logic Multiple Rows */}
+                {partOfSpeechList && partOfSpeechList.length > 0 && (
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 md:col-span-2 overflow-hidden">
+                    <div className="flex flex-col divide-y divide-gray-200 dark:divide-gray-800">
+                        {partOfSpeechList.map((posItem, index) => {
+                            const posDetail = posMapping[posItem];
+                            return (
+                                <div key={index} className="p-4 flex flex-wrap items-center gap-3">
+                                    {/* Viên 1: Tiếng Việt (Primary) */}
+                                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-white text-gray-800 border border-gray-200 shadow-sm dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700">
+                                         {posItem}
+                                    </span>
 
-                        {posDetail && (
-                            <>
-                                {/* Viên 2: Tiếng Anh (Secondary) */}
-                                <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800/50">
-                                    {posDetail.en}
-                                </span>
+                                    {posDetail && (
+                                        <>
+                                            {/* Viên 2: Tiếng Anh (Secondary) */}
+                                            <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800/50">
+                                                {posDetail.en}
+                                            </span>
 
-                                {/* Viên 3: Viết tắt (Technical) */}
-                                <span className="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold bg-gray-200 text-gray-600 border border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
-                                    {posDetail.abbr}
-                                </span>
-                            </>
-                        )}
+                                            {/* Viên 3: Viết tắt (Technical) */}
+                                            <span className="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-mono font-semibold bg-gray-200 text-gray-600 border border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600">
+                                                {posDetail.abbr}
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                   </div>
                 )}
