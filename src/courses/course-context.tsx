@@ -13,7 +13,7 @@ import {
   fetchGameInitialData as fetchGameInitialDataService,
   updateAchievementData as updateAchievementDataService,
   fetchAndSyncVocabularyData as fetchAndSyncVocabularyDataService,
-  fetchAllLocalProgress as fetchAllLocalProgressService, // Thêm import mới
+  fetchAllLocalProgress as fetchAllLocalProgressService,
   VocabularyItem,
 } from './course-data-service.ts';
 // Import data và generators
@@ -180,7 +180,12 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     if (['vocabularyGame', 'quiz', 'vocaMatchGame'].includes(currentView)) {
        setCurrentView('practices');
        setSelectedPractice(null);
-    } else if (currentView === 'wordChainGame' || currentView === 'analysis' || currentView === 'exampleView') {
+    } else if (
+        currentView === 'wordChainGame' || 
+        currentView === 'analysis' || 
+        currentView === 'exampleView' || 
+        currentView === 'topics' // Cập nhật: Thêm topics vào danh sách quay về main
+    ) {
        setCurrentView('main');
     } else if (currentView === 'practices') {
       setCurrentView('quizTypes');
@@ -294,7 +299,7 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     fetchGameInitialData,
     updateAchievementData,
     fetchAndSyncVocabularyData,
-    fetchAllLocalProgress, // Thêm hàm vào context value
+    fetchAllLocalProgress,
     // Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
