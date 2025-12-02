@@ -39,8 +39,7 @@ const shimmerStyle = `
   }
 `;
 
-// ... (Giữ nguyên các hàm getTopicImageUrl, TopicSkeleton, TopicImageCard như cũ) ...
-
+// --- HELPER FUNCTIONS ---
 const getTopicImageUrl = (index: number): string => {
   const baseUrl1 = 'https://raw.githubusercontent.com/englishleveling46/Flashcard/main/topic/image/';
   const baseUrl2 = 'https://raw.githubusercontent.com/englishleveling46/Flashcard/main/topic/image2/';
@@ -86,7 +85,7 @@ const TopicImageCard = ({ index }: { index: number }) => {
   );
 };
 
-// --- COMPONENT: STUDY TIMER (ĐÃ FIX LỖI) ---
+// --- COMPONENT: STUDY TIMER (NO BLUR) ---
 const StudyTimer = ({ 
     currentPage, 
     masteryCount, 
@@ -99,7 +98,7 @@ const StudyTimer = ({
     const [seconds, setSeconds] = useState(0);
     const [dailyCount, setDailyCount] = useState(0);
     const [justRewarded, setJustRewarded] = useState<{amount: number} | null>(null);
-    const [hasRewardedThisPage, setHasRewardedThisPage] = useState(false); // Cờ kiểm tra đã nhận thưởng trang này chưa
+    const [hasRewardedThisPage, setHasRewardedThisPage] = useState(false); 
     
     // SVG Circle Config
     const radius = 24;
@@ -122,48 +121,40 @@ const StudyTimer = ({
     // Reset Timer khi đổi trang
     useEffect(() => {
         setSeconds(0);
-        setHasRewardedThisPage(false); // Reset cờ để cho phép nhận thưởng ở trang mới
+        setHasRewardedThisPage(false); 
     }, [currentPage]);
 
-    // Timer Logic chạy mỗi giây
+    // Timer Logic
     useEffect(() => {
-        // Nếu đã hết lượt trong ngày HOẶC đã nhận thưởng trang này rồi -> Không chạy timer nữa (hoặc chạy đến max rồi dừng)
         if (dailyCount >= MAX_DAILY_REWARDS) return;
 
         const interval = setInterval(() => {
             setSeconds(prev => {
-                if (prev >= REWARD_DURATION_SECONDS) return prev; // Dừng ở max
+                if (prev >= REWARD_DURATION_SECONDS) return prev; 
                 return prev + 1;
             });
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [dailyCount, hasRewardedThisPage]); // Thêm hasRewardedThisPage vào dependencies
+    }, [dailyCount, hasRewardedThisPage]); 
 
-    // Logic trả thưởng (FIXED: Thêm điều kiện !hasRewardedThisPage)
+    // Logic trả thưởng
     useEffect(() => {
         if (
             seconds >= REWARD_DURATION_SECONDS && 
             dailyCount < MAX_DAILY_REWARDS && 
-            !hasRewardedThisPage // Chỉ thưởng nếu CHƯA nhận ở trang này
+            !hasRewardedThisPage 
         ) {
             const rewardAmount = BASE_GOLD_REWARD * (masteryCount > 0 ? masteryCount : 1);
-            
-            // 1. Gọi hàm cộng tiền
             onReward(rewardAmount);
             
-            // 2. Hiệu ứng UI
             setJustRewarded({ amount: rewardAmount });
             setTimeout(() => setJustRewarded(null), 3000);
 
-            // 3. Tăng biến đếm ngày
             const newCount = dailyCount + 1;
             setDailyCount(newCount);
-            
-            // 4. Đánh dấu đã nhận xong cho trang này (Chặn loop)
             setHasRewardedThisPage(true);
             
-            // 5. Lưu vào Storage
             const today = new Date().toISOString().split('T')[0];
             localStorage.setItem(`topic_rewards_${today}`, newCount.toString());
         }
@@ -176,32 +167,26 @@ const StudyTimer = ({
             
             {/* Popup thông báo cộng tiền */}
             {justRewarded && (
-                <div className="animate-popup bg-yellow-400 text-yellow-900 px-4 py-2 rounded-xl font-bold shadow-lg border-2 border-yellow-200 mb-3 flex items-center gap-2 pointer-events-auto">
+                <div className="animate-popup bg-yellow-400/90 text-yellow-900 px-4 py-2 rounded-xl font-bold shadow-lg border border-yellow-200/50 mb-3 flex items-center gap-2 pointer-events-auto">
                     <span>+ {justRewarded.amount} Coins</span>
                 </div>
             )}
 
-            {/* Vòng tròn Progress */}
-            <div className={`relative w-16 h-16 bg-white rounded-full shadow-xl border-4 transition-colors duration-300 pointer-events-auto group
-                ${isDailyLimitReached ? 'border-gray-200 bg-gray-50' : 'border-white'}
+            {/* Vòng tròn Progress (Có Opacity, KO Blur) */}
+            <div className={`relative w-16 h-16 rounded-full shadow-lg border-4 transition-all duration-300 pointer-events-auto group
+                ${isDailyLimitReached 
+                    ? 'border-gray-200/50 bg-gray-100/80' 
+                    : 'border-white/50 bg-white/80 hover:bg-white hover:border-white hover:shadow-xl'
+                }
             `}>
-                {/* Tooltip */}
-                <div className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                   {isDailyLimitReached 
-                        ? 'Daily limit reached (5/5)' 
-                        : hasRewardedThisPage 
-                            ? 'Page completed. Change page to earn more.' 
-                            : `Stay 5 mins: ${dailyCount}/${MAX_DAILY_REWARDS} today`
-                   }
-                </div>
-
+                
                 {/* SVG Progress */}
                 {!isDailyLimitReached && (
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 60 60">
-                        <circle cx="30" cy="30" r={radius} fill="none" stroke="#f3f4f6" strokeWidth="4" />
+                        <circle cx="30" cy="30" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="4" className="opacity-50" />
                         <circle
                             cx="30" cy="30" r={radius} fill="none"
-                            stroke={hasRewardedThisPage ? "#10B981" : "#F59E0B"} // Xanh lá nếu xong trang, Vàng nếu đang chạy
+                            stroke={hasRewardedThisPage ? "#10B981" : "#F59E0B"} 
                             strokeWidth="4" strokeLinecap="round"
                             style={{ strokeDasharray: circumference, strokeDashoffset: strokeDashoffset, transition: 'stroke-dashoffset 1s linear' }}
                         />
@@ -213,20 +198,19 @@ const StudyTimer = ({
                     {isDailyLimitReached ? (
                         <div className="flex flex-col items-center text-gray-400">
                              <span className="text-xs font-bold">5/5</span>
-                             <span className="text-[10px]">Done</span>
                         </div>
                     ) : hasRewardedThisPage ? (
                         <div className="flex flex-col items-center text-green-600 animate-bounce">
                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                              </svg>
                         </div>
                     ) : (
                         <>
-                            <span className="text-[10px] font-bold text-gray-500">
+                            <span className="text-[10px] font-bold text-gray-500/80">
                                 {dailyCount}/5
                             </span>
-                            <span className="text-[10px] text-orange-500 font-mono">
+                            <span className="text-[10px] text-orange-500 font-mono font-semibold">
                                 {Math.floor(seconds / 60)}:{(seconds % 60).toString().padStart(2, '0')}
                             </span>
                         </>
@@ -258,7 +242,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(prev => prev - 1); };
   const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(prev => prev + 1); };
 
-  // Hàm nhận thưởng từ Timer
   const handleTimeReward = useCallback((amount: number) => {
       if (setUserCoins) {
           setUserCoins((prev: number) => prev + amount);
@@ -269,7 +252,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     <div className="flex flex-col h-full bg-gray-100 relative">
       <style>{shimmerStyle}</style>
       
-      {/* Timer nằm đè lên nội dung, góc phải dưới */}
       <StudyTimer 
          currentPage={currentPage}
          masteryCount={masteryCount}
