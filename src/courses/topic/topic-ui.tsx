@@ -1,9 +1,9 @@
 // --- START OF FILE: topic.tsx ---
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 
 // --- Imports từ các file khác ---
-import { useQuizApp } from '../course-context.tsx'; // Import Context để lấy Coins/Mastery thực tế
+import { useQuizApp } from '../course-context.tsx'; // Import Context
 import HomeButton from '../../ui/home-button.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
@@ -14,16 +14,33 @@ interface TopicViewerProps {
 
 const ITEMS_PER_PAGE = 20;
 const MAX_TOTAL_ITEMS = 2000; 
+const REWARD_DURATION_SECONDS = 300; // 5 phút = 300 giây
+const MAX_DAILY_REWARDS = 5;
+const BASE_GOLD_REWARD = 5;
 
 // --- STYLES & ANIMATIONS ---
 const shimmerStyle = `
   @keyframes shimmer {
-    100% {
-      transform: translateX(100%);
-    }
+    100% { transform: translateX(100%); }
   }
   .animate-shimmer {
     animation: shimmer 1.5s infinite;
+  }
+  
+  @keyframes progress-spin {
+    from { stroke-dashoffset: 251; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  @keyframes popup-fade-up {
+    0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+    20% { opacity: 1; transform: translateY(0) scale(1); }
+    80% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  }
+  
+  .animate-popup {
+    animation: popup-fade-up 2.5s ease-out forwards;
   }
 `;
 
@@ -93,14 +110,162 @@ const TopicImageCard = ({ index }: { index: number }) => {
   );
 };
 
+// --- COMPONENT: STUDY TIMER & REWARD (Circular Progress) ---
+const StudyTimer = ({ 
+    currentPage, 
+    masteryCount, 
+    onReward 
+}: { 
+    currentPage: number, 
+    masteryCount: number,
+    onReward: (amount: number) => void 
+}) => {
+    const [seconds, setSeconds] = useState(0);
+    const [dailyCount, setDailyCount] = useState(0);
+    const [justRewarded, setJustRewarded] = useState<{amount: number} | null>(null);
+    
+    // SVG Circle Config
+    const radius = 24;
+    const circumference = 2 * Math.PI * radius;
+    const progress = Math.min((seconds / REWARD_DURATION_SECONDS) * 100, 100);
+    const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+    // Check localStorage for daily limit
+    useEffect(() => {
+        const today = new Date().toISOString().split('T')[0];
+        const key = `topic_rewards_${today}`;
+        const stored = localStorage.getItem(key);
+        if (stored) {
+            setDailyCount(parseInt(stored, 10));
+        } else {
+            // New day, reset storage
+            setDailyCount(0);
+            // Optional: Clean up old keys if needed
+        }
+    }, []);
+
+    // Timer Logic
+    useEffect(() => {
+        // Reset timer when page changes
+        setSeconds(0);
+    }, [currentPage]);
+
+    useEffect(() => {
+        if (dailyCount >= MAX_DAILY_REWARDS) return;
+
+        const interval = setInterval(() => {
+            setSeconds(prev => {
+                if (prev >= REWARD_DURATION_SECONDS) {
+                    return prev; // Stop at max
+                }
+                return prev + 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [dailyCount, currentPage]); // Re-run if dailyCount changes or page changes
+
+    // Handle Reward Trigger
+    useEffect(() => {
+        if (seconds >= REWARD_DURATION_SECONDS && dailyCount < MAX_DAILY_REWARDS) {
+            const rewardAmount = BASE_GOLD_REWARD * (masteryCount > 0 ? masteryCount : 1);
+            
+            // Trigger Context update
+            onReward(rewardAmount);
+            
+            // Show UI Animation
+            setJustRewarded({ amount: rewardAmount });
+            setTimeout(() => setJustRewarded(null), 3000);
+
+            // Update Daily Count
+            const newCount = dailyCount + 1;
+            setDailyCount(newCount);
+            
+            // Save to LocalStorage
+            const today = new Date().toISOString().split('T')[0];
+            localStorage.setItem(`topic_rewards_${today}`, newCount.toString());
+        }
+    }, [seconds, dailyCount, masteryCount, onReward]);
+
+    const isComplete = dailyCount >= MAX_DAILY_REWARDS;
+
+    return (
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
+            
+            {/* Reward Popup Notification */}
+            {justRewarded && (
+                <div className="animate-popup bg-yellow-400 text-yellow-900 px-4 py-2 rounded-xl font-bold shadow-lg border-2 border-yellow-200 mb-3 flex items-center gap-2 pointer-events-auto">
+                    <span>+ {justRewarded.amount}</span>
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 11a1 1 0 112 0 1 1 0 01-2 0zm0-4a1 1 0 112 0 1 1 0 01-2 0z" /></svg>
+                    <span className="text-xs opacity-75">Keep going!</span>
+                </div>
+            )}
+
+            {/* Timer Circle */}
+            <div className={`relative w-16 h-16 bg-white rounded-full shadow-xl border-4 transition-colors duration-300 pointer-events-auto group
+                ${isComplete ? 'border-gray-200 bg-gray-50' : 'border-white'}
+            `}>
+                {/* Tooltip */}
+                <div className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                   {isComplete ? 'Daily Limit Reached' : `Stay 5m/page: ${dailyCount}/${MAX_DAILY_REWARDS} today`}
+                </div>
+
+                {/* SVG Progress */}
+                {!isComplete && (
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 60 60">
+                        {/* Track */}
+                        <circle
+                            cx="30" cy="30" r={radius}
+                            fill="none"
+                            stroke="#f3f4f6"
+                            strokeWidth="4"
+                        />
+                        {/* Progress Indicator */}
+                        <circle
+                            cx="30" cy="30" r={radius}
+                            fill="none"
+                            stroke={seconds >= REWARD_DURATION_SECONDS ? "#10B981" : "#F59E0B"}
+                            strokeWidth="4"
+                            strokeLinecap="round"
+                            style={{
+                                strokeDasharray: circumference,
+                                strokeDashoffset: strokeDashoffset,
+                                transition: 'stroke-dashoffset 1s linear'
+                            }}
+                        />
+                    </svg>
+                )}
+
+                {/* Center Icon */}
+                <div className="absolute inset-0 flex items-center justify-center flex-col">
+                    {isComplete ? (
+                        <svg className="w-6 h-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                    ) : (
+                        <>
+                            <span className={`text-[10px] font-bold ${seconds >= REWARD_DURATION_SECONDS ? 'text-green-600' : 'text-gray-500'}`}>
+                                {dailyCount}/{MAX_DAILY_REWARDS}
+                            </span>
+                            <svg className={`w-4 h-4 ${seconds >= REWARD_DURATION_SECONDS ? 'text-green-500' : 'text-orange-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            </svg>
+                        </>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- MAIN COMPONENT ---
 export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
   
   // --- KẾT NỐI VỚI CONTEXT ---
-  // Lấy userCoins và masteryCount từ QuizAppContext
-  const { userCoins, masteryCount } = useQuizApp();
+  // Lấy userCoins, masteryCount và setUserCoins (để cộng tiền)
+  const { userCoins, masteryCount, setUserCoins } = useQuizApp();
 
   useEffect(() => {
     const scrollContainer = document.getElementById('topic-scroll-container');
@@ -122,9 +287,25 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
   };
 
+  // Handler khi nhận thưởng từ Timer
+  const handleTimeReward = useCallback((amount: number) => {
+      // Giả sử context có hàm setUserCoins nhận callback (prev => new)
+      // Nếu context của bạn chỉ nhận value, hãy đổi thành: setUserCoins(userCoins + amount);
+      if (setUserCoins) {
+          setUserCoins((prev: number) => prev + amount);
+      }
+  }, [setUserCoins]);
+
   return (
-    <div className="flex flex-col h-full bg-gray-100">
+    <div className="flex flex-col h-full bg-gray-100 relative">
       <style>{shimmerStyle}</style>
+      
+      {/* Floating Timer & Reward Component */}
+      <StudyTimer 
+         currentPage={currentPage}
+         masteryCount={masteryCount}
+         onReward={handleTimeReward}
+      />
       
       {/* --- HEADER (Style Word Chain + Real Data) --- */}
       <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-30 shadow-md">
@@ -133,12 +314,12 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                <HomeButton onClick={onGoBack} label="Home" />
             </div>
             
-            {/* Page Info (Ẩn trên mobile nhỏ để dành chỗ cho Coins) */}
+            {/* Page Info */}
             <div className="hidden md:block text-slate-300 font-medium text-sm">
                 Topic Page <span className="text-white font-bold">{currentPage}</span> / {totalPages}
             </div>
 
-            {/* Hiển thị Coins & Mastery thực tế */}
+            {/* Hiển thị Coins & Mastery */}
             <div className="flex items-center gap-2">
                 <CoinDisplay displayedCoins={userCoins} isStatsFullscreen={false} />
                 <MasteryDisplay masteryCount={masteryCount} />
@@ -151,7 +332,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
       <div id="topic-scroll-container" className="flex-grow overflow-y-auto p-4">
         <div className="max-w-2xl mx-auto space-y-8 pb-10">
           
-          {/* Thông báo trang cho Mobile (Hiển thị ở đây vì header chật) */}
+          {/* Thông báo trang cho Mobile */}
           <div className="md:hidden flex justify-center pb-2">
              <span className="bg-white/80 backdrop-blur px-4 py-1 rounded-full text-xs font-bold text-gray-500 shadow-sm border border-gray-200">
                 Page {currentPage} / {totalPages}
