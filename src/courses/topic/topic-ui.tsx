@@ -35,7 +35,7 @@ const shimmerStyle = `
   }
   
   .animate-popup {
-    animation: popup-fade-up 2.5s ease-out forwards;
+    animation: popup-fade-up 2.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
 `;
 
@@ -167,61 +167,52 @@ const StudyTimer = ({
 
     const isDailyLimitReached = dailyCount >= MAX_DAILY_REWARDS;
 
+    // Điều kiện để ẨN vòng tròn: Đã đạt giới hạn ngày HOẶC Đã nhận thưởng trang này
+    const shouldHideTimer = isDailyLimitReached || hasRewardedThisPage;
+
     return (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
             
-            {/* Popup thông báo cộng tiền */}
+            {/* --- POPUP THÔNG BÁO CỘNG TIỀN --- */}
             {justRewarded && (
-                <div className="animate-popup bg-yellow-400/90 text-yellow-900 px-4 py-2 rounded-xl font-bold shadow-lg border border-yellow-200/50 mb-3 flex items-center gap-2 pointer-events-auto">
-                    <span>+ {justRewarded.amount} Coins</span>
+                <div className="animate-popup bg-white border-2 border-yellow-400 px-5 py-2.5 rounded-full shadow-xl mb-4 flex items-center gap-2 pointer-events-auto transform origin-bottom-right">
+                    <span className="text-xl font-black text-yellow-500 drop-shadow-sm">
+                        +{justRewarded.amount}
+                    </span>
+                    <img 
+                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp" 
+                        alt="Gold"
+                        className="w-7 h-7 object-contain filter drop-shadow-sm"
+                    />
                 </div>
             )}
 
-            {/* Vòng tròn Progress */}
-            <div className={`relative w-16 h-16 rounded-full shadow-lg border-4 transition-all duration-300 pointer-events-auto group
-                ${isDailyLimitReached 
-                    ? 'border-gray-200/50 bg-gray-100/80' 
-                    : 'border-white/50 bg-white/80 hover:bg-white hover:border-white hover:shadow-xl'
-                }
-            `}>
-                
-                {/* SVG Progress */}
-                {!isDailyLimitReached && (
+            {/* Vòng tròn Progress - CHỈ HIỆN KHI CHƯA HOÀN THÀNH */}
+            {!shouldHideTimer && (
+                <div className="relative w-16 h-16 rounded-full shadow-lg border-4 border-white/50 bg-white/80 transition-all duration-300 pointer-events-auto group hover:bg-white hover:border-white hover:shadow-xl">
+                    
+                    {/* SVG Progress */}
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 60 60">
                         <circle cx="30" cy="30" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="4" className="opacity-50" />
                         <circle
                             cx="30" cy="30" r={radius} fill="none"
-                            stroke={hasRewardedThisPage ? "#10B981" : "#F59E0B"} 
+                            stroke="#F59E0B" 
                             strokeWidth="4" strokeLinecap="round"
                             style={{ strokeDasharray: circumference, strokeDashoffset: strokeDashoffset, transition: 'stroke-dashoffset 1s linear' }}
                         />
                     </svg>
-                )}
 
-                {/* Icon ở giữa */}
-                <div className="absolute inset-0 flex items-center justify-center flex-col">
-                    {isDailyLimitReached ? (
-                        <div className="flex flex-col items-center text-gray-400">
-                             <span className="text-xs font-bold">5/5</span>
-                        </div>
-                    ) : hasRewardedThisPage ? (
-                        <div className="flex flex-col items-center text-green-600 animate-bounce">
-                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                             </svg>
-                        </div>
-                    ) : (
-                        <>
-                            <span className="text-[10px] font-bold text-gray-500/80">
-                                {dailyCount}/5
-                            </span>
-                            <span className="text-[10px] text-orange-500 font-mono font-semibold">
-                                {Math.floor(seconds / 60)}:{(seconds % 60).toString().padStart(2, '0')}
-                            </span>
-                        </>
-                    )}
+                    {/* Icon ở giữa */}
+                    <div className="absolute inset-0 flex items-center justify-center flex-col">
+                        <span className="text-[10px] font-bold text-gray-500/80">
+                            {dailyCount}/5
+                        </span>
+                        <span className="text-[10px] text-orange-500 font-mono font-semibold">
+                            {Math.floor(seconds / 60)}:{(seconds % 60).toString().padStart(2, '0')}
+                        </span>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
@@ -232,7 +223,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
   
   // --- KẾT NỐI VỚI CONTEXT ---
-  // SỬA: Lấy updateUserCoins (hàm gọi DB) thay vì setUserCoins (không tồn tại)
   const { userCoins, masteryCount, updateUserCoins } = useQuizApp();
 
   useEffect(() => {
@@ -250,13 +240,10 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
   // --- HÀM XỬ LÝ CỘNG TIỀN ---
   const handleTimeReward = useCallback((amount: number) => {
-      // SỬA: Gọi updateUserCoins
       if (updateUserCoins) {
           updateUserCoins(amount)
             .then(() => console.log(`Added ${amount} coins successfully`))
             .catch((err) => console.error("Failed to add coins", err));
-      } else {
-        console.warn("updateUserCoins is not available in context");
       }
   }, [updateUserCoins]);
 
