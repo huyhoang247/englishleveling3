@@ -85,7 +85,7 @@ const TopicImageCard = ({ index }: { index: number }) => {
   );
 };
 
-// --- COMPONENT: STUDY TIMER (NO BLUR) ---
+// --- COMPONENT: STUDY TIMER ---
 const StudyTimer = ({ 
     currentPage, 
     masteryCount, 
@@ -146,15 +146,20 @@ const StudyTimer = ({
             !hasRewardedThisPage 
         ) {
             const rewardAmount = BASE_GOLD_REWARD * (masteryCount > 0 ? masteryCount : 1);
+            
+            // Gọi hàm reward
             onReward(rewardAmount);
             
+            // UI Animation
             setJustRewarded({ amount: rewardAmount });
             setTimeout(() => setJustRewarded(null), 3000);
 
+            // Update Counter
             const newCount = dailyCount + 1;
             setDailyCount(newCount);
             setHasRewardedThisPage(true);
             
+            // Save Storage
             const today = new Date().toISOString().split('T')[0];
             localStorage.setItem(`topic_rewards_${today}`, newCount.toString());
         }
@@ -172,7 +177,7 @@ const StudyTimer = ({
                 </div>
             )}
 
-            {/* Vòng tròn Progress (Có Opacity, KO Blur) */}
+            {/* Vòng tròn Progress */}
             <div className={`relative w-16 h-16 rounded-full shadow-lg border-4 transition-all duration-300 pointer-events-auto group
                 ${isDailyLimitReached 
                     ? 'border-gray-200/50 bg-gray-100/80' 
@@ -226,8 +231,9 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
   
-  // Context
-  const { userCoins, masteryCount, setUserCoins } = useQuizApp();
+  // --- KẾT NỐI VỚI CONTEXT ---
+  // SỬA: Lấy updateUserCoins (hàm gọi DB) thay vì setUserCoins (không tồn tại)
+  const { userCoins, masteryCount, updateUserCoins } = useQuizApp();
 
   useEffect(() => {
     const scrollContainer = document.getElementById('topic-scroll-container');
@@ -242,11 +248,17 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(prev => prev - 1); };
   const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(prev => prev + 1); };
 
+  // --- HÀM XỬ LÝ CỘNG TIỀN ---
   const handleTimeReward = useCallback((amount: number) => {
-      if (setUserCoins) {
-          setUserCoins((prev: number) => prev + amount);
+      // SỬA: Gọi updateUserCoins
+      if (updateUserCoins) {
+          updateUserCoins(amount)
+            .then(() => console.log(`Added ${amount} coins successfully`))
+            .catch((err) => console.error("Failed to add coins", err));
+      } else {
+        console.warn("updateUserCoins is not available in context");
       }
-  }, [setUserCoins]);
+  }, [updateUserCoins]);
 
   return (
     <div className="flex flex-col h-full bg-gray-100 relative">
