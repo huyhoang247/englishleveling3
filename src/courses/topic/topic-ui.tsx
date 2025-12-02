@@ -10,6 +10,19 @@ interface TopicViewerProps {
 const ITEMS_PER_PAGE = 20;
 const MAX_TOTAL_ITEMS = 2000; 
 
+// --- STYLES & ANIMATIONS ---
+// Hiệu ứng Shimmer (ánh sáng lướt qua) cho Skeleton
+const shimmerStyle = `
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite;
+  }
+`;
+
 // Hàm tạo URL
 const getTopicImageUrl = (index: number): string => {
   const baseUrl1 = 'https://raw.githubusercontent.com/englishleveling46/Flashcard/main/topic/image/';
@@ -23,7 +36,34 @@ const getTopicImageUrl = (index: number): string => {
   }
 };
 
-// Component hiển thị từng ảnh (Style giống Vertical Flashcard)
+// --- COMPONENT: SKELETON LOADING ---
+// Hiển thị khung xám giả lập hình ảnh đang tải
+const TopicSkeleton = () => {
+  return (
+    <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
+      {/* Giữ tỷ lệ khung hình 4:3 hoặc chiều cao cố định để giữ layout không bị giật */}
+      <div className="w-full h-64 sm:h-80 bg-gray-200 relative overflow-hidden">
+        {/* Lớp phủ Shimmer chạy qua */}
+        <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent z-10"></div>
+        
+        {/* Icon ảnh placeholder mờ ở giữa */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+            <svg className="w-16 h-16 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+        </div>
+      </div>
+      {/* Footer giả lập */}
+      <div className="p-4 space-y-2 bg-white">
+          <div className="h-4 bg-gray-200 rounded w-3/4 relative overflow-hidden">
+             <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+          </div>
+      </div>
+    </div>
+  );
+};
+
+// --- COMPONENT: TOPIC IMAGE CARD ---
 const TopicImageCard = ({ index }: { index: number }) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,30 +72,29 @@ const TopicImageCard = ({ index }: { index: number }) => {
   if (hasError) return null;
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 relative group">
-      {/* Loading State */}
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 z-10 h-64">
-          <div className="w-10 h-10 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-        </div>
-      )}
-      
-      {/* Image Full Width */}
-      <img
-        src={imageUrl}
-        alt={`Topic ${index}`}
-        className={`w-full h-auto block transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-        onLoad={() => setIsLoading(false)}
-        onError={() => setHasError(true)}
-        loading="lazy"
-      />
-      
-      {/* Optional: Overlay effect on hover (Giống style flashcard) */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none"></div>
+    <div className="relative group">
+      {/* Hiển thị Skeleton khi đang loading */}
+      {isLoading && <TopicSkeleton />}
+
+      {/* Container cho ảnh thật */}
+      <div className={`bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-500 ${isLoading ? 'hidden' : 'block'}`}>
+        <img
+          src={imageUrl}
+          alt={`Topic ${index}`}
+          className={`w-full h-auto block transition-opacity duration-700 ease-in-out ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          onLoad={() => setIsLoading(false)}
+          onError={() => setHasError(true)}
+          loading="lazy"
+        />
+        
+        {/* Hiệu ứng tối nhẹ khi hover (Optional) */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none rounded-2xl"></div>
+      </div>
     </div>
   );
 };
 
+// --- MAIN COMPONENT ---
 export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
@@ -83,6 +122,8 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
+      <style>{shimmerStyle}</style>
+      
       {/* Header */}
       <div className="flex-none bg-white shadow-sm z-20 px-4 py-3 border-b border-gray-200 sticky top-0">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
@@ -90,7 +131,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
             <BackButton onClick={onGoBack} />
             <h2 className="text-lg font-bold text-gray-800">Vocabulary Topics</h2>
           </div>
-          <div className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+          <div className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
             Page <span className="text-orange-600 font-bold">{currentPage}</span> / {totalPages}
           </div>
         </div>
@@ -98,18 +139,18 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
       {/* Main Content */}
       <div id="topic-scroll-container" className="flex-grow overflow-y-auto p-4">
-        {/* Container giới hạn max-w-2xl để giống New Feed/Vertical Gallery */}
-        <div className="max-w-2xl mx-auto space-y-6">
+        {/* Container giới hạn max-w-2xl để giống New Feed */}
+        <div className="max-w-2xl mx-auto space-y-6 pb-8">
           
           {/* Grid 1 Cột duy nhất */}
-          <div className="grid grid-cols-1 gap-6">
+          <div className="flex flex-col gap-6">
             {currentItems.map((itemIndex) => (
               <TopicImageCard key={itemIndex} index={itemIndex} />
             ))}
           </div>
 
           {/* Pagination Controls */}
-          <div className="flex justify-center items-center gap-4 py-8 bg-transparent">
+          <div className="flex justify-center items-center gap-4 py-6 bg-transparent">
             <button
               onClick={handlePrevPage}
               disabled={currentPage === 1}
@@ -126,17 +167,17 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
             </button>
 
             {/* Quick Page Jump */}
-            <div className="relative">
+            <div className="relative group">
                <select 
                  value={currentPage} 
                  onChange={(e) => setCurrentPage(Number(e.target.value))}
-                 className="appearance-none bg-white border border-gray-300 text-gray-700 font-bold py-2.5 pl-4 pr-8 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer hover:border-orange-400"
+                 className="appearance-none bg-white border border-gray-300 text-gray-700 font-bold py-2.5 pl-4 pr-10 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer hover:border-orange-400 transition-colors"
                >
                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
                    <option key={pageNum} value={pageNum}>{pageNum}</option>
                  ))}
                </select>
-               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 group-hover:text-orange-500 transition-colors">
                   <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                 </div>
             </div>
