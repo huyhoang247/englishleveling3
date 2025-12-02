@@ -1,7 +1,7 @@
 // --- START OF FILE: topic.tsx ---
 
 import React, { useState, useEffect, useMemo } from 'react';
-import BackButton from '../ui/back-button.tsx';
+import BackButton from '../../ui/back-button.tsx';
 
 interface TopicViewerProps {
   onGoBack: () => void;
