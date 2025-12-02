@@ -8,6 +8,7 @@ import VocaMatchGame from './voca-match/voca-match-ui.tsx';
 import AnalysisDashboard from './analysis-dashboard/analysis-ui.tsx';
 import WordChainGame from './word-chain-game/word-chain-ui.tsx';
 import PhraseViewer from './phrase/phrase-ui.tsx';
+import TopicViewer from './topic/topic-ui.tsx'; // <--- IMPORT MỚI
 import PracticeListLoadingSkeleton from './course-loading.tsx';
 import HomeButton from '../ui/home-button.tsx';
 import BackButton from '../ui/back-button.tsx';
@@ -53,7 +54,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   // --- END: LOGIC ĐIỀU KHIỂN NAVBAR ---
 
   // Logic render các màn hình fullscreen
-  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame', 'exampleView'].includes(currentView)) {
+  // CẬP NHẬT: Thêm 'topics' vào mảng
+  if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame', 'exampleView', 'topics'].includes(currentView)) {
       let ViewComponent = null;
 
       switch(currentView) {
@@ -74,6 +76,9 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               break;
           case 'exampleView':
               ViewComponent = <PhraseViewer onGoBack={goBack} />;
+              break;
+          case 'topics': // <--- CASE MỚI
+              ViewComponent = <TopicViewer onGoBack={goBack} />;
               break;
       }
       
@@ -113,13 +118,22 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/example-icon.webp" alt="Examples" className="h-20 w-20 mb-3" />
               <h3 className="text-lg font-bold text-gray-800 group-hover:text-green-600 transition-colors">Example</h3>
             </button>
-            {/* --- START: ĐÃ KHÔI PHỤC NÚT EXAM --- */}
+            
+            {/* --- BUTTON MỚI: TOPICS --- */}
+            <button
+              onClick={() => setCurrentView('topics')}
+              className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-orange-400 group"
+            >
+              <img src="https://cdn-icons-png.flaticon.com/512/3408/3408595.png" alt="Topics" className="h-20 w-20 mb-3 opacity-90" />
+              <h3 className="text-lg font-bold text-gray-800 group-hover:text-orange-600 transition-colors">Topics</h3>
+            </button>
+            {/* ------------------------- */}
+
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
               <img src={quizHomeAssets.examIcon} alt="Exam" className="h-20 w-20 mb-3" />
               <h3 className="text-lg font-bold text-gray-500">Exam</h3>
             </div>
-            {/* --- END: ĐÃ KHÔI PHỤC NÚT EXAM --- */}
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
               <img src={quizHomeAssets.grammarIcon} alt="Grammar" className="h-20 w-20 mb-3" />
@@ -228,7 +242,7 @@ const CheckIcon = ({ className }: { className: string }) => ( <svg xmlns="http:/
 
 // --- Child Components & Implementations ---
 
-const CircularProgress = memo(({ percentage, size, strokeWidth, trackColor }) => {
+const CircularProgress = memo(({ percentage, size, strokeWidth, trackColor }: any) => {
     const viewBox = `0 0 ${size} ${size}`;
     const radius = (size - strokeWidth) / 2;
     const circumference = radius * 2 * Math.PI;
@@ -242,9 +256,9 @@ const CircularProgress = memo(({ percentage, size, strokeWidth, trackColor }) =>
     );
 });
 
-const colorClasses = { indigo: { border: 'hover:border-indigo-300', bg: 'bg-indigo-100', text: 'text-indigo-600', hoverBg: 'group-hover:bg-indigo-200', arrow: 'group-hover:text-indigo-500' }, pink: { border: 'hover:border-pink-300', bg: 'bg-pink-100', text: 'text-pink-600', hoverBg: 'group-hover:bg-pink-200', arrow: 'group-hover:text-pink-500' }, teal: { border: 'hover:border-teal-300', bg: 'bg-teal-100', text: 'text-teal-600', hoverBg: 'group-hover:bg-teal-200', arrow: 'group-hover:text-teal-500' }, orange: { border: 'hover:border-orange-300', bg: 'bg-orange-100', text: 'text-orange-600', hoverBg: 'group-hover:bg-orange-200', arrow: 'group-hover:text-orange-500' }, purple: { border: 'hover:border-purple-300', bg: 'bg-purple-100', text: 'text-purple-600', hoverBg: 'group-hover:bg-purple-200', arrow: 'group-hover:text-purple-500' }, red: { border: 'hover:border-red-300', bg: 'bg-red-100', text: 'text-red-600', hoverBg: 'group-hover:bg-red-200', arrow: 'group-hover:text-red-500' }, green: { border: 'hover:border-green-300', bg: 'bg-green-100', text: 'text-green-600', hoverBg: 'group-hover:bg-green-200', arrow: 'group-hover:text-green-500' }, yellow: { border: 'hover:border-yellow-300', bg: 'bg-yellow-100', text: 'text-yellow-600', hoverBg: 'group-hover:bg-yellow-200', arrow: 'group-hover:text-yellow-500' }, cyan: { border: 'hover:border-cyan-300', bg: 'bg-cyan-100', text: 'text-cyan-600', hoverBg: 'group-hover:bg-cyan-200', arrow: 'group-hover:text-cyan-500' }, gray: { border: 'border-gray-300', bg: 'bg-gray-200', text: 'text-gray-500', hoverBg: 'group-hover:bg-gray-200', arrow: 'group-hover:text-gray-400' },};
+const colorClasses: any = { indigo: { border: 'hover:border-indigo-300', bg: 'bg-indigo-100', text: 'text-indigo-600', hoverBg: 'group-hover:bg-indigo-200', arrow: 'group-hover:text-indigo-500' }, pink: { border: 'hover:border-pink-300', bg: 'bg-pink-100', text: 'text-pink-600', hoverBg: 'group-hover:bg-pink-200', arrow: 'group-hover:text-pink-500' }, teal: { border: 'hover:border-teal-300', bg: 'bg-teal-100', text: 'text-teal-600', hoverBg: 'group-hover:bg-teal-200', arrow: 'group-hover:text-teal-500' }, orange: { border: 'hover:border-orange-300', bg: 'bg-orange-100', text: 'text-orange-600', hoverBg: 'group-hover:bg-orange-200', arrow: 'group-hover:text-orange-500' }, purple: { border: 'hover:border-purple-300', bg: 'bg-purple-100', text: 'text-purple-600', hoverBg: 'group-hover:bg-purple-200', arrow: 'group-hover:text-purple-500' }, red: { border: 'hover:border-red-300', bg: 'bg-red-100', text: 'text-red-600', hoverBg: 'group-hover:bg-red-200', arrow: 'group-hover:text-red-500' }, green: { border: 'hover:border-green-300', bg: 'bg-green-100', text: 'text-green-600', hoverBg: 'group-hover:bg-green-200', arrow: 'group-hover:text-green-500' }, yellow: { border: 'hover:border-yellow-300', bg: 'bg-yellow-100', text: 'text-yellow-600', hoverBg: 'group-hover:bg-yellow-200', arrow: 'group-hover:text-yellow-500' }, cyan: { border: 'hover:border-cyan-300', bg: 'bg-cyan-100', text: 'text-cyan-600', hoverBg: 'group-hover:bg-cyan-200', arrow: 'group-hover:text-cyan-500' }, gray: { border: 'border-gray-300', bg: 'bg-gray-200', text: 'text-gray-500', hoverBg: 'group-hover:bg-gray-200', arrow: 'group-hover:text-gray-400' },};
 
-const PracticeCard = memo(({ practiceNumber, details, progress, onRewardsClick, onReviewClick }) => {
+const PracticeCard = memo(({ practiceNumber, details, progress, onRewardsClick, onReviewClick }: any) => {
     const { handlePracticeSelect } = useQuizApp();
     const colors = colorClasses[details.color] || colorClasses.gray;
     const isCompleted = progress && progress.total > 0 && progress.completed >= progress.total;
@@ -259,7 +273,7 @@ const PracticeCard = memo(({ practiceNumber, details, progress, onRewardsClick, 
                     </div>
                     <div className="text-left flex-grow">
                         <h3 className="font-medium text-gray-800">{details.title}</h3>
-                        {Array.isArray(details.desc) ? (<div className="mt-1.5 flex flex-wrap gap-1.5">{details.desc.map(tag => <span key={tag} className={`inline-block text-xs font-semibold px-3 py-1 rounded-full bg-indigo-100 text-indigo-800`}>{tag}</span>)}</div>) : (<p className="text-xs text-gray-500 mt-1">{details.desc}</p>)}
+                        {Array.isArray(details.desc) ? (<div className="mt-1.5 flex flex-wrap gap-1.5">{details.desc.map((tag: any) => <span key={tag} className={`inline-block text-xs font-semibold px-3 py-1 rounded-full bg-indigo-100 text-indigo-800`}>{tag}</span>)}</div>) : (<p className="text-xs text-gray-500 mt-1">{details.desc}</p>)}
                     </div>
                 </div>
                 <div className="flex items-center gap-3 sm:gap-4 pl-2">{isCompleted ? <CompletedIcon className="w-6 h-6 text-green-500" /> : (progress && progress.total > 0 && <div className="text-right text-sm font-medium bg-gray-100 rounded-md px-2 py-0.5"><span className="font-bold text-gray-800">{progress.completed}</span><span className="text-gray-400">/{progress.total}</span></div>)}</div>
@@ -272,7 +286,7 @@ const PracticeCard = memo(({ practiceNumber, details, progress, onRewardsClick, 
     );
 });
 
-const ReviewItem = memo(({ practiceNumber, previewLevel, isLocked, isCompleted, progress, colors, unlockText }) => {
+const ReviewItem = memo(({ practiceNumber, previewLevel, isLocked, isCompleted, progress, colors, unlockText }: any) => {
     const { handlePracticeSelect } = useQuizApp();
     return (
         <button onClick={() => !isLocked && handlePracticeSelect(practiceNumber)} disabled={isLocked} className={`w-full bg-white border ${isLocked ? colors.border : `border-gray-200 ${colors.border}`} py-4 px-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex justify-between items-center group ${isLocked ? 'cursor-not-allowed opacity-70' : ''}`}>
@@ -287,13 +301,13 @@ const ReviewItem = memo(({ practiceNumber, previewLevel, isLocked, isCompleted, 
 
 function PracticeList() {
   const { selectedType, user } = useQuizApp();
-  const [progressData, setProgressData] = useState({});
+  const [progressData, setProgressData] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'main' | 'reviews'>('main');
   const [selectedPracticeForReview, setSelectedPracticeForReview] = useState<number | null>(null);
   const [isRewardsPopupOpen, setIsRewardsPopupOpen] = useState(false);
   const [selectedPracticeForRewards, setSelectedPracticeForRewards] = useState<{ number: number | null, title: string }>({ number: null, title: '' });
-  const [claimedRewards, setClaimedRewards] = useState({});
+  const [claimedRewards, setClaimedRewards] = useState<any>({});
   const MAX_PREVIEWS = 5;
 
   useEffect(() => {
@@ -309,7 +323,7 @@ function PracticeList() {
     loadProgress();
   }, [user, selectedType]);
   
-  const practiceDetails = useMemo(() => ({
+  const practiceDetails: any = useMemo(() => ({
     tracNghiem: {
         '1': { title: 'Practice 1', desc: ['Word Meaning'], color: 'indigo' },
         '2': { title: 'Practice 2', desc: ['Gap Fill', 'EN-VI'], color: 'pink' },
@@ -333,8 +347,8 @@ function PracticeList() {
     },
   }), []);
   
-  const handleReviewClick = useCallback((practiceNumber) => { setSelectedPracticeForReview(practiceNumber); setView('reviews'); }, []);
-  const handleRewardsClick = useCallback((practiceNumber, practiceTitle) => { setSelectedPracticeForRewards({ number: practiceNumber, title: practiceTitle }); setIsRewardsPopupOpen(true); }, []);
+  const handleReviewClick = useCallback((practiceNumber: any) => { setSelectedPracticeForReview(practiceNumber); setView('reviews'); }, []);
+  const handleRewardsClick = useCallback((practiceNumber: any, practiceTitle: any) => { setSelectedPracticeForRewards({ number: practiceNumber, title: practiceTitle }); setIsRewardsPopupOpen(true); }, []);
 
   if (loading) {
     return <PracticeListLoadingSkeleton />;
@@ -342,7 +356,7 @@ function PracticeList() {
 
   if (isRewardsPopupOpen) { return <RewardsPopup isOpen={isRewardsPopupOpen} onClose={() => setIsRewardsPopupOpen(false)} practiceNumber={selectedPracticeForRewards.number} practiceTitle={selectedPracticeForRewards.title} progressData={progressData} claimedRewards={claimedRewards} setClaimedRewards={setClaimedRewards} user={user} selectedType={selectedType} MAX_PREVIEWS={MAX_PREVIEWS} />; }
   if (view === 'reviews' && selectedPracticeForReview) {
-      const basePracticeDetails = practiceDetails[selectedType]?.[String(selectedPracticeForReview)];
+      const basePracticeDetails = practiceDetails[selectedType as string]?.[String(selectedPracticeForReview)];
       if (!basePracticeDetails) { return ( <div className="text-center text-red-500"><p>Lỗi: Không tìm thấy chi tiết bài tập.</p><button onClick={() => setView('main')} className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded">Quay lại</button></div> ); }
       const previewColors = ['purple', 'green', 'yellow', 'orange', 'pink'];
       return (
@@ -378,21 +392,21 @@ function PracticeList() {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="space-y-4 w-full pt-2">
-          {practicesToShow.map(pNumStr => {
+          {practicesToShow.map((pNumStr: string) => {
             const practiceNumber = parseInt(pNumStr, 10);
-            return <PracticeCard key={practiceNumber} practiceNumber={practiceNumber} details={practiceDetails[selectedType][practiceNumber]} progress={progressData[practiceNumber]} onReviewClick={handleReviewClick} onRewardsClick={handleRewardsClick} />;
+            return <PracticeCard key={practiceNumber} practiceNumber={practiceNumber} details={practiceDetails[selectedType as string][practiceNumber]} progress={progressData[practiceNumber]} onReviewClick={handleReviewClick} onRewardsClick={handleRewardsClick} />;
           })}
       </div>
     </div>
   );
 };
 
-const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }) => {
-    const [isClaiming, setIsClaiming] = useState(null);
-    const handleClaim = useCallback(async (rewardId, coinAmount, capacityAmount) => {
+const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progressData, claimedRewards, setClaimedRewards, user, selectedType, MAX_PREVIEWS }: any) => {
+    const [isClaiming, setIsClaiming] = useState<string | null>(null);
+    const handleClaim = useCallback(async (rewardId: any, coinAmount: any, capacityAmount: any) => {
         if (isClaiming || !user) return;
         setIsClaiming(rewardId);
-        try { await claimQuizReward(user.uid, rewardId, coinAmount, capacityAmount); setClaimedRewards(prev => ({ ...prev, [rewardId]: true })); } catch (error) { console.error("Error claiming reward via service:", error); alert("Đã có lỗi xảy ra khi nhận thưởng."); } finally { setIsClaiming(null); }
+        try { await claimQuizReward(user.uid, rewardId, coinAmount, capacityAmount); setClaimedRewards((prev: any) => ({ ...prev, [rewardId]: true })); } catch (error) { console.error("Error claiming reward via service:", error); alert("Đã có lỗi xảy ra khi nhận thưởng."); } finally { setIsClaiming(null); }
     }, [isClaiming, user, setClaimedRewards]);
 
     const renderedTiers = useMemo(() => {
@@ -401,7 +415,7 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         const MILESTONE_STEP = 100;
         const MAX_MILESTONES_TO_DISPLAY = 5;
 
-        const generateTiersForLevel = (levelProgress, levelNumber, levelTitle, multiplier) => {
+        const generateTiersForLevel = (levelProgress: any, levelNumber: any, levelTitle: any, multiplier: any) => {
             if (!levelProgress || levelProgress.total === 0) return null;
             const isInactivePreview = levelProgress.completed === 0;
             const levelTiers = [];
