@@ -1,7 +1,7 @@
 // --- START OF FILE: topic.tsx ---
 
 import React, { useState, useEffect, useMemo } from 'react';
-import BackButton from '../../ui/back-button.tsx';
+import BackButton from '../ui/back-button.tsx';
 
 interface TopicViewerProps {
   onGoBack: () => void;
@@ -11,7 +11,6 @@ const ITEMS_PER_PAGE = 20;
 const MAX_TOTAL_ITEMS = 2000; 
 
 // --- STYLES & ANIMATIONS ---
-// Hiệu ứng Shimmer (ánh sáng lướt qua) cho Skeleton
 const shimmerStyle = `
   @keyframes shimmer {
     100% {
@@ -37,25 +36,25 @@ const getTopicImageUrl = (index: number): string => {
 };
 
 // --- COMPONENT: SKELETON LOADING ---
-// Hiển thị khung xám giả lập hình ảnh đang tải
 const TopicSkeleton = () => {
   return (
     <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
-      {/* Giữ tỷ lệ khung hình 4:3 hoặc chiều cao cố định để giữ layout không bị giật */}
-      <div className="w-full h-64 sm:h-80 bg-gray-200 relative overflow-hidden">
-        {/* Lớp phủ Shimmer chạy qua */}
+      {/* Chiều cao giả lập để giữ layout không bị giật quá nhiều */}
+      <div className="w-full h-72 sm:h-96 bg-gray-200 relative overflow-hidden">
+        {/* Shimmer Effect */}
         <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent z-10"></div>
         
-        {/* Icon ảnh placeholder mờ ở giữa */}
+        {/* Placeholder Icon */}
         <div className="absolute inset-0 flex items-center justify-center opacity-20">
-            <svg className="w-16 h-16 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-20 h-20 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
         </div>
       </div>
+      
       {/* Footer giả lập */}
-      <div className="p-4 space-y-2 bg-white">
-          <div className="h-4 bg-gray-200 rounded w-3/4 relative overflow-hidden">
+      <div className="p-4 bg-white border-t border-gray-50">
+          <div className="h-4 bg-gray-200 rounded w-2/3 relative overflow-hidden">
              <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
           </div>
       </div>
@@ -72,23 +71,33 @@ const TopicImageCard = ({ index }: { index: number }) => {
   if (hasError) return null;
 
   return (
-    <div className="relative group">
-      {/* Hiển thị Skeleton khi đang loading */}
+    <div className="relative group w-full">
+      {/* 1. Hiển thị Skeleton khi đang loading */}
       {isLoading && <TopicSkeleton />}
 
-      {/* Container cho ảnh thật */}
-      <div className={`bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-500 ${isLoading ? 'hidden' : 'block'}`}>
+      {/* 2. Container Ảnh thật 
+          - Logic FIX: Không dùng 'hidden' (display: none) vì nó chặn trình duyệt tải ảnh.
+          - Thay vào đó: Dùng 'absolute top-0 h-0 opacity-0' để ảnh vẫn tồn tại trong DOM và tải ngầm.
+      */}
+      <div 
+        className={`bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-500 ease-in-out
+        ${isLoading 
+            ? 'absolute top-0 left-0 w-full h-0 opacity-0 z-[-1]' // Ẩn thị giác nhưng vẫn tải
+            : 'relative w-full h-auto opacity-100' // Hiện thị giác
+        }`}
+      >
         <img
           src={imageUrl}
           alt={`Topic ${index}`}
-          className={`w-full h-auto block transition-opacity duration-700 ease-in-out ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+          // FIX QUAN TRỌNG: Bỏ loading="lazy" hoặc dùng "eager" để bắt buộc tải ngay lập tức
+          loading="eager" 
+          className="w-full h-auto block"
           onLoad={() => setIsLoading(false)}
           onError={() => setHasError(true)}
-          loading="lazy"
         />
         
-        {/* Hiệu ứng tối nhẹ khi hover (Optional) */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none rounded-2xl"></div>
+        {/* Overlay tối nhẹ khi hover */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none"></div>
       </div>
     </div>
   );
@@ -99,7 +108,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
 
-  // Scroll lên đầu khi chuyển trang
   useEffect(() => {
     const scrollContainer = document.getElementById('topic-scroll-container');
     if (scrollContainer) {
@@ -139,18 +147,18 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
       {/* Main Content */}
       <div id="topic-scroll-container" className="flex-grow overflow-y-auto p-4">
-        {/* Container giới hạn max-w-2xl để giống New Feed */}
-        <div className="max-w-2xl mx-auto space-y-6 pb-8">
+        {/* Container giới hạn max-w-2xl */}
+        <div className="max-w-2xl mx-auto space-y-8 pb-10">
           
-          {/* Grid 1 Cột duy nhất */}
-          <div className="flex flex-col gap-6">
+          {/* List Ảnh */}
+          <div className="flex flex-col gap-8">
             {currentItems.map((itemIndex) => (
               <TopicImageCard key={itemIndex} index={itemIndex} />
             ))}
           </div>
 
           {/* Pagination Controls */}
-          <div className="flex justify-center items-center gap-4 py-6 bg-transparent">
+          <div className="flex justify-center items-center gap-4 py-6">
             <button
               onClick={handlePrevPage}
               disabled={currentPage === 1}
