@@ -26,7 +26,7 @@ const getTopicImageUrl = (index: number): string => {
   }
 };
 
-// Component hiển thị từng ảnh đơn lẻ để xử lý lỗi load ảnh
+// Component hiển thị từng ảnh đơn lẻ
 const TopicImageCard = ({ index }: { index: number }) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,11 +35,15 @@ const TopicImageCard = ({ index }: { index: number }) => {
   if (hasError) return null; // Ẩn hoàn toàn nếu ảnh lỗi
 
   return (
-    <div className="flex flex-col items-center bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
+      {/* 
+         - aspect-video (16/9) hoặc aspect-[4/3]: Giữ khung hình cố định để layout không bị nhảy.
+         - object-contain: Đảm bảo nhìn thấy toàn bộ nội dung ảnh.
+      */}
       <div className="relative w-full aspect-[4/3] bg-gray-50 flex items-center justify-center">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-orange-300 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
           </div>
         )}
         <img
@@ -51,9 +55,7 @@ const TopicImageCard = ({ index }: { index: number }) => {
           loading="lazy"
         />
       </div>
-      <div className="py-2 px-3 w-full bg-white border-t border-gray-100">
-        <span className="text-xs font-bold text-gray-400">#{index}</span>
-      </div>
+      {/* Đã xóa phần hiển thị text #index ở đây */}
     </div>
   );
 };
@@ -105,15 +107,21 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
       {/* Main Content (Scrollable) */}
       <div id="topic-scroll-container" className="flex-grow overflow-y-auto p-4 sm:p-6">
         <div className="max-w-5xl mx-auto">
-          {/* Grid Images */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {/* 
+            GRID CONFIGURATION:
+            - grid-cols-1: Mobile (Hiển thị 1 ảnh full chiều ngang)
+            - sm:grid-cols-2: Tablet nhỏ (2 cột)
+            - md:grid-cols-3: Tablet lớn (3 cột)
+            - lg:grid-cols-4: Desktop (4 cột)
+          */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {currentItems.map((itemIndex) => (
               <TopicImageCard key={itemIndex} index={itemIndex} />
             ))}
           </div>
 
           {/* Pagination Controls */}
-          <div className="mt-8 flex justify-center items-center gap-4 pb-8">
+          <div className="mt-8 flex justify-center items-center gap-4 pb-8 flex-wrap">
             <button
               onClick={handlePrevPage}
               disabled={currentPage === 1}
@@ -129,13 +137,13 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
               Prev
             </button>
 
-            {/* Page Jump Input (Optional but useful) */}
+            {/* Page Jump Input */}
             <div className="flex items-center gap-2">
                <span className="text-gray-500 text-sm hidden sm:inline">Go to:</span>
                <select 
                  value={currentPage} 
                  onChange={(e) => setCurrentPage(Number(e.target.value))}
-                 className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2"
+                 className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block p-2 outline-none"
                >
                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
                    <option key={pageNum} value={pageNum}>Page {pageNum}</option>
