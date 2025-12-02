@@ -1,7 +1,12 @@
 // --- START OF FILE: topic.tsx ---
 
 import React, { useState, useEffect, useMemo } from 'react';
-import BackButton from '../../ui/back-button.tsx';
+
+// --- Imports từ các file khác ---
+import { useQuizApp } from '../course-context.tsx'; // Import Context để lấy Coins/Mastery thực tế
+import HomeButton from '../../ui/home-button.tsx'; 
+import CoinDisplay from '../../ui/display/coin-display.tsx'; 
+import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 
 interface TopicViewerProps {
   onGoBack: () => void;
@@ -39,20 +44,14 @@ const getTopicImageUrl = (index: number): string => {
 const TopicSkeleton = () => {
   return (
     <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
-      {/* Chiều cao giả lập để giữ layout không bị giật quá nhiều */}
       <div className="w-full h-72 sm:h-96 bg-gray-200 relative overflow-hidden">
-        {/* Shimmer Effect */}
         <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent z-10"></div>
-        
-        {/* Placeholder Icon */}
         <div className="absolute inset-0 flex items-center justify-center opacity-20">
             <svg className="w-20 h-20 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
         </div>
       </div>
-      
-      {/* Footer giả lập */}
       <div className="p-4 bg-white border-t border-gray-50">
           <div className="h-4 bg-gray-200 rounded w-2/3 relative overflow-hidden">
              <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
@@ -72,31 +71,22 @@ const TopicImageCard = ({ index }: { index: number }) => {
 
   return (
     <div className="relative group w-full">
-      {/* 1. Hiển thị Skeleton khi đang loading */}
       {isLoading && <TopicSkeleton />}
-
-      {/* 2. Container Ảnh thật 
-          - Logic FIX: Không dùng 'hidden' (display: none) vì nó chặn trình duyệt tải ảnh.
-          - Thay vào đó: Dùng 'absolute top-0 h-0 opacity-0' để ảnh vẫn tồn tại trong DOM và tải ngầm.
-      */}
       <div 
         className={`bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-500 ease-in-out
         ${isLoading 
-            ? 'absolute top-0 left-0 w-full h-0 opacity-0 z-[-1]' // Ẩn thị giác nhưng vẫn tải
-            : 'relative w-full h-auto opacity-100' // Hiện thị giác
+            ? 'absolute top-0 left-0 w-full h-0 opacity-0 z-[-1]' 
+            : 'relative w-full h-auto opacity-100'
         }`}
       >
         <img
           src={imageUrl}
           alt={`Topic ${index}`}
-          // FIX QUAN TRỌNG: Bỏ loading="lazy" hoặc dùng "eager" để bắt buộc tải ngay lập tức
           loading="eager" 
           className="w-full h-auto block"
           onLoad={() => setIsLoading(false)}
           onError={() => setHasError(true)}
         />
-        
-        {/* Overlay tối nhẹ khi hover */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none"></div>
       </div>
     </div>
@@ -107,6 +97,10 @@ const TopicImageCard = ({ index }: { index: number }) => {
 export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
+  
+  // --- KẾT NỐI VỚI CONTEXT ---
+  // Lấy userCoins và masteryCount từ QuizAppContext
+  const { userCoins, masteryCount } = useQuizApp();
 
   useEffect(() => {
     const scrollContainer = document.getElementById('topic-scroll-container');
@@ -132,25 +126,38 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     <div className="flex flex-col h-full bg-gray-100">
       <style>{shimmerStyle}</style>
       
-      {/* Header */}
-      <div className="flex-none bg-white shadow-sm z-20 px-4 py-3 border-b border-gray-200 sticky top-0">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <BackButton onClick={onGoBack} />
-            <h2 className="text-lg font-bold text-gray-800">Vocabulary Topics</h2>
-          </div>
-          <div className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
-            Page <span className="text-orange-600 font-bold">{currentPage}</span> / {totalPages}
-          </div>
+      {/* --- HEADER (Style Word Chain + Real Data) --- */}
+      <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-30 shadow-md">
+        <div className="flex h-14 items-center justify-between px-4 w-full">
+            <div className="flex justify-start">
+               <HomeButton onClick={onGoBack} label="Home" />
+            </div>
+            
+            {/* Page Info (Ẩn trên mobile nhỏ để dành chỗ cho Coins) */}
+            <div className="hidden md:block text-slate-300 font-medium text-sm">
+                Topic Page <span className="text-white font-bold">{currentPage}</span> / {totalPages}
+            </div>
+
+            {/* Hiển thị Coins & Mastery thực tế */}
+            <div className="flex items-center gap-2">
+                <CoinDisplay displayedCoins={userCoins} isStatsFullscreen={false} />
+                <MasteryDisplay masteryCount={masteryCount} />
+            </div>
         </div>
-      </div>
+      </header>
+      {/* ------------------------------------------- */}
 
       {/* Main Content */}
       <div id="topic-scroll-container" className="flex-grow overflow-y-auto p-4">
-        {/* Container giới hạn max-w-2xl */}
         <div className="max-w-2xl mx-auto space-y-8 pb-10">
           
-          {/* List Ảnh */}
+          {/* Thông báo trang cho Mobile (Hiển thị ở đây vì header chật) */}
+          <div className="md:hidden flex justify-center pb-2">
+             <span className="bg-white/80 backdrop-blur px-4 py-1 rounded-full text-xs font-bold text-gray-500 shadow-sm border border-gray-200">
+                Page {currentPage} / {totalPages}
+             </span>
+          </div>
+
           <div className="flex flex-col gap-8">
             {currentItems.map((itemIndex) => (
               <TopicImageCard key={itemIndex} index={itemIndex} />
@@ -174,7 +181,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
               Prev
             </button>
 
-            {/* Quick Page Jump */}
             <div className="relative group">
                <select 
                  value={currentPage} 
