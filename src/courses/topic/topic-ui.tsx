@@ -1,6 +1,6 @@
 // --- START OF FILE: topic.tsx ---
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 // --- Imports từ các file khác ---
 import { useQuizApp } from '../course-context.tsx'; 
@@ -14,31 +14,15 @@ interface TopicViewerProps {
 
 const ITEMS_PER_PAGE = 20;
 const MAX_TOTAL_ITEMS = 2000; 
-const REWARD_DURATION_SECONDS = 300; // 5 phút = 300 giây
+const REWARD_DURATION_SECONDS = 300; 
 const MAX_DAILY_REWARDS = 5;
 const BASE_GOLD_REWARD = 5;
 
-// --- GAME CONFIGURATION ---
+// --- GAME LOGIC CONSTANTS ---
 const FREE_PAGES = 5;
-const BASE_UNLOCK_COST = 100;
-const PAGES_PER_BLOCK = 5;
-const PRICE_INCREASE_RATE = 0.2; // 20%
-
-// --- HELPER: Tính giá mở khóa trang ---
-const getUnlockCost = (page: number): number => {
-    if (page <= FREE_PAGES) return 0;
-    
-    // Page 6-10 (Block 0): 100
-    // Page 11-15 (Block 1): 120
-    const paidBlockIndex = Math.floor((page - (FREE_PAGES + 1)) / PAGES_PER_BLOCK);
-    
-    let cost = BASE_UNLOCK_COST;
-    for (let i = 0; i < paidBlockIndex; i++) {
-        cost = cost * (1 + PRICE_INCREASE_RATE);
-    }
-    
-    return Math.floor(cost);
-};
+const PAGES_PER_TIER = 5;
+const BASE_COST = 100;
+const COST_MULTIPLIER = 1.2; // Tăng 20%
 
 // --- STYLES & ANIMATIONS ---
 const styles = `
@@ -50,49 +34,34 @@ const styles = `
   }
   
   @keyframes popup-enter {
-    0% { opacity: 0; transform: scale(0.8) translateY(20px); }
-    50% { opacity: 1; transform: scale(1.05) translateY(-5px); }
+    0% { opacity: 0; transform: scale(0.9) translateY(20px); }
     100% { opacity: 1; transform: scale(1) translateY(0); }
   }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
   
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
   .animate-popup-enter {
     animation: popup-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
-
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
+  
+  .animate-shake {
+    animation: shake 0.3s ease-in-out;
   }
-
-  .game-btn {
-    transition: all 0.2s;
-    border-bottom-width: 4px;
+  
+  /* Game Button 3D Effect */
+  .btn-game {
+    transition: all 0.1s;
+    box-shadow: 0px 4px 0px 0px rgba(0,0,0,0.2);
   }
-  .game-btn:active {
-    transform: translateY(2px);
-    border-bottom-width: 1px;
-    margin-top: 3px;
+  .btn-game:active {
+    transform: translateY(4px);
+    box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.2);
   }
 `;
-
-// --- ICONS (SVG) ---
-const LockIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-12 h-12 text-white">
-        <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
-    </svg>
-);
-
-const CoinIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
-    <img 
-        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp" 
-        alt="Coin" 
-        className={`object-contain ${className} drop-shadow-sm`}
-    />
-);
 
 // --- HELPER FUNCTIONS ---
 const getTopicImageUrl = (index: number): string => {
@@ -106,15 +75,31 @@ const getTopicImageUrl = (index: number): string => {
   }
 };
 
+// Tính giá tiền cho trang
+const calculatePageCost = (page: number): number => {
+  if (page <= FREE_PAGES) return 0;
+  
+  // Tier 0: Page 6-10, Tier 1: Page 11-15...
+  const tierIndex = Math.floor((page - 1 - FREE_PAGES) / PAGES_PER_TIER);
+  
+  // Công thức: Base * (1.2 ^ Tier)
+  const cost = BASE_COST * Math.pow(COST_MULTIPLIER, tierIndex);
+  
+  // Làm tròn số
+  return Math.floor(cost);
+};
+
+// --- SUB-COMPONENTS ---
+
 const TopicSkeleton = () => (
-    <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
-        <div className="w-full h-72 sm:h-96 bg-gray-200 relative overflow-hidden">
-            <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent z-10"></div>
-        </div>
+  <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
+    <div className="w-full h-72 sm:h-96 bg-gray-200 relative overflow-hidden">
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent z-10"></div>
     </div>
+  </div>
 );
 
-const TopicImageCard = ({ index }: { index: number }) => {
+const TopicImageCard = React.memo(({ index }: { index: number }) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const imageUrl = useMemo(() => getTopicImageUrl(index), [index]);
@@ -124,7 +109,7 @@ const TopicImageCard = ({ index }: { index: number }) => {
   return (
     <div className="relative group w-full">
       {isLoading && <TopicSkeleton />}
-      <div className={`bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden ${isLoading ? 'hidden' : 'block'}`}>
+      <div className={`bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-opacity duration-500 ${isLoading ? 'hidden' : 'block'}`}>
         <img
           src={imageUrl}
           alt={`Topic ${index}`}
@@ -136,126 +121,101 @@ const TopicImageCard = ({ index }: { index: number }) => {
       </div>
     </div>
   );
-};
+});
 
-// --- COMPONENT: UNLOCK MODAL (Game Style) ---
-const UnlockModal = ({ 
-    cost, 
-    currentPage, 
-    userCoins, 
-    onConfirm, 
-    onCancel 
-}: { 
-    cost: number, 
-    currentPage: number, 
-    userCoins: number, 
-    onConfirm: () => void, 
-    onCancel: () => void 
-}) => {
-    const canAfford = userCoins >= cost;
+// --- UNLOCK MODAL COMPONENT ---
+interface UnlockModalProps {
+  targetPage: number;
+  cost: number;
+  currentCoins: number;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl animate-popup-enter relative">
-                {/* Header Decoration */}
-                <div className="h-24 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
-                    <div className="animate-float p-3 bg-white/20 rounded-full backdrop-blur-md border border-white/30 shadow-lg">
-                        <LockIcon />
-                    </div>
-                </div>
+const UnlockModal = ({ targetPage, cost, currentCoins, onConfirm, onCancel }: UnlockModalProps) => {
+  const canAfford = currentCoins >= cost;
+  const [isShaking, setIsShaking] = useState(false);
 
-                <div className="p-6 text-center">
-                    <h3 className="text-2xl font-black text-slate-800 mb-2">
-                        Unlock Page {currentPage}
-                    </h3>
-                    <p className="text-slate-500 text-sm mb-6">
-                        Expand your knowledge library by unlocking this page.
-                    </p>
+  const handleAttemptUnlock = () => {
+    if (canAfford) {
+      onConfirm();
+    } else {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 300);
+    }
+  };
 
-                    <div className="flex items-center justify-center gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <div className="text-right">
-                            <div className="text-xs text-slate-400 font-bold uppercase">Cost</div>
-                            <div className="flex items-center justify-end gap-1 text-red-500 font-black text-xl">
-                                -{cost} <CoinIcon className="w-5 h-5"/>
-                            </div>
-                        </div>
-                        <div className="w-px h-10 bg-slate-300"></div>
-                        <div className="text-left">
-                            <div className="text-xs text-slate-400 font-bold uppercase">You Have</div>
-                            <div className={`flex items-center gap-1 font-black text-xl ${canAfford ? 'text-green-600' : 'text-slate-400'}`}>
-                                {userCoins} <CoinIcon className="w-5 h-5"/>
-                            </div>
-                        </div>
-                    </div>
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+      {/* Backdrop with Blur */}
+      <div 
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        onClick={onCancel}
+      />
 
-                    <div className="flex gap-3">
-                        <button 
-                            onClick={onCancel}
-                            className="flex-1 py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button 
-                            onClick={onConfirm}
-                            disabled={!canAfford}
-                            className={`flex-1 game-btn py-3 rounded-xl font-bold text-white flex items-center justify-center gap-2 shadow-lg
-                                ${canAfford 
-                                    ? 'bg-green-500 border-green-700 hover:bg-green-400' 
-                                    : 'bg-gray-400 border-gray-500 cursor-not-allowed opacity-70'
-                                }`}
-                        >
-                            {canAfford ? 'Unlock Now' : 'Not Enough'}
-                        </button>
-                    </div>
-                </div>
+      {/* Modal Content */}
+      <div className={`relative bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-popup-enter overflow-hidden ${isShaking ? 'animate-shake' : ''}`}>
+        
+        {/* Background Decor */}
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-orange-400 to-red-500 opacity-10 rounded-b-[50%] transform -translate-y-10 scale-150 pointer-events-none" />
+
+        <div className="relative flex flex-col items-center text-center">
+          {/* Lock Icon */}
+          <div className="w-20 h-20 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full flex items-center justify-center mb-4 shadow-inner">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-orange-500">
+              <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+            </svg>
+          </div>
+
+          <h3 className="text-2xl font-black text-slate-800 mb-2">Unlock Page {targetPage}</h3>
+          <p className="text-slate-500 text-sm mb-6">
+            This content is locked. Spend coins to reveal new topics and expand your knowledge!
+          </p>
+
+          {/* Cost Display */}
+          <div className="flex items-center gap-3 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100 mb-6">
+            <span className="text-slate-400 text-sm font-bold uppercase tracking-wider">Price</span>
+            <div className="h-4 w-[1px] bg-slate-300"></div>
+            <div className="flex items-center gap-2">
+              <span className={`text-xl font-black ${canAfford ? 'text-slate-800' : 'text-red-500'}`}>
+                {cost}
+              </span>
+              <img 
+                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp" 
+                alt="Coin" 
+                className="w-6 h-6 object-contain"
+              />
             </div>
-        </div>
-    );
-};
+          </div>
 
-// --- COMPONENT: LOCKED OVERLAY ---
-const LockedOverlay = ({ 
-    cost, 
-    onUnlockClick 
-}: { 
-    cost: number, 
-    onUnlockClick: () => void 
-}) => {
-    return (
-        <div className="flex flex-col items-center justify-center h-[60vh] text-center p-6 space-y-6">
-            <div className="relative">
-                <div className="w-24 h-24 bg-slate-200 rounded-3xl flex items-center justify-center shadow-inner transform rotate-3">
-                    <div className="w-20 h-20 bg-slate-300 rounded-2xl flex items-center justify-center shadow-sm">
-                        <LockIcon />
-                    </div>
-                </div>
-                <div className="absolute -bottom-2 -right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full shadow-md border-2 border-white">
-                    LOCKED
-                </div>
-            </div>
-            
-            <div className="space-y-2">
-                <h2 className="text-2xl font-black text-slate-700">Content Locked</h2>
-                <p className="text-slate-500 max-w-xs mx-auto">
-                    You need to unlock this page to view the flashcards.
-                </p>
-            </div>
-
-            <button 
-                onClick={onUnlockClick}
-                className="game-btn group relative px-8 py-3 bg-gradient-to-r from-orange-400 to-amber-500 text-white font-bold rounded-full shadow-orange-200 shadow-xl border-orange-600 hover:scale-105 transition-transform"
+          {/* Actions */}
+          <div className="w-full space-y-3">
+            <button
+              onClick={handleAttemptUnlock}
+              className={`w-full btn-game py-3.5 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2 ${
+                canAfford 
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 shadow-emerald-200' 
+                  : 'bg-gray-400 cursor-not-allowed'
+              }`}
             >
-                <span className="flex items-center gap-2">
-                    Unlock for {cost} <CoinIcon className="w-6 h-6 brightness-200"/>
-                </span>
+              {canAfford ? 'Unlock Now' : 'Not Enough Coins'}
             </button>
+            
+            <button
+              onClick={onCancel}
+              className="w-full py-3 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-100 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
-// --- COMPONENT: STUDY TIMER (Revised Popup) ---
-const StudyTimer = ({ 
+// --- STUDY TIMER COMPONENT ---
+const StudyTimer = React.memo(({ 
     currentPage, 
     masteryCount, 
     onReward 
@@ -269,7 +229,6 @@ const StudyTimer = ({
     const [justRewarded, setJustRewarded] = useState<{amount: number} | null>(null);
     const [hasRewardedThisPage, setHasRewardedThisPage] = useState(false); 
     
-    // SVG Config
     const radius = 24;
     const circumference = 2 * Math.PI * radius;
     const progress = Math.min((seconds / REWARD_DURATION_SECONDS) * 100, 100);
@@ -290,7 +249,10 @@ const StudyTimer = ({
     useEffect(() => {
         if (dailyCount >= MAX_DAILY_REWARDS) return;
         const interval = setInterval(() => {
-            setSeconds(prev => (prev >= REWARD_DURATION_SECONDS ? prev : prev + 1));
+            setSeconds(prev => {
+                if (prev >= REWARD_DURATION_SECONDS) return prev; 
+                return prev + 1;
+            });
         }, 1000);
         return () => clearInterval(interval);
     }, [dailyCount, hasRewardedThisPage]); 
@@ -300,8 +262,7 @@ const StudyTimer = ({
             const rewardAmount = BASE_GOLD_REWARD * (masteryCount > 0 ? masteryCount : 1);
             onReward(rewardAmount);
             setJustRewarded({ amount: rewardAmount });
-            setTimeout(() => setJustRewarded(null), 4000);
-            
+            setTimeout(() => setJustRewarded(null), 3000);
             const newCount = dailyCount + 1;
             setDailyCount(newCount);
             setHasRewardedThisPage(true);
@@ -310,71 +271,55 @@ const StudyTimer = ({
         }
     }, [seconds, dailyCount, hasRewardedThisPage, masteryCount, onReward]);
 
-    const shouldHideTimer = dailyCount >= MAX_DAILY_REWARDS || hasRewardedThisPage;
+    const isDailyLimitReached = dailyCount >= MAX_DAILY_REWARDS;
+    const shouldHideTimer = isDailyLimitReached || hasRewardedThisPage;
 
     return (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
-            {/* REWARD POPUP */}
+        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end pointer-events-none">
             {justRewarded && (
-                <div className="animate-popup-enter mb-4 pointer-events-auto">
-                    <div className="relative bg-gradient-to-r from-yellow-100 to-amber-100 border-2 border-yellow-400 px-6 py-3 rounded-2xl shadow-xl shadow-yellow-200/50 flex items-center gap-3">
-                        <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-bounce">
-                            BONUS!
-                        </div>
-                        <CoinIcon className="w-10 h-10 animate-spin-slow" />
-                        <div className="flex flex-col">
-                            <span className="text-xs font-bold text-yellow-700 uppercase tracking-wide">Reward</span>
-                            <span className="text-2xl font-black text-yellow-600 leading-none">+{justRewarded.amount}</span>
-                        </div>
-                    </div>
+                <div className="animate-popup bg-white border-2 border-yellow-400 px-5 py-2.5 rounded-full shadow-xl mb-4 flex items-center gap-2 pointer-events-auto origin-bottom-right">
+                    <span className="text-xl font-black text-yellow-500 drop-shadow-sm">+{justRewarded.amount}</span>
+                    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp" alt="Gold" className="w-7 h-7 object-contain"/>
                 </div>
             )}
-
-            {/* TIMER CIRCLE */}
             {!shouldHideTimer && (
-                <div className="relative w-16 h-16 rounded-full shadow-lg border-4 border-white/80 bg-white/90 transition-all duration-300 pointer-events-auto hover:scale-110">
+                <div className="relative w-16 h-16 rounded-full shadow-lg border-4 border-white/50 bg-white/80 pointer-events-auto group transition-transform hover:scale-105">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 60 60">
                         <circle cx="30" cy="30" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="4" className="opacity-50" />
-                        <circle
-                            cx="30" cy="30" r={radius} fill="none"
-                            stroke="#F59E0B" strokeWidth="4" strokeLinecap="round"
-                            style={{ strokeDasharray: circumference, strokeDashoffset, transition: 'stroke-dashoffset 1s linear' }}
-                        />
+                        <circle cx="30" cy="30" r={radius} fill="none" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" style={{ strokeDasharray: circumference, strokeDashoffset, transition: 'stroke-dashoffset 1s linear' }} />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center flex-col">
                         <span className="text-[10px] font-bold text-gray-500/80">{dailyCount}/5</span>
-                        <span className="text-[10px] text-orange-500 font-mono font-semibold">
-                            {Math.floor(seconds / 60)}:{(seconds % 60).toString().padStart(2, '0')}
-                        </span>
+                        <span className="text-[10px] text-orange-500 font-mono font-semibold">{Math.floor(seconds / 60)}:{(seconds % 60).toString().padStart(2, '0')}</span>
                     </div>
                 </div>
             )}
         </div>
     );
-};
+});
 
 // --- MAIN COMPONENT ---
 export default function TopicViewer({ onGoBack }: TopicViewerProps) {
-  // State
+  const { userCoins, masteryCount, updateUserCoins } = useQuizApp();
+  
+  // State quản lý trang và unlock
   const [currentPage, setCurrentPage] = useState(1);
   const [maxUnlockedPage, setMaxUnlockedPage] = useState(FREE_PAGES);
-  const [showUnlockModal, setShowUnlockModal] = useState(false);
   
-  // Hooks
-  const { userCoins, masteryCount, updateUserCoins } = useQuizApp();
+  // State cho Modal
+  const [unlockModalData, setUnlockModalData] = useState<{ targetPage: number, cost: number } | null>(null);
+
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
 
-  // Load Unlocked Progress
+  // Load maxUnlockedPage từ LocalStorage
   useEffect(() => {
-    const saved = localStorage.getItem('topic_max_unlocked_page');
-    if (saved) {
-        setMaxUnlockedPage(parseInt(saved, 10));
-    } else {
-        localStorage.setItem('topic_max_unlocked_page', FREE_PAGES.toString());
+    const savedMaxPage = localStorage.getItem('topic_max_unlocked_page');
+    if (savedMaxPage) {
+      setMaxUnlockedPage(Math.max(FREE_PAGES, parseInt(savedMaxPage, 10)));
     }
   }, []);
 
-  // Scroll to top on page change
+  // Scroll to top khi đổi trang
   useEffect(() => {
     const scrollContainer = document.getElementById('topic-scroll-container');
     if (scrollContainer) scrollContainer.scrollTop = 0;
@@ -385,71 +330,76 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     return Array.from({ length: ITEMS_PER_PAGE }, (_, i) => start + i);
   }, [currentPage]);
 
-  // Logic Mở khóa
-  const isPageLocked = currentPage > maxUnlockedPage;
-  const currentUnlockCost = useMemo(() => getUnlockCost(currentPage), [currentPage]);
+  // Xử lý chuyển trang logic (có check khóa)
+  const tryNavigateToPage = (page: number) => {
+    if (page > totalPages || page < 1) return;
 
-  const handleUnlockConfirm = async () => {
-    if (userCoins >= currentUnlockCost) {
-        try {
-            // Trừ tiền
-            await updateUserCoins(-currentUnlockCost);
-            
-            // Cập nhật trang đã mở khóa (nếu mua trang 7 thì trang 6 cũng coi như mở nếu chưa mở)
-            // Logic ở đây là: Mở khóa trang X thì maxUnlockedPage = X
-            const newMax = Math.max(maxUnlockedPage, currentPage);
-            setMaxUnlockedPage(newMax);
-            localStorage.setItem('topic_max_unlocked_page', newMax.toString());
-            
-            setShowUnlockModal(false);
-        } catch (error) {
-            console.error("Failed to unlock:", error);
-            alert("Something went wrong with the transaction.");
-        }
+    if (page <= maxUnlockedPage) {
+      setCurrentPage(page);
+    } else {
+      // Nếu trang bị khóa -> Hiện Modal
+      // Chỉ cho phép mở khóa trang kế tiếp của maxUnlockedPage để tránh nhảy cóc (Game progression)
+      // Hoặc cho phép mở trang bất kỳ nếu đủ tiền. Ở đây logic là: Mở khóa trang `page`.
+      const cost = calculatePageCost(page);
+      setUnlockModalData({ targetPage: page, cost });
     }
   };
 
-  const handleTimeReward = useCallback((amount: number) => {
+  const handleConfirmUnlock = () => {
+    if (!unlockModalData) return;
+    const { cost, targetPage } = unlockModalData;
+
+    if (updateUserCoins) {
+        // Trừ tiền (số âm)
+        updateUserCoins(-cost).then(() => {
+            // Success
+            const newMax = Math.max(maxUnlockedPage, targetPage);
+            setMaxUnlockedPage(newMax);
+            localStorage.setItem('topic_max_unlocked_page', newMax.toString());
+            setCurrentPage(targetPage);
+            setUnlockModalData(null);
+            console.log(`Unlocked page ${targetPage} for ${cost} coins`);
+        }).catch(err => {
+            console.error("Unlock failed", err);
+        });
+    }
+  };
+
+  const handleReward = useCallback((amount: number) => {
       if (updateUserCoins) updateUserCoins(amount);
   }, [updateUserCoins]);
 
-  // Navigation Handlers
-  const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(prev => prev - 1); };
-  const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(prev => prev + 1); };
-
   return (
-    <div className="flex flex-col h-full bg-slate-100 relative font-sans">
+    <div className="flex flex-col h-full bg-gray-100 relative overflow-hidden">
       <style>{styles}</style>
       
-      {/* --- POPUPS & MODALS --- */}
+      {/* Unlock Modal */}
+      {unlockModalData && (
+        <UnlockModal 
+          targetPage={unlockModalData.targetPage}
+          cost={unlockModalData.cost}
+          currentCoins={userCoins}
+          onConfirm={handleConfirmUnlock}
+          onCancel={() => setUnlockModalData(null)}
+        />
+      )}
+
       <StudyTimer 
          currentPage={currentPage}
          masteryCount={masteryCount}
-         onReward={handleTimeReward}
+         onReward={handleReward}
       />
-
-      {showUnlockModal && (
-        <UnlockModal 
-            cost={currentUnlockCost}
-            currentPage={currentPage}
-            userCoins={userCoins}
-            onConfirm={handleUnlockConfirm}
-            onCancel={() => setShowUnlockModal(false)}
-        />
-      )}
       
-      {/* --- HEADER --- */}
-      <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-md z-30 shadow-lg border-b border-slate-700">
-        <div className="flex h-16 items-center justify-between px-4 w-full">
+      {/* Header */}
+      <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-30 shadow-md border-b border-slate-700">
+        <div className="flex h-14 items-center justify-between px-4 w-full">
             <div className="flex justify-start">
                <HomeButton onClick={onGoBack} label="Back" />
             </div>
             
             <div className="hidden md:flex flex-col items-center">
-                <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Topic Viewer</span>
-                <span className="text-white font-bold text-lg">
-                    Page {currentPage} <span className="text-slate-500">/ {totalPages}</span>
-                </span>
+                <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Topic Browser</span>
+                <span className="text-white font-bold text-sm">Page {currentPage} <span className="text-slate-500">/ {totalPages}</span></span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -459,75 +409,85 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
         </div>
       </header>
 
-      {/* --- MAIN CONTENT --- */}
-      <div id="topic-scroll-container" className="flex-grow overflow-y-auto p-4 bg-slate-100">
-        <div className="max-w-2xl mx-auto pb-10">
+      {/* Main Content */}
+      <div id="topic-scroll-container" className="flex-grow overflow-y-auto p-4 scroll-smooth">
+        <div className="max-w-2xl mx-auto space-y-8 pb-20">
           
           {/* Mobile Page Indicator */}
-          <div className="md:hidden flex justify-center pb-4 sticky top-0 z-20 pt-2">
-             <span className="bg-white/90 backdrop-blur px-4 py-1.5 rounded-full text-xs font-bold text-slate-600 shadow-sm border border-slate-200">
-                Page {currentPage} of {totalPages}
-             </span>
+          <div className="md:hidden flex justify-center pb-2">
+             <div className="bg-slate-800/80 backdrop-blur text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-sm border border-slate-700">
+                Page {currentPage} <span className="opacity-50 mx-1">/</span> {totalPages}
+             </div>
           </div>
 
-          {/* Content Area */}
-          <div className="min-h-[60vh]">
-              {isPageLocked ? (
-                  <LockedOverlay 
-                    cost={currentUnlockCost} 
-                    onUnlockClick={() => setShowUnlockModal(true)} 
-                  />
-              ) : (
-                  <div className="flex flex-col gap-6 animate-popup-enter">
-                    {currentItems.map((itemIndex) => (
-                      <TopicImageCard key={itemIndex} index={itemIndex} />
-                    ))}
-                  </div>
-              )}
+          <div className="flex flex-col gap-6">
+            {currentItems.map((itemIndex) => (
+              <TopicImageCard key={itemIndex} index={itemIndex} />
+            ))}
           </div>
 
-          {/* Controls Footer */}
-          <div className="flex justify-center items-center gap-4 py-8 mt-4 border-t border-slate-200">
-            <button
-              onClick={handlePrevPage}
-              disabled={currentPage === 1}
-              className={`flex items-center px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-sm ${
-                currentPage === 1
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  : 'bg-white text-slate-700 hover:bg-orange-500 hover:text-white hover:shadow-orange-200 hover:shadow-lg hover:-translate-y-1'
-              }`}
-            >
-              Previous
-            </button>
+          {/* Controls Navigation */}
+          <div className="flex justify-center items-center gap-3 py-8 sticky bottom-0 z-20 pointer-events-none">
+            <div className="pointer-events-auto bg-white/90 backdrop-blur-md p-2 rounded-full shadow-xl border border-gray-200 flex items-center gap-2">
+                
+                {/* Prev Button */}
+                <button
+                onClick={() => tryNavigateToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
+                    currentPage === 1
+                    ? 'bg-gray-100 text-gray-300'
+                    : 'bg-slate-100 text-slate-700 hover:bg-orange-500 hover:text-white btn-game'
+                }`}
+                >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+                </button>
 
-            <div className="relative group">
-               <select 
-                 value={currentPage} 
-                 onChange={(e) => setCurrentPage(Number(e.target.value))}
-                 className="appearance-none bg-white border-2 border-slate-200 text-slate-700 font-bold py-3 pl-6 pr-12 rounded-xl shadow-sm focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/20 cursor-pointer hover:border-orange-400 transition-colors"
-               >
-                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
-                   <option key={pageNum} value={pageNum}>
-                       Page {pageNum} {pageNum > maxUnlockedPage ? '🔒' : ''}
-                   </option>
-                 ))}
-               </select>
-               <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                   ▼
-               </div>
+                {/* Dropdown Page Select */}
+                <div className="relative group">
+                    <select 
+                        value={currentPage} 
+                        onChange={(e) => tryNavigateToPage(Number(e.target.value))}
+                        className="appearance-none bg-slate-50 border border-slate-200 text-slate-700 font-bold py-2 pl-4 pr-8 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer min-w-[120px] text-center"
+                    >
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => {
+                            const isLocked = pageNum > maxUnlockedPage;
+                            return (
+                                <option key={pageNum} value={pageNum} className={isLocked ? 'text-gray-400' : 'text-gray-900'}>
+                                    Page {pageNum} {isLocked ? '🔒' : ''}
+                                </option>
+                            );
+                        })}
+                    </select>
+                    {/* Chevron icon for select */}
+                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+
+                {/* Next Button */}
+                <button
+                onClick={() => tryNavigateToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
+                    currentPage === totalPages
+                    ? 'bg-gray-100 text-gray-300'
+                    : 'bg-slate-100 text-slate-700 hover:bg-orange-500 hover:text-white btn-game'
+                }`}
+                >
+                    {currentPage + 1 > maxUnlockedPage ? (
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-orange-500">
+                            <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+                         </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                    )}
+                </button>
             </div>
-
-            <button
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-              className={`flex items-center px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-sm ${
-                currentPage === totalPages
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  : 'bg-white text-slate-700 hover:bg-orange-500 hover:text-white hover:shadow-orange-200 hover:shadow-lg hover:-translate-y-1'
-              }`}
-            >
-              Next
-            </button>
           </div>
 
         </div>
