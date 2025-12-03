@@ -178,21 +178,16 @@ const UnlockModal = ({ targetPage, cost, currentCoins, onConfirm, onCancel }: Un
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-      {/* Overlay: Black with Opacity (No Blur for Performance) */}
       <div 
         className="absolute inset-0 bg-black/80 transition-opacity animate-[fade-in_0.2s]" 
         onClick={onCancel}
       />
-
-      {/* Modal Content */}
       <div className={`relative bg-white w-full max-w-xs sm:max-w-sm rounded-2xl p-5 shadow-2xl animate-popup-zoom overflow-hidden ${isShaking ? 'animate-shake' : ''}`}>
         
-        {/* Decor */}
         <div className="absolute top-0 right-0 w-24 h-24 bg-orange-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
         <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
 
         <div className="relative flex flex-col items-center text-center">
-          
           <div className="mb-3">
              <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center border-2 border-orange-100">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-orange-500">
@@ -213,7 +208,6 @@ const UnlockModal = ({ targetPage, cost, currentCoins, onConfirm, onCancel }: Un
               />
           </div>
 
-          {/* Buttons: Unlock (Left), Cancel (Right) */}
           <div className="grid grid-cols-2 gap-3 w-full">
             <button
               onClick={handleAttemptUnlock}
@@ -258,7 +252,6 @@ const StudyTimer = React.memo(({
     const radius = 24;
     const circumference = 2 * Math.PI * radius;
     const progress = Math.min((seconds / REWARD_DURATION_SECONDS) * 100, 100);
-    const strokeDashoffset = circumference - (progress / 100) * circumference;
 
     useEffect(() => {
         const today = new Date().toISOString().split('T')[0];
@@ -312,7 +305,7 @@ const StudyTimer = React.memo(({
                 <div className="relative w-16 h-16 rounded-full shadow-lg border-4 border-white/50 bg-white/80 pointer-events-auto group transition-transform hover:scale-105">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 60 60">
                         <circle cx="30" cy="30" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="4" className="opacity-50" />
-                        <circle cx="30" cy="30" r={radius} fill="none" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" style={{ strokeDasharray: circumference, strokeDashoffset, transition: 'stroke-dashoffset 1s linear' }} />
+                        <circle cx="30" cy="30" r={radius} fill="none" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" style={{ strokeDasharray: circumference, strokeDashoffset: circumference - (progress / 100) * circumference, transition: 'stroke-dashoffset 1s linear' }} />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center flex-col">
                         <span className="text-[10px] font-bold text-gray-500/80">{dailyCount}/5</span>
@@ -424,7 +417,8 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
       {/* Main Content */}
       <div id="topic-scroll-container" className="flex-grow overflow-y-auto p-4 scroll-smooth">
-        <div className="max-w-2xl mx-auto space-y-8 pb-10">
+        {/* ĐÃ CHỈNH SỬA: space-y-4 (giảm gap) và pb-6 (giảm footer padding) */}
+        <div className="max-w-2xl mx-auto space-y-4 pb-6">
           
           <div className="md:hidden flex justify-center pb-2">
              <div className="bg-slate-800/80 backdrop-blur text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-sm border border-slate-700">
@@ -438,8 +432,8 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
             ))}
           </div>
 
-          {/* Controls Navigation (STATIC AT BOTTOM) */}
-          <div className="flex justify-center items-center gap-3 py-8 mt-4 w-full">
+          {/* Controls Navigation (ĐÃ CHỈNH SỬA: py-4, không margin-top lớn) */}
+          <div className="flex justify-center items-center gap-3 py-4 w-full">
             <div className="bg-white p-2 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
                 
                 <button
