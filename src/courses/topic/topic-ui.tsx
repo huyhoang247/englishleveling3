@@ -86,13 +86,23 @@ const styles = `
     border-bottom: 0px solid transparent;
   }
 
-  /* Navigation Button 3D */
+  /* Navigation Arrow Button 3D */
   .btn-nav {
     transition: all 0.1s;
     box-shadow: 0px 3px 0px 0px rgba(0,0,0,0.1);
   }
   .btn-nav:active {
     transform: translateY(3px);
+    box-shadow: none;
+  }
+
+  /* Select Button 3D (Dark) */
+  .btn-select-3d {
+    transition: all 0.1s;
+    box-shadow: 0px 4px 0px 0px #0f172a; /* Slate-900 shadow */
+  }
+  .btn-select-3d:active {
+    transform: translateY(4px);
     box-shadow: none;
   }
 `;
@@ -444,8 +454,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
         onScroll={handleScroll} 
       >
         <div className="max-w-2xl mx-auto space-y-4 pb-2">
-          
-          {/* ĐÃ XÓA PHẦN NÚT PAGE TRÊN ĐẦU Ở ĐÂY */}
 
           <div className="flex flex-col gap-6">
             {currentItems.map((itemIndex) => (
@@ -453,7 +461,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
             ))}
           </div>
 
-          {/* Controls Navigation (Dark Mode Style) */}
+          {/* Controls Navigation (Dark 3D Mode) */}
           <div className="flex justify-center items-center gap-3 py-2 mt-2 w-full">
             <div className="bg-white p-1.5 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
                 
@@ -471,12 +479,12 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                 </svg>
                 </button>
 
-                {/* Styled Dark Select */}
+                {/* 3D Dark Select with 70% Opacity */}
                 <div className="relative group">
                     <select 
                         value={currentPage} 
                         onChange={(e) => tryNavigateToPage(Number(e.target.value))}
-                        className="appearance-none bg-slate-800 text-white border border-slate-700 font-bold py-2 pl-4 pr-9 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer min-w-[140px] text-center text-sm"
+                        className="appearance-none bg-slate-800/70 text-white border border-slate-700 font-bold py-2 pl-4 pr-9 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer min-w-[140px] text-center text-sm btn-select-3d backdrop-blur-sm"
                     >
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => {
                             const isLocked = pageNum > maxUnlockedPage;
