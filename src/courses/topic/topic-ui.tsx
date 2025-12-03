@@ -22,7 +22,8 @@ const BASE_GOLD_REWARD = 5;
 const FREE_PAGES = 5;          
 const PAGES_PER_TIER = 5;      
 const BASE_COST = 100;         
-const COST_MULTIPLIER = 1.2;   
+const COST_MULTIPLIER = 1.2;
+const LEVELS_PER_MAP_PAGE = 25; // 25 levels per map page (5x5 grid)
 
 // --- STYLES & ANIMATIONS ---
 const styles = `
@@ -183,7 +184,7 @@ const TopicImageCard = React.memo(({ index }: { index: number }) => {
   );
 });
 
-// --- LEVEL MAP MODAL (REPLACEMENT FOR SELECT) ---
+// --- LEVEL MAP MODAL (PAGINATED) ---
 interface LevelMapModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -194,20 +195,24 @@ interface LevelMapModalProps {
 }
 
 const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPage, onSelectPage }: LevelMapModalProps) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  
-  // Auto scroll to current page when opened
+  // Logic phân trang cho Map
+  const [currentMapPage, setCurrentMapPage] = useState(1);
+  const totalMapPages = Math.ceil(totalPages / LEVELS_PER_MAP_PAGE);
+
+  // Khi mở popup, tự động nhảy đến trang chứa level hiện tại
   useEffect(() => {
-    if (isOpen && scrollRef.current) {
-      // Find the button for current page
-      const currentButton = document.getElementById(`level-node-${currentPage}`);
-      if (currentButton) {
-        currentButton.scrollIntoView({ behavior: 'auto', block: 'center' });
-      }
+    if (isOpen) {
+      const mapPageForCurrentLevel = Math.ceil(currentPage / LEVELS_PER_MAP_PAGE);
+      setCurrentMapPage(mapPageForCurrentLevel);
     }
   }, [isOpen, currentPage]);
 
   if (!isOpen) return null;
+
+  // Tính toán các level cần hiển thị trong trang hiện tại
+  const startLevel = (currentMapPage - 1) * LEVELS_PER_MAP_PAGE + 1;
+  const endLevel = Math.min(currentMapPage * LEVELS_PER_MAP_PAGE, totalPages);
+  const levelsToShow = Array.from({ length: endLevel - startLevel + 1 }, (_, i) => startLevel + i);
 
   return (
     <div className="fixed inset-0 z-[70] flex flex-col justify-end sm:justify-center sm:items-center">
@@ -215,7 +220,7 @@ const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPa
       <div className="absolute inset-0 bg-black/80 transition-opacity animate-[fade-in_0.2s]" onClick={onClose} />
       
       {/* Modal Container */}
-      <div className="relative bg-slate-900 w-full sm:w-[400px] sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-popup-slide-up sm:animate-popup-zoom border-t border-slate-700 sm:border">
+      <div className="relative bg-slate-900 w-full sm:w-[420px] sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col animate-popup-slide-up sm:animate-popup-zoom border-t border-slate-700 sm:border">
         
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-slate-800 border-b border-slate-700 shrink-0">
@@ -229,22 +234,21 @@ const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPa
            </button>
         </div>
 
-        {/* Scrollable Grid */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 scroll-smooth custom-scrollbar">
-           <div className="grid grid-cols-5 gap-3 pb-8">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => {
+        {/* Level Grid (5x5) */}
+        <div className="flex-1 p-5 min-h-[300px]">
+           <div className="grid grid-cols-5 gap-3">
+              {levelsToShow.map(pageNum => {
                  const isLocked = pageNum > maxUnlockedPage;
                  const isCurrent = pageNum === currentPage;
                  const isUnlocked = !isLocked;
 
-                 let bgClass = "bg-slate-700 border-slate-900 text-slate-500"; // Locked default
-                 if (isCurrent) bgClass = "bg-yellow-400 border-yellow-600 text-yellow-900 ring-2 ring-yellow-200 ring-offset-2 ring-offset-slate-900 z-10";
+                 let bgClass = "bg-slate-700 border-slate-900 text-slate-500"; // Locked
+                 if (isCurrent) bgClass = "bg-yellow-400 border-yellow-600 text-yellow-900 ring-2 ring-yellow-200 ring-offset-2 ring-offset-slate-900 z-10 scale-110";
                  else if (isUnlocked) bgClass = "bg-blue-500 border-blue-700 text-white hover:bg-blue-400";
 
                  return (
                    <button
                      key={pageNum}
-                     id={`level-node-${pageNum}`}
                      onClick={() => {
                         onSelectPage(pageNum);
                         onClose();
@@ -252,7 +256,7 @@ const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPa
                      className={`aspect-square rounded-xl flex items-center justify-center font-bold text-sm relative level-node ${bgClass}`}
                    >
                      {isLocked ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-60">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-50">
                            <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
                         </svg>
                      ) : (
@@ -264,9 +268,29 @@ const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPa
            </div>
         </div>
         
-        {/* Footer info */}
-        <div className="p-3 bg-slate-900/90 border-t border-slate-800 text-center shrink-0">
-            <span className="text-slate-500 text-xs uppercase font-bold tracking-widest">Select a page to jump</span>
+        {/* Pagination Footer */}
+        <div className="p-3 bg-slate-800 border-t border-slate-700 flex items-center justify-between shrink-0">
+            <button 
+                onClick={() => setCurrentMapPage(prev => Math.max(1, prev - 1))}
+                disabled={currentMapPage === 1}
+                className={`p-2 rounded-lg font-bold text-sm flex items-center gap-1 ${currentMapPage === 1 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+            >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                Prev
+            </button>
+
+            <span className="text-slate-400 text-xs font-bold uppercase tracking-widest bg-slate-900 px-3 py-1 rounded-full">
+                Map {currentMapPage} / {totalMapPages}
+            </span>
+
+            <button 
+                onClick={() => setCurrentMapPage(prev => Math.min(totalMapPages, prev + 1))}
+                disabled={currentMapPage === totalMapPages}
+                className={`p-2 rounded-lg font-bold text-sm flex items-center gap-1 ${currentMapPage === totalMapPages ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+            >
+                Next
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
         </div>
       </div>
     </div>
@@ -451,7 +475,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const [maxUnlockedPage, setMaxUnlockedPage] = useState(FREE_PAGES);
   const [unlockModalData, setUnlockModalData] = useState<{ targetPage: number, cost: number } | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(false);
-  const [isMapOpen, setIsMapOpen] = useState(false); // State for Map Modal
+  const [isMapOpen, setIsMapOpen] = useState(false); 
 
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
 
@@ -485,7 +509,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     return Array.from({ length: ITEMS_PER_PAGE }, (_, i) => start + i);
   }, [currentPage]);
 
-  // Main navigation logic
   const tryNavigateToPage = (page: number) => {
     if (page > totalPages || page < 1) return;
 
@@ -522,7 +545,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     <div className="flex flex-col h-full bg-gray-100 relative overflow-hidden">
       <style>{styles}</style>
       
-      {/* Unlock Modal */}
       {unlockModalData && (
         <UnlockModal 
           targetPage={unlockModalData.targetPage}
@@ -583,7 +605,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
             ))}
           </div>
 
-          {/* Controls Navigation (Dark 3D Mode) */}
+          {/* Controls Navigation */}
           <div className="flex justify-center items-center gap-3 py-2 mt-2 w-full">
             <div className="bg-white p-1.5 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
                 
@@ -601,7 +623,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                 </svg>
                 </button>
 
-                {/* 3D MAP TRIGGER BUTTON (REPLACES SELECT) */}
+                {/* 3D MAP TRIGGER BUTTON */}
                 <button
                     onClick={() => setIsMapOpen(true)}
                     className="relative group bg-slate-800/70 hover:bg-slate-800 text-white font-bold py-2 pl-4 pr-3 rounded-full shadow-sm min-w-[140px] text-center text-sm btn-select-3d backdrop-blur-sm flex items-center justify-between gap-2"
