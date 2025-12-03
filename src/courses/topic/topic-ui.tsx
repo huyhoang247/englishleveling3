@@ -1,6 +1,6 @@
 // --- START OF FILE: topic.tsx ---
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 // --- Imports từ các file khác ---
 import { useQuizApp } from '../course-context.tsx'; 
@@ -14,7 +14,7 @@ interface TopicViewerProps {
 
 const ITEMS_PER_PAGE = 20;
 const MAX_TOTAL_ITEMS = 2000; 
-const REWARD_DURATION_SECONDS = 300; // 5 phút
+const REWARD_DURATION_SECONDS = 300; 
 const MAX_DAILY_REWARDS = 5;
 const BASE_GOLD_REWARD = 5;
 
@@ -34,8 +34,13 @@ const styles = `
   }
   
   @keyframes popup-zoom {
-    0% { opacity: 0; transform: scale(0.8); }
+    0% { opacity: 0; transform: scale(0.9); }
     100% { opacity: 1; transform: scale(1); }
+  }
+  
+  @keyframes popup-slide-up {
+    0% { transform: translateY(100%); }
+    100% { transform: translateY(0); }
   }
   
   @keyframes shake {
@@ -53,6 +58,10 @@ const styles = `
 
   .animate-popup-zoom {
     animation: popup-zoom 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  .animate-popup-slide-up {
+    animation: popup-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   
   .animate-shake {
@@ -99,10 +108,20 @@ const styles = `
   /* Select Button 3D (Dark) */
   .btn-select-3d {
     transition: all 0.1s;
-    box-shadow: 0px 4px 0px 0px #0f172a; /* Slate-900 shadow */
+    box-shadow: 0px 4px 0px 0px #0f172a; 
   }
   .btn-select-3d:active {
     transform: translateY(4px);
+    box-shadow: none;
+  }
+
+  /* Level Node Button */
+  .level-node {
+    transition: transform 0.1s, filter 0.2s;
+    box-shadow: 0px 3px 0px 0px rgba(0,0,0,0.3);
+  }
+  .level-node:active {
+    transform: translateY(3px);
     box-shadow: none;
   }
 `;
@@ -164,6 +183,96 @@ const TopicImageCard = React.memo(({ index }: { index: number }) => {
   );
 });
 
+// --- LEVEL MAP MODAL (REPLACEMENT FOR SELECT) ---
+interface LevelMapModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  currentPage: number;
+  totalPages: number;
+  maxUnlockedPage: number;
+  onSelectPage: (page: number) => void;
+}
+
+const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPage, onSelectPage }: LevelMapModalProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Auto scroll to current page when opened
+  useEffect(() => {
+    if (isOpen && scrollRef.current) {
+      // Find the button for current page
+      const currentButton = document.getElementById(`level-node-${currentPage}`);
+      if (currentButton) {
+        currentButton.scrollIntoView({ behavior: 'auto', block: 'center' });
+      }
+    }
+  }, [isOpen, currentPage]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[70] flex flex-col justify-end sm:justify-center sm:items-center">
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/80 transition-opacity animate-[fade-in_0.2s]" onClick={onClose} />
+      
+      {/* Modal Container */}
+      <div className="relative bg-slate-900 w-full sm:w-[400px] sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-popup-slide-up sm:animate-popup-zoom border-t border-slate-700 sm:border">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 bg-slate-800 border-b border-slate-700 shrink-0">
+           <h3 className="text-white font-black text-lg flex items-center gap-2">
+             <span className="text-orange-500 text-2xl">🗺️</span> Level Map
+           </h3>
+           <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-700 text-slate-300 flex items-center justify-center hover:bg-slate-600 transition-colors">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+             </svg>
+           </button>
+        </div>
+
+        {/* Scrollable Grid */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 scroll-smooth custom-scrollbar">
+           <div className="grid grid-cols-5 gap-3 pb-8">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => {
+                 const isLocked = pageNum > maxUnlockedPage;
+                 const isCurrent = pageNum === currentPage;
+                 const isUnlocked = !isLocked;
+
+                 let bgClass = "bg-slate-700 border-slate-900 text-slate-500"; // Locked default
+                 if (isCurrent) bgClass = "bg-yellow-400 border-yellow-600 text-yellow-900 ring-2 ring-yellow-200 ring-offset-2 ring-offset-slate-900 z-10";
+                 else if (isUnlocked) bgClass = "bg-blue-500 border-blue-700 text-white hover:bg-blue-400";
+
+                 return (
+                   <button
+                     key={pageNum}
+                     id={`level-node-${pageNum}`}
+                     onClick={() => {
+                        onSelectPage(pageNum);
+                        onClose();
+                     }}
+                     className={`aspect-square rounded-xl flex items-center justify-center font-bold text-sm relative level-node ${bgClass}`}
+                   >
+                     {isLocked ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 opacity-60">
+                           <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+                        </svg>
+                     ) : (
+                        pageNum
+                     )}
+                   </button>
+                 );
+              })}
+           </div>
+        </div>
+        
+        {/* Footer info */}
+        <div className="p-3 bg-slate-900/90 border-t border-slate-800 text-center shrink-0">
+            <span className="text-slate-500 text-xs uppercase font-bold tracking-widest">Select a page to jump</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- UNLOCK MODAL COMPONENT ---
 interface UnlockModalProps {
   targetPage: number;
@@ -187,7 +296,7 @@ const UnlockModal = ({ targetPage, cost, currentCoins, onConfirm, onCancel }: Un
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center px-4">
       <div 
         className="absolute inset-0 bg-black/80 transition-opacity animate-[fade-in_0.2s]" 
         onClick={onCancel}
@@ -342,6 +451,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const [maxUnlockedPage, setMaxUnlockedPage] = useState(FREE_PAGES);
   const [unlockModalData, setUnlockModalData] = useState<{ targetPage: number, cost: number } | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(false);
+  const [isMapOpen, setIsMapOpen] = useState(false); // State for Map Modal
 
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
 
@@ -375,6 +485,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     return Array.from({ length: ITEMS_PER_PAGE }, (_, i) => start + i);
   }, [currentPage]);
 
+  // Main navigation logic
   const tryNavigateToPage = (page: number) => {
     if (page > totalPages || page < 1) return;
 
@@ -411,6 +522,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     <div className="flex flex-col h-full bg-gray-100 relative overflow-hidden">
       <style>{styles}</style>
       
+      {/* Unlock Modal */}
       {unlockModalData && (
         <UnlockModal 
           targetPage={unlockModalData.targetPage}
@@ -420,6 +532,16 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
           onCancel={() => setUnlockModalData(null)}
         />
       )}
+
+      {/* Map Modal */}
+      <LevelMapModal 
+        isOpen={isMapOpen}
+        onClose={() => setIsMapOpen(false)}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        maxUnlockedPage={maxUnlockedPage}
+        onSelectPage={tryNavigateToPage}
+      />
 
       <StudyTimer 
          currentPage={currentPage}
@@ -479,27 +601,18 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                 </svg>
                 </button>
 
-                {/* 3D Dark Select with 70% Opacity */}
-                <div className="relative group">
-                    <select 
-                        value={currentPage} 
-                        onChange={(e) => tryNavigateToPage(Number(e.target.value))}
-                        className="appearance-none bg-slate-800/70 text-white border border-slate-700 font-bold py-2 pl-4 pr-9 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer min-w-[140px] text-center text-sm btn-select-3d backdrop-blur-sm"
-                    >
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => {
-                            const isLocked = pageNum > maxUnlockedPage;
-                            return (
-                                <option key={pageNum} value={pageNum} className={isLocked ? 'text-gray-400' : 'text-gray-900 bg-white'}>
-                                    Page {pageNum} / {totalPages} {isLocked ? '🔒' : ''}
-                                </option>
-                            );
-                        })}
-                    </select>
-                    {/* White Chevron Icon */}
-                    <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-300">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
-                </div>
+                {/* 3D MAP TRIGGER BUTTON (REPLACES SELECT) */}
+                <button
+                    onClick={() => setIsMapOpen(true)}
+                    className="relative group bg-slate-800/70 hover:bg-slate-800 text-white font-bold py-2 pl-4 pr-3 rounded-full shadow-sm min-w-[140px] text-center text-sm btn-select-3d backdrop-blur-sm flex items-center justify-between gap-2"
+                >
+                    <span>Page {currentPage} / {totalPages}</span>
+                    {currentPage > maxUnlockedPage ? (
+                        <span className="text-sm">🔒</span>
+                    ) : (
+                         <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    )}
+                </button>
 
                 <button
                 onClick={() => tryNavigateToPage(currentPage + 1)}
