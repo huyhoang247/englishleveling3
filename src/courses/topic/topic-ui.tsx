@@ -238,11 +238,13 @@ const UnlockModal = ({ targetPage, cost, currentCoins, onConfirm, onCancel }: Un
 const StudyTimer = React.memo(({ 
     currentPage, 
     masteryCount, 
-    onReward 
+    onReward,
+    forceHide // Prop mới để ẩn đồng hồ khi cuộn xuống
 }: { 
     currentPage: number, 
     masteryCount: number,
-    onReward: (amount: number) => void 
+    onReward: (amount: number) => void,
+    forceHide: boolean
 }) => {
     const [seconds, setSeconds] = useState(0);
     const [dailyCount, setDailyCount] = useState(0);
@@ -291,17 +293,24 @@ const StudyTimer = React.memo(({
     }, [seconds, dailyCount, hasRewardedThisPage, masteryCount, onReward]);
 
     const isDailyLimitReached = dailyCount >= MAX_DAILY_REWARDS;
-    const shouldHideTimer = isDailyLimitReached || hasRewardedThisPage;
+    const isCompleted = hasRewardedThisPage;
+
+    // Logic ẩn hiện container
+    const containerClasses = `fixed bottom-6 right-6 z-40 flex flex-col items-end transition-all duration-300 transform ${
+        forceHide ? 'translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
+    }`;
 
     return (
-        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end pointer-events-none">
+        <div className={containerClasses}>
             {justRewarded && (
                 <div className="animate-popup bg-white border-2 border-yellow-400 px-5 py-2.5 rounded-full shadow-xl mb-4 flex items-center gap-2 pointer-events-auto origin-bottom-right">
                     <span className="text-xl font-black text-yellow-500 drop-shadow-sm">+{justRewarded.amount}</span>
                     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp" alt="Gold" className="w-7 h-7 object-contain filter drop-shadow-sm"/>
                 </div>
             )}
-            {!shouldHideTimer && (
+            
+            {/* Chỉ hiện vòng tròn nếu chưa đạt giới hạn ngày VÀ chưa nhận thưởng trang này */}
+            {(!isDailyLimitReached && !isCompleted) && (
                 <div className="relative w-16 h-16 rounded-full shadow-lg border-4 border-white/50 bg-white/80 pointer-events-auto group transition-transform hover:scale-105">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 60 60">
                         <circle cx="30" cy="30" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="4" className="opacity-50" />
@@ -324,6 +333,9 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [maxUnlockedPage, setMaxUnlockedPage] = useState(FREE_PAGES);
   const [unlockModalData, setUnlockModalData] = useState<{ targetPage: number, cost: number } | null>(null);
+  
+  // State kiểm tra xem đã cuộn xuống đáy chưa để ẩn đồng hồ
+  const [isAtBottom, setIsAtBottom] = useState(false);
 
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
 
@@ -336,8 +348,24 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
   useEffect(() => {
     const scrollContainer = document.getElementById('topic-scroll-container');
-    if (scrollContainer) scrollContainer.scrollTop = 0;
+    if (scrollContainer) {
+        scrollContainer.scrollTop = 0;
+        setIsAtBottom(false); // Reset khi đổi trang
+    }
   }, [currentPage]);
+
+  // Xử lý sự kiện cuộn để ẩn/hiện đồng hồ
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const bottomThreshold = 150; // Khoảng cách pixel từ đáy để bắt đầu ẩn
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    
+    // Nếu vị trí cuộn + chiều cao màn hình >= tổng chiều cao - ngưỡng -> Đang ở đáy
+    if (scrollHeight - scrollTop - clientHeight < bottomThreshold) {
+        setIsAtBottom(true);
+    } else {
+        setIsAtBottom(false);
+    }
+  };
 
   const currentItems = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
@@ -394,6 +422,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
          currentPage={currentPage}
          masteryCount={masteryCount}
          onReward={handleReward}
+         forceHide={isAtBottom} // Truyền trạng thái ẩn
       />
       
       {/* Header */}
@@ -416,9 +445,13 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
       </header>
 
       {/* Main Content */}
-      <div id="topic-scroll-container" className="flex-grow overflow-y-auto p-4 scroll-smooth">
-        {/* ĐÃ CHỈNH SỬA: space-y-4 (giảm gap) và pb-6 (giảm footer padding) */}
-        <div className="max-w-2xl mx-auto space-y-4 pb-6">
+      <div 
+        id="topic-scroll-container" 
+        className="flex-grow overflow-y-auto p-4 scroll-smooth"
+        onScroll={handleScroll} // Bắt sự kiện cuộn
+      >
+        {/* Đã giảm padding bottom xuống pb-2 */}
+        <div className="max-w-2xl mx-auto space-y-4 pb-2">
           
           <div className="md:hidden flex justify-center pb-2">
              <div className="bg-slate-800/80 backdrop-blur text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-sm border border-slate-700">
@@ -432,8 +465,8 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
             ))}
           </div>
 
-          {/* Controls Navigation (ĐÃ CHỈNH SỬA: py-4, không margin-top lớn) */}
-          <div className="flex justify-center items-center gap-3 py-4 w-full">
+          {/* Controls Navigation - Đã giảm padding vertical xuống py-2 */}
+          <div className="flex justify-center items-center gap-3 py-2 mt-2 w-full">
             <div className="bg-white p-2 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
                 
                 <button
