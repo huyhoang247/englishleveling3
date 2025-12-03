@@ -154,7 +154,7 @@ const TopicImageCard = React.memo(({ index }: { index: number }) => {
   );
 });
 
-// --- UNLOCK MODAL COMPONENT (ĐÃ TỐI ƯU & REDESIGN) ---
+// --- UNLOCK MODAL COMPONENT ---
 interface UnlockModalProps {
   targetPage: number;
   cost: number;
@@ -178,11 +178,7 @@ const UnlockModal = ({ targetPage, cost, currentCoins, onConfirm, onCancel }: Un
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
-      {/* 
-         OVERLAY TỐI ƯU HIỆU NĂNG:
-         - Dùng bg-black/80 thay vì backdrop-blur.
-         - Không tính toán blur -> Không lag trên mobile yếu.
-      */}
+      {/* Overlay: Black with Opacity (No Blur for Performance) */}
       <div 
         className="absolute inset-0 bg-black/80 transition-opacity animate-[fade-in_0.2s]" 
         onClick={onCancel}
@@ -191,13 +187,12 @@ const UnlockModal = ({ targetPage, cost, currentCoins, onConfirm, onCancel }: Un
       {/* Modal Content */}
       <div className={`relative bg-white w-full max-w-xs sm:max-w-sm rounded-2xl p-5 shadow-2xl animate-popup-zoom overflow-hidden ${isShaking ? 'animate-shake' : ''}`}>
         
-        {/* Background Decor nhẹ */}
+        {/* Decor */}
         <div className="absolute top-0 right-0 w-24 h-24 bg-orange-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
         <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
 
         <div className="relative flex flex-col items-center text-center">
           
-          {/* Icon Header */}
           <div className="mb-3">
              <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center border-2 border-orange-100">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-orange-500">
@@ -208,7 +203,6 @@ const UnlockModal = ({ targetPage, cost, currentCoins, onConfirm, onCancel }: Un
 
           <h3 className="text-xl font-black text-slate-800 mb-1">Unlock Page {targetPage}</h3>
           
-          {/* Price Tag */}
           <div className="flex items-center justify-center gap-2 bg-slate-50 border border-slate-100 px-4 py-2 rounded-lg mb-4 mt-2">
               <span className="text-slate-500 text-sm font-medium">Cost:</span>
               <span className={`text-lg font-black ${canAfford ? 'text-slate-800' : 'text-red-500'}`}>{cost}</span>
@@ -219,15 +213,8 @@ const UnlockModal = ({ targetPage, cost, currentCoins, onConfirm, onCancel }: Un
               />
           </div>
 
-          {/* Action Buttons (Side by Side) */}
+          {/* Buttons: Unlock (Left), Cancel (Right) */}
           <div className="grid grid-cols-2 gap-3 w-full">
-            <button
-              onClick={onCancel}
-              className="btn-game-gray py-3 rounded-xl font-bold text-sm"
-            >
-              Cancel
-            </button>
-            
             <button
               onClick={handleAttemptUnlock}
               className={`py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 ${
@@ -237,6 +224,13 @@ const UnlockModal = ({ targetPage, cost, currentCoins, onConfirm, onCancel }: Un
               }`}
             >
               {canAfford ? 'Unlock' : 'No Coin'}
+            </button>
+
+            <button
+              onClick={onCancel}
+              className="btn-game-gray py-3 rounded-xl font-bold text-sm"
+            >
+              Cancel
             </button>
           </div>
 
@@ -430,7 +424,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
       {/* Main Content */}
       <div id="topic-scroll-container" className="flex-grow overflow-y-auto p-4 scroll-smooth">
-        <div className="max-w-2xl mx-auto space-y-8 pb-24">
+        <div className="max-w-2xl mx-auto space-y-8 pb-10">
           
           <div className="md:hidden flex justify-center pb-2">
              <div className="bg-slate-800/80 backdrop-blur text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-sm border border-slate-700">
@@ -444,9 +438,9 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
             ))}
           </div>
 
-          {/* Controls Navigation */}
-          <div className="flex justify-center items-center gap-3 py-6 sticky bottom-4 z-20 pointer-events-none">
-            <div className="pointer-events-auto bg-white/95 backdrop-blur-md p-2 rounded-full shadow-2xl border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
+          {/* Controls Navigation (STATIC AT BOTTOM) */}
+          <div className="flex justify-center items-center gap-3 py-8 mt-4 w-full">
+            <div className="bg-white p-2 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
                 
                 <button
                 onClick={() => tryNavigateToPage(currentPage - 1)}
