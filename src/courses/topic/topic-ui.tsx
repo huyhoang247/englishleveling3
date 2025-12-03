@@ -239,7 +239,7 @@ const StudyTimer = React.memo(({
     currentPage, 
     masteryCount, 
     onReward,
-    forceHide // Prop mới để ẩn đồng hồ khi cuộn xuống
+    forceHide
 }: { 
     currentPage: number, 
     masteryCount: number,
@@ -295,7 +295,6 @@ const StudyTimer = React.memo(({
     const isDailyLimitReached = dailyCount >= MAX_DAILY_REWARDS;
     const isCompleted = hasRewardedThisPage;
 
-    // Logic ẩn hiện container
     const containerClasses = `fixed bottom-6 right-6 z-40 flex flex-col items-end transition-all duration-300 transform ${
         forceHide ? 'translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
     }`;
@@ -309,7 +308,6 @@ const StudyTimer = React.memo(({
                 </div>
             )}
             
-            {/* Chỉ hiện vòng tròn nếu chưa đạt giới hạn ngày VÀ chưa nhận thưởng trang này */}
             {(!isDailyLimitReached && !isCompleted) && (
                 <div className="relative w-16 h-16 rounded-full shadow-lg border-4 border-white/50 bg-white/80 pointer-events-auto group transition-transform hover:scale-105">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 60 60">
@@ -333,8 +331,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [maxUnlockedPage, setMaxUnlockedPage] = useState(FREE_PAGES);
   const [unlockModalData, setUnlockModalData] = useState<{ targetPage: number, cost: number } | null>(null);
-  
-  // State kiểm tra xem đã cuộn xuống đáy chưa để ẩn đồng hồ
   const [isAtBottom, setIsAtBottom] = useState(false);
 
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
@@ -350,16 +346,13 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     const scrollContainer = document.getElementById('topic-scroll-container');
     if (scrollContainer) {
         scrollContainer.scrollTop = 0;
-        setIsAtBottom(false); // Reset khi đổi trang
+        setIsAtBottom(false);
     }
   }, [currentPage]);
 
-  // Xử lý sự kiện cuộn để ẩn/hiện đồng hồ
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const bottomThreshold = 150; // Khoảng cách pixel từ đáy để bắt đầu ẩn
+    const bottomThreshold = 150; 
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    
-    // Nếu vị trí cuộn + chiều cao màn hình >= tổng chiều cao - ngưỡng -> Đang ở đáy
     if (scrollHeight - scrollTop - clientHeight < bottomThreshold) {
         setIsAtBottom(true);
     } else {
@@ -422,7 +415,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
          currentPage={currentPage}
          masteryCount={masteryCount}
          onReward={handleReward}
-         forceHide={isAtBottom} // Truyền trạng thái ẩn
+         forceHide={isAtBottom} 
       />
       
       {/* Header */}
@@ -448,16 +441,11 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
       <div 
         id="topic-scroll-container" 
         className="flex-grow overflow-y-auto p-4 scroll-smooth"
-        onScroll={handleScroll} // Bắt sự kiện cuộn
+        onScroll={handleScroll} 
       >
-        {/* Đã giảm padding bottom xuống pb-2 */}
         <div className="max-w-2xl mx-auto space-y-4 pb-2">
           
-          <div className="md:hidden flex justify-center pb-2">
-             <div className="bg-slate-800/80 backdrop-blur text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-sm border border-slate-700">
-                Page {currentPage} <span className="opacity-50 mx-1">/</span> {totalPages}
-             </div>
-          </div>
+          {/* ĐÃ XÓA PHẦN NÚT PAGE TRÊN ĐẦU Ở ĐÂY */}
 
           <div className="flex flex-col gap-6">
             {currentItems.map((itemIndex) => (
@@ -465,9 +453,9 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
             ))}
           </div>
 
-          {/* Controls Navigation - Đã giảm padding vertical xuống py-2 */}
+          {/* Controls Navigation (Dark Mode Style) */}
           <div className="flex justify-center items-center gap-3 py-2 mt-2 w-full">
-            <div className="bg-white p-2 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
+            <div className="bg-white p-1.5 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
                 
                 <button
                 onClick={() => tryNavigateToPage(currentPage - 1)}
@@ -483,22 +471,24 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                 </svg>
                 </button>
 
+                {/* Styled Dark Select */}
                 <div className="relative group">
                     <select 
                         value={currentPage} 
                         onChange={(e) => tryNavigateToPage(Number(e.target.value))}
-                        className="appearance-none bg-slate-50 border border-slate-200 text-slate-700 font-bold py-2 pl-4 pr-9 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer min-w-[130px] text-center"
+                        className="appearance-none bg-slate-800 text-white border border-slate-700 font-bold py-2 pl-4 pr-9 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer min-w-[140px] text-center text-sm"
                     >
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => {
                             const isLocked = pageNum > maxUnlockedPage;
                             return (
-                                <option key={pageNum} value={pageNum} className={isLocked ? 'text-gray-400' : 'text-gray-900'}>
-                                    Page {pageNum} {isLocked ? '🔒' : ''}
+                                <option key={pageNum} value={pageNum} className={isLocked ? 'text-gray-400' : 'text-gray-900 bg-white'}>
+                                    Page {pageNum} / {totalPages} {isLocked ? '🔒' : ''}
                                 </option>
                             );
                         })}
                     </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
+                    {/* White Chevron Icon */}
+                    <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-300">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                     </div>
                 </div>
