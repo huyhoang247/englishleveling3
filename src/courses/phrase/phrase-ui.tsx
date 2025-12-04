@@ -106,8 +106,11 @@ interface PhraseData {
   uniqueCount: number;
 }
 
-// Cache variables
+// --- GLOBAL CACHE VARIABLES ---
+// 1. Cache for Phrase Filter
 let allPhraseGroupsCache: Map<number, Map<string, PhraseData>> | null = null;
+// 2. Cache for Vocabulary Check
+let vocabCheckCache: { matchedWords: { word: string; count: number }[], unmatchedWords: string[], total: number } | null = null;
 
 const getOrGenerateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
   if (allPhraseGroupsCache) return allPhraseGroupsCache;
@@ -150,7 +153,7 @@ const getOrGenerateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> =>
 };
 
 
-// --- Filter Popup Component ---
+// --- Filter Popup Component (Optimized with Cache) ---
 interface FilterPopupProps {
   isOpen: boolean;
   onClose: () => void;
@@ -163,26 +166,35 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
   const [currentPage, setCurrentPage] = useState(1);
   const [phraseLength, setPhraseLength] = useState(2);
   
-  // State for Async Loading
-  const [isLoading, setIsLoading] = useState(true);
+  // LOGIC CACHE: Nếu đã có cache, set isLoading = false ngay lập tức để không hiện Skeleton
+  const hasCache = allPhraseGroupsCache !== null;
+  const [isLoading, setIsLoading] = useState(!hasCache);
   const [availablePhrases, setAvailablePhrases] = useState<{phrase: string, count: number}[]>([]);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Use useEffect to handle heavy calculation without blocking main thread initially
   useEffect(() => {
-    if (isOpen) {
-      setIsLoading(true);
-      // Timeout allows the UI to paint the Skeleton before the heavy lifting starts
-      const timer = setTimeout(() => {
-        const allPhraseGroups = getOrGenerateAllPhraseGroups();
-        const currentPhraseMap = allPhraseGroups.get(phraseLength) || new Map();
+    if (!isOpen) return;
+
+    const loadFromCache = (groups: Map<number, Map<string, PhraseData>>) => {
+        const currentPhraseMap = groups.get(phraseLength) || new Map();
         const phrases = Array.from(currentPhraseMap.entries()).map(([phrase, data]) => ({
           phrase,
           count: data.uniqueCount,
         }));
-        
         setAvailablePhrases(phrases);
+    };
+
+    if (allPhraseGroupsCache) {
+      // TRƯỜNG HỢP 1: Có cache -> Chạy đồng bộ, nhanh tức thì
+      loadFromCache(allPhraseGroupsCache);
+      setIsLoading(false);
+    } else {
+      // TRƯỜNG HỢP 2: Chưa có cache -> Chạy bất đồng bộ, hiện Skeleton
+      setIsLoading(true);
+      const timer = setTimeout(() => {
+        const groups = getOrGenerateAllPhraseGroups();
+        loadFromCache(groups);
         setIsLoading(false);
       }, 50); 
       
@@ -297,7 +309,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
 };
 const MemoizedFilterPopup = React.memo(FilterPopup);
 
-// --- Vocabulary Check Popup Component ---
+// --- Vocabulary Check Popup Component (Optimized with Cache) ---
 interface VocabularyCheckPopupProps {
   isOpen: boolean;
   onClose: () => void;
@@ -309,54 +321,70 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
   const [sortBy, setSortBy] = useState<'freq' | 'alpha'>('freq');
   const [isCopied, setIsCopied] = useState(false); 
   
-  // State for Async Loading
-  const [isLoading, setIsLoading] = useState(true);
-  const [wordCheckResults, setWordCheckResults] = useState<{ matchedWords: { word: string; count: number }[], unmatchedWords: string[], total: number }>({ matchedWords: [], unmatchedWords: [], total: 0 });
+  // LOGIC CACHE: Kiểm tra cache và set loading state
+  const hasCache = vocabCheckCache !== null;
+  const [isLoading, setIsLoading] = useState(!hasCache);
+  
+  // Nếu có cache, khởi tạo state bằng cache luôn
+  const [wordCheckResults, setWordCheckResults] = useState<{ matchedWords: { word: string; count: number }[], unmatchedWords: string[], total: number }>(
+      vocabCheckCache || { matchedWords: [], unmatchedWords: [], total: 0 }
+  );
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Async calculation
   useEffect(() => {
-    if (isOpen) {
-      setIsLoading(true);
-      const timer = setTimeout(() => {
-        const wordSentenceMap = new Map<string, Set<string>>();
-        exampleData.forEach(sentence => {
-          const uniqueWordsInSentence = new Set(
-            sentence.english.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter(Boolean)
-          );
-          uniqueWordsInSentence.forEach(word => {
-            if (!wordSentenceMap.has(word)) {
-              wordSentenceMap.set(word, new Set());
-            }
-            wordSentenceMap.get(word)!.add(sentence.english.trim().toLowerCase());
-          });
-        });
-    
-        const uniqueVocabulary = [...new Set(defaultVocabulary.map(v => v.toLowerCase().trim()))];
-        const matchedWords: { word: string; count: number }[] = [];
-        const unmatchedWords: string[] = [];
-    
-        uniqueVocabulary.forEach(word => {
-          if (wordSentenceMap.has(word)) {
-            matchedWords.push({
-              word,
-              count: wordSentenceMap.get(word)!.size,
-            });
-          } else {
-            unmatchedWords.push(word);
-          }
-        });
-        
-        setWordCheckResults({ 
-          matchedWords, 
-          unmatchedWords: unmatchedWords.sort(),
-          total: uniqueVocabulary.length,
-        });
-        setIsLoading(false);
-      }, 100); 
+    if (!isOpen) return;
 
-      return () => clearTimeout(timer);
+    if (vocabCheckCache) {
+        // TRƯỜNG HỢP 1: Có cache -> Bỏ qua tính toán, đảm bảo loading false
+        setWordCheckResults(vocabCheckCache);
+        setIsLoading(false);
+    } else {
+        // TRƯỜNG HỢP 2: Chưa có cache -> Hiện Skeleton và Tính toán
+        setIsLoading(true);
+        const timer = setTimeout(() => {
+            const wordSentenceMap = new Map<string, Set<string>>();
+            exampleData.forEach(sentence => {
+              const uniqueWordsInSentence = new Set(
+                sentence.english.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter(Boolean)
+              );
+              uniqueWordsInSentence.forEach(word => {
+                if (!wordSentenceMap.has(word)) {
+                  wordSentenceMap.set(word, new Set());
+                }
+                wordSentenceMap.get(word)!.add(sentence.english.trim().toLowerCase());
+              });
+            });
+        
+            const uniqueVocabulary = [...new Set(defaultVocabulary.map(v => v.toLowerCase().trim()))];
+            const matchedWords: { word: string; count: number }[] = [];
+            const unmatchedWords: string[] = [];
+        
+            uniqueVocabulary.forEach(word => {
+              if (wordSentenceMap.has(word)) {
+                matchedWords.push({
+                  word,
+                  count: wordSentenceMap.get(word)!.size,
+                });
+              } else {
+                unmatchedWords.push(word);
+              }
+            });
+            
+            const results = { 
+              matchedWords, 
+              unmatchedWords: unmatchedWords.sort(),
+              total: uniqueVocabulary.length,
+            };
+
+            // LƯU KẾT QUẢ VÀO GLOBAL CACHE
+            vocabCheckCache = results;
+            
+            setWordCheckResults(results);
+            setIsLoading(false);
+        }, 100); 
+
+        return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
