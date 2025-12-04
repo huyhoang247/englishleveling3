@@ -1,13 +1,13 @@
 // --- START OF FILE: course-ui.tsx ---
 
 // quiz-app-home.tsx
-import React, { useMemo, memo, useCallback, useState, useEffect, Suspense, lazy } from 'react'; // <--- 1. Thêm Suspense, lazy
+import React, { useMemo, memo, useCallback, useState, useEffect } from 'react';
 import QuizApp from './multiple-choice/multiple-ui.tsx';
 import VocabularyGame from './fill-in-the-blank/fill-blank-ui.tsx';
 import VocaMatchGame from './voca-match/voca-match-ui.tsx';
 import AnalysisDashboard from './analysis-dashboard/analysis-ui.tsx';
 import WordChainGame from './word-chain-game/word-chain-ui.tsx';
-// import PhraseViewer from './phrase/phrase-ui.tsx'; // <--- 2. XOÁ DÒNG NÀY (Import tĩnh gây đơ)
+import PhraseViewer from './phrase/phrase-ui.tsx'; // <--- Đã bật lại Import tĩnh
 import TopicViewer from './topic/topic-ui.tsx'; 
 import PracticeListLoadingSkeleton from './course-loading.tsx';
 import HomeButton from '../ui/home-button.tsx';
@@ -19,38 +19,11 @@ import { fetchPracticeListProgress, claimQuizReward } from './course-data-servic
 import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts';
 import { User } from 'firebase/auth';
 
-// --- 3. KHAI BÁO LAZY IMPORT ---
-// Cách này giúp file này không bị đơ khi bấm vào. Nó sẽ hiện fallback trước, sau đó mới load file nặng.
-const PhraseViewer = lazy(() => import('./phrase/phrase-ui.tsx'));
-
 // --- Props cho component chính ---
 interface QuizAppHomeProps {
   hideNavBar?: () => void;
   showNavBar?: () => void;
 }
-
-// --- 4. TẠO SKELETON RIÊNG CHO DARK MODE (PHRASE UI) ---
-// Vì PhraseViewer chưa load xong nên ta không lấy được Skeleton bên đó,
-// ta tạo một cái tạm thời giống hệt ở đây để trải nghiệm mượt nhất.
-const PhraseFallbackLoader = () => (
-  <div className="h-full w-full bg-slate-900 flex flex-col p-4 sm:p-6 space-y-4">
-    {/* Header Fake */}
-    <div className="h-14 w-full bg-slate-800/50 rounded-lg animate-pulse mb-4"></div>
-    {/* List Items Fake */}
-    {Array.from({ length: 6 }).map((_, i) => (
-      <div key={i} className="bg-gray-900/70 p-4 rounded-xl border border-gray-800 h-28 w-full animate-pulse relative overflow-hidden">
-        <div className="flex justify-between">
-           <div className="space-y-2 w-3/4">
-              <div className="h-4 bg-gray-800 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-800 rounded w-1/2"></div>
-           </div>
-           <div className="h-8 w-8 bg-gray-800 rounded-full"></div>
-        </div>
-        <div className="h-3 bg-gray-800/50 rounded w-1/2 mt-4"></div>
-      </div>
-    ))}
-  </div>
-);
 
 // --- Component hiển thị nội dung, sử dụng Context ---
 export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps) {
@@ -98,13 +71,9 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               ViewComponent = <AnalysisDashboard onGoBack={goHome} />;
               break;
           
-          // --- 5. SỬ DỤNG SUSPENSE CHO EXAMPLE VIEW ---
+          // --- SỬ DỤNG TRỰC TIẾP (Sẽ dùng Skeleton nội bộ của PhraseViewer) ---
           case 'exampleView':
-              ViewComponent = (
-                <Suspense fallback={<PhraseFallbackLoader />}>
-                   <PhraseViewer onGoBack={goBack} />
-                </Suspense>
-              );
+              ViewComponent = <PhraseViewer onGoBack={goBack} />;
               break;
           
           case 'topics':
