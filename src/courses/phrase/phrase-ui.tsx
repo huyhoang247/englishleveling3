@@ -1,4 +1,4 @@
-// --- START OF FILE phrase-ui.tsx (REFACTORED - WITH COPY BUTTON) ---
+// --- START OF FILE phrase-ui.tsx ---
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import BackButton from '../../ui/back-button.tsx';
@@ -12,7 +12,7 @@ import { WORD_TO_CARD_MAP, Flashcard as FlashcardData, exampleData as allExample
 // --- END: Imports for Flashcard functionality ---
 
 // --- START: Imports for Game Mode functionality ---
-import { GameSetupPopup, GameMode, GameSentenceData } from './phrase-game.tsx'; // Adjust path if needed
+import { GameSetupPopup, GameMode, GameSentenceData } from './phrase-game.tsx'; 
 // --- END: Imports for Game Mode functionality ---
 
 // --- Icons used in this component ---
@@ -29,6 +29,51 @@ const ClipboardIcon = ({ className }: { className: string }) => ( <svg xmlns="ht
 
 const ITEMS_PER_PAGE = 50;
 const PHRASES_PER_PAGE = 20;
+
+// --- STYLES & SKELETON (DESIGN FOR DARK MODE) ---
+
+const styles = `
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite;
+  }
+`;
+
+// Skeleton for a single phrase item
+const PhraseSkeletonItem = () => (
+  <div className="relative bg-gray-900/70 p-4 rounded-xl border border-gray-800 overflow-hidden min-h-[100px]">
+    {/* Shimmer Effect Layer (Optimized for Dark Mode) */}
+    <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/5 to-transparent z-10"></div>
+
+    {/* Header & Button Placeholder */}
+    <div className="flex justify-between items-start mb-3">
+      {/* English Text Lines Placeholder */}
+      <div className="space-y-2 w-full pr-12">
+        <div className="h-5 bg-gray-800 rounded-md w-3/4"></div>
+        <div className="h-5 bg-gray-800 rounded-md w-1/2"></div>
+      </div>
+      
+      {/* Audio Button Placeholder */}
+      <div className="w-8 h-8 rounded-full bg-gray-800 flex-shrink-0"></div>
+    </div>
+
+    {/* Vietnamese Text Placeholder */}
+    <div className="h-4 bg-gray-800/50 rounded-md w-2/3 mt-2"></div>
+  </div>
+);
+
+// Skeleton List to show multiple items
+const PhraseSkeletonList = () => (
+  <div className="max-w-4xl mx-auto space-y-4">
+    {Array.from({ length: 8 }).map((_, i) => (
+      <PhraseSkeletonItem key={i} />
+    ))}
+  </div>
+);
+
+// --- END STYLES & SKELETON ---
 
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -435,6 +480,18 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   const [gameSettings, setGameSettings] = useState<{ sentences: GameSentenceData[], difficulty: number | 'all' } | null>(null);
   // --- END: State for Game Mode ---
 
+  // --- START: Skeleton Loading State ---
+  const [isLoading, setIsLoading] = useState(true);
+
+  // EFFECT: Simulate loading delay for smooth mounting and Skeleton display
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500); // 0.5s delay
+    return () => clearTimeout(timer);
+  }, []);
+  // --- END: Skeleton Loading State ---
+
   const flashcardVocabularySet = useMemo(() => new Set(Array.from(WORD_TO_CARD_MAP.keys())), []);
 
   const indexedExampleData = useMemo(() => 
@@ -590,6 +647,7 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
 
   return (
     <>
+      <style>{styles}</style>
       <MemoizedFilterPopup 
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
@@ -677,34 +735,41 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
         )}
 
         <main ref={listRef} className="flex-grow overflow-y-auto bg-black p-4 sm:p-6">
-          <div className="max-w-4xl mx-auto space-y-4">
-            {currentSentences.map((sentence) => {
-              const isCurrentAudio = audioState.index === sentence.originalIndex;
-              const isThisPlaying = isCurrentAudio && audioState.isPlaying;
-              return (
-                <div key={sentence.originalIndex} className="relative bg-gray-900/70 p-4 rounded-xl border border-gray-800">
-                  <button 
-                    onClick={() => handleToggleAudio(sentence.originalIndex)} 
-                    className={`absolute top-3 right-3 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${isThisPlaying ? 'bg-blue-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`} 
-                    aria-label={isThisPlaying ? 'Dừng phát' : 'Phát âm'}
-                  >
-                    {isThisPlaying ? <PauseIcon className="w-4 h-4" /> : <VolumeUpIcon className="w-4 h-4" />}
-                  </button>
-                  <p className="text-gray-200 text-base leading-relaxed font-medium pr-10">
-                    {renderSentenceWithFlashcards(sentence.english)}
-                  </p>
-                  <p className="mt-2 text-gray-400 text-sm italic">{sentence.vietnamese}</p>
-                </div>
-              );
-            })}
-             {filteredData.length === 0 && (
-                <div className="text-center text-slate-400 p-8 bg-slate-900/50 rounded-lg">
-                    <h3 className="text-lg font-semibold">No results found</h3>
-                    <p className="mt-1 text-sm">Try clearing the filters or choosing a different phrase.</p>
-                </div>
-             )}
-          </div>
+          
+          {/* LOGIC HIỂN THỊ SKELETON HOẶC NỘI DUNG CHÍNH */}
+          {isLoading ? (
+            <PhraseSkeletonList />
+          ) : (
+            <div className="max-w-4xl mx-auto space-y-4">
+                {currentSentences.map((sentence) => {
+                const isCurrentAudio = audioState.index === sentence.originalIndex;
+                const isThisPlaying = isCurrentAudio && audioState.isPlaying;
+                return (
+                    <div key={sentence.originalIndex} className="relative bg-gray-900/70 p-4 rounded-xl border border-gray-800">
+                    <button 
+                        onClick={() => handleToggleAudio(sentence.originalIndex)} 
+                        className={`absolute top-3 right-3 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${isThisPlaying ? 'bg-blue-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`} 
+                        aria-label={isThisPlaying ? 'Dừng phát' : 'Phát âm'}
+                    >
+                        {isThisPlaying ? <PauseIcon className="w-4 h-4" /> : <VolumeUpIcon className="w-4 h-4" />}
+                    </button>
+                    <p className="text-gray-200 text-base leading-relaxed font-medium pr-10">
+                        {renderSentenceWithFlashcards(sentence.english)}
+                    </p>
+                    <p className="mt-2 text-gray-400 text-sm italic">{sentence.vietnamese}</p>
+                    </div>
+                );
+                })}
+                {!isLoading && filteredData.length === 0 && (
+                    <div className="text-center text-slate-400 p-8 bg-slate-900/50 rounded-lg">
+                        <h3 className="text-lg font-semibold">No results found</h3>
+                        <p className="mt-1 text-sm">Try clearing the filters or choosing a different phrase.</p>
+                    </div>
+                )}
+            </div>
+          )}
         </main>
+        
         <footer className="sticky bottom-0 z-10 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 flex-shrink-0">
           <div className="max-w-4xl mx-auto p-3 flex justify-between items-center">
             <button 
@@ -734,5 +799,3 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
 };
 
 export default PhraseViewer;
-
-// --- END OF FILE phrase-ui.tsx (REFACTORED - WITH COPY BUTTON) ---
