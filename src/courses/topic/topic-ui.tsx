@@ -14,7 +14,7 @@ import {
   unlockTopicPageTransaction, 
   claimTopicRewardTransaction, 
   TopicProgressData 
-} from './topic-service.ts';
+} from '../../services/topic-service.ts';
 
 interface TopicViewerProps {
   onGoBack: () => void;
@@ -463,42 +463,55 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   // Lấy User data từ Context
   const { user, userCoins, masteryCount } = useQuizApp();
   
-  // --- LOCAL STATE for Topic Data (Quản lý trực tiếp tại đây) ---
+  // --- STATE 1: Trạng thái dữ liệu Topic ---
+  // Biến isDataLoaded rất quan trọng: Nó chặn việc Reset Page sai khi dữ liệu chưa về
   const [topicData, setTopicData] = useState<TopicProgressData>({
     maxUnlockedPage: FREE_PAGES,
     dailyReward: { date: '', count: 0 }
   });
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  // --- EFFECT: Lắng nghe dữ liệu Topic riêng biệt ---
+  // --- EFFECT: Lắng nghe dữ liệu Topic ---
   useEffect(() => {
     if (user) {
       const unsubscribe = listenToTopicData(user.uid, (data) => {
         setTopicData(data);
+        setIsDataLoaded(true); // Đánh dấu là đã có dữ liệu thật
       });
       return () => unsubscribe();
     } else {
-        // Reset nếu logout
         setTopicData({ maxUnlockedPage: FREE_PAGES, dailyReward: { date: '', count: 0 } });
+        setIsDataLoaded(false);
     }
   }, [user]);
 
   const maxUnlockedPage = topicData.maxUnlockedPage;
 
-  // Local navigation state
+  // --- STATE 2: Trang hiện tại ---
+  // Logic khởi tạo: Luôn tin tưởng LocalStorage trước (dù có thể là page 7)
   const [currentPage, setCurrentPage] = useState(() => {
      const saved = localStorage.getItem('topic_current_page');
-     const page = saved ? parseInt(saved, 10) : 1;
-     if (page > maxUnlockedPage) return maxUnlockedPage;
-     if (page < 1) return 1;
-     return page;
+     // Chỉ lấy giá trị, KHÔNG kiểm tra maxUnlockedPage ở đây để tránh race condition
+     return saved ? parseInt(saved, 10) : 1;
   });
 
-  // Sync current page if maxUnlockedPage changes from DB
+  // --- EFFECT QUAN TRỌNG: Sync dữ liệu ---
+  // Chỉ chạy khi đã có dữ liệu thật (isDataLoaded = true)
   useEffect(() => {
+      if (!isDataLoaded) return; // Nếu chưa tải xong DB thì đừng làm gì cả!
+
+      // Nếu dữ liệu thật về (VD: maxPage=7) và currentPage đang 7 -> OK
+      // Nếu dữ liệu thật về (VD: maxPage=5) mà currentPage đang 7 -> Reset về 5
       if (currentPage > maxUnlockedPage) {
           setCurrentPage(maxUnlockedPage);
       }
-  }, [maxUnlockedPage]);
+      
+      // Nếu currentPage nhỏ hơn 1 -> Reset về 1
+      if (currentPage < 1) {
+          setCurrentPage(1);
+      }
+
+  }, [maxUnlockedPage, isDataLoaded]); // Bỏ currentPage ra khỏi deps để tránh loop không cần thiết
 
   const [unlockModalData, setUnlockModalData] = useState<{ targetPage: number, cost: number } | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(false);
@@ -535,6 +548,8 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
   const tryNavigateToPage = (page: number) => {
     if (page > totalPages || page < 1) return;
+    
+    // Logic điều hướng
     if (page <= maxUnlockedPage) {
       setCurrentPage(page);
     } else if (page === maxUnlockedPage + 1) {
@@ -543,7 +558,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     }
   };
 
-  // --- ACTIONS: Gọi trực tiếp Service ---
   const handleConfirmUnlock = () => {
     if (!unlockModalData || !user) return;
     const { cost, targetPage } = unlockModalData;
