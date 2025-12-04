@@ -6,6 +6,9 @@ import { exampleData } from '../../voca-data/example-data.ts';
 import { generateAudioUrlsForExamSentence } from '../../voca-data/audio-quiz-generator.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
 
+// --- 1. IMPORT SKELETON TỪ FILE RIÊNG (Để đồng bộ giao diện) ---
+import PhraseSkeletonList from './phrase-loading.tsx';
+
 // --- START: Imports for Flashcard functionality ---
 import FlashcardDetailModal from '../../story/flashcard.tsx';
 import { WORD_TO_CARD_MAP, Flashcard as FlashcardData, exampleData as allExampleSentences } from '../../story/flashcard-data.ts';
@@ -30,43 +33,6 @@ const ClipboardIcon = ({ className }: { className: string }) => ( <svg xmlns="ht
 const ITEMS_PER_PAGE = 50;
 const PHRASES_PER_PAGE = 20;
 
-// --- STYLES & SKELETON (DESIGN FOR DARK MODE) ---
-
-const styles = `
-  @keyframes shimmer {
-    100% { transform: translateX(100%); }
-  }
-  .animate-shimmer {
-    animation: shimmer 1.5s infinite;
-  }
-`;
-
-// Skeleton for a single phrase item
-const PhraseSkeletonItem = () => (
-  <div className="relative bg-gray-900/70 p-4 rounded-xl border border-gray-800 overflow-hidden min-h-[100px]">
-    <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/5 to-transparent z-10"></div>
-    <div className="flex justify-between items-start mb-3">
-      <div className="space-y-2 w-full pr-12">
-        <div className="h-5 bg-gray-800 rounded-md w-3/4"></div>
-        <div className="h-5 bg-gray-800 rounded-md w-1/2"></div>
-      </div>
-      <div className="w-8 h-8 rounded-full bg-gray-800 flex-shrink-0"></div>
-    </div>
-    <div className="h-4 bg-gray-800/50 rounded-md w-2/3 mt-2"></div>
-  </div>
-);
-
-// Skeleton List to show multiple items
-const PhraseSkeletonList = () => (
-  <div className="max-w-4xl mx-auto space-y-4">
-    {Array.from({ length: 8 }).map((_, i) => (
-      <PhraseSkeletonItem key={i} />
-    ))}
-  </div>
-);
-
-// --- END STYLES & SKELETON ---
-
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
     useEffect(() => {
@@ -85,9 +51,7 @@ interface PhraseData {
   uniqueCount: number;
 }
 
-// --- OPTIMIZATION: Move expensive calculation to a variable, but ensure it doesn't block UI on import if possible.
-// In a real SPA, this runs once on load. If it's heavy, it might be better to lazy init it.
-// For now, we keep it here but we will make sure the COMPONENT mount is fast.
+// --- OPTIMIZATION: Cache variable for phrase groups to avoid re-calculation if user comes back
 let allPhraseGroupsCache: Map<number, Map<string, PhraseData>> | null = null;
 
 const getOrGenerateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
@@ -145,9 +109,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
   const [phraseLength, setPhraseLength] = useState(2);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Note: We use the cached generator here. 
-  // Ideally this component should also load data asynchronously if it's huge, 
-  // but usually the filter popup opens later so it's less critical for initial paint.
   const sortedAndFilteredPhrases = useMemo(() => {
     const allPhraseGroups = getOrGenerateAllPhraseGroups();
     const currentPhraseMap = allPhraseGroups.get(phraseLength) || new Map();
@@ -488,12 +449,12 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   const flashcardVocabularySet = useMemo(() => new Set(Array.from(WORD_TO_CARD_MAP.keys())), []);
 
   // --- HEAVY CALCULATION MOVED TO USE EFFECT ---
-  // This allows the initial render (Skeleton) to paint BEFORE the calculation blocks the thread.
+  // This allows the initial render (Skeleton from Suspense) to transition into this component,
+  // then shows internal skeleton while calculating data without freezing.
   useEffect(() => {
     setIsLoading(true);
     
-    // setTimeout 10ms ensures the browser has a "tick" to update the DOM (show skeleton)
-    // before freezing to do the heavy math.
+    // setTimeout 50ms ensures the browser has a "tick" to update the DOM
     const timer = setTimeout(() => {
       // 1. Prepare base data
       const indexedExampleData = exampleData.map((sentence, index) => ({ ...sentence, originalIndex: index }));
@@ -527,10 +488,10 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
 
       setFilteredData(finalData);
       setIsLoading(false);
-    }, 50); // Small delay to force Paint
+    }, 50); 
 
     return () => clearTimeout(timer);
-  }, [activeFilter]); // Re-run when filter changes
+  }, [activeFilter]);
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
@@ -653,7 +614,6 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
 
   return (
     <>
-      <style>{styles}</style>
       <MemoizedFilterPopup 
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
@@ -742,7 +702,7 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
 
         <main ref={listRef} className="flex-grow overflow-y-auto bg-black p-4 sm:p-6">
           
-          {/* LOGIC HIỂN THỊ SKELETON HOẶC NỘI DUNG CHÍNH */}
+          {/* LOGIC HIỂN THỊ SKELETON (Được import từ file riêng) HOẶC NỘI DUNG CHÍNH */}
           {isLoading ? (
             <PhraseSkeletonList />
           ) : (
