@@ -14,7 +14,7 @@ import {
   unlockTopicPageTransaction, 
   claimTopicRewardTransaction, 
   TopicProgressData 
-} from '../../services/topic-service.ts';
+} from './topic-service.ts';
 
 interface TopicViewerProps {
   onGoBack: () => void;
