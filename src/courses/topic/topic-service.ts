@@ -1,6 +1,6 @@
 // --- START OF FILE: src/services/topic-service.ts ---
 
-import { db } from '../firebase';
+import { db } from '../../firebase';
 import { 
   doc, 
   runTransaction, 
