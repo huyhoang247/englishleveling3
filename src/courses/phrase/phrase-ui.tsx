@@ -23,7 +23,7 @@ const ChevronRightIcon = ({ className }: { className: string }) => ( <svg xmlns=
 const FunnelIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg> );
 const XMarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> );
 const CheckBadgeIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> );
-const SparklesIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.553L16.5 21.75l-.398-1.197a3.375 3.375 0 00-2.455-2.455L12.75 18l1.197-.398a3.375 3.375 0 002.455-2.455l.398-1.197.398 1.197a3.375 3.375 0 00-2.455 2.455z" /></svg>);
+const SparklesIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.553L16.5 21.75l-.398-1.197a3.375 3.375 0 00-2.455-2.455L12.75 18l1.197-.398a3.375 3.375 0 002.455-2.455l.398-1.197.398 1.197a3.375 3.375 0 00-2.455 2.455l1.197.398-1.197.398a3.375 3.375 0 00-2.455 2.455z" /></svg>);
 const GameControllerIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM16.5 12a.75.75 0 0 0-.75-.75h-3.75a.75.75 0 0 0 0 1.5h3.75a.75.75 0 0 0 .75-.75Zm-6 0a.75.75 0 0 0-.75-.75H6a.75.75 0 0 0 0 1.5h3.75a.75.75 0 0 0 .75-.75Z" clipRule="evenodd" /></svg>);
 const ClipboardIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" /></svg> );
 
@@ -88,10 +88,8 @@ interface PhraseData {
 let allPhraseGroupsCache: Map<number, Map<string, PhraseData>> | null = null;
 
 const getOrGenerateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
-  // Nếu đã có cache, trả về ngay (Tức thì)
   if (allPhraseGroupsCache) return allPhraseGroupsCache;
 
-  // Nếu chưa có, bắt đầu tính toán (Nặng)
   const allPhraseGroups = new Map<number, Map<string, PhraseData>>();
 
   for (let phraseLength = 1; phraseLength <= 6; phraseLength++) {
@@ -137,12 +135,9 @@ interface VocabStats {
 }
 let vocabStatsCache: VocabStats | null = null;
 
-// Tách hàm tính toán ra khỏi Component để gọi chạy ngầm
 const getOrGenerateVocabularyStats = (): VocabStats => {
-    // Nếu cache đã có, trả về ngay
     if (vocabStatsCache) return vocabStatsCache;
 
-    // Tính toán nặng
     const wordSentenceMap = new Map<string, Set<string>>();
     exampleData.forEach(sentence => {
       const uniqueWordsInSentence = new Set(
@@ -197,7 +192,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const sortedAndFilteredPhrases = useMemo(() => {
-    // Gọi hàm này. Nếu đã tính ngầm xong -> Instant. Nếu chưa -> Tính ngay lập tức.
+    // Luôn gọi hàm này để lấy dữ liệu (đã được tính ngầm)
     const allPhraseGroups = getOrGenerateAllPhraseGroups();
     
     const currentPhraseMap = allPhraseGroups.get(phraseLength) || new Map();
@@ -215,7 +210,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
       phrases.sort((a, b) => b.count - a.count || a.phrase.localeCompare(b.phrase));
     }
     return phrases;
-  }, [debouncedSearchTerm, sortBy, phraseLength, isOpen]); // Thêm isOpen vào trigger
+  }, [debouncedSearchTerm, sortBy, phraseLength, isOpen]); 
   
   useEffect(() => {
     setCurrentPage(1);
@@ -318,7 +313,6 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const wordCheckResults = useMemo(() => {
-    // Gọi hàm này. Nếu đã tính ngầm xong -> Instant. Nếu chưa -> Tính ngay.
     return getOrGenerateVocabularyStats();
   }, [isOpen]); 
 
@@ -507,13 +501,12 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
 
   const flashcardVocabularySet = useMemo(() => new Set(Array.from(WORD_TO_CARD_MAP.keys())), []);
 
-  // --- XỬ LÝ DỮ LIỆU NẶNG + TÍNH TOÁN NGẦM (BACKGROUND CALCULATION) ---
+  // --- 1. PRIORITY CAO: LOAD DANH SÁCH CHÍNH (SKELETON -> LIST) ---
   useEffect(() => {
     setIsLoading(true);
     
     // setTimeout 50ms: Ưu tiên vẽ Skeleton và UI chính trước
     const timer = setTimeout(() => {
-      // 1. TÍNH TOÁN DANH SÁCH CHÍNH (PRIORITY 1)
       const indexedExampleData = exampleData.map((sentence, index) => ({ ...sentence, originalIndex: index }));
 
       let phraseFilteredData;
@@ -544,19 +537,26 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
 
       setFilteredData(finalData);
       setIsLoading(false); // Xong xuôi thì tắt Skeleton, hiện nội dung chính
-
-      // 2. KÍCH HOẠT TÍNH TOÁN NGẦM CHO POPUPS (PRIORITY 2)
-      // Chờ thêm 100ms nữa để UI render xong xuôi hoàn toàn mới bắt đầu chạy
-      setTimeout(() => {
-        // Tính toán và lưu vào Cache cho lần sau
-        getOrGenerateAllPhraseGroups();
-        getOrGenerateVocabularyStats();
-      }, 100);
-
     }, 50); 
 
     return () => clearTimeout(timer);
   }, [activeFilter]);
+
+  // --- 2. PRIORITY THẤP: TÍNH TOÁN NGẦM (BACKGROUND CALCULATION) ---
+  // Tách biệt hoàn toàn với useEffect bên trên để không làm nghẽn quá trình render List
+  useEffect(() => {
+    const runBackgroundTasks = () => {
+        // Kiểm tra xem đã tính chưa để tránh tính lại
+        if (!allPhraseGroupsCache) getOrGenerateAllPhraseGroups();
+        if (!vocabStatsCache) getOrGenerateVocabularyStats();
+    };
+
+    // Đợi 2000ms (2 giây) sau khi vào trang mới bắt đầu tính toán
+    // Thời điểm này UI đã ổn định (Idle), tính toán sẽ không gây giật lag
+    const backgroundTimer = setTimeout(runBackgroundTasks, 2000);
+
+    return () => clearTimeout(backgroundTimer);
+  }, []); // Dependency [] => Chỉ chạy 1 lần khi mount component
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
