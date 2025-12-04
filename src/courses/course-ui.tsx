@@ -1,14 +1,14 @@
 // --- START OF FILE: course-ui.tsx ---
 
 // quiz-app-home.tsx
-import React, { useMemo, memo, useCallback, useState, useEffect } from 'react';
+import React, { useMemo, memo, useCallback, useState, useEffect, Suspense, lazy } from 'react'; // <--- 1. Thêm Suspense, lazy
 import QuizApp from './multiple-choice/multiple-ui.tsx';
 import VocabularyGame from './fill-in-the-blank/fill-blank-ui.tsx';
 import VocaMatchGame from './voca-match/voca-match-ui.tsx';
 import AnalysisDashboard from './analysis-dashboard/analysis-ui.tsx';
 import WordChainGame from './word-chain-game/word-chain-ui.tsx';
-import PhraseViewer from './phrase/phrase-ui.tsx';
-import TopicViewer from './topic/topic-ui.tsx'; // <--- IMPORT MỚI
+// import PhraseViewer from './phrase/phrase-ui.tsx'; // <--- 2. XOÁ DÒNG NÀY (Import tĩnh gây đơ)
+import TopicViewer from './topic/topic-ui.tsx'; 
 import PracticeListLoadingSkeleton from './course-loading.tsx';
 import HomeButton from '../ui/home-button.tsx';
 import BackButton from '../ui/back-button.tsx';
@@ -19,11 +19,38 @@ import { fetchPracticeListProgress, claimQuizReward } from './course-data-servic
 import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts';
 import { User } from 'firebase/auth';
 
+// --- 3. KHAI BÁO LAZY IMPORT ---
+// Cách này giúp file này không bị đơ khi bấm vào. Nó sẽ hiện fallback trước, sau đó mới load file nặng.
+const PhraseViewer = lazy(() => import('./phrase/phrase-ui.tsx'));
+
 // --- Props cho component chính ---
 interface QuizAppHomeProps {
   hideNavBar?: () => void;
   showNavBar?: () => void;
 }
+
+// --- 4. TẠO SKELETON RIÊNG CHO DARK MODE (PHRASE UI) ---
+// Vì PhraseViewer chưa load xong nên ta không lấy được Skeleton bên đó,
+// ta tạo một cái tạm thời giống hệt ở đây để trải nghiệm mượt nhất.
+const PhraseFallbackLoader = () => (
+  <div className="h-full w-full bg-slate-900 flex flex-col p-4 sm:p-6 space-y-4">
+    {/* Header Fake */}
+    <div className="h-14 w-full bg-slate-800/50 rounded-lg animate-pulse mb-4"></div>
+    {/* List Items Fake */}
+    {Array.from({ length: 6 }).map((_, i) => (
+      <div key={i} className="bg-gray-900/70 p-4 rounded-xl border border-gray-800 h-28 w-full animate-pulse relative overflow-hidden">
+        <div className="flex justify-between">
+           <div className="space-y-2 w-3/4">
+              <div className="h-4 bg-gray-800 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-800 rounded w-1/2"></div>
+           </div>
+           <div className="h-8 w-8 bg-gray-800 rounded-full"></div>
+        </div>
+        <div className="h-3 bg-gray-800/50 rounded w-1/2 mt-4"></div>
+      </div>
+    ))}
+  </div>
+);
 
 // --- Component hiển thị nội dung, sử dụng Context ---
 export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps) {
@@ -38,15 +65,12 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   } = useQuizApp();
 
   // --- START: LOGIC ĐIỀU KHIỂN NAVBAR ---
-  // Effect này sẽ chạy khi component được mount (khi tab 'quiz' active)
-  // và sẽ cập nhật lại visibility của navbar mỗi khi view trong quiz thay đổi.
   useEffect(() => {
     if (currentView !== 'main') {
       hideNavBar?.();
     } else {
       showNavBar?.();
     }
-    // Khi component unmount (chuyển tab khác), đảm bảo navbar hiện lại.
     return () => {
       showNavBar?.();
     };
@@ -54,7 +78,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   // --- END: LOGIC ĐIỀU KHIỂN NAVBAR ---
 
   // Logic render các màn hình fullscreen
-  // CẬP NHẬT: Thêm 'topics' vào mảng
   if (['quiz', 'vocabularyGame', 'wordChainGame', 'analysis', 'vocaMatchGame', 'exampleView', 'topics'].includes(currentView)) {
       let ViewComponent = null;
 
@@ -74,17 +97,24 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
           case 'analysis':
               ViewComponent = <AnalysisDashboard onGoBack={goHome} />;
               break;
+          
+          // --- 5. SỬ DỤNG SUSPENSE CHO EXAMPLE VIEW ---
           case 'exampleView':
-              ViewComponent = <PhraseViewer onGoBack={goBack} />;
+              ViewComponent = (
+                <Suspense fallback={<PhraseFallbackLoader />}>
+                   <PhraseViewer onGoBack={goBack} />
+                </Suspense>
+              );
               break;
-          case 'topics': // <--- CASE MỚI
+          
+          case 'topics':
               ViewComponent = <TopicViewer onGoBack={goBack} />;
               break;
       }
       
       return (
         <div className="fixed inset-0 z-[51] bg-white flex flex-col">
-            <div className="flex-grow overflow-hidden">
+            <div className="flex-grow overflow-hidden h-full">
                 {ViewComponent}
             </div>
         </div>
@@ -119,7 +149,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               <h3 className="text-lg font-bold text-gray-800 group-hover:text-green-600 transition-colors">Example</h3>
             </button>
             
-            {/* --- BUTTON MỚI: TOPICS --- */}
             <button
               onClick={() => setCurrentView('topics')}
               className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-orange-400 group"
@@ -127,7 +156,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               <img src="https://cdn-icons-png.flaticon.com/512/3408/3408595.png" alt="Topics" className="h-20 w-20 mb-3 opacity-90" />
               <h3 className="text-lg font-bold text-gray-800 group-hover:text-orange-600 transition-colors">Topics</h3>
             </button>
-            {/* ------------------------- */}
 
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
