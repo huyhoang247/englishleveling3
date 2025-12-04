@@ -30,7 +30,7 @@ const ClipboardIcon = ({ className }: { className: string }) => ( <svg xmlns="ht
 const ITEMS_PER_PAGE = 50;
 const PHRASES_PER_PAGE = 20;
 
-// --- INTERNAL SKELETON DEFINITION ---
+// --- SKELETONS ---
 const styles = `
   @keyframes shimmer {
     100% { transform: translateX(100%); }
@@ -64,6 +64,30 @@ const PhraseSkeletonList = () => (
   </div>
 );
 
+// Skeleton for Popups list
+const PopupListSkeleton = () => (
+  <div className="space-y-3 animate-pulse">
+    {[1, 2, 3, 4, 5, 6].map((i) => (
+      <div key={i} className="flex justify-between items-center p-3 rounded-lg bg-slate-700/30 border border-slate-700/50">
+        <div className="h-4 bg-slate-700 rounded w-2/3"></div>
+        <div className="h-4 bg-slate-700 rounded w-8"></div>
+      </div>
+    ))}
+  </div>
+);
+
+// Skeleton for Stats grid
+const PopupStatsSkeleton = () => (
+  <div className="grid grid-cols-3 gap-4 mb-4 animate-pulse">
+    {[1, 2, 3].map((i) => (
+      <div key={i} className="flex flex-col items-center space-y-2">
+        <div className="h-3 bg-slate-700 rounded w-12"></div>
+        <div className="h-6 bg-slate-700 rounded w-16"></div>
+      </div>
+    ))}
+  </div>
+);
+
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
     useEffect(() => {
@@ -82,7 +106,7 @@ interface PhraseData {
   uniqueCount: number;
 }
 
-// Biến Cache để lưu trữ kết quả tính toán, tránh tính lại khi mở lại trang
+// Cache variables
 let allPhraseGroupsCache: Map<number, Map<string, PhraseData>> | null = null;
 
 const getOrGenerateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
@@ -138,19 +162,36 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
   const [sortBy, setSortBy] = useState<'alpha' | 'freq'>('freq');
   const [currentPage, setCurrentPage] = useState(1);
   const [phraseLength, setPhraseLength] = useState(2);
+  
+  // State for Async Loading
+  const [isLoading, setIsLoading] = useState(true);
+  const [availablePhrases, setAvailablePhrases] = useState<{phrase: string, count: number}[]>([]);
+
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const sortedAndFilteredPhrases = useMemo(() => {
-    // --- FIX: CHỈ TÍNH TOÁN KHI POPUP MỞ ---
-    if (!isOpen) return []; 
+  // Use useEffect to handle heavy calculation without blocking main thread initially
+  useEffect(() => {
+    if (isOpen) {
+      setIsLoading(true);
+      // Timeout allows the UI to paint the Skeleton before the heavy lifting starts
+      const timer = setTimeout(() => {
+        const allPhraseGroups = getOrGenerateAllPhraseGroups();
+        const currentPhraseMap = allPhraseGroups.get(phraseLength) || new Map();
+        const phrases = Array.from(currentPhraseMap.entries()).map(([phrase, data]) => ({
+          phrase,
+          count: data.uniqueCount,
+        }));
+        
+        setAvailablePhrases(phrases);
+        setIsLoading(false);
+      }, 50); 
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, phraseLength]);
 
-    // Logic này nặng, chỉ chạy khi isOpen = true
-    const allPhraseGroups = getOrGenerateAllPhraseGroups();
-    const currentPhraseMap = allPhraseGroups.get(phraseLength) || new Map();
-    let phrases = Array.from(currentPhraseMap.entries()).map(([phrase, data]) => ({
-      phrase,
-      count: data.uniqueCount,
-    }));
+  const sortedAndFilteredPhrases = useMemo(() => {
+    let phrases = [...availablePhrases];
 
     if (debouncedSearchTerm) {
       phrases = phrases.filter(p => p.phrase.includes(debouncedSearchTerm.toLowerCase()));
@@ -161,7 +202,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
       phrases.sort((a, b) => b.count - a.count || a.phrase.localeCompare(b.phrase));
     }
     return phrases;
-  }, [debouncedSearchTerm, sortBy, phraseLength, isOpen]); // Thêm isOpen vào dependencies
+  }, [availablePhrases, debouncedSearchTerm, sortBy]);
   
   useEffect(() => {
     setCurrentPage(1);
@@ -220,24 +261,30 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
              <button onClick={onClearFilter} className="px-3 py-1 text-sm text-blue-400 hover:bg-slate-700 rounded-md">Clear Filter</button>
           </div>
         </div>
+        
         <div className="overflow-y-auto px-4 pb-4 flex-grow">
-          <ul className="space-y-2">
-            {paginatedPhrases.length > 0 ? paginatedPhrases.map(({ phrase, count }) => (
-              <li key={phrase}>
-                <button onClick={() => onSelectFilter(phrase)} className="w-full text-left p-3 rounded-lg bg-slate-900 hover:bg-slate-700/50 border border-slate-700 transition-colors flex justify-between items-center">
-                  <span className="font-medium text-slate-200">"{phrase}"</span>
-                  <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-1 rounded-full">{count}</span>
-                </button>
-              </li>
-            )) : (
-              <div className="text-center text-slate-400 py-8">
-                <p>No matching phrases found.</p>
-                <p className="text-xs mt-1">Try changing phrase length or search term.</p>
-              </div>
-            )}
-          </ul>
+          {isLoading ? (
+            <PopupListSkeleton />
+          ) : (
+            <ul className="space-y-2">
+              {paginatedPhrases.length > 0 ? paginatedPhrases.map(({ phrase, count }) => (
+                <li key={phrase}>
+                  <button onClick={() => onSelectFilter(phrase)} className="w-full text-left p-3 rounded-lg bg-slate-900 hover:bg-slate-700/50 border border-slate-700 transition-colors flex justify-between items-center">
+                    <span className="font-medium text-slate-200">"{phrase}"</span>
+                    <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-1 rounded-full">{count}</span>
+                  </button>
+                </li>
+              )) : (
+                <div className="text-center text-slate-400 py-8">
+                  <p>No matching phrases found.</p>
+                  <p className="text-xs mt-1">Try changing phrase length or search term.</p>
+                </div>
+              )}
+            </ul>
+          )}
         </div>
-        {totalPages > 1 && (
+        
+        {!isLoading && totalPages > 1 && (
             <footer className="flex-shrink-0 border-t border-slate-700 p-3 flex justify-between items-center">
                 <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeftIcon className="w-5 h-5" /></button>
                 <div className="text-sm font-medium text-slate-400">Page <span className="font-bold text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-200">{totalPages}</span></div>
@@ -261,46 +308,57 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<'freq' | 'alpha'>('freq');
   const [isCopied, setIsCopied] = useState(false); 
+  
+  // State for Async Loading
+  const [isLoading, setIsLoading] = useState(true);
+  const [wordCheckResults, setWordCheckResults] = useState<{ matchedWords: { word: string; count: number }[], unmatchedWords: string[], total: number }>({ matchedWords: [], unmatchedWords: [], total: 0 });
+
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const wordCheckResults = useMemo(() => {
-    // --- FIX: CHỈ TÍNH TOÁN KHI POPUP MỞ ---
-    if (!isOpen) return { matchedWords: [], unmatchedWords: [], total: 0 };
-
-    const wordSentenceMap = new Map<string, Set<string>>();
-    exampleData.forEach(sentence => {
-      const uniqueWordsInSentence = new Set(
-        sentence.english.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter(Boolean)
-      );
-      uniqueWordsInSentence.forEach(word => {
-        if (!wordSentenceMap.has(word)) {
-          wordSentenceMap.set(word, new Set());
-        }
-        wordSentenceMap.get(word)!.add(sentence.english.trim().toLowerCase());
-      });
-    });
-
-    const uniqueVocabulary = [...new Set(defaultVocabulary.map(v => v.toLowerCase().trim()))];
-    const matchedWords: { word: string; count: number }[] = [];
-    const unmatchedWords: string[] = [];
-
-    uniqueVocabulary.forEach(word => {
-      if (wordSentenceMap.has(word)) {
-        matchedWords.push({
-          word,
-          count: wordSentenceMap.get(word)!.size,
+  // Async calculation
+  useEffect(() => {
+    if (isOpen) {
+      setIsLoading(true);
+      const timer = setTimeout(() => {
+        const wordSentenceMap = new Map<string, Set<string>>();
+        exampleData.forEach(sentence => {
+          const uniqueWordsInSentence = new Set(
+            sentence.english.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter(Boolean)
+          );
+          uniqueWordsInSentence.forEach(word => {
+            if (!wordSentenceMap.has(word)) {
+              wordSentenceMap.set(word, new Set());
+            }
+            wordSentenceMap.get(word)!.add(sentence.english.trim().toLowerCase());
+          });
         });
-      } else {
-        unmatchedWords.push(word);
-      }
-    });
+    
+        const uniqueVocabulary = [...new Set(defaultVocabulary.map(v => v.toLowerCase().trim()))];
+        const matchedWords: { word: string; count: number }[] = [];
+        const unmatchedWords: string[] = [];
+    
+        uniqueVocabulary.forEach(word => {
+          if (wordSentenceMap.has(word)) {
+            matchedWords.push({
+              word,
+              count: wordSentenceMap.get(word)!.size,
+            });
+          } else {
+            unmatchedWords.push(word);
+          }
+        });
+        
+        setWordCheckResults({ 
+          matchedWords, 
+          unmatchedWords: unmatchedWords.sort(),
+          total: uniqueVocabulary.length,
+        });
+        setIsLoading(false);
+      }, 100); 
 
-    return { 
-      matchedWords, 
-      unmatchedWords: unmatchedWords.sort(),
-      total: uniqueVocabulary.length,
-    };
-  }, [isOpen]); // Thêm isOpen vào dependencies
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   const sortedAndFilteredItems = useMemo(() => {
     if (activeTab === 'matched') {
@@ -364,20 +422,24 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
         </header>
 
         <div className="p-4 flex-shrink-0 space-y-4">
-            <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                    <div className="text-xs text-slate-400">TOTAL</div>
-                    <div className="text-2xl font-bold text-white">{wordCheckResults.total}</div>
+            {isLoading ? (
+               <PopupStatsSkeleton />
+            ) : (
+                <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <div className="text-xs text-slate-400">TOTAL</div>
+                        <div className="text-2xl font-bold text-white">{wordCheckResults.total}</div>
+                    </div>
+                    <div>
+                        <div className="text-xs text-green-400">MATCHED</div>
+                        <div className="text-2xl font-bold text-green-400">{wordCheckResults.matchedWords.length}</div>
+                    </div>
+                    <div>
+                        <div className="text-xs text-amber-400">UNMATCHED</div>
+                        <div className="text-2xl font-bold text-amber-400">{wordCheckResults.unmatchedWords.length}</div>
+                    </div>
                 </div>
-                <div>
-                    <div className="text-xs text-green-400">MATCHED</div>
-                    <div className="text-2xl font-bold text-green-400">{wordCheckResults.matchedWords.length}</div>
-                </div>
-                <div>
-                    <div className="text-xs text-amber-400">UNMATCHED</div>
-                    <div className="text-2xl font-bold text-amber-400">{wordCheckResults.unmatchedWords.length}</div>
-                </div>
-            </div>
+            )}
              <input
                 type="text"
                 placeholder="Search for a word..."
@@ -398,57 +460,63 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
                     </button>
                 </nav>
             </div>
-            {activeTab === 'matched' ? (
-                <div className="flex justify-end gap-2 text-sm pt-3">
-                    <button onClick={() => setSortBy('freq')} className={`px-3 py-1 rounded-md transition-colors ${sortBy === 'freq' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>Most Common</button>
-                    <button onClick={() => setSortBy('alpha')} className={`px-3 py-1 rounded-md transition-colors ${sortBy === 'alpha' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>A-Z</button>
-                </div>
-            ) : (
-                <div className="flex justify-end gap-2 text-sm pt-3">
-                    <button 
-                        onClick={handleCopyUnmatched} 
-                        className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-colors ${isCopied ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white'}`}
-                    >
-                        {isCopied ? (
-                            <span className="font-medium">Copied!</span>
-                        ) : (
-                            <>
-                                <ClipboardIcon className="w-4 h-4" />
-                                <span>Copy All</span>
-                            </>
-                        )}
-                    </button>
-                </div>
+            {!isLoading && (
+                activeTab === 'matched' ? (
+                    <div className="flex justify-end gap-2 text-sm pt-3">
+                        <button onClick={() => setSortBy('freq')} className={`px-3 py-1 rounded-md transition-colors ${sortBy === 'freq' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>Most Common</button>
+                        <button onClick={() => setSortBy('alpha')} className={`px-3 py-1 rounded-md transition-colors ${sortBy === 'alpha' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>A-Z</button>
+                    </div>
+                ) : (
+                    <div className="flex justify-end gap-2 text-sm pt-3">
+                        <button 
+                            onClick={handleCopyUnmatched} 
+                            className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-colors ${isCopied ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white'}`}
+                        >
+                            {isCopied ? (
+                                <span className="font-medium">Copied!</span>
+                            ) : (
+                                <>
+                                    <ClipboardIcon className="w-4 h-4" />
+                                    <span>Copy All</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                )
             )}
         </div>
 
         <div className="overflow-y-auto px-4 pb-4 flex-grow">
-          {paginatedItems.length > 0 ? (
-            activeTab === 'matched' ? (
-              <ul className="space-y-2">
-                {(paginatedItems as { word: string; count: number }[]).map(({ word, count }) => (
-                  <li key={word} className="w-full text-left p-3 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
-                    <span className="font-medium text-slate-200">{word}</span>
-                    <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-1 rounded-full">{count}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {(paginatedItems as string[]).map((word) => (
-                  <li key={word} className="p-2 bg-slate-900 rounded-md text-slate-300 text-sm text-center font-mono border border-slate-700/50 truncate">
-                    {word}
-                  </li>
-                ))}
-              </ul>
-            )
+          {isLoading ? (
+             <PopupListSkeleton />
           ) : (
-             <div className="text-center text-slate-400 py-8">
-                <p>No matching words found.</p>
-             </div>
+             paginatedItems.length > 0 ? (
+                activeTab === 'matched' ? (
+                  <ul className="space-y-2">
+                    {(paginatedItems as { word: string; count: number }[]).map(({ word, count }) => (
+                      <li key={word} className="w-full text-left p-3 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
+                        <span className="font-medium text-slate-200">{word}</span>
+                        <span className="text-xs font-mono bg-slate-700 text-slate-300 px-2 py-1 rounded-full">{count}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {(paginatedItems as string[]).map((word) => (
+                      <li key={word} className="p-2 bg-slate-900 rounded-md text-slate-300 text-sm text-center font-mono border border-slate-700/50 truncate">
+                        {word}
+                      </li>
+                    ))}
+                  </ul>
+                )
+              ) : (
+                 <div className="text-center text-slate-400 py-8">
+                    <p>No matching words found.</p>
+                 </div>
+              )
           )}
         </div>
-        {totalPages > 1 && (
+        {!isLoading && totalPages > 1 && (
             <footer className="flex-shrink-0 border-t border-slate-700 p-3 flex justify-between items-center">
                 <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeftIcon className="w-5 h-5" /></button>
                 <div className="text-sm font-medium text-slate-400">Page <span className="font-bold text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-200">{totalPages}</span></div>
