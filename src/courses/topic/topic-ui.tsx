@@ -195,11 +195,9 @@ interface LevelMapModalProps {
 }
 
 const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPage, onSelectPage }: LevelMapModalProps) => {
-  // Logic phân trang cho Map
   const [currentMapPage, setCurrentMapPage] = useState(1);
   const totalMapPages = Math.ceil(totalPages / LEVELS_PER_MAP_PAGE);
 
-  // Khi mở popup, tự động nhảy đến trang chứa level hiện tại
   useEffect(() => {
     if (isOpen) {
       const mapPageForCurrentLevel = Math.ceil(currentPage / LEVELS_PER_MAP_PAGE);
@@ -209,20 +207,16 @@ const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPa
 
   if (!isOpen) return null;
 
-  // Tính toán các level cần hiển thị trong trang hiện tại
   const startLevel = (currentMapPage - 1) * LEVELS_PER_MAP_PAGE + 1;
   const endLevel = Math.min(currentMapPage * LEVELS_PER_MAP_PAGE, totalPages);
   const levelsToShow = Array.from({ length: endLevel - startLevel + 1 }, (_, i) => startLevel + i);
 
   return (
     <div className="fixed inset-0 z-[70] flex flex-col justify-end sm:justify-center sm:items-center">
-      {/* Overlay */}
       <div className="absolute inset-0 bg-black/80 transition-opacity animate-[fade-in_0.2s]" onClick={onClose} />
       
-      {/* Modal Container */}
       <div className="relative bg-slate-900 w-full sm:w-[420px] sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col animate-popup-slide-up sm:animate-popup-zoom border-t border-slate-700 sm:border">
         
-        {/* Header */}
         <div className="flex items-center justify-between p-4 bg-slate-800 border-b border-slate-700 shrink-0">
            <h3 className="text-white font-black text-lg flex items-center gap-2">
              <span className="text-orange-500 text-2xl">🗺️</span> Level Map
@@ -234,15 +228,12 @@ const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPa
            </button>
         </div>
 
-        {/* Level Grid (5x5) */}
         <div className="flex-1 p-5 min-h-[300px]">
            <div className="grid grid-cols-5 gap-3">
               {levelsToShow.map(pageNum => {
                  const isLocked = pageNum > maxUnlockedPage;
                  const isCurrent = pageNum === currentPage;
                  const isUnlocked = !isLocked;
-                 
-                 // Kiểm tra nếu level này ở quá xa (lớn hơn level tối đa + 1)
                  const isDeepLocked = pageNum > maxUnlockedPage + 1;
 
                  let bgClass = "";
@@ -252,17 +243,15 @@ const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPa
                  } else if (isUnlocked) {
                     bgClass = "bg-blue-500 border-blue-700 text-white hover:bg-blue-400";
                  } else if (isDeepLocked) {
-                    // Level ở xa, không cho bấm
                     bgClass = "bg-slate-800 border-slate-950 text-slate-600 opacity-50 cursor-not-allowed";
                  } else {
-                    // Level kế tiếp (có thể mở khóa)
                     bgClass = "bg-slate-700 border-slate-900 text-slate-500 hover:bg-slate-600";
                  }
 
                  return (
                    <button
                      key={pageNum}
-                     disabled={isDeepLocked} // Vô hiệu hóa nút nếu ở xa
+                     disabled={isDeepLocked}
                      onClick={() => {
                         if (!isDeepLocked) {
                             onSelectPage(pageNum);
@@ -284,7 +273,6 @@ const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPa
            </div>
         </div>
         
-        {/* Pagination Footer */}
         <div className="p-3 bg-slate-800 border-t border-slate-700 flex items-center justify-between shrink-0">
             <button 
                 onClick={() => setCurrentMapPage(prev => Math.max(1, prev - 1))}
@@ -487,20 +475,35 @@ const StudyTimer = React.memo(({
 export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const { userCoins, masteryCount, updateUserCoins } = useQuizApp();
   
-  const [currentPage, setCurrentPage] = useState(1);
-  const [maxUnlockedPage, setMaxUnlockedPage] = useState(FREE_PAGES);
+  // Hàm helper để đọc max page từ localStorage
+  const getStoredMaxPage = () => {
+     const saved = localStorage.getItem('topic_max_unlocked_page');
+     return saved ? Math.max(FREE_PAGES, parseInt(saved, 10)) : FREE_PAGES;
+  };
+
+  // Khởi tạo state bằng giá trị từ localStorage (Lazy initialization)
+  const [maxUnlockedPage, setMaxUnlockedPage] = useState(getStoredMaxPage);
+
+  const [currentPage, setCurrentPage] = useState(() => {
+     const saved = localStorage.getItem('topic_current_page');
+     const page = saved ? parseInt(saved, 10) : 1;
+     // Kiểm tra ngay lập tức để tránh mở page chưa unlock
+     const currentMax = getStoredMaxPage();
+     if (page > currentMax) return currentMax;
+     if (page < 1) return 1;
+     return page;
+  });
+
   const [unlockModalData, setUnlockModalData] = useState<{ targetPage: number, cost: number } | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false); 
 
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
 
+  // Effect để tự động lưu currentPage mỗi khi nó thay đổi
   useEffect(() => {
-    const savedMaxPage = localStorage.getItem('topic_max_unlocked_page');
-    if (savedMaxPage) {
-      setMaxUnlockedPage(Math.max(FREE_PAGES, parseInt(savedMaxPage, 10)));
-    }
-  }, []);
+    localStorage.setItem('topic_current_page', currentPage.toString());
+  }, [currentPage]);
 
   useEffect(() => {
     const scrollContainer = document.getElementById('topic-scroll-container');
@@ -525,19 +528,15 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     return Array.from({ length: ITEMS_PER_PAGE }, (_, i) => start + i);
   }, [currentPage]);
 
-  // FIX: Chặn việc nhảy page xa quá mức cho phép
   const tryNavigateToPage = (page: number) => {
     if (page > totalPages || page < 1) return;
 
     if (page <= maxUnlockedPage) {
-      // Page đã mở -> Vào luôn
       setCurrentPage(page);
     } else if (page === maxUnlockedPage + 1) {
-      // Page kế tiếp -> Hiện bảng mua
       const cost = calculatePageCost(page);
       setUnlockModalData({ targetPage: page, cost });
     }
-    // Nếu page > max + 1 -> Không làm gì cả (Chặn nhảy cóc)
   };
 
   const handleConfirmUnlock = () => {
@@ -548,7 +547,9 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
         updateUserCoins(-cost).then(() => {
             const newMax = Math.max(maxUnlockedPage, targetPage);
             setMaxUnlockedPage(newMax);
+            // Lưu max page vào local storage
             localStorage.setItem('topic_max_unlocked_page', newMax.toString());
+            // Set current page (Effect sẽ tự động lưu current page vào local storage)
             setCurrentPage(targetPage);
             setUnlockModalData(null);
         }).catch(err => {
