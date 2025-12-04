@@ -241,17 +241,33 @@ const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPa
                  const isLocked = pageNum > maxUnlockedPage;
                  const isCurrent = pageNum === currentPage;
                  const isUnlocked = !isLocked;
+                 
+                 // Kiểm tra nếu level này ở quá xa (lớn hơn level tối đa + 1)
+                 const isDeepLocked = pageNum > maxUnlockedPage + 1;
 
-                 let bgClass = "bg-slate-700 border-slate-900 text-slate-500"; // Locked
-                 if (isCurrent) bgClass = "bg-yellow-400 border-yellow-600 text-yellow-900 ring-2 ring-yellow-200 ring-offset-2 ring-offset-slate-900 z-10 scale-110";
-                 else if (isUnlocked) bgClass = "bg-blue-500 border-blue-700 text-white hover:bg-blue-400";
+                 let bgClass = "";
+                 
+                 if (isCurrent) {
+                    bgClass = "bg-yellow-400 border-yellow-600 text-yellow-900 ring-2 ring-yellow-200 ring-offset-2 ring-offset-slate-900 z-10 scale-110";
+                 } else if (isUnlocked) {
+                    bgClass = "bg-blue-500 border-blue-700 text-white hover:bg-blue-400";
+                 } else if (isDeepLocked) {
+                    // Level ở xa, không cho bấm
+                    bgClass = "bg-slate-800 border-slate-950 text-slate-600 opacity-50 cursor-not-allowed";
+                 } else {
+                    // Level kế tiếp (có thể mở khóa)
+                    bgClass = "bg-slate-700 border-slate-900 text-slate-500 hover:bg-slate-600";
+                 }
 
                  return (
                    <button
                      key={pageNum}
+                     disabled={isDeepLocked} // Vô hiệu hóa nút nếu ở xa
                      onClick={() => {
-                        onSelectPage(pageNum);
-                        onClose();
+                        if (!isDeepLocked) {
+                            onSelectPage(pageNum);
+                            onClose();
+                        }
                      }}
                      className={`aspect-square rounded-xl flex items-center justify-center font-bold text-sm relative level-node ${bgClass}`}
                    >
@@ -509,15 +525,19 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     return Array.from({ length: ITEMS_PER_PAGE }, (_, i) => start + i);
   }, [currentPage]);
 
+  // FIX: Chặn việc nhảy page xa quá mức cho phép
   const tryNavigateToPage = (page: number) => {
     if (page > totalPages || page < 1) return;
 
     if (page <= maxUnlockedPage) {
+      // Page đã mở -> Vào luôn
       setCurrentPage(page);
-    } else {
+    } else if (page === maxUnlockedPage + 1) {
+      // Page kế tiếp -> Hiện bảng mua
       const cost = calculatePageCost(page);
       setUnlockModalData({ targetPage: page, cost });
     }
+    // Nếu page > max + 1 -> Không làm gì cả (Chặn nhảy cóc)
   };
 
   const handleConfirmUnlock = () => {
