@@ -1,12 +1,20 @@
 // --- START OF FILE: topic.tsx ---
 
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 // --- Imports từ các file khác ---
 import { useQuizApp } from '../course-context.tsx'; 
 import HomeButton from '../../ui/home-button.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
+
+// --- NEW IMPORTS: Direct from Topic Service ---
+import { 
+  listenToTopicData, 
+  unlockTopicPageTransaction, 
+  claimTopicRewardTransaction, 
+  TopicProgressData 
+} from './topic-service.ts';
 
 interface TopicViewerProps {
   onGoBack: () => void;
@@ -23,9 +31,9 @@ const FREE_PAGES = 5;
 const PAGES_PER_TIER = 5;      
 const BASE_COST = 100;         
 const COST_MULTIPLIER = 1.2;
-const LEVELS_PER_MAP_PAGE = 25; // 25 levels per map page (5x5 grid)
+const LEVELS_PER_MAP_PAGE = 25; 
 
-// --- STYLES & ANIMATIONS ---
+// --- STYLES & ANIMATIONS (Giữ nguyên) ---
 const styles = `
   @keyframes shimmer {
     100% { transform: translateX(100%); }
@@ -147,7 +155,6 @@ const calculatePageCost = (page: number): number => {
 };
 
 // --- SUB-COMPONENTS ---
-
 const TopicSkeleton = () => (
   <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
     <div className="w-full h-72 sm:h-96 bg-gray-200 relative overflow-hidden">
@@ -184,7 +191,7 @@ const TopicImageCard = React.memo(({ index }: { index: number }) => {
   );
 });
 
-// --- LEVEL MAP MODAL (PAGINATED) ---
+// --- LEVEL MAP MODAL ---
 interface LevelMapModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -237,7 +244,6 @@ const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPa
                  const isDeepLocked = pageNum > maxUnlockedPage + 1;
 
                  let bgClass = "";
-                 
                  if (isCurrent) {
                     bgClass = "bg-yellow-400 border-yellow-600 text-yellow-900 ring-2 ring-yellow-200 ring-offset-2 ring-offset-slate-900 z-10 scale-110";
                  } else if (isUnlocked) {
@@ -301,7 +307,7 @@ const LevelMapModal = ({ isOpen, onClose, currentPage, totalPages, maxUnlockedPa
   );
 };
 
-// --- UNLOCK MODAL COMPONENT ---
+// --- UNLOCK MODAL ---
 interface UnlockModalProps {
   targetPage: number;
   cost: number;
@@ -330,7 +336,6 @@ const UnlockModal = ({ targetPage, cost, currentCoins, onConfirm, onCancel }: Un
         onClick={onCancel}
       />
       <div className={`relative bg-white w-full max-w-xs sm:max-w-sm rounded-2xl p-5 shadow-2xl animate-popup-zoom overflow-hidden ${isShaking ? 'animate-shake' : ''}`}>
-        
         <div className="absolute top-0 right-0 w-24 h-24 bg-orange-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
         <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
 
@@ -348,66 +353,53 @@ const UnlockModal = ({ targetPage, cost, currentCoins, onConfirm, onCancel }: Un
           <div className="flex items-center justify-center gap-2 bg-slate-50 border border-slate-100 px-4 py-2 rounded-lg mb-4 mt-2">
               <span className="text-slate-500 text-sm font-medium">Cost:</span>
               <span className={`text-lg font-black ${canAfford ? 'text-slate-800' : 'text-red-500'}`}>{cost}</span>
-              <img 
-                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp" 
-                alt="Coin" 
-                className="w-5 h-5 object-contain"
-              />
+              <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp" alt="Coin" className="w-5 h-5 object-contain" />
           </div>
 
           <div className="grid grid-cols-2 gap-3 w-full">
             <button
               onClick={handleAttemptUnlock}
-              className={`py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 ${
-                canAfford 
-                  ? 'btn-game-green' 
-                  : 'bg-gray-400 border-b-4 border-gray-500 cursor-not-allowed'
-              }`}
+              className={`py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 ${canAfford ? 'btn-game-green' : 'bg-gray-400 border-b-4 border-gray-500 cursor-not-allowed'}`}
             >
               {canAfford ? 'Unlock' : 'No Coin'}
             </button>
-
-            <button
-              onClick={onCancel}
-              className="btn-game-gray py-3 rounded-xl font-bold text-sm"
-            >
-              Cancel
-            </button>
+            <button onClick={onCancel} className="btn-game-gray py-3 rounded-xl font-bold text-sm">Cancel</button>
           </div>
-
         </div>
       </div>
     </div>
   );
 };
 
-// --- STUDY TIMER COMPONENT ---
+// --- STUDY TIMER ---
 const StudyTimer = React.memo(({ 
     currentPage, 
     masteryCount, 
+    dailyCountFromServer,
+    lastDateFromServer,
     onReward,
     forceHide
 }: { 
     currentPage: number, 
     masteryCount: number,
+    dailyCountFromServer: number,
+    lastDateFromServer: string,
     onReward: (amount: number) => void,
     forceHide: boolean
 }) => {
     const [seconds, setSeconds] = useState(0);
-    const [dailyCount, setDailyCount] = useState(0);
     const [justRewarded, setJustRewarded] = useState<{amount: number} | null>(null);
     const [hasRewardedThisPage, setHasRewardedThisPage] = useState(false); 
+
+    const effectiveDailyCount = useMemo(() => {
+        const today = new Date().toISOString().split('T')[0];
+        if (lastDateFromServer !== today) return 0;
+        return dailyCountFromServer;
+    }, [dailyCountFromServer, lastDateFromServer]);
     
     const radius = 24;
     const circumference = 2 * Math.PI * radius;
     const progress = Math.min((seconds / REWARD_DURATION_SECONDS) * 100, 100);
-
-    useEffect(() => {
-        const today = new Date().toISOString().split('T')[0];
-        const key = `topic_rewards_${today}`;
-        const stored = localStorage.getItem(key);
-        setDailyCount(stored ? parseInt(stored, 10) : 0);
-    }, []);
 
     useEffect(() => {
         setSeconds(0);
@@ -415,7 +407,7 @@ const StudyTimer = React.memo(({
     }, [currentPage]);
 
     useEffect(() => {
-        if (dailyCount >= MAX_DAILY_REWARDS) return;
+        if (effectiveDailyCount >= MAX_DAILY_REWARDS) return;
         const interval = setInterval(() => {
             setSeconds(prev => {
                 if (prev >= REWARD_DURATION_SECONDS) return prev; 
@@ -423,23 +415,19 @@ const StudyTimer = React.memo(({
             });
         }, 1000);
         return () => clearInterval(interval);
-    }, [dailyCount, hasRewardedThisPage]); 
+    }, [effectiveDailyCount, hasRewardedThisPage]); 
 
     useEffect(() => {
-        if (seconds >= REWARD_DURATION_SECONDS && dailyCount < MAX_DAILY_REWARDS && !hasRewardedThisPage) {
+        if (seconds >= REWARD_DURATION_SECONDS && effectiveDailyCount < MAX_DAILY_REWARDS && !hasRewardedThisPage) {
             const rewardAmount = BASE_GOLD_REWARD * (masteryCount > 0 ? masteryCount : 1);
             onReward(rewardAmount);
             setJustRewarded({ amount: rewardAmount });
             setTimeout(() => setJustRewarded(null), 3000);
-            const newCount = dailyCount + 1;
-            setDailyCount(newCount);
             setHasRewardedThisPage(true);
-            const today = new Date().toISOString().split('T')[0];
-            localStorage.setItem(`topic_rewards_${today}`, newCount.toString());
         }
-    }, [seconds, dailyCount, hasRewardedThisPage, masteryCount, onReward]);
+    }, [seconds, effectiveDailyCount, hasRewardedThisPage, masteryCount, onReward]);
 
-    const isDailyLimitReached = dailyCount >= MAX_DAILY_REWARDS;
+    const isDailyLimitReached = effectiveDailyCount >= MAX_DAILY_REWARDS;
     const isCompleted = hasRewardedThisPage;
 
     const containerClasses = `fixed bottom-6 right-6 z-40 flex flex-col items-end transition-all duration-300 transform ${
@@ -454,7 +442,6 @@ const StudyTimer = React.memo(({
                     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp" alt="Gold" className="w-7 h-7 object-contain filter drop-shadow-sm"/>
                 </div>
             )}
-            
             {(!isDailyLimitReached && !isCompleted) && (
                 <div className="relative w-16 h-16 rounded-full shadow-lg border-4 border-white/50 bg-white/80 pointer-events-auto group transition-transform hover:scale-105">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 60 60">
@@ -462,7 +449,7 @@ const StudyTimer = React.memo(({
                         <circle cx="30" cy="30" r={radius} fill="none" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" style={{ strokeDasharray: circumference, strokeDashoffset: circumference - (progress / 100) * circumference, transition: 'stroke-dashoffset 1s linear' }} />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center flex-col">
-                        <span className="text-[10px] font-bold text-gray-500/80">{dailyCount}/5</span>
+                        <span className="text-[10px] font-bold text-gray-500/80">{effectiveDailyCount}/{MAX_DAILY_REWARDS}</span>
                         <span className="text-[10px] text-orange-500 font-mono font-semibold">{Math.floor(seconds / 60)}:{(seconds % 60).toString().padStart(2, '0')}</span>
                     </div>
                 </div>
@@ -473,26 +460,45 @@ const StudyTimer = React.memo(({
 
 // --- MAIN COMPONENT ---
 export default function TopicViewer({ onGoBack }: TopicViewerProps) {
-  const { userCoins, masteryCount, updateUserCoins } = useQuizApp();
+  // Lấy User data từ Context
+  const { user, userCoins, masteryCount } = useQuizApp();
   
-  // Hàm helper để đọc max page từ localStorage
-  const getStoredMaxPage = () => {
-     const saved = localStorage.getItem('topic_max_unlocked_page');
-     return saved ? Math.max(FREE_PAGES, parseInt(saved, 10)) : FREE_PAGES;
-  };
+  // --- LOCAL STATE for Topic Data (Quản lý trực tiếp tại đây) ---
+  const [topicData, setTopicData] = useState<TopicProgressData>({
+    maxUnlockedPage: FREE_PAGES,
+    dailyReward: { date: '', count: 0 }
+  });
 
-  // Khởi tạo state bằng giá trị từ localStorage (Lazy initialization)
-  const [maxUnlockedPage, setMaxUnlockedPage] = useState(getStoredMaxPage);
+  // --- EFFECT: Lắng nghe dữ liệu Topic riêng biệt ---
+  useEffect(() => {
+    if (user) {
+      const unsubscribe = listenToTopicData(user.uid, (data) => {
+        setTopicData(data);
+      });
+      return () => unsubscribe();
+    } else {
+        // Reset nếu logout
+        setTopicData({ maxUnlockedPage: FREE_PAGES, dailyReward: { date: '', count: 0 } });
+    }
+  }, [user]);
 
+  const maxUnlockedPage = topicData.maxUnlockedPage;
+
+  // Local navigation state
   const [currentPage, setCurrentPage] = useState(() => {
      const saved = localStorage.getItem('topic_current_page');
      const page = saved ? parseInt(saved, 10) : 1;
-     // Kiểm tra ngay lập tức để tránh mở page chưa unlock
-     const currentMax = getStoredMaxPage();
-     if (page > currentMax) return currentMax;
+     if (page > maxUnlockedPage) return maxUnlockedPage;
      if (page < 1) return 1;
      return page;
   });
+
+  // Sync current page if maxUnlockedPage changes from DB
+  useEffect(() => {
+      if (currentPage > maxUnlockedPage) {
+          setCurrentPage(maxUnlockedPage);
+      }
+  }, [maxUnlockedPage]);
 
   const [unlockModalData, setUnlockModalData] = useState<{ targetPage: number, cost: number } | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(false);
@@ -500,7 +506,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
   const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
 
-  // Effect để tự động lưu currentPage mỗi khi nó thay đổi
   useEffect(() => {
     localStorage.setItem('topic_current_page', currentPage.toString());
   }, [currentPage]);
@@ -530,7 +535,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
   const tryNavigateToPage = (page: number) => {
     if (page > totalPages || page < 1) return;
-
     if (page <= maxUnlockedPage) {
       setCurrentPage(page);
     } else if (page === maxUnlockedPage + 1) {
@@ -539,28 +543,27 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     }
   };
 
+  // --- ACTIONS: Gọi trực tiếp Service ---
   const handleConfirmUnlock = () => {
-    if (!unlockModalData) return;
+    if (!unlockModalData || !user) return;
     const { cost, targetPage } = unlockModalData;
 
-    if (updateUserCoins) {
-        updateUserCoins(-cost).then(() => {
-            const newMax = Math.max(maxUnlockedPage, targetPage);
-            setMaxUnlockedPage(newMax);
-            // Lưu max page vào local storage
-            localStorage.setItem('topic_max_unlocked_page', newMax.toString());
-            // Set current page (Effect sẽ tự động lưu current page vào local storage)
+    unlockTopicPageTransaction(user.uid, targetPage, cost)
+        .then(() => {
             setCurrentPage(targetPage);
             setUnlockModalData(null);
-        }).catch(err => {
+        })
+        .catch(err => {
             console.error("Unlock failed", err);
+            alert("Unlock failed: " + err.message);
         });
-    }
   };
 
   const handleReward = useCallback((amount: number) => {
-      if (updateUserCoins) updateUserCoins(amount);
-  }, [updateUserCoins]);
+      if (!user) return;
+      claimTopicRewardTransaction(user.uid, amount, MAX_DAILY_REWARDS)
+        .catch(err => console.error("Reward claim failed", err));
+  }, [user]);
 
   return (
     <div className="flex flex-col h-full bg-gray-100 relative overflow-hidden">
@@ -589,6 +592,8 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
       <StudyTimer 
          currentPage={currentPage}
          masteryCount={masteryCount}
+         dailyCountFromServer={topicData.dailyReward.count}
+         lastDateFromServer={topicData.dailyReward.date}
          onReward={handleReward}
          forceHide={isAtBottom} 
       />
